@@ -79,7 +79,7 @@ import ubic.gemma.persistence.util.EntityUtils;
  * Update or fill in the data associated with an experiment. Cases include reprocessing data from CEL files (Affymetrix,
  * GEO only), inserting data for RNA-seq data sets but also generic cases where data didn't come from GEO and we need to
  * add or replace data.
- * 
+ *
  * For loading experiments from flat files, see SimpleExpressionDataLoaderService
  *
  * @author paul
@@ -308,136 +308,6 @@ public class DataUpdater {
         return ee;
     }
 
-    //    /**
-    //     * Single platform only (merged, so originally >1 platform). We detect this automatically.
-    //     * 
-    //     * If vectors have been merged as well, this will not work
-    //     * 
-    //     * @param ee
-    //     */
-    //    private void reprocessAffyDataFromCelMergedPlatform( ExpressionExperiment ee ) {
-    //
-    //        /*
-    //         * TODO: check if vectormerging was run; that will need extra care to make sure we get it right (we'd have to
-    //         * essentially start over; might not be worth it, even if possible)
-    //         */
-    //
-    //        /*
-    //         * Need to work out what the platforms were.
-    //         */
-    //        RawDataFetcher f = new RawDataFetcher();
-    //        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-    //
-    //        if ( files.isEmpty() ) {
-    //            throw new RuntimeException( "Data was apparently not available" );
-    //        }
-    //        ee = experimentService.thawLite( ee );
-    //
-    //        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    //        qt = qtService.create( qt );
-    //        Collection<RawExpressionDataVector> vectors = new HashSet<>();
-    //
-    //        Map<ArrayDesign, Collection<BioAssay>> plats2Bas = determinePlatformsFromCELs( ee, files );
-    //
-    //        for ( ArrayDesign originalPlatform : plats2Bas.keySet() ) {
-    //
-    //            ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
-    //
-    //            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
-    //
-    //            Collection<BioAssay> bioAssaysForOnePlatform = plats2Bas.get( originalPlatform );
-    //            Collection<RawExpressionDataVector> v = apt
-    //                    .processData( ee, targetPlatform, originalPlatform, bioAssaysForOnePlatform, files );
-    //
-    //            if ( v.isEmpty() ) {
-    //                throw new IllegalStateException(
-    //                        "No vectors were returned for " + ee + "; Original platform=" + originalPlatform + "; target platform=" + targetPlatform );
-    //            }
-    //
-    //            vectors.addAll( v );
-    //
-    //            // Guaranteed that target != original - but do we want to switch? It might be easier just to leave it. If merged at the 
-    //            // vector level, this won't work anyway. And we can only switch the bioassays that were used here.
-    //            //  if ( !targetPlatform.equals( originalPlatform ) ) {
-    //            //  int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform );
-    //            //            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-    //            //            auditTrailService.addUpdateEvent( ee, eventType,
-    //            //                    "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
-    //            //                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
-    //            //            //   }
-    //
-    //        }
-    //
-    //        ee = experimentService.replaceRawVectors( ee, vectors );
-    //
-    //        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
-    //
-    //        this.postprocess( ee );
-    //    }
-
-    //    /**
-    //     * @param thawedEe thawed ee
-    //     * @param celchip celchip as in GPLXXXX; Single platform only
-    //     */
-    //    public void reprocessAffyDataFromCel( ExpressionExperiment ee, String celchip ) {
-    //        /*
-    //         * Add AffyPowerToolsProbesetSummarize method to take this, then load the targetPlatform. Only for single
-    //         * platform datasets! We'll get an error otherwise.
-    //         */
-    //
-    //        Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
-    //
-    //        RawDataFetcher f = new RawDataFetcher();
-    //        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-    //
-    //        if ( files.isEmpty() ) {
-    //            throw new RuntimeException( "Data was apparently not available" );
-    //        }
-    //        ee = experimentService.thawLite( ee );
-    //
-    //        if ( celchip == null ) {
-    //            // try to work out what it was from the cel files
-    //            AffyChipTypeExtractor ex = new AffyChipTypeExtractor();
-    //            Map<BioAssay, String> bm2chips = ex.getChipTypes( ee, files );
-    //           
-    //            /*
-    //             * Reverse the map.
-    //             */
-    //            Map<String, Collection<BioAssay>> chip2bms = new HashMap<>();
-    //            for ( BioAssay ba : bm2chips.keySet() ) {
-    //                String c = bm2chips.get( ba );
-    //                if ( !chip2bms.containsKey( c ) ) {
-    //                    chip2bms.put( c, new HashSet<BioAssay>() );
-    //                }
-    //                chip2bms.get( c ).add( ba );
-    //            }
-    //
-    //        } else {
-    //
-    //            if ( arrayDesignsUsed.size() >= 1 ) {
-    //                /*
-    //                 * See if we can figure out if it was vector switched, that will probably block this.
-    //                 */
-    //                log.warn( "Data run on merged platform: " + arrayDesignsUsed.iterator().next() );
-    //
-    //                reprocessAffyDataFromCelMergedPlatform( ee );
-    //                return;
-    //            }
-    //
-    //            // convert this name into the targetArray
-    //            ArrayDesign targetPlatform = arrayDesignService.findByShortName( celchip );
-    //            if ( targetPlatform == null ) {
-    //                throw new IllegalArgumentException( "No platform in system matches " + celchip );
-    //            }
-    //
-    //        }
-    //
-    //        // assuming we figured it out, run as usual.
-    //
-    //        throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
-    //
-    //    }
-
     @SuppressWarnings("UnusedReturnValue") // Possible external use
     public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeRawVectors( ee, qt );
@@ -598,16 +468,16 @@ public class DataUpdater {
      * Provide or replace data for an Affymetrix-based experiment, using CEL files. CEL files are downloaded from GEO,
      * apt-probeset-summarize is executed to get the data, and then the experiment is updated. One side-effect is that
      * the data set may end up being on a different platform than originally.
-     * 
+     *
      * A complication is the CEL file type
      * may not match the platform we want the experiment to end up being one. A further complication is when this is
      * re-run on a data set, or if the data set is on a merged platform.
-     * 
+     *
      * Therefore, some of the steps involve inspecting the CEL files to determine the chip type used so we can run
      * apt-probset-summarize correctly; replacing the vectors.
-     * 
+     *
      * Exceptions will be thrown if CEL files can't be located, or the experiments is set up in a way we can't support.
-     * 
+     *
      * @param ee the experiment
      */
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
@@ -703,57 +573,6 @@ public class DataUpdater {
 
         }
     }
-
-    //    /**
-    //     * You can now analyze CEL file data for data sets that have more than one platform (affyFromCel). However, this has
-    //     * to be done before the data set is switched to a merged platform.
-    //     *
-    //     * @param ee ee
-    //     * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
-    //     */
-    //    private ExpressionExperiment reprocessAffyFromCelWithCDF( ExpressionExperiment ee ) {
-    //
-    //        Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
-    //
-    //        ee = experimentService.thawLite( ee );
-    //        RawDataFetcher f = new RawDataFetcher();
-    //        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-    //
-    //        if ( files.isEmpty() ) {
-    //            throw new RuntimeException( "Data was apparently not available" );
-    //        }
-    //        Collection<RawExpressionDataVector> vectors = new HashSet<>();
-    //
-    //        // Use the same QT for each one 
-    //        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    //        qt = quantitationTypeService.create( qt );
-    //
-    //        for ( ArrayDesign ad : arrayDesignsUsed ) {
-    //            DataUpdater.log.info( "Processing data for " + ad );
-    //
-    //            ad = arrayDesignService.thaw( ad );
-    //
-    //            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
-    //
-    //            vectors.addAll( apt.processThreeprimeArrayData( ee, ad, files ) );
-    //
-    //        }
-    //        if ( vectors.isEmpty() ) {
-    //            throw new IllegalStateException( "No vectors were returned for " + ee );
-    //        }
-    //
-    //        ee = experimentService.replaceRawVectors( ee, vectors );
-    //        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
-    //                .join( arrayDesignsUsed, "; " ), true );
-    //
-    //        if ( arrayDesignsUsed.size() == 1 ) {
-    //            this.postprocess( ee );
-    //        } else {
-    //            DataUpdater.log.warn( "Skipping postprocessing for mult-platform experiment" );
-    //        }
-    //
-    //        return ee;
-    //    }
 
     /**
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
@@ -1151,12 +970,12 @@ public class DataUpdater {
 
     /**
      * Switches bioassays on the original platform to the target platform (if they are the same, nothing will be done)
-     * 
+     *
      * @param ee presumed thawed
      * @param originalPlatform
      * @param targetPlatform
      * @param toBeSwitched if necessary, specific which bioassays need to be switched (case: merged and re-run); or null
-     * 
+     *
      * @return how many were switched
      */
     private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign originalPlatform, ArrayDesign targetPlatform,
