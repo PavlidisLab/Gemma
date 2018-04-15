@@ -286,9 +286,7 @@ public class AffyPowerToolsProbesetSummarize {
             int found = 0;
             List<String> columnsToKeep = new ArrayList<>();
             for ( int i = 0; i < matrix.columns(); i++ ) {
-                String columnName = matrix.getColName( i );
-
-                String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
+                String sampleName = matrix.getColName( i );
 
                 BioAssay assay = matchBioAssayToCelFileName( bmap, sampleName );
 
@@ -308,7 +306,7 @@ public class AffyPowerToolsProbesetSummarize {
                         .info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " [" + assay
                                 .getAccession().getAccession() + "]" );
 
-                columnsToKeep.add( columnName );
+                columnsToKeep.add( sampleName );
                 bad.getBioAssays().add( assay );
                 found++;
             }
