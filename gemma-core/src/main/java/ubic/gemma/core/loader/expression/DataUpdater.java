@@ -152,7 +152,7 @@ public class DataUpdater {
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
         Collection<RawExpressionDataVector> vectors = apt
-                .processData( ee, pathToAptOutputFile, targetPlatform, originalPlatform );
+                .processData( ee, pathToAptOutputFile, targetPlatform, originalPlatform, ee.getBioAssays() );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -499,7 +499,8 @@ public class DataUpdater {
             isOnMergedPlatform = merged.get( ad.getId() );
             if ( isOnMergedPlatform && associatedPlats.size() > 1 ) {
                 // should be rare; normally after merge we have just one platform
-                throw new IllegalArgumentException( "Cannot reprocess datasets that include a merged platform and is still on multiple platforms" );
+                throw new IllegalArgumentException( "Cannot reprocess datasets that include a "
+                        + "merged platform and is still on multiple platforms" );
             }
         }
 
@@ -525,10 +526,12 @@ public class DataUpdater {
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
             Collection<BioAssay> bioAssays = plats2Bas.get( originalPlatform );
 
-            log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform );
+            log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
+                    + "BioAssays are currently recorded as platform="
+                    + originalPlatform );
 
             Collection<RawExpressionDataVector> v = apt
-                    .processData( ee, originalPlatform, targetPlatform, bioAssays, files );
+                    .processData( ee, targetPlatform, originalPlatform, bioAssays, files );
 
             if ( v.isEmpty() ) {
                 throw new IllegalStateException(
@@ -543,6 +546,13 @@ public class DataUpdater {
              */
             if ( !targetPlatform.equals( originalPlatform ) && ( vectorsWereMerged || !isOnMergedPlatform ) ) {
 
+                /*
+                 * This is a little dangerous, since we're not in a transaction and replacing the vectors comes later.
+                 * But if something goes wrong, it shouldn't actually
+                 * matter that much - so long as we try again and succeed.
+                 * If concerned we can make all of the updates to the EE separated into
+                 * a single transaction, with some code complexity added.
+                 */
                 int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform, bioAssays );
 
                 AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -552,17 +562,15 @@ public class DataUpdater {
             }
         }
         ee = experimentService.replaceRawVectors( ee, vectors );
+        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
         if ( vectorsWereMerged ) {
             vectorMergingService.mergeVectors( ee );
         }
-
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
-
         this.postprocess( ee );
 
         /*
-         * FIXME: this can end up with stray bioassaydimensions? Esp. in merged vector case.
+         * Might this end up with stray bioassaydimensions? Esp. in merged vector case.
          */
     }
 
@@ -676,15 +684,14 @@ public class DataUpdater {
     /**
      * Affymetrix
      * 
-     * @param ee
-     * @param files
+     * @param ee (lightly thawed)
+     * @param files CEL files
      * @return
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee, Collection<LocalFile> files ) {
-        AffyChipTypeExtractor ex = new AffyChipTypeExtractor();
-        Map<BioAssay, String> bm2chips = ex.getChipTypes( ee, files );
+        Map<BioAssay, String> bm2chips = AffyChipTypeExtractor.getChipTypes( ee, files );
         /*
-         * Reverse the map.
+         * Reverse the map (probably should just make this part of getChipTypes)
          */
         Map<String, Collection<BioAssay>> chip2bms = new HashMap<>();
         for ( BioAssay ba : bm2chips.keySet() ) {

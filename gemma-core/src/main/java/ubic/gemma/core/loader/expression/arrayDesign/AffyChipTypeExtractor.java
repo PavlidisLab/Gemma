@@ -60,9 +60,9 @@ public class AffyChipTypeExtractor {
      * @return
      * @throws IOException
      */
-    public Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
-        Map<String, BioAssay> assayAccessions = this.getAccessionToBioAssayMap( ee );
+        Map<String, BioAssay> assayAccessions = getAccessionToBioAssayMap( ee );
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
@@ -70,7 +70,7 @@ public class AffyChipTypeExtractor {
                             + ee.getShortName() );
         }
 
-        Map<BioAssay, File> bioAssays2Files = this.matchBioAssaysToRawDataFiles( files, assayAccessions );
+        Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFiles( files, assayAccessions );
 
         /*
          * Check if we should go on
@@ -94,7 +94,7 @@ public class AffyChipTypeExtractor {
         }
 
         try {
-            return this.getChipTypesFromFiles( bioAssays2Files );
+            return getChipTypesFromFiles( bioAssays2Files );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -104,13 +104,13 @@ public class AffyChipTypeExtractor {
      * @param bioAssays2Files
      * @return
      */
-    private Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
+    private static Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
         Map<BioAssay, String> result = new HashMap<>();
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
             try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
 
-                String chiptype = this.extract( is );
+                String chiptype = extract( is );
 
                 if ( chiptype == null ) {
                     log.warn( "No chip type found in " + f.getName() );
@@ -130,7 +130,7 @@ public class AffyChipTypeExtractor {
      * @param assayAccessions
      * @return
      */
-    private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
+    private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
 
         Map<BioAssay, File> result = new HashMap<>();
         for ( LocalFile lf : files ) {
@@ -153,7 +153,7 @@ public class AffyChipTypeExtractor {
      * @param ee
      * @return bioassay accession (GSM...) to bioassay map
      */
-    private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
+    private static Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
         Map<String, BioAssay> assayAccessions = new HashMap<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             DatabaseEntry accession = ba.getAccession();
@@ -173,31 +173,31 @@ public class AffyChipTypeExtractor {
      * @param is
      * @return
      */
-    public String extract( InputStream is ) {
+    public static String extract( InputStream is ) {
 
         String chipType = null;
         try (DataInputStream str = new DataInputStream( is )) {
 
             BufferedReader reader;
 
-            int magic = this.readByte( str );
+            int magic = readByte( str );
             switch ( magic ) {
                 case 64: {
 
-                    int version = this.readIntLittleEndian( str );
+                    int version = readIntLittleEndian( str );
 
                     if ( version != 4 ) {
                         // it's always supposed to be.
                         throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                     }
 
-                    AffyChipTypeExtractor.log.debug( this.readShort( str ) ); // numrows
+                    AffyChipTypeExtractor.log.debug( readShort( str ) ); // numrows
 
-                    AffyChipTypeExtractor.log.debug( this.readShort( str ) ); // numcols
+                    AffyChipTypeExtractor.log.debug( readShort( str ) ); // numcols
 
-                    AffyChipTypeExtractor.log.debug( this.readIntLittleEndian( str ) ); // numcells
+                    AffyChipTypeExtractor.log.debug( readIntLittleEndian( str ) ); // numcells
 
-                    int headerLen = this.readShort( str );
+                    int headerLen = readShort( str );
 
                     if ( headerLen == 0 ) {
                         // throw new IllegalStateException( "Zero header length read" );
@@ -216,7 +216,7 @@ public class AffyChipTypeExtractor {
 
                     for ( String string : headerLines ) {
                         if ( string.startsWith( "DatHeader" ) ) {
-                            chipType = this.parseStandardFormat( string );
+                            chipType = parseStandardFormat( string );
                             break;
                         }
                     }
@@ -225,22 +225,20 @@ public class AffyChipTypeExtractor {
                 case 59: {
 
                     // Command Console format
-                    int version = this.readUnsignedByte( str );
+                    int version = readUnsignedByte( str );
                     if ( version != 1 ) {
                         // this is fixed to 1 according to affy docs.
                         throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                     }
                     @SuppressWarnings("unused")
-                    int numDataGroups = this
-                            .readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
+                    int numDataGroups = readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
 
                     // contains another header, with different name/value/type
                     // triples.
                     @SuppressWarnings("unused")
-                    int filePosOfFirstGroup = this
-                            .readIntBigEndian( str ); // file position of first data group.
+                    int filePosOfFirstGroup = readIntBigEndian( str ); // file position of first data group.
 
-                    chipType = this.parseGenericCCHeader( str );
+                    chipType = parseGenericCCHeader( str );
 
                     // need to find number of parent file headers and then read array of generic file headers
 
@@ -249,7 +247,7 @@ public class AffyChipTypeExtractor {
                          * Look in the parentheader
                          */
 
-                        chipType = this.parseGenericCCHeader( str );
+                        chipType = parseGenericCCHeader( str );
                     }
 
                     // $dataHeader$parents[[1]]$parameters$`affymetrix-scan-date`
@@ -269,7 +267,7 @@ public class AffyChipTypeExtractor {
                     while ( ( line = reader.readLine() ) != null ) {
                         // log.info( line );
                         if ( line.startsWith( "DatHeader" ) ) {
-                            chipType = this.parseStandardFormat( line );
+                            chipType = parseStandardFormat( line );
                         }
                         if ( chipType != null || ++count > 100 ) { // don't read too much.
                             reader.close();
@@ -292,30 +290,30 @@ public class AffyChipTypeExtractor {
 
     }
 
-    private String parseGenericCCHeader( DataInputStream str ) throws IOException {
+    private static String parseGenericCCHeader( DataInputStream str ) throws IOException {
 
         /*
          * acquisition data, intensity data etc. Usually "intensity data" for the first header.
          */
-        String datatypeIdentifier = this.readString( str );
+        String datatypeIdentifier = readString( str );
 
         AffyChipTypeExtractor.log.debug( datatypeIdentifier );
 
-        String guid = this.readString( str );
+        String guid = readString( str );
 
         AffyChipTypeExtractor.log.debug( guid );
 
         // we just need to read thsee off, even if we aren't using it.
         @SuppressWarnings("unused")
-        String createDate = this.readUnicodeString( str ); // blank?
+        String createDate = readUnicodeString( str ); // blank?
         @SuppressWarnings("unused")
-        String locale = this.readUnicodeString( str ); // e.g. en-US
-        int numKeyValuePairs = this.readIntBigEndian( str ); // e.g. 55
+        String locale = readUnicodeString( str ); // e.g. en-US
+        int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
         String result = null;
         for ( int i = 0; i < numKeyValuePairs; i++ ) {
-            String name = this.readUnicodeString( str );
-            byte[] value = this.readBytes( str );
-            String type = this.readUnicodeString( str );
+            String name = readUnicodeString( str );
+            byte[] value = readBytes( str );
+            String type = readUnicodeString( str );
             Object v;
 
             switch ( type ) {
@@ -386,7 +384,7 @@ public class AffyChipTypeExtractor {
         }
 
         @SuppressWarnings("unused")
-        int numParentHeaders = this.readIntBigEndian( str );
+        int numParentHeaders = readIntBigEndian( str );
         return result;
     }
 
@@ -394,7 +392,7 @@ public class AffyChipTypeExtractor {
      * @param string
      * @return
      */
-    private String parseStandardFormat( String string ) {
+    private static String parseStandardFormat( String string ) {
         Pattern regex = Pattern.compile( STANDARD_FORMAT_REGEX );
 
         Matcher matcher = regex.matcher( string );
@@ -408,15 +406,15 @@ public class AffyChipTypeExtractor {
     /**
      * @return 8 bit signed integral number
      */
-    private int readByte( DataInputStream dis ) throws IOException {
+    private static int readByte( DataInputStream dis ) throws IOException {
         return dis.readByte();
     }
 
     /**
      * The data is stored as a int, then the array of bytes.
      */
-    private byte[] readBytes( DataInputStream str ) throws IOException {
-        int fieldLength = this.readIntBigEndian( str );
+    private static byte[] readBytes( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
 
         byte[] result = new byte[fieldLength];
         for ( int i = 0; i < fieldLength; i++ ) {
@@ -428,7 +426,7 @@ public class AffyChipTypeExtractor {
         return result;
     }
 
-    private int readIntBigEndian( DataInputStream dis ) throws IOException {
+    private static int readIntBigEndian( DataInputStream dis ) throws IOException {
         byte[] buf = new byte[4];
 
         for ( int i = 0; i < buf.length; i++ ) {
@@ -441,11 +439,11 @@ public class AffyChipTypeExtractor {
     /**
      * @return 32 bit signed integral number
      */
-    private int readIntLittleEndian( DataInputStream dis ) throws IOException {
+    private static int readIntLittleEndian( DataInputStream dis ) throws IOException {
         return dis.readInt();
     }
 
-    private int readShort( DataInputStream dis ) throws IOException {
+    private static int readShort( DataInputStream dis ) throws IOException {
         return dis.readShort();
     }
 
@@ -454,8 +452,8 @@ public class AffyChipTypeExtractor {
      *         the CHAR
      *         array (to store the string contents).
      */
-    private String readString( DataInputStream str ) throws IOException {
-        int fieldLength = this.readIntBigEndian( str );
+    private static String readString( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
         StringBuilder buf = new StringBuilder();
         for ( int i = 0; i < fieldLength; i++ ) {
             if ( str.available() == 0 )
@@ -471,8 +469,8 @@ public class AffyChipTypeExtractor {
      *         (to store the string contents).
      *         (http://media.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html)
      */
-    private String readUnicodeString( DataInputStream str ) throws IOException {
-        int fieldLength = this.readIntBigEndian( str );
+    private static String readUnicodeString( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
 
         // log.info( fieldLength );
 
@@ -486,7 +484,7 @@ public class AffyChipTypeExtractor {
         return new String( buf, "UTF-16" );
     }
 
-    private int readUnsignedByte( DataInputStream dis ) throws IOException {
+    private static int readUnsignedByte( DataInputStream dis ) throws IOException {
         return dis.readUnsignedByte();
     }
 

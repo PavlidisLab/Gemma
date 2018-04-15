@@ -174,15 +174,16 @@ public class AffyPowerToolsProbesetSummarize {
      * For when we are reprocessing and needed to figure out what the original platform was from the CEL files.
      * 
      * @param ee ee
-     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+     * @param targetPlatform target platform (thawed); call multiple times if there is more than one platform (though
+     *        that should
      *        not happen for exon arrays)
-     * @param targetplatform (thawed)
+     * @param originalPlatform
      * @param BioAssays to use
      * @param files list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
     protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
-            ArrayDesign originalPlatform, ArrayDesign targetPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
+            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
 
         if ( bioAssays.isEmpty() ) {
             throw new IllegalArgumentException( "No assays" );
@@ -192,12 +193,7 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        Collection<String> accessionsOfInterest = new HashSet<>();
-        for ( BioAssay ba : bioAssays ) {
-            accessionsOfInterest.add( ba.getAccession().getAccession() );
-        }
-
-        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
+        return this.tryRun( ee, targetPlatform, originalPlatform, files, bioAssays );
     }
 
     /**
@@ -209,12 +205,13 @@ public class AffyPowerToolsProbesetSummarize {
      *        platform)
      * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
      *        original platform, so we're not trying to match up bioassays that are not relevant.
+     * @param bioAssays that we're dealing with (could be a subset of a multi-platform experiment)
      * @return raw data vectors
      * @throws IOException io problem
      * @throws FileNotFoundException file not found
      */
     protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
-            ArrayDesign targetPlatform, ArrayDesign originalPlatform ) throws IOException {
+            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<BioAssay> bioAssaysToUse ) throws IOException {
 
         checkFileReadable( aptOutputFileToRead );
 
@@ -230,24 +227,16 @@ public class AffyPowerToolsProbesetSummarize {
                 throw new IllegalStateException( "Matrix from APT had no columns" );
             }
 
-            Collection<BioAssay> allBioAssays = ee.getBioAssays();
-
-            Collection<BioAssay> bioAssaysToUse = new HashSet<>();
-            for ( BioAssay bioAssay : allBioAssays ) {
-                if ( bioAssay.getArrayDesignUsed().equals( originalPlatform ) ) {
-                    bioAssaysToUse.add( bioAssay );
-                }
-            }
-
             if ( bioAssaysToUse.isEmpty() ) {
                 throw new IllegalStateException( "No bioassays were on the platform: " + originalPlatform );
             }
 
-            if ( allBioAssays.size() > bioAssaysToUse.size() ) {
-                AffyPowerToolsProbesetSummarize.log
-                        .info( "Using " + bioAssaysToUse.size() + "/" + allBioAssays.size() + " bioassays (those on "
-                                + originalPlatform.getShortName() + ")" );
-            }
+            // this might just be confusing.
+            //            if ( ee.getBioAssays().size() > bioAssaysToUse.size() ) {
+            //                AffyPowerToolsProbesetSummarize.log
+            //                        .info( "Using " + bioAssaysToUse.size() + "/" + ee.getBioAssays().size() + " bioassays (those on "
+            //                                + originalPlatform.getShortName() + ")" );
+            //            }
 
             if ( matrix.columns() < bioAssaysToUse.size() ) {
                 // having > is okay, there can be extra.
@@ -268,11 +257,13 @@ public class AffyPowerToolsProbesetSummarize {
              * Add them ... note we haven't switched platforms yet (and might not do that)
              */
 
+            // this is to help us match results to bioassays
             Map<String, BioAssay> bmap = new HashMap<>();
             for ( BioAssay bioAssay : bioAssaysToUse ) {
                 if ( bmap.containsKey( bioAssay.getAccession().getAccession() ) || bmap
                         .containsKey( bioAssay.getName() ) ) {
-                    throw new IllegalStateException( "Duplicate" );
+                    // defensive.
+                    throw new IllegalStateException( "Name or accesion was duplicated for : " + bioAssay );
                 }
                 bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
                 bmap.put( bioAssay.getName(), bioAssay );
@@ -280,10 +271,8 @@ public class AffyPowerToolsProbesetSummarize {
 
             log.info( "Will attempt to match " + bmap.size() + " bioAssays in data set to apt output" );
 
-            if ( AffyPowerToolsProbesetSummarize.log.isDebugEnabled() )
-                AffyPowerToolsProbesetSummarize.log
-                        .debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                                + StringUtils.join( bmap.keySet(), "\n" ) );
+            log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                    + StringUtils.join( bmap.keySet(), "\n" ) );
 
             int found = 0;
             List<String> columnsToKeep = new ArrayList<>();
@@ -377,8 +366,7 @@ public class AffyPowerToolsProbesetSummarize {
             vectors.add( vector );
 
         }
-        AffyPowerToolsProbesetSummarize.log
-                .info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
+        log.info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
         return vectors;
     }
 
@@ -576,16 +564,20 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
-     * @param targetPlatform
+     * @param targetPlatform - platform whose configuratino we're using to run apt-probeset-summarize
      * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
-     *        for the data set, which is actually a situation we don't currently support.
+     *        for the data set
      * @param files
-     * @param accessionsOfInterest
-     * @param threePrime
+     * @param bioAssays that we're dealing with (would be a subset of a dataset if multiplatform)
      * @return
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
+            ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<BioAssay> bioAssays ) {
+
+        Collection<String> accessionsOfInterest = new HashSet<>();
+        for ( BioAssay ba : bioAssays ) {
+            accessionsOfInterest.add( ba.getAccession().getAccession() );
+        }
 
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
@@ -655,7 +647,7 @@ public class AffyPowerToolsProbesetSummarize {
 
             return this.processData( ee,
                     outputPath + File.separator + AffyPowerToolsProbesetSummarize.METHOD + ".summary.txt",
-                    targetPlatform, originalPlatform );
+                    targetPlatform, originalPlatform, bioAssays );
 
         } catch ( InterruptedException | IOException e ) {
             throw new RuntimeException( e );
