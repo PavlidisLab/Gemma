@@ -514,18 +514,21 @@ public class DataUpdater {
         }
         ee = experimentService.thawLite( ee );
 
-        Map<ArrayDesign, Collection<BioAssay>> plats2Bas = determinePlatformsFromCELs( ee, files );
+        Map<ArrayDesign, Collection<BioAssay>> targetPlats2BioAssays = determinePlatformsFromCELs( ee, files );
 
         QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
         qt = qtService.create( qt );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
 
-        for ( ArrayDesign originalPlatform : plats2Bas.keySet() ) {
+        for ( ArrayDesign originalPlatform : associatedPlats ) {
 
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
-            Collection<BioAssay> bioAssays = plats2Bas.get( originalPlatform );
+            Collection<BioAssay> bioAssays = targetPlats2BioAssays.get( targetPlatform );
 
+            if (bioAssays == null || bioAssays.isEmpty()) throw new IllegalStateException("Something went wrong, no bioAssays matched platform="
+                    + targetPlatform + " for original platform = " + originalPlatform );
+            
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
                     + "BioAssays are currently recorded as platform="
                     + originalPlatform );
@@ -686,7 +689,7 @@ public class DataUpdater {
      * 
      * @param ee (lightly thawed)
      * @param files CEL files
-     * @return
+     * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily the "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee, Collection<LocalFile> files ) {
         Map<BioAssay, String> bm2chips = AffyChipTypeExtractor.getChipTypes( ee, files );
@@ -702,7 +705,7 @@ public class DataUpdater {
             chip2bms.get( c ).add( ba );
         }
         Map<String, String> chipNames2GPL = AffyPowerToolsProbesetSummarize.loadChipNames();
-        Map<ArrayDesign, Collection<BioAssay>> originalPlat2BioAssays = new HashMap<>();
+        Map<ArrayDesign, Collection<BioAssay>> targetPlatform2BioAssays = new HashMap<>();
         for ( String chipname : chip2bms.keySet() ) {
 
             /*
@@ -714,9 +717,11 @@ public class DataUpdater {
             }
 
             ArrayDesign originalPlatform = arrayDesignService.findByShortName( originalPlatName );
-            originalPlat2BioAssays.put( originalPlatform, chip2bms.get( chipname ) );
+            ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
+
+            targetPlatform2BioAssays.put( targetPlatform, chip2bms.get( chipname ) );
         }
-        return originalPlat2BioAssays;
+        return targetPlatform2BioAssays;
     }
 
     /**
