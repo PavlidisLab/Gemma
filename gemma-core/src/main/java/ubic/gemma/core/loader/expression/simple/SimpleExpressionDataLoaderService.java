@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 /**
- * Load experiment from a flat file. See also {@link ubic.gemma.core.loader.expression.geo.DataUpdater} for related
+ * Load experiment from a flat file. See also {@link ubic.gemma.core.loader.expression.DataUpdater} for related
  * operations on experiments already in the system.
  *
  * @author paul

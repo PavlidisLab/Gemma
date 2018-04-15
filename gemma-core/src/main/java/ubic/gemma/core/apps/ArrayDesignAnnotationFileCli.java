@@ -387,7 +387,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 String accession = arguments[0];
                 String annotationFileName = arguments[1];
-                String type = arguments[2];
+                String outputType = arguments[2];
 
                 // Check the syntax of the given line
                 if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
@@ -401,11 +401,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                     AbstractCLI.log.warn( "No annotation file name specified on line: " + lineNumber
                             + " Using platform name as default annotation file name" );
                 }
-                if ( StringUtils.isBlank( type ) ) {
+                if ( StringUtils.isBlank( outputType ) ) {
                     this.type = OutputType.SHORT;
                     AbstractCLI.log.warn( "No type specified for line: " + lineNumber + " Defaulting to short" );
                 } else {
-                    this.type = OutputType.valueOf( type.toUpperCase() );
+                    this.type = OutputType.valueOf( outputType.toUpperCase() );
                 }
 
                 // need to set these so processing ad works correctly

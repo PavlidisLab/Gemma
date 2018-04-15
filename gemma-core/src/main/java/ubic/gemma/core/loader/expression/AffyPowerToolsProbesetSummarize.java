@@ -48,16 +48,86 @@ import java.util.*;
 public class AffyPowerToolsProbesetSummarize {
 
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
-    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
     private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
+    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
     private static final long AFFY_UPDATE_INTERVAL_S = 30;
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
 
-    // rma-sketch uses much less memory, supposedly makes little difference
+    // rma-sketch uses much less memory, supposedly makes little difference in final results.
     private static final String METHOD = "rma";
+
+    /**
+     * @param bmap
+     * @param sampleName
+     * @return BioAssay, or null if not found.
+     */
+    public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
+        /*
+         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+         */
+        BioAssay assay = null;
+        if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
+            String geoAcc = sampleName.split( "_" )[0];
+
+            if ( bmap.containsKey( geoAcc ) ) {
+                assay = bmap.get( geoAcc );
+            } else {
+                AffyPowerToolsProbesetSummarize.log.debug( "No bioassay found " + geoAcc );
+            }
+        } else {
+
+            /*
+             * Sometimes column names are like Aud_19L.CEL - no GSM number. Sometimes this works, but it's last ditch.
+             */
+            assay = bmap.get( sampleName );
+        }
+        return assay;
+    }
+
+    /**
+     * Map of strings found in CEL files to GPL ids.
+     * 
+     * @return
+     */
+    protected static Map<String, String> loadChipNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
+            Map<String, String> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                result.put( k, pc.getString( k ) );
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    protected static QuantitationType makeAffyQuantitationType() {
+        QuantitationType result = QuantitationType.Factory.newInstance();
+
+        result.setGeneralType( GeneralType.QUANTITATIVE );
+        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        result.setIsPreferred( Boolean.TRUE );
+        result.setIsNormalized( Boolean.TRUE );
+        result.setIsBackgroundSubtracted( Boolean.TRUE );
+        result.setIsBackground( false );
+        result.setName( AffyPowerToolsProbesetSummarize.METHOD + " value" );
+        result.setDescription( "Computed in Gemma by apt-probeset-summarize" );
+        result.setType( StandardQuantitationType.AMOUNT );
+        result.setIsMaskedPreferred( false ); // this is raw data.
+        result.setScale( ScaleType.LOG2 ); // always.
+        result.setIsRatio( false );
+        result.setIsRecomputedFromRawData( true );
+
+        return result;
+    }
+
     private QuantitationType quantitationType;
 
     public AffyPowerToolsProbesetSummarize() {
@@ -73,24 +143,98 @@ public class AffyPowerToolsProbesetSummarize {
         this.quantitationType = qt;
     }
 
-    public static QuantitationType makeAffyQuantitationType() {
-        QuantitationType result = QuantitationType.Factory.newInstance();
+    //    /**
+    //     * @param ee ee
+    //     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+    //     *        not happen for exon arrays)
+    //     * @param originalPlatform might be the same as targetPlatform
+    //     * @param files list of CEL files (any other files included will be ignored)
+    //     * @return raw data vectors
+    //     */
+    //    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
+    //            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<LocalFile> files ) {
+    //
+    //        Collection<BioAssay> bioAssays = ee.getBioAssays();
+    //
+    //        if ( bioAssays.isEmpty() ) {
+    //            throw new IllegalArgumentException( "Experiment had no assays" );
+    //        }
+    //
+    //        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+    //            throw new IllegalArgumentException( "Target design had no elements" );
+    //        }
+    //
+    //        Collection<String> accessionsOfInterest = null;
+    //        if ( bioAssays.size() < files.size() ) {
+    //            accessionsOfInterest = new HashSet<>();
+    //            /*
+    //             * This can happen when we split a GEO data set by platform. This means we have to filter the files *first*
+    //             * not after. I'm not sure there's really a down side to always doing this step.
+    //             */
+    //            for ( BioAssay ba : bioAssays ) {
+    //                accessionsOfInterest.add( ba.getAccession().getAccession() );
+    //            }
+    //
+    //        }
+    //
+    //        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
+    //    }
 
-        result.setGeneralType( GeneralType.QUANTITATIVE );
-        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
-        result.setIsPreferred( Boolean.TRUE );
-        result.setIsNormalized( Boolean.TRUE );
-        result.setIsBackgroundSubtracted( Boolean.TRUE );
-        result.setIsBackground( false );
-        result.setName( AffyPowerToolsProbesetSummarize.METHOD + " value" );
-        result.setDescription( "Computed in Gemma by apt-probeset-summarize" );
-        result.setType( StandardQuantitationType.AMOUNT );
-        result.setIsMaskedPreferred( false ); // this is raw data.
-        result.setScale( ScaleType.LOG2 );
-        result.setIsRatio( false );
-        result.setIsRecomputedFromRawData( true );
+    /**
+     * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
+     */
+    protected Map<String, Map<String, String>> loadMpsNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
+            Map<String, Map<String, String>> result = new HashMap<>();
 
-        return result;
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                String[] k2 = k.split( "\\." );
+                String platform = k2[0];
+                String type = k2[1];
+
+                if ( !result.containsKey( platform ) ) {
+                    result.put( platform, new HashMap<String, String>() );
+                }
+                result.get( platform ).put( type, pc.getString( k ) );
+
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * For when we are reprocessing and needed to figure out what the original platform was from the CEL files.
+     * 
+     * @param ee ee
+     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+     *        not happen for exon arrays)
+     * @param targetplatform (thawed)
+     * @param BioAssays to use
+     * @param files list of CEL files (any other files included will be ignored)
+     * @return raw data vectors
+     */
+    protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
+            ArrayDesign originalPlatform, ArrayDesign targetPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
+
+        if ( bioAssays.isEmpty() ) {
+            throw new IllegalArgumentException( "No assays" );
+        }
+
+        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+            throw new IllegalArgumentException( "Target design had no elements" );
+        }
+
+        Collection<String> accessionsOfInterest = new HashSet<>();
+        for ( BioAssay ba : bioAssays ) {
+            accessionsOfInterest.add( ba.getAccession().getAccession() );
+        }
+
+        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
     }
 
     /**
@@ -105,7 +249,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @throws IOException io problem
      * @throws FileNotFoundException file not found
      */
-    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
+    protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
             ArrayDesign targetPlatform, ArrayDesign originalPlatform ) throws IOException {
 
         checkFileReadable( aptOutputFileToRead );
@@ -157,7 +301,7 @@ public class AffyPowerToolsProbesetSummarize {
             bad.setDescription( "Generated from output of apt-probeset-summarize" );
 
             /*
-             * Add them ... note we haven't switched platforms yet.
+             * Add them ... note we haven't switched platforms yet (and might not do that)
              */
 
             Map<String, BioAssay> bmap = new HashMap<>();
@@ -220,70 +364,6 @@ public class AffyPowerToolsProbesetSummarize {
                 quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
             }
             return this.convertDesignElementDataVectors( ee, bad, targetPlatform, matrix );
-        }
-    }
-
-    /**
-     * @param ee ee
-     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
-     *        not happen for exon arrays)
-     * @param originalPlatform might be the same as targetPlatform
-     * @param files list of CEL files (any other files included will be ignored)
-     * @return raw data vectors
-     */
-    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
-            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<LocalFile> files ) {
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-
-        if ( bioAssays.isEmpty() ) {
-            throw new IllegalArgumentException( "Experiment had no assays" );
-        }
-
-        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
-            throw new IllegalArgumentException( "Target design had no elements" );
-        }
-
-        Collection<String> accessionsOfInterest = null;
-        if ( bioAssays.size() < files.size() ) {
-            accessionsOfInterest = new HashSet<>();
-            /*
-             * This can happen when we split a GEO data set by platform. This means we have to filter the files *first*
-             * not after. I'm not sure there's really a down side to always doing this step.
-             */
-            for ( BioAssay ba : bioAssays ) {
-                accessionsOfInterest.add( ba.getAccession().getAccession() );
-            }
-
-        }
-
-        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
-    }
-
-    /**
-     * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
-     */
-    protected Map<String, Map<String, String>> loadMpsNames() {
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
-            Map<String, Map<String, String>> result = new HashMap<>();
-
-            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
-                String k = it.next();
-                String[] k2 = k.split( "\\." );
-                String platform = k2[0];
-                String type = k2[1];
-
-                if ( !result.containsKey( platform ) ) {
-                    result.put( platform, new HashMap<String, String>() );
-                }
-                result.get( platform ).put( type, pc.getString( k ) );
-
-            }
-            return result;
-
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
         }
     }
 
@@ -359,6 +439,52 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
+     * For 3' arrays. Run RMA with quantile normalization.
+     * 
+     * <pre>
+     * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
+     * /bigscratch/GSE123/*.CEL
+     * </pre>
+     *
+     * @param targetPlatform ad
+     * @param cdfFileName e g. HG-U133A_2.cdf
+     * @param celfiles celfiles
+     * @param outputPath path
+     * @return string
+     */
+    private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName,
+            List<String> celfiles, String outputPath ) {
+        String toolPath = Settings.getString( "affy.power.tools.exec" );
+
+        /*
+         * locate the CDF file
+         */
+        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
+        String cdfName;
+        if ( cdfFileName != null ) {
+            cdfName = cdfFileName;
+        } else {
+            String shortName = targetPlatform.getShortName();
+            // probably won't work ...
+            cdfName = shortName + ".cdf";
+        }
+        String cdfFullPath;
+        if ( !cdfName.contains( cdfPath ) ) {
+            cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
+        } else {
+            cdfFullPath = cdfName;
+        }
+        this.checkFileReadable( cdfFullPath );
+
+        /*
+         * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
+         */
+
+        return toolPath + " -a " + AffyPowerToolsProbesetSummarize.METHOD + " -d " + cdfFullPath + " -o " + outputPath
+                + " " + StringUtils.join( celfiles, " " );
+    }
+
+    /**
      * @param files files
      * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
@@ -422,7 +548,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param outputPath directory
      * @return string or null if not found.s
      */
-    private String getCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
+    private String getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.
          */
@@ -463,52 +589,6 @@ public class AffyPowerToolsProbesetSummarize {
                 + "apt-output";
     }
 
-    /**
-     * For 3' arrays. Run RMA with quantile normalization.
-     * 
-     * <pre>
-     * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
-     * /bigscratch/GSE123/*.CEL
-     * </pre>
-     *
-     * @param targetPlatform ad
-     * @param cdfFileName e g. HG-U133A_2.cdf
-     * @param celfiles celfiles
-     * @param outputPath path
-     * @return string
-     */
-    private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
-            List<String> celfiles, String outputPath ) {
-        String toolPath = Settings.getString( "affy.power.tools.exec" );
-
-        /*
-         * locate the CDF file
-         */
-        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
-        String cdfName;
-        if ( cdfFileName != null ) {
-            cdfName = cdfFileName;
-        } else {
-            String shortName = targetPlatform.getShortName();
-            // probably won't work ...
-            cdfName = shortName + ".cdf";
-        }
-        String cdfFullPath;
-        if ( !cdfName.contains( cdfPath ) ) {
-            cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
-        } else {
-            cdfFullPath = cdfName;
-        }
-        this.checkFileReadable( cdfFullPath );
-
-        /*
-         * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
-         */
-
-        return toolPath + " -a " + AffyPowerToolsProbesetSummarize.METHOD + " -d " + cdfFullPath + " -o " + outputPath
-                + " " + StringUtils.join( celfiles, " " );
-    }
-
     private Map<String, String> loadCdfNames() {
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
@@ -523,55 +603,6 @@ public class AffyPowerToolsProbesetSummarize {
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /**
-     * Map of strings found in CEL files to GPL ids.
-     * 
-     * @return
-     */
-    private Map<String, String> loadChipNames() {
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
-            Map<String, String> result = new HashMap<>();
-
-            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
-                String k = it.next();
-                result.put( k, pc.getString( k ) );
-            }
-            return result;
-
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * @param bmap
-     * @param sampleName
-     * @return BioAssay, or null if not found.
-     */
-    public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
-        /*
-         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
-         */
-        BioAssay assay = null;
-        if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-            String geoAcc = sampleName.split( "_" )[0];
-
-            if ( bmap.containsKey( geoAcc ) ) {
-                assay = bmap.get( geoAcc );
-            } else {
-                AffyPowerToolsProbesetSummarize.log.debug( "No bioassay found " + geoAcc );
-            }
-        } else {
-
-            /*
-             * Sometimes column names are like Aud_19L.CEL - no GSM number. Sometimes this works, but it's last ditch.
-             */
-            assay = bmap.get( sampleName );
-        }
-        return assay;
     }
 
     private DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
@@ -600,10 +631,10 @@ public class AffyPowerToolsProbesetSummarize {
         // look for a CDF first.
         String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();
         if ( cdfFileName != null ) {
-            cmd = this.getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celFiles, outputPath );
+            cmd = this.getCDFCommand( targetPlatform, cdfFileName, celFiles, outputPath );
         } else {
             /* presumably mps based */
-            cmd = this.getCommand( targetPlatform, celFiles, outputPath );
+            cmd = this.getMPSCommand( targetPlatform, celFiles, outputPath );
         }
 
         if ( cmd == null ) {

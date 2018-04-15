@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.core.loader.expression.geo.DataUpdater;
+import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
@@ -82,10 +82,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions() {
         super.buildOptions();
         super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
-                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
-        super.addOption( "celchip", true,
-                "Platform name (e.g. GPL6096) that the CEL files are from; use in case you need to redo "
-                        + "a data set that has already been switched, otherwise not needed; implies -force" );
+                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
+                        + "ensure you used the right official CDF/MPS configuration" );
+        //        super.addOption( "celchip", true,
+        //                "Platform name (e.g. GPL6096) that the CEL files are from; use in case you need to redo "
+        //                        + "a data set that has already been switched, otherwise not needed; implies -force" );
         super.addForceOption();
 
     }
@@ -128,7 +129,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
             try {
                 AbstractCLI.log.info( "Loading data from " + aptFile );
-                serv.addAffyData( thawedEe, aptFile );
+                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
 
             } catch ( Exception exception ) {
                 return exception;
@@ -147,23 +148,23 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * if the audit trail already has a DataReplacedEvent, skip it, unless --force. Ignore this for
                  * multiplatform studies (at our peril)
                  */
-                if ( this.checkForAlreadyDone( ee ) ) {
-                    if ( this.celchip != null ) {
+                if ( this.checkForAlreadyDone( ee ) && !this.force ) {
+                    //if ( this.celchip != null ) {
+                    //
+                    //                        if ( adsUsed.size() > 1 ) {
+                    //                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
+                    //                        }
+                    //
+                    //                        log.info( "Re-running using chip=" + celchip );
+                    //                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
+                    //                        this.successObjects.add( thawedEe );
+                    //                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                    //  } else {
 
-                        if ( adsUsed.size() > 1 ) {
-                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
-                        }
-
-                        log.info( "Re-running using chip=" + celchip );
-                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
-                        this.successObjects.add( thawedEe );
-                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
-                    } else {
-
-                        this.errorObjects.add( ee
-                                + ": Was already run before, supply -celchip option to re-run" );
-                        continue;
-                    }
+                    this.errorObjects.add( ee
+                            + ": Was already run before, use -force" );
+                    continue;
+                    //   }
                 }
 
                 ArrayDesign ad = adsUsed.iterator().next();
@@ -174,14 +175,14 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  */
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
                     AbstractCLI.log.info( ad + " looks like affy array" );
-                    if ( this.celchip != null ) {
-                        if ( adsUsed.size() > 1 ) {
-                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
-                        }
-                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
-                    } else {
-                        serv.reprocessAffyDataFromCel( thawedEe );
-                    }
+                    // if ( this.celchip != null ) {
+                    //                        if ( adsUsed.size() > 1 ) {
+                    //                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
+                    //                        }
+                    //                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
+                    //    } else {
+                    serv.reprocessAffyDataFromCel( thawedEe );
+                    //    }
                     this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else {

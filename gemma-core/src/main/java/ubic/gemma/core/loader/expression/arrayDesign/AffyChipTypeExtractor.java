@@ -148,6 +148,11 @@ public class AffyChipTypeExtractor {
 
     }
 
+    /**
+     * 
+     * @param ee
+     * @return bioassay accession (GSM...) to bioassay map
+     */
     private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
         Map<String, BioAssay> assayAccessions = new HashMap<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
