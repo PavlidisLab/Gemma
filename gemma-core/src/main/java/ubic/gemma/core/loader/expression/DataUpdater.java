@@ -521,7 +521,14 @@ public class DataUpdater {
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
 
-        for ( ArrayDesign originalPlatform : associatedPlats ) {
+        Collection<ArrayDesign> workingPlatforms;
+        if ( isOnMergedPlatform ) {
+            workingPlatforms = targetPlats2BioAssays.keySet();
+        } else {
+            workingPlatforms = associatedPlats;
+        }
+
+        for ( ArrayDesign originalPlatform : workingPlatforms ) {
 
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
             Collection<BioAssay> bioAssays = targetPlats2BioAssays.get( targetPlatform );
@@ -531,7 +538,7 @@ public class DataUpdater {
 
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
                     + "BioAssays are currently recorded as platform="
-                    + originalPlatform );
+                    + originalPlatform + ( isOnMergedPlatform ? " (Via merged platform " + associatedPlats.iterator().next() + ")" : "" ) );
 
             Collection<RawExpressionDataVector> v = apt
                     .processData( ee, targetPlatform, originalPlatform, bioAssays, files );

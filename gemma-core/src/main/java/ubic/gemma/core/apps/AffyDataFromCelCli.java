@@ -20,6 +20,7 @@
 package ubic.gemma.core.apps;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -31,6 +32,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
  * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
@@ -156,17 +158,26 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 }
 
                 ArrayDesign ad = adsUsed.iterator().next();
+                ArrayDesignService asd = this.getBean( ArrayDesignService.class );
 
                 /*
                  * Even if there are multiple platforms, we assume they are all Affy, or all not. If not, that's your
                  * problem :) (seriously, we could check...)
                  */
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
-                    AbstractCLI.log.info( ad + " looks like affy array" );
+                    AbstractCLI.log.info( ad + " looks like Affy array" );
                     serv.reprocessAffyDataFromCel( thawedEe );
 
                     this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
+                    ad = asd.thawLite( ad );
+                    if ( GeoPlatform.isAffyPlatform( ad.getMergees().iterator().next().getShortName() ) ) {
+                        AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
+                        serv.reprocessAffyDataFromCel( thawedEe );
+                        this.successObjects.add( thawedEe );
+                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                    }
                 } else {
 
                     this.errorObjects.add( ee + ": " +
