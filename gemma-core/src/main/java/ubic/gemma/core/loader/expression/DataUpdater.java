@@ -125,6 +125,9 @@ public class DataUpdater {
     @Autowired
     private VectorMergingService vectorMergingService;
 
+    @Autowired
+    private ExpressionExperimentPlatformSwitchService experimentPlatformSwitchService;
+
     /**
      * Affymetrix: Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves. Must be single-platform. Will switch the data set to use the
@@ -538,7 +541,7 @@ public class DataUpdater {
 
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
                     + "BioAssays are currently recorded as platform="
-                    + originalPlatform + ( isOnMergedPlatform ? " (Via merged platform " + associatedPlats.iterator().next() + ")" : "" ) );
+                    + originalPlatform + ( isOnMergedPlatform ? " (Via merged platform " + mergedPlat + ")" : "" ) );
 
             Collection<RawExpressionDataVector> v = apt
                     .processData( ee, targetPlatform, originalPlatform, bioAssays, files );
@@ -551,10 +554,10 @@ public class DataUpdater {
             vectors.addAll( v );
 
             /*
-             * If it's on a merged platform, we don't switch the bioassays, since we'd just want to switch again anyway.
-             * However, if vectors were merged, we *do* need to switch so the vectormerging can be redone.
+             * Switch the bioassays. We do this even when are using a merged platform, effectively de-merging them. We
+             * just need to remerge.
              */
-            if ( !targetPlatform.equals( originalPlatform ) && ( vectorsWereMerged || !isOnMergedPlatform ) ) {
+            if ( !targetPlatform.equals( originalPlatform ) ) {
 
                 /*
                  * This is a little dangerous, since we're not in a transaction and replacing the vectors comes later.
@@ -577,9 +580,20 @@ public class DataUpdater {
         ee = experimentService.replaceRawVectors( ee, vectors );
         this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
-        if ( vectorsWereMerged ) {
-            vectorMergingService.mergeVectors( ee );
+        log.info( "------  Done with reanalyzed data -----" );
+
+        if ( isOnMergedPlatform ) {
+            ArrayDesign mergedPlat = associatedPlats.iterator().next();
+            log.info( "------- Restoring platform/merge status: Switch to " + mergedPlat );
+            experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, mergedPlat );
+
+            if ( vectorsWereMerged ) {
+                log.info( "------ Restoring vector merge" );
+                vectorMergingService.mergeVectors( ee );
+            }
+
         }
+
         this.postprocess( ee );
 
         /*
