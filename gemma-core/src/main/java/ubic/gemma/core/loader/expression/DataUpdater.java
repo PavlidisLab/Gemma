@@ -552,7 +552,7 @@ public class DataUpdater {
 
             /*
              * If it's on a merged platform, we don't switch the bioassays, since we'd just want to switch again anyway.
-             * However, if it was merged, we *do* need to switch so the vectormerging can be redone.
+             * However, if vectors were merged, we *do* need to switch so the vectormerging can be redone.
              */
             if ( !targetPlatform.equals( originalPlatform ) && ( vectorsWereMerged || !isOnMergedPlatform ) ) {
 
