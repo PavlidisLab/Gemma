@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
@@ -40,7 +41,6 @@ import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.analysis.preprocess.VectorMergingServiceImpl;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -85,7 +85,7 @@ import ubic.gemma.persistence.util.EntityUtils;
  *
  * @author paul
  */
-@Component
+@Service
 public class DataUpdater {
 
     private static final Log log = LogFactory.getLog( DataUpdater.class );
@@ -538,6 +538,7 @@ public class DataUpdater {
 
         /*
          * Collect these so we can clean up. TODO make this part of the bioassaydimension service, make more efficient
+         * and complete
          */
         Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -567,7 +568,7 @@ public class DataUpdater {
                         "No vectors were returned for " + ee + "; Original platform=" + originalPlatform + "; target platform=" + targetPlatform );
             }
 
-            vectors.addAll( v );
+            vectors.addAll( v ); // not yet persistent
 
             /*
              * Switch the bioassays. We do this even when are using a merged platform, effectively de-merging them. We
@@ -593,19 +594,26 @@ public class DataUpdater {
                                 .getShortName() + " to " + targetPlatform.getShortName() + ")" );
             }
         }
+
         ee = experimentService.replaceRawVectors( ee, vectors );
         this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
-        /*
-         * Clean up unused bioassaydimensions. We always make new ones here.
-         */
-        try {
-            bioAssayDimensionService.remove( allOldBioAssayDims );
-        } catch ( Exception e ) {
-            log.warn( "Failed to clean up old bioassaydimensions" );
-        }
+        log.info( "------  Done with reanalyzed data; cleaning up and postprocessing -----" );
 
-        log.info( "------  Done with reanalyzed data -----" );
+        /*
+         * Postprocessing, all of which is non-serious if it fails.
+         */
+
+        /*
+         * Clean up any unused bioassaydimensions. We always make new ones here. At this point they should be freed up.
+         */
+        for ( BioAssayDimension bad : allOldBioAssayDims ) {
+            try {
+                bioAssayDimensionService.remove( bad );
+            } catch ( Exception e ) {
+                log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() );
+            }
+        }
 
         if ( isOnMergedPlatform ) {
             try {
@@ -621,7 +629,6 @@ public class DataUpdater {
             } catch ( Exception e ) {
                 log.error( "Failed to restore merge status, please run separatelyF" );
             }
-
         }
 
         this.postprocess( ee );

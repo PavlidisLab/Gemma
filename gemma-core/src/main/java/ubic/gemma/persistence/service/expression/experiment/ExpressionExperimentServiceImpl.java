@@ -185,7 +185,9 @@ public class ExpressionExperimentServiceImpl
 
         BioAssayDimension bad = BADs.iterator().next();
 
-        bad = this.bioAssayDimensionService.findOrCreate( bad );
+        if ( bad.getId() == null ) {
+            bad = this.bioAssayDimensionService.findOrCreate( bad );
+        }
         assert bad.getBioAssays().size() > 0;
 
         QuantitationType newQt = qts.iterator().next();
@@ -827,9 +829,9 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *           checking
-     *           the curation details of the object directly, as this method also checks all the array designs the given
-     *           experiment belongs to.
+     *        checking
+     *        the curation details of the object directly, as this method also checks all the array designs the given
+     *        experiment belongs to.
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
@@ -868,7 +870,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
+     *        be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override
@@ -978,7 +980,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
@@ -1006,7 +1008,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
