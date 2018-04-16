@@ -49,10 +49,16 @@ import java.util.regex.Pattern;
  */
 public class AffyPowerToolsProbesetSummarize {
 
+    /**
+     * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz or GSM1525415_C1.cel.gz and not
+     * GSM12343.EXP.gz
+     */
+    private static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
+
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
     private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
-
+    
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
     private static final long AFFY_UPDATE_INTERVAL_S = 30;
@@ -67,11 +73,8 @@ public class AffyPowerToolsProbesetSummarize {
      * @return BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
-        /*
-         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz and not GSM12343.EXP.gz
-         */
 
-        Pattern regex = Pattern.compile( "^(GSM[0-9]+).*\\.CEL(\\.gz)?" );
+        Pattern regex = Pattern.compile( GEO_CEL_FILE_NAME_REGEX );
 
         Matcher matcher = regex.matcher( sampleName );
 
