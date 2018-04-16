@@ -602,7 +602,7 @@ public class AffyPowerToolsProbesetSummarize {
         }
 
         if ( cmd == null ) {
-            throw new IllegalArgumentException( "There is no MPS configuration for " + targetPlatform.getShortName() + ", check "
+            throw new IllegalArgumentException( "There is no CDF or MPS configuration for " + targetPlatform.getShortName() + ", check "
                     + AFFY_MPS_PROPERTIES_FILE_NAME + " and " + AFFY_CDFS_PROPERTIES_FILE_NAME );
         }
 
