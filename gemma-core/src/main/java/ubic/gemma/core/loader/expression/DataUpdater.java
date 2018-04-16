@@ -40,6 +40,7 @@ import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.VectorMergingServiceImpl;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -128,6 +129,9 @@ public class DataUpdater {
     @Autowired
     private ExpressionExperimentPlatformSwitchService experimentPlatformSwitchService;
 
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
     /**
      * Affymetrix: Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves. Must be single-platform. Will switch the data set to use the
@@ -165,7 +169,8 @@ public class DataUpdater {
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
-            int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform, null );
+            // Switch ALL bioassays to the target platform.
+            int numSwitched = this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
@@ -531,6 +536,17 @@ public class DataUpdater {
             workingPlatforms = associatedPlats;
         }
 
+        /*
+         * Collect these so we can clean up. TODO make this part of the bioassaydimension service, make more efficient
+         */
+        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
+            for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
+                allOldBioAssayDims.add( bioAssayDim );
+            }
+        }
+
         for ( ArrayDesign originalPlatform : workingPlatforms ) {
 
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
@@ -555,9 +571,9 @@ public class DataUpdater {
 
             /*
              * Switch the bioassays. We do this even when are using a merged platform, effectively de-merging them. We
-             * just need to remerge.
+             * just need to remerge. This is easier than trying to keep it merged, sinc
              */
-            if ( !targetPlatform.equals( originalPlatform ) ) {
+            if ( !targetPlatform.equals( originalPlatform ) || isOnMergedPlatform ) {
 
                 /*
                  * This is a little dangerous, since we're not in a transaction and replacing the vectors comes later.
@@ -566,7 +582,7 @@ public class DataUpdater {
                  * If concerned we can make all of the updates to the EE separated into
                  * a single transaction, with some code complexity added.
                  */
-                int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform, bioAssays );
+                int numSwitched = this.switchBioAssaysToTargetPlatform( ee, targetPlatform, bioAssays );
 
                 log.info( "Switched " + numSwitched + " bioassays from " + originalPlatform
                         .getShortName() + " to " + targetPlatform.getShortName() );
@@ -580,25 +596,35 @@ public class DataUpdater {
         ee = experimentService.replaceRawVectors( ee, vectors );
         this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
+        /*
+         * Clean up unused bioassaydimensions. We always make new ones here.
+         */
+        try {
+            bioAssayDimensionService.remove( allOldBioAssayDims );
+        } catch ( Exception e ) {
+            log.warn( "Failed to clean up old bioassaydimensions" );
+        }
+
         log.info( "------  Done with reanalyzed data -----" );
 
         if ( isOnMergedPlatform ) {
-            ArrayDesign mergedPlat = associatedPlats.iterator().next();
-            log.info( "------- Restoring platform/merge status: Switch to " + mergedPlat );
-            experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, mergedPlat );
+            try {
+                ArrayDesign mergedPlat = associatedPlats.iterator().next();
+                log.info( "------- Restoring platform/merge status: Switch to " + mergedPlat );
+                mergedPlat = arrayDesignService.thaw( mergedPlat );
+                experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, mergedPlat );
 
-            if ( vectorsWereMerged ) {
-                log.info( "------ Restoring vector merge" );
-                vectorMergingService.mergeVectors( ee );
+                if ( vectorsWereMerged ) {
+                    log.info( "------ Restoring vector merge" );
+                    vectorMergingService.mergeVectors( ee );
+                }
+            } catch ( Exception e ) {
+                log.error( "Failed to restore merge status, please run separatelyF" );
             }
 
         }
 
         this.postprocess( ee );
-
-        /*
-         * Might this end up with stray bioassaydimensions? Esp. in merged vector case.
-         */
     }
 
     /**
@@ -1089,24 +1115,21 @@ public class DataUpdater {
      * will be done)
      *
      * @param ee presumed thawed
-     * @param originalPlatform
      * @param targetPlatform
      * @param toBeSwitched if necessary, specific which bioassays need to be switched (case: merged and re-run); or null
      *
      * @return how many were switched
      */
-    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign originalPlatform, ArrayDesign targetPlatform,
+    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform,
             Collection<BioAssay> toBeSwitched ) {
-
-        if ( originalPlatform.equals( targetPlatform ) ) return 0;
 
         int i = 0;
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( toBeSwitched != null && !toBeSwitched.contains( ba ) ) continue;
-            if ( ba.getArrayDesignUsed().equals( originalPlatform ) ) {
-                ba.setArrayDesignUsed( targetPlatform );
-                i++;
-            }
+
+            ba.setArrayDesignUsed( targetPlatform );
+            i++;
+
         }
 
         experimentService.update( ee );
