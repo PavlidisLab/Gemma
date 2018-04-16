@@ -39,6 +39,7 @@ import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
@@ -65,6 +66,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -130,6 +132,12 @@ public class DataUpdater {
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCorService;
+
+    @Autowired
+    private PrincipalComponentAnalysisService pcaService;
 
     /**
      * Affymetrix: Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
@@ -606,12 +614,19 @@ public class DataUpdater {
         /*
          * Clean up any unused bioassaydimensions. We always make new ones here. At this point they should be freed up.
          */
-        for ( BioAssayDimension bad : allOldBioAssayDims ) {
-            try {
-                bioAssayDimensionService.remove( bad );
-            } catch ( Exception e ) {
-                log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() );
+        try {
+            sampleCorService.delete( ee );
+            pcaService.removeForExperiment( ee );
+            for ( BioAssayDimension bad : allOldBioAssayDims ) {
+                try {
+                    bioAssayDimensionService.remove( bad );
+                    log.info( "Removed bioAssayDimension ID=" + bad.getId() );
+                } catch ( Exception e ) {
+                    log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() + ": " + e.getMessage() );
+                }
             }
+        } catch ( Exception e ) {
+            log.warn( "Error during cleanup: " + e.getMessage() );
         }
 
         boolean needsPost = true;
