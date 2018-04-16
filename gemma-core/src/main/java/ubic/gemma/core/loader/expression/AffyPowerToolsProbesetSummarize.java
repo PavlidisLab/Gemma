@@ -68,10 +68,10 @@ public class AffyPowerToolsProbesetSummarize {
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
         /*
-         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz
+         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz and not GSM12343.EXP.gz
          */
 
-        Pattern regex = Pattern.compile( "^(GSM[0-9]+).+" );
+        Pattern regex = Pattern.compile( "^(GSM[0-9]+).*\\.CEL(\\.gz)?" );
 
         Matcher matcher = regex.matcher( sampleName );
 

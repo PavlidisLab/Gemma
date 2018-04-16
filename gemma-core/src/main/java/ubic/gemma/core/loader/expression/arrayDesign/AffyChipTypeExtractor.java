@@ -66,7 +66,7 @@ public class AffyChipTypeExtractor {
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
-                    "Couldn't get any scan date information, could not determine provider or it is not supported for "
+                    "Couldn't get any accessions for bioassays of: "
                             + ee.getShortName() );
         }
 
@@ -113,7 +113,7 @@ public class AffyChipTypeExtractor {
                 String chiptype = extract( is );
 
                 if ( chiptype == null ) {
-                    log.warn( "No chip type found in " + f.getName() );
+                    log.warn( "No chip name type found in " + f.getName() + " for " + ba );
                     continue;
                 }
 
@@ -276,11 +276,6 @@ public class AffyChipTypeExtractor {
                     }
                     break;
             }
-
-            if ( chipType == null ) {
-                throw new IllegalStateException( "Failed to find chip type" );
-            }
-            AffyChipTypeExtractor.log.debug( chipType );
 
             return chipType;
 

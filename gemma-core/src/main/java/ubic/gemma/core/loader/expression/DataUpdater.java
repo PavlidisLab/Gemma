@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import cern.colt.list.DoubleArrayList;
@@ -615,6 +614,7 @@ public class DataUpdater {
             }
         }
 
+        boolean needsPost = true;
         if ( isOnMergedPlatform ) {
             try {
                 ArrayDesign mergedPlat = associatedPlats.iterator().next();
@@ -625,13 +625,15 @@ public class DataUpdater {
                 if ( vectorsWereMerged ) {
                     log.info( "------ Restoring vector merge" );
                     vectorMergingService.mergeVectors( ee );
+                    needsPost = false; // since that does it.
                 }
             } catch ( Exception e ) {
-                log.error( "Failed to restore merge status, please run separatelyF" );
+                needsPost = false; // it would fail anyway.
+                log.error( "Failed to restore merge status, please attempt to run separately and proceed with any postprocessing" );
             }
         }
 
-        this.postprocess( ee );
+        if ( needsPost ) this.postprocess( ee );
     }
 
     /**
@@ -1041,6 +1043,8 @@ public class DataUpdater {
     }
 
     /**
+     * Generic
+     * 
      * @param rawMatrix matrix
      * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
@@ -1110,7 +1114,6 @@ public class DataUpdater {
         // several transactions
         try {
             ee = preprocessorService.process( ee );
-            assert ee.getNumberOfDataVectors() != null;
         } catch ( PreprocessingException e ) {
             DataUpdater.log.error( "Error during postprocessing", e );
         }

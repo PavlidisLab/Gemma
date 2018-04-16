@@ -65,14 +65,11 @@ public class AffyChipNameExtract extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected Exception doWork( String[] args ) {
 
-        // parse
-        AffyChipTypeExtractor apr = new AffyChipTypeExtractor();
-
-        for ( int i = 2; i < args.length; i++ ) {
+        for ( int i = 0; i < args.length; i++ ) {
             String f = args[i];
             try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f )) {
 
-                String type = apr.extract( is );
+                String type = AffyChipTypeExtractor.extract( is );
                 System.err.println( type + "\t" + f );
             } catch ( IOException e ) {
                 System.err.println( "Failed to find chip type: " + "\t" + f + " " + e.getMessage() );
