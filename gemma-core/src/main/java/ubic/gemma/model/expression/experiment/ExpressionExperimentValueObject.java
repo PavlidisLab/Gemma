@@ -139,12 +139,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         batchEffect = ( String ) row[25];
         batchConfound = ( String ) row[26];
 
-        // Geeq: for administrators, create an admin VO, for non-admins, only add geeq if experiment if fully curated (needAttention == false)
+        // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
         geeq = row[30] == null ?
                 null :
                 SecurityUtil.isUserAdmin() ?
                         new GeeqAdminValueObject( ( Geeq ) row[30] ) :
-                        this.needsAttention ? null : new GeeqValueObject( ( Geeq ) row[30] );
+                        new GeeqValueObject( ( Geeq ) row[30] );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,

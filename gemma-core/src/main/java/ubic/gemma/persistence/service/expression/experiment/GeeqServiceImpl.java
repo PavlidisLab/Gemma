@@ -237,6 +237,11 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         gq = this.updateQualityScore( gq );
         gq = this.updateSuitabilityScore( gq );
 
+        // Add note if experiment curation not finished
+        if(ee.getCurationDetails().getNeedsAttention()){
+            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
+        }
+
         stopwatch.stop();
         gq.setLastRun( this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
                 "Took " + stopwatch.elapsedMillis() + "ms.\nUnexpected problems encountered: \n" + gq

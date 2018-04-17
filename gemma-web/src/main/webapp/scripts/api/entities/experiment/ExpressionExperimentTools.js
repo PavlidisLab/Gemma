@@ -109,7 +109,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     "<div class='gq-errors'>" +
                     "<span class='icon'><i class='red fa-exclamation-triangle fa'></i></span>" +
                     "<span class='msg'>" +
-                    "   <p>There were unexpected problems while scoring this experiment:</p>" +
+                    "   <p>There were some issues while scoring this experiment:</p>" +
                     "   <pre>" + this.experimentDetails.geeq.otherIssues + "</pre>" +
                     "</span>" +
                     "</div>" +

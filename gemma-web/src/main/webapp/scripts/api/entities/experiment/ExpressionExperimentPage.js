@@ -202,7 +202,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
          * @param experimentDetails.expressionExperimentSets
          * @param experimentDetails.lastArrayDesignUpdateDate
          * @param experimentDetails.needsAttention
-         * @param experimentDetails.geeq.publicQualityScore,
+         * @param experimentDetails.geeq
+         * @param experimentDetails.geeq.publicQualityScore
          * @param experimentDetails.geeq.publicSuitabilityScore
          */
         this.experimentDetails = experimentDetails;
