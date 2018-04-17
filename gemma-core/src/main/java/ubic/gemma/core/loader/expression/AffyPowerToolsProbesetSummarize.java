@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.loader.expression;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -58,7 +59,7 @@ public class AffyPowerToolsProbesetSummarize {
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
     private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
-    
+
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
     private static final long AFFY_UPDATE_INTERVAL_S = 30;
@@ -281,12 +282,11 @@ public class AffyPowerToolsProbesetSummarize {
                 bmap.put( bioAssay.getName(), bioAssay );
             }
 
-            log.info( "Will attempt to match " + bmap.size() + " bioAssays in data set to apt output" );
+            log.info( "Will attempt to match " + bioAssaysToUse.size() + " bioAssays in data set to apt output" );
 
             log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
                     + StringUtils.join( bmap.keySet(), "\n" ) );
 
-            int found = 0;
             List<String> columnsToKeep = new ArrayList<>();
             for ( int i = 0; i < matrix.columns(); i++ ) {
                 String sampleName = matrix.getColName( i );
@@ -311,12 +311,13 @@ public class AffyPowerToolsProbesetSummarize {
 
                 columnsToKeep.add( sampleName );
                 bad.getBioAssays().add( assay );
-                found++;
             }
 
-            if ( found != bioAssaysToUse.size() ) {
+            if ( bad.getBioAssays().size() != bioAssaysToUse.size() ) {
+                Collection<BioAssay> missing = CollectionUtils.subtract( bioAssaysToUse, bad.getBioAssays() );
                 throw new IllegalStateException(
-                        "Failed to find a data column for every bioassay on the given platform " + targetPlatform );
+                        "Failed to find a data column for every bioassay on the given platform " +
+                                targetPlatform + "; missing:\n" + StringUtils.join( missing, "\n" ) );
             }
 
             if ( columnsToKeep.size() < matrix.columns() ) {
