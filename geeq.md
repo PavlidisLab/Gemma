@@ -22,7 +22,7 @@ some of the measured factors. We make the socre public for these datasets, but i
 On the Gemma website, we use colored emoticons to give intuitive visual representation of both the quality and suitability scores. In mostr places, hovering over the emoticon will reveal the numerical value of the score. 
 
 The color of the emoticon will change from red, to yellow, to green based on where on the [-1, 1] interval the score is. 
-If the score is higher than 0.3, the icon will be smiling face 🙂, if lower than -0.3, the icon will be frowing face 🙁, scores in between will show a neutral face 😐.
+If the score is higher than 0.3, the icon will be smiling a face 🙂, if lower than -0.3, the icon will be a frowing face 🙁 and scores in between will show a neutral face 😐.
 
 ## Suitability Score factors
 ### Publication
