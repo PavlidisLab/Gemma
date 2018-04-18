@@ -505,7 +505,7 @@ public class DataUpdater {
      * @param ee the experiment
      */
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
-
+        log.info( "------  Begin processing: " + ee + " -----" );
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
 
         boolean isOnMergedPlatform = false;
@@ -522,6 +522,9 @@ public class DataUpdater {
         boolean vectorsWereMerged = isOnMergedPlatform && hasEvent( ee, ExpressionExperimentVectorMergeEvent.class );
 
         RawDataFetcher f = new RawDataFetcher();
+        if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
+            throw new UnsupportedOperationException( "Can only process from CEL for data sets with an external accession" );
+        }
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files.isEmpty() ) {

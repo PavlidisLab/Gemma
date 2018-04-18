@@ -157,6 +157,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
 
+                if ( thawedEe.getAccession() == null || thawedEe.getAccession().getAccession() == null ) {
+                    throw new UnsupportedOperationException( "Can only process from CEL for data sets with an external accession" );
+                }
+
                 ArrayDesign ad = adsUsed.iterator().next();
                 ArrayDesignService asd = this.getBean( ArrayDesignService.class );
 
