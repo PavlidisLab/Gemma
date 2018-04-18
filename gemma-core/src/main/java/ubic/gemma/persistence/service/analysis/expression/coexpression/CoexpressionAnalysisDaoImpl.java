@@ -49,17 +49,6 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
         super( CoexpressionAnalysis.class, sessionFactory );
     }
 
-    /**
-     * @see CoexpressionAnalysisDao#findByName(String)
-     */
-    @Override
-    public Collection<CoexpressionAnalysis> findByName( final String name ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select a from CoexpressionAnalysis as a where a.name = :name" )
-                .setParameter( "name", name ).list();
-    }
-
     @Override
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
         String q = "select ccd from CoexpressionAnalysis pca "
@@ -83,36 +72,6 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
         return this.getSessionFactory().getCurrentSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
                 != null;
-    }
-
-    @Override
-    public Collection<CoexpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        //language=HQL
-        final String queryString = "select distinct a from CoexpressionAnalysis a where :e = a.experimentAnalyzed";
-        //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
-    }
-
-    @Override
-    public Map<Investigation, Collection<CoexpressionAnalysis>> findByInvestigations(
-            Collection<Investigation> investigations ) {
-        Map<Investigation, Collection<CoexpressionAnalysis>> results = new HashMap<>();
-        for ( Investigation ee : investigations ) {
-            Collection<CoexpressionAnalysis> ae = this.findByInvestigation( ee );
-            results.put( ee, ae );
-        }
-        return results;
-    }
-
-    @Override
-    public Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon ) {
-        //language=HQL
-        final String queryString =
-                "select distinct an from CoexpressionAnalysis an" + " inner join an.experimentAnalyzed ee "
-                        + "inner join ee.bioAssays ba "
-                        + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
-        //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
 }

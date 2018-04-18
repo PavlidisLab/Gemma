@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
 import java.util.*;
 
@@ -35,11 +36,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private static final Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
 
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Override
     public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) {
-        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionMatrixService.findOrCreate( ee );
+        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
 
         if ( cormat == null || cormat.rows() == 0 ) {
             OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );

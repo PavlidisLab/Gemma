@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -90,7 +91,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private SVDServiceHelper svdService;
     @Autowired
@@ -289,7 +290,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) {
         try {
-            sampleCoexpressionMatrixService.findOrCreate( ee );
+            sampleCoexpressionAnalysisService.compute( ee );
         } catch ( Exception e ) {
             PreprocessorServiceImpl.log.error( "SampleCorrelation could not be computed: " + e.getMessage() );
         }

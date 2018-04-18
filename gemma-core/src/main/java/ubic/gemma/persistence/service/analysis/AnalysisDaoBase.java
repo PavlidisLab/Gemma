@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,32 +39,50 @@ import java.util.Map;
  */
 public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T> implements AnalysisDao<T> {
 
+    private Class<T> analysisClass;
+
     protected AnalysisDaoBase( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
+        this.analysisClass = elementClass;
     }
 
-    /**
-     * @see AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
-     */
     @Override
-    public abstract Collection<T> findByInvestigation( final Investigation investigation );
+    public Collection<T> findByInvestigation( final Investigation investigation ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select an  from " + this.analysisClass.getSimpleName() + " an where an.experimentAnalyzed = :ee" )
+                .setParameter( "ee", investigation ).list();
+    }
 
-    /**
-     * @see AnalysisDao#findByInvestigations(java.util.Collection)
-     */
     @Override
-    public abstract Map<Investigation, Collection<T>> findByInvestigations(
-            final Collection<Investigation> investigations );
+    public Map<Investigation, Collection<T>> findByInvestigations( final Collection<Investigation> investigations ) {
+        Map<Investigation, Collection<T>> results = new HashMap<>();
 
-    /**
-     * @see AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
+        for ( Investigation ee : investigations ) {
+            results.put( ee, this.findByInvestigation( ee ) );
+        }
+
+        return results;
+    }
+
     @Override
-    public abstract Collection<T> findByTaxon( final Taxon taxon );
+    public Collection<T> findByName( String name ) {
+        return this.findByProperty( "name", name );
+    }
+
+    @Override
+    public Collection<T> findByTaxon( final Taxon taxon ) {
+        //language=HQL
+        final String queryString = "select distinct an from " + this.analysisClass.getSimpleName()
+                + " an inner join an.experimentAnalyzed ee " + "inner join ee.bioAssays ba "
+                + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
+        //noinspection unchecked
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
 
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
+        this.remove( this.findByInvestigation( ee ) );
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,24 +19,71 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
+/**
+ * The 'analysis' in the name is a bit of a stretch here, as this object servers purely as an aggregator
+ * of all the sample coexpression matrices.
+ */
 public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = 5006465967597402551L;
     private SampleCoexpressionMatrix sampleCoexpressionMatrix;
 
+    private SampleCoexpressionMatrix rawCoexpressionMatrix;
+    private SampleCoexpressionMatrix regressedCoexpressionMatrix;
+
+    protected SampleCoexpressionAnalysis() {
+    }
+
+    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix rawCoexpressionMatrix,
+            SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
+        super( experimentAnalyzed );
+        this.rawCoexpressionMatrix = rawCoexpressionMatrix;
+        this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
+    }
+
+    @Deprecated
     public SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
         return this.sampleCoexpressionMatrix;
     }
 
+    @Deprecated
     public void setSampleCoexpressionMatrix( SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
         this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
     }
 
-    public static final class Factory {
-        public static SampleCoexpressionAnalysis newInstance() {
-            return new SampleCoexpressionAnalysis();
-        }
+    /**
+     * Note that since you get a full square matrix, all correlations
+     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
+     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
+     * Also observe that the matrix may contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     *
+     * @return a coexpression matrix with all factors (none regressed out), and including outliers.
+     */
+    public SampleCoexpressionMatrix getRawCoexpressionMatrix() {
+        return rawCoexpressionMatrix;
+    }
+
+    public void setRawCoexpressionMatrix( SampleCoexpressionMatrix rawFullCoexpressionMatrix ) {
+        this.rawCoexpressionMatrix = rawFullCoexpressionMatrix;
+    }
+
+    /**
+     * Note that since you get a full square matrix, all correlations
+     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
+     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
+     * Also observe that the matrix may contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     *
+     * @return a coexpression matrix with regressed out major factors.
+     */
+    public SampleCoexpressionMatrix getRegressedCoexpressionMatrix() {
+        return regressedCoexpressionMatrix;
+    }
+
+    public void setRegressedCoexpressionMatrix( SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
+        this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
     }
 
 }

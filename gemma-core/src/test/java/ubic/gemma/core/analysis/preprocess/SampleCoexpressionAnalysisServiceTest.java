@@ -20,6 +20,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
 import static org.junit.Assert.assertEquals;
@@ -28,28 +29,30 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author paul
  */
-public class SampleCoexpressionMatrixServiceTest extends BaseSpringContextTest {
+public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Test
     public void test() {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionMatrixService.create( ee );
+        sampleCoexpressionAnalysisService.compute( ee );
+        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadRawMatrix( ee );
 
-        this.check( matrix );
+                this.check( matrix );
 
         // recompute ...
-        matrix = sampleCoexpressionMatrixService.create( ee );
+        sampleCoexpressionAnalysisService.compute( ee );
+        matrix = sampleCoexpressionAnalysisService.loadRawMatrix( ee );
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
 
         this.check( matrix );
     }

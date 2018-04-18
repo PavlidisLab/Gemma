@@ -35,7 +35,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -65,6 +64,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -143,7 +143,7 @@ public class ExpressionExperimentController {
     @Autowired
     private SessionListManager sessionListManager;
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private MeanVarianceService meanVarianceService;
     @Autowired
@@ -451,7 +451,7 @@ public class ExpressionExperimentController {
         ExperimentQCTag qc = new ExperimentQCTag();
         qc.setEe( ee.getId() );
         qc.setEeManagerId( ee.getId() + "-eemanager" );
-        qc.setHasCorrMat( sampleCoexpressionMatrixService.hasMatrix( ee ) );
+        qc.setHasCorrMat( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
@@ -1184,10 +1184,11 @@ public class ExpressionExperimentController {
         }
 
         // identify outliers
-        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+        if ( !sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
             return 0;
         }
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
+                .loadRawMatrix( ee );
         if ( sampleCorrelationMatrix.rows() < 3 ) {
             return 0;
         }
@@ -1377,7 +1378,7 @@ public class ExpressionExperimentController {
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        mav.addObject( "hasCorrMat", sampleCoexpressionMatrixService.hasMatrix( expressionExperiment ) );
+        mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
         mav.addObject( "hasMeanVariance", meanVarianceService.hasMeanVariance( expressionExperiment ) );
@@ -1690,7 +1691,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.create( ee, false, false );
+        sampleCoexpressionAnalysisService.compute( ee );
     }
 
     private void updateMV( Long id ) {

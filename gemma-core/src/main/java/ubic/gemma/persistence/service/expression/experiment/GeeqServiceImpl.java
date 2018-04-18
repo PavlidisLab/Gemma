@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -78,20 +78,20 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final ExpressionDataMatrixService expressionDataMatrixService;
     private final OutlierDetectionService outlierDetectionService;
     private final AuditTrailService auditTrailService;
-    private final SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
-            SampleCoexpressionMatrixService sampleCoexpressionMatrixService ) {
+            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
-        this.sampleCoexpressionMatrixService = sampleCoexpressionMatrixService;
+        this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
     }
 
     @Override
@@ -694,7 +694,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = sampleCoexpressionMatrixService.findOrCreate( ee );
+            cormat = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
         } catch ( IllegalStateException e ) {
             Log.warn( this.getClass(),
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );

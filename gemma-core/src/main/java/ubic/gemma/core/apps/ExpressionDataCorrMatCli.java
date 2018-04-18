@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.apps;
 
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -89,13 +89,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
             return;
         }
 
-        SampleCoexpressionMatrixService sampleCoexpressionMatrixService = this
-                .getBean( SampleCoexpressionMatrixService.class );
+        SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService = this
+                .getBean( SampleCoexpressionAnalysisService.class );
 
         if ( this.force ) {
-            sampleCoexpressionMatrixService.create( ee);
+            sampleCoexpressionAnalysisService.compute( ee);
         } else {
-            sampleCoexpressionMatrixService.findOrCreate( ee);
+            sampleCoexpressionAnalysisService.load( ee);
         }
 
         this.audit( ee );

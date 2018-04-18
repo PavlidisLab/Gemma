@@ -482,14 +482,6 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
-        //noinspection unchecked
-        return this.getHibernateTemplate()
-                .findByNamedParam( "select a from DifferentialExpressionAnalysis as a where a.name = :name", "name",
-                        name );
-    }
-
-    @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
         if ( analysis == null ) {
             throw new IllegalArgumentException( "analysis cannot be null" );
@@ -505,37 +497,32 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
     @Override
     public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        return this.getAnalyses( investigation );
-    }
+        Long id = investigation.getId();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
-    @Override
-    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
-            Collection<Investigation> investigations ) {
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid" )
+                .setParameter( "eeid", id ).list() );
 
-        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
-
-        for ( Investigation i : investigations ) {
-            results.put( i, this.getAnalyses( i ) );
-        }
+        /*
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
+         */
+        //noinspection unchecked
+        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                        + "join eess.sourceExperiment see "
+                        + "join a.experimentAnalyzed eeanalyzed where see.id=:eeid and eess=eeanalyzed" )
+                .setParameter( "eeid", id ).list() );
 
         return results;
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon ) {
-        //language=HQL
-        final String queryString =
-                "select distinct doa from DifferentialExpressionAnalysis as doa inner join doa.experimentAnalyzed as ee "
-                        + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
-        //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    @Override
     @Deprecated // Not useful for DEAs, works for other analysis types.
     public void removeForExperiment( ExpressionExperiment ee ) {
-        AbstractDao.log.error( "!!! Not removing any analyses for experiment " + ee + ", use the service layer instead!" );
+        throw new IllegalStateException(
+                "!!! Not removing any analyses for experiment " + ee + ", use the service layer instead!" );
     }
 
     private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {
@@ -644,33 +631,6 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
             result.addAll( this.getHibernateTemplate()
                     .findByNamedParam( "from ExpressionExperiment e where e.id in (:ids)", "ids", ids ) );
         }
-    }
-
-    private Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
-        if ( investigation == null )
-            throw new IllegalArgumentException( "Investigation must not be null" );
-        Long id = investigation.getId();
-
-        return this.getAnalysesForExperiment( id );
-
-    }
-
-    private Collection<DifferentialExpressionAnalysis> getAnalysesForExperiment( Long id ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-        final String query = "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid ";
-        //noinspection unchecked
-        results.addAll( this.getHibernateTemplate().findByNamedParam( query, "eeid", id ) );
-
-        /*
-         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
-         */
-        //noinspection unchecked
-        results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a"
-                        + " join eess.sourceExperiment see "
-                        + " join a.experimentAnalyzed eeanalyzed where see.id=:ee and eess=eeanalyzed", "ee", id ) );
-
-        return results;
     }
 
     /**
