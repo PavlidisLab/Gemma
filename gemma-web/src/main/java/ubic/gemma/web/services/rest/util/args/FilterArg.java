@@ -217,11 +217,6 @@ public abstract class FilterArg extends MalformableArg {
             } catch ( IndexOutOfBoundsException e ) {
                 throw new GemmaApiException(
                         new WellComposedErrorBody( Response.Status.BAD_REQUEST, ERROR_MSG_ARGS_MISALIGNED ) );
-            } catch ( ParseException e ) {
-                WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                        ERROR_MSG_MALFORMED_REQUEST );
-                WellComposedErrorBody.addExceptionFields( error, e );
-                throw new GemmaApiException( error );
             }
         }
 

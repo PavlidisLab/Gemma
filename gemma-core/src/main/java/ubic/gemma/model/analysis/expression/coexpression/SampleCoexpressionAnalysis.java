@@ -30,16 +30,16 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = 5006465967597402551L;
 
-    private SampleCoexpressionMatrix rawCoexpressionMatrix;
+    private SampleCoexpressionMatrix fullCoexpressionMatrix;
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
 
     protected SampleCoexpressionAnalysis() {
     }
 
-    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix rawCoexpressionMatrix,
+    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
             SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
         super( experimentAnalyzed );
-        this.rawCoexpressionMatrix = rawCoexpressionMatrix;
+        this.fullCoexpressionMatrix = fullCoexpressionMatrix;
         this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
     }
 
@@ -51,12 +51,12 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
      *
      * @return a coexpression matrix with all factors (none regressed out), and including outliers.
      */
-    public SampleCoexpressionMatrix getRawCoexpressionMatrix() {
-        return rawCoexpressionMatrix;
+    public SampleCoexpressionMatrix getFullCoexpressionMatrix() {
+        return fullCoexpressionMatrix;
     }
 
-    public void setRawCoexpressionMatrix( SampleCoexpressionMatrix rawFullCoexpressionMatrix ) {
-        this.rawCoexpressionMatrix = rawFullCoexpressionMatrix;
+    public void setFullCoexpressionMatrix( SampleCoexpressionMatrix rawFullCoexpressionMatrix ) {
+        this.fullCoexpressionMatrix = rawFullCoexpressionMatrix;
     }
 
     /**

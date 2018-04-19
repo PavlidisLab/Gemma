@@ -68,7 +68,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Override
     public DoubleMatrix<BioAssay, BioAssay> loadRawMatrix( ExpressionExperiment ee ) {
-        return this.toDoubleMatrix( this.load( ee ).getRawCoexpressionMatrix() );
+        return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
@@ -81,6 +81,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         SampleCoexpressionAnalysis mat = sampleCoexpressionAnalysisDao.load( ee );
 
         if ( mat == null ) {
+            SampleCoexpressionAnalysisServiceImpl.log.info( "Sample Correlations not calculated for ee " + ee.getId() + " yet, running them now." );
             return this.compute( ee );
         }
         return mat;
@@ -99,7 +100,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // Create new analysis
         SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( ee, // Analyzed experiment
-                this.getMatrix( ee, false ), // RawFull
+                this.getMatrix( ee, false ), // Full
                 this.getMatrix( ee, true ) );// Regressed
 
         // Persist
