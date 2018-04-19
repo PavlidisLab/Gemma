@@ -19,8 +19,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.jet.math.Functions;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -37,15 +35,12 @@ import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -102,6 +97,38 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
     }
 
+    public static DoubleMatrix<String, String> makeDataMatrix( ObjectMatrix<String, String, Object> designMatrix,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+        /*
+         * Convert the data into a string-keyed matrix.
+         */
+        DoubleMatrix<String, String> sNamedMatrix = new DenseDoubleMatrix<>( namedMatrix.asArray() );
+        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
+            sNamedMatrix.addRowName( namedMatrix.getRowName( i ).getId().toString() );
+        }
+        sNamedMatrix.setColumnNames( designMatrix.getRowNames() );
+        return sNamedMatrix;
+    }
+
+    public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
+        /*
+         * Indices of the biomaterials in the original matrix.
+         */
+        List<BioAssay> bioAssays = new ArrayList<>();
+        for ( BioMaterial bm : columnsToUse ) {
+            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
+        }
+
+        /*
+         * fix the upper level column name maps.
+         */
+        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
+        reorderedDim.setBioAssays( bioAssays );
+        reorderedDim.setName( "Slice" );
+
+        return reorderedDim;
+    }
+
     /**
      * Determine if any factor should be treated as the intercept term.
      */
@@ -123,72 +150,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
         }
         return interceptFactor;
-    }
-
-    /**
-     * @param matrix      on which to perform regression.
-     * @param config      containing configuration of factors to include. Any interactions or subset configuration is
-     *                    ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
-     *                    ignored)
-     * @param retainScale if true, the data retain the global mean (intercept)
-     * @return residuals from the regression.
-     */
-    @Override
-    public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config, boolean retainScale ) {
-
-        if ( config.getFactorsToInclude().isEmpty() ) {
-            LinearModelAnalyzer.log.warn( "No factors" );
-            return matrix;
-        }
-
-        /*
-         * Note that this method relies on similar code to doAnalysis, for the setup stages.
-         */
-
-        List<ExperimentalFactor> factors = config.getFactorsToInclude();
-
-        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
-
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
-                .getBaselineConditions( samplesUsed, factors );
-
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
-                .buildDesignMatrix( factors, samplesUsed, baselineConditions );
-
-        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
-
-        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
-        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-
-        DoubleMatrix<String, String> sNamedMatrix = this.makeDataMatrix( designMatrix, namedMatrix );
-
-        // perform weighted least squares regression on COUNT data
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
-        LeastSquaresFit fit;
-        if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-            LinearModelAnalyzer.log.info( "Calculating residuals of weighted least squares regression on COUNT data" );
-            DoubleMatrix1D librarySize = MatrixStats.colSums( sNamedMatrix ); // note: data is not log transformed
-            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix, librarySize );
-            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix, mv.getWeights() );
-        } else {
-            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
-        }
-
-        DoubleMatrix2D residuals = fit.getResiduals();
-
-        if ( retainScale ) {
-            DoubleMatrix1D intercept = fit.getCoefficients().viewRow( 0 );
-            for ( int i = 0; i < residuals.rows(); i++ ) {
-                residuals.viewRow( i ).assign( Functions.plus( intercept.get( i ) ) );
-            }
-        }
-
-        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
-        f.setRowNames( dmatrix.getMatrix().getRowNames() );
-        f.setColumnNames( dmatrix.getMatrix().getColNames() );
-        return new ExpressionDataDoubleMatrix( dmatrix, f );
-
     }
 
     @Override
@@ -370,7 +331,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 .orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude() );
 
         // slice.
-        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
+        ExpressionDataDoubleMatrix subsetMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
+                LinearModelAnalyzer.createBADMap( samplesInSubset ) );
 
         Collection<ExperimentalFactor> subsetFactors = this
                 .fixFactorsForSubset( dmatrix, subset, config.getFactorsToInclude() );
@@ -437,7 +399,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
 
-        dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix ); // enforce ordering
+        dmatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesUsed,
+                LinearModelAnalyzer.createBADMap( samplesUsed ) ); // enforce ordering
 
         /*
          * Do the analysis, by subsets if requested
@@ -698,7 +661,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * PREPARATION FOR 'NATIVE' FITTING
          */
-        DoubleMatrix<String, String> sNamedMatrix = this.makeDataMatrix( designMatrix, namedMatrix );
+        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
         DesignMatrix properDesignMatrix = this
                 .makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
 
@@ -1222,19 +1185,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     }
 
-    private DoubleMatrix<String, String> makeDataMatrix( ObjectMatrix<String, String, Object> designMatrix,
-            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
-        /*
-         * Convert the data into a string-keyed matrix.
-         */
-        DoubleMatrix<String, String> sNamedMatrix = new DenseDoubleMatrix<>( namedMatrix.asArray() );
-        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
-            sNamedMatrix.addRowName( namedMatrix.getRowName( i ).getId().toString() );
-        }
-        sNamedMatrix.setColumnNames( designMatrix.getRowNames() );
-        return sNamedMatrix;
-    }
-
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
             List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
         /*
@@ -1357,7 +1307,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             samplesInSubset = ExpressionDataMatrixColumnSort
                     .orderByExperimentalDesign( samplesInSubset, config.getFactorsToInclude() );
-            ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
+            ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( dmatrix, samplesInSubset,
+                    LinearModelAnalyzer.createBADMap( samplesInSubset ) );
             subMatrices.put( fv, subMatrix );
         }
 

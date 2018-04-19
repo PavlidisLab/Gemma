@@ -14,23 +14,32 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MatrixStats;
-import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzer;
+import ubic.basecode.math.linearmodels.DesignMatrix;
+import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -38,10 +47,13 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,10 +67,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final Logger log = LoggerFactory.getLogger( SampleCoexpressionAnalysisServiceImpl.class );
     private static final ByteArrayConverter bac = new ByteArrayConverter();
     private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";
-    private static final String MSG_ERR_NO_DESIGN = "No experimental factors found! Can not regress major factors.";
+    private static final String MSG_ERR_NO_DESIGN = "Can not run factor regression! No experimental factors found.";
+    private static final String MSG_ERR_NO_FACTORS = "Can not run factor regression! No factors to include in the regressed matrix.";
+    private static final String MSG_ERR_NO_BAS_IN_BAD = "No bioassays in the bioAssayDimension id:%d";
     private static final String MSG_ERR_REFORMAT = "Could not reformat the sample correlation matrix!";
     private static final String MSG_ERR_BIOASSAY_MISMATCH = "Number of bioassays doesn't match length of the best bioAssayDimension. BAs in dimension: %d, rows in cormat: %d";
-    private static final String MSG_ERR_NO_BAS_IN_BAD = "No bioassays in the bioAssayDimension id:%d";
+
     private static final String MSG_INFO_RUNNING_SCM = "Sample Correlations not calculated for ee %d yet, running them now.";
     private static final String MSG_INFO_COMPUTING_SCM = "Computing sample coexpression matrix for ee %d, regressing: %s";
     private static final String MSG_INFO_REGRESSING = "Regressing out covariates";
@@ -72,9 +86,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
     @Autowired
-    private DiffExAnalyzer lma;
-    @Autowired
     private SVDServiceHelper svdService;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
 
     @Override
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
@@ -205,13 +219,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
         }
         if ( useRegression ) {
-            mat = this.loadFilteredDataMatrix( ee, vectors, false );
             if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
                 SampleCoexpressionAnalysisServiceImpl.log
                         .error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             } else {
-                mat = this.regressMajorFactors( ee, mat );
+                mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false ) );
             }
         } else {
             mat = this.loadFilteredDataMatrix( ee, vectors, true );
@@ -255,8 +268,57 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
             DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
             config.setFactorsToInclude( importantFactors );
-            mat = lma.regressionResiduals( mat, config, true );
+            mat = this.regressionResiduals( mat, config );
         }
         return mat;
+    }
+
+    /**
+     * @param matrix on which to perform regression.
+     * @param config containing configuration of factors to include. Any interactions or subset configuration is
+     *               ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
+     *               ignored)
+     * @return residuals from the regression.
+     */
+    private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        if ( config.getFactorsToInclude().isEmpty() ) {
+            SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_FACTORS );
+            return null;
+        }
+
+        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
+                .getBaselineConditions( samplesUsed, factors );
+        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
+                .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
+        BioAssayDimension bad = LinearModelAnalyzer.createBADMap( samplesUsed );
+        bad = bioAssayDimensionService.create( bad );
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
+        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
+
+        // perform weighted least squares regression on COUNT data
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        LeastSquaresFit fit;
+        if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+            SampleCoexpressionAnalysisServiceImpl.log
+                    .info( "Calculating residuals of weighted least squares regression on COUNT data" );
+            DoubleMatrix1D librarySize = MatrixStats.colSums( sNamedMatrix ); // note: data is not log transformed
+            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix, librarySize );
+            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix, mv.getWeights() );
+        } else {
+            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
+        }
+
+        DoubleMatrix2D residuals = fit.getResiduals();
+
+        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
+        f.setRowNames( dmatrix.getMatrix().getRowNames() );
+        f.setColumnNames( dmatrix.getMatrix().getColNames() );
+        return new ExpressionDataDoubleMatrix( dmatrix, f );
     }
 }

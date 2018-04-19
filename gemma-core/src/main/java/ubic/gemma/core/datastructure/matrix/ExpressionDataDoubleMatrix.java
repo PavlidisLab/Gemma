@@ -234,40 +234,27 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      *
      * @param columnsToUse columns
      * @param sourceMatrix matrix
+     * @param reorderedDim the reordered bioAssayDimension.
      */
-    public ExpressionDataDoubleMatrix( List<BioMaterial> columnsToUse, ExpressionDataDoubleMatrix sourceMatrix ) {
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse,
+            BioAssayDimension reorderedDim ) {
         this.init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
 
         this.matrix = new DenseDoubleMatrix<>( sourceMatrix.rows(), columnsToUse.size() );
         this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
+        this.matrix.setColumnNames( columnsToUse );
 
         this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
 
-        /*
-         * Indices of the biomaterials in the original matrix.
-         */
-        List<Integer> originalBioMaterialIndices = new ArrayList<>();
+        this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
 
-        List<BioAssay> bioAssays = new ArrayList<>();
+        List<Integer> originalBioMaterialIndices = new ArrayList<>();
         for ( BioMaterial bm : columnsToUse ) {
             originalBioMaterialIndices.add( sourceMatrix.getColumnIndex( bm ) );
-            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
         }
 
-        this.matrix.setColumnNames( columnsToUse );
-
-        /*
-         * fix the upper level column name maps.
-         */
-        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
-        reorderedDim.setBioAssays( bioAssays );
-
         this.bioAssayDimensions.clear();
-
-        reorderedDim.setName( "Slice" );
-
-        this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
 
         int i = 0;
         for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
@@ -277,19 +264,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             Double[] sourceRow = sourceMatrix.getRow( designElement );
 
             assert sourceRow != null : "Source matrix does not have row for " + designElement;
+            bioAssayDimensions.put( designElement, reorderedDim );
 
             for ( int j = 0; j < originalBioMaterialIndices.size(); j++ ) {
                 Double val = sourceRow[originalBioMaterialIndices.get( j )];
                 this.set( i, j, val );
             }
             i++;
-
-            this.bioAssayDimensions.put( designElement, reorderedDim );
-
         }
 
         super.setUpColumnElements();
-
     }
 
     @Override
