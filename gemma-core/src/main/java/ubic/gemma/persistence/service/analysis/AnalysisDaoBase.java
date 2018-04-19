@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T> implements AnalysisDao<T> {
 
-    private Class<T> analysisClass;
+    private final Class<T> analysisClass;
 
     protected AnalysisDaoBase( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -74,7 +74,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T>
     public Collection<T> findByTaxon( final Taxon taxon ) {
         //language=HQL
         final String queryString = "select distinct an from " + this.analysisClass.getSimpleName()
-                + " an inner join an.experimentAnalyzed ee " + "inner join ee.bioAssays ba "
+                + " an inner join an.experimentAnalyzed ee inner join ee.bioAssays ba "
                 + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );

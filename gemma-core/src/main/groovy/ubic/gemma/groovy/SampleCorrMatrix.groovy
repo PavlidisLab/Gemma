@@ -4,7 +4,7 @@ import ubic.gemma.groovy.framework.GemmaCliBuilder
 import ubic.gemma.groovy.framework.SpringSupport
 
 //noinspection GroovyUnusedAssignment
-def cli = new GemmaCliBuilder("groovy Samplecorrmatrix [opts] <eeid>")
+GemmaCliBuilder cli = new GemmaCliBuilder("groovy Samplecorrmatrix [opts] <eeid>")
 sx = new SpringSupport()
 s = sx.getBean("sampleCoexpressionMatrixService")
 

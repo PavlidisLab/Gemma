@@ -27,8 +27,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 
 import java.util.*;
 
@@ -69,7 +70,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param bad          all we nee is the id, the name and the list of bioassays from this.S
      * @param vec          VO
      */
-    public DoubleVectorValueObject( BioAssaySet bioassaySet, DoubleVectorValueObject vec,
+    public DoubleVectorValueObject( ExpressionExperimentSubSet bioassaySet, DoubleVectorValueObject vec,
             BioAssayDimensionValueObject bad ) {
         super( -1L ); // because this is a 'slice', not a persistent one.
         this.sourceVectorId = vec.getId(); // so we can track this!
@@ -82,7 +83,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.setDesignElement( vec.getDesignElement() );
 
         if ( !bioassaySet.getId().equals( vec.getExpressionExperiment().getId() ) ) {
-            this.expressionExperiment = bioassaySet.createValueObject();
+            this.expressionExperiment = new ExpressionExperimentSubsetValueObject( bioassaySet );
         } else {
             this.expressionExperiment = vec.getExpressionExperiment();
         }

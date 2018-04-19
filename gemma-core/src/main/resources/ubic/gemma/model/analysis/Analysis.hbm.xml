@@ -83,11 +83,6 @@
                 <subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
                           discriminator-value="SampleCoexpressionAnalysis"
                           abstract="false">
-                    <many-to-one name="sampleCoexpressionMatrix"
-                                 class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-                                 cascade="all" lazy="false" fetch="select">
-                        <column name="SAMPLE_COEXPRESSION_MATRIX_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-                    </many-to-one>
                     <many-to-one name="rawCoexpressionMatrix"
                                  class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
                                  cascade="all" lazy="false" fetch="select">

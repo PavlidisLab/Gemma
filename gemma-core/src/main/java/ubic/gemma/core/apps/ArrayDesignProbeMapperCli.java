@@ -170,7 +170,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.addOption( probesToDoOption );
     }
 
-    TaxonService taxonService;
+    private TaxonService taxonService;
 
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
@@ -396,7 +396,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                 AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
 
-                if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign ) ) {
+                if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     continue;
                 }
 
@@ -541,7 +541,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         /*
          * Hackery to work around rn6 problems
          */
-        boolean isRat = false;
+        boolean isRat;
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
@@ -628,7 +628,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return;
         }
 
-        if ( !shouldRun( skipIfLastRunLaterThan, design ) ) {
+        if ( !shouldRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
             return;
         }
 
@@ -655,46 +655,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
-    private boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
-            AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
-            return false;
-        }
-
-        if ( this.hasOption( "force" ) ) return true;
-
-        if ( this.isSubsumedOrMerged( design ) ) {
-            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
-
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return false;
-        }
-
-        if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
-            if ( skipIfLastRunLaterThan != null ) {
-                AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            } else {
-                AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
-                errorObjects.add( design + " seems to be up to date or is not ready to run" );
-            }
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
      * well. We simply add an audit event, and update the report for the platform.
      * 
-     * @param design
-     * @param eventType
+     * @param design platform
      */
     private void updateMergedOrSubsumed( ArrayDesign design ) {
         /*

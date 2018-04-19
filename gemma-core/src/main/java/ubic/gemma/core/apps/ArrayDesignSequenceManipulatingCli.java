@@ -31,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.IOException;
@@ -45,7 +46,6 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
-    boolean allowSubsumedOrMerged = false;
     ArrayDesignReportService arrayDesignReportService;
     ArrayDesignService arrayDesignService;
     Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
@@ -81,7 +81,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @param design a platform
      * @return related platforms
      */
-    protected Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+    Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
         Collection<ArrayDesign> toUpdate = new HashSet<>();
         toUpdate.addAll( design.getMergees() );
         toUpdate.addAll( design.getSubsumedArrayDesigns() );
@@ -149,11 +149,44 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         return false;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design, Class<? extends ArrayDesignAnalysisEvent> cls ) {
+        if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
+            return false;
+        }
+
+        if ( this.hasOption( "force" ) ) return true;
+
+        if ( this.isSubsumedOrMerged( design ) ) {
+            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
+
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return false;
+        }
+
+        if ( !this.needToRun( skipIfLastRunLaterThan, design, cls) ) {
+            if ( skipIfLastRunLaterThan != null ) {
+                AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            } else {
+                AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
+                errorObjects.add( design + " seems to be up to date or is not ready to run" );
+            }
+            return false;
+        }
+        return true;
+    }
+
     /**
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
      * analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 

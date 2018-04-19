@@ -45,7 +45,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.util.*;
 
 import java.util.*;
@@ -62,12 +61,9 @@ public class ExpressionExperimentDaoImpl
     private static final int BATCH_SIZE = 1000;
     private static final int NON_ADMIN_QUERY_FILTER_COUNT = 2;
 
-    private BioAssayDao bioAssayDao;
-
     @Autowired
-    public ExpressionExperimentDaoImpl( SessionFactory sessionFactory, BioAssayDao bioAssayDao ) {
+    public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperiment.class, sessionFactory );
-        this.bioAssayDao = bioAssayDao;
     }
 
     @Override

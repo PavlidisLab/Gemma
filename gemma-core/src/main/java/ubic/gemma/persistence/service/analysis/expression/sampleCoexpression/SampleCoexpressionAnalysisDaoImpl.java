@@ -17,22 +17,12 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author paul

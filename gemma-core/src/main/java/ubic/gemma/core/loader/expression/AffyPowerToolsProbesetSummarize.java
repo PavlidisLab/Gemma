@@ -339,7 +339,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * 
-     * @param ad
+     * @param ad platform
      * @return file or null if not found
      */
     private File findCdf( ArrayDesign ad ) {
@@ -525,8 +525,8 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param bmap
-     * @param sampleName
+     * @param bmap bio assay map
+     * @param sampleName sample name
      * @return BioAssay, or null if not found.
      */
     private BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
@@ -558,14 +558,13 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ee
-     * @param targetPlatform
+     * @param ee experiment
+     * @param targetPlatform target platform
      * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
      *        for the data set, which is actually a situation we don't currently support.
-     * @param files
-     * @param accessionsOfInterest
-     * @param threePrime
-     * @return
+     * @param files files
+     * @param accessionsOfInterest accessions of interest
+     * @return raw expression data vectors
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
@@ -573,7 +572,7 @@ public class AffyPowerToolsProbesetSummarize {
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
         String outputPath = this.getOutputFilePath( ee );
-        String cmd = null;
+        String cmd;
 
         // look for a CDF first.
         String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();

@@ -21,10 +21,10 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
  */
 public class BatchEffectDetails {
 
+    private final boolean hasBatchInformation;
+    private final boolean dataWasBatchCorrected;
     private Integer component;
     private double componentVarianceProportion;
-    private boolean hasBatchInformation;
-    private boolean dataWasBatchCorrected;
     private double pvalue;
 
     public BatchEffectDetails( boolean hasBatchInformation, boolean dataWasBatchCorrected ) {

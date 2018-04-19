@@ -280,7 +280,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Collection<ArrayDesign> toDo = new ArrayList<>();
         int numChecked = 0;
 
-        Taxon taxon = null;
+        Taxon taxon;
         if ( this.taxonName != null ) {
             TaxonService taxonService = this.getBean( TaxonService.class );
             taxon = taxonService.findByCommonName( taxonName );
@@ -358,7 +358,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 this.processOneAD( ad );
             } catch ( Exception e ) {
                 errorObjects.add( ad + " " + e.getMessage() );
-                continue;
             }
         }
 

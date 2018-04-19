@@ -211,6 +211,7 @@ public class DataUpdater {
      * @param thawedEe thawed ee
      * @param celchip celchip
      */
+    @SuppressWarnings("unused") // Not yet implemented
     public void reprocessAffyDataFromCel( ExpressionExperiment thawedEe, String celchip ) {
         throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
         /*
@@ -922,8 +923,8 @@ public class DataUpdater {
      * Switches bioassays on the original platform to the target platform (if they are the same, nothing will be done)
      * 
      * @param ee presumed thawed
-     * @param originalPlatform
-     * @param targetPlatform
+     * @param originalPlatform original platform
+     * @param targetPlatform target platform
      * @return how many were switched
      */
     private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign originalPlatform, ArrayDesign targetPlatform ) {

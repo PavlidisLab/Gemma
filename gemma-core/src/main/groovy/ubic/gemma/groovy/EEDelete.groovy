@@ -3,9 +3,10 @@ package ubic.gemma.groovy
 import ubic.gemma.groovy.framework.GemmaCliBuilder
 import ubic.gemma.groovy.framework.SpringSupport
 
-def cli = new GemmaCliBuilder(usage: 'groovy ubic.gemma.groovy.EEDelete [opts] <eeid>')
+//noinspection GroovyAssignabilityCheck
+GemmaCliBuilder cli = new GemmaCliBuilder(usage: 'groovy ubic.gemma.groovy.EEDelete [opts] <eeid>')
 
-def opt = cli.parse(args)
+def opt = cli.parse(args) as Object
 if (!opt || opt.h) {
     cli.usage()
     return

@@ -24,7 +24,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -45,6 +44,4 @@ public interface PrincipalComponentAnalysisService extends BaseService<Principal
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );
-
-    Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee );
 }

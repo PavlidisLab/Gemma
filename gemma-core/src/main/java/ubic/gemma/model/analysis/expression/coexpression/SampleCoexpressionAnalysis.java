@@ -29,7 +29,6 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = 5006465967597402551L;
-    private SampleCoexpressionMatrix sampleCoexpressionMatrix;
 
     private SampleCoexpressionMatrix rawCoexpressionMatrix;
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
@@ -42,16 +41,6 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
         super( experimentAnalyzed );
         this.rawCoexpressionMatrix = rawCoexpressionMatrix;
         this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
-    }
-
-    @Deprecated
-    public SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
-        return this.sampleCoexpressionMatrix;
-    }
-
-    @Deprecated
-    public void setSampleCoexpressionMatrix( SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
-        this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
     }
 
     /**

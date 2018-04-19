@@ -40,13 +40,9 @@ import java.util.List;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
         implements ExpressionAnalysisResultSetDao {
 
-    private DifferentialExpressionResultDao resultDao;
-
     @Autowired
-    public ExpressionAnalysisResultSetDaoImpl( DifferentialExpressionResultDao resultDao,
-            SessionFactory sessionFactory ) {
+    public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
-        this.resultDao = resultDao;
     }
 
     /**

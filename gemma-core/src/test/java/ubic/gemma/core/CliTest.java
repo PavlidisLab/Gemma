@@ -19,11 +19,10 @@
 
 package ubic.gemma.core;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
 import ubic.gemma.core.apps.GemmaCLI;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * 

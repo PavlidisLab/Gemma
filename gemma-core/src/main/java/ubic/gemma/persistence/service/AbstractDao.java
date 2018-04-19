@@ -27,7 +27,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -160,6 +159,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @param propertyValue the value to look for.
      * @return a list of entities whose properties like-matched the given value.
      */
+    @SuppressWarnings("SameParameterValue") // Better for general use
     protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
