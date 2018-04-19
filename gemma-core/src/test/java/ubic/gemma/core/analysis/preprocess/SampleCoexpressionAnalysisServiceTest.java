@@ -42,13 +42,13 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         sampleCoexpressionAnalysisService.compute( ee );
-        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadRawMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
 
                 this.check( matrix );
 
         // recompute ...
         sampleCoexpressionAnalysisService.compute( ee );
-        matrix = sampleCoexpressionAnalysisService.loadRawMatrix( ee );
+        matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
 
         this.check( matrix );
 

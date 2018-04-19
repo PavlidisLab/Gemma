@@ -1188,7 +1188,7 @@ public class ExpressionExperimentController {
             return 0;
         }
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                .loadRawMatrix( ee );
+                .loadFullMatrix( ee );
         if ( sampleCorrelationMatrix.rows() < 3 ) {
             return 0;
         }

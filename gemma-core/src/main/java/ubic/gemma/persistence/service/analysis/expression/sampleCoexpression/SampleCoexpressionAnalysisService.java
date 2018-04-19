@@ -25,16 +25,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface SampleCoexpressionAnalysisService {
 
     /**
-     * Loads the analysis containing the coexpression matrices for the given experiment and converts the raw coexpression matrix
-     * into a double matrix. If the analysis does not exist, computes it.
+     * Loads the analysis containing the coexpression matrices for the given experiment and converts the full (non-regressed) coexpression matrix
+     * into a double matrix. If the analysis or the matrix does not exist, computes it.
      *
      * @param ee the experiment to load the raw coexpression matrix for.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadRawMatrix( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee );
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment and converts the regressed coexpression matrix
-     * into a double matrix. If the analysis does not exist, computes it.
+     * into a double matrix. If the analysis or the matrix does not exist, computes it.
      *
      * @param ee the experiment to load the regressed coexpression matrix for.
      */

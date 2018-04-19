@@ -291,7 +291,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadRawMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
 
         List<String> stringNames = new ArrayList<>();
         for ( BioAssay ba : omatrix.getRowNames() ) {

@@ -54,6 +54,16 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     private static final Logger log = LoggerFactory.getLogger( SampleCoexpressionAnalysisServiceImpl.class );
     private static final ByteArrayConverter bac = new ByteArrayConverter();
+    private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";
+    private static final String MSG_ERR_NO_DESIGN = "No experimental factors found! Can not regress major factors.";
+    private static final String MSG_ERR_REFORMAT = "Could not reformat the sample correlation matrix!";
+    private static final String MSG_ERR_BIOASSAY_MISMATCH = "Number of bioassays doesn't match length of the best bioAssayDimension. BAs in dimension: %d, rows in cormat: %d";
+    private static final String MSG_ERR_NO_BAS_IN_BAD = "No bioassays in the bioAssayDimension id:%d";
+    private static final String MSG_INFO_RUNNING_SCM = "Sample Correlations not calculated for ee %d yet, running them now.";
+    private static final String MSG_INFO_COMPUTING_SCM = "Computing sample coexpression matrix for ee %d, regressing: %s";
+    private static final String MSG_INFO_REGRESSING = "Regressing out covariates";
+    private static final String MSG_INFO_BATCH_REMOVED = "Removed 'batch' from the list of significant factors.";
+    private static final double IMPORTANCE_THRESHOLD = 0.01;
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
@@ -67,7 +77,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private SVDServiceHelper svdService;
 
     @Override
-    public DoubleMatrix<BioAssay, BioAssay> loadRawMatrix( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
@@ -80,8 +90,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
         SampleCoexpressionAnalysis mat = sampleCoexpressionAnalysisDao.load( ee );
 
-        if ( mat == null ) {
-            SampleCoexpressionAnalysisServiceImpl.log.info( "Sample Correlations not calculated for ee " + ee.getId() + " yet, running them now." );
+        if ( mat == null || mat.getFullCoexpressionMatrix() == null || mat.getRegressedCoexpressionMatrix() == null ) {
+            SampleCoexpressionAnalysisServiceImpl.log
+                    .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, ee.getId() ) );
             return this.compute( ee );
         }
         return mat;
@@ -121,7 +132,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         if ( numBa == 0 ) {
             throw new IllegalArgumentException(
-                    "No bioassays in the bioAssayDimension with id=" + matrix.getBioAssayDimension().getId() );
+                    String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_BAS_IN_BAD,
+                            matrix.getBioAssayDimension().getId() ) );
         }
 
         try {
@@ -139,10 +151,11 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress ) {
-        SampleCoexpressionAnalysisServiceImpl.log
-                .info( "Computing sample coexpression matrices for ee " + ee.getId() + " regressing: " + regress );
+        SampleCoexpressionAnalysisServiceImpl.log.info( String
+                .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
-        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, this.loadVectors( ee ) );
+        ExpressionDataDoubleMatrix mat = this
+                .loadDataMatrix( ee, regress, processedExpressionDataVectorService.getProcessedDataVectors( ee ) );
         if ( mat == null ) {
             return null;
         }
@@ -152,8 +165,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         BioAssayDimension bestBioAssayDimension = mat.getBestBioAssayDimension();
         if ( cormat.rows() != bestBioAssayDimension.getBioAssays().size() ) {
             throw new IllegalStateException(
-                    "Number of bioassays doesn't match length of the best bioAssayDimension. BAs in dimension: "
-                            + bestBioAssayDimension.getBioAssays().size() + ", rows in cormat: " + cormat.rows() );
+                    String.format( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_BIOASSAY_MISMATCH,
+                            bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
         return new SampleCoexpressionMatrix( bestBioAssayDimension,
@@ -179,7 +192,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             cormat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( cormat );
             cormat = cormat.subsetRows( cormat.getColNames() ); // enforce same order on rows.
         } catch ( Exception e ) {
-            SampleCoexpressionAnalysisServiceImpl.log.error( "Could not reformat the sample correlation matrix! " );
+            SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_REFORMAT );
             e.printStackTrace();
         }
         return cormat;
@@ -188,11 +201,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
             Collection<ProcessedExpressionDataVector> vectors ) {
         ExpressionDataDoubleMatrix mat;
+        if ( vectors == null || vectors.isEmpty() ) {
+            SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
+        }
         if ( useRegression ) {
             mat = this.loadFilteredDataMatrix( ee, vectors, false );
             if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
                 SampleCoexpressionAnalysisServiceImpl.log
-                        .error( "No experimental factors found! Can not regress major factors." );
+                        .error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             } else {
                 mat = this.regressMajorFactors( ee, mat );
@@ -201,15 +217,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             mat = this.loadFilteredDataMatrix( ee, vectors, true );
         }
         return mat;
-    }
-
-    private Collection<ProcessedExpressionDataVector> loadVectors( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
-        if ( vectors.isEmpty() ) {
-            throw new IllegalArgumentException( "Must have processed vectors created first" );
-        }
-        return vectors;
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
@@ -230,9 +237,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @return regressed double matrix
      */
     private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
-        double importanceThreshold = 0.01;
         Set<ExperimentalFactor> importantFactors = svdService
-                .getImportantFactors( ee, ee.getExperimentalDesign().getExperimentalFactors(), importanceThreshold );
+                .getImportantFactors( ee, ee.getExperimentalDesign().getExperimentalFactors(),
+                        SampleCoexpressionAnalysisServiceImpl.IMPORTANCE_THRESHOLD );
         /* Remove 'batch' from important factors */
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor factor : importantFactors ) {
@@ -241,10 +248,11 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
         if ( batch != null ) {
             importantFactors.remove( batch );
-            SampleCoexpressionAnalysisServiceImpl.log.info( "Removed 'batch' from the list of significant factors." );
+            SampleCoexpressionAnalysisServiceImpl.log
+                    .info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_BATCH_REMOVED );
         }
         if ( !importantFactors.isEmpty() ) {
-            SampleCoexpressionAnalysisServiceImpl.log.info( "Regressing out covariates" );
+            SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
             DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
             config.setFactorsToInclude( importantFactors );
             mat = lma.regressionResiduals( mat, config, true );
