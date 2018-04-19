@@ -438,8 +438,10 @@ public class DataUpdater {
 
         ee = experimentService.replaceRawVectors( ee, vectors );
 
-        // audit if we switched platforms.
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
+
+            this.switchBioAssaysToTargetPlatform( ee, targetPlatform, ee.getBioAssays() );
+
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
                     "Switched in course of updating vectors using data input (from " + originalArrayDesign
@@ -452,11 +454,6 @@ public class DataUpdater {
         ee = this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
-
-        // debug code.
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assert ba.getArrayDesignUsed().equals( targetPlatform );
-        }
 
         return ee;
     }
