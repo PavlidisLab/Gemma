@@ -117,14 +117,11 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         return !this.findByProperty( "experimentAnalyzed", ee ).isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
-    }
-
-    private Collection<SampleCoexpressionAnalysis> findAnalysesByExperiment( ExpressionExperiment ee ) {
-        return this.findByProperty( "experimentAnalyzed", ee );
+        Collection<SampleCoexpressionAnalysis> as = this.findByProperty( "experimentAnalyzed", ee );
+        if ( as != null && !as.isEmpty() )
+            this.remove( as );
     }
 
     private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
