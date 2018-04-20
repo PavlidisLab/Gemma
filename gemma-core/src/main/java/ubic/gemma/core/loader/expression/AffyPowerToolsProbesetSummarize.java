@@ -14,6 +14,23 @@
  */
 package ubic.gemma.core.loader.expression;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -22,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -30,7 +48,11 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.util.TimeUtil;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -38,12 +60,6 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
-
-import java.io.*;
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author paul
@@ -57,7 +73,7 @@ public class AffyPowerToolsProbesetSummarize {
     protected static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
 
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
-    private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
+    static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
@@ -67,18 +83,6 @@ public class AffyPowerToolsProbesetSummarize {
 
     // rma-sketch uses much less memory, supposedly makes little difference in final results.
     private static final String METHOD = "rma";
-    private QuantitationType quantitationType;
-
-    AffyPowerToolsProbesetSummarize() {
-        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    }
-
-    /**
-     * @param qt qt
-     */
-    AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
-        this.quantitationType = qt;
-    }
 
     /**
      * @param bmap bMap
@@ -115,9 +119,9 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @return Map of configuration strings from a configuration file NOT GOOD
+     * @return Map of configuration strings from a configuration file
      */
-    static Map<String, String> loadNames( String fileName ) {
+    static Map<String, String> loadMapFromConfig( String fileName ) {
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( fileName );
             Map<String, String> result = new HashMap<>();
@@ -153,32 +157,17 @@ public class AffyPowerToolsProbesetSummarize {
         return result;
     }
 
+    private QuantitationType quantitationType;
+
+    AffyPowerToolsProbesetSummarize() {
+        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+    }
+
     /**
-     * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
+     * @param qt qt
      */
-    protected Map<String, Map<String, String>> loadMpsNames() {
-        try {
-            PropertiesConfiguration pc = ConfigUtils
-                    .loadClasspathConfig( AffyPowerToolsProbesetSummarize.AFFY_MPS_PROPERTIES_FILE_NAME );
-            Map<String, Map<String, String>> result = new HashMap<>();
-
-            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
-                String k = it.next();
-                String[] k2 = k.split( "\\." );
-                String platform = k2[0];
-                String type = k2[1];
-
-                if ( !result.containsKey( platform ) ) {
-                    result.put( platform, new HashMap<String, String>() );
-                }
-                result.get( platform ).put( type, pc.getString( k ) );
-
-            }
-            return result;
-
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+    AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
+        this.quantitationType = qt;
     }
 
     /**
@@ -332,6 +321,34 @@ public class AffyPowerToolsProbesetSummarize {
         }
     }
 
+    /**
+     * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
+     */
+    protected Map<String, Map<String, String>> loadMpsNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils
+                    .loadClasspathConfig( AffyPowerToolsProbesetSummarize.AFFY_MPS_PROPERTIES_FILE_NAME );
+            Map<String, Map<String, String>> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                String[] k2 = k.split( "\\." );
+                String platform = k2[0];
+                String type = k2[1];
+
+                if ( !result.containsKey( platform ) ) {
+                    result.put( platform, new HashMap<String, String>() );
+                }
+                result.get( platform ).put( type, pc.getString( k ) );
+
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private void checkFileReadable( String f ) {
         if ( !new File( f ).canRead() ) {
             throw new IllegalArgumentException( f + " could not be read" );
@@ -392,7 +409,7 @@ public class AffyPowerToolsProbesetSummarize {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
 
         Map<String, String> cdfNames = AffyPowerToolsProbesetSummarize
-                .loadNames( AffyPowerToolsProbesetSummarize.AFFY_CDFS_PROPERTIES_FILE_NAME );
+                .loadMapFromConfig( AffyPowerToolsProbesetSummarize.AFFY_CDFS_PROPERTIES_FILE_NAME );
 
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );
@@ -406,7 +423,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
-     * 
+     *
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
@@ -499,13 +516,13 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For exon arrays and others that don't have CDFs. Like
-     * 
+     *
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
      * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
      * /bigscratch/GSE13344/*.CEL
      * </pre>
-     * 
+     *
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
