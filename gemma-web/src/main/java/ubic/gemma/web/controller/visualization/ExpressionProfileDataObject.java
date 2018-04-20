@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+
+import java.util.Collection;
 
 /**
  * A lightweight object to hold expression data for a single probe.

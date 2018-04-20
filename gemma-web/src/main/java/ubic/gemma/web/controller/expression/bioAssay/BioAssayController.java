@@ -25,10 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -69,9 +67,6 @@ public class BioAssayController {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
 
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
     public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
         ExpressionExperiment ee = eeService.load( eeId );
         if ( ee == null ) {
@@ -80,25 +75,14 @@ public class BioAssayController {
 
         ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
-
-        // this used to be in a separate method.
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
-
-            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay, false );
-
-            if ( outlierMap.containsKey( assay.getId() ) ) {
-                bioAssayValueObject.setPredictedOutlier( true );
-            }
-
-            result.add( bioAssayValueObject );
+            result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );
         }
 
         BioAssayController.log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
-
         return result;
     }
 
@@ -113,7 +97,8 @@ public class BioAssayController {
     }
 
     @RequestMapping(value = { "/showBioAssay.html", "/" })
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView show( HttpServletRequest request,
+            @SuppressWarnings("unused") /*required by spring*/ HttpServletResponse response ) {
 
         BioAssayController.log.debug( request.getParameter( "id" ) );
 
@@ -139,12 +124,13 @@ public class BioAssayController {
     }
 
     @RequestMapping("/showAllBioAssays.html")
-    public ModelAndView showAllBioAssays( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showAllBioAssays( HttpServletRequest request,
+            @SuppressWarnings("unused") /*required by spring*/ HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
         Collection<BioAssay> bioAssays = new ArrayList<>();
         if ( StringUtils.isBlank( sId ) ) {
             /*
-             * Probably not desirable ... there are >70,000 of them
+             * Probably not desirable ... there are >380,000 of them
              */
             bioAssays = bioAssayService.loadAll();
         } else {

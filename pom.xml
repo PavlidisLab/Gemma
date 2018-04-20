@@ -326,7 +326,6 @@
                         <productionBranch>master</productionBranch>
                         <developmentBranch>development</developmentBranch>
                         <releaseBranchPrefix>release-</releaseBranchPrefix>
-                        <versionTagPrefix></versionTagPrefix>
                         <origin>origin</origin>
                         <!-- Unused for releasing -->
                         <featureBranchPrefix>feature-</featureBranchPrefix>

@@ -19,23 +19,19 @@
 
 package ubic.gemma.web.remote;
 
+import org.apache.commons.lang3.StringUtils;
+import org.directwebremoting.convert.BeanConverter;
+import org.directwebremoting.dwrp.ParseUtil;
+import org.directwebremoting.dwrp.ProtocolConstants;
+import org.directwebremoting.extend.*;
+import org.directwebremoting.util.LocalUtil;
+import org.directwebremoting.util.Messages;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.commons.lang3.StringUtils;
-import org.directwebremoting.convert.BeanConverter;
-import org.directwebremoting.dwrp.ParseUtil;
-import org.directwebremoting.dwrp.ProtocolConstants;
-import org.directwebremoting.extend.InboundContext;
-import org.directwebremoting.extend.InboundVariable;
-import org.directwebremoting.extend.MarshallException;
-import org.directwebremoting.extend.Property;
-import org.directwebremoting.extend.TypeHintContext;
-import org.directwebremoting.util.LocalUtil;
-import org.directwebremoting.util.Messages;
 
 /**
  * @author kelsey

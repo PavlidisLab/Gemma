@@ -38,9 +38,6 @@ public interface DiffExAnalyzer {
     ExperimentalFactor determineInterceptFactor( Collection<ExperimentalFactor> factors,
             QuantitationType quantitationType );
 
-    ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config, boolean retainScale );
-
     /**
      * @param expressionExperiment the experiment
      * @param config               config

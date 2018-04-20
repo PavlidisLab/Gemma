@@ -6,7 +6,6 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -217,11 +216,6 @@ public abstract class FilterArg extends MalformableArg {
             } catch ( IndexOutOfBoundsException e ) {
                 throw new GemmaApiException(
                         new WellComposedErrorBody( Response.Status.BAD_REQUEST, ERROR_MSG_ARGS_MISALIGNED ) );
-            } catch ( ParseException e ) {
-                WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                        ERROR_MSG_MALFORMED_REQUEST );
-                WellComposedErrorBody.addExceptionFields( error, e );
-                throw new GemmaApiException( error );
             }
         }
 

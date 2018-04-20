@@ -106,9 +106,9 @@ public class CommonQueries {
             String subsetQuery =
                     "select distinct ees.id,ad.id from ExpressionExperimentSubSet as ees join ees.sourceExperiment ee "
                             + " join ee.bioAssays b join b.arrayDesignUsed ad where ees.id in (:ees)";
-            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() ); // note:
-            // CollectionUtils.removeAll
-            // has a bug.
+            //noinspection unchecked
+            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() );
+            // note: CollectionUtils.removeAll has a bug.
 
             qr = session.createQuery( subsetQuery ).setParameterList( "ees", possibleEEsubsets ).list();
             ee2ads = CommonQueries.addAllAds( ee2ads, qr );
@@ -163,6 +163,7 @@ public class CommonQueries {
     public static Collection<ArrayDesignValueObject> getArrayDesignsUsedVOs( Long eeId, Session session ) {
         List<?> list = CommonQueries.createGetADsUsedQueryObject( eeId, session ).list();
         Collection<ArrayDesignValueObject> vos = new LinkedList<>();
+        //noinspection unchecked
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
             vos.add( new ArrayDesignValueObject( ad ) );
         }
@@ -206,6 +207,7 @@ public class CommonQueries {
         queryObject.setParameter( "gene", gene.getId(), LongType.INSTANCE );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
+        //noinspection unchecked
         return queryObject.list();
     }
 

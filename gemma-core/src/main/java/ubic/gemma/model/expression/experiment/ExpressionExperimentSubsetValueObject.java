@@ -6,7 +6,7 @@ public class ExpressionExperimentSubsetValueObject extends ExpressionExperimentV
 
     private final Long sourceExperiment;
 
-    ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees ) {
+    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees ) {
         super( ees.getId() );
         this.sourceExperiment = ees.getSourceExperiment().getId();
         this.bioAssayCount = ees.getBioAssays() != null ? ees.getBioAssays().size() : null;

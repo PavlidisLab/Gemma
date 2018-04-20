@@ -540,8 +540,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String[] tokensPrimary = primaryReferencePubmeds.split( ";" );
 
             for ( String primary : tokensPrimary ) {
-                evidence.getPhenotypeAssPubVO()
-                        .add( PhenotypeAssPubValueObject.createPrimaryPublication( primary.trim() ) );
+                //noinspection unchecked // There is no reason for this method to have the return Set type erased
+                Set<PhenotypeAssPubValueObject> set = evidence.getPhenotypeAssPubVO();
+                set.add( PhenotypeAssPubValueObject.createPrimaryPublication( primary.trim() ) );
             }
         }
 

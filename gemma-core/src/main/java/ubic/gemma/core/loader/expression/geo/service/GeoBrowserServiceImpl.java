@@ -284,6 +284,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         if ( f.exists() ) {
             try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
 
+                //noinspection unchecked
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
                 ois.close();
                 fis.close();

@@ -1,8 +1,8 @@
 package ubic.gemma.web.util;
 
-import java.util.Comparator;
-
 import ubic.gemma.model.genome.Gene;
+
+import java.util.Comparator;
 
 public class GeneSymbolComparator implements Comparator<Gene> {
 

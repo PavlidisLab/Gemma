@@ -8,7 +8,6 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,13 +51,8 @@ public class ArrayCompositeSequenceArg
     }
 
     public ArrayList<ObjectFilter[]> getPlatformFilter() {
-        ObjectFilter filter;
-        try {
-            filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(),
-                    ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS );
-        } catch ( ParseException e ) {
-            throw this.convertParseException( e );
-        }
+        ObjectFilter filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(),
+                ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS );
         return ObjectFilter.singleFilter( filter );
     }
 

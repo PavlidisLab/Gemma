@@ -813,9 +813,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * for affymetrix processing
      * 
-     * @param bioSequences
-     * @param sequenceBuffer
-     * @param csBuffer
+     * @param bioSequences bio sequences
+     * @param sequenceBuffer sequence buffer
+     * @param csBuffer cs buffer
      */
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
             Map<String, CompositeSequence> csBuffer ) {

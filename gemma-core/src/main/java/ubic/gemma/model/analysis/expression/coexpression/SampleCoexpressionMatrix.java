@@ -21,14 +21,25 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 
 /**
- * This is only a separate entity to avoid having the blob stored in the ANALYSIS table.
+ * Holds the data of the sample coexpression matrix
  */
-public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
+public class SampleCoexpressionMatrix implements java.io.Serializable {
 
-    private static final long serialVersionUID = 4340621792397336563L;
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 8168483585163161355L;
     private BioAssayDimension bioAssayDimension;
     private byte[] coexpressionMatrix;
     private Long id;
+
+    protected SampleCoexpressionMatrix() {
+    }
+
+    public SampleCoexpressionMatrix( BioAssayDimension bioAssayDimension, byte[] coexpressionMatrix ) {
+        this.bioAssayDimension = bioAssayDimension;
+        this.coexpressionMatrix = coexpressionMatrix;
+    }
 
     public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
@@ -80,27 +91,6 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         }
         final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
         return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-        public static SampleCoexpressionMatrix newInstance() {
-            return new SampleCoexpressionMatrixImpl();
-        }
-
-        /**
-         * @param bioAssayDimension  the BADimension to set on the created matrix
-         * @param coexpressionMatrix the coexp matrix to set on the created matrix
-         * @return Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
-        public static SampleCoexpressionMatrix newInstance( byte[] coexpressionMatrix,
-                BioAssayDimension bioAssayDimension ) {
-            final SampleCoexpressionMatrix entity = new SampleCoexpressionMatrixImpl();
-            entity.setCoexpressionMatrix( coexpressionMatrix );
-            entity.setBioAssayDimension( bioAssayDimension );
-            return entity;
-        }
     }
 
 }

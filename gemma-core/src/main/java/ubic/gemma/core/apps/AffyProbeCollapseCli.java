@@ -19,13 +19,13 @@
 
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Purely a testing tool, to turn Affy individual probes (by probeset) into collapsed sequences. This is what happens

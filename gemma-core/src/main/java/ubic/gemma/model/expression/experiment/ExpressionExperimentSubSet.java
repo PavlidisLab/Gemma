@@ -54,7 +54,6 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
         this.bioAssays = bioAssays;
     }
 
-    @Deprecated
     @Override
     public ExpressionExperimentValueObject createValueObject() {
         return new ExpressionExperimentSubsetValueObject( this );

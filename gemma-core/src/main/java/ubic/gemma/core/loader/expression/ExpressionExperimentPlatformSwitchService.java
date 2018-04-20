@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -39,6 +38,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -92,7 +92,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     private BioAssayService bioAssayService;
 
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     private ExpressionExperimentSubSetService subsetService;
@@ -110,7 +110,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         // remove stuff that will be in the way.
         processedExpressionDataVectorService.removeProcessedDataVectors( ee );
-        sampleCoexpressionMatrixService.delete( ee );
+        sampleCoexpressionAnalysisService.removeForExperiment( ee );
         for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( ee ) ) {
             subsetService.remove( subset );
         }

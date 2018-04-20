@@ -19,20 +19,19 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.model.genome.Gene;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their corresponding

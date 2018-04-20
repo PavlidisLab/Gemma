@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns="http://purl.obolibrary.org/obo/doid.owl#"
-   xml:base="http://purl.obolibrary.org/obo/doid.owl"
-   xmlns:obo="http://purl.obolibrary.org/obo/"
-   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-   xmlns:doid="http://purl.obolibrary.org/obo/doid#"
-   xmlns:owl="http://www.w3.org/2002/07/owl#"
-   xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#">
+<rdf:RDF
+        xml:base="http://purl.obolibrary.org/obo/doid.owl"
+        xmlns:obo="http://purl.obolibrary.org/obo/"
+        xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+        xmlns:owl="http://www.w3.org/2002/07/owl#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#">
    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/doid.owl">
       <oboInOwl:hasOBOFormatVersion rdf:datatype="http://www.w3.org/2001/XMLSchema#string">1.2</oboInOwl:hasOBOFormatVersion>
       <oboInOwl:date rdf:datatype="http://www.w3.org/2001/XMLSchema#string">17:01:2013 12:56</oboInOwl:date>

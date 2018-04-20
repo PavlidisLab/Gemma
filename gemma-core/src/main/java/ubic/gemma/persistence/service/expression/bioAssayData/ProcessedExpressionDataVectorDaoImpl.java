@@ -1221,7 +1221,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param vectors
+     * @param vectors vectors
      */
     private void renormalize( Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
 

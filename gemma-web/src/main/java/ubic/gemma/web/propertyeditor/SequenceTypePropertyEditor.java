@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
-
 import ubic.gemma.model.genome.biosequence.SequenceType;
+
+import java.beans.PropertyEditorSupport;
 
 /**
  * @author pavlidis

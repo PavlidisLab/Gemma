@@ -18,14 +18,13 @@
  */
 package ubic.gemma.web.services;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import junit.framework.TestCase;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class GemmaEndpointTest extends TestCase {

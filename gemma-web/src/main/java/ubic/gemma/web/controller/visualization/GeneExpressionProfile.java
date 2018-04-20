@@ -18,13 +18,12 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.util.Collection;
-
 import org.apache.commons.lang.StringUtils;
-
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+
+import java.util.Collection;
 
 /**
  * Expression data for one probe; designed for conveying small amounts of data to clients. NOTE the data are

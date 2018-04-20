@@ -18,13 +18,12 @@
  */
 package ubic.gemma.web.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.beans.PropertyEditorSupport;
 
 /**
  * Used to convert ArrayDesigns from and into strings for display in forms.

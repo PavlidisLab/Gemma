@@ -58,7 +58,6 @@ test-build
 .clover
 .mymetadata
 build
-generated-sources
 andromda*.exc
 *.jar
 *.log
@@ -107,39 +106,14 @@ gemma-core/src/test/resources/data/loader/expression/geo/meta-analysis/.RData
 gemma-core/src/test/resources/data/search/io/file/index
 gemma-core/*.log
 gemma-core/andromda*.exc
-gemma-core/cobertura.ser
 gemma-core/spring*.exc
 gemma-core/hibernate*.exc
 gemma-core/src/main/uml/*.uml
 gemma-core/src/main/uml/*.bak
 
-# disablyng everything IDEA related - consider changing if more people start using IDEA.
+# disabling everything IDEA related - consider changing if more people start using IDEA.
 .idea
 *.iml
-
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
-# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
-
-# User-specific stuff:
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/dictionaries
-
-# Sensitive or high-churn files:
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.xml
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-
-# Gradle:
-.idea/**/gradle.xml
-.idea/**/libraries
-
-# Mongo Explorer plugin:
-.idea/**/mongoSettings.xml
 
 ## File-based project format:
 *.iws

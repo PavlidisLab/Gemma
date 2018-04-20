@@ -37,11 +37,11 @@
 
 package ubic.gemma.web.image.aba;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @author tvrossum

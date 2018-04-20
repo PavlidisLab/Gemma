@@ -53,7 +53,6 @@ class GemmaCliBuilder extends CliBuilder {
     }
 
     @SuppressWarnings("GroovyMissingReturnStatement")
-    @Override
     OptionAccessor parse(args) {
         def opts = super.parse(args)
 

@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;

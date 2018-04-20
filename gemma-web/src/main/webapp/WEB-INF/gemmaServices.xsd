@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="qualified"
         targetNamespace="http://gemma.msl.ubc.ca/ws"
-        xmlns:tns="http://gemma.msl.ubc.ca/ws">
+>
 
     
     <element name="experimentNameRequest">

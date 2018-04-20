@@ -19,19 +19,18 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Given a Taxon (eg. "1" for Homo Sapien), will return all the Expression Experiment IDs that match the Taxon.
