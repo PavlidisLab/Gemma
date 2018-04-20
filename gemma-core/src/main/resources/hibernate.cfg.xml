@@ -7,5 +7,6 @@
     <session-factory>
         <property name="connection.url"/>
         <property name="connection.driver_class"/>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
     </session-factory>
 </hibernate-configuration>

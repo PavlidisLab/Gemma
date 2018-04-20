@@ -18,10 +18,10 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+
 import java.util.Collection;
 import java.util.HashSet;
-
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 
 /**
  * Used to carry information about the experimental design analysis settings to clients.

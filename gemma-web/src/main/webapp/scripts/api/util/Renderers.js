@@ -50,27 +50,28 @@ Gemma.Renderers = {
     },
 
     qualityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        if (!record.get('needsAttention')) {
+        if (record.get('geeq')) {
             var geeq = record.get('geeq');
-            if(geeq !== undefined) return getGeeqIconColored(geeq.publicQualityScore);
+            return getGeeqIconColored(geeq.publicQualityScore);
         }
     },
 
     suitabilityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        if (!record.get('needsAttention')) {
+        if (record.get('geeq')) {
             var geeq = record.get('geeq');
-            if(geeq !== undefined) return getGeeqIconColored(geeq.publicSuitabilityScore);
+            return getGeeqIconColored(geeq.publicSuitabilityScore);
         }
     },
 
     curationNoteStubRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         if (record.get('needsAttention')) {
-            var note = record.get('curationNote') ? record.get('curationNote') : "";
+            var orig_note = record.get('curationNote') ? record.get('curationNote') : "";
+            var note = orig_note;
             if (note.length > 50) {
                 note = note.substring(0, 49) + "...";
             }
-            return note;
+            return "<i ext:qtip='" + orig_note + "'>" + note + "</i>";
         }
-    }
+    },
 
 };

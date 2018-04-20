@@ -35,7 +35,6 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -57,9 +56,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -110,8 +109,6 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private QuantitationTypeService quantitationTypeDao;
     @Autowired
-    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
-    @Autowired
     private SearchService searchService;
     @Autowired
     private SecurityService securityService;
@@ -119,6 +116,8 @@ public class ExpressionExperimentServiceImpl
     private SVDService svdService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -185,7 +184,9 @@ public class ExpressionExperimentServiceImpl
 
         BioAssayDimension bad = BADs.iterator().next();
 
-        bad = this.bioAssayDimensionService.findOrCreate( bad );
+        if ( bad.getId() == null ) {
+            bad = this.bioAssayDimensionService.findOrCreate( bad );
+        }
         assert bad.getBioAssays().size() > 0;
 
         QuantitationType newQt = qts.iterator().next();
@@ -827,9 +828,9 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *           checking
-     *           the curation details of the object directly, as this method also checks all the array designs the given
-     *           experiment belongs to.
+     *        checking
+     *        the curation details of the object directly, as this method also checks all the array designs the given
+     *        experiment belongs to.
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
@@ -868,7 +869,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
+     *        be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override
@@ -931,7 +932,7 @@ public class ExpressionExperimentServiceImpl
         this.differentialExpressionAnalysisService.removeForExperiment( ee );
 
         // Remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
 
         // Remove PCA
         this.principalComponentAnalysisService.removeForExperiment( ee );
@@ -978,7 +979,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
@@ -1006,7 +1007,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 

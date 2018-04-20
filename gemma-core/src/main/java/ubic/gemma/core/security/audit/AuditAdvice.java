@@ -87,6 +87,7 @@ public class AuditAdvice {
      * @param pjp      pjp
      * @param retValue return value
      */
+    @SuppressWarnings("unused") // entry point
     public void doAuditAdvice( JoinPoint pjp, Object retValue ) {
 
         final Signature signature = pjp.getSignature();

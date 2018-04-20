@@ -7,16 +7,18 @@ import ubic.gemma.core.analysis.sequence.BlatResult2Psl
 import ubic.gemma.groovy.framework.GemmaCliBuilder
 import ubic.gemma.groovy.framework.SpringSupport
 
-def cli = new GemmaCliBuilder(usage: "groovy ProbeLocations [opts] <platform short name>")
+//noinspection GroovyAssignabilityCheck
+GemmaCliBuilder cli = new GemmaCliBuilder(usage: "groovy ProbeLocations [opts] <platform short name>")
 
-def opt = cli.parse(args)
+def opt = cli.parse(args) as Object
 
-def sx = new SpringSupport()
+SpringSupport sx = new SpringSupport()
 
 def ars = sx.getBean("arrayDesignService")
 def bas = sx.getBean("blatResultService")
 def bss = sx.getBean("bioSequenceService")
 
+//noinspection GroovyAssignabilityCheck
 def array = ars.findByShortName(opt.arguments()[0])
 
 // println("# ${array}")

@@ -23,10 +23,10 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.io.File;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+
+import java.io.File;
 
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson on Date: 2006/01/05 10:09:38

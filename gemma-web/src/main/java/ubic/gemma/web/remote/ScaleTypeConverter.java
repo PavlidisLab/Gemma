@@ -22,7 +22,6 @@ import org.directwebremoting.convert.StringConverter;
 import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
 import org.directwebremoting.extend.MarshallException;
-
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 /**

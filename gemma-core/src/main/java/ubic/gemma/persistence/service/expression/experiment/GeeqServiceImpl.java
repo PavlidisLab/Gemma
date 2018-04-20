@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -41,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -72,25 +72,26 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private static final double N_10 = -GeeqServiceImpl.P_10;
     public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
     public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
+    private static final String DE_EXCLUDE = "DE_Exclude";
     private final ExpressionExperimentService expressionExperimentService;
     private final ArrayDesignService arrayDesignService;
     private final ExpressionDataMatrixService expressionDataMatrixService;
     private final OutlierDetectionService outlierDetectionService;
     private final AuditTrailService auditTrailService;
-    private final SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
-            SampleCoexpressionMatrixService sampleCoexpressionMatrixService ) {
+            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
-        this.sampleCoexpressionMatrixService = sampleCoexpressionMatrixService;
+        this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
     }
 
     @Override
@@ -228,13 +229,18 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Log.info( this.getClass(),
                     GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
                             + "." );
-            gq.addOtherIssues( e.getMessage() );
             e.printStackTrace();
+            gq.addOtherIssues( e.getMessage() );
         }
 
         // Recalculate final scores
         gq = this.updateQualityScore( gq );
         gq = this.updateSuitabilityScore( gq );
+
+        // Add note if experiment curation not finished
+        if(ee.getCurationDetails().getNeedsAttention()){
+            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
+        }
 
         stopwatch.stop();
         gq.setLastRun( this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
@@ -648,8 +654,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatch( ef ) ) {
-                    removeFvs.add( fv ); // always remove batch factor values
+                if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE.equalsIgnoreCase( fv.getDescriptiveString() ) ) {
+                    removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {
                     if ( !keepEfs.contains( ef ) && keepEfs.size() <= GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK ) {
                         keepEfs.add( ef ); // keep first two encountered factors
@@ -688,7 +694,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = sampleCoexpressionMatrixService.findOrCreate( ee );
+            cormat = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
         } catch ( IllegalStateException e ) {
             Log.warn( this.getClass(),
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );

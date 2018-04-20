@@ -697,7 +697,7 @@
            timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl"
+    <cache name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
            maxElementsOnDisk="10000"
            maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false"/>

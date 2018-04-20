@@ -145,8 +145,11 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         var saveButton = new Ext.Button({
             text: 'Save Curation info',
-            tooltip: 'Update curation status and note. Only works when changes to the attention status or note have been done',
-            handler: function () {
+            tooltip: 'Update curation status and note. Only works when changes to the attention status or note have been done. ' +
+            'If you are un-setting the "Needs Attention" property, GEEQ scores will be run automatically. ',
+            handler: function (b, e) {
+                b.setText('Save Curation info <i class="fa fa-refresh fa-fw fa-spin"/>');
+                b.setDisabled(true);
                 this.saveCurationStatusAndNote();
             },
             scope: this

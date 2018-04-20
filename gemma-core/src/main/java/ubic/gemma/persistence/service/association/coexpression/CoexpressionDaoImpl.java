@@ -156,8 +156,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
          */
         Map<NonPersistentNonOrderedCoexpLink, Boolean> existingResults = this.preFetch( links );
 
-        Query q = sess.createQuery(
-                "from " + geneLinkClassName + " where firstGene =:f and secondGene=:s and positiveCorrelation=:pc" );
+        String s = "from " + geneLinkClassName + " where firstGene =:f and secondGene=:s and positiveCorrelation=:pc";
+        Query q = sess.createQuery(s );
 
         SQLQuery updateFlippedLinkQuery = sess.createSQLQuery(
                 "UPDATE " + CoexpressionQueryUtils.getGeneLinkTableName( gene.getTaxon() )

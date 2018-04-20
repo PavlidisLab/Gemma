@@ -88,43 +88,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
-    public void checkUnsupportedLinksHaveNoSupport() {
-        JdbcTemplate jt = new JdbcTemplate( dataSource );
-
-        // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
-        // position 12 is important.
-        final Collection<Long> checkme = new HashSet<>();
-        // maybe these patterns aren't this reproducible.
-        jt.query(
-                // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
-                // + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000',"
-                // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
-                // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
-
-                // 000002BB00000001000000000000001600000000
-                "SELECT ID FROM MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___0000000100000000000000%'",
-                new RowCallbackHandler() {
-
-                    @Override
-                    public void processRow( ResultSet rs ) throws SQLException {
-                        Long id = rs.getLong( 1 );
-                        checkme.add( id );
-                    }
-                } );
-
-        // we should definitely have some of these
-        assertTrue( checkme.size() > 0 );
-
-        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK IN (?) AND SUPPORT > 0",
-                new Object[] { checkme.toArray() }, new RowCallbackHandler() {
-                    @Override
-                    public void processRow( ResultSet rs ) {
-                        fail( "Should not have had any rows" );
-                    }
-                } );
-
-    }
-
     @Before
     public void setup() {
         super.setTestCollectionSize( 100 );
@@ -208,6 +171,43 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // expect to get at least one links with support >1
         ees.add( ee2 );
         this.checkResults( ees, 2 );
+
+    }
+
+    private void checkUnsupportedLinksHaveNoSupport() {
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+
+        // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
+        // position 12 is important.
+        final Collection<Long> checkme = new HashSet<>();
+        // maybe these patterns aren't this reproducible.
+        jt.query(
+                // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
+                // + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000',"
+                // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
+                // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
+
+                // 000002BB00000001000000000000001600000000
+                "SELECT ID FROM MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___0000000100000000000000%'",
+                new RowCallbackHandler() {
+
+                    @Override
+                    public void processRow( ResultSet rs ) throws SQLException {
+                        Long id = rs.getLong( 1 );
+                        checkme.add( id );
+                    }
+                } );
+
+        // we should definitely have some of these
+        assertTrue( checkme.size() > 0 );
+
+        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK IN (?) AND SUPPORT > 0",
+                new Object[] { checkme.toArray() }, new RowCallbackHandler() {
+                    @Override
+                    public void processRow( ResultSet rs ) {
+                        fail( "Should not have had any rows" );
+                    }
+                } );
 
     }
 

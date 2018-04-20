@@ -19,11 +19,10 @@
 
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
+
+import static org.junit.Assert.*;
 
 /**
  * 

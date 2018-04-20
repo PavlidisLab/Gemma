@@ -19,17 +19,16 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Given an NCBI ID, will return the matching Gemma gene id. The result is a 2D array mapping the NCBI IDs to the Gene

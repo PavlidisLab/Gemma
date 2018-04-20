@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.util;
 
-import javax.servlet.http.Cookie;
-
 import junit.framework.TestCase;
+
+import javax.servlet.http.Cookie;
 
 /**
  * @author pavlidis

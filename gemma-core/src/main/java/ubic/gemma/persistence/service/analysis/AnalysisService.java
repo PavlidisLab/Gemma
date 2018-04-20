@@ -73,7 +73,7 @@ public interface AnalysisService<T extends Analysis> {
     /**
      * @param investigations investigations
      * @return An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
-     * investigations given exacly matches other wise returns null
+     * investigations given exactly matches other wise returns null
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     T findByUniqueInvestigations( Collection<? extends Investigation> investigations );

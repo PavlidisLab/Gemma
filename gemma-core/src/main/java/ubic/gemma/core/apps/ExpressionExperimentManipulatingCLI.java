@@ -31,11 +31,13 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -205,7 +207,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     void addForceOption() {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        @SuppressWarnings("static-access") Option forceOption = OptionBuilder.withArgName( "Force processing" )
+        @SuppressWarnings("static-access")
+        Option forceOption = OptionBuilder.withArgName( "Force processing" )
                 .withLongOpt( "force" ).withDescription( defaultExplanation ).create( "force" );
         this.addOption( forceOption );
     }
@@ -272,10 +275,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<>();
+
+        // explicitly support one case
+        if ( query.matches( "GPL[0-9]+" ) ) {
+            ArrayDesign ad = this.getBean( ArrayDesignService.class ).findByShortName( query );
+            if ( ad != null ) {
+                Collection<ExpressionExperiment> ees2 = this.getBean( ArrayDesignService.class ).getExpressionExperiments( ad );
+                ees.addAll( ees2 );
+                log.info( ees.size() + " experiments matched to platform " + ad );
+            }
+            return ees;
+        }
+
         Collection<SearchResult> eeSearchResults = searchService
                 .search( SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
-
-        AbstractCLI.log.info( ees.size() + " Expression experiments matched '" + query + "'" );
 
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult sr : eeSearchResults ) {
@@ -285,6 +298,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 ees.add( ee );
             }
         }
+
+        AbstractCLI.log.info( ees.size() + " Expression experiments matched '" + query + "'" );
+
         return ees;
 
     }

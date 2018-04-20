@@ -18,11 +18,7 @@
  */
 package ubic.gemma.core.apps;
 
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
-
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -30,6 +26,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Remove all associations that this array design has with BioSequences. This is needed for cases where the original

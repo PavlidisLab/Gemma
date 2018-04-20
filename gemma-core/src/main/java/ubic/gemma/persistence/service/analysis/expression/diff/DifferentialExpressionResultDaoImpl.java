@@ -859,8 +859,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         // gather up probe information
         Map<Long, String> probeNames = new HashMap<>();
-        //noinspection unchecked
         if ( !probeIds.isEmpty() ) {
+            //noinspection unchecked
             for ( Object[] rec : ( List<Object[]> ) session
                     .createQuery( "select id,name from CompositeSequence where id in (:ids)" )
                     .setParameterList( "ids", probeIds ).list() ) {

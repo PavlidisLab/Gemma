@@ -21,7 +21,6 @@ package ubic.gemma.persistence;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -32,8 +31,8 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis

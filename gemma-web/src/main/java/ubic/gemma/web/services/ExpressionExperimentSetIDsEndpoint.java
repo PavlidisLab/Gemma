@@ -19,17 +19,16 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A service to return the full list of Expression Experiment Set IDs along with the corresponding name and experiment

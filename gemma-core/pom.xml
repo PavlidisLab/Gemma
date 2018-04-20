@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.23.2</version>
+        <version>1.24</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -80,7 +80,7 @@
                         <mkdir dir="target/schema"/>
                         <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
                                       output="${project.build.directory}/schema/gemma-ddl.sql"
-                                      properties="${basedir}/src/main/resources/hibernate.properties">
+                                      config="${basedir}/src/main/resources/hibernate.cfg.xml">
                             <fileset dir="src/main/resources" includes="**/*.hbm.xml"/>
                         </schemaexport>
                     </target>

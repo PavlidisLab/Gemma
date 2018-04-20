@@ -1,7 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -36,11 +34,10 @@ public class ObjectFilter {
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
      *
      * @param propertyType the type of the property that will be checked.
-     * @throws ParseException in case the given requiredValue could not be parsed into the propertyType.
      * @see ObjectFilter#ObjectFilter(String, Object, String, String)
      */
     public ObjectFilter( String propertyName, Class propertyType, Object requiredValue, String operator,
-            String objectAlias ) throws ParseException {
+            String objectAlias ) {
         this.propertyName = propertyName;
         this.propertyType = propertyType;
         this.requiredValue = this.convertToParamType( requiredValue, propertyType );
@@ -113,9 +110,8 @@ public class ObjectFilter {
      * @param requiredValue the Object to be converted into the desired type.
      * @param propertyType  the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
-     * @throws ParseException when there was a problem converting the given value into the requested type.
      */
-    private Object convertToParamType( Object requiredValue, Class propertyType ) throws ParseException {
+    private Object convertToParamType( Object requiredValue, Class propertyType ) {
         if ( Iterable.class.isAssignableFrom( requiredValue.getClass() ) ) {
             // We got a collection
             @SuppressWarnings("unchecked") // Assuming default is string
@@ -134,7 +130,7 @@ public class ObjectFilter {
         }
     }
 
-    private Object convertItem(Object requiredValue, Class propertyType){
+    private Object convertItem( Object requiredValue, Class propertyType ) {
         // Assuming default is string
         if ( String.class.isAssignableFrom( propertyType ) ) {
             return requiredValue;

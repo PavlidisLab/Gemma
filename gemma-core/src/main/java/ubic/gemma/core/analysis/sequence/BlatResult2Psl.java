@@ -36,7 +36,7 @@ public class BlatResult2Psl {
      * @param blatResult blat result
      * @return psl
      */
-    public static String blatResult2Psl( BlatResult blatResult ) {
+    private static String blatResult2Psl( BlatResult blatResult ) {
         StringBuilder buf = new StringBuilder();
         buf.append( blatResult.getMatches() ).append( " " );
         buf.append( blatResult.getMismatches() ).append( " " );

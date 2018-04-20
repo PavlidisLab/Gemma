@@ -28,7 +28,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -48,8 +51,11 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     private final CurationDetailsService curationDetailsService;
 
     @Autowired
+    private GeeqService geeqService;
+
+    @Autowired
     public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, AuditEventDao auditEventDao,
-            CurationDetailsService curationDetailsService ) {
+            CurationDetailsService curationDetailsService) {
         super( auditTrailDao );
         this.auditTrailDao = auditTrailDao;
         this.auditEventDao = auditEventDao;
@@ -92,6 +98,11 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         //If object is curatable, update curation details
         if ( auditable instanceof Curatable && auditEvent != null && auditEvent.getEventType() != null ) {
             curationDetailsService.update( ( Curatable ) auditable, auditEvent );
+
+            if(auditable instanceof ExpressionExperiment && auditEvent.getEventType().getClass().equals(
+                    DoesNotNeedAttentionEvent.class )){
+                geeqService.calculateScore( auditable.getId(), GeeqService.OPT_MODE_ALL );
+            }
         }
 
         //return the newly created event
