@@ -57,8 +57,8 @@ public class AffyPowerToolsProbesetSummarize {
     protected static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
 
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
-    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
     private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
+    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
@@ -106,6 +106,7 @@ public class AffyPowerToolsProbesetSummarize {
             if ( bmap.containsKey( geoAcc ) ) {
                 return bmap.get( geoAcc );
             }
+
         } else {
 
             /*
@@ -122,11 +123,11 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @return Map of strings found in CEL files to GPL ids.
+     * @return Map of configuration strings from a configuration file NOT GOOD
      */
-    static Map<String, String> loadNames() {
+    static Map<String, String> loadNames( String fileName ) {
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( fileName );
             Map<String, String> result = new HashMap<>();
 
             for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
@@ -398,7 +399,8 @@ public class AffyPowerToolsProbesetSummarize {
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
 
-        Map<String, String> cdfNames = AffyPowerToolsProbesetSummarize.loadNames();
+        Map<String, String> cdfNames = AffyPowerToolsProbesetSummarize
+                .loadNames( AffyPowerToolsProbesetSummarize.AFFY_CDFS_PROPERTIES_FILE_NAME );
 
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );

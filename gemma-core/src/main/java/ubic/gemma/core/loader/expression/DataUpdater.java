@@ -73,6 +73,7 @@ import java.util.*;
 public class DataUpdater {
 
     private static final Log log = LogFactory.getLog( DataUpdater.class );
+    private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -758,7 +759,7 @@ public class DataUpdater {
             }
             chip2bms.get( c ).add( ba );
         }
-        Map<String, String> chipNames2GPL = AffyPowerToolsProbesetSummarize.loadNames();
+        Map<String, String> chipNames2GPL = AffyPowerToolsProbesetSummarize.loadNames( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
         Map<ArrayDesign, Collection<BioAssay>> targetPlatform2BioAssays = new HashMap<>();
         for ( String chipname : chip2bms.keySet() ) {
 
