@@ -1,12 +1,11 @@
 package ubic.gemma.web.persistence;
 
-import java.util.Collection;
-
+import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
-import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+
+import java.util.Collection;
 
 public interface SessionListManager {
 

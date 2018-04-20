@@ -14,12 +14,12 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author paul

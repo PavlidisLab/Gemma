@@ -50,14 +50,13 @@ import java.util.regex.Pattern;
  */
 public class AffyPowerToolsProbesetSummarize {
 
+    static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     /**
      * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz or GSM1525415_C1.cel.gz and not
      * GSM12343.EXP.gz
      */
     private static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
-
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
-    private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
@@ -67,15 +66,29 @@ public class AffyPowerToolsProbesetSummarize {
 
     // rma-sketch uses much less memory, supposedly makes little difference in final results.
     private static final String METHOD = "rma";
+    private QuantitationType quantitationType;
+
+    AffyPowerToolsProbesetSummarize() {
+        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+    }
 
     /**
-     * @param bmap
-     * @param sampleName
+     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
+     *
+     * @param qt qt
+     */
+    AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
+        this.quantitationType = qt;
+    }
+
+    /**
+     * @param bmap       bMap
+     * @param sampleName sampleName
      * @return BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
 
-        Pattern regex = Pattern.compile( GEO_CEL_FILE_NAME_REGEX );
+        Pattern regex = Pattern.compile( AffyPowerToolsProbesetSummarize.GEO_CEL_FILE_NAME_REGEX );
 
         Matcher matcher = regex.matcher( sampleName );
 
@@ -87,7 +100,8 @@ public class AffyPowerToolsProbesetSummarize {
                 if ( bmap.containsKey( geoAcc ) ) {
                     return bmap.get( geoAcc );
                 }
-                AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found " + geoAcc + " (sample name=" + sampleName + ")" );
+                AffyPowerToolsProbesetSummarize.log
+                        .warn( "No bioassay found " + geoAcc + " (sample name=" + sampleName + ")" );
             }
 
         } else {
@@ -101,13 +115,11 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Map of strings found in CEL files to GPL ids.
-     *
-     * @return
+     * @return Map of strings found in CEL files to GPL ids.
      */
-    protected static Map<String, String> loadChipNames() {
+    static Map<String, String> loadNames( String fileName ) {
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( fileName );
             Map<String, String> result = new HashMap<>();
 
             for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
@@ -121,7 +133,7 @@ public class AffyPowerToolsProbesetSummarize {
         }
     }
 
-    protected static QuantitationType makeAffyQuantitationType() {
+    static QuantitationType makeAffyQuantitationType() {
         QuantitationType result = QuantitationType.Factory.newInstance();
 
         result.setGeneralType( GeneralType.QUANTITATIVE );
@@ -141,27 +153,13 @@ public class AffyPowerToolsProbesetSummarize {
         return result;
     }
 
-    private QuantitationType quantitationType;
-
-    public AffyPowerToolsProbesetSummarize() {
-        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    }
-
-    /**
-     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
-     *
-     * @param qt qt
-     */
-    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
-        this.quantitationType = qt;
-    }
-
     /**
      * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
      */
     protected Map<String, Map<String, String>> loadMpsNames() {
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
+            PropertiesConfiguration pc = ConfigUtils
+                    .loadClasspathConfig( AffyPowerToolsProbesetSummarize.AFFY_MPS_PROPERTIES_FILE_NAME );
             Map<String, Map<String, String>> result = new HashMap<>();
 
             for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
@@ -186,17 +184,17 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For when we are reprocessing and needed to figure out what the original platform was from the CEL files.
      *
-     * @param ee ee
-     * @param targetPlatform target platform (thawed); call multiple times if there is more than one platform (though
-     *        that should
-     *        not happen for exon arrays)
-     * @param originalPlatform
-     * @param BioAssays to use
-     * @param files list of CEL files (any other files included will be ignored)
+     * @param ee               ee
+     * @param targetPlatform   target platform (thawed); call multiple times if there is more than one platform (though
+     *                         that should
+     *                         not happen for exon arrays)
+     * @param originalPlatform original platform
+     * @param bioAssays        BAs to use
+     * @param files            list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
-    protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
-            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
+    Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ArrayDesign originalPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
 
         if ( bioAssays.isEmpty() ) {
             throw new IllegalArgumentException( "No assays" );
@@ -212,21 +210,22 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For either 3' or Exon arrays.
      *
-     * @param ee ee
+     * @param ee                  ee
      * @param aptOutputFileToRead file
-     * @param targetPlatform (thawed) deal with data from this platform (call multiple times if there is more than one
-     *        platform)
-     * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
-     *        original platform, so we're not trying to match up bioassays that are not relevant.
-     * @param bioAssays that we're dealing with (could be a subset of a multi-platform experiment)
+     * @param targetPlatform      (thawed) deal with data from this platform (call multiple times if there is more than one
+     *                            platform)
+     * @param originalPlatform    can be the same as the targetPlatform. But we specify this in case there is more than one
+     *                            original platform, so we're not trying to match up bioassays that are not relevant.
+     * @param bioAssaysToUse      that we're dealing with (could be a subset of a multi-platform experiment)
      * @return raw data vectors
-     * @throws IOException io problem
+     * @throws IOException           io problem
      * @throws FileNotFoundException file not found
      */
-    protected Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
-            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<BioAssay> bioAssaysToUse ) throws IOException {
+    Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
+            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<BioAssay> bioAssaysToUse )
+            throws IOException {
 
-        checkFileReadable( aptOutputFileToRead );
+        this.checkFileReadable( aptOutputFileToRead );
 
         AffyPowerToolsProbesetSummarize.log.info( "Parsing " + aptOutputFileToRead );
 
@@ -282,16 +281,18 @@ public class AffyPowerToolsProbesetSummarize {
                 bmap.put( bioAssay.getName(), bioAssay );
             }
 
-            log.info( "Will attempt to match " + bioAssaysToUse.size() + " bioAssays in data set to apt output" );
+            AffyPowerToolsProbesetSummarize.log
+                    .info( "Will attempt to match " + bioAssaysToUse.size() + " bioAssays in data set to apt output" );
 
-            log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                    + StringUtils.join( bmap.keySet(), "\n" ) );
+            AffyPowerToolsProbesetSummarize.log
+                    .debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                            + StringUtils.join( bmap.keySet(), "\n" ) );
 
             List<String> columnsToKeep = new ArrayList<>();
             for ( int i = 0; i < matrix.columns(); i++ ) {
                 String sampleName = matrix.getColName( i );
 
-                BioAssay assay = matchBioAssayToCelFileName( bmap, sampleName );
+                BioAssay assay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( bmap, sampleName );
 
                 if ( assay == null ) {
                     /*
@@ -316,8 +317,8 @@ public class AffyPowerToolsProbesetSummarize {
             if ( bad.getBioAssays().size() != bioAssaysToUse.size() ) {
                 Collection<BioAssay> missing = CollectionUtils.subtract( bioAssaysToUse, bad.getBioAssays() );
                 throw new IllegalStateException(
-                        "Failed to find a data column for every bioassay on the given platform " +
-                                targetPlatform + "; missing:\n" + StringUtils.join( missing, "\n" ) );
+                        "Failed to find a data column for every bioassay on the given platform " + targetPlatform
+                                + "; missing:\n" + StringUtils.join( missing, "\n" ) );
             }
 
             if ( columnsToKeep.size() < matrix.columns() ) {
@@ -341,9 +342,9 @@ public class AffyPowerToolsProbesetSummarize {
      * Stolen from SimpleExpressionDataLoaderService.
      *
      * @param expressionExperiment ee
-     * @param bioAssayDimension BA dim
-     * @param targetPlatform target design (thawed)
-     * @param matrix matrix read from apt output.
+     * @param bioAssayDimension    BA dim
+     * @param targetPlatform       target design (thawed)
+     * @param matrix               matrix read from apt output.
      * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
@@ -358,7 +359,8 @@ public class AffyPowerToolsProbesetSummarize {
             csMap.put( cs.getName(), cs );
         }
 
-        log.info( "Target platform has " + csMap.size() + " elements, apt data matrix has " + matrix.rows() );
+        AffyPowerToolsProbesetSummarize.log
+                .info( "Target platform has " + csMap.size() + " elements, apt data matrix has " + matrix.rows() );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
@@ -377,19 +379,20 @@ public class AffyPowerToolsProbesetSummarize {
             vectors.add( vector );
 
         }
-        log.info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
+        AffyPowerToolsProbesetSummarize.log
+                .info( "Setup " + vectors.size() + " data vectors for " + matrix.rows() + " results from APT" );
         return vectors;
     }
 
     /**
-     * 
      * @param ad platform
      * @return file or null if not found
      */
     private File findCdf( ArrayDesign ad ) {
-        String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
+        String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
 
-        Map<String, String> cdfNames = this.loadCdfNames();
+        Map<String, String> cdfNames = AffyPowerToolsProbesetSummarize
+                .loadNames( AffyPowerToolsProbesetSummarize.AFFY_CDFS_PROPERTIES_FILE_NAME );
 
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );
@@ -403,20 +406,19 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
-     *
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
      * @param targetPlatform ad
-     * @param cdfFileName e g. HG-U133A_2.cdf
-     * @param celfiles celfiles
-     * @param outputPath path
+     * @param cdfFileName    e g. HG-U133A_2.cdf
+     * @param celfiles       celfiles
+     * @param outputPath     path
      * @return string
      */
-    private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName,
-            List<String> celfiles, String outputPath ) {
+    private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName, List<String> celfiles,
+            String outputPath ) {
         String toolPath = Settings.getString( "affy.power.tools.exec" );
 
         /*
@@ -448,7 +450,7 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param files files
+     * @param files                files
      * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
      */
@@ -496,18 +498,16 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For exon arrays and others that don't have CDFs. Like
-     * 
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
      * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
      * /bigscratch/GSE13344/*.CEL
      * </pre>
-     * 
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param ad ad
-     * @param celfiles celfiles
+     * @param ad         ad
+     * @param celfiles   celfiles
      * @param outputPath directory
      * @return string or null if not found.s
      */
@@ -524,7 +524,7 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalStateException( refPath + " is not a valid directory" );
         }
 
-        Map<String, Map<String, String>> mpsnames = loadMpsNames();
+        Map<String, Map<String, String>> mpsnames = this.loadMpsNames();
 
         String p = ad.getShortName();
 
@@ -552,35 +552,19 @@ public class AffyPowerToolsProbesetSummarize {
                 + "apt-output";
     }
 
-    private Map<String, String> loadCdfNames() {
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
-            Map<String, String> result = new HashMap<>();
-
-            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
-                String k = it.next();
-                result.put( k, pc.getString( k ) );
-            }
-            return result;
-
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     private DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         return reader.read( data );
     }
 
     /**
-     * @param ee
-     * @param targetPlatform - platform whose configuratino we're using to run apt-probeset-summarize
-     * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
-     *        for the data set
-     * @param files
-     * @param bioAssays that we're dealing with (would be a subset of a dataset if multiplatform)
-     * @return
+     * @param ee               experiment
+     * @param targetPlatform   platform whose configuration we're using to run apt-probeset-summarize
+     * @param originalPlatform only really necessary if we are switching platforms AND there are multiple platforms
+     *                         for the data set
+     * @param files            files
+     * @param bioAssays        that we're dealing with (would be a subset of a dataset if multiplatform)
+     * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<BioAssay> bioAssays ) {
@@ -606,11 +590,14 @@ public class AffyPowerToolsProbesetSummarize {
         }
 
         if ( cmd == null ) {
-            throw new IllegalArgumentException( "There is no CDF or MPS configuration for " + targetPlatform.getShortName() + ", check "
-                    + AFFY_MPS_PROPERTIES_FILE_NAME + " and " + AFFY_CDFS_PROPERTIES_FILE_NAME );
+            throw new IllegalArgumentException(
+                    "There is no CDF or MPS configuration for " + targetPlatform.getShortName() + ", check "
+                            + AffyPowerToolsProbesetSummarize.AFFY_MPS_PROPERTIES_FILE_NAME + " and "
+                            + AffyPowerToolsProbesetSummarize.AFFY_CDFS_PROPERTIES_FILE_NAME );
         }
 
-        log.info( "Original platform: " + originalPlatform + "; Target platform (apt-probeset-summarize will be called with): " + targetPlatform );
+        AffyPowerToolsProbesetSummarize.log.info( "Original platform: " + originalPlatform
+                + "; Target platform (apt-probeset-summarize will be called with): " + targetPlatform );
 
         AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
 
@@ -648,7 +635,8 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             if ( exitVal > 0 ) {
-                log.warn( "apt-probeset-summarize exit value was non-zero: " + exitVal );
+                AffyPowerToolsProbesetSummarize.log
+                        .warn( "apt-probeset-summarize exit value was non-zero: " + exitVal );
             }
 
             overallWatch.stop();

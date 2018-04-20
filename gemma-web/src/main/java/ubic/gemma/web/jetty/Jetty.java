@@ -18,11 +18,11 @@ package ubic.gemma.web.jetty;
  * limitations under the License.
  *
  */
-import java.net.URL;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.jetty.Server;
+
+import java.net.URL;
 
 /**
  * Start Jetty from a run configuration

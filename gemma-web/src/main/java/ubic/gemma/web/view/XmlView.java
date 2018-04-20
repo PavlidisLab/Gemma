@@ -18,12 +18,11 @@
  */
 package ubic.gemma.web.view;
 
-import java.util.Map;
+import org.springframework.web.servlet.view.AbstractView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.servlet.view.AbstractView;
+import java.util.Map;
 
 /**
  * Model should contain a single value matching XML_PARAM

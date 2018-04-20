@@ -37,15 +37,34 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
-class BatchInfoParser {
+public class BatchInfoParser {
 
     private static final Log log = LogFactory.getLog( BatchInfoParser.class );
 
     private ScanDateExtractor scanDateExtractor = null;
 
+    /**
+     * @param ee experiment
+     * @return bioassay accession (GSM...) to bioassay map
+     */
+    public static Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
+        Map<String, BioAssay> assayAccessions = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            DatabaseEntry accession = ba.getAccession();
+            if ( StringUtils.isBlank( accession.getAccession() ) ) {
+                throw new IllegalStateException(
+                        "Must have accession for each bioassay to get batch information from source for " + ee
+                                .getShortName() );
+            }
+
+            assayAccessions.put( accession.getAccession(), ba );
+        }
+        return assayAccessions;
+    }
+
     public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
-        Map<String, BioAssay> assayAccessions = this.getAccessionToBioAssayMap( ee );
+        Map<String, BioAssay> assayAccessions = BatchInfoParser.getAccessionToBioAssayMap( ee );
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
@@ -85,24 +104,6 @@ class BatchInfoParser {
      */
     public ScanDateExtractor getScanDateExtractor() {
         return scanDateExtractor;
-    }
-
-    private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
-        Map<String, BioAssay> assayAccessions = new HashMap<>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            DatabaseEntry accession = ba.getAccession();
-            // ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
-            // accession.getExternalDatabase(); // check for GEO
-
-            if ( StringUtils.isBlank( accession.getAccession() ) ) {
-                throw new IllegalStateException(
-                        "Must have accession for each bioassay to get batch information from source for " + ee
-                                .getShortName() );
-            }
-
-            assayAccessions.put( accession.getAccession(), ba );
-        }
-        return assayAccessions;
     }
 
     /**

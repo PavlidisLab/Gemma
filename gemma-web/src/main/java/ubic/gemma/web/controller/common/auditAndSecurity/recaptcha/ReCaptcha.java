@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
-import com.hp.hpl.jena.sparql.pfunction.library.str;
 import net.sf.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;

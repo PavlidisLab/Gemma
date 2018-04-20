@@ -18,11 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @author keshav

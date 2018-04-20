@@ -19,11 +19,11 @@
 
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Purely a testing tool to parse CEL files to extract the 'chip name', so we can gather them.
@@ -47,26 +47,15 @@ public class AffyChipNameExtract extends ArrayDesignSequenceManipulatingCli {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "chipnameExtract";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
 
-        for ( int i = 0; i < args.length; i++ ) {
-            String f = args[i];
+        for ( String f : args ) {
             try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f )) {
 
                 String type = AffyChipTypeExtractor.extract( is );

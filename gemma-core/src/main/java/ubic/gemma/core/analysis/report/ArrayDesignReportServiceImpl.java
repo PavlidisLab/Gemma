@@ -52,8 +52,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     // For all array designs
     private final static String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
 
-    private final ArrayDesignService arrayDesignService;
-    private final AuditEventService auditEventService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     /**
      * Batch of classes we can get events for all at once.
@@ -62,12 +65,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private final Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
             ArrayDesignSequenceAnalysisEvent.class, ArrayDesignGeneMappingEvent.class,
             ArrayDesignRepeatAnalysisEvent.class };
-
-    @Autowired
-    public ArrayDesignReportServiceImpl( ArrayDesignService arrayDesignService, AuditEventService auditEventService ) {
-        this.arrayDesignService = arrayDesignService;
-        this.auditEventService = auditEventService;
-    }
 
     @Override
     public void generateAllArrayDesignReport() {

@@ -18,19 +18,18 @@
  */
 package ubic.gemma.web.remote;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ObjectOutboundVariable;
 import org.directwebremoting.extend.MarshallException;
 import org.directwebremoting.extend.OutboundContext;
 import org.directwebremoting.extend.OutboundVariable;
 import org.directwebremoting.extend.Property;
-
 import ubic.basecode.dataStructure.DoublePoint;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * The 8 decimal precision of a double is just a waste of bandwidth in most cases. This converter just truncs the

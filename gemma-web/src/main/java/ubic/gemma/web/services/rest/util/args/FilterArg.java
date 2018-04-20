@@ -6,7 +6,6 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;

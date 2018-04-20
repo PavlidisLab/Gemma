@@ -1,3 +1,5 @@
+# noinspection MysqlParsingForFile
+
 START TRANSACTION;
 
 -- Drop status FK constraints
@@ -51,11 +53,8 @@ ALTER TABLE PHENOTYPE_ASSOCIATION
   DROP FOREIGN KEY FKC2E912AAD052C38A;
 
 -- purge the status table before doing any changes to it
-DELETE FROM STATUS
-WHERE id NOT IN ((SELECT STATUS_FK
-                  FROM ARRAY_DESIGN)
-                 UNION (SELECT STATUS_FK
-                        FROM INVESTIGATION));
+
+DELETE FROM "STATUS" WHERE id NOT IN (SELECT STATUS_FK FROM ARRAY_DESIGN UNION SELECT STATUS_FK FROM INVESTIGATION);
 
 -- rename columns in AD and Investigation
 ALTER TABLE ARRAY_DESIGN

@@ -18,19 +18,18 @@
  */
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term

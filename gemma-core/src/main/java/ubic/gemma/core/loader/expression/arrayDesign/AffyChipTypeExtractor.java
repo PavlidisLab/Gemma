@@ -17,10 +17,9 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoParser;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,7 +41,6 @@ import java.util.regex.Pattern;
  * Note that the Affymetrix documentation does not mention a chip type, explicitly, but it's in the "DatHeader", and in
  * GCOS files as affymetrix-array-type
  *
- * @see AffyScanDateExtractor
  * @author paul
  */
 public class AffyChipTypeExtractor {
@@ -55,14 +53,13 @@ public class AffyChipTypeExtractor {
      * from CEL, especially if the original platform information has been lost (e.g., by switching to a merged platform,
      * or from a custom CDF-based version)
      * 
-     * @param ee
+     * @param ee experiment
      * @param files CEL files
-     * @return
-     * @throws IOException
+     * @return map of bioassays to cel identifiers
      */
     public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
-        Map<String, BioAssay> assayAccessions = getAccessionToBioAssayMap( ee );
+        Map<String, BioAssay> assayAccessions = BatchInfoParser.getAccessionToBioAssayMap( ee );
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
@@ -101,8 +98,8 @@ public class AffyChipTypeExtractor {
     }
 
     /**
-     * @param bioAssays2Files
-     * @return
+     * @param bioAssays2Files map to files
+     * @return map of BAs to chip names
      */
     private static Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
         Map<BioAssay, String> result = new HashMap<>();
@@ -126,9 +123,9 @@ public class AffyChipTypeExtractor {
     }
 
     /**
-     * @param files
-     * @param assayAccessions
-     * @return
+     * @param files files
+     * @param assayAccessions accessions
+     * @return mapt od BAs to files
      */
     private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
 
@@ -150,29 +147,8 @@ public class AffyChipTypeExtractor {
     }
 
     /**
-     * 
-     * @param ee
-     * @return bioassay accession (GSM...) to bioassay map
-     */
-    private static Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
-        Map<String, BioAssay> assayAccessions = new HashMap<>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            DatabaseEntry accession = ba.getAccession();
-            if ( StringUtils.isBlank( accession.getAccession() ) ) {
-                throw new IllegalStateException(
-                        "Must have accession for each bioassay to get batch information from source for " + ee
-                                .getShortName() );
-            }
-
-            assayAccessions.put( accession.getAccession(), ba );
-        }
-        return assayAccessions;
-    }
-
-    /**
-     * 
-     * @param is
-     * @return
+     * @param is input stream
+     * @return text
      */
     public static String extract( InputStream is ) {
 
@@ -385,16 +361,15 @@ public class AffyChipTypeExtractor {
     }
 
     /**
-     * @param string
-     * @return
+     * @param string string to be parsed
+     * @return parsed string
      */
     private static String parseStandardFormat( String string ) {
         Pattern regex = Pattern.compile( STANDARD_FORMAT_REGEX );
 
         Matcher matcher = regex.matcher( string );
         if ( matcher.matches() ) {
-            String tok = matcher.group( 1 );
-            return tok;
+            return matcher.group( 1 );
         }
         return null;
     }

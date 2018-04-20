@@ -22,12 +22,10 @@ package ubic.gemma.web.util;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
 import gemma.gsec.util.SecurityUtil;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.persistence.util.Settings;
 
 /**

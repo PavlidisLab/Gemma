@@ -19,11 +19,7 @@
 
 package ubic.gemma.core.apps;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.util.AbstractCLI;
@@ -33,6 +29,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
