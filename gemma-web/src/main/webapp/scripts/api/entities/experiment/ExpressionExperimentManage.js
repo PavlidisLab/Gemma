@@ -641,25 +641,25 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
         width: 15
     }, {
-        header: 'Curation note',
-        sortable: false,
-        renderer: Gemma.Renderers.curationNoteStubRenderer,
-        tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
-        width: 100
-    }, {
         header: 'Quality',
         dataIndex: 'quality',
         sortable: true,
         renderer: Gemma.Renderers.qualityRenderer,
-        tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.',
+        tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.<br/><br/>If the experiment is still in curation, this score can change significantly.',
         width: 15
     }, {
         header: 'Suitability',
         dataIndex: 'suitability',
         sortable: true,
         renderer: Gemma.Renderers.suitabilityRenderer,
-        tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.',
+        tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.<br/><br/>If the experiment is still in curation, this score can change significantly.',
         width: 15
+    }, {
+        header: 'Curation note',
+        sortable: false,
+        renderer: Gemma.Renderers.curationNoteStubRenderer,
+        tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
+        width: 100
     }, {
         header: '#ADs',
         sortable: true,

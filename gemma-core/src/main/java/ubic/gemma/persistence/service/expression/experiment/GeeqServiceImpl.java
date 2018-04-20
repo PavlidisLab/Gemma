@@ -72,6 +72,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private static final double N_10 = -GeeqServiceImpl.P_10;
     public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
     public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
+    private static final String DE_EXCLUDE = "DE_Exclude";
     private final ExpressionExperimentService expressionExperimentService;
     private final ArrayDesignService arrayDesignService;
     private final ExpressionDataMatrixService expressionDataMatrixService;
@@ -228,13 +229,18 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Log.info( this.getClass(),
                     GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
                             + "." );
-            gq.addOtherIssues( e.getMessage() );
             e.printStackTrace();
+            gq.addOtherIssues( e.getMessage() );
         }
 
         // Recalculate final scores
         gq = this.updateQualityScore( gq );
         gq = this.updateSuitabilityScore( gq );
+
+        // Add note if experiment curation not finished
+        if(ee.getCurationDetails().getNeedsAttention()){
+            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
+        }
 
         stopwatch.stop();
         gq.setLastRun( this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
@@ -648,8 +654,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatch( ef ) ) {
-                    removeFvs.add( fv ); // always remove batch factor values
+                if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE.equalsIgnoreCase( fv.getDescriptiveString() ) ) {
+                    removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {
                     if ( !keepEfs.contains( ef ) && keepEfs.size() <= GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK ) {
                         keepEfs.add( ef ); // keep first two encountered factors

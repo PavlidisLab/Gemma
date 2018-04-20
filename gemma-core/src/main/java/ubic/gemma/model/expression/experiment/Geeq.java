@@ -324,8 +324,8 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * @return Presence of non-removed outliers:
-     * -1.0 if ratio &gt; 0%
-     * +1.0 if ratio = 0%
+     * -1.0 if there are any outliers
+     * +1.0 if there are no outliers
      * extra (in corrMatIssues):
      * 1 if the correlation matrix is empty
      * 2 if the correlation matrix has NaN values

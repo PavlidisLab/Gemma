@@ -75,7 +75,7 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
         }, {
             name: "lastUpdated",
             type: "date"
-        },{
+        }, {
             name: "geeq"
         }]
     }),
@@ -219,7 +219,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 dataIndex: 'quality',
                 sortable: true,
                 renderer: Gemma.Renderers.qualityRenderer,
-                tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.',
+                tooltip: 'Shows the quality score of experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.<br/><br/>If the experiment is still in curation, this score can change significantly.',
                 width: 0.05
             },
             {
@@ -227,7 +227,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 dataIndex: 'suitability',
                 sortable: true,
                 renderer: Gemma.Renderers.suitabilityRenderer,
-                tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.',
+                tooltip: 'Shows the suitability score of experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.<br/><br/>If the experiment is still in curation, this score can change significantly.',
                 width: 0.05
             },
             {
