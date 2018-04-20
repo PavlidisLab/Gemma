@@ -928,7 +928,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( mappedName == null ) {
             /*
-             * This situation is okay, it can happen in cases where (for example) the element was filtered out when the
+             * This situation can be okay, it can happen in cases where (for example) the element was filtered out when the
              * platform was being created, but it appears in the data.
              */
             return null;
