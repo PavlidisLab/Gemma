@@ -938,8 +938,13 @@ public class GeoConverterImpl implements GeoConverter {
 
         CompositeSequence compositeSequence = designMap.get( mappedName );
 
-        if ( compositeSequence == null )
-            throw new IllegalStateException( "No composite sequence " + designElementName );
+        if ( compositeSequence == null ) {
+            /*
+             * This could be an error, but also can happen if we are on a platform for which we expect to replace data.
+             */
+            // throw new IllegalStateException( "No composite sequence " + designElementName + " for mapped name " + mappedName );
+            return null;
+        }
 
         if ( compositeSequence.getBiologicalCharacteristic() != null
                 && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null &&
@@ -1092,13 +1097,33 @@ public class GeoConverterImpl implements GeoConverter {
             return arrayDesign;
         }
 
-        this.convertPlatformElements( identifier, platform, arrayDesign, externalReferences, probeOrganismColumn,
+        boolean fullyUsable = this.convertPlatformElements( identifier, platform, arrayDesign, externalReferences, probeOrganismColumn,
                 externalDb, descriptions, sequences, probeOrganism, primaryTaxon );
+
+        if ( !fullyUsable ) {
+            log.warn( "Some or all identifiers may have been skipped during parse" );
+        }
 
         return arrayDesign;
     }
 
-    private void convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
+    /**
+     * 
+     * @param identifier
+     * @param platform
+     * @param arrayDesign
+     * @param externalReferences
+     * @param probeOrganismColumn
+     * @param externalDb
+     * @param descriptions
+     * @param sequences
+     * @param probeOrganism
+     * @param primaryTaxon
+     * @return true if we expect this platform to be fully usable or whether some or all elements may have been omitted
+     *         in our parse (so how freaked out later in processing should we be if an element in the data doesn't
+     *         match)
+     */
+    private boolean convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
             Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb,
             List<String> descriptions, List<String> sequences, List<String> probeOrganism, Taxon primaryTaxon ) {
 
@@ -1111,13 +1136,13 @@ public class GeoConverterImpl implements GeoConverter {
         if ( identifiers == null ) {
             // we don't get any probe information; e.g., MPSS, SAGE, Exon arrays.
             GeoConverterImpl.log.warn( "No identifiers, so platform elements will be skipped" );
-            return;
+            return false;
         }
 
         if ( !platform.useDataFromGeo() && !forceConvertElements ) {
             GeoConverterImpl.log
                     .warn( "Will not convert elements for this platform - set forceConvertElements to override" );
-            return;
+            return false;
         }
 
         assert cloneIdentifiers == null || cloneIdentifiers.size() == identifiers.size();
@@ -1181,6 +1206,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         GeoConverterImpl.log.info( arrayDesign.getCompositeSequences().size() + " elements on the platform" );
+        return !strictSelection;
     }
 
     private int processId( GeoPlatform platform, ArrayDesign arrayDesign, String probeOrganismColumn,
