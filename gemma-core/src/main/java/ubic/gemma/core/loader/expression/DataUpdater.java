@@ -36,7 +36,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
-import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
@@ -72,7 +71,6 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -90,9 +88,6 @@ import ubic.gemma.persistence.util.EntityUtils;
 public class DataUpdater {
 
     private static final Log log = LogFactory.getLog( DataUpdater.class );
-
-    @Autowired
-    private AnalysisUtilService analysisUtilService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -114,9 +109,6 @@ public class DataUpdater {
 
     @Autowired
     private PreprocessorService preprocessorService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private QuantitationTypeService qtService;
@@ -235,7 +227,9 @@ public class DataUpdater {
 
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
+        // important: replaceData takes care of the platform switch if necessary; call first.
         ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+
         ee = this.addData( ee, targetArrayDesign, countEEMatrix );
 
         this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
@@ -255,14 +249,12 @@ public class DataUpdater {
             ee = this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
-        assert !processedExpressionDataVectorService.getProcessedDataVectors( ee ).isEmpty();
     }
 
     /**
-     * Generic. Add an additional data (with associated quantitation type) to the selected experiment. Will do
-     * postprocessing if
-     * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
-     * thrown.
+     * Generic but in practice used for RNA-seq. Add an additional data (with associated quantitation type) to the
+     * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
+     * a preferred quantitation type, an error will be thrown.
      *
      * @param ee ee
      * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
@@ -307,11 +299,6 @@ public class DataUpdater {
         ee = experimentService.addRawVectors( ee, vectors );
 
         this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
-
-        // debug code.
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assert ba.getArrayDesignUsed().equals( targetPlatform );
-        }
 
         experimentService.update( ee );
 
@@ -393,7 +380,8 @@ public class DataUpdater {
      * SimpleExpressionDataLoaderService.
      *
      * @param ee the experiment to be modified
-     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
+     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
+     *        experiment will be switched to it if necessary.
      * @param data the data to be used
      * @return ee
      */
@@ -430,11 +418,6 @@ public class DataUpdater {
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
         }
-
-        /*
-         * remove all analyses, etc.
-         */
-        analysisUtilService.deleteOldAnalyses( ee );
 
         ee = experimentService.replaceRawVectors( ee, vectors );
 

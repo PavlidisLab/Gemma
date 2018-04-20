@@ -80,8 +80,9 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
             // we still put the processing dates in, below.
         } else {
+            log.info( "Persisting information on " + datesToBatch.size() + " batches" );
+
             ef = this.makeFactorForBatch( ee );
-            // assert ef.getId() != null;
 
             for ( String batchId : datesToBatch.keySet() ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
@@ -185,7 +186,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                             .warn( "Singleton at the end of the series, combining with the last batch: gap is " + String
                                     .format( "%.2f",
                                             ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60
-                                                    * 24 ) ) + " hours." );
+                                                    * 24 ) )
+                                    + " hours." );
                     mergedAnySingletons = true;
                 } else if ( this.gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -201,7 +203,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by waiting for the next batch: gap is " + String
                                         .format( "%.2f",
                                                 ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) ) + " hours." );
+                                                        * 60 * 24 ) )
+                                        + " hours." );
                         batchNum++;
                         batchDateString = this.formatBatchName( batchNum, df, currentDate );
                         result.put( batchDateString, new HashSet<Date>() );
@@ -211,7 +214,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by adding to the last batch: gap is " + String
                                         .format( "%.2f",
                                                 ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) ) + " hours." );
+                                                        * 60 * 24 ) )
+                                        + " hours." );
                         // don't start a new batch, fall through.
                     }
 
@@ -273,16 +277,17 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
         batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
-                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df
-                .format( DateUtils.truncate( d, Calendar.HOUR ) );
+                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
+                + df
+                        .format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
     /**
      * @param earlierDate earlier date
-     * @param date        data
+     * @param date data
      * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should treat it as a
-     * separate batch.
+     *         separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
         return !DateUtils.isSameDay( date, earlierDate ) && DateUtils

@@ -54,7 +54,7 @@ public class AffyPowerToolsProbesetSummarize {
      * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz or GSM1525415_C1.cel.gz and not
      * GSM12343.EXP.gz
      */
-    private static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
+    protected static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
 
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
     private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
@@ -70,34 +70,35 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param bmap
-     * @param sampleName
+     * @param fileName (also ends up as column headings of APT output files)
      * @return BioAssay, or null if not found.
      */
-    public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
+    public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
 
         Pattern regex = Pattern.compile( GEO_CEL_FILE_NAME_REGEX );
 
-        Matcher matcher = regex.matcher( sampleName );
+        Matcher matcher = regex.matcher( fileName );
 
         BioAssay assay = null;
-        if ( sampleName.matches( sampleName ) ) {
 
-            if ( matcher.matches() ) {
-                String geoAcc = matcher.group( 1 );
-                if ( bmap.containsKey( geoAcc ) ) {
-                    return bmap.get( geoAcc );
-                }
-                AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found " + geoAcc + " (sample name=" + sampleName + ")" );
+        if ( matcher.matches() ) {
+            String geoAcc = matcher.group( 1 );
+            if ( bmap.containsKey( geoAcc ) ) {
+                return bmap.get( geoAcc );
             }
-
         } else {
 
             /*
              * Sometimes column names are like Aud_19L.CEL - no GSM number. Sometimes this works, but it's last ditch.
              */
-            assay = bmap.get( sampleName );
+            assay = bmap.get( fileName );
+            if ( assay != null ) {
+                return assay;
+            }
         }
-        return assay;
+        // this is okay, not every file needs to be for the bioassays we want.
+        AffyPowerToolsProbesetSummarize.log.debug( "No bioassay found matching " + fileName );
+        return null;
     }
 
     /**
@@ -464,7 +465,7 @@ public class AffyPowerToolsProbesetSummarize {
                         .endsWith( ".CEL.GZ" ) ) ) {
 
                     if ( accessionsOfInterest != null ) {
-                        String acc = fi.getName().replaceAll( "(GSM[0-9]+).+", "$1" );
+                        String acc = fi.getName().replaceAll( GEO_CEL_FILE_NAME_REGEX, "$1" );
                         if ( !accessionsOfInterest.contains( acc ) ) {
                             continue;
                         }
