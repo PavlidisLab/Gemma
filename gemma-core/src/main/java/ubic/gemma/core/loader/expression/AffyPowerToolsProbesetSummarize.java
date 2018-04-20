@@ -74,13 +74,6 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * <<<<<<< HEAD
-     * 
-     * @param bmap
-     * @param fileName (also ends up as column headings of APT output files)
-     *        =======
-     *        This constructor is used for multiplatform situations where the same QT must be used for each platform.
-     *
      * @param qt qt
      */
     AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
@@ -90,7 +83,6 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * @param bmap bMap
      * @param sampleName sampleName
-     *        >>>>>>> development
      * @return BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
