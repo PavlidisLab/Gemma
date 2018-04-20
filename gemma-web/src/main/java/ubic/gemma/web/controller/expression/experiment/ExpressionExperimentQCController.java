@@ -66,7 +66,7 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -116,7 +116,7 @@ public class ExpressionExperimentQCController extends BaseController {
     @Autowired
     private MeanVarianceService meanVarianceService;
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
     private OutlierDetectionService outlierDetectionService;
     @Autowired
@@ -191,12 +191,11 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         // identify outliers
-        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+        if ( !sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
             log.warn( "Experiment doesn't have correlation matrix computed (will not create right now)" );
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
 
         Collection<BioAssay> bioAssays = new HashSet<>();
@@ -292,7 +291,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
 
         List<String> stringNames = new ArrayList<>();
         for ( BioAssay ba : omatrix.getRowNames() ) {

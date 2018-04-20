@@ -33,6 +33,13 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
     private BioAssaySet experimentAnalyzed;
     private Integer numberOfElementsAnalyzed;
 
+    public SingleExperimentAnalysis() {
+    }
+
+    public SingleExperimentAnalysis( BioAssaySet experimentAnalyzed ) {
+        this.experimentAnalyzed = experimentAnalyzed;
+    }
+
     public BioAssaySet getExperimentAnalyzed() {
         return this.experimentAnalyzed;
     }

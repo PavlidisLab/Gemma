@@ -102,7 +102,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * Map of strings found in CEL files to GPL ids.
-     * 
+     *
      * @return
      */
     protected static Map<String, String> loadChipNames() {
@@ -185,7 +185,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For when we are reprocessing and needed to figure out what the original platform was from the CEL files.
-     * 
+     *
      * @param ee ee
      * @param targetPlatform target platform (thawed); call multiple times if there is more than one platform (though
      *        that should
@@ -383,7 +383,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * 
-     * @param ad
+     * @param ad platform
      * @return file or null if not found
      */
     private File findCdf( ArrayDesign ad ) {
@@ -403,7 +403,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
-     * 
+     *
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
@@ -593,7 +593,7 @@ public class AffyPowerToolsProbesetSummarize {
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
         String outputPath = this.getOutputFilePath( ee );
-        String cmd = null;
+        String cmd;
 
         // look for a CDF first.
         File cdf = this.findCdf( targetPlatform );

@@ -17,11 +17,11 @@ package ubic.gemma.core.tasks.analysis.expression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
 import java.util.Collection;
@@ -39,7 +39,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private SampleCoexpressionMatrixService coexpressionMatrixService;
+    private SampleCoexpressionAnalysisService coexpressionMatrixService;
 
     @Override
     public TaskResult execute() {
@@ -56,7 +56,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl
             processedVectors = processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         }
 
-        coexpressionMatrixService.create( ee);
+        coexpressionMatrixService.compute( ee );
 
         return new TaskResult( taskCommand, processedVectors.size() );
     }

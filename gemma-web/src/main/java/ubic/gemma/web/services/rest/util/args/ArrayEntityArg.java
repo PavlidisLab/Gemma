@@ -10,7 +10,6 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
 import java.lang.reflect.InvocationTargetException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,13 +62,9 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
-        ObjectFilter filter;
-        try {
-            filter = new ObjectFilter( this.getPropertyName( service ), this.getPropertyType( service ),
-                    this.getValue(), ObjectFilter.in, this.getObjectDaoAlias() );
-        } catch ( ParseException e ) {
-            throw this.convertParseException( e );
-        }
+        ObjectFilter filter = new ObjectFilter( this.getPropertyName( service ), this.getPropertyType( service ),
+                this.getValue(), ObjectFilter.in, this.getObjectDaoAlias() );
+
         filters.add( new ObjectFilter[] { filter } );
         return filters;
     }
@@ -125,19 +120,6 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
                     "Identifier " + value + " not recognized." ) );
         }
         return identifier;
-    }
-
-    /**
-     * Converts the given parse exception into a GemmaApiException with a well composed error body.
-     *
-     * @param e the exception to be converted.
-     * @return a properly populated GemmaApiException describing the given exception.
-     */
-    GemmaApiException convertParseException( ParseException e ) {
-        WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                FilterArg.ERROR_MSG_MALFORMED_REQUEST );
-        WellComposedErrorBody.addExceptionFields( error, e );
-        return new GemmaApiException( error );
     }
 
     /**

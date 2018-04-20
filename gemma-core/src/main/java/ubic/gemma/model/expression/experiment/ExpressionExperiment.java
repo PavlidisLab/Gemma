@@ -104,7 +104,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.bioAssays = bioAssays;
     }
 
-    @Deprecated
     @Override
     public ExpressionExperimentValueObject createValueObject() {
         return new ExpressionExperimentValueObject( this );

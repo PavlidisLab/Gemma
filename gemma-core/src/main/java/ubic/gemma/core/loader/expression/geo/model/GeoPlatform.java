@@ -18,22 +18,14 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.*;
 
 /**
  * Bean describing a microarray platform in GEO
@@ -129,15 +121,15 @@ public class GeoPlatform extends GeoData {
     public static boolean isGEOAffyDataUsable( String geoPlatformId ) {
 
         if ( !isAffyPlatform( geoPlatformId ) ) {
-            throw new IllegalArgumentException( "Not an Affy platform, so far as we know, check that it's an Affy platform first" );
+            throw new IllegalArgumentException(
+                    "Not an Affy platform, so far as we know, check that it's an Affy platform first" );
         }
 
         String platformToUse = affyPlatformMap.get( geoPlatformId );
 
         // it's already on the right platform, though we may replace the data later.
-        if ( platformToUse.equals( geoPlatformId ) ) return true;
+        return platformToUse.equals( geoPlatformId ) || !affyExonArrays.contains( platformToUse );
 
-        return !affyExonArrays.contains( platformToUse );
     }
 
     private Collection<String> catalogNumbers = new HashSet<>();

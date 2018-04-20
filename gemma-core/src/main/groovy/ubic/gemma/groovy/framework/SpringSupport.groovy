@@ -31,6 +31,7 @@ class SpringSupport {
 
         def b = new AtomicBoolean(false)
         System.err.print "Loading Spring context "
+        //noinspection GroovyAssignabilityCheck
         def t = Thread.start {
             def timer = new StopWatch()
             timer.start()
@@ -55,6 +56,7 @@ class SpringSupport {
         } else {
             def success = manAuthentication.validateRequest(userName, password)
             if (!success) {
+                //noinspection GroovyAssignabilityCheck
                 throw new Exception("Not authenticated. Make sure you entered a valid username (got '" + userName + "') and password")
             } else {
                 println("Logged in as " + userName)

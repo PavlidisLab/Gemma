@@ -35,7 +35,6 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -57,9 +56,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -110,8 +109,6 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private QuantitationTypeService quantitationTypeDao;
     @Autowired
-    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
-    @Autowired
     private SearchService searchService;
     @Autowired
     private SecurityService securityService;
@@ -119,6 +116,8 @@ public class ExpressionExperimentServiceImpl
     private SVDService svdService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -933,7 +932,7 @@ public class ExpressionExperimentServiceImpl
         this.differentialExpressionAnalysisService.removeForExperiment( ee );
 
         // Remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
 
         // Remove PCA
         this.principalComponentAnalysisService.removeForExperiment( ee );

@@ -92,6 +92,11 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         this.userFlaggedOutlier = this.outlier;
     }
 
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
+        this( bioAssay, basic );
+        this.predictedOutlier = predictedOutlier;
+    }
+
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
         Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {

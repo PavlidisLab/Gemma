@@ -42,9 +42,8 @@ public abstract class BioAssaySet extends Investigation {
     public abstract void setBioAssays( Collection<BioAssay> bioAssays );
 
     /**
-     * @return an expression experiment value object
-     * @deprecated use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
+     * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
+     * @return an expression experiment value object.
      */
-    @Deprecated
     public abstract ExpressionExperimentValueObject createValueObject();
 }

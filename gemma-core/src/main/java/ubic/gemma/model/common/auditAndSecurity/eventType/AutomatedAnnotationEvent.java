@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * @deprecated this event type was used by the auto-tagger, which has been removed. This event type has been kept
  * so that the audit-trails can still properly display these events, but creation new events of this type should not
- * occure.
+ * occur.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Still present in database
 @Deprecated
