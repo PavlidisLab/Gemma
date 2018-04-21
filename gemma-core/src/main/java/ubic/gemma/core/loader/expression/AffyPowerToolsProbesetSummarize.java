@@ -78,10 +78,11 @@ public class AffyPowerToolsProbesetSummarize {
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
-    private static final long AFFY_UPDATE_INTERVAL_S = 30;
+    private static final long AFFY_UPDATE_INTERVAL_S = 60;
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
 
-    // rma-sketch uses much less memory, supposedly makes little difference in final results.
+    // rma-sketch uses much less memory, supposedly makes little difference in
+    // final results. But we run >1000 samples without trouble using the 'rma' setting.
     private static final String METHOD = "rma";
 
     /**
