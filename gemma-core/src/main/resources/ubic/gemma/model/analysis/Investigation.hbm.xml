@@ -46,14 +46,7 @@
                 <column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </set>
-        <set name="investigators" table="INVESTIGATORS" lazy="true" fetch="select">
-            <key foreign-key="CONTACT_INVESTIGATION_FKC">
-                <column name="INVESTIGATION_FK" sql-type="BIGINT"/>
-            </key>
-            <many-to-many class="ubic.gemma.model.common.auditAndSecurity.Contact">
-                <column name="INVESTIGATORS_FK" sql-type="BIGINT"/>
-            </many-to-many>
-        </set>
+       
         <subclass name="ubic.gemma.model.expression.experiment.BioAssaySet"
                   abstract="true">
             <subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment"

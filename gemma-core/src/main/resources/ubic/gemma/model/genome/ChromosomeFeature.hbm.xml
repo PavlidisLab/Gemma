@@ -31,10 +31,6 @@
         </many-to-one>
         <subclass name="ubic.gemma.model.genome.gene.GeneProduct" discriminator-value="GeneProduct"
                   abstract="false">
-            <property name="type" type="ubic.gemma.model.genome.gene.GeneProductTypeEnum">
-                <column name="TYPE" not-null="false" unique="false"
-                        sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-            </property>
             <property name="ncbiGi" type="java.lang.String">
                 <column name="NCBI_GI" not-null="false" unique="false"
                         sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>

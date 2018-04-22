@@ -19,7 +19,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -35,7 +35,7 @@ import java.util.HashSet;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
-public class BioAssay extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
+public class BioAssay extends Describable implements gemma.gsec.model.SecuredChild {
 
     private static final long serialVersionUID = -7868768731812964045L;
 
@@ -113,8 +113,9 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the entity tracks
-     * when this was done.
+     * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the
+     *         entity tracks
+     *         when this was done.
      */
     public Boolean getIsOutlier() {
         return this.isOutlier;
@@ -126,7 +127,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
 
     /**
      * @return Indicates the date that the assay was processed in the original study. This would correspond to "batch"
-     * information and will often be a "scan date" or similar information extracted from the raw data files.
+     *         information and will often be a "scan date" or similar information extracted from the raw data files.
      */
     public Date getProcessingDate() {
         return this.processingDate;
@@ -162,8 +163,9 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false otherwise.
-     * It should be left as null if it isn't known.
+     * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false
+     *         otherwise.
+     *         It should be left as null if it isn't known.
      */
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
@@ -174,8 +176,9 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the total of the
-     * values for the elements assayed.
+     * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the
+     *         total of the
+     *         values for the elements assayed.
      */
     public Integer getSequenceReadCount() {
         return this.sequenceReadCount;
@@ -186,9 +189,10 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the length
-     * for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
-     * representing the mean read length.
+     * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the
+     *         length
+     *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
+     *         representing the mean read length.
      */
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;

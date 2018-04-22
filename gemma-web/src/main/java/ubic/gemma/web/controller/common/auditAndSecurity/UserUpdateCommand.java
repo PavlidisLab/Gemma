@@ -60,8 +60,8 @@ public class UserUpdateCommand {
         UserUpdateCommand other = ( UserUpdateCommand ) obj;
         if ( user == null ) {
             return other.user == null;
-        } else
-            return user.equals( other.user );
+        }
+        return user.equals( other.user );
     }
 
     public Boolean getAdminUser() {
@@ -70,14 +70,6 @@ public class UserUpdateCommand {
 
     public void setAdminUser( Boolean adminUser ) {
         this.adminUser = adminUser;
-    }
-
-    public AuditTrail getAuditTrail() {
-        return this.user.getAuditTrail();
-    }
-
-    public void setAuditTrail( AuditTrail auditTrail ) {
-        this.user.setAuditTrail( auditTrail );
     }
 
     /**

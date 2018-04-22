@@ -18,14 +18,14 @@
  */
 package ubic.gemma.model.common.description;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-public class BibliographicReference extends AbstractAuditable {
+public class BibliographicReference extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

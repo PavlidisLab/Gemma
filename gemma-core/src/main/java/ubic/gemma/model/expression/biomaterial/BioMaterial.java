@@ -20,7 +20,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,7 +37,7 @@ import java.util.HashSet;
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
-public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
+public class BioMaterial extends Describable implements gemma.gsec.model.SecuredChild {
 
     private static final long serialVersionUID = 4374359557498220256L;
     private ubic.gemma.model.genome.Taxon sourceTaxon;
@@ -64,9 +64,11 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * @return An optional external reference for this BioMaterial. In many cases this is the same as the accession for the
-     * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
-     * BioMaterial may reference a given external accession.
+     * @return An optional external reference for this BioMaterial. In many cases this is the same as the accession for
+     *         the
+     *         related BioAssay. We store the information here to help make the data easier to trace. Note that more
+     *         than one
+     *         BioMaterial may reference a given external accession.
      */
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;

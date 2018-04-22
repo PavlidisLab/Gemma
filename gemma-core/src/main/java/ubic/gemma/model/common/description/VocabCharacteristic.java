@@ -67,12 +67,11 @@ public class VocabCharacteristic extends Characteristic {
             return new VocabCharacteristic();
         }
 
-        public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
+        public static VocabCharacteristic newInstance( String name, String description,
                 String value, String valueUri, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final VocabCharacteristic entity = new VocabCharacteristic();
             entity.setName( name );
             entity.setDescription( description );
-            entity.setAuditTrail( auditTrail );
             entity.setCategoryUri( categoryUri );
             entity.setValueUri( valueUri );
             entity.setValue( value );

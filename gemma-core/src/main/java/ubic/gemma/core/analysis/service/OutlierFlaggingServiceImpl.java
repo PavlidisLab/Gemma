@@ -81,7 +81,6 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             hasNewOutliers = true;
             ba.setIsOutlier( true );
             bioAssayService.update( ba );
-            this.audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
 
         if ( !hasNewOutliers ) {
@@ -135,11 +134,6 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             OutlierFlaggingServiceImpl.log
                     .error( "Error during postprocessing, make sure additional steps are completed", e );
         }
-    }
-
-    private void audit( BioAssay bioAssay, String note ) {
-        AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( bioAssay, eventType, note );
     }
 
 }

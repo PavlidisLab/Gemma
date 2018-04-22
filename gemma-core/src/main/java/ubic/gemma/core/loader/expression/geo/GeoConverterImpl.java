@@ -37,7 +37,6 @@ import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -751,13 +750,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private Person convertContact( GeoContact contact ) {
-        Person result = Person.Factory.newInstance();
-        result.setName( contact.getName() );
-        result.setEmail( contact.getEmail() );
-        return result;
-    }
-
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
      *
@@ -765,12 +757,10 @@ public class GeoConverterImpl implements GeoConverter {
      * @param expExp ee
      */
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
-        expExp.getInvestigators().add( this.convertContact( series.getContact() ) );
         if ( series.getContributers().size() > 0 ) {
             expExp.setDescription( expExp.getDescription() + "\nContributers: " );
             for ( GeoContact contributer : series.getContributers() ) {
                 expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
-                expExp.getInvestigators().add( this.convertContact( contributer ) );
             }
             expExp.setDescription( expExp.getDescription() + "\n" );
         }

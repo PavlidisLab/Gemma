@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.protocol.Protocol;
 
 /**
@@ -28,8 +28,8 @@ import ubic.gemma.model.common.protocol.Protocol;
  *
  * @author Paul
  */
-public abstract class Analysis extends AbstractAuditable {
-    
+public abstract class Analysis extends Describable {
+
     private static final long serialVersionUID = -7666181528240555473L;
     private Protocol protocol;
 

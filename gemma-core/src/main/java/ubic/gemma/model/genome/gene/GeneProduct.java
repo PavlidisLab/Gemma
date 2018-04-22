@@ -32,7 +32,6 @@ public class GeneProduct extends ChromosomeFeature {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8414732389521430535L;
-    private GeneProductType type;
     private String ncbiGi;
     private Collection<DatabaseEntry> accessions = new java.util.HashSet<>();
     /**
@@ -141,14 +140,6 @@ public class GeneProduct extends ChromosomeFeature {
 
     public void setNcbiGi( String ncbiGi ) {
         this.ncbiGi = ncbiGi;
-    }
-
-    public GeneProductType getType() {
-        return this.type;
-    }
-
-    public void setType( GeneProductType type ) {
-        this.type = type;
     }
 
     private int computeHashCode() {

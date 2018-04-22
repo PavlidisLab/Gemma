@@ -83,7 +83,6 @@ public class DifferentialExpressionAnalysisTaskImpl
             DifferentialExpressionAnalysis minimalResult = DifferentialExpressionAnalysis.Factory.newInstance();
             minimalResult.setName( r.getName() );
             minimalResult.setDescription( r.getDescription() );
-            minimalResult.setAuditTrail( r.getAuditTrail() );
             minimalResults.add( minimalResult );
         }
 
