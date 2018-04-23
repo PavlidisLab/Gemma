@@ -94,10 +94,6 @@
                              cascade="all" lazy="proxy" fetch="select">
                     <column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                 </many-to-one>
-                <many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFile" cascade="all"
-                             lazy="proxy" fetch="select">
-                    <column name="RAW_DATA_FILE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-                </many-to-one>
                 <set name="bioAssays" lazy="true" fetch="select" cascade="all">
                     <cache usage="read-write"/>
                     <key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC">

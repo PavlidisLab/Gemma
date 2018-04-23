@@ -1472,7 +1472,6 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );
-        Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getOtherRelevantPublications() );
         Hibernate.initialize( result.getBioAssays() );
@@ -1485,7 +1484,6 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-            Hibernate.initialize( ba.getDerivedDataFiles() );
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
@@ -1709,14 +1707,14 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
             Hibernate
                     .initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
+            //   Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
             Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                Hibernate.initialize( bf.getPublicationTypes() );
+                //     Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
     }

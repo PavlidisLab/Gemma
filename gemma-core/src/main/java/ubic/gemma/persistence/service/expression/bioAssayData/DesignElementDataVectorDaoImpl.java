@@ -126,7 +126,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
             BioAssayDimension tbad = ( BioAssayDimension ) this.getSessionFactory().getCurrentSession().createQuery(
                     "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
-                            + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad ")
+                            + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
                     .setParameter( "bad", bad.getId() ).uniqueResult();
 
             assert tbad != null;
@@ -198,7 +198,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             ba = ( BioAssay ) session.get( BioAssay.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
-            Hibernate.initialize( ba.getDerivedDataFiles() );
         }
     }
 
@@ -233,7 +232,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     /**
-     * @param ee      ee
+     * @param ee ee
      * @param cs2gene Map of probes to genes.
      * @return map of vectors to gene ids.
      */
@@ -241,9 +240,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         // Do not do in clause for experiments, as it can't use the indices
         //language=HQL
-        String queryString =
-                "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                        + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id = :eeId ";
+        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
+                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id = :eeId ";
 
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
@@ -273,9 +271,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene ) {
 
         //language=HQL
-        String queryString =
-                "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
-                        + " where dedv.designElement.id in ( :cs ) ";
+        String queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVector dedv fetch all properties"
+                + " where dedv.designElement.id in ( :cs ) ";
 
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
@@ -316,7 +313,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( results.next() ) {
-            @SuppressWarnings("unchecked") T dedv = ( T ) results.get( 0 );
+            @SuppressWarnings("unchecked")
+            T dedv = ( T ) results.get( 0 );
             Long cs = ( Long ) results.get( 1 );
             Collection<Long> associatedGenes = cs2gene.get( cs );
             if ( !dedv2genes.containsKey( dedv ) ) {

@@ -230,42 +230,6 @@ public class GeoConverterImpl implements GeoConverter {
         this.addFactorValueToBioMaterial( expExp, geoSubSet, factorValue );
     }
 
-    @Override
-    public LocalFile convertSupplementaryFileToLocalFile( Object object ) {
-
-        URL remoteFileUrl = null;
-        LocalFile remoteFile = null;
-
-        if ( object instanceof GeoSeries ) {
-            GeoSeries series = ( GeoSeries ) object;
-            String file = series.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        } else if ( object instanceof GeoSample ) {
-            GeoSample sample = ( GeoSample ) object;
-            String file = sample.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        } else if ( object instanceof GeoPlatform ) {
-            GeoPlatform platform = ( GeoPlatform ) object;
-            String file = platform.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        }
-
-        /* nulls allowed in remoteFile ... deal with later. */
-        if ( remoteFile != null )
-            remoteFile.setRemoteURL( remoteFileUrl );
-
-        return remoteFile;
-    }
-
     /**
      * This method determines the primary taxon on the array: There are 4 main branches of logic. 1.First it checks if
      * there is only one platform taxon defined on the GEO submission: If there is that is the primary taxon. 2.If
@@ -825,16 +789,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
         ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: " + platform
                 .getLastUpdateDate() );
-
-        LocalFile arrayDesignRawFile = this.convertSupplementaryFileToLocalFile( platform );
-        if ( arrayDesignRawFile != null ) {
-            Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
-            if ( arrayDesignLocalFiles == null ) {
-                arrayDesignLocalFiles = new HashSet<>();
-            }
-            arrayDesignLocalFiles.add( arrayDesignRawFile );
-            ad.setLocalFiles( arrayDesignLocalFiles );
-        }
 
         this.convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
 
@@ -1727,9 +1681,6 @@ public class GeoConverterImpl implements GeoConverter {
 
         expExp.setAccession( this.convertDatabaseEntry( series ) );
 
-        LocalFile expExpRawDataFile = this.convertSupplementaryFileToLocalFile( series );
-        expExp.setRawDataFile( expExpRawDataFile );
-
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
         design.setName( "" );
@@ -1826,8 +1777,6 @@ public class GeoConverterImpl implements GeoConverter {
                         BioAssay ba = this.convertSample( sample, bioMaterial, expExp.getExperimentalDesign() );
 
                         assert ( ba != null );
-                        LocalFile rawDataFile = this.convertSupplementaryFileToLocalFile( sample );
-                        ba.setRawDataFile( rawDataFile );// deal with null at UI
                         ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
                                 + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
 

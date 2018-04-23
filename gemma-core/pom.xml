@@ -52,6 +52,7 @@
                     <include>**/*.nib</include>
                     <include>**/*.gff</include>
                     <include>**/*.sql</include>
+                    
                     <include>**/*.phr</include>
                     <include>**/*.pin</include>
                     <include>**/*.pni</include>
@@ -59,7 +60,18 @@
                     <include>**/*.psd</include>
                     <include>**/*.psi</include>
                     <include>**/*.psq</include>
+                    
+                    <include>**/*.nhr</include>
+                    <include>**/*.nin</include>
+                    <include>**/*.nnd</include>
+                    <include>**/*.nni</include>
+                    <include>**/*.nog</include>
+                    <include>**/*.nsd</include>
+                    <include>**/*.nsi</include>
+                    <include>**/*.nsq</include>
+                    
                     <include>**/*.sample</include>
+                   
                 </includes>
             </testResource>
         </testResources>

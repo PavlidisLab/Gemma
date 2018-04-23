@@ -21,14 +21,11 @@ package ubic.gemma.model.expression.bioAssay;
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.persistence.Transient;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
@@ -48,9 +45,7 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     private ArrayDesign arrayDesignUsed;
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
-    private LocalFile rawDataFile;
     private String metadata;
-    private Collection<LocalFile> derivedDataFiles = new HashSet<>();
 
     @Override
     public boolean equals( Object object ) {
@@ -102,17 +97,6 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     }
 
     /**
-     * @return Files containing derived data, from our own or someone else's analysis.
-     */
-    public Collection<LocalFile> getDerivedDataFiles() {
-        return this.derivedDataFiles;
-    }
-
-    public void setDerivedDataFiles( Collection<LocalFile> derivedDataFiles ) {
-        this.derivedDataFiles = derivedDataFiles;
-    }
-
-    /**
      * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the
      *         entity tracks
      *         when this was done.
@@ -135,17 +119,6 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     public void setProcessingDate( Date processingDate ) {
         this.processingDate = processingDate;
-    }
-
-    /**
-     * @return The data 'as we got it', such as CEL files or raw files from the SMD site, or GEO soft files.
-     */
-    public LocalFile getRawDataFile() {
-        return this.rawDataFile;
-    }
-
-    public void setRawDataFile( LocalFile rawDataFile ) {
-        this.rawDataFile = rawDataFile;
     }
 
     public BioMaterial getSampleUsed() {

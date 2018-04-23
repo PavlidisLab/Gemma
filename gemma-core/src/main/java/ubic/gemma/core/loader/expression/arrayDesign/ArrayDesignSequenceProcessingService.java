@@ -33,15 +33,9 @@ import java.util.Collection;
 public interface ArrayDesignSequenceProcessingService {
 
     /**
-     * When checking a BLAST database for sequences, we stop after checking Genbank accessions versions up to this value
-     * (e.g, AA22930.1)
-     */
-    int MAX_VERSION_NUMBER = 20;
-
-    /**
      * Associate sequences with an array design.
      *
-     * @param sequences,     for Affymetrix these should be the Collapsed probe sequences.
+     * @param sequences, for Affymetrix these should be the Collapsed probe sequences.
      * @param designElements design elements
      */
     void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
@@ -52,7 +46,7 @@ public interface ArrayDesignSequenceProcessingService {
      * of a design element.
      *
      * @param designElements design elements
-     * @param fastaFile      fasta file
+     * @param fastaFile fasta file
      * @throws IOException when IO problems occur.
      */
     void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
@@ -68,9 +62,9 @@ public interface ArrayDesignSequenceProcessingService {
      * copy. This is considered safe because Affymetrix uses unique probeset names for a given set of actual probes
      * sequences.
      *
-     * @param arrayDesign       An existing ArrayDesign that already has compositeSequences filled in.
+     * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
-     * @param taxon             validated taxon
+     * @param taxon validated taxon
      * @return bio sequences
      * @throws IOException when IO problems occur.
      */
@@ -96,7 +90,7 @@ public interface ArrayDesignSequenceProcessingService {
      *
      * @param sequenceFile FASTA format
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
-     * @param arrayDesign  platform
+     * @param arrayDesign platform
      * @return bio sequences
      * @throws IOException when IO problems occur.
      * @see ubic.gemma.core.loader.genome.FastaParser
@@ -131,8 +125,8 @@ public interface ArrayDesignSequenceProcessingService {
      *
      * @param sequenceFile FASTA, Affymetrix or tabbed format (depending on the type)
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
-     * @param taxon        - if null, attempt to determine it from the array design.
-     * @param arrayDesign  platform
+     * @param taxon - if null, attempt to determine it from the array design.
+     * @param arrayDesign platform
      * @return bio sequences
      * @throws IOException when IO problems occur.
      * @see ubic.gemma.core.loader.genome.FastaParser
@@ -148,14 +142,14 @@ public interface ArrayDesignSequenceProcessingService {
      * any of the probe identifiers in the file given match the array design).
      *
      * @param sequenceIdentifierFile Sequence file has two columns: column 1 is a probe id, column 2 is a genbank
-     *                               accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
-     *                               ones missing will be sought directly in Gemma.
-     * @param force                  If true, if an existing BioSequence that matches is found in the system, any existing sequence
-     *                               information in the BioSequence will be overwritten.
-     * @param arrayDesign            plaftorm
-     * @param taxon                  taxon
-     * @param blastDbHome            blast db home
-     * @param databaseNames          database names
+     *        accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
+     *        ones missing will be sought directly in Gemma.
+     * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
+     * @param arrayDesign plaftorm
+     * @param taxon taxon
+     * @param blastDbHome blast db home
+     * @param databaseNames database names
      * @return bio sequences
      * @throws IOException when IO problems occur.
      */
@@ -176,10 +170,10 @@ public interface ArrayDesignSequenceProcessingService {
      * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
      *
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome   where to find the blast databases for sequence retrieval
-     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *                      overwritten with a new one.
-     * @param arrayDesign   platform
+     * @param blastDbHome where to find the blast databases for sequence retrieval
+     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *        overwritten with a new one.
+     * @param arrayDesign platform
      * @return bio sequences
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
@@ -189,11 +183,11 @@ public interface ArrayDesignSequenceProcessingService {
      * Provided primarily for testing.
      *
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome   where to find the blast databases for sequence retrieval
-     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *                      overwritten with a new one.
-     * @param arrayDesign   platform
-     * @param fc            fasta command
+     * @param blastDbHome where to find the blast databases for sequence retrieval
+     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *        overwritten with a new one.
+     * @param arrayDesign platform
+     * @param fc fasta command
      * @return bio sequences
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
@@ -202,11 +196,11 @@ public interface ArrayDesignSequenceProcessingService {
     /**
      * Update a single sequence in the system.
      *
-     * @param force         If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *                      information in the BioSequence will be overwritten.
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      * @param databaseNames database names
-     * @param blastDbHome   blast db home
-     * @param sequenceId    sequence id
+     * @param blastDbHome blast db home
+     * @param sequenceId sequence id
      * @return persistent BioSequence.
      */
     BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome, boolean force );

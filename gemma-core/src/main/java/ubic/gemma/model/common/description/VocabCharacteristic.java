@@ -20,7 +20,6 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 
 import java.util.Objects;
 

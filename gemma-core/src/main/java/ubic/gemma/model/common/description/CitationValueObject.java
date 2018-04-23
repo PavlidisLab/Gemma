@@ -92,23 +92,15 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
         this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
         this.setId( ref.getId() );
-        if ( ref.getPublicationTypes() != null ) {
-
-            for ( PublicationType pt : ref.getPublicationTypes() ) {
-                if ( pt.getType() != null && ( pt.getType().contains( "Retraction of Publication" ) || pt.getType()
-                        .contains( "Retracted Publication" ) ) ) {
-                    retracted = true;
-                }
-
-            }
-        }
+        this.retracted = ref.getRetracted();
 
     }
 
     /**
      * @param ref ref
-     * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference param
-     * was null
+     * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference
+     *         param
+     *         was null
      */
     public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
 
@@ -122,7 +114,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     /**
      * @param refs refs
      * @return a collection of citation value objects constructed from a collection of BibliographicReference objects
-     * or an empty list if all the BibliographicReference list param was null or empty
+     *         or an empty list if all the BibliographicReference list param was null or empty
      */
     public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
 
@@ -197,8 +189,8 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         CitationValueObject other = ( CitationValueObject ) obj;
         if ( pubmedAccession == null ) {
             return other.pubmedAccession == null;
-        } else
-            return pubmedAccession.equals( other.pubmedAccession );
+        }
+        return pubmedAccession.equals( other.pubmedAccession );
     }
 
     public boolean isRetracted() {

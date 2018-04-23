@@ -32,12 +32,5 @@
       <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"  lazy="proxy" fetch="select">
          <column name="DATABASE_SUPPLIER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="flatFiles" lazy="true" fetch="select">
-         <cache usage="read-write" />
-         <key foreign-key="LOCAL_FILE_EXTERNAL_DATABASE_FKC">
-            <column name="EXTERNAL_DATABASE_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.LocalFile"/>
-      </set>
    </class>
 </hibernate-mapping>

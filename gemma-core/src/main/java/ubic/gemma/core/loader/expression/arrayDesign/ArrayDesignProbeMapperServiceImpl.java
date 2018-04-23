@@ -74,7 +74,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author pavlidis
  */
 @Component
-
 public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapperService {
 
     private static final int QUEUE_SIZE = 20000;
@@ -162,10 +161,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-
-            if ( compositeSequence.getName().equals( "1431126_a_at" ) ) {
-                ArrayDesignProbeMapperServiceImpl.log.debug( "HERE" );
-            }
 
             Map<String, Collection<BlatAssociation>> results = this
                     .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );

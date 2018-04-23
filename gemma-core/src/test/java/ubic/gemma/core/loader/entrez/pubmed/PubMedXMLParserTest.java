@@ -26,7 +26,6 @@ import org.junit.Test;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.model.common.description.PublicationType;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 import java.io.InputStream;
@@ -192,7 +191,7 @@ public class PubMedXMLParserTest {
                     // log.info( c.getName() );
                     actualNumberofCompounds++;
                 }
-                assertTrue( reference.getPublicationTypes().size() > 0 );
+                //   assertTrue( reference.getPublicationTypes().size() > 0 );
             }
 
             assertEquals( expectedNumberofKeywords, actualNumberofKeywords );
@@ -238,13 +237,7 @@ public class PubMedXMLParserTest {
                     "Retracted [In: Garey CE, Schwarzman AL, Rise ML, Seyfried TN. Nat Genet. 1995 Sep;11(1):104 PMID=7550304]",
                     br.getDescription() );
 
-            boolean ok = false;
-            for ( PublicationType pt : br.getPublicationTypes() ) {
-                if ( "Retracted Publication".equals( pt.getType() ) ) {
-                    ok = true;
-                }
-            }
-            assertTrue( ok );
+            assertTrue( br.getRetracted() );
 
         } catch ( RuntimeException e ) {
             this.logOrThrowException( e );

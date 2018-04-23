@@ -24,7 +24,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -96,14 +95,6 @@ public class BibliographicReferenceServiceImpl
         this.populateBibliographicPhenotypes( idToBibRefVO );
 
         return idToBibRefVO.values();
-    }
-
-    @Override
-    @Transactional
-    public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
-        bibliographicReference.setFullTextPdf( pdfFile );
-        this.bibliographicReferenceDao.update( bibliographicReference );
-
     }
 
     @Override
@@ -182,7 +173,8 @@ public class BibliographicReferenceServiceImpl
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 

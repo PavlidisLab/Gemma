@@ -294,27 +294,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         // BioMaterials
         bioAssay.setSampleUsed( ( BioMaterial ) this.persist( bioAssay.getSampleUsed() ) );
 
-        AbstractPersister.log.debug( "biomaterials done" );
-
-        LocalFile rawDataFile = bioAssay.getRawDataFile();
-        if ( rawDataFile != null ) {
-            if ( this.isTransient( rawDataFile ) ) {
-                rawDataFile.setId( null ); // in case of retry.
-                // raw file is unique for bioassay.
-                bioAssay.setRawDataFile( this.persistLocalFile( rawDataFile, true ) );
-            } else {
-                // re-sync.
-                this.localFileDao.update( rawDataFile );
-            }
-            AbstractPersister.log.debug( "raw data file done" );
-        }
-
-        for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
-            if ( this.isTransient( file ) )
-                file.setId( null ); // in case of retry
-            this.persistLocalFile( file );
-        }
-
         AbstractPersister.log.debug( "Done with " + bioAssay );
 
     }

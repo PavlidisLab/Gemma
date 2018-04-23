@@ -42,7 +42,8 @@ import java.util.List;
 
 /**
  * Simple class to parse XML in the format defined by
- * <a href="http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd">ncbi</a>. The resulting BibliographicReference object is
+ * <a href="http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd">ncbi</a>. The resulting
+ * BibliographicReference object is
  * associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MeSH.
  *
  * @author pavlidis
@@ -334,8 +335,8 @@ public class PubMedXMLParser {
         return this.extractJournalIssueDate( dateNode );
     }
 
-    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) {
-        Collection<PublicationType> publicationTypes = new HashSet<>();
+    private boolean isRetracted( Node pubtypeList ) {
+        //   private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) {
         NodeList childNodes = pubtypeList.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
             Node item = childNodes.item( i );
@@ -343,11 +344,13 @@ public class PubMedXMLParser {
                 continue;
             }
             String type = XMLUtils.getTextValue( ( Element ) item );
-            PublicationType pt = PublicationType.Factory.newInstance();
-            pt.setType( type );
-            publicationTypes.add( pt );
+
+            if ( "Retracted Publication".equals( type ) ) {
+                return true;
+            }
         }
-        return publicationTypes;
+        return false;
+        //   return publicationTypes;
     }
 
     private boolean isMajorHeading( Node descriptor ) {
@@ -434,7 +437,7 @@ public class PubMedXMLParser {
                     }
                     break;
                 case "PublicationTypeList":
-                    bibRef.setPublicationTypes( this.extractPublicationTypes( item ) );
+                    bibRef.setRetracted( this.isRetracted( item ) );
                     break;
             }
         }

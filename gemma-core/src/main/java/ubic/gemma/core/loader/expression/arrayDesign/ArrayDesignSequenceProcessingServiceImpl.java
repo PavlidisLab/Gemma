@@ -392,48 +392,23 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         /*
          * Fill in sequences from BLAST databases.
          */
-        int versionNumber = 1;
         int numSwitched = 0;
         if ( fc == null )
             fc = new SimpleFastaCmd();
-        while ( versionNumber < ArrayDesignSequenceProcessingService.MAX_VERSION_NUMBER ) {
 
-            Collection<BioSequence> retrievedSequences = this
-                    .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
+        Collection<BioSequence> retrievedSequences = this
+                .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
-            // map of accessions to sequence.
-            Map<String, BioSequence> found = this
-                    .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
+        // map of accessions to sequence.
+        Map<String, BioSequence> found = this
+                .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
-            finalResult.addAll( retrievedSequences );
+        finalResult.addAll( retrievedSequences );
 
-            // replace the sequences.
-            numSwitched = this.replaceSequences( arrayDesign, probe2acc, numSwitched, found );
+        // replace the sequences.
+        numSwitched = this.replaceSequences( arrayDesign, probe2acc, numSwitched, found );
 
-            notFound = this.getUnFound( notFound, found );
-
-            if ( notFound.isEmpty() ) {
-                break; // we're done!
-            }
-
-            // bump up the version numbers for ones we haven't found yet.
-
-            for ( String accession : notFound ) {
-                if ( ArrayDesignSequenceProcessingServiceImpl.log.isTraceEnabled() )
-                    ArrayDesignSequenceProcessingServiceImpl.log
-                            .trace( accession + " not found, increasing version number to " + versionNumber );
-                accessionsToFetch.remove( accession );
-
-                // add or increase the version number.
-                accession = accession.replaceFirst( "\\.\\d+$", "" );
-                accession = accession + "." + Integer.toString( versionNumber );
-                accessionsToFetch.add( accession );
-            }
-            notFound = accessionsToFetch;
-
-            ++versionNumber;
-
-        }
+        notFound = this.getUnFound( notFound, found );
 
         if ( !notFound.isEmpty() && taxon != null ) {
 
@@ -453,7 +428,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
              * See if they're already in Gemma. This is good for sequences that are not in genbank but have been loaded
              * previously.
              */
-            Map<String, BioSequence> found = this.findLocalSequences( notFound, taxon );
+            found = this.findLocalSequences( notFound, taxon );
             finalResult.addAll( found.values() );
 
             numSwitched = this.replaceSequences( arrayDesign, probe2acc, numSwitched, found );
@@ -507,43 +482,16 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<String> notFound = accessionsToFetch.keySet();
         Collection<BioSequence> finalResult = new HashSet<>();
 
-        int versionNumber = 1;
         if ( fc == null )
             fc = new SimpleFastaCmd();
-        while ( versionNumber < ArrayDesignSequenceProcessingService.MAX_VERSION_NUMBER ) {
-            Collection<BioSequence> retrievedSequences = this
-                    .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
+        Collection<BioSequence> retrievedSequences = this
+                .searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
-            // we can loop through the taxa as we can ignore sequence when retrieved and arraydesign taxon not match.
+        Map<String, BioSequence> found = this
+                .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray, force );
 
-            Map<String, BioSequence> found = this
-                    .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray, force );
-
-            finalResult.addAll( found.values() );
-            notFound = this.getUnFound( notFound, found );
-
-            if ( notFound.isEmpty() ) {
-                break;
-            }
-
-            // bump up the version numbers.
-
-            for ( String accession : notFound ) {
-                if ( ArrayDesignSequenceProcessingServiceImpl.log.isTraceEnabled() )
-                    ArrayDesignSequenceProcessingServiceImpl.log
-                            .trace( accession + " not found, increasing version number to " + versionNumber );
-                // remove the version number and increase it
-                BioSequence bs = accessionsToFetch.get( accession );
-                accessionsToFetch.remove( accession );
-
-                // add or increase the version number.
-                accession = accession.replaceFirst( "\\.\\d+$", "" );
-                accession = accession + "." + Integer.toString( versionNumber );
-                accessionsToFetch.put( accession, bs );
-            }
-            notFound = accessionsToFetch.keySet();
-            ++versionNumber;
-        }
+        finalResult.addAll( found.values() );
+        notFound = this.getUnFound( notFound, found );
 
         if ( !notFound.isEmpty() ) {
             this.logMissingSequences( arrayDesign, notFound );
@@ -911,8 +859,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         ArrayDesignSequenceProcessingServiceImpl.log
                 .warn( notFound.size() + " sequences were not found (or were already filled in) for " + arrayDesign );
         StringBuilder buf = new StringBuilder();
-        buf.append( "Missing (or already present) sequences for following accessions " + "at version numbers up to "
-                + ArrayDesignSequenceProcessingService.MAX_VERSION_NUMBER + " : " );
+        buf.append( "Missing (or already present) sequences for following accessions : " );
         int i = 0;
         for ( String string : notFound ) {
             string = string.replaceFirst( "\\.\\d$", "" );
