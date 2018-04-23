@@ -222,7 +222,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                                     numberOfFactors: resultSet.experimentalFactors.length,
                                     analysisId: resultSet.analysisId,
                                     resultSetId: resultSet.resultSetId,
-                                    numberOfFactorValues: resultSet.experimentalFactors.length === 1 ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].length
+                                    numberOfFactorValues: resultSet.experimentalFactors.length === 1 && analysis.factorValuesUsed[resultSet.experimentalFactors[0].id] ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].length
                                         : null,
 
                                     leaf: true
