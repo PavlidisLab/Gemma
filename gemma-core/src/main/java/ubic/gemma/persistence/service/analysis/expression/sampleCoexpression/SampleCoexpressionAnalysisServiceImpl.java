@@ -138,7 +138,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
-
+        if ( matrix == null )
+            return null;
+        
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = matrix.getBioAssayDimension().getBioAssays();
@@ -214,10 +216,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
             Collection<ProcessedExpressionDataVector> vectors ) {
-        ExpressionDataDoubleMatrix mat;
         if ( vectors == null || vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
+            return null;
         }
+
+        ExpressionDataDoubleMatrix mat;
         if ( useRegression ) {
             if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
                 SampleCoexpressionAnalysisServiceImpl.log
@@ -229,6 +233,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         } else {
             mat = this.loadFilteredDataMatrix( ee, vectors, true );
         }
+
         return mat;
     }
 

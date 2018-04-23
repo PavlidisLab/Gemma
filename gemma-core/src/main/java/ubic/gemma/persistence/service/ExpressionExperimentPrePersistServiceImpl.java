@@ -109,6 +109,16 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          */
         if ( !dataVectorsThatNeedNewProbes.isEmpty() ) {
 
+            if ( !Settings.getBoolean( "gemma.allow.new.probes.onexisting.platforms", false ) ) {
+                // then these vectors have to be removed, we can't load them. 
+
+                log.warn( dataVectorsThatNeedNewProbes.size()
+                        + " vectors do not match probes in the existing platform, "
+                        + "and gemma.allow.new.probes.onexisting.platforms=false, so they will be ignored." );
+                ee.getRawExpressionDataVectors().removeAll( dataVectorsThatNeedNewProbes );
+                return cache;
+            }
+
             ExpressionExperimentPrePersistServiceImpl.log.info( dataVectorsThatNeedNewProbes.size()
                     + " vectors don't have probes, may add to the platform." );
 
@@ -195,12 +205,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<>();
 
         for ( ArrayDesign ad : toAdd.keySet() ) {
-
-            // We might not want to allow this, as it could indicate an error.
-            if ( !Settings.getBoolean( "gemma.allow.new.probes.onexisting.platforms", true ) ) {
-                throw new UnsupportedOperationException(
-                        "The system is not configured to allow new elements to be added to an existing platform." );
-            }
 
             assert ad.getId() != null;
             result.put( ad, new HashSet<CompositeSequence>() );

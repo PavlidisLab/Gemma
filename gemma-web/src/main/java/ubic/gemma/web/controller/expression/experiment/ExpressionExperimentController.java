@@ -1189,7 +1189,7 @@ public class ExpressionExperimentController {
         }
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
                 .loadFullMatrix( ee );
-        if ( sampleCorrelationMatrix.rows() < 3 ) {
+        if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
             return 0;
         }
         Collection<OutlierDetails> outliers = outlierDetectionService

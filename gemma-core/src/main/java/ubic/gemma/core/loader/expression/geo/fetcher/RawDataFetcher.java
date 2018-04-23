@@ -104,6 +104,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 throw new IOException( "Files were not obtained, or download was cancelled." );
             }
 
+            log.info( result.size() + " files obtained from archive" );
+
             return result;
         } catch ( IOException e ) {
             throw new RuntimeException( e );

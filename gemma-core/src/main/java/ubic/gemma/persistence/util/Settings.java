@@ -62,7 +62,6 @@ public class Settings {
      * Configuration parameter for lib directory, where jars shouldu be copied to make them available to the compute
      * grid (for example)
      */
-
     private static final String REMOTE_TASKS_ENABLED_PROPERTY = "gemma.remoteTasks.enabled";
     private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
     /**
@@ -175,43 +174,28 @@ public class Settings {
     }
 
     /**
-     * Attempt to get the version information about the application.
+     * @return Attempt to get the version information about the application.
      */
     public static String getAppVersion() {
         return Settings.getString( "gemma.version" );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String)
-     */
     public static BigDecimal getBigDecimal( String key ) {
         return Settings.config.getBigDecimal( key );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String, java.math.BigDecimal)
-     */
     public static BigDecimal getBigDecimal( String key, BigDecimal defaultValue ) {
         return Settings.config.getBigDecimal( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String)
-     */
     public static BigInteger getBigInteger( String key ) {
         return Settings.config.getBigInteger( key );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String, java.math.BigInteger)
-     */
     public static BigInteger getBigInteger( String key, BigInteger defaultValue ) {
         return Settings.config.getBigInteger( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String)
-     */
     public static boolean getBoolean( String key ) {
         try {
             return Settings.config.getBoolean( key );
@@ -221,23 +205,14 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String, boolean)
-     */
     public static boolean getBoolean( String key, boolean defaultValue ) {
         return Settings.config.getBoolean( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String, java.lang.Boolean)
-     */
     public static Boolean getBoolean( String key, Boolean defaultValue ) {
         return Settings.config.getBoolean( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String)
-     */
     public static byte getByte( String key ) {
         try {
             return Settings.config.getByte( key );
@@ -247,37 +222,22 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String, byte)
-     */
     public static byte getByte( String key, byte defaultValue ) {
         return Settings.config.getByte( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String, java.lang.Byte)
-     */
     public static Byte getByte( String key, Byte defaultValue ) {
         return Settings.config.getByte( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getConfiguration(int)
-     */
     public static Configuration getConfiguration( int index ) {
         return Settings.config.getConfiguration( index );
     }
 
-    /**
-     * The default value given if none is defined is AND.
-     */
     public static String getDefaultSearchOperator() {
         return Settings.getString( "gemma.search.defaultOperator", "AND" );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String)
-     */
     public static double getDouble( String key ) {
         try {
             return Settings.config.getDouble( key );
@@ -287,16 +247,10 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String, double)
-     */
     public static double getDouble( String key, double defaultValue ) {
         return Settings.config.getDouble( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String, java.lang.Double)
-     */
     public static Double getDouble( String key, Double defaultValue ) {
         return Settings.config.getDouble( key, defaultValue );
     }
@@ -312,9 +266,6 @@ public class Settings {
         return val + File.separatorChar;
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String)
-     */
     public static float getFloat( String key ) {
         try {
             return Settings.config.getFloat( key );
@@ -324,16 +275,10 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String, float)
-     */
     public static float getFloat( String key, float defaultValue ) {
         return Settings.config.getFloat( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String, java.lang.Float)
-     */
     public static Float getFloat( String key, Float defaultValue ) {
         return Settings.config.getFloat( key, defaultValue );
     }
@@ -377,16 +322,10 @@ public class Settings {
         return url;
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getInMemoryConfiguration()
-     */
     public static Configuration getInMemoryConfiguration() {
         return Settings.config.getInMemoryConfiguration();
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String)
-     */
     public static int getInt( String key ) {
         try {
             return Settings.config.getInt( key );
@@ -396,37 +335,22 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String, int)
-     */
     public static int getInt( String key, int defaultValue ) {
         return Settings.config.getInt( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInteger(java.lang.String, java.lang.Integer)
-     */
     public static Integer getInteger( String key, Integer defaultValue ) {
         return Settings.config.getInteger( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getKeys()
-     */
     public static Iterator<String> getKeys() {
         return Settings.config.getKeys();
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getKeys(java.lang.String)
-     */
     public static Iterator<String> getKeys( String key ) {
         return Settings.config.getKeys( key );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getList(java.lang.String)
-     */
     public static List<?> getList( String key ) {
 
         try {
@@ -438,16 +362,10 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String, java.util.List)
-     */
     public static List<?> getList( String key, List<Object> defaultValue ) {
         return Settings.config.getList( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String)
-     */
     public static long getLong( String key ) {
         try {
             return Settings.config.getLong( key );
@@ -457,51 +375,30 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String, long)
-     */
     public static long getLong( String key, long defaultValue ) {
         return Settings.config.getLong( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String, java.lang.Long)
-     */
     public static Long getLong( String key, Long defaultValue ) {
         return Settings.config.getLong( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getNumberOfConfigurations()
-     */
     public static int getNumberOfConfigurations() {
         return Settings.config.getNumberOfConfigurations();
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String)
-     */
     public static Properties getProperties( String key ) {
         return Settings.config.getProperties( key );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String, java.util.Properties)
-     */
     public static Properties getProperties( String key, Properties defaults ) {
         return Settings.config.getProperties( key, defaults );
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getProperty(java.lang.String)
-     */
     public static Object getProperty( String key ) {
         return Settings.config.getProperty( key );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String)
-     */
     public static short getShort( String key ) {
         try {
             return Settings.config.getShort( key );
@@ -512,23 +409,14 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String, short)
-     */
     public static short getShort( String key, short defaultValue ) {
         return Settings.config.getShort( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String, java.lang.Short)
-     */
     public static Short getShort( String key, Short defaultValue ) {
         return Settings.config.getShort( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
-     */
     public static String getString( String key ) {
         try {
             return StringUtils.strip( Settings.config.getString( key ), "\"\'" );
@@ -538,16 +426,10 @@ public class Settings {
         }
     }
 
-    /**
-     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String, java.lang.String)
-     */
     public static String getString( String key, String defaultValue ) {
         return Settings.config.getString( key, defaultValue );
     }
 
-    /**
-     * @see org.apache.commons.configuration.CompositeConfiguration#getStringArray(java.lang.String)
-     */
     public static String[] getStringArray( String key ) {
         try {
             return Settings.config.getStringArray( key );
@@ -590,6 +472,9 @@ public class Settings {
 
     /**
      * Set an environment/application variable programatically.
+     *
+     * @param key   key
+     * @param value value
      */
     public static void setProperty( String key, Object value ) {
         Settings.config.setProperty( key, value );
