@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -84,7 +83,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
 
         if ( !hasNewOutliers ) {
-            System.out.println( "No new outliers." );
+            //   log.info( "No new outliers." );
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );

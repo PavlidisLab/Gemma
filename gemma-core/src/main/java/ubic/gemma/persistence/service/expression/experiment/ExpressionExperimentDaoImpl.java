@@ -1004,8 +1004,8 @@ public class ExpressionExperimentDaoImpl
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments ) {
         //language=HQL
-        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.bioAssays ba "
-                + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
+        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.auditTrail trail inner join"
+                + " trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<>();

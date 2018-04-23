@@ -156,10 +156,6 @@
     <cache name="ubic.gemma.model.common.description.BibliographicReference.meshTerms" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.description.BibliographicReference.publicationTypes"
-           maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-           overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.common.description.BibliographicReference.keywords" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
@@ -192,9 +188,6 @@
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.BibRefAnnotationImpl" maxElementsInMemory="10000" eternal="false"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.description.PublicationTypeImpl" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.common.description.Keyword" maxElementsInMemory="10000" eternal="false"

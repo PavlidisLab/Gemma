@@ -470,17 +470,7 @@
         </terracotta>
     </cache>
 
-    <cache name="ubic.gemma.model.common.description.BibliographicReference.publicationTypes" maxElementsOnDisk="10000"
-           maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-           overflowToDisk="false">
-        <terracotta>
-            <nonstop timeoutMillis="3000">
-                <timeoutBehavior type="noop"/>
-            </nonstop>
-        </terracotta>
-    </cache>
-
-    <cache name="ubic.gemma.model.common.description.BibliographicReference.keywords" maxElementsOnDisk="10000"
+ <cache name="ubic.gemma.model.common.description.BibliographicReference.keywords" maxElementsOnDisk="10000"
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false">
         <terracotta>
@@ -580,16 +570,6 @@
     </cache>
 
     <cache name="ubic.gemma.model.common.description.BibRefAnnotationImpl" maxElementsOnDisk="10000"
-           maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-           overflowToDisk="false">
-        <terracotta>
-            <nonstop timeoutMillis="3000">
-                <timeoutBehavior type="noop"/>
-            </nonstop>
-        </terracotta>
-    </cache>
-
-    <cache name="ubic.gemma.model.common.description.PublicationTypeImpl" maxElementsOnDisk="10000"
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false">
         <terracotta>
