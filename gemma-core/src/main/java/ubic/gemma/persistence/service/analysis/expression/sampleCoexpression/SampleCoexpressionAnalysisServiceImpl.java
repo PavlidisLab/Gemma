@@ -138,7 +138,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
-
+        if ( matrix == null )
+            return null;
+        
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = matrix.getBioAssayDimension().getBioAssays();

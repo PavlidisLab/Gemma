@@ -292,6 +292,10 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        if ( omatrix == null ) {
+            log.warn( "No correlation matrix for ee " + id );
+            return null;
+        }
 
         List<String> stringNames = new ArrayList<>();
         for ( BioAssay ba : omatrix.getRowNames() ) {
