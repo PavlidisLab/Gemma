@@ -110,10 +110,11 @@ public class GeoPlatform extends GeoData {
      * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
      * from CEL files - exon arrays.
      * 
-     * Logic: if this was run on an Affymetrix exon array we won't use the data from GEO, *unless* it was already using
-     * the gene-level
-     * version of the platform, in which case we let it in. Note that we still endeavour to reanalyze all Affy data sets
-     * at the CEL file level
+     * Logic: if this was run on an Affymetrix exon array we won't use the data from GEO, even if it was already using
+     * the gene-level version of the platform, because there are several variant versions that just muck up the system
+     * with useless probes (we have gone back and forth on this a bit...)
+     * 
+     * Note that we endeavour to reanalyze all Affy data sets at the CEL file level.
      *
      * @param geoPlatformId (GPL)
      * @return true if the platform is affymetrix exon array.
@@ -127,9 +128,14 @@ public class GeoPlatform extends GeoData {
 
         String platformToUse = affyPlatformMap.get( geoPlatformId );
 
-        // it's already on the right platform, though we may replace the data later.
-        return platformToUse.equals( geoPlatformId ) || !affyExonArrays.contains( platformToUse );
+        if ( affyExonArrays.contains( platformToUse ) ) {
+            return false;
+        }
 
+        // it's already on the right platform, though we may replace the data later.
+        if ( platformToUse.equals( geoPlatformId ) ) return true;
+
+        return false; // alternative CDFs etc.
     }
 
     private Collection<String> catalogNumbers = new HashSet<>();
