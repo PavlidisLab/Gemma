@@ -34,6 +34,10 @@ public class ObjectFilter {
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
      *
      * @param propertyType the type of the property that will be checked.
+     * @param objectAlias alias of the relevant object to use in the final hql query
+     * @param operator operator the operator for this filter
+     * @param propertyName property name
+     * @param requiredValue required value
      * @see ObjectFilter#ObjectFilter(String, Object, String, String)
      */
     public ObjectFilter( String propertyName, Class propertyType, Object requiredValue, String operator,

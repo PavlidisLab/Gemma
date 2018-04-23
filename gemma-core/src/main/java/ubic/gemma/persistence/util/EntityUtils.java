@@ -109,6 +109,8 @@ public class EntityUtils {
      * Given a set of entities, create a map of their ids to the entities.
      *
      * @param entities where id is called "id"
+     * @param <T>      the type
+     * @return the created map
      */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
         Map<Long, T> result = new HashMap<>();
@@ -122,7 +124,11 @@ public class EntityUtils {
     }
 
     /**
-     * @param methodName accessor e.g. "getId"
+     * @param methodName     accessor e.g. "getId"
+     * @param <T>            the type
+     * @param entities       entities
+     * @param nestedProperty nested property
+     * @return the created map
      */
     public static <T> Map<Long, T> getNestedIdMap( Collection<? extends T> entities, String nestedProperty,
             String methodName ) {
@@ -142,6 +148,9 @@ public class EntityUtils {
 
     /**
      * @param methodName accessor e.g. "getId"
+     * @param entities   entities
+     * @param <T>        the type
+     * @return the created map
      */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String methodName ) {
         Map<Long, T> result = new HashMap<>();
@@ -154,6 +163,7 @@ public class EntityUtils {
     }
 
     /**
+     * @param entities entities
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
@@ -168,6 +178,7 @@ public class EntityUtils {
     /**
      * Convenience method for pushing an ID into a collection (encapsulates a common idiom)
      *
+     * @param entity entity
      * @return a collection with one item in it.
      */
     public static Collection<Long> getIds( Object entity ) {
@@ -192,7 +203,7 @@ public class EntityUtils {
      * Expert only. Must be called within a session? Not sure why this is necessary. Obtain the implementation for a
      * proxy. If target is not an instanceof HibernateProxy, target is returned.
      *
-     * @param target The object to be unproxied.
+     * @param target The object to be un-proxied.
      * @return the underlying implementation.
      */
     public static Object getImplementationForProxy( Object target ) {
@@ -204,6 +215,7 @@ public class EntityUtils {
     }
 
     /**
+     * @param target target
      * @return true if the target is a hibernate proxy.
      */
     public static boolean isProxy( Object target ) {
@@ -213,6 +225,7 @@ public class EntityUtils {
     /**
      * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
      *
+     * @param sess         session
      * @param securedClass Securable type
      * @param ids          to be filtered
      * @param showPublic   also show public items (won't work if showOnlyEditable is true)

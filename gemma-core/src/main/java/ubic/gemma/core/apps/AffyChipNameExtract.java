@@ -32,7 +32,7 @@ import java.io.InputStream;
  * 
  * You just run this like
  * 
- * $GEMMACMD chipnameExtract <filenames>
+ * $GEMMACMD chipnameExtract [filenames]
  * 
  * It doesn't handle the regular argument setup, wasn't worth the trouble.
  * 
