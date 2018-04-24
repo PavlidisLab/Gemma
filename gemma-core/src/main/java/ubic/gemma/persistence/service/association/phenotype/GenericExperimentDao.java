@@ -26,7 +26,8 @@ import java.util.Collection;
 public interface GenericExperimentDao extends BaseDao<GenericExperiment> {
 
     /**
-     * Find all Investigations for a specific pubmed
+     * @param pubmed pubmed
+     * @return all Investigations for a specific pubmed
      */
     Collection<GenericExperiment> findByPubmedID( String pubmed );
 
