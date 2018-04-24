@@ -93,7 +93,11 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 .getBean( SampleCoexpressionAnalysisService.class );
 
         ee = eeService.thawLiter( ee );
-        sampleCoexpressionAnalysisService.load( ee );
+        if ( !force ) {
+            sampleCoexpressionAnalysisService.load( ee );
+        } else {
+            sampleCoexpressionAnalysisService.compute( ee );
+        }
 
         this.audit( ee );
     }
