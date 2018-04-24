@@ -87,7 +87,10 @@ public interface CompositeSequenceService
             Collection<ArrayDesign> arrayDesigns );
 
     /**
-     * Given a Collection of composite sequences returns of map of a compositesequence to a collection of genes
+     * Given a Collection of composite sequences returns of map of a composite sequence to a collection of genes
+     *
+     * @param sequences sequences
+     * @return map
      */
     Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences );
 
@@ -96,7 +99,8 @@ public interface CompositeSequenceService
     Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
     /**
-     * Returns a map of CompositeSequences to collection of BioSequence2GeneProducts at each location.
+     * @param compositeSequences sequences
+     * @return a map of CompositeSequences to collection of BioSequence2GeneProducts at each location.
      */
     Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
@@ -104,12 +108,6 @@ public interface CompositeSequenceService
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
-
-    /**
-     * @deprecated Not used?
-     */
-    @Deprecated
-    Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
     Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs );
 

@@ -37,9 +37,10 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
     BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
-     * <p>
      * Find by the external database id, such as for PubMed
-     * </p>
+     *
+     * @param externalId external database id
+     * @return found bibliographic reference
      */
     BibliographicReference findByExternalId( DatabaseEntry externalId );
 

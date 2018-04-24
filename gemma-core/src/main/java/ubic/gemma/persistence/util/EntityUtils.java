@@ -225,10 +225,11 @@ public class EntityUtils {
     /**
      * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
      *
-     * @param sess         session
-     * @param securedClass Securable type
-     * @param ids          to be filtered
-     * @param showPublic   also show public items (won't work if showOnlyEditable is true)
+     * @param sess             session
+     * @param securedClass     Securable type
+     * @param ids              to be filtered
+     * @param showPublic       also show public items (won't work if showOnlyEditable is true)
+     * @param showOnlyEditable show only editable
      * @return filtered IDs, at the very least limited to those that are readable by the current user
      */
     public static Collection<Long> securityFilterIds( Class<? extends Securable> securedClass, Collection<Long> ids,

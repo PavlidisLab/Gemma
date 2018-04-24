@@ -49,7 +49,6 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -80,8 +79,6 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
     private HomologeneService homologeneService;
     @Autowired
     private SearchService searchService;
-    @Autowired
-    private TaxonService taxonService;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -95,18 +92,12 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return this.geneDao.find( physicalLocation );
     }
 
-    /**
-     * @see GeneService#findByAccession(String, ubic.gemma.model.common.description.ExternalDatabase)
-     */
     @Override
     @Transactional(readOnly = true)
     public Gene findByAccession( final String accession, final ExternalDatabase source ) {
         return this.geneDao.findByAccession( accession, source );
     }
 
-    /**
-     * @see GeneService#findByAlias(String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByAlias( final String search ) {
@@ -119,9 +110,6 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return this.geneDao.findByEnsemblId( exactString );
     }
 
-    /**
-     * @see GeneService#findByNCBIId(Integer)
-     */
     @Override
     @Transactional(readOnly = true)
     public Gene findByNCBIId( Integer accession ) {
@@ -146,9 +134,6 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return result;
     }
 
-    /**
-     * @see GeneService#findByOfficialName(String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialName( final String officialName ) {
@@ -161,27 +146,18 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return this.geneDao.findByOfficialNameInexact( officialName );
     }
 
-    /**
-     * @see GeneService#findByOfficialSymbol(String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
         return this.geneDao.findByOfficialSymbol( officialSymbol );
     }
 
-    /**
-     * @see GeneService#findByOfficialSymbol(String, Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
         return this.geneDao.findByOfficialSymbol( symbol, taxon );
     }
 
-    /**
-     * @see GeneService#findByOfficialSymbolInexact(String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
@@ -233,36 +209,24 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return annotationAssociationService.removeRootTerms( ontologies );
     }
 
-    /**
-     * @see GeneService#getCompositeSequenceCountById(Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public long getCompositeSequenceCountById( final Long id ) {
         return this.geneDao.getCompositeSequenceCountById( id );
     }
 
-    /**
-     * @see GeneService#getCompositeSequences(Gene, ArrayDesign)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
         return this.geneDao.getCompositeSequences( gene, arrayDesign );
     }
 
-    /**
-     * @see GeneService#getCompositeSequencesById(Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
         return this.geneDao.getCompositeSequencesById( id );
     }
 
-    /**
-     * @see GeneService#getGenesByTaxon(Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
@@ -321,9 +285,6 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return result;
     }
 
-    /**
-     * @see GeneService#loadAll(Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadAll( final Taxon taxon ) {
@@ -438,9 +399,6 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return details;
     }
 
-    /**
-     * @see GeneService#loadMicroRNAs(Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadMicroRNAs( final Taxon taxon ) {
@@ -488,18 +446,12 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         return this.geneDao.thaw( gene );
     }
 
-    /**
-     * Only thaw the Aliases, very light version
-     */
     @Override
     @Transactional(readOnly = true)
     public Gene thawAliases( Gene gene ) {
         return this.geneDao.thawAliases( gene );
     }
 
-    /**
-     * @see GeneService#thawLite(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {

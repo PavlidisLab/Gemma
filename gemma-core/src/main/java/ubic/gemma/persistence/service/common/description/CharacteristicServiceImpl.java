@@ -91,11 +91,8 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
         return this.characteristicDao.findByUri( searchString );
     }
 
-    /**
-     * @see CharacteristicService#findByValue(java.lang.String)
-     */
     @Override
-    public java.util.Collection<Characteristic> findByValue( java.lang.String search ) {
+    public Collection<Characteristic> findByValue( java.lang.String search ) {
         return this.characteristicDao.findByValue( search + '%' );
     }
 

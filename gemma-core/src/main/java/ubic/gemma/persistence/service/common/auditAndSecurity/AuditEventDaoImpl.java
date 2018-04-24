@@ -164,6 +164,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
     /**
      * Note that this only returns selected classes of auditables.
      *
+     * @param date date
      * @return Collection of Auditables
      * @see AuditEventDao#getNewSinceDate(java.util.Date)
      */
@@ -181,6 +182,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
     /**
      * Note that this only returns selected classes of auditables.
      *
+     * @param date date
      * @return Collection of Auditables
      * @see AuditEventDao#getUpdatedSinceDate(Date)
      */
@@ -367,6 +369,9 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
     /**
      * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
+     *
+     * @param auditables auditables
+     * @return map of audit trails to auditables
      */
     @SuppressWarnings("unchecked")
     private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
@@ -447,6 +452,8 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
     /**
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given classes)
+     * @param types types
+     * @return list of types
      */
     private List<String> getClassHierarchy( Collection<Class<? extends AuditEventType>> types ) {
         List<String> classes = new ArrayList<>();

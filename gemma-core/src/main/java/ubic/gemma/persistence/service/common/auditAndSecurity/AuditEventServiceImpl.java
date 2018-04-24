@@ -62,17 +62,11 @@ public class AuditEventServiceImpl implements AuditEventService {
         return this.auditEventDao.getLastEvents( auditables, types );
     }
 
-    /**
-     * @see AuditEventService#getNewSinceDate(java.util.Date)
-     */
     @Override
     public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date ) {
         return this.auditEventDao.getNewSinceDate( date );
     }
 
-    /**
-     * @see AuditEventService#getUpdatedSinceDate(java.util.Date)
-     */
     @Override
     public Collection<Auditable> getUpdatedSinceDate( java.util.Date date ) {
         return this.auditEventDao.getUpdatedSinceDate( date );

@@ -52,6 +52,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     Collection<String> findEvidenceOwners();
 
     /**
+     * @param limit limit
+     * @param externalDatabaseName external database name
+     * @param start start
      * @return all evidences from a specific external database
      */
     Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit,
@@ -182,7 +185,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String filePath );
 
     /**
-     * @param filePath path
+     * @param folderPath path
      * @return all external databases statistics used in neurocarta
      */
     Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );

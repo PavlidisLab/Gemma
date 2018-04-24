@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,8 @@ public interface AuditEventService {
     /**
      * Fast method to retrieve auditEventTypes of multiple classes.
      *
+     * @param types      types
+     * @param auditables auditables
      * @return map of AuditEventType to a Map of Auditable to the AuditEvent matching that type.
      * Note: cannot secure this very easily since map key is a Class.
      */
@@ -49,19 +52,21 @@ public interface AuditEventService {
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
-     * Returns a collection of Auditables created since the date given.
+     * @param date date
+     * @return a collection of Auditables created since the date given.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
+    Collection<Auditable> getNewSinceDate( Date date );
 
     /**
-     * Returns a collection of Auditable objects that were updated since the date entered.
+     * @param date date
+     * @return a collection of Auditable objects that were updated since the date entered.
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
      * applicationContext-security.xml
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
+    Collection<Auditable> getUpdatedSinceDate( Date date );
 
     boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 

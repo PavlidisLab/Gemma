@@ -140,12 +140,14 @@ public interface CoexpressionService {
      * @param quick      quick
      * @param t          taxon
      * @param genes      genes
+     * @return a map of gene IDs to coexpression results.
      */
     Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, boolean quick );
 
     /**
-     * @param quick quick
+     * @param quick      quick
+     * @param experiment experiment
      * @return all the coexpression links for the given experiment, but not including flipped versions
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

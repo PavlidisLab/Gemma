@@ -34,13 +34,17 @@ import java.util.Map;
  * @see AuditEventService
  */
 public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventValueObject> {
+
     /**
+     * @param auditable auditable
      * @return events for the given auditable.
      */
     List<AuditEvent> getEvents( Auditable auditable );
 
     /**
-     * Returns the last AuditEvent of the specified type from the given auditable.
+     * @param auditable auditable
+     * @param type      type
+     * @return the last AuditEvent of the specified type from the given auditable.
      */
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
@@ -49,11 +53,17 @@ public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventVa
 
     /**
      * Get auditables that have been Created since the given date
+     *
+     * @param date date
+     * @return auditables
      */
     Collection<Auditable> getNewSinceDate( Date date );
 
     /**
      * Get auditables that have been Updated since the given date
+     *
+     * @param date date
+     * @return auditables
      */
     Collection<Auditable> getUpdatedSinceDate( Date date );
 

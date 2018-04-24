@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * Interface that supports basic CRUD operations.
  *
- * @param <T>
+ * @param <T> type
  * @author paul
  */
 public interface BaseDao<T> {

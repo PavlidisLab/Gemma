@@ -163,11 +163,6 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
-        return this.compositeSequenceDao.getRawSummary( compositeSequence, numResults );
-    }
-
-    @Override
     public Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs ) {
         BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
 
