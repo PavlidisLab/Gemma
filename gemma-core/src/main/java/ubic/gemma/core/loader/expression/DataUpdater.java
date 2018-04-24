@@ -497,7 +497,7 @@ public class DataUpdater {
         }
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
 
-        if ( files.isEmpty() ) {
+        if ( files == null || files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
         ee = experimentService.thawLite( ee );
