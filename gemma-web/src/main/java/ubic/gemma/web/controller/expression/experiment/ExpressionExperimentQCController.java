@@ -323,8 +323,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ColorMatrix<String, String> cm = new ColorMatrix<>( matrix );
 
-        this.cleanNames( matrix );
-
         int row = matrix.rows();
         int cellsize = ( int ) Math.min( ExpressionExperimentQCController.MAX_HEATMAP_CELLSIZE,
                 Math.max( 1, size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX / row ) );
@@ -469,42 +467,6 @@ public class ExpressionExperimentQCController extends BaseController {
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
             double height ) {
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
-    }
-
-    /**
-     * clean up the names of the correlation matrix rows and columns, so they are not to long and also contain the
-     * bioassay id for reference purposes. Note that newly created coexpression matrices already give shorter names, so
-     * this is partly for backwards compatibility with the old format.
-     */
-    private void cleanNames( DoubleMatrix<String, String> matrix ) {
-        List<String> rawRowNames = matrix.getRowNames();
-        List<String> rowNames = new ArrayList<>();
-        int i = 0;
-        Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
-        Pattern bipattern = Pattern.compile( "BioAssay Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
-        int MAX_BIO_ASSAY_NAME_LEN = 30;
-
-        for ( String rn : rawRowNames ) {
-            Matcher matcher = p.matcher( rn );
-            Matcher bppat = bipattern.matcher( rn );
-            String bioassayid = null;
-            if ( matcher.matches() ) {
-                bioassayid = matcher.group( 1 );
-            }
-
-            String cleanRn = StringUtils.abbreviate( bppat.replaceFirst( "" ), MAX_BIO_ASSAY_NAME_LEN );
-
-            if ( bioassayid != null ) {
-                if ( !cleanRn.contains( bioassayid ) )
-                    rowNames.add( cleanRn + " ID=" + bioassayid ); // ensure the rows are unique
-                else
-                    rowNames.add( cleanRn + " " + ++i );
-            } else {
-                rowNames.add( cleanRn );
-            }
-        }
-        matrix.setRowNames( rowNames );
-        matrix.setColumnNames( rowNames );
     }
 
     /**
