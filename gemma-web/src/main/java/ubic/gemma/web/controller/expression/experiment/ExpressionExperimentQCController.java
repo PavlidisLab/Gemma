@@ -277,24 +277,24 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param os         response output stream
      */
     @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
-    public ModelAndView visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
+    public void visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
             Boolean forceShowLabels, OutputStream os ) throws Exception {
 
         if ( id == null ) {
             log.warn( "No id!" );
-            return null;
+            return;
         }
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
-            return null;
+            return;
         }
 
         DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );
-            return null;
+            return;
         }
 
         List<String> stringNames = new ArrayList<>();
@@ -309,9 +309,9 @@ public class ExpressionExperimentQCController extends BaseController {
             StringWriter s = new StringWriter();
             MatrixWriter<String, String> mw = new MatrixWriter<>( s, new DecimalFormat( "#.##" ) );
             mw.writeMatrix( matrix, true );
-            ModelAndView mav = new ModelAndView( new TextView() );
-            mav.addObject( TextView.TEXT_PARAM, s.toString() );
-            return mav;
+            os.write( s.toString().replace( "\uFFFD", "\t" )
+                    .getBytes() ); // This does not solve the root issue, but I wasted too much time on it
+            return;
         }
 
         /*
@@ -343,8 +343,6 @@ public class ExpressionExperimentQCController extends BaseController {
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
         boolean showScalebar = size > 2;
         writer.writeToPng( cm, os, reallyShowLabels, showScalebar );
-
-        return null; // nothing to return;
     }
 
     /**
