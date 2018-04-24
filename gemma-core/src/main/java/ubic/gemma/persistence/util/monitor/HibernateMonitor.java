@@ -21,7 +21,7 @@ package ubic.gemma.persistence.util.monitor;
 public interface HibernateMonitor {
 
     /**
-     * Log some statistics.
+     * @return Log some statistics.
      */
     String getStats();
 
@@ -31,6 +31,7 @@ public interface HibernateMonitor {
      * @param showEntityStats             whether to show entity statistics
      * @param showCollectionStats         whether to show collection statistics
      * @param showSecondLevelCacheDetails whether to show level cache details
+     * @return log
      */
     String getStats( boolean showEntityStats, boolean showCollectionStats, boolean showSecondLevelCacheDetails );
 

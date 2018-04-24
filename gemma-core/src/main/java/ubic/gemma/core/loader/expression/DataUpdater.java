@@ -122,9 +122,9 @@ public class DataUpdater {
      * "right" platform when the one originally used was an alt CDF or exon-level, so be sure never to use an alt CDF
      * for processing raw data.
      *
-     * @param ee ee
+     * @param ee                  ee
      * @param pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
-     *        exon-level)
+     *                            exon-level)
      * @throws IOException when IO problems occur.
      */
     public void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
@@ -173,14 +173,14 @@ public class DataUpdater {
      * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
      * type we use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param ee ee
-     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
-     *        switched to use it.
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param ee                  ee
+     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
+     *                            switched to use it.
+     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads is paired reads
-     * @param readLength read length
+     * @param isPairedReads       is paired reads
+     * @param readLength          read length
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
@@ -231,7 +231,7 @@ public class DataUpdater {
             QuantitationType rpkmqt = this.makeRPKMQt();
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
 
-            ee = this.addData( ee, targetArrayDesign, rpkmEEMatrix );
+            this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
     }
@@ -241,14 +241,13 @@ public class DataUpdater {
      * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
      * a preferred quantitation type, an error will be thrown.
      *
-     * @param ee ee
+     * @param ee             ee
      * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
-     *        for a multi-platform dataset)
-     * @param data to slot in
+     *                       for a multi-platform dataset)
+     * @param data           to slot in
      * @return ee
      */
-    public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            ExpressionDataDoubleMatrix data ) {
+    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
             throw new IllegalArgumentException( "Data had no rows" );
@@ -304,7 +303,7 @@ public class DataUpdater {
      * @return amount of vectors removed
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
-    public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
+    int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeRawVectors( ee, qt );
     }
 
@@ -360,91 +359,16 @@ public class DataUpdater {
 
     /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
-     * quantitation type. Note that this replaces the "raw" data.
-     * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
-     * SimpleExpressionDataLoaderService.
-     *
-     * <<<<<<< HEAD
-     * 
-     * @param ee the experiment to be modified
-     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
-     *        experiment will be switched to it if necessary.
-     * @param data the data to be used
-     *        =======
-     * @param ee the experiment to be modified
-     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
-     * @param data the data to be used
-     *        >>>>>>> development
-     * @return ee
-     */
-    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            ExpressionDataDoubleMatrix data ) {
-
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
-                    + "you must switch/merge first and then provide appropriate replacement data." );
-        }
-
-        if ( data.rows() == 0 ) {
-            throw new IllegalArgumentException( "Data had no rows" );
-        }
-
-        ArrayDesign originalArrayDesign = ads.iterator().next();
-
-        Collection<QuantitationType> qts = data.getQuantitationTypes();
-
-        if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Only supports a single quantitation type" );
-        }
-
-        if ( qts.isEmpty() ) {
-            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
-        }
-
-        QuantitationType qt = qts.iterator().next();
-        qt.setIsPreferred( true );
-
-        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "no vectors!" );
-        }
-
-        ee = experimentService.replaceRawVectors( ee, vectors );
-
-        if ( !targetPlatform.equals( originalArrayDesign ) ) {
-
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform, ee.getBioAssays() );
-
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using data input (from " + originalArrayDesign
-                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
-        }
-
-        this.audit( ee, "Data vector replacement for " + targetPlatform, true );
-        experimentService.update( ee );
-
-        ee = this.postprocess( ee );
-
-        assert ee.getNumberOfDataVectors() != null;
-
-        return ee;
-    }
-
-    /**
-     * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type. Note that this replaces the "raw" data. Similar to
      * AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
      *
-     * @param ee ee
+     * @param ee             ee
      * @param targetPlatform (this only works for a single-platform data set)
-     * @param qt qt
-     * @param data data
+     * @param qt             qt
+     * @param data           data
      * @return ee
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
@@ -488,7 +412,7 @@ public class DataUpdater {
             }
         }
 
-        boolean vectorsWereMerged = isOnMergedPlatform && this.hasEvent( ee, ExpressionExperimentVectorMergeEvent.class );
+        boolean vectorsWereMerged = isOnMergedPlatform && this.hasVectorMergeEvent( ee );
 
         RawDataFetcher f = new RawDataFetcher();
         if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
@@ -536,8 +460,9 @@ public class DataUpdater {
                         + " for original platform = " + originalPlatform );
 
             DataUpdater.log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
-                    + "BioAssays are currently recorded as platform=" + originalPlatform
-                    + ( isOnMergedPlatform ? " (Via merged platform " + associatedPlats.iterator().next() + ")" : "" ) );
+                    + "BioAssays are currently recorded as platform=" + originalPlatform + ( isOnMergedPlatform ?
+                    " (Via merged platform " + associatedPlats.iterator().next() + ")" :
+                    "" ) );
 
             Collection<RawExpressionDataVector> v = apt
                     .processData( ee, targetPlatform, originalPlatform, bioAssays, files );
@@ -572,8 +497,7 @@ public class DataUpdater {
                 AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
                 auditTrailService.addUpdateEvent( ee, eventType, "Switched " + numSwitched
                         + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
-                                .getShortName()
-                        + " to " + targetPlatform.getShortName() + ")" );
+                        .getShortName() + " to " + targetPlatform.getShortName() + ")" );
             }
         }
 
@@ -630,11 +554,79 @@ public class DataUpdater {
     }
 
     /**
+     * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
+     * quantitation type. Note that this replaces the "raw" data.
+     * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
+     * SimpleExpressionDataLoaderService.
+     *
+     * @param ee             the experiment to be modified
+     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
+     *                       experiment will be switched to it if necessary.
+     * @param data           the data to be used
+     * @return ee
+     */
+    ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ExpressionDataDoubleMatrix data ) {
+
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
+                    + "you must switch/merge first and then provide appropriate replacement data." );
+        }
+
+        if ( data.rows() == 0 ) {
+            throw new IllegalArgumentException( "Data had no rows" );
+        }
+
+        ArrayDesign originalArrayDesign = ads.iterator().next();
+
+        Collection<QuantitationType> qts = data.getQuantitationTypes();
+
+        if ( qts.size() > 1 ) {
+            throw new IllegalArgumentException( "Only supports a single quantitation type" );
+        }
+
+        if ( qts.isEmpty() ) {
+            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
+        }
+
+        QuantitationType qt = qts.iterator().next();
+        qt.setIsPreferred( true );
+
+        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "no vectors!" );
+        }
+
+        ee = experimentService.replaceRawVectors( ee, vectors );
+
+        if ( !targetPlatform.equals( originalArrayDesign ) ) {
+
+            this.switchBioAssaysToTargetPlatform( ee, targetPlatform, ee.getBioAssays() );
+
+            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+            auditTrailService.addUpdateEvent( ee, eventType,
+                    "Switched in course of updating vectors using data input (from " + originalArrayDesign
+                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
+        }
+
+        this.audit( ee, "Data vector replacement for " + targetPlatform, true );
+        experimentService.update( ee );
+
+        ee = this.postprocess( ee );
+
+        assert ee.getNumberOfDataVectors() != null;
+
+        return ee;
+    }
+
+    /**
      * RNA-seq
      *
-     * @param ee experiment
+     * @param ee            experiment
      * @param countEEMatrix count ee matrix
-     * @param readLength read length
+     * @param readLength    read length
      * @param isPairedReads is paired reads
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
@@ -658,8 +650,8 @@ public class DataUpdater {
      * Generic
      *
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee ee
-     * @param note note
+     * @param ee      ee
+     * @param note    note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
         AuditEventType eventType;
@@ -676,8 +668,8 @@ public class DataUpdater {
     /**
      * RNA-seq
      *
-     * @param ee experiment
-     * @param countMatrix count matrix
+     * @param ee                  experiment
+     * @param countMatrix         count matrix
      * @param allowMissingSamples allow missing samples
      * @return experiment
      */
@@ -739,10 +731,10 @@ public class DataUpdater {
     /**
      * Affymetrix
      *
-     * @param ee (lightly thawed)
+     * @param ee    (lightly thawed)
      * @param files CEL files
      * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily the
-     *         "original platform".
+     * "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee,
             Collection<LocalFile> files ) {
@@ -828,14 +820,16 @@ public class DataUpdater {
     }
 
     /**
-     * @param eventClass if null, then all events are added.
+     * @param a auditable
+     * @return true if auditable has vector merge event
      */
-    private boolean hasEvent( Auditable a, Class<? extends AuditEventType> eventClass ) {
+    private boolean hasVectorMergeEvent( Auditable a ) {
 
         for ( AuditEvent event : this.auditTrailService.getEvents( a ) ) {
             if ( event == null )
                 continue; // just in case; should not happen
-            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+            if ( event.getEventType() != null && ExpressionExperimentVectorMergeEvent.class
+                    .isAssignableFrom( event.getEventType().getClass() ) ) {
                 return true;
             }
         }
@@ -921,10 +915,10 @@ public class DataUpdater {
     /**
      * Non-Affymetrix
      *
-     * @param ee experiment
+     * @param ee             experiment
      * @param targetPlatform target platform
-     * @param data data
-     * @param qt QT
+     * @param data           data
+     * @param qt             QT
      * @return raw vectors
      */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -1012,8 +1006,8 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param ee experiment
-     * @param rawMatrix raw matrix
+     * @param ee          experiment
+     * @param rawMatrix   raw matrix
      * @param finalMatrix final matrix
      */
     private void matchBioMaterialsToColNames( ExpressionExperiment ee, DoubleMatrix<String, String> rawMatrix,
@@ -1039,7 +1033,7 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param rawMatrix matrix
+     * @param rawMatrix         matrix
      * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
@@ -1118,9 +1112,9 @@ public class DataUpdater {
      * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
      * will be done)
      *
-     * @param ee presumed thawed
+     * @param ee             presumed thawed
      * @param targetPlatform target platform
-     * @param toBeSwitched if necessary, specific which bioassays need to be switched (case: merged and re-run); or null
+     * @param toBeSwitched   if necessary, specific which bioassays need to be switched (case: merged and re-run); or null
      * @return how many were switched
      */
     private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform,

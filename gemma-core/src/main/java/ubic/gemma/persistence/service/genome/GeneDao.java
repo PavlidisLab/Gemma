@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,14 +38,19 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
+     *
+     * @param physicalLocation physical location
+     * @return found genes
      */
-    @Deprecated
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
     Gene findByAccession( String accession, ExternalDatabase source );
 
     /**
      * Locate genes that match the given alias string
+     *
+     * @param search search string
+     * @return found genes
      */
     Collection<Gene> findByAlias( String search );
 
@@ -53,11 +58,6 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
 
     Gene findByNcbiId( Integer accession );
 
-    /**
-     * <p>
-     * Finder based on the official name.
-     * </p>
-     */
     Collection<Gene> findByOfficialSymbol( String officialSymbol );
 
     Collection<Gene> findByOfficialName( String officialName );
@@ -71,6 +71,8 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
     /**
      * Quickly load exact matches.
      *
+     * @param query   query
+     * @param taxonId taxon id
      * @return map of gene symbol (toLowerCase()) to the gene. The actual query that led to the gene is not retained.
      */
     Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId );
@@ -78,6 +80,7 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
     /**
      * Quickly load exact matches.
      *
+     * @param ncbiIds ncbi ids
      * @return map of NCBI Id to the gene.
      */
     Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds );
@@ -86,6 +89,7 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
     Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
     /**
+     * @param id id
      * @return how many platform elements (e.g. probes) represent this gene, totalled up over all platforms.
      */
     long getCompositeSequenceCountById( long id );
@@ -95,22 +99,26 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
     Collection<CompositeSequence> getCompositeSequencesById( long id );
 
     /**
-     * returns a collections of genes that match the given taxon
+     * @param taxon taxon
+     * @return a collections of genes that match the given taxon
      */
     Collection<Gene> getGenesByTaxon( Taxon taxon );
 
     /**
-     * Returns a collection of genes that are actually MicroRNA for a given taxon
+     * @param taxon taxon
+     * @return a collection of genes that are actually MicroRNA for a given taxon
      */
     Collection<Gene> getMicroRnaByTaxon( Taxon taxon );
 
     /**
+     * @param id id
      * @return how many platforms have a representation of this gene
      */
     int getPlatformCountById( Long id );
 
     /**
-     * Returns a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
+     * @param taxon taxon
+     * @return  a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
      */
     Collection<Gene> loadKnownGenes( Taxon taxon );

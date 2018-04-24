@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * Interface that supports basic CRUD operations.
  *
- * @param <T>
+ * @param <T> type
  * @author paul
  */
 public interface BaseDao<T> {
@@ -39,6 +39,9 @@ public interface BaseDao<T> {
     /**
      * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
      * appropriate 'find' method.
+     *
+     * @param entity the entity to create
+     * @return the persistent version of the entity
      */
     T create( T entity );
 
@@ -78,21 +81,25 @@ public interface BaseDao<T> {
      * Remove a persistent instance based on its id. The implementer is trusted to know what type of object to remove.
      * Note that this method is to be avoided for Securables, because it will leave cruft in the ACL tables. We may fix
      * this by having this method return the removed object.
+     *
+     * @param id the id of the entity to be removed
      */
     void remove( Long id );
 
     /**
      * Remove a persistent instance
+     *
+     * @param entity the entity to be removed
      */
     void remove( T entity );
 
     /**
-     * Update the entities. Not supported if the entities are immutable.
+     * @param entities Update the entities. Not supported if the entities are immutable.
      */
     void update( Collection<T> entities );
 
     /**
-     * Update the entity. Not supported if the entity is immutable.
+     * @param entity Update the entity. Not supported if the entity is immutable.
      */
     void update( T entity );
 

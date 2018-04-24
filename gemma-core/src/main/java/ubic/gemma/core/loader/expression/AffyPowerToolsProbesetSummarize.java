@@ -87,7 +87,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param bmap bMap
-     * @param sampleName sampleName
+     * @param fileName file name
      * @return BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {

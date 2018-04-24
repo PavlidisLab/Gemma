@@ -70,9 +70,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final String MSG_ERR_NO_DESIGN = "Can not run factor regression! No experimental factors found.";
     private static final String MSG_ERR_NO_FACTORS = "Can not run factor regression! No factors to include in the regressed matrix.";
     private static final String MSG_ERR_NO_BAS_IN_BAD = "No bioassays in the bioAssayDimension id:%d";
-    private static final String MSG_ERR_REFORMAT = "Could not reformat the sample correlation matrix!";
     private static final String MSG_ERR_BIOASSAY_MISMATCH = "Number of bioassays doesn't match length of the best bioAssayDimension. BAs in dimension: %d, rows in cormat: %d";
-
     private static final String MSG_INFO_RUNNING_SCM = "Sample Correlations not calculated for ee %d yet, running them now.";
     private static final String MSG_INFO_COMPUTING_SCM = "Computing sample coexpression matrix for ee %d, regressing: %s";
     private static final String MSG_INFO_REGRESSING = "Regressing out covariates";
@@ -140,7 +138,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
         if ( matrix == null )
             return null;
-        
+
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = matrix.getBioAssayDimension().getBioAssays();
@@ -158,6 +156,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );
             result.setColumnNames( bioAssays );
+            result = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( result );
+            result = result.subsetRows( result.getColNames() ); // enforce same order on rows.
             return result;
         } catch ( IllegalArgumentException e ) {
             SampleCoexpressionAnalysisServiceImpl.log.error( e.getMessage() );
@@ -200,18 +200,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             transpose.setRowName( s, i );
         }
 
-        return this.reformatCorMat( MatrixStats.correlationMatrix( transpose ) );
-    }
-
-    private DoubleMatrix<BioAssay, BioAssay> reformatCorMat( DoubleMatrix<BioAssay, BioAssay> cormat ) {
-        try {
-            cormat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( cormat );
-            cormat = cormat.subsetRows( cormat.getColNames() ); // enforce same order on rows.
-        } catch ( Exception e ) {
-            SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_REFORMAT );
-            e.printStackTrace();
-        }
-        return cormat;
+        return MatrixStats.correlationMatrix( transpose );
     }
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,

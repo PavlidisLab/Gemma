@@ -36,37 +36,43 @@ import java.util.Set;
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /**
-     * counts the evidence that from neurocarta that came from a specific MetaAnalysis
+     * @param geneDifferentialExpressionMetaAnalysisId id
+     * @return count of the evidence that from neurocarta that came from a specific MetaAnalysis
      */
     Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
 
     /**
-     * find category terms currently used in the database by evidence
+     * @return category terms currently used in the database by evidence
      */
     Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
     /**
-     * return the list of the owners that have evidence in the system
+     * @return the list of the owners that have evidence in the system
      */
     Collection<String> findEvidenceOwners();
 
     /**
-     * find all evidences from a specific external database
+     * @param limit limit
+     * @param externalDatabaseName external database name
+     * @param start start
+     * @return all evidences from a specific external database
      */
     Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit,
             int start );
 
     /**
-     * find all evidence that doesn't come from an external course
+     * @return all evidence that doesn't come from an external course
      */
     Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
 
     /**
-     * Gets all External Databases that are used with evidence
+     * @return all External Databases that are used with evidence
      */
     Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 
     /**
+     * @param taxon      taxon
+     * @param term       term
      * @param includeIEA if false, electronic annotations will be omitted
      * @return map of gene value objects to the exact phenotype the gene was annotated to. (gives no indication of 'bag
      * of terms')
@@ -74,55 +80,79 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA );
 
     /**
-     * find Genes link to a phenotype
+     * @param taxon               taxon
+     * @param externalDatabaseIds external db ids
+     * @param phenotypesValueUri  phenotype value uri
+     * @param showOnlyEditable    show only editable
+     * @return Genes link to a phenotype
      */
     Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /**
-     * find all PhenotypeAssociation for a specific gene id
+     * @param geneId gene id
+     * @return all PhenotypeAssociation for a specific gene id
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
 
     /**
-     * find all PhenotypeAssociation for a specific gene id and external Databases ids
+     * @param externalDatabaseIds external db ids
+     * @param geneId              gene id
+     * @return all PhenotypeAssociation for a specific gene id and external Databases ids
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
             Collection<Long> externalDatabaseIds );
 
     /**
-     * find all PhenotypeAssociation for a specific NCBI id
+     * @param geneNCBI gene ncbi id
+     * @return all PhenotypeAssociation for a specific NCBI id
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
     /**
-     * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
+     * @param geneNCBI  gene ncbi id
+     * @param phenotype phenotype
+     * @return all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype );
 
     /**
-     * find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
+     * @param ids ids
+     * @return PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
      */
     Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids );
 
     /**
-     * find PhenotypeAssociations associated with a BibliographicReference
+     * @param pubMedID pumbed id
+     * @return PhenotypeAssociations associated with a BibliographicReference
      */
     Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
     /**
-     * find private evidence id that the user can modify or owns
+     * @param limit   limit
+     * @param taxonId taxon id
+     * @return private evidence id that the user can modify or owns
      */
     Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
 
     /**
-     * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
+     * @param externalDatabaseIds    external db ids
+     * @param taxon                  taxon
+     * @param noElectronicAnnotation no electronic annotation
+     * @param showOnlyEditable       show only editable
+     * @param valuesUri              value uris
+     * @return ll private phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     /**
-     * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
+     * @param showOnlyEditable       show only editable
+     * @param noElectronicAnnotation no electronic annotation
+     * @param taxon                  taxon
+     * @param externalDatabaseIds    external database ids
+     * @param valuesUri              values uri
+     * @return all public phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
@@ -130,40 +160,47 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     Collection<String> loadAllDescription();
 
     /**
-     * find all phenotypes in Neurocarta
+     * @return all phenotypes in Neurocarta
      */
     Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
-     * load all valueURI of Phenotype in the database
+     * @return all valueURI of Phenotype in the database
      */
     Set<String> loadAllPhenotypesUri();
 
     /**
-     * returns a Collection of DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one
+     * @param maxResults                               max results
+     * @param geneDifferentialExpressionMetaAnalysisId ids
+     * @return a Collection of DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one
      * exists (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, int maxResults );
 
     /**
-     * find statistics all evidences
+     * @param filePath path
+     * @return statistics all evidences
      */
     ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String filePath );
 
     /**
-     * finds all external databases statistics used in neurocarta
+     * @param folderPath path
+     * @return all external databases statistics used in neurocarta
      */
     Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );
 
     /**
-     * find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.)
+     * @param filePath path
+     * @return statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.)
      */
     ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String filePath );
 
     /**
      * remove a PhenotypeAssociationPublication
-     **/
+     *
+     * @param phenotypeAssociationPublicationId id
+     */
     void removePhenotypePublication( Long phenotypeAssociationPublicationId );
 
 }

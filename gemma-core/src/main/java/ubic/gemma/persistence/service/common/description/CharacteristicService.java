@@ -37,52 +37,72 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      *
      * @param start How far into the list to start
      * @param limit Maximum records to retrieve
+     * @return characteristics
      */
     List<Characteristic> browse( Integer start, Integer limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param start How far into the list to start
-     * @param limit Maximum records to retrieve
+     * @param start      How far into the list to start
+     * @param limit      Maximum records to retrieve
+     * @param sortField  sort field
+     * @param descending sor order
+     * @return characteristics
      */
     List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
 
     /**
      * @param classesToFilterOn - constraint for who the 'owner' of the characteristic is.
+     * @param uriString         uri string
+     * @return characteristics
      */
     Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
 
     /**
-     * @param classes - constraint for who the 'owner' of the characteristic is.
+     * @param classes            - constraint for who the 'owner' of the characteristic is.
+     * @param characteristicUris characteristic uris
+     * @return characteristics
      */
-    Collection<?> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
+    Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
     /**
      * given a collection of strings that represent URI's will find all the characteristics that are used in the system
      * with URI's matching anyone in the given collection
+     *
+     * @param uris uris
+     * @return characteristics
      */
     Collection<Characteristic> findByUri( Collection<String> uris );
 
     /**
      * Looks for an exact match of the give string to a valueUri in the characteristic database
+     *
+     * @param searchString search string
+     * @return characteristics
      */
     Collection<Characteristic> findByUri( String searchString );
 
     /**
      * Returns a collection of characteristics that have a Value that match the given search string. The value is
      * usually a human readable form of the termURI
+     *
+     * @param search search
+     * @return characteristics
      */
     Collection<Characteristic> findByValue( String search );
 
     /**
-     * Returns a map of the specified characteristics to their parent objects.
+     * @param characteristics characteristics
+     * @return a map of the specified characteristics to their parent objects.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
 
     /**
-     * Returns a map of the specified characteristics to their parent objects, constrained to be among the classes
+     * @param characteristics characteristics
+     * @param classes         classes
+     * @return a map of the specified characteristics to their parent objects, constrained to be among the classes
      * given.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
@@ -90,6 +110,8 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
 
     /**
      * @param classes constraint
+     * @param string  string value
+     * @return characteristics
      */
     Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 

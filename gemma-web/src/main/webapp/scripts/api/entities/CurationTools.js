@@ -281,9 +281,15 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
                     callback: refreshCb
                 });
             } else if (!needsAttention && parent.curatable.needsAttention) {
-                AuditController.addAuditEvent(parent.auditable, "DoesNotNeedAttentionEvent", "Does not need attention.", null, {
-                    callback: refreshCb
-                });
+                var auditCallback = {callback: refreshCb};
+                if (parent.isExperiment()) {
+                    auditCallback = {
+                        callback: function () {
+                            ExpressionExperimentController.runGeeq(parent.auditable.id, "all", {callback: refreshCb})
+                        }
+                    }
+                }
+                AuditController.addAuditEvent(parent.auditable, "DoesNotNeedAttentionEvent", "Does not need attention.", null, auditCallback);
             }
         };
 

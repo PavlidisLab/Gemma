@@ -28,6 +28,11 @@ public interface AuditHelper {
 
     /**
      * Add AuditAction.CREATE event and update Status.
+     *
+     * @param auditable auditable
+     * @param note      note
+     * @param user      user
+     * @return new event
      */
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
@@ -35,6 +40,11 @@ public interface AuditHelper {
 
     /**
      * Add AuditAction.UPDATE event and update Status.
+     *
+     * @param auditable auditable
+     * @param note      note
+     * @param user      user
+     * @return new event
      */
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
