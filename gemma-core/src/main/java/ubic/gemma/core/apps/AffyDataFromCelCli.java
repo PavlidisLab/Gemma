@@ -85,9 +85,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                         + "ensure you used the right official CDF/MPS configuration" );
-        //        super.addOption( "celchip", true,
-        //                "Platform name (e.g. GPL6096) that the CEL files are from; use in case you need to redo "
-        //                        + "a data set that has already been switched, otherwise not needed; implies -force" );
         super.addForceOption();
 
     }
@@ -99,6 +96,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             return e;
 
         DataUpdater serv = this.getBean( DataUpdater.class );
+
+        if ( this.expressionExperiments.isEmpty() )
+            return null;
 
         // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService
