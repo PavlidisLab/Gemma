@@ -466,12 +466,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         AbstractPersister.log.debug( "taxon done" );
 
-        for ( Treatment treatment : entity.getTreatments() ) {
-
-            Characteristic action = treatment.getAction();
-            AbstractPersister.log.debug( treatment + " action: " + action );
-            AbstractPersister.log.debug( "treatment done" );
-        }
         AbstractPersister.log.debug( "start save" );
         BioMaterial bm = bioMaterialDao.findOrCreate( entity );
         AbstractPersister.log.debug( "save biomaterial done" );
