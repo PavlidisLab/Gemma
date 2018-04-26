@@ -128,6 +128,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
         reorderedDim.setBioAssays( bioAssays );
         reorderedDim.setName( "Slice" );
+        reorderedDim.setDescription( "Created for subset differential expression analysis (" + columnsToUse.size() + " biomaterials)" );
 
         return reorderedDim;
     }
