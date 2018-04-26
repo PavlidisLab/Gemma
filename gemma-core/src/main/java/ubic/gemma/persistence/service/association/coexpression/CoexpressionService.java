@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,8 @@ import java.util.Set;
 public interface CoexpressionService {
 
     /**
+     * @param gene gene
+     * @param ee   bio assay set
      * @return the number of links the gene has in the given data set ("node degree")
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -54,6 +56,8 @@ public interface CoexpressionService {
      *
      * @param bioAssaySet should be all of them for the bioAssaySet (not a batch)
      * @param geesTested  genes which were tested
+     * @param c           link creator
+     * @param links       links
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
@@ -62,6 +66,8 @@ public interface CoexpressionService {
     /**
      * Maintenance method. Remove coexpression information from the database about the experiment in question (this does
      * not remove the analysis object).
+     *
+     * @param experiment experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteLinks( BioAssaySet experiment );
@@ -69,8 +75,11 @@ public interface CoexpressionService {
     /**
      * Find links which are common to all of the given data sets.
      *
-     * @param bas data sets the link must be supported by; that is, the stringency is implied by bas.size(). Assumed to
-     *            be security-filtered.
+     * @param bas        data sets the link must be supported by; that is, the stringency is implied by bas.size(). Assumed to
+     *                   be security-filtered.
+     * @param gene       gene
+     * @param quick      quick
+     * @param maxResults max results
      * @return coexpression results.
      */
     List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int maxResults,
@@ -83,6 +92,9 @@ public interface CoexpressionService {
      * @param bas        assumed to be security-filtered.
      * @param stringency the minimum number of data sets for which the coexpression must be observed, among the given
      *                   datasets.
+     * @param quick      quick
+     * @param maxResults max results
+     * @param gene       gene
      * @return coexpression results.
      */
     List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int stringency,
@@ -92,7 +104,11 @@ public interface CoexpressionService {
      * Find coexpression links for the genes that are common to all the given datasets (that is, the stringency is equal
      * to the size of the set of datasets)
      *
-     * @param bas - assumed to already be security-filtered
+     * @param bas        - assumed to already be security-filtered
+     * @param quick      quick
+     * @param maxResults max results
+     * @param genes      genes
+     * @param t          taxon
      * @return a map of gene IDs to coexpression results.
      */
     Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
@@ -104,6 +120,11 @@ public interface CoexpressionService {
      * @param bas        assumed to already be security-filtered
      * @param maxResults limit to the number of results per gene, but connections among the query genes (if there is
      *                   more than one) are given priority and not subject to the limit.
+     * @param stringency the minimum number of data sets for which the coexpression must be observed, among the given
+     *                   datasets.
+     * @param quick      quick
+     * @param t          taxon
+     * @param genes      genes
      * @return a map of gene IDs to coexpression results.
      */
     Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
@@ -115,11 +136,18 @@ public interface CoexpressionService {
      *
      * @param bas        data sets to be considered, presumed to be security filtered already
      * @param stringency Must be less than or equal to the number of data sets
+     *                   datasets.
+     * @param quick      quick
+     * @param t          taxon
+     * @param genes      genes
+     * @return a map of gene IDs to coexpression results.
      */
     Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, boolean quick );
 
     /**
+     * @param quick      quick
+     * @param experiment experiment
      * @return all the coexpression links for the given experiment, but not including flipped versions
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -133,6 +161,10 @@ public interface CoexpressionService {
     Map<Long, GeneCoexpressionNodeDegreeValueObject> getNodeDegrees( Collection<Long> genes );
 
     /**
+     * @param gene       gene
+     * @param idMap      id map
+     * @param linksSoFar links so far
+     * @param skipGenes  skip genes
      * @return links that were made
      */
     @Secured("GROUP_ADMIN")

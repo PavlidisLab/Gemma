@@ -37,16 +37,18 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     /**
      * Associates a bioMaterial with a specified bioAssay.
+     *
+     * @param bioAssay    bio assay
+     * @param bioMaterial bio material
      */
     @PreAuthorize("hasPermission(#bioAssay, 'write') or hasPermission(#bioAssay, 'administration')")
     void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioAssay create( BioAssay bioAssay );
-
     /**
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
+     *
+     * @param bioAssay bio assay
+     * @return bio assay dimensions
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
@@ -63,6 +65,14 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     BioAssay findOrCreate( BioAssay bioAssay );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    BioAssay create( BioAssay bioAssay );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioAssay> load( Collection<Long> ids );
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     BioAssay load( Long id );
 
@@ -71,17 +81,18 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     Collection<BioAssay> loadAll();
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> load( Collection<Long> ids );
-
-    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioAssay bioAssay );
 
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( BioAssay bioAssay );
+
     /**
-     * <p>
      * Removes the association between a specific bioMaterial and a bioAssay.
-     * </p>
+     *
+     * @param bioAssay    bio assay
+     * @param bioMaterial bio material
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
@@ -91,10 +102,6 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( BioAssay bioAssay );
 
     Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

@@ -41,6 +41,7 @@ public interface GeoService {
      * @param geoAccession               accession
      * @param loadPlatformOnly           load platforms only
      * @param splitIncompatiblePlatforms split incompatible platforms
+     * @return collection
      */
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms );
@@ -52,12 +53,14 @@ public interface GeoService {
      * @param geoAccession               accession
      * @param loadPlatformOnly           load platforms only
      * @param splitIncompatiblePlatforms split incompatible platforms
+     * @return collection
      */
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.
+     * @return generator
      */
     @SuppressWarnings("unused")
     // Possible external use

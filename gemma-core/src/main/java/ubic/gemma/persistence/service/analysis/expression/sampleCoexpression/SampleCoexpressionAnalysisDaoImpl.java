@@ -52,4 +52,9 @@ class SampleCoexpressionAnalysisDaoImpl extends AnalysisDaoBase<SampleCoexpressi
 
     }
 
+    @Override
+    public SampleCoexpressionAnalysis create( SampleCoexpressionAnalysis entity ) {
+        this.getSessionFactory().getCurrentSession().flush();
+        return super.create( entity );
+    }
 }

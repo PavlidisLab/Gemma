@@ -36,6 +36,7 @@ public interface Blat {
      *
      * @param b         The genome is inferred from the Taxon held by the sequence.
      * @param sensitive if true use the more sensitive gfServer, if available.
+     * @param taxon taxon
      * @return Collection of BlatResult objects.
      * @throws IOException when there are IO problems.
      */
