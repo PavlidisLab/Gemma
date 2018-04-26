@@ -29,6 +29,7 @@ import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisUtil;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
@@ -51,6 +52,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -239,7 +241,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * Regress out any 'major' factors, work with residuals only
      *
-     * @param ee  the experiment to load the factors from
+     * @param ee the experiment to load the factors from
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
@@ -270,8 +272,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * @param matrix on which to perform regression.
      * @param config containing configuration of factors to include. Any interactions or subset configuration is
-     *               ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
-     *               ignored)
+     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qValueThreshold will be
+     *        ignored)
      * @return residuals from the regression.
      */
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
@@ -283,30 +285,31 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
 
         List<ExperimentalFactor> factors = config.getFactorsToInclude();
-        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
+
+        /*
+         * Using ordered samples isn't necessary, it doesn't matter so long as the design matrix is in the same order.
+         * We always want to use all the samples. There is no need to create a new bioassaydimension.
+         */
+        BioAssayDimension bad = matrix.getBestBioAssayDimension(); // this is what we do for the non-regressed version.
+        assert bad.getId() != null;
+
+        List<BioMaterial> samplesUsed = new ArrayList<>();
+        for ( BioAssay ba : bad.getBioAssays() ) {
+            samplesUsed.add( ba.getSampleUsed() );
+        }
+
+        // set up design matrix
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
                 .getBaselineConditions( samplesUsed, factors );
         ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils
                 .buildDesignMatrix( factors, samplesUsed, baselineConditions );
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
-        BioAssayDimension bad = LinearModelAnalyzer.createBADMap( samplesUsed );
-        bad = bioAssayDimensionService.create( bad );
+
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
         DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
 
-        // perform weighted least squares regression on COUNT data
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
-        LeastSquaresFit fit;
-        if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
-            SampleCoexpressionAnalysisServiceImpl.log
-                    .info( "Calculating residuals of weighted least squares regression on COUNT data" );
-            DoubleMatrix1D librarySize = MatrixStats.colSums( sNamedMatrix ); // note: data is not log transformed
-            MeanVarianceEstimator mv = new MeanVarianceEstimator( properDesignMatrix, sNamedMatrix, librarySize );
-            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix, mv.getWeights() );
-        } else {
-            fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
-        }
+        LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
         DoubleMatrix2D residuals = fit.getResiduals();
 
