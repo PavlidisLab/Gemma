@@ -71,11 +71,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final String MSG_ERR_NO_FACTORS = "Can not run factor regression! No factors to include in the regressed matrix.";
     private static final String MSG_ERR_NO_BAS_IN_BAD = "No bioassays in the bioAssayDimension id:%d";
     private static final String MSG_ERR_BIOASSAY_MISMATCH = "Number of bioassays doesn't match length of the best bioAssayDimension. BAs in dimension: %d, rows in cormat: %d";
+    private static final String MSG_WARN_NO_REGRESSED_MATRIX = "No regressed matrix for ee %d, returning the full matrix instead.";
     private static final String MSG_INFO_RUNNING_SCM = "Sample Correlations not calculated for ee %d yet, running them now.";
     private static final String MSG_INFO_COMPUTING_SCM = "Computing sample coexpression matrix for ee %d, regressing: %s";
     private static final String MSG_INFO_REGRESSING = "Regressing out covariates";
     private static final String MSG_INFO_BATCH_REMOVED = "Removed 'batch' from the list of significant factors.";
+    private static final String MSG_INFO_ANALYSIS_STATUS = " | SAMPLE CORR ANALYSIS | %s\t | full matrix : %s\t | regressed matrix: %s";
+    private static final String A_STATUS_AVAILABLE = "Available";
+    private static final String A_STATUS_NOT_AVAILABLE = "Not available";
     private static final double IMPORTANCE_THRESHOLD = 0.01;
+    private static final String A_STATUS_COMPUTED = "Just computed";
+    private static final String A_STATUS_LOADED = "Loaded from db";
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
@@ -94,20 +100,29 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
-    public DoubleMatrix<BioAssay, BioAssay> loadRegressedMatrix( ExpressionExperiment ee ) {
-        return this.toDoubleMatrix( this.load( ee ).getRegressedCoexpressionMatrix() );
+    public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) {
+        SampleCoexpressionAnalysis analysis = this.load( ee );
+        SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
+        if ( matrix == null ) {
+            SampleCoexpressionAnalysisServiceImpl.log.warn( String
+                    .format( SampleCoexpressionAnalysisServiceImpl.MSG_WARN_NO_REGRESSED_MATRIX, ee.getId() ) );
+            matrix = analysis.getFullCoexpressionMatrix();
+        }
+        return this.toDoubleMatrix( matrix );
     }
 
     @Override
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
-        SampleCoexpressionAnalysis mat = sampleCoexpressionAnalysisDao.load( ee );
+        SampleCoexpressionAnalysis analysis = sampleCoexpressionAnalysisDao.load( ee );
 
-        if ( mat == null || mat.getFullCoexpressionMatrix() == null || mat.getRegressedCoexpressionMatrix() == null ) {
+        if ( analysis == null || analysis.getFullCoexpressionMatrix() == null || this.shouldComputeRegressed( ee,
+                analysis ) ) {
             SampleCoexpressionAnalysisServiceImpl.log
                     .info( String.format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_RUNNING_SCM, ee.getId() ) );
             return this.compute( ee );
         }
-        return mat;
+        this.logCormatStatus( analysis, false );
+        return analysis;
     }
 
     @Override
@@ -122,17 +137,45 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         this.removeForExperiment( ee );
 
         // Create new analysis
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
         SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( ee, // Analyzed experiment
-                this.getMatrix( ee, false ), // Full
-                this.getMatrix( ee, true ) );// Regressed
+                this.getMatrix( ee, false, vectors ), // Full
+                this.getMatrix( ee, true, vectors ) );// Regressed
 
         // Persist
+        this.logCormatStatus( analysis, true );
         return sampleCoexpressionAnalysisDao.create( analysis );
     }
 
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+    }
+
+    /**
+     * Checks whether the regressed matrix should be computed for the given ee.
+     * @param ee the experiment that will be checked for meeting all the conditions to have regressed matrix computed.
+     * @param analysis the analysis that will be checked for already having a regressed matrix or not.
+     * @return true, if the regression matrix should be run for the given combination of experiment and analysis. False if
+     * computing it is not necessary or possible.
+     */
+    private boolean shouldComputeRegressed( ExpressionExperiment ee, SampleCoexpressionAnalysis analysis ) {
+        return analysis.getRegressedCoexpressionMatrix() == null && !this.getImportantFactors( ee ).isEmpty();
+    }
+
+    private void logCormatStatus( SampleCoexpressionAnalysis analysis, boolean justComputed ) {
+        String full = analysis.getFullCoexpressionMatrix() != null ?
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_AVAILABLE :
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_NOT_AVAILABLE;
+        String reg = analysis.getRegressedCoexpressionMatrix() != null ?
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_AVAILABLE :
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_NOT_AVAILABLE;
+        String comp = justComputed ?
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_COMPUTED :
+                SampleCoexpressionAnalysisServiceImpl.A_STATUS_LOADED;
+        SampleCoexpressionAnalysisServiceImpl.log.info( String
+                .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_ANALYSIS_STATUS, comp, full, reg ) );
     }
 
     private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
@@ -166,12 +209,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
     }
 
-    private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress ) {
+    private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
+            Collection<ProcessedExpressionDataVector> vectors ) {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
-        ExpressionDataDoubleMatrix mat = this
-                .loadDataMatrix( ee, regress, processedExpressionDataVectorService.getProcessedDataVectors( ee ) );
+        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors );
         if ( mat == null ) {
             return null;
         }
@@ -244,6 +287,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @return regressed double matrix
      */
     private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+        Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
+        if ( !importantFactors.isEmpty() ) {
+            SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
+            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+            config.setFactorsToInclude( importantFactors );
+            mat = this.regressionResiduals( mat, config );
+        }
+        return mat;
+    }
+
+    private Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee ) {
         Set<ExperimentalFactor> importantFactors = svdService
                 .getImportantFactors( ee, ee.getExperimentalDesign().getExperimentalFactors(),
                         SampleCoexpressionAnalysisServiceImpl.IMPORTANCE_THRESHOLD );
@@ -258,13 +312,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             SampleCoexpressionAnalysisServiceImpl.log
                     .info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_BATCH_REMOVED );
         }
-        if ( !importantFactors.isEmpty() ) {
-            SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
-            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.setFactorsToInclude( importantFactors );
-            mat = this.regressionResiduals( mat, config );
-        }
-        return mat;
+        return importantFactors;
     }
 
     /**

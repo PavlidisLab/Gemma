@@ -96,8 +96,6 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //
 
@@ -291,6 +289,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return;
         }
 
+        ee = expressionExperimentService.thawLiter( ee );
         DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );

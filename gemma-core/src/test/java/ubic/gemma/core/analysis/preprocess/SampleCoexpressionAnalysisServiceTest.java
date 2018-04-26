@@ -52,7 +52,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+        matrix = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
 
         this.check( matrix );
     }
