@@ -167,8 +167,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
 
-            // TODO log-transform if not already, update QT. See https://github.com/PavlidisLab/Gemma/issues/50
-
             ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
             // Convert to vectors

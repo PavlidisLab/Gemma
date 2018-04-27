@@ -460,7 +460,6 @@ public class ExpressionExperimentFilter {
         boolean alreadyLogged = this.isLogTransformed( datamatrix );
         if ( !alreadyLogged ) {
             MatrixStats.logTransform( datamatrix.getMatrix() );
-
         }
 
     }
