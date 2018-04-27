@@ -128,8 +128,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                        + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
-                        + "left join fetch at.events where b.id in (:ids)" )
+                        + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
                 .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
     }
 

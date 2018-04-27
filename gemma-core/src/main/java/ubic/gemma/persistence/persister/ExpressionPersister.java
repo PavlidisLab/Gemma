@@ -103,7 +103,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             this.persistCollectionElements( ee.getQuantitationTypes() );
             this.persistCollectionElements( ee.getOtherRelevantPublications() );
-            this.persistCollectionElements( ee.getInvestigators() );
 
             if ( ee.getAccession() != null ) {
                 this.fillInDatabaseEntry( ee.getAccession() );
@@ -295,30 +294,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         // BioMaterials
         bioAssay.setSampleUsed( ( BioMaterial ) this.persist( bioAssay.getSampleUsed() ) );
 
-        AbstractPersister.log.debug( "biomaterials done" );
-
-        LocalFile rawDataFile = bioAssay.getRawDataFile();
-        if ( rawDataFile != null ) {
-            if ( this.isTransient( rawDataFile ) ) {
-                rawDataFile.setId( null ); // in case of retry.
-                // raw file is unique for bioassay.
-                bioAssay.setRawDataFile( this.persistLocalFile( rawDataFile, true ) );
-            } else {
-                // re-sync.
-                this.localFileDao.update( rawDataFile );
-            }
-            AbstractPersister.log.debug( "raw data file done" );
-        }
-
-        for ( LocalFile file : bioAssay.getDerivedDataFiles() ) {
-            if ( this.isTransient( file ) )
-                file.setId( null ); // in case of retry
-            this.persistLocalFile( file );
-        }
-
-        if ( this.isTransient( bioAssay.getAuditTrail() ) && bioAssay.getAuditTrail() != null )
-            bioAssay.getAuditTrail().setId( null ); // in case of retry;
-
         AbstractPersister.log.debug( "Done with " + bioAssay );
 
     }
@@ -351,9 +326,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         for ( Characteristic c : annotations ) {
             // in case of retry.
             c.setId( null );
-            if ( c.getAuditTrail() != null && this.isTransient( c.getAuditTrail() ) ) {
-                c.getAuditTrail().setId( null );
-            }
         }
 
         this.persistCollectionElements( annotations );
@@ -494,12 +466,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         AbstractPersister.log.debug( "taxon done" );
 
-        for ( Treatment treatment : entity.getTreatments() ) {
-
-            Characteristic action = treatment.getAction();
-            AbstractPersister.log.debug( treatment + " action: " + action );
-            AbstractPersister.log.debug( "treatment done" );
-        }
         AbstractPersister.log.debug( "start save" );
         BioMaterial bm = bioMaterialDao.findOrCreate( entity );
         AbstractPersister.log.debug( "save biomaterial done" );
@@ -528,9 +494,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         Characteristic category = experimentalFactor.getCategory();
         if ( this.isTransient( category ) ) {
             category.setId( null );
-            if ( category.getAuditTrail() != null && this.isTransient( category.getAuditTrail() ) ) {
-                category.getAuditTrail().setId( null );
-            }
         }
 
         assert ( !this.isTransient( experimentalFactor.getExperimentalDesign() ) );
@@ -597,12 +560,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             factors = new HashSet<>();
         }
         experimentalDesign.setExperimentalFactors( null );
-
-        if ( experimentalDesign.getAuditTrail() != null ) {
-            experimentalDesign.getAuditTrail().setId( null ); // in case of retry
-        }
-        // prob not necessary?
-        experimentalDesign.setAuditTrail( this.persistAuditTrail( experimentalDesign.getAuditTrail() ) );
 
         // Note we use create because this is specific to the instance. (we're overriding a cascade)
         experimentalDesign = experimentalDesignDao.create( experimentalDesign );

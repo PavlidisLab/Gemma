@@ -9,12 +9,10 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import static org.junit.Assert.*;
@@ -31,9 +29,6 @@ public class AclTestUtils {
 
     @Autowired
     private AclService aclService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -62,8 +57,6 @@ public class AclTestUtils {
     public void checkDeleteEEAcls( ExpressionExperiment ee ) {
         this.checkDeletedAcl( ee );
 
-        this.checkDeletedAcl( ee.getRawDataFile() );
-
         this.checkDeletedAcl( ee.getExperimentalDesign() );
 
         for ( ExperimentalFactor f : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -77,16 +70,6 @@ public class AclTestUtils {
         assertTrue( ee.getBioAssays().size() > 0 );
         for ( BioAssay ba : ee.getBioAssays() ) {
             this.checkDeletedAcl( ba );
-
-            LocalFile rawDataFile = ba.getRawDataFile();
-
-            for ( LocalFile f : ba.getDerivedDataFiles() ) {
-                this.checkDeletedAcl( f );
-            }
-
-            if ( rawDataFile != null ) {
-                this.checkDeletedAcl( rawDataFile );
-            }
 
             BioMaterial bm = ba.getSampleUsed();
             this.checkDeletedAcl( bm );
@@ -109,12 +92,6 @@ public class AclTestUtils {
         this.checkHasAclParent( experimentalDesign, ee );
         this.checkLacksAces( experimentalDesign );
 
-        if ( ee.getRawDataFile() != null ) {
-            this.checkHasAcl( ee.getRawDataFile() );
-            this.checkHasAclParent( ee.getRawDataFile(), ee );
-            this.checkLacksAces( ee.getRawDataFile() );
-        }
-
         for ( ExperimentalFactor f : experimentalDesign.getExperimentalFactors() ) {
             this.checkHasAcl( f );
             this.checkHasAclParent( f, ee );
@@ -134,20 +111,6 @@ public class AclTestUtils {
             this.checkHasAclParent( ba, ee );
             this.checkLacksAces( ba );
 
-            LocalFile rawDataFile = ba.getRawDataFile();
-
-            if ( rawDataFile != null ) {
-                this.checkHasAcl( rawDataFile );
-                this.checkHasAclParent( rawDataFile, null );
-                this.checkLacksAces( rawDataFile );
-            }
-
-            for ( LocalFile f : ba.getDerivedDataFiles() ) {
-                this.checkHasAcl( f );
-                this.checkHasAclParent( f, null );
-                this.checkLacksAces( f );
-            }
-
             BioMaterial bm = ba.getSampleUsed();
             this.checkHasAcl( bm );
             this.checkHasAclParent( bm, ee );
@@ -156,14 +119,6 @@ public class AclTestUtils {
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
             this.checkHasAcl( arrayDesign );
             assertTrue( this.getParentAcl( arrayDesign ) == null );
-
-            // make sure the localfiles are associated with the array design, not the ee.
-            arrayDesign = arrayDesignService.thawLite( arrayDesign );
-            for ( LocalFile lf : arrayDesign.getLocalFiles() ) {
-                this.checkHasAcl( lf );
-                this.checkLacksAces( lf );
-                this.checkHasAclParent( lf, arrayDesign );
-            }
 
         }
     }

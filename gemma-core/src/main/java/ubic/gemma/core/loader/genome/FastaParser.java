@@ -98,7 +98,8 @@ public class FastaParser extends RecordParser<BioSequence> {
     }
 
     /**
-     * Recognizes Defline format as described at <a href='http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers'>wikipedia</a>.
+     * Recognizes Defline format as described at
+     * <a href='http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers'>wikipedia</a>.
      * Our amendments:
      * FIXME: recognize multi-line headers separated by ^A.(used for redundant sequences)
      * FIXME: parsing of more obscure (to us) headers might not be complete.
@@ -158,7 +159,7 @@ public class FastaParser extends RecordParser<BioSequence> {
      * </pre>
      *
      * @param bioSequence BA
-     * @param header      header
+     * @param header header
      * @return boolean always true
      */
     @SuppressWarnings("SameReturnValue") // Consistency with other similar methods
@@ -232,7 +233,7 @@ public class FastaParser extends RecordParser<BioSequence> {
      * </ul>
      *
      * @param bioSequence BA
-     * @param header      header
+     * @param header header
      * @return boolean
      */
     private boolean parseDeflineHeader( BioSequence bioSequence, String header ) {
@@ -285,7 +286,7 @@ public class FastaParser extends RecordParser<BioSequence> {
      * This is a special case, but these are used on microarrays.
      *
      * @param bioSequence BA
-     * @param header      header
+     * @param header header
      * @return boolean
      */
     private boolean parseNIA( BioSequence bioSequence, String header ) {

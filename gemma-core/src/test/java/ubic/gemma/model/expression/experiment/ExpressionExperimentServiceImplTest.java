@@ -99,8 +99,6 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
             ee.getBioAssays().add( ba );
         }
 
-        ee.getInvestigators().add( admin );
-
         c = new HashSet<>();
         ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
         numberTwelve.setId( 12L );

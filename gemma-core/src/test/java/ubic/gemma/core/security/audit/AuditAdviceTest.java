@@ -101,10 +101,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         // make sure we added an update event on the ee
         assertEquals( 2, auditEventService.getEvents( ee ).size() );
 
-        // check that we haven't added an update event to the design -- only a create.
-
-        assertEquals( 1, auditEventService.getEvents( ee.getExperimentalDesign() ).size() );
-
         expressionExperimentService.remove( ee );
 
         this.checkDeletedTrails( trailIds, eventIds );
@@ -136,16 +132,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         Session session = sessionFactory.openSession();
         session.update( ee );
 
-        for ( BioAssay bioa : ee.getBioAssays() ) {
-            assertNotNull( bioa.getAuditTrail() );
-            Collection<AuditEvent> events = bioa.getAuditTrail().getEvents();
-            assertEquals( 1, events.size() );
-            for ( AuditEvent e : events ) {
-                assertNotNull( e.getId() );
-                assertNotNull( e.getAction() );
-            }
-        }
-
         session.close();
 
         this.expressionExperimentService.update( ee );
@@ -154,12 +140,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertEquals( 5, ee.getAuditTrail().getEvents().size() );
 
-        /*
-         * Check we didn't get any extra events added to children.
-         */
-        for ( BioAssay prod : ee.getBioAssays() ) {
-            assertEquals( 1, prod.getAuditTrail().getEvents().size() );
-        }
     }
 
     @Test
@@ -175,68 +155,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
-        for ( BioAssay prod : ee.getBioAssays() ) {
-            assertNotNull( prod.getAuditTrail() );
-
-            Collection<AuditEvent> events = this.auditTrailService.getEvents( prod );
-            assertEquals( 1, events.size() );
-            for ( AuditEvent e : events ) {
-                assertNotNull( e.getId() );
-                assertEquals( AuditAction.CREATE, e.getAction() );
-            }
-        }
-
-    }
-
-    @Test
-    public void testSimpleAuditCreateUpdateUser() {
-
-        String USERNAME = RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
-
-        String encodedPassword = passwordEncoder.encodePassword( USERNAME, USERNAME );
-        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, USERNAME, true, null, null, null, new Date() );
-        userManager.createUser( u );
-
-        User user = ( User ) userService.findByUserName( USERNAME );
-
-        List<AuditEvent> events = auditTrailService.getEvents( user );
-
-        assertEquals( "Should have just one event, a 'create'", 1, events.size() );
-        assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
-
-        assertNotNull( events.get( 0 ).getId() );
-
-        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
-        userService.update( user );
-
-        events = auditTrailService.getEvents( user );
-
-        int sizeAfterFirstUpdate = events.size();
-
-        assertEquals( "Should have a 'create' and an 'update'", 2, sizeAfterFirstUpdate );
-
-        // debugging...
-        if ( !events.get( 0 ).getAction().equals( AuditAction.CREATE ) ) {
-            log.info( "First event wasn't 'C', dumping trail" );
-            for ( AuditEvent ae : events ) {
-                log.info( ae );
-            }
-        }
-
-        assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
-        assertEquals( AuditAction.UPDATE, events.get( sizeAfterFirstUpdate - 1 ).getAction() );
-
-        // third time.
-        user.setEmail( RandomStringUtils.randomNumeric( 10 ) ); // change something.
-        userService.update( user );
-
-        events = auditTrailService.getEvents( user );
-
-        assertEquals( 3, user.getAuditTrail().getEvents().size() );
-        assertEquals( AuditAction.UPDATE, events.get( 2 ).getAction() );
-
-        // cleanup
-        userManager.deleteUser( USERNAME );
     }
 
     @Test
@@ -382,35 +300,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     private void checkEEAuditTrails( ExpressionExperiment ee, Collection<Long> trailIds, Collection<Long> eventIds ) {
         this.checkAuditTrail( ee, trailIds, eventIds );
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            this.checkAuditTrail( ba, trailIds, eventIds );
-            BioMaterial bm = ba.getSampleUsed();
-            this.checkAuditTrail( bm, trailIds, eventIds );
-            for ( Characteristic c : bm.getCharacteristics() ) {
-                this.checkAuditTrail( c, trailIds, eventIds );
-            }
-
-            for ( Treatment t : bm.getTreatments() ) {
-                this.checkAuditTrail( t, trailIds, eventIds );
-                this.checkAuditTrail( t.getAction(), trailIds, eventIds );
-                // for ( CompoundMeasurement cm : t.getCompoundMeasurements() ) {
-                // checkAuditTrail( cm.getCompound().getCompoundIndices(), trailIds, eventIds );
-                // }
-            }
-
-        }
-
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.size() > 0 );
-
-        for ( ExperimentalFactor ef : experimentalFactors ) {
-            this.checkAuditTrail( ef, trailIds, eventIds );
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                for ( Characteristic c : fv.getCharacteristics() ) {
-                    this.checkAuditTrail( c, trailIds, eventIds );
-                }
-            }
-        }
 
     }
 

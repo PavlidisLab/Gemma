@@ -38,15 +38,6 @@ import java.util.Map;
 public interface BibliographicReferenceService
         extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
-    /**
-     * Adds a document (in PDF format) for the reference.
-     *
-     * @param bibliographicReference reference
-     * @param pdfFile                pdf file
-     */
-    @Secured({ "GROUP_USER" })
-    void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
-
     List<BibliographicReference> browse( Integer start, Integer limit );
 
     List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
@@ -89,7 +80,7 @@ public interface BibliographicReferenceService
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      *
-     * @param id           id
+     * @param id id
      * @param databaseName db name
      * @return reference
      */

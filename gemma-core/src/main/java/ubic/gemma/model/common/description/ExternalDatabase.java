@@ -19,14 +19,14 @@
 
 package ubic.gemma.model.common.description;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 
 import java.util.Collection;
 
 /**
  * @author Paul
  */
-public class ExternalDatabase extends AbstractAuditable {
+public class ExternalDatabase extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

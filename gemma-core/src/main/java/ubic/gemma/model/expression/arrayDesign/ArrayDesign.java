@@ -47,7 +47,6 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> subsumedArrayDesigns = new java.util.HashSet<>();
     private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> mergees = new java.util.HashSet<>();
     private ubic.gemma.model.common.auditAndSecurity.Contact designProvider;
-    private Collection<ubic.gemma.model.common.description.LocalFile> localFiles = new java.util.HashSet<>();
     private Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> alternateNames = new java.util.HashSet<>();
     private CurationDetails curationDetails;
 
@@ -58,9 +57,11 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * @return The number of design elements, according to the manufactuerer or determined at the time the array design was
-     * entered into the system. The actual number of design elements can only be determined by looking at the associated
-     * Collection of DesignElements.
+     * @return The number of design elements, according to the manufactuerer or determined at the time the array design
+     *         was
+     *         entered into the system. The actual number of design elements can only be determined by looking at the
+     *         associated
+     *         Collection of DesignElements.
      */
     public Integer getAdvertisedNumberOfDesignElements() {
         return this.advertisedNumberOfDesignElements;
@@ -107,17 +108,6 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         this.externalReferences = externalReferences;
     }
 
-    /**
-     * @return Files containing data that were loaded to create this ArrayDesign
-     */
-    public Collection<ubic.gemma.model.common.description.LocalFile> getLocalFiles() {
-        return this.localFiles;
-    }
-
-    public void setLocalFiles( Collection<ubic.gemma.model.common.description.LocalFile> localFiles ) {
-        this.localFiles = localFiles;
-    }
-
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign getMergedInto() {
         return this.mergedInto;
     }
@@ -136,8 +126,9 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     /**
      * @return The taxon the array design is for. This could be a non-specific taxon ("salmonid"). It may not match the
-     * sequences on the array exactly. For example, a mouse array might have some non-mouse sequences as controls, but
-     * the primary taxon is still mouse.
+     *         sequences on the array exactly. For example, a mouse array might have some non-mouse sequences as
+     *         controls, but
+     *         the primary taxon is still mouse.
      */
     public ubic.gemma.model.genome.Taxon getPrimaryTaxon() {
         return this.primaryTaxon;
@@ -148,8 +139,9 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
-     * used names like "HG-U95A".
+     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past
+     *         we often
+     *         used names like "HG-U95A".
      */
     public String getShortName() {
         return this.shortName;
@@ -160,8 +152,9 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * @return Array designs that this array design "covers". For example, the HG-U133_Plus_2 array includes all the elements
-     * that are on the HG-U133A and HG-U133B, so they are subsumed by the HG-U133_Plus_2.
+     * @return Array designs that this array design "covers". For example, the HG-U133_Plus_2 array includes all the
+     *         elements
+     *         that are on the HG-U133A and HG-U133B, so they are subsumed by the HG-U133_Plus_2.
      */
     public Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> getSubsumedArrayDesigns() {
         return this.subsumedArrayDesigns;
@@ -174,7 +167,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
 
     /**
      * @return An array design that subsumes this one (contains DesignElements that are equivalent to the ones on this
-     * arraydesign).
+     *         arraydesign).
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign getSubsumingArrayDesign() {
         return this.subsumingArrayDesign;

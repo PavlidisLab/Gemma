@@ -82,7 +82,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
 
         this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
         this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
-        this.retracted = checkIfRetracted( ref );
+        this.retracted = ref.getRetracted();
     }
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
@@ -352,16 +352,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
             meshTermList.add( msh.getTerm() );
         }
         return meshTermList;
-    }
-
-    private boolean checkIfRetracted( BibliographicReference ref ) {
-        for ( PublicationType pt : ref.getPublicationTypes() ) {
-            if ( pt.getType() != null && ( pt.getType().contains( "Retraction of Publication" ) || pt.getType()
-                    .contains( "Retracted Publication" ) ) ) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

@@ -72,13 +72,6 @@
       <many-to-one name="designProvider" class="ubic.gemma.model.common.auditAndSecurity.Contact"  lazy="proxy" fetch="select">
          <column name="DESIGN_PROVIDER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="localFiles" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
-         <key foreign-key="LOCAL_FILE_ARRAY_DESIGN_FKC">
-            <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.LocalFile"/>
-      </set>
       <set name="alternateNames" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="ALTERNATE_NAME_ARRAY_DESIGN_FKC">

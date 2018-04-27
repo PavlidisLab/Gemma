@@ -72,12 +72,9 @@
                 <value>classpath:ubic/gemma/model/genome/Taxon.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/description/DatabaseEntry.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/description/ExternalDatabase.hbm.xml</value>
-                <value>classpath:ubic/gemma/model/common/description/LocalFile.hbm.xml</value>
-                <value>classpath:ubic/gemma/model/common/description/FileFormat.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml</value>
-                <value>classpath:ubic/gemma/model/common/description/PublicationType.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/auditAndSecurity/UserGroup.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/auditAndSecurity/GroupAuthority.hbm.xml</value>
                 <value>classpath:ubic/gemma/model/common/auditAndSecurity/Contact.hbm.xml</value>

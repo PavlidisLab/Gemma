@@ -19,7 +19,7 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 
 /**
  * Representing a person or organization that can be contacted about, or is the source of, data in the system. A contact
@@ -27,7 +27,7 @@ import ubic.gemma.model.common.AbstractAuditable;
  *
  * @author Paul
  */
-public class Contact extends AbstractAuditable implements gemma.gsec.model.Contact {
+public class Contact extends Describable implements gemma.gsec.model.Contact {
 
     /**
      * The serial version UID of this class. Needed for serialization.

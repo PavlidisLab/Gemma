@@ -43,7 +43,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Integer numberOfDataVectors;
     private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private Collection<QuantitationType> quantitationTypes = new HashSet<>();
-    private LocalFile rawDataFile;
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
     private String source;
@@ -163,14 +162,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.quantitationTypes = quantitationTypes;
     }
 
-    public LocalFile getRawDataFile() {
-        return this.rawDataFile;
-    }
-
-    public void setRawDataFile( LocalFile rawDataFile ) {
-        this.rawDataFile = rawDataFile;
-    }
-
     public Collection<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
     }
@@ -180,8 +171,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
-     * used names like "alizadeh-lymphoma".
+     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past
+     *         we often
+     *         used names like "alizadeh-lymphoma".
      */
     public String getShortName() {
         return this.shortName;

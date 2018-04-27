@@ -29,7 +29,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.PersonDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.common.description.LocalFileDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
@@ -47,9 +46,6 @@ abstract public class CommonPersister extends AbstractPersister {
 
     private final Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<>();
     private final Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<>();
-
-    @Autowired
-    LocalFileDao localFileDao;
 
     @Autowired
     private AuditTrailDao auditTrailDao;
@@ -93,8 +89,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return this.persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
             return this.persistExternalDatabase( ( ExternalDatabase ) entity );
-        } else if ( entity instanceof LocalFile ) {
-            return this.persistLocalFile( ( LocalFile ) entity );
         } else if ( entity instanceof Protocol ) {
             return this.persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof VocabCharacteristic ) {
@@ -183,21 +177,6 @@ abstract public class CommonPersister extends AbstractPersister {
 
         seenDatabases.put( database.getName(), database );
         return database;
-    }
-
-    LocalFile persistLocalFile( LocalFile file ) {
-        return this.persistLocalFile( file, false );
-    }
-
-    LocalFile persistLocalFile( LocalFile file, boolean forceNew ) {
-        if ( file == null )
-            return null;
-        if ( !this.isTransient( file ) )
-            return file;
-        if ( forceNew )
-            return localFileDao.create( file );
-        file.setId( null ); // in case of retry.
-        return localFileDao.findOrCreate( file );
     }
 
     Protocol persistProtocol( Protocol protocol ) {

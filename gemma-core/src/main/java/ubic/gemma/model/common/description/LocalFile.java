@@ -25,8 +25,13 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
+/**
+ * Not a persistent entity
+ * 
+ * @author paul
+ */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.Securable {
+public class LocalFile implements Identifiable, Serializable {
 
     private static final long serialVersionUID = 5057142607188347151L;
     private java.net.URL localURL;
@@ -34,8 +39,6 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     private String version;
     private Long size;
     private Long id;
-    private FileFormat format;
-    private Collection<LocalFile> sourceFiles = new java.util.HashSet<>();
 
     /**
      * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
@@ -63,14 +66,6 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
 
     public Boolean canWrite() {
         return this.asFile().canWrite();
-    }
-
-    public FileFormat getFormat() {
-        return this.format;
-    }
-
-    public void setFormat( FileFormat format ) {
-        this.format = format;
     }
 
     @Override
@@ -110,17 +105,6 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
 
     public void setSize( Long size ) {
         this.size = size;
-    }
-
-    /**
-     * @return Any files which were used to create this file.
-     */
-    public Collection<LocalFile> getSourceFiles() {
-        return this.sourceFiles;
-    }
-
-    public void setSourceFiles( Collection<LocalFile> sourceFiles ) {
-        this.sourceFiles = sourceFiles;
     }
 
     /**

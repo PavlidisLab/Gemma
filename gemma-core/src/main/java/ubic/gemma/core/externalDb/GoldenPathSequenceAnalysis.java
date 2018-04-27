@@ -34,7 +34,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
@@ -300,7 +299,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
- 
+
         /*
          * Use kgXRef only to get the description - sometimes missing thus the outer join.
          */
@@ -725,8 +724,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     }
 
                     product.getAccessions().add( accession );
-
-                    product.setType( GeneProductType.RNA );
 
                     Gene gene = Gene.Factory.newInstance();
                     gene.setOfficialSymbol( rs.getString( 2 ) );

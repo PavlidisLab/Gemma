@@ -29,7 +29,6 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     private String ncbiId;
     private String name;
     private Long geneId;
-    private String type;
     private String chromosome;
     private String strand;
     private Long nucleotideStart;
@@ -56,7 +55,6 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     public GeneProductValueObject( GeneProduct entity ) {
         super( entity.getId() );
         this.name = entity.getName();
-        this.type = entity.getType().getValue();
         this.ncbiId = entity.getNcbiGi();
         if ( entity.getPhysicalLocation() != null ) {
             if ( entity.getPhysicalLocation().getChromosome() != null ) {
@@ -124,11 +122,4 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
         this.strand = strand;
     }
 
-    public String getType() {
-        return this.type;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
-    }
 }

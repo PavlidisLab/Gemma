@@ -37,7 +37,6 @@ import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -229,42 +228,6 @@ public class GeoConverterImpl implements GeoConverter {
 
         FactorValue factorValue = this.convertSubsetDescriptionToFactorValue( geoSubSet, experimentalFactor );
         this.addFactorValueToBioMaterial( expExp, geoSubSet, factorValue );
-    }
-
-    @Override
-    public LocalFile convertSupplementaryFileToLocalFile( Object object ) {
-
-        URL remoteFileUrl = null;
-        LocalFile remoteFile = null;
-
-        if ( object instanceof GeoSeries ) {
-            GeoSeries series = ( GeoSeries ) object;
-            String file = series.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        } else if ( object instanceof GeoSample ) {
-            GeoSample sample = ( GeoSample ) object;
-            String file = sample.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        } else if ( object instanceof GeoPlatform ) {
-            GeoPlatform platform = ( GeoPlatform ) object;
-            String file = platform.getSupplementaryFile();
-            if ( !StringUtils.isEmpty( file ) && !StringUtils.equalsIgnoreCase( file, "NONE" ) ) {
-                remoteFile = LocalFile.Factory.newInstance();
-                remoteFileUrl = this.tryGetRemoteFileUrl( file );
-            }
-        }
-
-        /* nulls allowed in remoteFile ... deal with later. */
-        if ( remoteFile != null )
-            remoteFile.setRemoteURL( remoteFileUrl );
-
-        return remoteFile;
     }
 
     /**
@@ -751,13 +714,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private Person convertContact( GeoContact contact ) {
-        Person result = Person.Factory.newInstance();
-        result.setName( contact.getName() );
-        result.setEmail( contact.getEmail() );
-        return result;
-    }
-
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
      *
@@ -765,12 +721,10 @@ public class GeoConverterImpl implements GeoConverter {
      * @param expExp ee
      */
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
-        expExp.getInvestigators().add( this.convertContact( series.getContact() ) );
         if ( series.getContributers().size() > 0 ) {
             expExp.setDescription( expExp.getDescription() + "\nContributers: " );
             for ( GeoContact contributer : series.getContributers() ) {
                 expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
-                expExp.getInvestigators().add( this.convertContact( contributer ) );
             }
             expExp.setDescription( expExp.getDescription() + "\n" );
         }
@@ -835,16 +789,6 @@ public class GeoConverterImpl implements GeoConverter {
         }
         ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: " + platform
                 .getLastUpdateDate() );
-
-        LocalFile arrayDesignRawFile = this.convertSupplementaryFileToLocalFile( platform );
-        if ( arrayDesignRawFile != null ) {
-            Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
-            if ( arrayDesignLocalFiles == null ) {
-                arrayDesignLocalFiles = new HashSet<>();
-            }
-            arrayDesignLocalFiles.add( arrayDesignRawFile );
-            ad.setLocalFiles( arrayDesignLocalFiles );
-        }
 
         this.convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
 
@@ -1763,9 +1707,6 @@ public class GeoConverterImpl implements GeoConverter {
 
         expExp.setAccession( this.convertDatabaseEntry( series ) );
 
-        LocalFile expExpRawDataFile = this.convertSupplementaryFileToLocalFile( series );
-        expExp.setRawDataFile( expExpRawDataFile );
-
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
         design.setName( "" );
@@ -1862,8 +1803,6 @@ public class GeoConverterImpl implements GeoConverter {
                         BioAssay ba = this.convertSample( sample, bioMaterial, expExp.getExperimentalDesign() );
 
                         assert ( ba != null );
-                        LocalFile rawDataFile = this.convertSupplementaryFileToLocalFile( sample );
-                        ba.setRawDataFile( rawDataFile );// deal with null at UI
                         ba.setDescription( ba.getDescription() + "\nSource GEO sample is " + sample.getGeoAccession()
                                 + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
 
