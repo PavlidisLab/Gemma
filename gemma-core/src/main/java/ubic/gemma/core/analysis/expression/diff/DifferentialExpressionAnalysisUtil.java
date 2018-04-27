@@ -169,8 +169,7 @@ public class DifferentialExpressionAnalysisUtil {
     }
 
     /**
-     * Returns a List of all the different types of biomaterials across all bioassays in the experiment. If there is
-     * more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
+     * Returns a List of all the different types of biomaterials across all bioassays in the experiment. 
      *
      * @param matrix matrix
      * @return list of biomaterials

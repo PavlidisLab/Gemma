@@ -29,22 +29,29 @@ public interface SampleCoexpressionAnalysisService {
      * into a double matrix. If the analysis or the matrix does not exist, computes it.
      *
      * @param ee the experiment to load the raw coexpression matrix for.
+     * @return the full, non-regressed matrix. If the matrix is not available event after attempted computation, returns null.
      */
     DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee );
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment and converts the regressed coexpression matrix
-     * into a double matrix. If the analysis or the matrix does not exist, computes it.
+     * into a double matrix. If the analysis or the matrix does not exist, computes it. If there are problems loading
+     * or computing the regressed matrix (e.g. because the experiment has no experimental design), the full matrix is
+     * returned instead.
      *
      * @param ee the experiment to load the regressed coexpression matrix for.
+     * @return sample correlation matrix with major factors regressed out, if such matrix exists for the given experiment.
+     * If not, the full non-regressed matrix is returned. If no matrix is available event after attempted computation, returns null.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadRegressedMatrix( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee );
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment. If the analysis does not
-     * exist, computes it.
+     * exist, or the full matrix is not available, or the regressed matrix is not available but all conditions
+     * for its computation are met, it re-runs the analysis.
      *
      * @param ee the experiment to load the analysis for.
+     * @return the sample correlation analysis containing both full and regressed sample correlation matrices.
      */
     SampleCoexpressionAnalysis load( ExpressionExperiment ee );
 

@@ -285,13 +285,7 @@ public class SearchServiceImpl implements SearchService {
 
             // Filter by taxon
             if ( taxon != null ) {
-                Collection<Long> eeIdsToKeep = new HashSet<>();
-                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
-                for ( ExpressionExperiment ee : ees ) {
-                    if ( eeIds.contains( ee.getId() ) )
-                        eeIdsToKeep.add( ee.getId() );
-                }
-                eeIds.retainAll( eeIdsToKeep );
+                eeIds.retainAll( EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) ) );
             }
         } else {
             Collection<ExpressionExperiment> ees = ( taxon != null ) ?
