@@ -83,8 +83,14 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
 
+        // scale is not correctly recorded.
         ee = ( ExpressionExperiment ) results.iterator().next();
-        qt = this.createOrUpdateQt( ScaleType.LINEAR );
+        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+
+        // not parsed properly
+        ArrayDesign ad = eeService.getArrayDesignsUsed( ee ).iterator().next();
+        ad.setTechnologyType( TechnologyType.TWOCOLOR );
+        arrayDesignService.update( ad );
 
         qt.setIsNormalized( true );
         quantitationTypeService.update( qt );
@@ -100,35 +106,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         } catch ( Exception ignored ) {
 
         }
-    }
-
-    @Test
-    final public void testServiceLinearNormalized() {
-
-        assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
-
-        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
-
-        // convert byte[] to array[]
-        // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
-        Arrays.sort( means );
-        Arrays.sort( variances );
-
-        int expectedLength = 97; // after filtering
-        assertEquals( expectedLength, means.length );
-        assertEquals( expectedLength, variances.length );
-        expectedLength = 95; // duplicate rows removed
-
-        int idx = 0;
-        assertEquals( -1.9858, means[idx], 0.0001 );
-        assertEquals( 0, variances[idx], 0.0001 );
-
-        idx = expectedLength - 1;
-        assertEquals( 0.02509, means[idx], 0.0001 );
-        assertEquals( 0.09943, variances[idx], 0.0001 );
-
     }
 
     @Test
