@@ -50,7 +50,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
             BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
-            PhenotypeAssociation.class, TreatmentImpl.class };
+            PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 
     @Autowired
