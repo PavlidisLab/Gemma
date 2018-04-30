@@ -105,7 +105,8 @@ public class ExpressionDataDoubleMatrixUtil {
                 .ensureLog2Scale( qt, new ExpressionDataDoubleMatrix( data ) );
 
         // Change the QT information if necessary
-        if(qt.getScale() != ScaleType.LOG2) {
+        if ( qt.getScale() != ScaleType.LOG2 ) {
+            log.info( " Changing scale of QT " + qt.getId() + " to LOG2!" );
             data = matrix.toProcessedDataVectors();
             for ( ProcessedExpressionDataVector v : data ) {
                 v.getQuantitationType().setScale( ScaleType.LOG2 );

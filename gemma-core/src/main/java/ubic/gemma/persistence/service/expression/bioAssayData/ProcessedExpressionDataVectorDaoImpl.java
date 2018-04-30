@@ -162,6 +162,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
         }
 
+        // Ensure log2 scale
+        expressionExperiment.setProcessedExpressionDataVectors( ExpressionDataDoubleMatrixUtil
+                .ensureLog2Scale( expressionExperiment.getProcessedExpressionDataVectors() ) );
+
         AbstractDao.log.info( "Persisting " + expressionExperiment.getProcessedExpressionDataVectors().size()
                 + " processed data vectors" );
 
