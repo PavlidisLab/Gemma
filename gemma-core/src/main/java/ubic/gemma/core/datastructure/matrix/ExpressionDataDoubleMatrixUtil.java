@@ -99,7 +99,6 @@ public class ExpressionDataDoubleMatrixUtil {
             Collection<ProcessedExpressionDataVector> data ) {
 
         QuantitationType qt = data.iterator().next().getQuantitationType();
-
         // Ensure the data is on a Log2 scale.
         ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
                 .ensureLog2Scale( qt, new ExpressionDataDoubleMatrix( data ) );
@@ -196,9 +195,8 @@ public class ExpressionDataDoubleMatrixUtil {
             }
         }
 
-        throw new UnknownLogScaleException(
-                "Data look log tranformed, not sure about base (" + quantitationType + ")" );
-
+        log.warn( "Data look log transformed, not sure about base (" + quantitationType + "). Will report as LINEAR!" );
+        return ScaleType.LINEAR;
     }
 
     /**

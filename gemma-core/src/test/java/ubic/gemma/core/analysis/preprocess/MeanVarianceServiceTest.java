@@ -334,8 +334,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         ee = eeService.load( ee.getId() );
         mvr = meanVarianceService.create( ee, true );
         assertEquals( oldEeId, ee.getId() );
-        assertTrue( oldMvr != mvr );
-
+        assertNotSame( oldMvr, mvr );
     }
 
     private QuantitationType createOrUpdateQt( ScaleType scale ) {
@@ -357,6 +356,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             qt.setIsBatchCorrected( false );
             qt.setIsRecomputedFromRawData( false );
             quantitationTypeService.create( qt );
+            ee.getQuantitationTypes().add( qt );
         } else {
             qt = qtList.iterator().next();
             qt.setScale( scale );

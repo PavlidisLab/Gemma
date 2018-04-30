@@ -963,7 +963,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         //language=HQL
-        final String queryString = "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
+        final String queryString = "select distinct quantType " + "from ExpressionExperiment ee "
                 + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
         //noinspection unchecked
