@@ -117,7 +117,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         Collection<DatabaseEntry> accessions = new HashSet<>();
         // DatabaseEntry
 
-        StringBuilder seriesAccession = new StringBuilder( "" );
+        StringBuilder seriesAccession = new StringBuilder();
         if ( geoAccession.startsWith( "GSE" ) ) {
             seriesAccession = new StringBuilder( geoAccession );
         } else if ( geoAccession.startsWith( "GPL" ) ) {

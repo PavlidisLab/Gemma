@@ -129,11 +129,11 @@ public class SimpleFastaCmd implements FastaCmd {
     /**
      * Keys can be numbers or strings...
      * 
-     * @param keys
-     * @param database
-     * @param blastHome
-     * @return
-     * @throws IOException
+     * @param keys keys
+     * @param database database
+     * @param blastHome blast home
+     * @return bio sequences
+     * @throws IOException when there are IO problems
      */
     private Collection<BioSequence> getMultiple( Collection<?> keys, String database, String blastHome )
             throws IOException {
@@ -167,9 +167,8 @@ public class SimpleFastaCmd implements FastaCmd {
         SimpleFastaCmd.log.debug( "BLASTDB=" + blastHome );
         pr = Runtime.getRuntime().exec( command, opts );
 
-        Collection<BioSequence> sequences = this.getSequencesFromFastaCmdOutput( pr );
         //  EntityUtils.deleteFile( tmp );
-        return sequences;
+        return this.getSequencesFromFastaCmdOutput( pr );
 
     }
 

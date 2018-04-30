@@ -819,7 +819,7 @@ public class SearchServiceImpl implements SearchService {
          *
          * But if they put in Parkinson's disease we don't want to do two queries.
          */
-        List<String> subparts = Arrays.asList( query.split( " AND " ) );
+        String[] subparts = query.split( " AND " );
 
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult> allResults = new HashSet<>();

@@ -292,7 +292,6 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                     allOmimId.add( new Long( omimPhenotypeId ) );
                 }
             }
-            br.close();
         }
 
         return this.populateOmimIdsToPubmeds( allOmimId );
@@ -346,7 +345,6 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
                     omimIdToGeneNCBI.put( tokens[0], tokens[2] );
                 }
             }
-            br.close();
         }
         return omimIdToGeneNCBI;
     }

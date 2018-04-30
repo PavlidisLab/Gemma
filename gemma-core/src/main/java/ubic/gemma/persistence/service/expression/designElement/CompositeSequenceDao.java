@@ -75,8 +75,6 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
-    
-    Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

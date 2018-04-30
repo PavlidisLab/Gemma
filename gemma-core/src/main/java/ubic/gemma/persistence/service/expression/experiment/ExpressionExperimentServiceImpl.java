@@ -357,15 +357,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see ExpressionExperimentService#findByInvestigator(Contact)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        return this.expressionExperimentDao.findByInvestigator( investigator );
-    }
-
-    /**
      * @see ExpressionExperimentService#findByName(String)
      */
     @Override
@@ -477,7 +468,7 @@ public class ExpressionExperimentServiceImpl
             return null;
         }
 
-        StringBuilder result = new StringBuilder( "" );
+        StringBuilder result = new StringBuilder();
 
         for ( BatchConfoundValueObject c : confounds ) {
             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
@@ -532,9 +523,7 @@ public class ExpressionExperimentServiceImpl
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
         String result = "";
-        if ( beDetails == null || beDetails.hasNoBatchInfo() ) {
-            result = "";
-        } else {
+        if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
             if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
             } else if ( beDetails.getComponent() != null

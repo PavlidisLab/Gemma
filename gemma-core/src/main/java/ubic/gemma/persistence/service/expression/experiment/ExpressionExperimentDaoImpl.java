@@ -74,16 +74,6 @@ public class ExpressionExperimentDaoImpl
                         + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
                 .uniqueResult() ).intValue();
     }
-
-    @Override
-    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        String queryString = "from Investigation i fetch all properties where :investigator in i.investigators";
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "investigator", investigator );
-        //noinspection unchecked
-        return query.list();
-    }
-
     @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         return this.thaw( expressionExperiment, true );
@@ -360,7 +350,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        boolean isList = ( ids != null && ids instanceof List );
+        boolean isList = ( ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return Collections.emptyList();

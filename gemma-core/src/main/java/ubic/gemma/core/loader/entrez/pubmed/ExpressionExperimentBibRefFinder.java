@@ -104,7 +104,6 @@ public class ExpressionExperimentBibRefFinder {
                     return Integer.parseInt( capturedAccession );
                 }
             }
-            is.close();
 
         } catch ( IOException e ) {
             ExpressionExperimentBibRefFinder.log.error( e, e );

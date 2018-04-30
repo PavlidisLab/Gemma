@@ -59,16 +59,6 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
         verify( eeDao );
     }
 
-    @Test
-    public void testExpressionExperimentFindByInvestigator() {
-        reset( eeDao );
-        eeDao.findByInvestigator( nobody );
-        expectLastCall().andReturn( cJustTwelve );
-        replay( eeDao );
-        svc.findByInvestigator( nobody );
-        verify( eeDao );
-    }
-
     @Before
     public void setUp() {
 

@@ -31,6 +31,7 @@ public class Multifunctionality implements java.io.Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by spring
     public Multifunctionality() {
     }
 

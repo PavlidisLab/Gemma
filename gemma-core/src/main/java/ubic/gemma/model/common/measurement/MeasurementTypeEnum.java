@@ -87,7 +87,7 @@ public final class MeasurementTypeEnum extends MeasurementType implements org.hi
      */
     @Override
     public boolean equals( Object x, Object y ) throws HibernateException {
-        return ( x == y ) || ( x != null && y != null && y.equals( x ) );
+        return ( x == y ) || ( y != null && y.equals( x ) );
     }
 
     /**

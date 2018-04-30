@@ -472,35 +472,6 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
-        if ( compositeSequence == null || compositeSequence.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = compositeSequence.getId();
-
-        String nativeQueryString = CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
-
-        int limit = CompositeSequenceDaoImpl.MAX_CS_RECORDS;
-        if ( numResults != null && numResults != 0 ) {
-            limit = Math.min( numResults, CompositeSequenceDaoImpl.MAX_CS_RECORDS );
-        }
-
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( nativeQueryString );
-        queryObject.setParameter( "id", id );
-        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
-                .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
-                .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
-                .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
-
-        queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
-
-        queryObject.setMaxResults( limit );
-        //noinspection unchecked
-        return queryObject.list();
-    }
-
-    @Override
     public void thaw( final Collection<CompositeSequence> compositeSequences ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {

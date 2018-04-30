@@ -79,7 +79,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
 
-        if ( c != null && c instanceof VocabCharacteristic ) {
+        if ( c instanceof VocabCharacteristic ) {
             VocabCharacteristic v = ( VocabCharacteristic ) c;
             if ( v.getCategory() != null && v.getCategory()
                     .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {

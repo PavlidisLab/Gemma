@@ -162,7 +162,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
             return bioAssays;
         List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
-                        + " left join fetch b.derivedDataFiles join fetch b.sampleUsed bm"
+                        + " left join fetch b.sampleUsed bm"
                         + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) ",
                 "ids",
                 EntityUtils.getIds( bioAssays ) );

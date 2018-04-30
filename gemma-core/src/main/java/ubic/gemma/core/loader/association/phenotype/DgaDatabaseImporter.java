@@ -160,7 +160,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                     }
                 }
             }
-            dgaReader.close();
         }
 
         for ( String key : commonLines.keySet() ) {

@@ -113,6 +113,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * @param otherBean, cannot be <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
+    @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), null, otherBean.getNcbiId(), otherBean.getOfficialSymbol(),
                 otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(),

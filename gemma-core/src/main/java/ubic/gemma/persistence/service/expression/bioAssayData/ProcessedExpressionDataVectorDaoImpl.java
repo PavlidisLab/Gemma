@@ -274,7 +274,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param ee    ee
      * @return processed data vectors
      */
-    @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
 
         if ( limit == null || limit < 0 ) {
