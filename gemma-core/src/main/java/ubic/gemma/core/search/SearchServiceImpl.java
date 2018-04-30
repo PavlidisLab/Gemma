@@ -694,7 +694,6 @@ public class SearchServiceImpl implements SearchService {
         orderedClassesToSearch.add( ExpressionExperiment.class );
         orderedClassesToSearch.add( FactorValue.class );
         orderedClassesToSearch.add( BioMaterial.class );
-        orderedClassesToSearch.add( Treatment.class );
 
         Collection<SearchResult> characterSearchResults = new HashSet<>();
 
