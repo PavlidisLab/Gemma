@@ -123,7 +123,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         Collection<? extends DesignElementDataVector> builderVectors = new HashSet<>(
                 rawVectors.isEmpty() ? procVectors : rawVectors );
 
-        System.out.println("Building matrix with vectors that I just thawed");
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( builderVectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
 
