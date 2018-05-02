@@ -444,7 +444,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         boolean dataReprocessedFromRaw = false;
         for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 dataReprocessedFromRaw = true;
             }
         }

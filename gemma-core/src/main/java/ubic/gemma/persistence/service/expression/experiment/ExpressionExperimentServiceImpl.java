@@ -979,7 +979,7 @@ public class ExpressionExperimentServiceImpl
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
         for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+            if ( qt.getIsBatchCorrected() ) {
                 return true;
             }
         }
