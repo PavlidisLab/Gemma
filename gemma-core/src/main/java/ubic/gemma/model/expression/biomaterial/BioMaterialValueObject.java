@@ -30,10 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author lukem
@@ -65,6 +62,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private String name;
 
     private boolean basicFVs;
+    private Date assayProcessingDate;
 
     /**
      * Required when using the class as a spring bean.
@@ -125,6 +123,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayDescription = ba.getDescription();
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
+        this.assayProcessingDate = ba.getProcessingDate();
     }
 
     @Override
@@ -238,6 +237,14 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     public void setCharacteristics( Collection<CharacteristicValueObject> characteristicsDetails ) {
         this.characteristics = characteristicsDetails;
+    }
+
+    public Date getAssayProcessingDate() {
+        return assayProcessingDate;
+    }
+
+    public void setAssayProcessingDate( Date assayProcessingDate ) {
+        this.assayProcessingDate = assayProcessingDate;
     }
 
     /**
