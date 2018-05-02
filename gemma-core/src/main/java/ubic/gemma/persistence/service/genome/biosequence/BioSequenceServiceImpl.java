@@ -94,4 +94,8 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
         return this.bioSequenceDao.thaw( bioSequence );
     }
 
+    @Override
+    public BioSequence findByCompositeSequence( Long id ) {
+        return this.bioSequenceDao.findByCompositeSequence( id );
+    }
 }

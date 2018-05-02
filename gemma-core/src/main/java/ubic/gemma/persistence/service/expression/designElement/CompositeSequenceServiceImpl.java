@@ -163,8 +163,8 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs ) {
-        BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
+    public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
+            CompositeSequenceValueObject cs ) {
 
         biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
 
@@ -205,18 +205,18 @@ public class CompositeSequenceServiceImpl
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence( this.loadValueObject( cs ) );
+                summary.setCompositeSequence( cs );
                 results.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }
 
         }
 
-        this.addBlatResultsLackingGenes( cs, results );
+        this.addBlatResultsLackingGenes( biologicalCharacteristic, results, cs );
 
         if ( results.size() == 0 ) {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
-            summary.setCompositeSequence( this.loadValueObject( cs ) );
+            summary.setCompositeSequence( cs );
             BlatResultValueObject newInstance = new BlatResultValueObject( -1L );
             newInstance.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
             summary.setBlatResult( newInstance );
@@ -256,9 +256,9 @@ public class CompositeSequenceServiceImpl
         Collection<CompositeSequenceValueObject> vos = super
                 .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
         for ( CompositeSequenceValueObject vo : vos ) {
-            // This is hyper super ultra inefficient
-            // FIXME convert this to a single query retrieval on the dao level.
-            vo.setGeneMappingSummaries( this.getGeneMappingSummary( this.load( vo.getId() ) ) );
+            // Not passing the vo since that would create data redundancy in the returned structure
+            vo.setGeneMappingSummaries( this.getGeneMappingSummary(
+                    this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
         }
         return vos;
     }
@@ -266,19 +266,15 @@ public class CompositeSequenceServiceImpl
     /**
      * Note that duplicate hits will be ignored here. See bug 4037.
      */
-    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<Integer, GeneMappingSummary> blatResults ) {
-        /*
-         * Pick up blat results that didn't map to genes.
-         */
-        BioSequence biologicalCharacteristic = bioSequenceService.thaw( cs.getBiologicalCharacteristic() );
-
+    private void addBlatResultsLackingGenes( BioSequence biologicalCharacteristic,
+            Map<Integer, GeneMappingSummary> blatResults, CompositeSequenceValueObject cs ) {
         Collection<BlatResultValueObject> allBlatResultsForCs = blatResultService.loadValueObjects(
                 blatResultService.thaw( blatResultService.findByBioSequence( biologicalCharacteristic ) ) );
         for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {
             if ( !blatResults.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence( this.loadValueObject( cs ) );
+                summary.setCompositeSequence( cs );
                 // no gene...
                 blatResults.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }

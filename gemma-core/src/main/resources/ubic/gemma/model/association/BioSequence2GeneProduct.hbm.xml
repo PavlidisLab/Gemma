@@ -32,7 +32,7 @@
         <property name="specificity" type="java.lang.Double">
             <column name="SPECIFICITY" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
-        <many-to-one name="bioSequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl" lazy="proxy"
+        <many-to-one name="bioSequence" class="ubic.gemma.model.genome.biosequence.BioSequence" lazy="proxy"
                      fetch="select">
             <column name="BIO_SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

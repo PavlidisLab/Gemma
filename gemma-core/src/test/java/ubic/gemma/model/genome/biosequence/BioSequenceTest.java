@@ -6,7 +6,7 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @author Paul
  */
-public class BioSequenceImplTest extends TestCase {
+public class BioSequenceTest extends TestCase {
 
     public void testEqualsID() {
         BioSequence a = BioSequence.Factory.newInstance();

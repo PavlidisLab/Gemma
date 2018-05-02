@@ -148,7 +148,7 @@ public class CompositeSequenceController extends BaseController {
         compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
-        return compositeSequenceService.getGeneMappingSummary( cs );
+        return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(), compositeSequenceService.loadValueObject( cs ) );
     }
 
     @InitBinder
