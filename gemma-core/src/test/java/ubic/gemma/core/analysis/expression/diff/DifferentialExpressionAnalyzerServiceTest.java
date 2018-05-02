@@ -144,7 +144,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertTrue( !rs.getResults().isEmpty() );
-            assertEquals( 99, rs.getResults().size() );
+            assertEquals( 10, rs.getResults().size() );
         }
 
         /*
@@ -167,7 +167,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
-        assertEquals( 99, readIn.rows() );
+        assertEquals( 10, readIn.rows() );
         System.out.println( readIn.toString() );
         assertEquals( 9, readIn.columns() );
 
