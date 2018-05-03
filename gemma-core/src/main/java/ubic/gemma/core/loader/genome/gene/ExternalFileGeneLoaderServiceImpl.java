@@ -27,7 +27,6 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
@@ -72,7 +71,6 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return load( b, taxon );
     }
 
-
     @Override
     public int load( String geneFile, String taxonName ) throws Exception {
 
@@ -94,9 +92,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * return it.
      *
      * @param fields A string array containing gene symbol, gene name and uniprot id.
-     * @param taxon  Taxon relating to gene
+     * @param taxon Taxon relating to gene
      * @return Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or invalid
-     * fields) or modified.
+     *         fields) or modified.
      */
     private Gene createGene( String[] fields, Taxon taxon ) {
 
@@ -155,7 +153,6 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      */
     private GeneProduct createGeneProduct( Gene gene ) {
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-        geneProduct.setType( GeneProductType.RNA );
         geneProduct.setGene( gene );
         geneProduct.setName( gene.getName() );
         geneProduct.setDescription( "Gene product placeholder" );

@@ -40,30 +40,30 @@ public class CharacteristicSortTest extends BaseSpringContextTest {
 
         List<CharacteristicValueObject> cl = new ArrayList<>();
         cl.add( new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "g", "gggg", null, "gggg_", "g", null, null ) ) );
+                Characteristic.Factory.newInstance( "g", "gggg", "gggg_", "g", null, null ) ) );
 
         cl.add( new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "xused", "x", null, "xused", "x", null, null ) ) );
+                Characteristic.Factory.newInstance( "xused", "x", "xused", "x", null, null ) ) );
 
         // will be first
         CharacteristicValueObject a = new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "a", "a", null, "aused", "a", null, null ) );
+                Characteristic.Factory.newInstance( "a", "a", "aused", "a", null, null ) );
         a.setNumTimesUsed( 3 );
         a.setAlreadyPresentInDatabase( true );
         cl.add( a );
 
         CharacteristicValueObject vo = new CharacteristicValueObject(
-                VocabCharacteristic.Factory.newInstance( "b", "bbbb", null, "bbbbb", "http://bbbb", "b", null, null ) );
+                VocabCharacteristic.Factory.newInstance( "b", "bbbb", "bbbbb", "http://bbbb", "b", null, null ) );
         vo.setNumTimesUsed( 5 );
         vo.setAlreadyPresentInDatabase( true );
         cl.add( vo );
 
         cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
-                .newInstance( "a", "aaaa", null, "aaaa_", "http://aaaa_", "a", null, null ) ) );
+                .newInstance( "a", "aaaa", null, "aaaa_", "http://aaaa_", "a", null ) ) );
         cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
-                .newInstance( "d", "dddd", null, "dddd_", "http://dddd_", "d", null, null ) ) );
+                .newInstance( "d", "dddd", null, "dddd_", "http://dddd_", "d", null ) ) );
         cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
-                .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null, null ) ) );
+                .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null ) ) );
 
         ontologyService.sort( cl );
 

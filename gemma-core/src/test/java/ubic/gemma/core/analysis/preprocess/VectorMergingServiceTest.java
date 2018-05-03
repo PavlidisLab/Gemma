@@ -24,6 +24,8 @@ import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -32,6 +34,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -41,6 +44,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests loading, platform switch, vector merge, and complex deletion (in teardown)
@@ -73,6 +77,9 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private VectorMergingService vectorMergingService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Before
     @After
@@ -130,6 +137,14 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         ee = this.eeService.thawLite( ee );
 
+        // fix for unknown log scale
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+            if ( qt.getIsPreferred() ) {
+                qt.setScale( ScaleType.LOG2 );
+                quantitationTypeService.update( qt );
+            }
+        }
+
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
 
         assertEquals( 7, aas.size() );
@@ -162,7 +177,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         ArrayDesign firstaa = taas.iterator().next();
         aas.remove( firstaa );
 
-        assertEquals( null, firstaa.getMergedInto() );
+        assertNull( firstaa.getMergedInto() );
 
         mergedAA = arrayDesignMergeService.merge( firstaa, taas, "testMerge" + RandomStringUtils.randomAlphabetic( 5 ),
                 "merged" + RandomStringUtils.randomAlphabetic( 5 ), false );

@@ -299,9 +299,7 @@ public class ShellDelegatingBlat implements Blat {
 
     @Override
     public void startServer( BlattableGenome genome, int port ) throws IOException {
-        Socket socket = null;
-        try {
-            socket = new Socket( host, port );
+        try (Socket socket = new Socket( host, port )) {
             ShellDelegatingBlat.log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {
@@ -323,10 +321,6 @@ public class ShellDelegatingBlat implements Blat {
                 ShellDelegatingBlat.log.info( "Server seems to have started" );
             }
 
-        } finally {
-            if ( socket != null ) {
-                socket.close();
-            }
         }
     }
 

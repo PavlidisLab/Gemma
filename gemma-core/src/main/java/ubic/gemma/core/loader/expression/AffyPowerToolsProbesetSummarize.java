@@ -96,7 +96,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         Matcher matcher = regex.matcher( fileName );
 
-        BioAssay assay = null;
+        BioAssay assay;
 
         if ( matcher.matches() ) {
             String geoAcc = matcher.group( 1 );
@@ -305,6 +305,7 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             if ( bad.getBioAssays().size() != bioAssaysToUse.size() ) {
+                //noinspection unchecked
                 Collection<BioAssay> missing = CollectionUtils.subtract( bioAssaysToUse, bad.getBioAssays() );
                 throw new IllegalStateException(
                         "Failed to find a data column for every bioassay on the given platform " + targetPlatform

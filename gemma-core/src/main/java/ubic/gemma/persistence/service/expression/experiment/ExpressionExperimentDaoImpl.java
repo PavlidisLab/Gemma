@@ -74,16 +74,6 @@ public class ExpressionExperimentDaoImpl
                         + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
                 .uniqueResult() ).intValue();
     }
-
-    @Override
-    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        String queryString = "from Investigation i fetch all properties where :investigator in i.investigators";
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "investigator", investigator );
-        //noinspection unchecked
-        return query.list();
-    }
-
     @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         return this.thaw( expressionExperiment, true );
@@ -122,10 +112,10 @@ public class ExpressionExperimentDaoImpl
     /**
      * Special method for front-end access
      *
-     * @param orderBy    the field to order the results by.
+     * @param orderBy the field to order the results by.
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
+     * @param ids only list specific ids.
+     * @param taxon only list experiments within specific taxon.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Override
@@ -144,7 +134,11 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {{ this.add( filters ); }},
+        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {
+            {
+                this.add( filters );
+            }
+        },
                 this.getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
@@ -212,10 +206,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
-                        + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdated desc";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
+                + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdated desc";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "taxon", taxon );
 
@@ -250,10 +243,7 @@ public class ExpressionExperimentDaoImpl
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
-        String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
-                limit < 0 ?
-                        "asc" :
-                        "desc" );
+        String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + ( limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
         q.setMaxResults( Math.abs( limit ) );
 
@@ -360,7 +350,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        boolean isList = ( ids != null && ids instanceof List );
+        boolean isList = ( ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return Collections.emptyList();
@@ -403,9 +393,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
-                        + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
+        final String queryString = "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
+                + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bibID", bibRefID )
@@ -416,8 +405,7 @@ public class ExpressionExperimentDaoImpl
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
 
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
                 .list();
 
@@ -529,9 +517,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef where ef = :ef ";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                + "inner join ed.experimentalFactors ef where ef = :ef ";
 
         List results = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ef", ef )
                 .list();
@@ -551,9 +538,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByFactorValue( Long factorValueId ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
-                        + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
+                + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
 
         //noinspection unchecked
         List<ExpressionExperiment> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -642,10 +628,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByParentTaxon( Taxon taxon ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample "
-                        + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample "
+                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -655,8 +640,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
         //language=HQL
-        final String queryString =
-                "select ee from ExpressionExperiment as ee " + "inner join ee.quantitationTypes qt where qt = :qt ";
+        final String queryString = "select ee from ExpressionExperiment as ee " + "inner join ee.quantitationTypes qt where qt = :qt ";
 
         List results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "qt", quantitationType ).list();
@@ -673,9 +657,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByTaxon( Taxon taxon ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -703,10 +686,9 @@ public class ExpressionExperimentDaoImpl
     @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids ) {
         //language=HQL
-        final String queryString =
-                "select ee.id, ad.id, event " + "from ExpressionExperiment ee " + "inner join ee.bioAssays b "
-                        + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
-                        + "inner join trail.events event " + "where ee.id in (:ids) ";
+        final String queryString = "select ee.id, ad.id, event " + "from ExpressionExperiment ee " + "inner join ee.bioAssays b "
+                + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
+                + "inner join trail.events event " + "where ee.id in (:ids) ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
@@ -740,9 +722,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
         //language=HQL
-        final String queryString =
-                "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
-                        + " where ee.id in (:ids) ";
+        final String queryString = "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
+                + " where ee.id in (:ids) ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
@@ -771,8 +752,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Integer getBioAssayCountById( long Id ) {
         //language=HQL
-        final String queryString =
-                "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays ba where ee.id = :ee";
+        final String queryString = "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays ba where ee.id = :ee";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
                 .list();
@@ -788,9 +768,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
         //language=HQL
-        final String queryString =
-                "select count(distinct sample) from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where ee.id = :eeId ";
+        final String queryString = "select count(distinct sample) from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample where ee.id = :eeId ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "eeId", expressionExperiment.getId() ).list();
@@ -984,9 +963,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         //language=HQL
-        final String queryString =
-                "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                        + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
+        final String queryString = "select distinct quantType " + "from ExpressionExperiment ee "
+                + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1001,10 +979,9 @@ public class ExpressionExperimentDaoImpl
         }
 
         //language=HQL
-        final String queryString =
-                "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                        + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
+        final String queryString = "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
+                + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
+                + "inner join ba.arrayDesignUsed ad " + "where ee = :ee and ad = :ad";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1017,8 +994,8 @@ public class ExpressionExperimentDaoImpl
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments ) {
         //language=HQL
-        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.bioAssays ba "
-                + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
+        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.auditTrail trail inner join"
+                + " trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<>();
@@ -1057,9 +1034,8 @@ public class ExpressionExperimentDaoImpl
             if ( list.size() > 0 )
                 return ( Taxon ) list.iterator().next();
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
-            String queryString =
-                    "select su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
-                            + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
+            String queryString = "select su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
+                    + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
             List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
                     .list();
             if ( list.size() > 0 )
@@ -1088,9 +1064,8 @@ public class ExpressionExperimentDaoImpl
             list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameterList( "ees", bioAssaySets ).list();
         } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
-            String queryString =
-                    "select eess, su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
-                            + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
+            String queryString = "select eess, su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
+                    + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
             list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameterList( "ees", bioAssaySets ).list();
         } else {
@@ -1101,7 +1076,8 @@ public class ExpressionExperimentDaoImpl
         for ( Object o : list ) {
             Object[] oa = ( Object[] ) o;
 
-            @SuppressWarnings("unchecked") T e = ( T ) oa[0];
+            @SuppressWarnings("unchecked")
+            T e = ( T ) oa[0];
             Taxon t = ( Taxon ) oa[1];
             result.put( e, t );
 
@@ -1122,9 +1098,9 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
-     * keeping before you can
-     * remove the experiment. Attempting to call this method directly will likely result in
-     * org.hibernate.exception.ConstraintViolationException
+     *             keeping before you can
+     *             remove the experiment. Attempting to call this method directly will likely result in
+     *             org.hibernate.exception.ConstraintViolationException
      */
     @Override
     @Deprecated
@@ -1158,11 +1134,6 @@ public class ExpressionExperimentDaoImpl
             Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
             Hibernate.initialize( designElementDataVectors );
             ee.setRawExpressionDataVectors( null );
-
-            /*
-             * We don't remove the investigators, just breaking the association.
-             */
-            ee.getInvestigators().clear();
 
             int count = 0;
             if ( designElementDataVectors != null ) {
@@ -1274,13 +1245,13 @@ public class ExpressionExperimentDaoImpl
      * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
      * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
-     * @param offset  amount of EEs to skip.
-     * @param limit   maximum amount of EEs to retrieve.
+     * @param offset amount of EEs to skip.
+     * @param limit maximum amount of EEs to retrieve.
      * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                be a property of EE itself, or any nested property that hibernate can reach.
-     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
+     *        be a property of EE itself, or any nested property that hibernate can reach.
+     *        E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
+     * @param asc true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filter see this#formRestrictionClause(ArrayList) filters argument for description.
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
@@ -1385,14 +1356,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param offset      amount of EEs to skip.
-     * @param limit       maximum amount of EEs to retrieve.
-     * @param orderBy     the property to order by.
-     * @param asc         whether the ordering is ascending or descending.
-     * @param filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
+     * @param offset amount of EEs to skip.
+     * @param limit maximum amount of EEs to retrieve.
+     * @param orderBy the property to order by.
+     * @param asc whether the ordering is ascending or descending.
+     * @param filters An array representing either a conjunction (AND) or disjunction (OR) of filters.
      * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
-     *                    filters property to be treated as a conjunction (AND).
-     *                    If you are passing a single filter, using <code>false</code> is slightly more effective;
+     *        filters property to be treated as a conjunction (AND).
+     *        If you are passing a single filter, using <code>false</code> is slightly more effective;
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     @SuppressWarnings("SameParameterValue") // Better reusability
@@ -1428,7 +1399,7 @@ public class ExpressionExperimentDaoImpl
      *
      * @param orderBy the order field requested by front end or API.
      * @return a string that can be used as the orderByProperty param in
-     * {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
+     *         {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1491,7 +1462,6 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );
-        Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getOtherRelevantPublications() );
         Hibernate.initialize( result.getBioAssays() );
@@ -1504,7 +1474,6 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-            Hibernate.initialize( ba.getDerivedDataFiles() );
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
@@ -1592,10 +1561,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                        description.
+     * @param filters see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *        description.
      * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
+     * @param orderDesc whether the ordering is ascending or descending.
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
@@ -1643,7 +1612,7 @@ public class ExpressionExperimentDaoImpl
                 + "qts, " // 24
                 + ObjectFilter.DAO_EE_ALIAS + ".batchEffect, " // 25
                 + ObjectFilter.DAO_EE_ALIAS + ".batchConfound, " // 26
-                + "eNote, "  //27
+                + "eNote, " //27
                 + "eAttn, " //28
                 + "eTrbl, " //29
                 + ObjectFilter.DAO_GEEQ_ALIAS + " " //30
@@ -1728,14 +1697,14 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
             Hibernate
                     .initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
+            //   Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
             Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                Hibernate.initialize( bf.getPublicationTypes() );
+                //     Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
     }

@@ -2,7 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -60,17 +59,12 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
      */
     public Collection<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
-        ArrayDesign ad = this.getPersistentObject( service );
-        Collection<CompositeSequence> css = ad == null ? null : service.getCompositeSequences( ad, limit, offset );
-        Collection<CompositeSequenceValueObject> csVos = new ArrayList<>( css != null ? css.size() : 0 );
-        if ( css == null )
-            return csVos;
-        for ( CompositeSequence cs : css ) {
-            CompositeSequenceValueObject csVo = csService.loadValueObject( cs );
-            csVo.setGeneMappingSummaries( csService.getGeneMappingSummary( cs ) );
-            csVos.add( csVo );
-        }
-        return csVos;
+        final ArrayDesign ad = this.getPersistentObject( service );
+        ArrayList<ObjectFilter[]> filters = new ArrayList<ObjectFilter[]>() {{
+            add( new ObjectFilter[] {
+                    new ObjectFilter( "arrayDesign", ad, ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS ) } );
+        }};
+        return csService.loadValueObjectsPreFilter( offset, limit, "", true, filters );
 
     }
 

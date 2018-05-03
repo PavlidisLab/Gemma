@@ -28,7 +28,7 @@ public interface PreprocessorService {
     /**
      * @param ee    the experiment
      * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
-     *              differential expression.
+     *              differential expression; batch correction.
      * @throws PreprocessingException if there was a problem during the processing
      */
     void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;

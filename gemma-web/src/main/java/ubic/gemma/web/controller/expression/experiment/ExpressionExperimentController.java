@@ -1341,7 +1341,7 @@ public class ExpressionExperimentController {
             if ( qt.getIsPreferred() ) {
                 countPreferred++;
             }
-            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 dataReprocessedFromRaw = true;
             }
         }

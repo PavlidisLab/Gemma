@@ -22,7 +22,6 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -37,15 +36,6 @@ import java.util.Map;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface BibliographicReferenceService
         extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
-
-    /**
-     * Adds a document (in PDF format) for the reference.
-     *
-     * @param bibliographicReference reference
-     * @param pdfFile                pdf file
-     */
-    @Secured({ "GROUP_USER" })
-    void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
 
     List<BibliographicReference> browse( Integer start, Integer limit );
 
@@ -89,7 +79,7 @@ public interface BibliographicReferenceService
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      *
-     * @param id           id
+     * @param id id
      * @param databaseName db name
      * @return reference
      */

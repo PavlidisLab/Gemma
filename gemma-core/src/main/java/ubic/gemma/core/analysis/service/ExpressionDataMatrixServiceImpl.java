@@ -123,7 +123,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
                         continue;
                     }
 
-                    Double[] ar = r.toArray( new Double[r.size()] );
+                    Double[] ar = r.toArray( new Double[0] );
 
                     // compute median of collection.
                     double[] dar = ArrayUtils.toPrimitive( ar );

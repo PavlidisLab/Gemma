@@ -242,7 +242,7 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
         TaxonService taxonService = this.getBean( TaxonService.class );
         Collection<Taxon> taxa = new ArrayList<>();
 
-        if ( taxonName != null && StringUtils.isNotBlank( taxonName ) ) {
+        if ( StringUtils.isNotBlank( taxonName ) ) {
             taxon = taxonService.findByCommonName( taxonName );
 
             if ( taxon == null || !( taxon.getIsSpecies() ) || !( taxon.getIsGenesUsable() ) ) {

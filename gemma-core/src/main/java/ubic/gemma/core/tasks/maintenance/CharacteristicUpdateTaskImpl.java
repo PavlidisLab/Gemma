@@ -132,9 +132,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
      * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
      *
      * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
-     * Characteristic.
+     *         Characteristic.
      * @throws IllegalStateException if the corresponding FactorValue already has at least one Characteristic. This
-     *                               method is just intended for filling that in if it's empty.
+     *         method is just intended for filling that in if it's empty.
      */
     private Collection<FactorValue> convertToFactorValuesWithCharacteristics( Collection<AnnotationValueObject> avos ) {
         Collection<FactorValue> result = new HashSet<>();
@@ -237,12 +237,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 continue;
             }
 
-            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ?
-                    ( VocabCharacteristic ) cFromClient :
-                    null;
-            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ?
-                    ( VocabCharacteristic ) cFromDatabase :
-                    null;
+            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromClient : null;
+            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromDatabase : null;
 
             /*
              * if one of the characteristics is a VocabCharacteristic and the other is not, we have to change the
@@ -275,9 +271,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 addToParent( vcFromDatabase, parent );
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
-                // don't copy AuditTrail or Status to avoid cascade error... vcFromDatabase.getAuditTrail()
                 cFromDatabase = characteristicService.create( Characteristic.Factory
-                        .newInstance( vcFromDatabase.getName(), vcFromDatabase.getDescription(), null,
+                        .newInstance( vcFromDatabase.getName(), vcFromDatabase.getDescription(),
                                 StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
                                 vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );

@@ -95,6 +95,13 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
             dataIndex: "baName",
             sortable: true,
             tooltip: 'BioAssay name/details'
+        }, {
+            id: "date-column",
+            header: "BA Date",
+            width: 40,
+            dataIndex: "baDate",
+            sortable: true,
+            tooltip: 'BioAssay processing date'
         }];
 
         this.factorValueEditors = [];
@@ -216,6 +223,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
             type: "string"
         }, {
             name: "baDesc",
+            type: "string"
+        }, {
+            name: "baDate",
             type: "string"
         }];
 
@@ -419,7 +429,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
              * This order must match the record!
              */
             data[i] = [bmvo.id, bmvo.name, bmvo.description, chars, bmvo.assayName,
-                bmvo.assayDescription];
+                bmvo.assayDescription, Gemma.Renderers.dateRenderer(bmvo.assayProcessingDate)];
 
             var factors = bmvo.factors;
 

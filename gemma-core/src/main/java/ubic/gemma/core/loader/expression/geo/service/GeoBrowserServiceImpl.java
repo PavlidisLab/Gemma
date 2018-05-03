@@ -286,14 +286,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
                 //noinspection unchecked
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
-                ois.close();
-                fis.close();
 
             } catch ( Exception e ) {
                 GeoBrowserServiceImpl.log
                         .error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
                 this.localInfo = new HashMap<>();
-                this.saveLocalInfo(); // ensure this gets initilized even if unused
+                this.saveLocalInfo(); // ensure this gets initialized even if unused
             }
         } else {
             this.localInfo = new HashMap<>();
@@ -320,7 +318,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
             oos.writeObject( this.localInfo );
             oos.flush();
-            oos.close();
         } catch ( Exception e ) {
             GeoBrowserServiceImpl.log.error( "Failed to save local GEO info", e );
         }

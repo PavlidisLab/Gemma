@@ -109,7 +109,6 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 String geneProductName = ( String ) row[6];
                 String geneProductAccession = ( String ) row[7];
                 Object geneProductGeneId = row[8];
-                String geneProductType = ( String ) row[9];
                 Long geneId = ( ( BigInteger ) row[10] ).longValue();
                 String geneName = ( String ) row[11];
                 Integer geneAccession = ( Integer ) row[12]; // NCBI
@@ -125,7 +124,6 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                     if ( geneProductGeneId != null ) {
                         gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
                     }
-                    gpVo.setType( geneProductType );
                     geneProductSet.put( geneProductId, gpVo );
                 }
 

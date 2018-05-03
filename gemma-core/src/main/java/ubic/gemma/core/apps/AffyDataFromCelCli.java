@@ -57,7 +57,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private boolean checkForAlreadyDone( BioAssaySet ee ) {
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 return true;
             }
         }

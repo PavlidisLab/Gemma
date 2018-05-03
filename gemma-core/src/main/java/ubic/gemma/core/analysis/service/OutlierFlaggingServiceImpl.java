@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -81,11 +80,10 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             hasNewOutliers = true;
             ba.setIsOutlier( true );
             bioAssayService.update( ba );
-            this.audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
 
         if ( !hasNewOutliers ) {
-            System.out.println( "No new outliers." );
+            //   log.info( "No new outliers." );
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
@@ -135,11 +133,6 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             OutlierFlaggingServiceImpl.log
                     .error( "Error during postprocessing, make sure additional steps are completed", e );
         }
-    }
-
-    private void audit( BioAssay bioAssay, String note ) {
-        AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( bioAssay, eventType, note );
     }
 
 }

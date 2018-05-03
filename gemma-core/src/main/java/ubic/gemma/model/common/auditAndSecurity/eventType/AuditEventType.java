@@ -33,6 +33,7 @@ public abstract class AuditEventType implements Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // required by spring
     public AuditEventType() {
     }
 

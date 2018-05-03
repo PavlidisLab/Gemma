@@ -68,9 +68,6 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
-    Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment,
-            Integer limit );
-
     Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 

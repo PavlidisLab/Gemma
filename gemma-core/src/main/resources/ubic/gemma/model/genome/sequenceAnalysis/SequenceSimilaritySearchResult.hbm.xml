@@ -13,11 +13,11 @@
             </generator>
         </id>
         <discriminator column="class"/>
-        <many-to-one name="querySequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl" lazy="proxy"
+        <many-to-one name="querySequence" class="ubic.gemma.model.genome.biosequence.BioSequence" lazy="proxy"
                      fetch="select">
             <column name="QUERY_SEQUENCE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="targetSequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl" lazy="proxy"
+        <many-to-one name="targetSequence" class="ubic.gemma.model.genome.biosequence.BioSequence" lazy="proxy"
                      fetch="select">
             <column name="TARGET_SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

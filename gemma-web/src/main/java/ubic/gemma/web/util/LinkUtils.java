@@ -19,7 +19,6 @@
 package ubic.gemma.web.util;
 
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -72,14 +71,8 @@ public class LinkUtils {
     }
 
     public static String getNcbiUrl( GeneProductValueObject product ) {
-        String ncbiLink = "";
-        if ( product.getType().equals( GeneProductType.RNA.getValue() ) ) {
-            ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
-        } else {
-            // assume protein
-            ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&cmd=search&term=";
+        String ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
 
-        }
         return ncbiLink + product.getNcbiId();
     }
 

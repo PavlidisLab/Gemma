@@ -54,10 +54,6 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
-        AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) persisterHelper.persist( ad );
-
-        testBibRef.setAuditTrail( ad );
 
         bibliographicReferenceService.create( testBibRef );
     }

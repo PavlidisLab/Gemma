@@ -141,7 +141,6 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
                 public void execute( Connection connection ) {
                     BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
                     Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                    Hibernate.initialize( bioAssay.getDerivedDataFiles() );
                     BioMaterial bm = bioAssay.getSampleUsed();
                     BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
                     Hibernate.initialize( bm );
@@ -163,9 +162,9 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
             return bioAssays;
         List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
-                        + " left join fetch b.derivedDataFiles join fetch b.sampleUsed bm"
-                        + " left join bm.factorValues left join bm.bioAssaysUsedIn left join fetch "
-                        + " b.auditTrail at left join fetch at.events where b.id in (:ids) ", "ids",
+                        + " left join fetch b.sampleUsed bm"
+                        + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) ",
+                "ids",
                 EntityUtils.getIds( bioAssays ) );
         //noinspection unchecked
         return ( Collection<BioAssay> ) thawedBioassays;
@@ -175,7 +174,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
      * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
      *
      * @param entities the bio assays to convert into a VO
-     * @param basic    true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
+     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
      * @return a collection of bioAssay value objects
      */
     @Override

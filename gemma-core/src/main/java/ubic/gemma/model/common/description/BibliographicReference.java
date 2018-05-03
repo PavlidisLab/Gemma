@@ -18,14 +18,14 @@
  */
 package ubic.gemma.model.common.description;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-public class BibliographicReference extends AbstractAuditable {
+public class BibliographicReference extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -45,10 +45,9 @@ public class BibliographicReference extends AbstractAuditable {
     private Date publicationDate;
     private String annotatedAbstract;
     private DatabaseEntry pubAccession;
-    private LocalFile fullTextPdf;
+    private Boolean retracted = false;
     private Collection<Characteristic> annotations = new HashSet<>();
     private Collection<MedicalSubjectHeading> meshTerms = new HashSet<>();
-    private Collection<PublicationType> publicationTypes = new HashSet<>();
     private Collection<Keyword> keywords = new HashSet<>();
     private Collection<Compound> chemicals = new HashSet<>();
 
@@ -112,14 +111,6 @@ public class BibliographicReference extends AbstractAuditable {
 
     public void setEditor( String editor ) {
         this.editor = editor;
-    }
-
-    public LocalFile getFullTextPdf() {
-        return this.fullTextPdf;
-    }
-
-    public void setFullTextPdf( LocalFile fullTextPdf ) {
-        this.fullTextPdf = fullTextPdf;
     }
 
     /**
@@ -189,14 +180,6 @@ public class BibliographicReference extends AbstractAuditable {
         this.publicationDate = publicationDate;
     }
 
-    public Collection<PublicationType> getPublicationTypes() {
-        return this.publicationTypes;
-    }
-
-    public void setPublicationTypes( Collection<PublicationType> publicationTypes ) {
-        this.publicationTypes = publicationTypes;
-    }
-
     public String getPublisher() {
         return this.publisher;
     }
@@ -219,6 +202,20 @@ public class BibliographicReference extends AbstractAuditable {
 
     public void setVolume( String volume ) {
         this.volume = volume;
+    }
+
+    /**
+     * @return true if article is recorded as retracted
+     */
+    public Boolean getRetracted() {
+        return retracted;
+    }
+
+    /**
+     * @param retracted the retracted to set
+     */
+    public void setRetracted( Boolean retracted ) {
+        this.retracted = retracted;
     }
 
     public static final class Factory {

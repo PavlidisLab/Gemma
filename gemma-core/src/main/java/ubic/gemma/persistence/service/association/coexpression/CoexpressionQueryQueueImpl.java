@@ -28,7 +28,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
@@ -87,23 +86,6 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
         }
     }
 
-    @Transactional(readOnly = true)
-    public void queryForCache( QueuedGene gene ) {
-
-        int numCached = coexpressionDao.queryAndCache( geneDao.load( gene.getId() ) );
-        //noinspection StatementWithEmptyBody // Better readability
-        if ( numCached < 0 ) {
-            // it was already in the cache
-        } else if ( numCached > 0 ) {
-            CoexpressionQueryQueueImpl.log.debug( "Cached " + numCached + " coexpression links at stringency="
-                    + CoexpressionCache.CACHE_QUERY_STRINGENCY + " for " + gene.getId() );
-        } else {
-            CoexpressionQueryQueueImpl.log
-                    .debug( "No coexpression links to cache at stringency=" + CoexpressionCache.CACHE_QUERY_STRINGENCY
-                            + " for " + gene.getId() );
-        }
-    }
-
     @Override
     protected void initDao() throws Exception {
         super.initDao();
@@ -152,6 +134,22 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
         }, "Fetching coexpression for recently used genes" );
         loadThread.setDaemon( true );
         loadThread.start();
+    }
+
+    private void queryForCache( QueuedGene gene ) {
+
+        int numCached = coexpressionDao.queryAndCache( geneDao.load( gene.getId() ) );
+        //noinspection StatementWithEmptyBody // Better readability
+        if ( numCached < 0 ) {
+            // it was already in the cache
+        } else if ( numCached > 0 ) {
+            CoexpressionQueryQueueImpl.log.debug( "Cached " + numCached + " coexpression links at stringency="
+                    + CoexpressionCache.CACHE_QUERY_STRINGENCY + " for " + gene.getId() );
+        } else {
+            CoexpressionQueryQueueImpl.log
+                    .debug( "No coexpression links to cache at stringency=" + CoexpressionCache.CACHE_QUERY_STRINGENCY
+                            + " for " + gene.getId() );
+        }
     }
 
     private synchronized void addToFullQueryQueue( Long id ) {

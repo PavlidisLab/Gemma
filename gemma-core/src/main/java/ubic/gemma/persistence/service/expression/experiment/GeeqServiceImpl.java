@@ -444,7 +444,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         boolean dataReprocessedFromRaw = false;
         for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 dataReprocessedFromRaw = true;
             }
         }
@@ -668,7 +668,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
             // sort so the keys in the hash map are consistent
             Collection<Long> ids = EntityUtils.getIds( fvs );
-            Long[] arr = ids.toArray( new Long[ids.size()] );
+            Long[] arr = ids.toArray( new Long[0] );
             Arrays.sort( arr );
             String key = Arrays.toString( arr );
 
@@ -719,7 +719,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         //noinspection StatementWithEmptyBody // because java standard libraries suck, we have to iterate like this to remove all NaNs, not just the first one.
         while ( list.remove( Double.NaN ) ) {}
 
-        return ArrayUtils.toPrimitive( list.toArray( new Double[list.size()] ) );
+        return ArrayUtils.toPrimitive( list.toArray( new Double[0] ) );
     }
 
     private void cormatOps( Geeq gq, double[] cormatLTri, cormatOpsType type ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,18 +36,16 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
     BioSequence findByAccession( DatabaseEntry accession );
 
     /**
-     * <p>
-     * Returns matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which
+     * @param genes genes
+     * @return matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which
      * had no associated sequences are not included in the result.
-     * </p>
      */
     Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes );
 
     /**
-     * <p>
-     * Retrieve all biosequences with names matching the given string. This matches only the name field, not the
+     * @param name name
+     * @return all biosequences with names matching the given string. This matches only the name field, not the
      * accession.
-     * </p>
      */
     Collection<BioSequence> findByName( String name );
 
@@ -77,4 +75,6 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
     Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
 
     BioSequence thaw( BioSequence bs );
+
+    BioSequence findByCompositeSequence( Long id );
 }

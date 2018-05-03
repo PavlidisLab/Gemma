@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.24.3</version>
+        <version>1.24.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -52,13 +52,14 @@
                     <include>**/*.nib</include>
                     <include>**/*.gff</include>
                     <include>**/*.sql</include>
-                    <include>**/*.phr</include>
-                    <include>**/*.pin</include>
-                    <include>**/*.pni</include>
-                    <include>**/*.pnd</include>
-                    <include>**/*.psd</include>
-                    <include>**/*.psi</include>
-                    <include>**/*.psq</include>
+                    <include>**/*.nhr</include>
+                    <include>**/*.nin</include>
+                    <include>**/*.nnd</include>
+                    <include>**/*.nni</include>
+                    <include>**/*.nog</include>
+                    <include>**/*.nsd</include>
+                    <include>**/*.nsi</include>
+                    <include>**/*.nsq</include>
                     <include>**/*.sample</include>
                 </includes>
             </testResource>

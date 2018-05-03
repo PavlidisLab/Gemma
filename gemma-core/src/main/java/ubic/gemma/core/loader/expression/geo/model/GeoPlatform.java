@@ -133,9 +133,8 @@ public class GeoPlatform extends GeoData {
         }
 
         // it's already on the right platform, though we may replace the data later.
-        if ( platformToUse.equals( geoPlatformId ) ) return true;
+        return platformToUse.equals( geoPlatformId );
 
-        return false; // alternative CDFs etc.
     }
 
     private Collection<String> catalogNumbers = new HashSet<>();

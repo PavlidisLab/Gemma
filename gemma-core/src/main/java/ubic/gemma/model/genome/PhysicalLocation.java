@@ -44,6 +44,7 @@ public class PhysicalLocation extends ChromosomeLocation {
     /**
      * No-arg constructor added to satisfy javabean contract
      */
+    @SuppressWarnings("WeakerAccess") // Required by spring
     public PhysicalLocation() {
     }
 

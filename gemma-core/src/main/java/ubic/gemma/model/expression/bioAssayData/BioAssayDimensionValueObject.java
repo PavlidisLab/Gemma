@@ -165,8 +165,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         if ( isReordered )
             throw new IllegalStateException( "You cannot reorder twice" );
 
-        assert bioAssays != null;
-
         synchronized ( this.bioAssays ) {
 
             // make sure we have a backup. (might not be very important)

@@ -19,14 +19,16 @@
 
 package ubic.gemma.model.common.description;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 
+import javax.persistence.Transient;
 import java.util.Collection;
 
 /**
  * @author Paul
  */
-public class ExternalDatabase extends AbstractAuditable {
+public class ExternalDatabase extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -35,9 +37,8 @@ public class ExternalDatabase extends AbstractAuditable {
     private String localInstallDbName;
     private String webUri;
     private String ftpUri;
-    private ubic.gemma.model.common.description.DatabaseType type;
-    private ubic.gemma.model.common.auditAndSecurity.Contact databaseSupplier;
-    private Collection<ubic.gemma.model.common.description.LocalFile> flatFiles = new java.util.HashSet<>();
+    private DatabaseType type;
+    private Contact databaseSupplier;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -65,20 +66,12 @@ public class ExternalDatabase extends AbstractAuditable {
         return this.getName().hashCode();
     }
 
-    public ubic.gemma.model.common.auditAndSecurity.Contact getDatabaseSupplier() {
+    public Contact getDatabaseSupplier() {
         return this.databaseSupplier;
     }
 
-    public void setDatabaseSupplier( ubic.gemma.model.common.auditAndSecurity.Contact databaseSupplier ) {
+    public void setDatabaseSupplier( Contact databaseSupplier ) {
         this.databaseSupplier = databaseSupplier;
-    }
-
-    public Collection<ubic.gemma.model.common.description.LocalFile> getFlatFiles() {
-        return this.flatFiles;
-    }
-
-    public void setFlatFiles( Collection<ubic.gemma.model.common.description.LocalFile> flatFiles ) {
-        this.flatFiles = flatFiles;
     }
 
     public String getFtpUri() {

@@ -53,8 +53,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
 /**
@@ -241,15 +239,6 @@ public class PersistentDummyObjectHelper {
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
         ee.setAccession( de1 );
-
-        LocalFile file = LocalFile.Factory.newInstance();
-        try {
-            file.setLocalURL( new URL( "file:///just/a/placeholder/" + ee.getShortName() ) );
-        } catch ( MalformedURLException e ) {
-            log.error( "Malformed URL" );
-        }
-
-        ee.setRawDataFile( file );
         Collection<FactorValue> allFactorValues = new HashSet<>();
 
         ExperimentalDesign ed = this.getExperimentalDesign( allFactorValues );
@@ -301,15 +290,6 @@ public class PersistentDummyObjectHelper {
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
         ee.setAccession( de1 );
-
-        LocalFile file = LocalFile.Factory.newInstance();
-        try {
-            file.setLocalURL( new URL( "file:///just/a/placeholder/" + ee.getShortName() ) );
-        } catch ( MalformedURLException e ) {
-            log.error( "Malformed URL" );
-        }
-
-        ee.setRawDataFile( file );
 
         ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
         ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
@@ -381,8 +361,8 @@ public class PersistentDummyObjectHelper {
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
-     * @param doSequence            If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
+     * @param doSequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
@@ -601,7 +581,7 @@ public class PersistentDummyObjectHelper {
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      *
-     * @param ed        ED
+     * @param ed ED
      * @param accession accession
      * @return db entry
      */
@@ -628,7 +608,7 @@ public class PersistentDummyObjectHelper {
 
     /**
      * @param databaseName GEO or PubMed (others could be supported)
-     * @param accession    accession
+     * @param accession accession
      * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
@@ -794,8 +774,7 @@ public class PersistentDummyObjectHelper {
     }
 
     private Collection<QuantitationType> addQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
-        for ( int quantitationTypeNum = 0;
-              quantitationTypeNum < PersistentDummyObjectHelper.NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < PersistentDummyObjectHelper.NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
             QuantitationType q = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
             if ( quantitationTypes.size() == 0 ) {
                 q.setIsPreferred( true );
@@ -848,9 +827,9 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * @param bioAssays         BAs
-     * @param ad                AD
-     * @param ee                EE
+     * @param bioAssays BAs
+     * @param ad AD
+     * @param ee EE
      * @param quantitationTypes QTs
      * @return These are non-persistent
      */
@@ -906,24 +885,6 @@ public class PersistentDummyObjectHelper {
         de.setExternalDatabase( PersistentDummyObjectHelper.geo );
         de.setAccession( ba.getName() );
         ba.setAccession( de );
-
-        LocalFile file = LocalFile.Factory.newInstance();
-        try {
-            file.setLocalURL( new URL( "file:///tmp/" + ba.getName() ) );
-        } catch ( MalformedURLException e ) {
-            log.error( "Malformed URL" );
-        }
-        ba.setRawDataFile( file );
-
-        LocalFile fileb = LocalFile.Factory.newInstance();
-        try {
-            fileb.setLocalURL( new URL( "file:///tmp/raw" + ba.getName() ) );
-        } catch ( MalformedURLException e ) {
-            log.error( "Malformed URL" );
-        }
-        ba.setRawDataFile( file );
-
-        ba.getDerivedDataFiles().add( fileb );
 
         return ba;
     }
