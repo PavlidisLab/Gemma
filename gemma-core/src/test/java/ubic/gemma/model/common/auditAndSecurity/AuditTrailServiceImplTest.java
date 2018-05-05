@@ -101,7 +101,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddUpdateEventAuditableAuditEventTypeString() {
-        AuditEventType f = ArrayDesignGeneMappingEvent.Factory.newInstance();
+        AuditEventType f = AlignmentBasedGeneMappingEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, f, "nothing special, just testing" );
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();

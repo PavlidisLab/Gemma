@@ -1,0 +1,120 @@
+/*
+ * The gemma-core project
+ * 
+ * Copyright (c) 2018 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.core.apps;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+
+/**
+ * 
+ * work in progress
+ * @author paul
+ */
+public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipulatingCli {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "adATcleanup";
+    }
+
+    public static void main( String[] args ) {
+        ArrayDesignAuditTrailCleanupCli c = new ArrayDesignAuditTrailCleanupCli();
+        c.doWork( args );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
+     */
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception e = super.processCommandLine( args );
+        if ( e != null )
+            return e;
+        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
+            List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+
+            Collection<AuditEvent> toRemove = new HashSet<>();
+
+            Map<Object, List<AuditEvent>> eventsByType = new HashMap<>();
+
+            /*
+             * Rules: delete all but the most recent event of each type.
+             */
+            for ( AuditEvent ae : allEvents ) {
+                if ( ae.getEventType() == null ) {
+                    if ( ae.getAction().equals( AuditAction.UPDATE ) ) {
+                        if ( !eventsByType.containsKey( AuditAction.UPDATE ) ) {
+                            eventsByType.put( AuditAction.UPDATE, new ArrayList<AuditEvent>() );
+                        }
+                        eventsByType.get( AuditAction.UPDATE ).add( ae );
+                    }
+                } else {
+                    AuditEventType type = ae.getEventType();
+
+                    Class<? extends AuditEventType> typeClass = type.getClass();
+                    if ( !eventsByType.containsKey( typeClass ) ) {
+                        eventsByType.put( typeClass, new ArrayList<AuditEvent>() );
+                    }
+                    eventsByType.get( typeClass ).add( ae );
+                }
+            }
+
+            for ( Object k : eventsByType.keySet() ) {
+
+                List<AuditEvent> evs = eventsByType.get( k );
+
+                System.err.println( "------------------------" );
+                System.err.println( k );
+                for ( AuditEvent ae : evs ) {
+                    System.err.println( ae.getDate() + " " + ae.getNote() );
+                }
+                
+                // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent
+                // possibly delete all ArrayDesignAnnotationFileEvent
+                
+                // keep only last AlignmentBasedGeneMappingEvent, ArrayDesignRepeatAnalysisEvent, ArrayDesignGeneMappingEvent, ArrayDesignSequenceAnalysisEvent 
+            }
+
+            this.successObjects.add( arrayDesign );
+        }
+
+        return null;
+
+    }
+
+}

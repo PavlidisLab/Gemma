@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
@@ -54,14 +55,14 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
             ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(), "alignment" );
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignGeneMappingEvent(), "mapping" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new AlignmentBasedGeneMappingEvent(), "mapping" );
 
             Thread.sleep( 100 );
 
             ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(),
                     "alignment 2" );
 
-            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignGeneMappingEvent(), "mapping 2" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new AlignmentBasedGeneMappingEvent(), "mapping 2" );
             Thread.sleep( 100 );
             ArrayDesignReportServiceTest.persisted = true;
         }
