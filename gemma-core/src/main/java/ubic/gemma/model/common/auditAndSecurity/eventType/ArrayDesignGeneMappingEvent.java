@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * The mapping of probes to genes for an ArrayDesign
  */
-public class ArrayDesignGeneMappingEvent
+public abstract class ArrayDesignGeneMappingEvent
         extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
@@ -35,15 +35,6 @@ public class ArrayDesignGeneMappingEvent
      * @author Paul
      */
     public ArrayDesignGeneMappingEvent() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static final class Factory {
-
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent();
-        }
-
     }
 
 }
