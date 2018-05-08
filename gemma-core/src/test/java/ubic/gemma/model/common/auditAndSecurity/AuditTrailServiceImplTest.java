@@ -109,7 +109,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
-        assertEquals( ArrayDesignGeneMappingEvent.class,
+        assertEquals( AlignmentBasedGeneMappingEvent.class,
                 ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
     }
 
