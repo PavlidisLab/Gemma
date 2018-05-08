@@ -121,62 +121,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
-    @Test
-    public void testAnalyzeAndDelete() throws Exception {
-
-        assert ee.getId() != null;
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
-        config.addInteractionToInclude( factors );
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee, config );
-        assertNotNull( analyses );
-        assertTrue( !analyses.isEmpty() );
-        assertNotNull( analyses.iterator().next() );
-
-        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService
-                .thawFully( analyses.iterator().next() );
-
-        aclTestUtils.checkHasAcl( analysis );
-        aclTestUtils.checkLacksAces( analysis );
-        aclTestUtils.checkHasAclParent( analysis, ee );
-
-        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-            assertTrue( !rs.getResults().isEmpty() );
-            assertEquals( 10, rs.getResults().size() );
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            expressionExperimentService.remove( ee );
         }
-
-        /*
-         * Exercise the matrix output services.
-         */
-        // avoid adding annotations for genes, it confuses the reader.
-        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            this.arrayDesignAnnotationService.deleteExistingFiles( ad );
-        }
-        Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
-
-        assertEquals( 1, outputLocations.size() );
-
-        File outputLocation = outputLocations.iterator().next();
-
-        // NOte that this reader generally won't work for experiment files because of the gene annotations.
-        DoubleMatrixReader r = new DoubleMatrixReader();
-
-        assertTrue( outputLocation.canRead() );
-
-        DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
-
-        assertEquals( 10, readIn.rows() );
-        System.out.println( readIn.toString() );
-        assertEquals( 9, readIn.columns() );
-
-        expressionDataFileService.deleteAllFiles( ee );
-
-        // / remove the analysis
-        int numDeleted = differentialExpressionAnalyzerService.deleteAnalyses( ee );
-        assertTrue( numDeleted > 0 );
-
     }
 
     /**
@@ -226,11 +175,62 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
-    @After
-    public void tearDown() {
-        if ( ee != null ) {
-            expressionExperimentService.remove( ee );
+    @Test
+    public void testAnalyzeAndDelete() throws Exception {
+
+        assert ee.getId() != null;
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        config.addInteractionToInclude( factors );
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+        assertNotNull( analyses );
+        assertTrue( !analyses.isEmpty() );
+        assertNotNull( analyses.iterator().next() );
+
+        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService
+                .thawFully( analyses.iterator().next() );
+
+        aclTestUtils.checkHasAcl( analysis );
+        aclTestUtils.checkLacksAces( analysis );
+        aclTestUtils.checkHasAclParent( analysis, ee );
+
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+            assertTrue( !rs.getResults().isEmpty() );
+            assertEquals( 99, rs.getResults().size() );
         }
+
+        /*
+         * Exercise the matrix output services.
+         */
+        // avoid adding annotations for genes, it confuses the reader.
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            this.arrayDesignAnnotationService.deleteExistingFiles( ad );
+        }
+        Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+
+        assertEquals( 1, outputLocations.size() );
+
+        File outputLocation = outputLocations.iterator().next();
+
+        // NOte that this reader generally won't work for experiment files because of the gene annotations.
+        DoubleMatrixReader r = new DoubleMatrixReader();
+
+        assertTrue( outputLocation.canRead() );
+
+        DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
+
+        assertEquals( 99, readIn.rows() );
+        System.out.println( readIn.toString() );
+        assertEquals( 9, readIn.columns() );
+
+        expressionDataFileService.deleteAllFiles( ee );
+
+        // / remove the analysis
+        int numDeleted = differentialExpressionAnalyzerService.deleteAnalyses( ee );
+        assertTrue( numDeleted > 0 );
+
     }
 
     /**

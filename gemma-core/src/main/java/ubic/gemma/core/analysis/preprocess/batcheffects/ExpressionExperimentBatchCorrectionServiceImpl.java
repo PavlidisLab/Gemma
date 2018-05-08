@@ -61,7 +61,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     public boolean checkCorrectability( ExpressionExperiment ee, boolean force ) {
 
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsBatchCorrected() ) {
+            if ( qt.getIsBatchCorrected() && !force ) {
                 ExpressionExperimentBatchCorrectionServiceImpl.log
                         .warn( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
                 return false;

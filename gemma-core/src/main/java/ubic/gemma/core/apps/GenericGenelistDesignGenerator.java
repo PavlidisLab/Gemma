@@ -14,9 +14,12 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -42,10 +45,6 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Creates an array design based on the current set of transcripts for a taxon.
@@ -92,17 +91,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
-                .withDescription( "Taxon of the genes" ).withLongOpt( "taxon" ).isRequired().create( 't' );
-        this.addOption( taxonOption );
-
-        this.addOption(
-                OptionBuilder.withDescription( "use NCBI numeric IDs as the identifiers instead of gene symbols" )
-                        .create( "ncbiids" ) );
-
-        this.addOption( OptionBuilder.withDescription( "use Ensembl identifiers instead of gene symbols" )
-                .create( "ensembl" ) );
-
+        super.addOption( "t", "taxon", true, "Taxon of the genes" );
+        super.addOption( "ncbiids", false, "use NCBI numeric IDs as the identifiers instead of gene symbols" );
+        super.addOption( "ensembl", false, "use Ensembl identifiers instead of gene symbols" );
     }
 
     @Override
@@ -282,14 +273,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                         AbstractCLI.log.debug( "New element " + " with " + bioSequence + " for " + gene );
                     csForGene = CompositeSequence.Factory.newInstance();
                     if ( useNCBIIds ) {
-                        if ( gene.getNcbiGeneId() == null ) {
-                            continue;
-                        }
                         csForGene.setName( gene.getNcbiGeneId().toString() );
                     } else if ( useEnsemblIds ) {
-                        if ( gene.getEnsemblId() == null ) {
-                            continue;
-                        }
                         csForGene.setName( gene.getEnsemblId() );
                     } else {
                         csForGene.setName( gene.getOfficialSymbol() );
@@ -303,22 +288,39 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;
                 } else {
-                    if ( AbstractCLI.log.isDebugEnabled() )
-                        AbstractCLI.log
-                                .debug( "Updating existing element: " + csForGene + " with " + bioSequence + " for "
-                                        + gene );
-                    csForGene.setArrayDesign( arrayDesign );
-                    csForGene.setBiologicalCharacteristic( bioSequence );
-                    csForGene.setDescription( "Generic expression element for " + gene );
+                    boolean changed = false;
                     assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
-                    compositeSequenceService.update( csForGene );
+
+                    if ( !csForGene.getArrayDesign().equals( arrayDesign ) ) {
+                        // does this happen?
+                        log.debug( "Platform changed? " + csForGene + " on " + csForGene.getArrayDesign() );
+                        csForGene.setArrayDesign( arrayDesign );
+                        csForGene.setDescription( "Generic expression element for " + gene );
+                        changed = true;
+                    }
+
+                    if ( !csForGene.getBiologicalCharacteristic().equals( bioSequence ) ) {
+                        // does this happen?
+                        csForGene.setBiologicalCharacteristic( bioSequence );
+                        changed = true;
+                    }
+
+                    if ( changed ) {
+                        compositeSequenceService.update( csForGene );
+                    }
 
                     // making sure ...
                     csForGene = compositeSequenceService.load( csForGene.getId() );
                     assert csForGene.getId() != null;
                     arrayDesign.getCompositeSequences().add( csForGene );
 
-                    numUpdatedElements++;
+                    if ( changed ) {
+                        if ( AbstractCLI.log.isDebugEnabled() )
+                            AbstractCLI.log
+                                    .debug( "Updating existing element: " + csForGene + " with " + bioSequence + " for "
+                                            + gene );
+                        numUpdatedElements++;
+                    }
                 }
 
                 assert bioSequence.getId() != null;
@@ -340,9 +342,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                                 + " updated elements; " + numWithNoTranscript
                                 + " genes had no transcript and were skipped." );
         }
-
-        // is this necessary? causes an error sometimes.
-        // arrayDesignService.update( arrayDesign );
 
         AbstractCLI.log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
