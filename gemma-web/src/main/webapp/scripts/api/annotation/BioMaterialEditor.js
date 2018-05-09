@@ -552,7 +552,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     if (fvColumnRegEx.test(value)) {
                         value = (this.fvMap[value]) ? this.fvMap[value] : value;
                     }
-                    if (item.name !== "id" && item.name !== "bmDesc" && item.name !== "bmChars"
+                    if (item.name !== "id" && item.name !== "bmDesc"
                         && item.name !== "baDesc" && valueRegEx.test(value)) {
                         found = true;
                     }
