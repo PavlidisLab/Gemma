@@ -199,7 +199,7 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
             annotationValueObject.setId( assoc.getOntologyEntry().getId() );
             annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
             annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
-            annotationValueObject.setEvidenceCode( assoc.getEvidenceCode().getValue() );
+            annotationValueObject.setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
             annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
             annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
             annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
