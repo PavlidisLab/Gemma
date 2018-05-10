@@ -11,8 +11,6 @@ drop table PUBLICATION_TYPE;
 -- Remove unused audit events for ChromosomeFeature
 delete a, t from AUDIT_EVENT a inner join CHROMOSOME_FEATURE c ON c.AUDIT_TRAIL_FK = a.AUDIT_TRAIL_FK
   inner join AUDIT_TRAIL t ON t.ID = a.AUDIT_TRAIL_FK;
-alter table CHROMOSOME_FEATURE
-  DROP COLUMN AUDIT_TRAIL_FK;
 
 -- remove Investigators from Investigation
 delete c, i from CONTACT c INNER JOIN INVESTIGATORS i ON i.INVESTIGATORS_FK = c.ID;
