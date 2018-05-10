@@ -317,7 +317,7 @@ public class ExperimentalDesignUtils {
                     throw new IllegalStateException( "Biomaterial had more than one value for factor: " + factor );
                 }
 
-                boolean isBaseline = baseLineFV != null && fv.equals( baseLineFV );
+                boolean isBaseline = fv.equals( baseLineFV );
 
                 if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                     Measurement measurement = fv.getMeasurement();

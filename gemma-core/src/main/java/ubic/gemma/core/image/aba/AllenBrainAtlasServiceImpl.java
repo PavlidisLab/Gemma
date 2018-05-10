@@ -627,7 +627,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     private void showHeader( URLConnection url ) {
 
-        this.infoOut.println( "" );
+        this.infoOut.println();
         this.infoOut.println( "URL              : " + url.getURL().toString() );
         this.infoOut.println( "Content-Type     : " + url.getContentType() );
         this.infoOut.println( "Content-Length   : " + url.getContentLength() );

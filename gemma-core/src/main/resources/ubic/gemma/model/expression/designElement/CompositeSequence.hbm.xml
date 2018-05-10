@@ -17,7 +17,7 @@
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequence"  lazy="proxy" fetch="select">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="arrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" cascade="none"  lazy="false" fetch="select">

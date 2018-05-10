@@ -32,49 +32,28 @@ import java.util.Collection;
  */
 public interface Gene2GeneProteinAssociationService extends BaseService<Gene2GeneProteinAssociation> {
 
-    /**
-     * Delete all gene2geneProteinAssociation
-     */
     @Secured({ "GROUP_ADMIN" })
     void removeAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
 
-    /**
-     * Find a gene2geneProteinAssociation
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
-    /**
-     * Create a gene2geneProteinAssociation
-     */
     @Override
     @Secured({ "GROUP_ADMIN" })
     Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
-    /**
-     * Load all gene2geneProteinAssociation
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Collection<Gene2GeneProteinAssociation> loadAll();
 
-    /**
-     * remove the given gene2geneProteinAssociation
-     */
     @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
-    /**
-     * Does a 'thawRawAndProcessed' of a Gene2GeneProteinAssociation
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     void thaw( Gene2GeneProteinAssociation association );
 
-    /**
-     * Finds Gene2GeneProteinAssociation for a given gene
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );
 

@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.util.SequenceBinUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 import java.util.HashSet;

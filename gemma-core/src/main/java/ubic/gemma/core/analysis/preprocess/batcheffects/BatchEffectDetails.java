@@ -30,6 +30,7 @@ public class BatchEffectDetails {
     public BatchEffectDetails( boolean hasBatchInformation, boolean dataWasBatchCorrected ) {
         this.hasBatchInformation = hasBatchInformation;
         this.dataWasBatchCorrected = dataWasBatchCorrected;
+        this.pvalue = 1.0;
     }
 
     public Integer getComponent() {

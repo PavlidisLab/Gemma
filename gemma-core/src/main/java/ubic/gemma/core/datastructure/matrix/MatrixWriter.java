@@ -160,6 +160,7 @@ public class MatrixWriter {
                 int i = matrix.getColumnIndex( bioMaterial );
                 Object val = matrix.get( j, i );
                 if ( val == null || ( val instanceof Double && Double.isNaN( ( Double ) val ) ) ) {
+                    //noinspection RedundantStringOperation // being explicit
                     buf.append( "" );
                 } else if ( val instanceof Double ) {
                     buf.append( String.format( "%.3g", ( Double ) val ) );

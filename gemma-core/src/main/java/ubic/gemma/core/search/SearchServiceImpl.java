@@ -285,13 +285,7 @@ public class SearchServiceImpl implements SearchService {
 
             // Filter by taxon
             if ( taxon != null ) {
-                Collection<Long> eeIdsToKeep = new HashSet<>();
-                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
-                for ( ExpressionExperiment ee : ees ) {
-                    if ( eeIds.contains( ee.getId() ) )
-                        eeIdsToKeep.add( ee.getId() );
-                }
-                eeIds.retainAll( eeIdsToKeep );
+                eeIds.retainAll( EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) ) );
             }
         } else {
             Collection<ExpressionExperiment> ees = ( taxon != null ) ?
@@ -700,7 +694,6 @@ public class SearchServiceImpl implements SearchService {
         orderedClassesToSearch.add( ExpressionExperiment.class );
         orderedClassesToSearch.add( FactorValue.class );
         orderedClassesToSearch.add( BioMaterial.class );
-        orderedClassesToSearch.add( Treatment.class );
 
         Collection<SearchResult> characterSearchResults = new HashSet<>();
 
@@ -826,7 +819,7 @@ public class SearchServiceImpl implements SearchService {
          *
          * But if they put in Parkinson's disease we don't want to do two queries.
          */
-        List<String> subparts = Arrays.asList( query.split( " AND " ) );
+        String[] subparts = query.split( " AND " );
 
         // we would have to first deal with the separate queries, and then apply the logic.
         Collection<SearchResult> allResults = new HashSet<>();

@@ -24,6 +24,7 @@ import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -55,9 +56,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     private String celchip = null;
 
     private boolean checkForAlreadyDone( BioAssaySet ee ) {
-        // this isn't foolproof, because 
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 return true;
             }
         }
@@ -85,9 +85,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                         + "ensure you used the right official CDF/MPS configuration" );
-        //        super.addOption( "celchip", true,
-        //                "Platform name (e.g. GPL6096) that the CEL files are from; use in case you need to redo "
-        //                        + "a data set that has already been switched, otherwise not needed; implies -force" );
         super.addForceOption();
 
     }
@@ -99,6 +96,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             return e;
 
         DataUpdater serv = this.getBean( DataUpdater.class );
+
+        if ( this.expressionExperiments.isEmpty() )
+            return null;
 
         // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService
@@ -146,13 +146,21 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 thawedEe = this.eeService.thawLite( thawedEe );
 
                 /*
-                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force. Ignore this for
-                 * multiplatform studies (at our peril)
+                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
                  */
                 if ( this.checkForAlreadyDone( ee ) && !this.force ) {
 
                     this.errorObjects.add( ee
                             + ": Was already run before, use -force" );
+                    continue;
+                }
+
+                /*
+                 * Avoid repeated attempts that won't work e.g. no data available.
+                 */
+                if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
+                    this.errorObjects.add( ee
+                            + ": Failed before, use -force to re-attempt" );
                     continue;
                 }
 

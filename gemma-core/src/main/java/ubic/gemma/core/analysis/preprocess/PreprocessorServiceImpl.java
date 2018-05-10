@@ -126,7 +126,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 this.processForSampleCorrelation( ee );
                 this.processForMeanVarianceRelation( ee );
                 this.processForPca( ee );
-                // analyzerService.deleteAnalyses( ee ); ??
             } catch ( Exception e ) {
                 throw new PreprocessingException( e );
             }
@@ -166,8 +165,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
 
             Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
-
-            // TODO log-transform if not already, update QT. See https://github.com/PavlidisLab/Gemma/issues/50
 
             ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
@@ -213,11 +210,19 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return outliers;
     }
 
-    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
-        // // refresh into context.
+    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ){
+        // refresh into context.
         ee = expressionExperimentService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
+
+        // batch correct
+        try {
+            this.batchCorrect( ee, false );
+        } catch ( PreprocessingException e ) {
+            log.error( e.getMessage() );
+            log.warn( "Batch correction skipped, proceeding with experiment preprocessing..." );
+        }
 
         /*
          * Redo any old diff ex analyses

@@ -78,25 +78,6 @@ public class BibliographicReferenceServiceImpl
         return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }
 
-    @Transactional(readOnly = true)
-    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
-            Collection<BibliographicReference> bibRefs ) {
-        if ( bibRefs.isEmpty() ) {
-            return new ArrayList<>();
-        }
-        Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
-
-        for ( BibliographicReference bibref : bibRefs ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
-            idToBibRefVO.put( bibref.getId(), vo );
-        }
-
-        this.populateRelatedExperiments( bibRefs, idToBibRefVO );
-        this.populateBibliographicPhenotypes( idToBibRefVO );
-
-        return idToBibRefVO.values();
-    }
-
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
@@ -173,8 +154,7 @@ public class BibliographicReferenceServiceImpl
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
-                            + th,
-                    th );
+                            + th, th );
         }
     }
 
@@ -311,6 +291,24 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         return this.bibliographicReferenceDao.thaw( bibliographicReferences );
+    }
+
+    private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+            Collection<BibliographicReference> bibRefs ) {
+        if ( bibRefs.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
+
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
+            idToBibRefVO.put( bibref.getId(), vo );
+        }
+
+        this.populateRelatedExperiments( bibRefs, idToBibRefVO );
+        this.populateBibliographicPhenotypes( idToBibRefVO );
+
+        return idToBibRefVO.values();
     }
 
     private void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {

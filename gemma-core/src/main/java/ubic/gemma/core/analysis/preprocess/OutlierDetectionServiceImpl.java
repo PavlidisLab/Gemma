@@ -40,7 +40,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     @Override
     public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) {
-        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee );
 
         if ( cormat == null || cormat.rows() == 0 ) {
             OutlierDetectionServiceImpl.log.warn( "Correlation matrix is empty, cannot check for outliers" );

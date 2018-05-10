@@ -22,8 +22,10 @@ package ubic.gemma.core.loader.expression;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * 
@@ -39,6 +41,33 @@ public class AffyPowerToolsProbesetSummarizeTest {
 
         assertEquals( "MoGene-2_1-st.mps", mpsnames.get( "GPL17400" ).get( "mps" ) );
         assertEquals( "RaEx-1_0-st-v1.r2.pgf", mpsnames.get( "GPL6543" ).get( "pgf" ) );
+
+    }
+
+    @Test
+    public void testCELnameregex() {
+        Pattern regex = Pattern.compile( AffyPowerToolsProbesetSummarize.GEO_CEL_FILE_NAME_REGEX );
+
+        String[] tests = new String[] { "GSM467834_77_(huex-1_0-st-v2).cel.gz", "GSM467779_55.CEL.gz", "GSM467779.CEL.gz",
+                "GSM467865_A10_HuEx-1_0-st-v2_2.CEL.gz",
+                "GSM1440859_1273-FC.CEL", "GSM467780_35-real_HuEx-1_0-st-v2_.CEL.gz" };
+
+        for ( String fn : tests ) {
+            Matcher matcher = regex.matcher( fn );
+            if ( matcher.matches() ) {
+
+                String geoAcc = matcher.group( 1 );
+
+                if ( geoAcc == null ) {
+                    fail( fn + " matched but failed to extract GSM ID" );
+                    break;
+                }
+
+                assertTrue( geoAcc.matches( "GSM[0-9]+" ) );
+            } else {
+                fail( fn + " didn't match" );
+            }
+        }
 
     }
 

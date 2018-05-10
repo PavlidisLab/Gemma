@@ -46,12 +46,12 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             try {
-                log.info( "--------- Deleting " +  bas + " --------");
+                log.info( "--------- Deleting " + bas + " --------" );
                 this.eeService.remove( ( ExpressionExperiment ) bas );
                 successObjects.add( bas );
                 log.info( "--------- Finished Deleting " + bas + " -------" );
             } catch ( Exception ex ) {
-                log.error( ex );
+                log.error( ex, ex );
                 errorObjects.add( bas + " " + ex.getMessage() );
             }
         }

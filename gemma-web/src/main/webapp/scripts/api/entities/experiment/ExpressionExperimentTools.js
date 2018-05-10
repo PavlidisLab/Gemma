@@ -412,15 +412,15 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         qBody.add(this.geeqRowRenderer('Batch info', ee.geeq.qScoreBatchInfo,
             "Checks whether the experiment has batch info available.", qBatchInfoDesc));
 
-        qBody.add(this.geeqRowRenderer('Batch effect', ee.geeq.qScorePublicBatchEffect,
-            "Checks the experimental data for a batch effect. This value is the currently publicly displayed information.",
-            qBatchEffDesc, 1, qBatchEffErr, beffExtra));
-        qBody.add(beffExtra);
-
         qBody.add(this.geeqRowRenderer('Batch confound', ee.geeq.qScorePublicBatchConfound,
             "Checks whether the experimental data are confounded with batches. This value is the currently publicly displayed information.",
             qBatchConfDesc, 1, qBatchConfErr, bconfExtra));
         qBody.add(bconfExtra);
+
+        qBody.add(this.geeqRowRenderer('Batch effect', ee.geeq.qScorePublicBatchEffect,
+            "Checks the experimental data for a batch effect. This value is the currently publicly displayed information.",
+            qBatchEffDesc, 1, qBatchEffErr, beffExtra));
+        qBody.add(beffExtra);
 
         panel.add(qBody);
         if (!qReplErr && !qOutlErr && !qBatchConfErr) {
@@ -980,7 +980,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             : {
                 html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') +
-                ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch effect not detected'
+                ' fa fa-check-square-o fa-lg" ></i>&nbsp;' +
+                (ee.hasBatchInformation === false ? 'No batch info, can not check for batch effect' : 'Batch effect not detected')
             };
 
         panelBC.add(be);

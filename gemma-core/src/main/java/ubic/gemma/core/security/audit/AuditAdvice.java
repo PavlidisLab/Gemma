@@ -41,8 +41,6 @@ import ubic.gemma.core.security.authorization.acl.AclAdvice;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.persistence.util.ReflectionUtil;
@@ -149,28 +147,6 @@ public class AuditAdvice {
             return true;
         }
 
-        return false;
-    }
-
-    /**
-     * For cases where don't have a cascade but the other end is auditable.
-     * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
-     * often not be reachable.
-     *
-     * @param object we are checking
-     * @param property of the object
-     * @return true if the association should be followed.
-     * @see AclAdvice for similar code
-     */
-    @SuppressWarnings("SimplifiableIfStatement") // Better readability
-    private boolean specialCaseForAssociationFollow( Object object, String property ) {
-
-        //        if ( BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "samplesUsed" ) || property
-        //                .equals( "arrayDesignUsed" ) ) ) {
-        //            return true;
-        //        }
-        //        return DesignElementDataVector.class.isAssignableFrom( object.getClass() ) && property
-        //                .equals( "bioAssayDimension" );
         return false;
     }
 
@@ -355,9 +331,8 @@ public class AuditAdvice {
 
                 String propertyName = propertyNames[j];
 
-                if ( !this.specialCaseForAssociationFollow( object, propertyName )
-                        && ( this.canSkipAssociationCheck( object, propertyName ) || !crudUtils
-                                .needCascade( methodName, cs ) ) ) {
+                if ( this.canSkipAssociationCheck( object, propertyName ) || !crudUtils
+                                .needCascade( methodName, cs ) ) {
                     continue;
                 }
 

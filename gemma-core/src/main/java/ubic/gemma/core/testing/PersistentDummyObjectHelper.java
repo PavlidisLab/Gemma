@@ -53,8 +53,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
 /**

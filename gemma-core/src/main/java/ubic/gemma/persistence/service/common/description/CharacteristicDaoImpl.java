@@ -227,6 +227,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return vos;
     }
 
+    @SuppressWarnings("SameParameterValue") // Better for general use
     private Collection<Characteristic> getBatchList( Collection<String> batch, String queryString ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "uris", batch )

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,10 @@ public interface AuditTrailDao extends BaseDao<AuditTrail> {
     /**
      * Add the given event to the audit trail of the given AbstractAuditable entity. For efficiency, it is best to set the audit
      * event performer before passing in.
+     *
+     * @param auditable  auditable
+     * @param auditEvent audit event
+     * @return created event
      */
     AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 

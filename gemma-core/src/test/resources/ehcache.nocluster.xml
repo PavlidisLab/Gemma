@@ -72,10 +72,10 @@
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
 
-    <cache name="ubic.gemma.model.genome.biosequence.BioSequenceImpl" maxElementsInMemory="200000" eternal="true"
+    <cache name="ubic.gemma.model.genome.biosequence.BioSequence" maxElementsInMemory="200000" eternal="true"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.biosequence.BioSequenceImpl.bioSequence2GeneProduct"
+    <cache name="ubic.gemma.model.genome.biosequence.BioSequence.bioSequence2GeneProduct"
            maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 

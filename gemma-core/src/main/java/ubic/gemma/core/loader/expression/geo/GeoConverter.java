@@ -17,7 +17,6 @@ package ubic.gemma.core.loader.expression.geo;
 import ubic.gemma.core.loader.expression.geo.model.GeoData;
 import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.core.loader.util.converter.Converter;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;

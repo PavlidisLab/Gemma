@@ -37,6 +37,7 @@ public abstract class ChromosomeFeature extends Describable {
     /**
      * No-arg constructor added to satisfy javabean contract
      */
+    @SuppressWarnings("WeakerAccess") // Required by spring
     public ChromosomeFeature() {
     }
 

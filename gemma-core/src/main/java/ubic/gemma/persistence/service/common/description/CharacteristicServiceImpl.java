@@ -25,7 +25,6 @@ import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -50,7 +49,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
             BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
-            PhenotypeAssociation.class, TreatmentImpl.class };
+            PhenotypeAssociation.class };
     private final CharacteristicDao characteristicDao;
 
     @Autowired
@@ -91,11 +90,8 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
         return this.characteristicDao.findByUri( searchString );
     }
 
-    /**
-     * @see CharacteristicService#findByValue(java.lang.String)
-     */
     @Override
-    public java.util.Collection<Characteristic> findByValue( java.lang.String search ) {
+    public Collection<Characteristic> findByValue( java.lang.String search ) {
         return this.characteristicDao.findByValue( search + '%' );
     }
 

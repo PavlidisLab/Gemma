@@ -68,7 +68,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
                     edWriter.write( writer, ( ExpressionExperiment ) ee, true );
                     writer.flush();
-                    writer.close();
                 } catch ( IOException exception ) {
                     return exception;
                 }

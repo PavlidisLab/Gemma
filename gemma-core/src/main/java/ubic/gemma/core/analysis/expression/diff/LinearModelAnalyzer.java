@@ -113,7 +113,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         return sNamedMatrix;
     }
 
-    public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
+    /**
+     * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
+     *
+     * @param columnsToUse columns to use
+     * @return bio assay dimension
+     */
+    private static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
          * Indices of the biomaterials in the original matrix.
          */
@@ -127,7 +133,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
         reorderedDim.setBioAssays( bioAssays );
-        reorderedDim.setName( "Slice" );
+        reorderedDim.setName( "For analysis" );
+        reorderedDim.setDescription( bioAssays.size() + " bioAssays" );
 
         return reorderedDim;
     }
@@ -802,8 +809,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     assert factorsForName.size() == 1;
                     ExperimentalFactor experimentalFactor = factorsForName.iterator().next();
 
-                    if ( interceptFactor != null && factorsForName.size() == 1 && experimentalFactor
-                            .equals( interceptFactor ) ) {
+                    if ( factorsForName.size() == 1 && experimentalFactor.equals( interceptFactor ) ) {
                         overallPValue = lm.getInterceptP();
                     } else {
                         overallPValue = lm.getMainEffectP( factorName );

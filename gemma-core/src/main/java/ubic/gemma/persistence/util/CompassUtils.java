@@ -60,6 +60,7 @@ public class CompassUtils {
      * Deletes and re-creates the index. See the IndexService
      *
      * @param gps gps
+     * @return false if there was a problem
      */
     public static synchronized boolean rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();

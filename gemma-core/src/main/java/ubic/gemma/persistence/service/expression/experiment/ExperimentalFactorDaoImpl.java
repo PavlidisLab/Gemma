@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -68,6 +69,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         }
 
         ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
@@ -83,15 +85,12 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
             // if there are factor values to remove
             if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                 bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
+                session.update( bm );
             }
         }
 
-        // ed.getExperimentalFactors().remove( experimentalFactor );
         // remove the experimental factor this cascades to values.
-
-        // this.getExperimentalDesignDao().update( ed );
-        this.getHibernateTemplate().delete( experimentalFactor );
+        session.delete( experimentalFactor );
     }
 
     @Override

@@ -43,6 +43,10 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
+     *
+     * @param auditable auditable
+     * @param note      note
+     * @return created event
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, String note );

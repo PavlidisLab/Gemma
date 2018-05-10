@@ -39,7 +39,7 @@ import java.util.concurrent.FutureTask;
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public abstract class AbstractFetcher implements Fetcher {
 
-    protected static final int INFO_UPDATE_INTERVAL = 5000;
+    protected static final int INFO_UPDATE_INTERVAL = 10000;
     protected static final Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     private static final int NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY = 5;
     /**

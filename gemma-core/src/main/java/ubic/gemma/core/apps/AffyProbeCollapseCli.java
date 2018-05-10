@@ -36,7 +36,7 @@ import java.util.Collection;
  * 
  * You just run this like
  * 
- * $GEMMACMD affyCollapse <filename> 
+ * $GEMMACMD affyCollapse [filename]
  * 
  * It doesn't handle the regular argument setup, wasn't worth the trouble. Generates FASTA format but easy to change.
  * 

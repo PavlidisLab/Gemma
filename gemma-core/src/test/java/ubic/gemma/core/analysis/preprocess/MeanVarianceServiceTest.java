@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,8 +84,14 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
 
+        // scale is not correctly recorded.
         ee = ( ExpressionExperiment ) results.iterator().next();
-        qt = this.createOrUpdateQt( ScaleType.LINEAR );
+        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+
+        // not parsed properly
+        ArrayDesign ad = eeService.getArrayDesignsUsed( ee ).iterator().next();
+        ad.setTechnologyType( TechnologyType.TWOCOLOR );
+        arrayDesignService.update( ad );
 
         qt.setIsNormalized( true );
         quantitationTypeService.update( qt );
@@ -100,35 +107,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         } catch ( Exception ignored ) {
 
         }
-    }
-
-    @Test
-    final public void testServiceLinearNormalized() {
-
-        assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
-
-        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
-
-        // convert byte[] to array[]
-        // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
-        Arrays.sort( means );
-        Arrays.sort( variances );
-
-        int expectedLength = 97; // after filtering
-        assertEquals( expectedLength, means.length );
-        assertEquals( expectedLength, variances.length );
-        expectedLength = 95; // duplicate rows removed
-
-        int idx = 0;
-        assertEquals( -1.9858, means[idx], 0.0001 );
-        assertEquals( 0, variances[idx], 0.0001 );
-
-        idx = expectedLength - 1;
-        assertEquals( 0.02509, means[idx], 0.0001 );
-        assertEquals( 0.09943, variances[idx], 0.0001 );
-
     }
 
     @Test
@@ -231,20 +209,29 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // so it doesn't look for soft files
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        boolean bad;
 
-        ee = eeService.findByShortName( "GSE29006" );
-        if ( ee != null ) {
-            eeService.remove( ee );
-        }
+        do {
+            try {
+                bad = false;
+                ee = eeService.findByShortName( "GSE29006" );
+                if ( ee != null ) {
+                    eeService.remove( ee );
+                }
 
-        assertNull( eeService.findByShortName( "GSE29006" ) );
+                assertNull( eeService.findByShortName( "GSE29006" ) );
 
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            throw new IllegalStateException( "Need to remove this data set before test is run" );
-        }
+                try {
+                    Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
+                    ee = ( ExpressionExperiment ) results.iterator().next();
+                } catch ( AlreadyExistsInSystemException e ) {
+                    throw new IllegalStateException( "Need to remove this data set before test is run" );
+                }
+
+            } catch(ObjectNotFoundException e ){
+                bad = true;
+            }
+        } while ( bad ); // This is to fight an odd race condition that does not seem to occur in production, see git issue #45
 
         ee = eeService.thaw( ee );
 
@@ -334,8 +321,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         ee = eeService.load( ee.getId() );
         mvr = meanVarianceService.create( ee, true );
         assertEquals( oldEeId, ee.getId() );
-        assertTrue( oldMvr != mvr );
-
+        assertNotSame( oldMvr, mvr );
     }
 
     private QuantitationType createOrUpdateQt( ScaleType scale ) {
@@ -357,6 +343,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             qt.setIsBatchCorrected( false );
             qt.setIsRecomputedFromRawData( false );
             quantitationTypeService.create( qt );
+            ee.getQuantitationTypes().add( qt );
         } else {
             qt = qtList.iterator().next();
             qt.setScale( scale );

@@ -156,7 +156,7 @@ public class BibliographicReferenceDaoImpl
             throw new NullPointerException( "PubAccession cannot be null" );
         }
 
-        java.util.List<?> results = queryObject.list();
+        List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {

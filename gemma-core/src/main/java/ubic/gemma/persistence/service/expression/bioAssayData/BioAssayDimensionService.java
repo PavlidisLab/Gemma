@@ -30,11 +30,11 @@ public interface BioAssayDimensionService
         extends BaseVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> {
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
 
     @Override
-    @Secured({ "GROUP_USER" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     BioAssayDimension create( BioAssayDimension bioAssayDimension );
 
     @Override

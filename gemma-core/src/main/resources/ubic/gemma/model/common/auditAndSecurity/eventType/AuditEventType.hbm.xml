@@ -120,7 +120,11 @@
             </subclass>
             <subclass abstract="false" discriminator-value="DataReplacedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent"
-            />
+            >
+                <subclass abstract="false" discriminator-value="FailedDataReplacedEvent"
+                          name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent"
+                />
+            </subclass>
             <subclass abstract="false" discriminator-value="DataAddedEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent"
             />

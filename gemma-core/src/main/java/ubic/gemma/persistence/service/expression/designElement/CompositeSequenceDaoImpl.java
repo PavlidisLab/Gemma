@@ -175,7 +175,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
@@ -186,7 +186,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
@@ -197,7 +197,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
@@ -207,7 +207,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     @Override
     public Collection<CompositeSequence> findByName( final String name ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select distinct cs from CompositeSequence" + " cs where cs.name = :name" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct cs from CompositeSequence" + " cs where cs.name = :name" )
                 .setParameter( "name", name ).list();
     }
 
@@ -362,7 +363,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         // gets all kinds of associations, not just blat.
         //language=HQL
         final String queryString =
-                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
+                "select distinct gene from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
                         + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
                         + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
         //noinspection unchecked
@@ -469,35 +470,6 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         this.getHibernateTemplate().setMaxResults( 0 );
         return this.getRawSummary( ( Collection<CompositeSequence> ) cs );
 
-    }
-
-    @Override
-    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
-        if ( compositeSequence == null || compositeSequence.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = compositeSequence.getId();
-
-        String nativeQueryString = CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
-
-        int limit = CompositeSequenceDaoImpl.MAX_CS_RECORDS;
-        if ( numResults != null && numResults != 0 ) {
-            limit = Math.min( numResults, CompositeSequenceDaoImpl.MAX_CS_RECORDS );
-        }
-
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( nativeQueryString );
-        queryObject.setParameter( "id", id );
-        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
-                .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
-                .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
-                .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
-
-        queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
-
-        queryObject.setMaxResults( limit );
-        //noinspection unchecked
-        return queryObject.list();
     }
 
     @Override
@@ -762,8 +734,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
                 + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
                 + ObjectFilter.DAO_AD_ALIAS + " "  // 2
                 + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
-                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " "
-                // ad
+                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " "//ad
                 + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );

@@ -100,6 +100,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param name name
      * @return bean
      */
+    @SuppressWarnings("SameParameterValue") // Better for general use
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( name, clz );

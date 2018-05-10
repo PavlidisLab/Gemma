@@ -45,5 +45,10 @@
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/gemma-core"/>
+	<classpathentry excluding="**" kind="src" output="target/test-classes" path="target/Gemma/WEB-INF">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

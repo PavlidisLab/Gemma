@@ -378,7 +378,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         this.checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = this.parseAccessionFile( sequenceIdentifierFile );
-        Collection<BioSequence> finalResult = new HashSet<>();
 
         // values that were not found
         Collection<String> notFound = new HashSet<>( probe2acc.values() );
@@ -403,7 +402,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Map<String, BioSequence> found = this
                 .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
-        finalResult.addAll( retrievedSequences );
+        Collection<BioSequence> finalResult = new HashSet<>( retrievedSequences );
 
         // replace the sequences.
         numSwitched = this.replaceSequences( arrayDesign, probe2acc, numSwitched, found );
@@ -480,7 +479,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
 
         Collection<String> notFound = accessionsToFetch.keySet();
-        Collection<BioSequence> finalResult = new HashSet<>();
 
         if ( fc == null )
             fc = new SimpleFastaCmd();
@@ -490,7 +488,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Map<String, BioSequence> found = this
                 .findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray, force );
 
-        finalResult.addAll( found.values() );
+        Collection<BioSequence> finalResult = new HashSet<>( found.values() );
         notFound = this.getUnFound( notFound, found );
 
         if ( !notFound.isEmpty() ) {

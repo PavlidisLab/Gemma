@@ -36,7 +36,7 @@ import java.util.Set;
 public interface PhenotypeAssociationService {
 
     /**
-     * Using an phenotypeAssociation id removes the evidence
+     * @param p Using a phenotypeAssociation id removes the evidence
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( PhenotypeAssociation p );

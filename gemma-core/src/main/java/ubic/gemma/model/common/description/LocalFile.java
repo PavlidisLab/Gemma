@@ -23,7 +23,6 @@ import ubic.gemma.model.common.Identifiable;
 import java.io.File;
 import java.io.Serializable;
 import java.net.URISyntaxException;
-import java.util.Collection;
 
 /**
  * Not a persistent entity

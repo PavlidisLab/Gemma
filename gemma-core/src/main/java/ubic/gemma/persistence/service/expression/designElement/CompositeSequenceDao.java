@@ -49,19 +49,25 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
     CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     /**
-     * <p>
      * Given a collection of composite sequences returns a map of the given composite sequences to a collection of genes
-     * </p>
+     *
+     * @param compositeSequences composite sequences
+     * @return map
      */
     Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences );
 
     /**
      * given a composite sequence returns a collection of genes
+     *
+     * @param limit             limit
+     * @param compositeSequence sequence
+     * @param offset            offset
      */
     Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
     /**
-     * Returns a map of CompositeSequences to BlatAssociations .
+     * @param compositeSequences sequences
+     * @return a map of CompositeSequences to BlatAssociations.
      */
     Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
@@ -69,13 +75,6 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
-
-    /**
-     * <p>
-     * See ArrayDesignDao.getRawCompositeSequenceSummary.
-     * </p>
-     */
-    Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

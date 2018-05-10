@@ -55,4 +55,5 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
 
     BioSequence thaw( BioSequence bioSequence );
 
+    BioSequence findByCompositeSequence( Long id );
 }

@@ -34,6 +34,10 @@ public class ObjectFilter {
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
      *
      * @param propertyType the type of the property that will be checked.
+     * @param objectAlias alias of the relevant object to use in the final hql query
+     * @param operator operator the operator for this filter
+     * @param propertyName property name
+     * @param requiredValue required value
      * @see ObjectFilter#ObjectFilter(String, Object, String, String)
      */
     public ObjectFilter( String propertyName, Class propertyType, Object requiredValue, String operator,
@@ -157,7 +161,7 @@ public class ObjectFilter {
                 ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
         } else if ( operator.equals( ObjectFilter.in ) ) { // Check 'in' conditions
-            if ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
+            if ( !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
                 throw new IllegalArgumentException(
                         "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }

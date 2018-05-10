@@ -243,7 +243,6 @@ public class DatasetCombiner {
                         associatedSeriesAccession.add( capturedAccession );
                     }
                 }
-                is.close();
             }
         } catch ( MalformedURLException e ) {
             DatasetCombiner.log.error( e, e );

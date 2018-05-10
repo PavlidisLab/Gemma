@@ -134,14 +134,11 @@ public class AffyChipTypeExtractor {
 
             BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.asFile().getName() );
             if ( bioAssay == null ) {
-                //  log.warn( "No bioAssay found for " + lf.asFile().getName() ); // there are other kinds of files like EXP and CHP, ignored.
-
                 continue;
             }
             log.info( "BioAssay found for " + lf.asFile().getName() + " (" + bioAssay + ")" );
             result.put( bioAssay, lf.asFile() );
         }
-
         return result;
 
     }

@@ -55,12 +55,12 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         String queryString;
         List<BioSequence> results;
         if ( databaseEntry.getId() != null ) {
-            queryString = "select b from BioSequenceImpl b inner join fetch b.sequenceDatabaseEntry d inner join fetch d.externalDatabase e  where d=:dbe";
+            queryString = "select b from BioSequence b inner join fetch b.sequenceDatabaseEntry d inner join fetch d.externalDatabase e  where d=:dbe";
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameter( "dbe", databaseEntry ).list();
         } else {
-            queryString = "select b from BioSequenceImpl b inner join fetch b.sequenceDatabaseEntry d "
+            queryString = "select b from BioSequence b inner join fetch b.sequenceDatabaseEntry d "
                     + "inner join fetch d.externalDatabase e where d.accession = :acc and e.name = :dbName";
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -180,7 +180,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         if ( bioSequence.getId() == null )
             return bioSequence;
 
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select b from BioSequenceImpl b "
+        List<?> res = this.getHibernateTemplate().findByNamedParam( "select b from BioSequence b "
                         + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
                         + " left join fetch pt.externalDatabase "
                         + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
@@ -190,6 +190,13 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 bioSequence.getId() );
 
         return ( BioSequence ) res.iterator().next();
+    }
+
+    @Override
+    public BioSequence findByCompositeSequence( Long id ) {
+        return ( BioSequence ) this.getSessionFactory().getCurrentSession().createQuery(
+                "select cs.biologicalCharacteristic from CompositeSequence as cs where cs.id = :id" )
+                .setParameter( "id", id ).uniqueResult();
     }
 
     @Override
@@ -204,17 +211,6 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
             vos.add( this.loadValueObject( e ) );
         }
         return vos;
-    }
-
-    @Override
-    public BioSequence findOrCreate( BioSequence bioSequence ) {
-        BioSequence existingBioSequence = this.find( bioSequence );
-        if ( existingBioSequence != null ) {
-            return existingBioSequence;
-        }
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Creating new: " + bioSequence );
-        return this.create( bioSequence );
     }
 
     @SuppressWarnings("unchecked")
@@ -259,9 +255,20 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         return ( BioSequence ) result;
     }
 
+    @Override
+    public BioSequence findOrCreate( BioSequence bioSequence ) {
+        BioSequence existingBioSequence = this.find( bioSequence );
+        if ( existingBioSequence != null ) {
+            return existingBioSequence;
+        }
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new: " + bioSequence );
+        return this.create( bioSequence );
+    }
+
     private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( "select b from BioSequenceImpl b "
+        return this.getHibernateTemplate().findByNamedParam( "select b from BioSequence b "
                         + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
                         + " left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
                         + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
@@ -273,7 +280,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         //noinspection unchecked
         List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
-                        + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
+                        + " BioSequence bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
                         + " where ggp=bsgp and gene in (:genes)" ).setParameterList( "genes", genes ).list();
         for ( Object[] oa : qr ) {
             Gene g = ( Gene ) oa[0];
@@ -310,5 +317,4 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         if ( AbstractDao.log.isDebugEnabled() )
             AbstractDao.log.debug( sb.toString() );
     }
-
 }
