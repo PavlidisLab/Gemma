@@ -27,7 +27,6 @@ import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -73,15 +72,6 @@ public class ExpressionExperimentDaoImpl
                         + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
                         + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
                 .uniqueResult() ).intValue();
-    }
-
-    @Override
-    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        String queryString = "from Investigation i fetch all properties where :investigator in i.investigators";
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "investigator", investigator );
-        //noinspection unchecked
-        return query.list();
     }
 
     @Override
@@ -144,8 +134,11 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {{ this.add( filters ); }},
-                this.getOrderByProperty( orderBy ), descending );
+        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {
+            {
+                this.add( filters );
+            }
+        }, this.getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
         if ( limit > 0 ) {
@@ -360,7 +353,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        boolean isList = ( ids != null && ids instanceof List );
+        boolean isList = ( ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
                 return Collections.emptyList();
@@ -984,9 +977,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         //language=HQL
-        final String queryString =
-                "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
-                        + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
+        final String queryString = "select distinct quantType " + "from ExpressionExperiment ee "
+                + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1017,8 +1009,8 @@ public class ExpressionExperimentDaoImpl
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments ) {
         //language=HQL
-        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.bioAssays ba "
-                + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
+        final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.auditTrail trail inner join"
+                + " trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<>();
@@ -1158,11 +1150,6 @@ public class ExpressionExperimentDaoImpl
             Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
             Hibernate.initialize( designElementDataVectors );
             ee.setRawExpressionDataVectors( null );
-
-            /*
-             * We don't remove the investigators, just breaking the association.
-             */
-            ee.getInvestigators().clear();
 
             int count = 0;
             if ( designElementDataVectors != null ) {
@@ -1491,7 +1478,6 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );
-        Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getOtherRelevantPublications() );
         Hibernate.initialize( result.getBioAssays() );
@@ -1504,7 +1490,6 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-            Hibernate.initialize( ba.getDerivedDataFiles() );
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {
@@ -1643,7 +1628,7 @@ public class ExpressionExperimentDaoImpl
                 + "qts, " // 24
                 + ObjectFilter.DAO_EE_ALIAS + ".batchEffect, " // 25
                 + ObjectFilter.DAO_EE_ALIAS + ".batchConfound, " // 26
-                + "eNote, "  //27
+                + "eNote, " //27
                 + "eAttn, " //28
                 + "eTrbl, " //29
                 + ObjectFilter.DAO_GEEQ_ALIAS + " " //30
@@ -1728,14 +1713,14 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
             Hibernate
                     .initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
+            //   Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
             Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                Hibernate.initialize( bf.getPublicationTypes() );
+                //     Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
     }

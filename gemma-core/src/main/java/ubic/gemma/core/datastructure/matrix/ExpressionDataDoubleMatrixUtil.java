@@ -28,8 +28,11 @@ import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import java.util.Collection;
 
 /**
  * Perform various computations on ExpressionDataMatrices (usually in-place).
@@ -57,31 +60,7 @@ public class ExpressionDataDoubleMatrixUtil {
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
             ExpressionDataDoubleMatrix dmatrix ) {
 
-        ScaleType scaleType = ExpressionDataDoubleMatrixUtil.findScale( quantitationType, dmatrix.getMatrix() );
-
-        if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( "Data is already on a log2 scale" );
-        } else if ( scaleType.equals( ScaleType.LN ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from ln to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
-        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
-            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
-        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( dmatrix.getMatrix() );
-        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
-            /*
-             * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
-             */
-            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from count to log2 counts per million **** " );
-            DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
-            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats
-                    .convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
-            dmatrix = new ExpressionDataDoubleMatrix( dmatrix, log2cpm );
-        } else {
-            throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
-        }
+        dmatrix = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( quantitationType, dmatrix );
 
         /*
          * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
@@ -108,6 +87,70 @@ public class ExpressionDataDoubleMatrixUtil {
 
         return dmatrix;
 
+    }
+
+    /**
+     * Ensures that the given data is on a Log2 scale. Also changes the QT appropriately.
+     *
+     * @param data the data to have a Log2 scale ensured
+     * @return data transformed to a Log2 scale, unless they were already on the scale.
+     */
+    public static Collection<ProcessedExpressionDataVector> ensureLog2Scale(
+            Collection<ProcessedExpressionDataVector> data ) {
+
+        QuantitationType qt = data.iterator().next().getQuantitationType();
+        // Ensure the data is on a Log2 scale.
+        ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
+                .ensureLog2Scale( qt, new ExpressionDataDoubleMatrix( data ) );
+
+        // Change the QT information if necessary
+        if ( qt.getScale() != ScaleType.LOG2 ) {
+            log.info( " Changing scale of QT " + qt.getId() + " to LOG2!" );
+            data = matrix.toProcessedDataVectors();
+            for ( ProcessedExpressionDataVector v : data ) {
+                v.getQuantitationType().setScale( ScaleType.LOG2 );
+            }
+        }
+
+        return data;
+    }
+
+    /**
+     * Ensures that the given matrix is on a Log2 scale.
+     * ! Does not update the QT !
+     *
+     * @param quantitationType the quantitation type to be checked for the scale.
+     * @param dmatrix          the matrix to be transformed to a log2 scale if necessary.
+     * @return a data matrix that is guaranteed to be on a log2 scale.
+     */
+    private static ExpressionDataDoubleMatrix ensureLog2Scale( QuantitationType quantitationType,
+            ExpressionDataDoubleMatrix dmatrix ) {
+        ScaleType scaleType = ExpressionDataDoubleMatrixUtil.findScale( quantitationType, dmatrix.getMatrix() );
+
+        if ( scaleType.equals( ScaleType.LOG2 ) ) {
+            ExpressionDataDoubleMatrixUtil.log.info( "Data is already on a log2 scale" );
+        } else if ( scaleType.equals( ScaleType.LN ) ) {
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from ln to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
+        } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
+            MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
+        } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
+            ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
+            MatrixStats.logTransform( dmatrix.getMatrix() );
+        } else if ( scaleType.equals( ScaleType.COUNT ) ) {
+            /*
+             * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
+             */
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from count to log2 counts per million **** " );
+            DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats
+                    .convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
+            dmatrix = new ExpressionDataDoubleMatrix( dmatrix, log2cpm );
+        } else {
+            throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
+        }
+        return dmatrix;
     }
 
     /**
@@ -152,9 +195,8 @@ public class ExpressionDataDoubleMatrixUtil {
             }
         }
 
-        throw new UnknownLogScaleException(
-                "Data look log tranformed, not sure about base (" + quantitationType + ")" );
-
+        log.warn( "Data look log transformed, not sure about base (" + quantitationType + "). Will report as LINEAR!" );
+        return ScaleType.LINEAR;
     }
 
     /**

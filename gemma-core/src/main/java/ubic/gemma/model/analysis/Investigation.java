@@ -36,7 +36,6 @@ public abstract class Investigation extends AbstractAuditable implements Securab
     private static final long serialVersionUID = -5191564466698945873L;
 
     private Collection<Characteristic> characteristics = new HashSet<>();
-    private Collection<Contact> investigators = new HashSet<>();
     private Collection<BibliographicReference> otherRelevantPublications = new HashSet<>();
     private Contact owner;
     private BibliographicReference primaryPublication;
@@ -53,19 +52,9 @@ public abstract class Investigation extends AbstractAuditable implements Securab
     }
 
     /**
-     * @return Other contacts who are investigators on this experiment
-     */
-    public Collection<Contact> getInvestigators() {
-        return this.investigators;
-    }
-
-    public void setInvestigators( Collection<Contact> investigators ) {
-        this.investigators = investigators;
-    }
-
-    /**
-     * @return A collection of other publications that are directly relevant to this investigation (e.g., use the same data but
-     * are not the primary publication for the investigation).
+     * @return A collection of other publications that are directly relevant to this investigation (e.g., use the same
+     *         data but
+     *         are not the primary publication for the investigation).
      */
     public Collection<BibliographicReference> getOtherRelevantPublications() {
         return this.otherRelevantPublications;
@@ -76,7 +65,8 @@ public abstract class Investigation extends AbstractAuditable implements Securab
     }
 
     /**
-     * @return The contact who owns this investigation. For publicly acquired data, this is the data submitter or provider.
+     * @return The contact who owns this investigation. For publicly acquired data, this is the data submitter or
+     *         provider.
      */
     public Contact getOwner() {
         return this.owner;

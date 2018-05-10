@@ -171,11 +171,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                                 .equals( "100005_at" ) || el.getName().equals( "100006_at" ) || el.getName()
                                 .equals( "100007_at" ) || el.getName().equals( "100009_r_at" ) || el.getName()
                                 .equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
-                    assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
-                } else {
-                    assertTrue( "Got unexpected NA value for " + ba.getName() + " for " + el.getName(),
-                            !Double.isNaN( row[j] ) );
                 }
             }
         }
@@ -218,13 +214,10 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                                 .equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
                     assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
-                } else {
-                    assertTrue( "Got unexpected NA value for " + ba.getName() + " for " + el.getName(),
-                            !Double.isNaN( row[j] ) );
                 }
             }
         }
-        assertTrue( found );
+        assertFalse( found );
     }
 
     @Test
@@ -354,8 +347,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                 ByteArrayConverter conv = new ByteArrayConverter();
                 Double[] d = ArrayUtils.toObject( conv.byteArrayToDoubles( vector.getData() ) );
                 assertEquals( 20, d.length );
-                assertEquals( -0.08, d[1], 0.001 );
-                assertEquals( 0.45, d[10], 0.001 );
+                assertEquals( Double.NaN, d[1], 0.001 );
+                assertEquals( -1.152, d[10], 0.001 );
                 assertEquals( Double.NaN, d[19], 0.001 );
             }
         }

@@ -62,7 +62,7 @@ public class BibliographicReferenceDaoImpl
 
     @Override
     public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
-        final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
+        final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<>();
         //noinspection unchecked
         List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query ).list();
@@ -78,7 +78,7 @@ public class BibliographicReferenceDaoImpl
             return bibliographicReference;
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
                 "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id = :id " )
+                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id " )
                 .setParameter( "id", bibliographicReference.getId() ).uniqueResult();
     }
 
@@ -89,7 +89,7 @@ public class BibliographicReferenceDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id in (:ids) " )
+                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
     }
 
@@ -156,7 +156,7 @@ public class BibliographicReferenceDaoImpl
             throw new NullPointerException( "PubAccession cannot be null" );
         }
 
-        java.util.List<?> results = queryObject.list();
+        List<?> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {

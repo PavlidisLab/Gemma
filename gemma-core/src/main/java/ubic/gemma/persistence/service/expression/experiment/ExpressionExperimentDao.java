@@ -28,8 +28,6 @@ public interface ExpressionExperimentDao
 
     Integer countNotTroubled();
 
-    Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
-
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );

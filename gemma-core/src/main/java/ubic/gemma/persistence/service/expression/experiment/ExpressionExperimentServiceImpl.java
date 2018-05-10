@@ -36,7 +36,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
@@ -357,15 +356,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see ExpressionExperimentService#findByInvestigator(Contact)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        return this.expressionExperimentDao.findByInvestigator( investigator );
-    }
-
-    /**
      * @see ExpressionExperimentService#findByName(String)
      */
     @Override
@@ -477,7 +467,7 @@ public class ExpressionExperimentServiceImpl
             return null;
         }
 
-        StringBuilder result = new StringBuilder( "" );
+        StringBuilder result = new StringBuilder();
 
         for ( BatchConfoundValueObject c : confounds ) {
             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
@@ -532,16 +522,13 @@ public class ExpressionExperimentServiceImpl
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
         String result = "";
-        if ( beDetails == null || beDetails.hasNoBatchInfo() ) {
-            result = "";
-        } else {
+        if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
             if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-            } else if ( beDetails.getComponent() != null
-                    && beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+            } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
                 result = "This data set may have a batch artifact" + pc + ", p=" + String
-                        .format( "%.2g", beDetails.getPvalue() );
+                        .format( "%.5g", beDetails.getPvalue() );
             }
         }
         return Strings.emptyToNull( result );
@@ -828,9 +815,9 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *        checking
-     *        the curation details of the object directly, as this method also checks all the array designs the given
-     *        experiment belongs to.
+     *           checking
+     *           the curation details of the object directly, as this method also checks all the array designs the given
+     *           experiment belongs to.
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
@@ -869,7 +856,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *        be filled in with IC. A category and value must be provided.
+     *           be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override
@@ -979,7 +966,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
+     * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
@@ -990,7 +977,7 @@ public class ExpressionExperimentServiceImpl
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
         for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+            if ( qt.getIsBatchCorrected() ) {
                 return true;
             }
         }
@@ -1007,7 +994,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 

@@ -96,8 +96,6 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //
 
@@ -158,7 +156,6 @@ public class ExpressionExperimentQCController extends BaseController {
             if ( assay.getIsOutlier() ) {
                 bioAssays.add( assay );
             }
-
         }
 
         // and write it out
@@ -196,7 +193,14 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
+                .loadFullMatrix( ee );
+        if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
+            return null;
+        }
+
+        Collection<OutlierDetails> outliers = outlierDetectionService
+                .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
 
         Collection<BioAssay> bioAssays = new HashSet<>();
         if ( !outliers.isEmpty() ) {
@@ -270,15 +274,18 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id         of experiment
-     * @param size       Multiplier on the cell size. 1 or null for standard small size.
-     * @param text       if true, output a tabbed file instead of a png
-     * @param showLabels if the row and column labels of the matrix should be shown.
-     * @param os         response output stream
+     * @param id              of experiment
+     * @param size            Multiplier on the cell size. 1 or null for standard small size.
+     * @param text            if true, output a tabbed file instead of a png
+     * @param showLabels      if the row and column labels of the matrix should be shown.
+     * @param contrVal
+     * @param forceShowLabels forces the display of labels in the picture
+     * @param reg             uses the regressed matrix (if available).
+     * @param os              response output stream
      */
     @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
     public void visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
-            Boolean forceShowLabels, OutputStream os ) throws Exception {
+            Boolean forceShowLabels, Boolean reg, OutputStream os ) throws Exception {
 
         if ( id == null ) {
             log.warn( "No id!" );
@@ -291,7 +298,10 @@ public class ExpressionExperimentQCController extends BaseController {
             return;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        ee = expressionExperimentService.thawLiter( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ?
+                sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee ) :
+                sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );
             return;

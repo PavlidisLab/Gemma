@@ -42,6 +42,8 @@ import java.util.List;
 public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMaterialValueObject>
         implements BioMaterialDao {
 
+    private static final int MAX_REPS = 5;
+
     @Autowired
     public BioMaterialDaoImpl( SessionFactory sessionFactory ) {
         super( BioMaterial.class, sessionFactory );
@@ -54,7 +56,18 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
-        List results = queryObject.list();
+        // This part is involved in a weird race condition that I could not get to a bottom of, so this is a hack-fix for now - tesarst, 2018-May-2
+        List results = null;
+        int rep = 0;
+        while ( results == null && rep < BioMaterialDaoImpl.MAX_REPS ) {
+            try {
+                results = queryObject.list();
+                rep++;
+            } catch ( ObjectNotFoundException e ) {
+                AbstractDao.log.warn( "BioMaterial query list threw: " + e.getMessage() );
+            }
+        }
+
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -128,8 +141,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                        + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
-                        + "left join fetch at.events where b.id in (:ids)" )
+                        + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
                 .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
     }
 

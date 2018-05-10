@@ -1187,13 +1187,9 @@ public class ExpressionExperimentController {
         if ( !sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
             return 0;
         }
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                .loadFullMatrix( ee );
-        if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
-            return 0;
-        }
+
         Collection<OutlierDetails> outliers = outlierDetectionService
-                .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
+                .identifyOutliersByMedianCorrelation( ee );
         count = outliers.size();
 
         ExpressionExperimentController.log.info( count + " possible outliers detected." );
@@ -1341,7 +1337,7 @@ public class ExpressionExperimentController {
             if ( qt.getIsPreferred() ) {
                 countPreferred++;
             }
-            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
                 dataReprocessedFromRaw = true;
             }
         }

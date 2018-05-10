@@ -20,7 +20,6 @@ package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 
 import java.util.Objects;
 
@@ -67,12 +66,11 @@ public class VocabCharacteristic extends Characteristic {
             return new VocabCharacteristic();
         }
 
-        public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
+        public static VocabCharacteristic newInstance( String name, String description,
                 String value, String valueUri, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final VocabCharacteristic entity = new VocabCharacteristic();
             entity.setName( name );
             entity.setDescription( description );
-            entity.setAuditTrail( auditTrail );
             entity.setCategoryUri( categoryUri );
             entity.setValueUri( valueUri );
             entity.setValue( value );

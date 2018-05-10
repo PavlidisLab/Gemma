@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecuredChild;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.persistence.Transient;
@@ -33,7 +33,7 @@ import java.util.HashSet;
  *
  * @author Paul
  */
-public class ExperimentalFactor extends AbstractAuditable implements SecuredChild {
+public class ExperimentalFactor extends Describable implements SecuredChild {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -97,8 +97,8 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
 
         if ( this.getDescription() == null ) {
             return other.getDescription() == null;
-        } else
-            return this.getDescription().equals( other.getDescription() );
+        }
+        return this.getDescription().equals( other.getDescription() );
 
     }
 
@@ -151,8 +151,9 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     }
 
     /**
-     * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the factorvalues,
-     * Categorical ones must not.
+     * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the
+     *         factorvalues,
+     *         Categorical ones must not.
      */
     public FactorType getType() {
         return this.type;

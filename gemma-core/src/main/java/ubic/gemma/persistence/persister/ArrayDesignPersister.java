@@ -22,7 +22,6 @@ import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -124,12 +123,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             if ( arrayDesign.getDesignProvider() != null )
                 arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
-
-            if ( arrayDesign.getLocalFiles() != null ) {
-                for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-                    this.persistLocalFile( file );
-                }
-            }
 
             if ( arrayDesign.getPrimaryTaxon() == null ) {
                 throw new IllegalArgumentException( "Primary taxon cannot be null" );

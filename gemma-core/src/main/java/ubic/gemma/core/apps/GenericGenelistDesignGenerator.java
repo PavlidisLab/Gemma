@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -217,9 +216,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
              * to pick the representative, but it generally doesn't matter.
              */
             for ( GeneProduct geneProduct : products ) {
-                if ( !GeneProductType.RNA.equals( geneProduct.getType() ) ) {
-                    continue;
-                }
 
                 /*
                  * Name is usually the genbank or ensembl accession

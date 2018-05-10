@@ -22,8 +22,7 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.AbstractAuditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.Describable;
 
 import java.util.Objects;
 
@@ -33,7 +32,7 @@ import java.util.Objects;
  *
  * @author Paul
  */
-public class Characteristic extends AbstractAuditable {
+public class Characteristic extends Describable {
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;
@@ -84,9 +83,11 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
-     * term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for the
-     * abstract class.
+     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
+     *         ontology
+     *         term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
+     *         the
+     *         abstract class.
      */
     public String getValueUri() {
         return this.valueUri;
@@ -108,12 +109,17 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * @return The URI of the class that this is an instance of. Will only be different from the termUri when the class is
-     * effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we can
-     * more readily group together Characteristics that are instances of the same class. For example: If the classUri is
-     * "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and the
-     * termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared as
-     * associations with this.
+     * @return The URI of the class that this is an instance of. Will only be different from the termUri when the class
+     *         is
+     *         effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we
+     *         can
+     *         more readily group together Characteristics that are instances of the same class. For example: If the
+     *         classUri is
+     *         "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and
+     *         the
+     *         termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared
+     *         as
+     *         associations with this.
      */
     public String getCategoryUri() {
         return this.categoryUri;
@@ -148,12 +154,11 @@ public class Characteristic extends AbstractAuditable {
             return new Characteristic();
         }
 
-        public static Characteristic newInstance( String name, String description, AuditTrail auditTrail, String value,
+        public static Characteristic newInstance( String name, String description, String value,
                 String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new Characteristic();
             entity.setName( name );
             entity.setDescription( description );
-            entity.setAuditTrail( auditTrail );
             entity.setValue( value );
             entity.setCategory( category );
             entity.setCategoryUri( categoryUri );

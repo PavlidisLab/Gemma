@@ -201,7 +201,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
-                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.localFiles where a.id=:adId" )
+                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adId" )
                 .setParameter( "adId", arrayDesign.getId() ).list();
 
         if ( res.size() == 0 ) {
@@ -222,7 +222,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                        + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adIds)" )
+                        + " left join fetch a.mergedInto where a.id in (:adIds)" )
                 .setParameterList( "adIds", EntityUtils.getIds( arrayDesigns ) ).list();
     }
 

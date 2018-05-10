@@ -24,7 +24,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -77,33 +76,6 @@ public class BibliographicReferenceServiceImpl
     @Override
     public Collection<BibliographicReferenceValueObject> loadAllValueObjects() {
         return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
-    }
-
-    @Transactional(readOnly = true)
-    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
-            Collection<BibliographicReference> bibRefs ) {
-        if ( bibRefs.isEmpty() ) {
-            return new ArrayList<>();
-        }
-        Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
-
-        for ( BibliographicReference bibref : bibRefs ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
-            idToBibRefVO.put( bibref.getId(), vo );
-        }
-
-        this.populateRelatedExperiments( bibRefs, idToBibRefVO );
-        this.populateBibliographicPhenotypes( idToBibRefVO );
-
-        return idToBibRefVO.values();
-    }
-
-    @Override
-    @Transactional
-    public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
-        bibliographicReference.setFullTextPdf( pdfFile );
-        this.bibliographicReferenceDao.update( bibliographicReference );
-
     }
 
     @Override
@@ -319,6 +291,24 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         return this.bibliographicReferenceDao.thaw( bibliographicReferences );
+    }
+
+    private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+            Collection<BibliographicReference> bibRefs ) {
+        if ( bibRefs.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
+
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
+            idToBibRefVO.put( bibref.getId(), vo );
+        }
+
+        this.populateRelatedExperiments( bibRefs, idToBibRefVO );
+        this.populateBibliographicPhenotypes( idToBibRefVO );
+
+        return idToBibRefVO.values();
     }
 
     private void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {

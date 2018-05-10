@@ -35,9 +35,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.persistence.util.SequenceBinUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,14 +51,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class NcbiGeneConverter implements Converter<Object, Object> {
 
-    // configured in project.properties, override in Gemma.properties
-    private static final String RETAIN_PROTEIN_INFO_PARAM = "gemma.store.ncbi.proteininfo";
-
     private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     private static final ExternalDatabase genBank;
     private static final ExternalDatabase ensembl;
-    private static final boolean retainProteinInformation = Settings
-            .getBoolean( NcbiGeneConverter.RETAIN_PROTEIN_INFO_PARAM, false );
 
     static {
         genBank = ExternalDatabase.Factory.newInstance();
@@ -178,7 +171,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
         Collection<GeneProduct> geneProducts = new HashSet<>();
         // initialize up to two Gene Products
-        // one for RNA, one for Protein (if retainProteinInformation = true)
 
         // RNA section
         if ( acc.getRnaNucleotideAccession() != null ) {
@@ -188,7 +180,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             rna.setNcbiGi( acc.getRnaNucleotideGI() );
             rna.setGene( gene );
             rna.setName( acc.getRnaNucleotideAccession() );
-            rna.setType( GeneProductType.RNA );
 
             String description = "Imported from NCBI Gene";
 
@@ -220,28 +211,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             geneProducts.add( rna );
         }
 
-        // Protein section
-        if ( NcbiGeneConverter.retainProteinInformation && acc.getProteinAccession() != null ) {
-            GeneProduct protein = GeneProduct.Factory.newInstance();
-
-            // set available fields
-            protein.setNcbiGi( acc.getProteinGI() );
-            protein.setGene( gene );
-            protein.setName( acc.getProteinAccession() );
-            protein.setType( GeneProductType.PROTEIN );
-            protein.setDescription(
-                    "Imported from NCBI Gene" + ( acc.getStatus() != null ? " (" + acc.getStatus() + ")" : "" ) );
-
-            DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-            accession.setAccession( acc.getProteinAccession() );
-            accession.setAccessionVersion( acc.getProteinAccessionVersion() );
-            accession.setExternalDatabase( NcbiGeneConverter.genBank );
-
-            Collection<DatabaseEntry> accessions = new HashSet<>();
-            accessions.add( accession );
-            protein.setAccessions( accessions );
-            geneProducts.add( protein );
-        }
         return geneProducts;
     }
 
@@ -269,11 +238,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
-
-        if ( !NcbiGeneConverter.retainProteinInformation ) {
-            NcbiGeneConverter.log.info( "Note that protein information will be ignored; set "
-                    + NcbiGeneConverter.RETAIN_PROTEIN_INFO_PARAM + " to true to change" );
-        }
 
         Thread convertThread = new Thread( new Runnable() {
             @Override

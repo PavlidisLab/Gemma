@@ -109,7 +109,7 @@ public interface CompositeSequenceService
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
 
-    Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs );
+    Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic, CompositeSequenceValueObject cs );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

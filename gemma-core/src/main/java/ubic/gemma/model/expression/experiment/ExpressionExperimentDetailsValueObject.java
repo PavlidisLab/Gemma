@@ -68,7 +68,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Date datePcaAnalysis;
     private Date dateProcessedDataVectorComputation;
     private Double minPvalue;
-    private String investigators;
     private String linkAnalysisEventType;
     private String missingValueAnalysisEventType;
     private String pcaAnalysisEventType;
@@ -294,14 +293,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
 
         this.sampleRemovedFlags = sampleRemovedFlags;
-    }
-
-    public String getInvestigators() {
-        return investigators;
-    }
-
-    public void setInvestigators( String investigators ) {
-        this.investigators = investigators;
     }
 
     public Boolean getHasBothIntensities() {

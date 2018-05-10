@@ -1614,7 +1614,7 @@ public class GeoFamilyParser implements Parser<Object> {
     private void parseSeriesVariableRepeatsSampleListLine( String line, String value ) {
         Integer variableId = this.extractVariableNumber( line );
         GeoReplication var = this.currentSeries().getReplicates().get( variableId );
-        Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
+        String[] samples = StringUtils.split( value, ", " );
         for ( String string : samples ) {
             GeoSample sam = results.getSampleMap().get( string );
             var.addToRepeatsSampleList( sam );
@@ -1625,7 +1625,7 @@ public class GeoFamilyParser implements Parser<Object> {
     private void parseSeriesVariableSampleListLine( String line, String value ) {
         Integer variableId = this.extractVariableNumber( line );
         GeoVariable var = this.currentSeries().getVariables().get( variableId );
-        Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
+        String[] samples = StringUtils.split( value, "," );
         for ( String string : samples ) {
             GeoSample sam = results.getSampleMap().get( string );
             var.addToVariableSampleList( sam );

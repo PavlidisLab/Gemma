@@ -161,7 +161,7 @@ public class ObjectFilter {
                 ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
         } else if ( operator.equals( ObjectFilter.in ) ) { // Check 'in' conditions
-            if ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
+            if ( !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
                 throw new IllegalArgumentException(
                         "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }

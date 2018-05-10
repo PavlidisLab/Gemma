@@ -226,13 +226,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         // DIAGNOSTICS TAB
         this.add(this.makeDiagnosticsTab(experimentDetails, isAdmin));
 
-        // QUANTITATION TYPES TAB
-        this.add(new Gemma.ExpressionExperimentQuantitationTypeGrid({
-            title: 'Quantitation Types',
-            itemId: 'quantitation',
-            eeid: experimentDetails.id
-        }));
-
         this.adjustForIsAdmin(isAdmin, this.editable);
 
     },
@@ -346,6 +339,18 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     adjustForIsAdmin: function (isAdmin, isEditable) {
         // hide/show 'refresh' link to diagnostics tab
         this.refreshDiagnosticsBtn.setVisible(isAdmin || isEditable);
+
+        // QUANTITATION TYPES TAB
+        if ((isAdmin || isEditable) && !this.qtTab) {
+            this.qtTab = new Gemma.ExpressionExperimentQuantitationTypeGrid({
+                title: 'Quantitation Types',
+                itemId: 'quantitation',
+                eeid: this.experimentDetails.id
+            });
+            this.add(this.qtTab);
+        } else if (this.qtTab) {
+            this.qtTab.setVisible((isAdmin || isEditable));
+        }
 
         /* HISTORY TAB */
         if ((isAdmin || isEditable) && !this.historyTab) {

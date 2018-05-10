@@ -471,7 +471,7 @@ public class GeoValues implements Serializable {
 
         }
 
-        return result.toArray( new Integer[result.size()] );
+        return result.toArray( new Integer[0] );
 
     }
 
@@ -775,9 +775,7 @@ public class GeoValues implements Serializable {
         }
 
         LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
-        if ( !sampleQtMap.contains( sample ) ) {
-            sampleQtMap.add( sample );
-        }
+        sampleQtMap.add( sample );
         return platform;
     }
 

@@ -33,6 +33,7 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -42,6 +43,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -68,6 +70,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     ExpressionDataFileService dataFileService;
     @Autowired
     AclTestUtils aclTestUtils;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
     @Autowired
     private GeoService geoService;
     @Autowired
@@ -197,6 +201,15 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.load( ee.getId() );
         ee = this.eeService.thawLite( ee );
+
+        // fix for unknown log scale
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+            if ( qt.getIsPreferred() ) {
+                qt.setScale( ScaleType.LOG2 );
+                quantitationTypeService.update( qt );
+            }
+        }
+
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 16, qts.size() );

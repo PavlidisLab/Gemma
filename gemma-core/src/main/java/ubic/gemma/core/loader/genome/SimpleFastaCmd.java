@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.core.util.concurrent.ParsingStreamConsumer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
@@ -127,6 +126,15 @@ public class SimpleFastaCmd implements FastaCmd {
 
     }
 
+    /**
+     * Keys can be numbers or strings...
+     * 
+     * @param keys keys
+     * @param database database
+     * @param blastHome blast home
+     * @return bio sequences
+     * @throws IOException when there are IO problems
+     */
     private Collection<BioSequence> getMultiple( Collection<?> keys, String database, String blastHome )
             throws IOException {
 
@@ -142,25 +150,29 @@ public class SimpleFastaCmd implements FastaCmd {
         try (Writer tmpOut = new FileWriter( tmp )) {
 
             for ( Object object : keys ) {
-                tmpOut.write( object.toString() + "\n" );
+                if ( object instanceof String ) {
+                    String acc = object.toString().replaceFirst( "\\.[0-9]+", "" );
+                    tmpOut.write( acc + "\n" );
+
+                } else {
+                    tmpOut.write( object.toString() + "\n" );
+                }
             }
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command =
-                SimpleFastaCmd.fastaCmdExecutable + " -" + dbOption + " " + database + " -" + entryBatchOption + " "
-                        + tmp.getAbsolutePath();
-        SimpleFastaCmd.log.debug( command );
+        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -" + dbOption + " " + database + " -" + entryBatchOption + " "
+                + tmp.getAbsolutePath();
+        SimpleFastaCmd.log.warn( command );
         Process pr;
         SimpleFastaCmd.log.debug( "BLASTDB=" + blastHome );
         pr = Runtime.getRuntime().exec( command, opts );
 
-        Collection<BioSequence> sequences = this.getSequencesFromFastaCmdOutput( pr );
-        EntityUtils.deleteFile( tmp );
-        return sequences;
+        //  EntityUtils.deleteFile( tmp );
+        return this.getSequencesFromFastaCmdOutput( pr );
 
     }
 
-    private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) throws IOException {
+    private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
 
         try (final InputStream is = new BufferedInputStream( pr.getInputStream() );
                 InputStream err = pr.getErrorStream()) {
@@ -168,25 +180,34 @@ public class SimpleFastaCmd implements FastaCmd {
             final FastaParser parser = new FastaParser();
 
             ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<>( parser, is );
-            GenericStreamConsumer gsc = new GenericStreamConsumer( err );
+            GenericStreamConsumer gsc = new GenericStreamConsumer( err, true );
             sg.start();
             gsc.start();
+            int exitVal = Integer.MIN_VALUE;
 
-            try {
-                int exitVal = pr.waitFor();
-                Thread.sleep( 200 ); // Makes sure results are flushed.
+            while ( exitVal == Integer.MIN_VALUE ) {
+
+                try {
+                    exitVal = pr.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still waiting.
+                }
+                Thread.sleep( 200 );
+
                 SimpleFastaCmd.log
                         .debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
 
-                return parser.getResults();
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( e );
             }
+            Thread.sleep( 200 );
+            return parser.getResults();
+
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
         }
     }
 
     /**
-     * @param key,     which is normally either a String (ACC) or an Integer (GID)
+     * @param key, which is normally either a String (ACC) or an Integer (GID)
      * @param database db
      * @throws IOException io problems
      */
@@ -195,11 +216,10 @@ public class SimpleFastaCmd implements FastaCmd {
             blastHome = SimpleFastaCmd.blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command =
-                SimpleFastaCmd.fastaCmdExecutable + " -" + dbOption + " " + database + " -" + queryOption + " " + key;
+        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -" + dbOption + " " + database + " -" + queryOption + " " + key;
         Process pr = Runtime.getRuntime().exec( command, opts );
-        if ( SimpleFastaCmd.log.isDebugEnabled() )
-            SimpleFastaCmd.log.debug( command + " ( " + opts[0] + ")" );
+        log.info( StringUtils.join( opts, " " ) );
+        SimpleFastaCmd.log.info( command );
         Collection<BioSequence> sequences = this.getSequencesFromFastaCmdOutput( pr );
         if ( sequences.size() == 0 ) {
             return null;

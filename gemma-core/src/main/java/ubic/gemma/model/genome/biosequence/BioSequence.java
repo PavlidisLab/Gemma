@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,12 +35,12 @@ import java.util.Collection;
  * </p>
  */
 @SuppressWarnings("unused")
-public abstract class BioSequence extends ubic.gemma.model.common.Describable {
+public class BioSequence extends ubic.gemma.model.common.Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -5548459682099905305L;
+    private static final long serialVersionUID = -6620431603579954167L;
     private Long length;
     private String sequence;
     private Boolean isApproximateLength;
@@ -146,13 +146,61 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
         this.type = type;
     }
 
+    @Override
+    public int hashCode() {
+        int hashCode;
+
+        if ( this.getId() != null ) {
+            return 29 * this.getId().hashCode();
+        }
+        int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
+        int taxonHash = this.getTaxon() == null ? 0 : this.getTaxon().hashCode();
+        int lengthHash = this.getLength() == null ? 0 : this.getLength().hashCode();
+        int dbHash = this.getSequenceDatabaseEntry() == null ? 0 : this.getSequenceDatabaseEntry().hashCode();
+        int seqHash = 0;
+        if ( dbHash == 0 && nameHash == 0 && lengthHash == 0 && this.getSequence() != null )
+            seqHash = this.getSequence().hashCode();
+        hashCode = 29 * nameHash + seqHash + dbHash + taxonHash + lengthHash;
+
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+
+        if ( !( object instanceof BioSequence ) ) {
+            return false;
+        }
+        final BioSequence that = ( BioSequence ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+
+        // The way this is constructed, ALL of the items must be the same.
+        if ( this.getSequenceDatabaseEntry() != null && that.getSequenceDatabaseEntry() != null && !this
+                .getSequenceDatabaseEntry().equals( that.getSequenceDatabaseEntry() ) )
+            return false;
+
+        if ( this.getTaxon() != null && that.getTaxon() != null && !this.getTaxon().equals( that.getTaxon() ) )
+            return false;
+
+        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+            return false;
+
+        //noinspection SimplifiableIfStatement // Better readability
+        if ( this.getSequence() != null && that.getSequence() != null && !this.getSequence()
+                .equals( that.getSequence() ) )
+            return false;
+
+        return this.getLength() == null || that.getLength() == null || this.getLength().equals( that.getLength() );
+    }
+
     public static final class Factory {
         public static BioSequence newInstance() {
-            return new BioSequenceImpl();
+            return new BioSequence();
         }
 
         public static BioSequence newInstance( Taxon taxon ) {
-            final BioSequence entity = new BioSequenceImpl();
+            final BioSequence entity = new BioSequence();
             entity.setTaxon( taxon );
             return entity;
         }

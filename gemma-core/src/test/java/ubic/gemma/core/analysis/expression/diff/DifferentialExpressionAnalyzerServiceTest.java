@@ -121,6 +121,60 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            expressionExperimentService.remove( ee );
+        }
+    }
+
+    /**
+     * Test for bug 2026, not a subsetted analysis.
+     */
+    @Test
+    public void testAnalyzeAndDeleteSpecificAnalysis() {
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        config.setFactorsToInclude( factors );
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+        assertTrue( !analyses.isEmpty() );
+
+        Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
+        assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
+
+        assertTrue( differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
+
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
+
+    }
+
+    /**
+     * Tests running with a subset factor, then deleting.
+     */
+    @Test
+    public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() {
+
+        ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
+                .toArray( new ExperimentalFactor[] {} );
+
+        List<ExperimentalFactor> factorsToUse = Collections.singletonList( factors[0] );
+        ExperimentalFactor subsetFactor = factors[1];
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factorsToUse );
+        config.setSubsetFactor( subsetFactor );
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+
+        assertTrue( !analyses.isEmpty() );
+
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
+
+    }
+
     @Test
     public void testAnalyzeAndDelete() throws Exception {
 
@@ -177,60 +231,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         int numDeleted = differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertTrue( numDeleted > 0 );
 
-    }
-
-    /**
-     * Test for bug 2026, not a subsetted analysis.
-     */
-    @Test
-    public void testAnalyzeAndDeleteSpecificAnalysis() {
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee, config );
-        assertTrue( !analyses.isEmpty() );
-
-        Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
-        assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
-
-        assertTrue( differentialExpressionAnalysisService
-                .getExperimentsWithAnalysis( taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
-
-        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
-
-    }
-
-    /**
-     * Tests running with a subset factor, then deleting.
-     */
-    @Test
-    public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() {
-
-        ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
-                .toArray( new ExperimentalFactor[] {} );
-
-        List<ExperimentalFactor> factorsToUse = Collections.singletonList( factors[0] );
-        ExperimentalFactor subsetFactor = factors[1];
-
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factorsToUse );
-        config.setSubsetFactor( subsetFactor );
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                .runDifferentialExpressionAnalyses( ee, config );
-
-        assertTrue( !analyses.isEmpty() );
-
-        differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
-
-    }
-
-    @After
-    public void tearDown() {
-        if ( ee != null ) {
-            expressionExperimentService.remove( ee );
-        }
     }
 
     /**

@@ -54,12 +54,6 @@ public class ProcessedExpressionDataVectorServiceImpl
         this.processedExpressionDataVectorDao = mainDao;
     }
 
-    @Transactional(readOnly = true)
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment,
-            int limit ) {
-        return this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment, limit );
-    }
-
     @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vectors ) {

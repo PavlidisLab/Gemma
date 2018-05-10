@@ -307,28 +307,25 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                         .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                                 EntityUtils.getIds( ees ), 100, false );
 
-                if ( multiGeneResults.isEmpty() ) {
-                    //noinspection ConstantConditions // these strange structures are to help with debugger.
-                    assertTrue( !multiGeneResults.isEmpty() );
-                }
+                if( !multiGeneResults.isEmpty() ) {
 
-                for ( Long id : multiGeneResults.keySet() ) {
-                    for ( CoexpressionValueObject coex : multiGeneResults.get( id ) ) {
-                        this.checkResult( coex );
+                    for ( Long id : multiGeneResults.keySet() ) {
+                        for ( CoexpressionValueObject coex : multiGeneResults.get( id ) ) {
+                            this.checkResult( coex );
+                        }
                     }
-                }
 
-                // with stringency specified, quick.
-                Map<Long, List<CoexpressionValueObject>> multiGeneResults2 = geneCoexpressionService
-                        .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
-                                EntityUtils.getIds( ees ), ees.size(), 100, true );
-                if ( multiGeneResults.size() != multiGeneResults2.size() ) {
-                    assertEquals( multiGeneResults.size(), multiGeneResults2.size() );
-                }
+                    // with stringency specified, quick.
+                    Map<Long, List<CoexpressionValueObject>> multiGeneResults2 = geneCoexpressionService
+                            .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ), EntityUtils.getIds( ees ), ees.size(), 100, true );
+                    if ( multiGeneResults.size() != multiGeneResults2.size() ) {
+                        assertEquals( multiGeneResults.size(), multiGeneResults2.size() );
+                    }
 
-                for ( Long id : multiGeneResults2.keySet() ) {
-                    for ( CoexpressionValueObject coex : multiGeneResults2.get( id ) ) {
-                        this.checkResult( coex );
+                    for ( Long id : multiGeneResults2.keySet() ) {
+                        for ( CoexpressionValueObject coex : multiGeneResults2.get( id ) ) {
+                            this.checkResult( coex );
+                        }
                     }
                 }
             }
