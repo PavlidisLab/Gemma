@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -208,20 +209,29 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // so it doesn't look for soft files
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        boolean bad;
 
-        ee = eeService.findByShortName( "GSE29006" );
-        if ( ee != null ) {
-            eeService.remove( ee );
-        }
+        do {
+            try {
+                bad = false;
+                ee = eeService.findByShortName( "GSE29006" );
+                if ( ee != null ) {
+                    eeService.remove( ee );
+                }
 
-        assertNull( eeService.findByShortName( "GSE29006" ) );
+                assertNull( eeService.findByShortName( "GSE29006" ) );
 
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            throw new IllegalStateException( "Need to remove this data set before test is run" );
-        }
+                try {
+                    Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
+                    ee = ( ExpressionExperiment ) results.iterator().next();
+                } catch ( AlreadyExistsInSystemException e ) {
+                    throw new IllegalStateException( "Need to remove this data set before test is run" );
+                }
+
+            } catch(ObjectNotFoundException e ){
+                bad = true;
+            }
+        } while ( bad ); // This is to fight an odd race condition that does not seem to occur in production, see git issue #45
 
         ee = eeService.thaw( ee );
 
