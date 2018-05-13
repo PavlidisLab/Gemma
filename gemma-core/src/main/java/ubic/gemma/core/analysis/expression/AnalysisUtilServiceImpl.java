@@ -18,12 +18,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
 /**
  * Utility methods for dealing with analyses.
@@ -44,6 +46,9 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
 
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+
     @Override
     public boolean deleteOldAnalyses( ExpressionExperiment expExp ) {
 
@@ -53,7 +58,16 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
             try {
                 principalComponentAnalysisService.removeForExperiment( expExp );
             } catch ( Exception e ) {
-                AnalysisUtilServiceImpl.log.warn( "Could not remove pca for: " + expExp );
+                AnalysisUtilServiceImpl.log.warn( "Could not remove PCA for: " + expExp );
+                removedAll = false;
+            }
+        }
+
+        if ( sampleCoexpressionAnalysisService.hasAnalysis( expExp ) ) {
+            try {
+                sampleCoexpressionAnalysisService.removeForExperiment( expExp );
+            } catch ( Exception e ) {
+                AnalysisUtilServiceImpl.log.warn( "Could not remove sample correlations for: " + expExp );
                 removedAll = false;
             }
         }
@@ -75,6 +89,8 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
                 removedAll = false;
             }
         }
+
+        log.info( "Done deleting old analyses (as much as possible)" );
         return removedAll;
     }
 }

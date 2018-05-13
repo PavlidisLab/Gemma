@@ -18,20 +18,16 @@
  */
 package ubic.gemma.core.analysis.service;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author pavlidis
@@ -48,9 +44,9 @@ public abstract class ExpressionExperimentVectorManipulatingService {
     protected RawExpressionDataVectorService rawExpressionDataVectorService;
 
     /**
-     * @param data           where data will be stored, starts out empty
+     * @param data where data will be stored, starts out empty
      * @param representation of the quantitation type for the vector
-     * @param oldV           vector to be converted
+     * @param oldV vector to be converted
      */
     protected void convertFromBytes( List<Object> data, PrimitiveType representation, DesignElementDataVector oldV ) {
         byte[] rawDat = oldV.getData();
@@ -86,27 +82,6 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
-    }
-
-    protected Collection<RawExpressionDataVector> getRawVectorsForOneQuantitationType( ArrayDesign arrayDesign,
-            QuantitationType type ) {
-        Collection<RawExpressionDataVector> vectorsForQt = rawExpressionDataVectorService.find( arrayDesign, type );
-        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
-            return null;
-        }
-        rawExpressionDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
-    }
-
-    protected Collection<ProcessedExpressionDataVector> getProcessedVectorsForOneQuantitationType(
-            ArrayDesign arrayDesign, QuantitationType type ) {
-        Collection<ProcessedExpressionDataVector> vectorsForQt = processedExpressionDataVectorService
-                .find( arrayDesign, type );
-        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
-            return null;
-        }
-        processedExpressionDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
     }
 
 }
