@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.util.monitor.HibernateMonitor;
 
 import java.util.Collection;
 
@@ -55,7 +56,11 @@ public class ExperimentalFactorServiceImpl
             differentialExpressionAnalysisService.remove( a );
         }
         this.experimentalFactorDao.remove( experimentalFactor );
+    }
 
+    @Override
+    public ExperimentalFactor thaw(ExperimentalFactor ef){
+        return this.experimentalFactorDao.thaw(ef);
     }
 
 }

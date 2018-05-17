@@ -70,4 +70,5 @@ public interface ExperimentalFactorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExperimentalFactor experimentalFactor );
 
+    ExperimentalFactor thaw( ExperimentalFactor ef );
 }
