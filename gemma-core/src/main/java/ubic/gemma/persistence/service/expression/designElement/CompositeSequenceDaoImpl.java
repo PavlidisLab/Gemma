@@ -425,7 +425,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
                 .createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
-                .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
+                .addScalar( "geneid" ).addScalar( "gId" ).addScalar( "gSymbol" )
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
 
         queryObject.addScalar( "chrom" ).addScalar( "tgst" ).addScalar( "tgend" ).addScalar( "tgstarts" )
