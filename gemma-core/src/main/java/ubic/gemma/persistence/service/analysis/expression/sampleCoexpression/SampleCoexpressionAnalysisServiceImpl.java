@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
+import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.math.MatrixRowStats;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
@@ -353,6 +355,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
         f.setRowNames( dmatrix.getMatrix().getRowNames() );
         f.setColumnNames( dmatrix.getMatrix().getColNames() );
+        
+        DoubleArrayList rowmeans = MatrixRowStats.means( sNamedMatrix );
+        for ( int i = 0; i < f.rows(); i++ ) {
+            double rowmean = rowmeans.get( i );
+            for ( int j = 0; j < f.columns(); j++ ) {
+                f.set( i, j, f.get( i, j ) + rowmean );
+            }
+        }
         return new ExpressionDataDoubleMatrix( dmatrix, f );
     }
 }
