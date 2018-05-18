@@ -109,9 +109,9 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 String geneProductName = ( String ) row[6];
                 String geneProductAccession = ( String ) row[7];
                 Object geneProductGeneId = row[8];
-                Long geneId = ( ( BigInteger ) row[10] ).longValue();
-                String geneName = ( String ) row[11];
-                Integer geneAccession = ( Integer ) row[12]; // NCBI
+                Long geneId = ( ( BigInteger ) row[9] ).longValue();
+                String geneName = ( String ) row[10];
+                Integer geneAccession = ( Integer ) row[11]; // NCBI
 
                 // fill in value object for geneProducts
                 Map<Long, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
@@ -137,10 +137,10 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
             }
 
-            String arrayDesignShortName = ( String ) row[13];
-            Long arrayDesignId = ( ( BigInteger ) row[14] ).longValue();
+            String arrayDesignShortName = ( String ) row[12];
+            Long arrayDesignId = ( ( BigInteger ) row[13] ).longValue();
 
-            String csDesc = ( String ) row[20];
+            String csDesc = ( String ) row[19];
             vo.setCompositeSequenceDescription( csDesc );
 
             vo.setArrayDesignId( arrayDesignId );
@@ -149,7 +149,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             vo.setCompositeSequenceName( csName );
 
             vo.setArrayDesignShortName( arrayDesignShortName );
-            vo.setArrayDesignName( ( String ) row[21] );
+            vo.setArrayDesignName( ( String ) row[20] );
 
             // fill in value object
             if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {
@@ -214,11 +214,11 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
     private void countBlatHits( Object[] row, Map<Long, Set<Integer>> blatResultCount, Long csId,
             CompositeSequenceMapValueObject vo ) {
 
-        Long chromId = ( ( BigInteger ) row[15] ).longValue();
-        Long targetStart = ( ( BigInteger ) row[16] ).longValue();
-        Long targetEnd = ( ( BigInteger ) row[17] ).longValue();
-        String targetStarts = ( String ) row[18];
-        Long queryId = ( ( BigInteger ) row[19] ).longValue();
+        Long chromId = ( ( BigInteger ) row[14] ).longValue();
+        Long targetStart = ( ( BigInteger ) row[15] ).longValue();
+        Long targetEnd = ( ( BigInteger ) row[16] ).longValue();
+        String targetStarts = ( String ) row[17];
+        Long queryId = ( ( BigInteger ) row[18] ).longValue();
 
         int hash = 1;
         int prime = 31;
