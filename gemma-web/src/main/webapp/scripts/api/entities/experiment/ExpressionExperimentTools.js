@@ -238,9 +238,9 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         var sSizeDesc =
             Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 20 samples. Experiments this size are no longer accepted in Gemma." :
-                Number(ee.geeq.sScoreSampleSize) === -0.5 ? "The experiment has less than 50 samples." :
+                Number(ee.geeq.sScoreSampleSize) === -0.3 ? "The experiment has less than 50 samples." :
                     Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 100 samples." :
-                        Number(ee.geeq.sScoreSampleSize) === 0.5 ? "The experiment has less than 200 samples." :
+                        Number(ee.geeq.sScoreSampleSize) === 0.3 ? "The experiment has less than 200 samples." :
                             "The experiment has at least 200 samples.";
 
         var sRawDesc =

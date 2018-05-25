@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,4 +143,11 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         return vos;
     }
 
+    @Override
+    public ExperimentalFactor thaw( ExperimentalFactor ef ) {
+        ef = this.load( ef.getId() );
+        Hibernate.initialize( ef );
+        Hibernate.initialize( ef.getExperimentalDesign() );
+        return ef;
+    }
 }
