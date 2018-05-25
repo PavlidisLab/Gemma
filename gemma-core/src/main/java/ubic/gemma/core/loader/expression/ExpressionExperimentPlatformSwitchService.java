@@ -189,12 +189,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         helperService.persist( ee, arrayDesign );
 
+        log.info( "Finishing up" );
         if ( targetBioAssayDimension != null && !unusedBADs.isEmpty() ) {
             this.cleanupUnused( unusedBADs, targetBioAssayDimension );
         }
 
         ee = expressionExperimentService.load( ee.getId() ); // refresh after cleanup
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+        ee = expressionExperimentService.thawLite( ee );
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails? works fine if run later by cli
 
         return ee;
     }
