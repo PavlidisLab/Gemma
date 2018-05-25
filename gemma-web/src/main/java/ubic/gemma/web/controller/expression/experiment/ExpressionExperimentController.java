@@ -1712,8 +1712,7 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult execute() {
-            ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
-            expressionExperimentService.remove( ee );
+            expressionExperimentService.remove( taskCommand.getEntityId() );
 
             return new TaskResult( taskCommand, new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
