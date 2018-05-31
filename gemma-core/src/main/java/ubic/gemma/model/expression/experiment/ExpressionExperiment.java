@@ -171,8 +171,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     /**
      * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past
-     *         we often
-     *         used names like "alizadeh-lymphoma".
+     * we often
+     * used names like "alizadeh-lymphoma".
      */
     public String getShortName() {
         return this.shortName;

@@ -1278,16 +1278,17 @@ public class ExpressionExperimentDaoImpl
 
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
+        Query queryCnt = this.getCountVosQueryString( filter, orderByProperty, !asc );
         query.setCacheable( true );
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
-
         //noinspection unchecked
         List<Object[]> list = query.list();
         List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
 
+        int totalCnt = queryCnt.list().size();
         for ( Object[] row : list ) {
-            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row );
+            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row, totalCnt );
             vos.add( vo );
         }
 
@@ -1576,6 +1577,22 @@ public class ExpressionExperimentDaoImpl
         return result;
     }
 
+    private Query getCountVosQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
+
+        // Restrict to non-troubled EEs for non-administrators
+        filters = getObjectFilters( filters );
+
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select count(*) " // 0
+                + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
+                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
+                + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
+                + ObjectFilter.DAO_AD_ALIAS + " ";
+
+        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
+    }
+
     /**
      * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
      *                        description.
@@ -1587,18 +1604,7 @@ public class ExpressionExperimentDaoImpl
             boolean orderDesc ) {
 
         // Restrict to non-troubled EEs for non-administrators
-        if ( !SecurityUtil.isUserAdmin() ) {
-            if ( filters == null ) {
-                filters = new ArrayList<>( ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            } else {
-                filters.ensureCapacity( filters.size() + ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            }
-            // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
-            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.DAO_EE_ALIAS ) } );
-            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.DAO_AD_ALIAS ) } );
-        }
+        filters = getObjectFilters( filters );
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id as id, " // 0
@@ -1643,6 +1649,27 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
+        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
+    }
+
+    private ArrayList<ObjectFilter[]> getObjectFilters( ArrayList<ObjectFilter[]> filters ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
+            if ( filters == null ) {
+                filters = new ArrayList<>( ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
+            } else {
+                filters.ensureCapacity( filters.size() + ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
+            }
+            // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.DAO_EE_ALIAS ) } );
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.DAO_AD_ALIAS ) } );
+        }
+        return filters;
+    }
+
+    private Query postProcessVoQuery( ArrayList<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
+            String queryString ) {
         queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
@@ -1765,5 +1792,7 @@ public class ExpressionExperimentDaoImpl
             vo.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
     }
+
+
 
 }

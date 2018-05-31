@@ -56,8 +56,9 @@ public abstract class FilterArg extends MalformableArg {
         super( errorMessage, exception );
     }
 
-    public static FilterArg EMPTY_FILTER(){
-        return new FilterArg(null, null, null, null, null) {};
+    public static FilterArg EMPTY_FILTER() {
+        return new FilterArg( null, null, null, null, null ) {
+        };
     }
 
     /**
@@ -109,10 +110,9 @@ public abstract class FilterArg extends MalformableArg {
             if ( i == parts.length || parts[i].toLowerCase().equals( "and" ) ) {
                 // We either reached an 'AND', or the end of the string.
                 // Add the current disjunction.
-                propertyNames.add( propertyNamesDisjunction.toArray( new String[propertyNamesDisjunction.size()] ) );
-                propertyOperators
-                        .add( propertyOperatorsDisjunction.toArray( new String[propertyOperatorsDisjunction.size()] ) );
-                propertyValues.add( propertyValuesDisjunction.toArray( new String[propertyValuesDisjunction.size()] ) );
+                propertyNames.add( propertyNamesDisjunction.toArray( new String[0] ) );
+                propertyOperators.add( propertyOperatorsDisjunction.toArray( new String[0] ) );
+                propertyValues.add( propertyValuesDisjunction.toArray( new String[0] ) );
                 // Start new disjunction lists
                 propertyNamesDisjunction = new LinkedList<>();
                 propertyOperatorsDisjunction = new LinkedList<>();
@@ -142,6 +142,17 @@ public abstract class FilterArg extends MalformableArg {
         String[] parts = property.split( "\\.", 2 );
         Field field = checkAllFields( cls, parts[0] );
         Class<?> subCls = field.getType();
+        // TODO This allows collections of appropriate type, but then the filter application has to be handled differently on the DAO level.
+        //        if(Collection.class.isAssignableFrom( subCls )){
+        //            ParameterizedType pt = (ParameterizedType )field.getGenericType();
+        //            for(Type type : pt.getActualTypeArguments()) {
+        //                if(type instanceof  Class) {
+        //                    subCls = ( Class<?> ) type;
+        //                    break;
+        //                }
+        //            }
+        //        }
+
         if ( parts.length > 1 ) {
             return getPropertyType( parts[1], subCls );
         } else {

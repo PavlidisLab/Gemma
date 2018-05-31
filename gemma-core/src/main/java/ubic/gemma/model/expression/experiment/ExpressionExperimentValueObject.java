@@ -82,7 +82,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      *
      * @param row the database row to read the VO parameters from
      */
-    public ExpressionExperimentValueObject( Object[] row ) {
+    public ExpressionExperimentValueObject( Object[] row, Integer totalInBatch ) {
         super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[29], ( Boolean ) row[15],
                 ( AuditEvent ) row[28], ( String ) row[16], ( AuditEvent ) row[27] );
 
@@ -145,6 +145,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 SecurityUtil.isUserAdmin() ?
                         new GeeqAdminValueObject( ( Geeq ) row[30] ) :
                         new GeeqValueObject( ( Geeq ) row[30] );
+
+        // meta info
+        this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,

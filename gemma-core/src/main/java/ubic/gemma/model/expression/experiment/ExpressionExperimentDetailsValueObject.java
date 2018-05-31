@@ -87,7 +87,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     public ExpressionExperimentDetailsValueObject( Object[] row ) {
-        super( row );
+        super( row, null );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
