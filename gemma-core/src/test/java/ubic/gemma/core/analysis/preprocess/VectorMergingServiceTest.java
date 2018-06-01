@@ -206,7 +206,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
             assertEquals( mergedAA, v.getDesignElement().getArrayDesign() );
         }
 
-        assertEquals( 15, ee.getQuantitationTypes().size() );
+        assertEquals( 16, ee.getQuantitationTypes().size() );
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = vectorMergingService.mergeVectors( ee );

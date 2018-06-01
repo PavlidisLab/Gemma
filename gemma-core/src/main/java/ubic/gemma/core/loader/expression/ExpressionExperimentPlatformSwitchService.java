@@ -162,13 +162,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
          */
         Collection<BioAssayDimension> unusedBADs = new HashSet<>();
         BioAssayDimension targetBioAssayDimension = null;
-        int maxSize = 0;
         if ( multiPlatformPerSample ) {
-            targetBioAssayDimension = this.doMultiSample( ee, unusedBADs, maxSize );
+            targetBioAssayDimension = this.doMultiSample( ee, unusedBADs );
         }
         if ( multiPlatformPerSample && targetBioAssayDimension == null ) {
             throw new RuntimeException( "Data set cannot be switched to merged platform: no suitable bioassaydimension found" );
         }
+
+        /*
+         * To account for cases where we have no data loaded yet.
+         */
+        boolean hasData = expressionExperimentService.getQuantitationTypes( ee ).size() > 0 && ee.getRawExpressionDataVectors().size() > 0;
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements = new HashMap<>();
@@ -178,7 +182,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     oldAd );
         }
 
-        if ( totalVectorsSwitched == 0 ) {
+        if ( totalVectorsSwitched == 0 && hasData ) {
             throw new RuntimeException( "No vectors were switched" );
         }
 
@@ -196,8 +200,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         ee = expressionExperimentService.load( ee.getId() ); // refresh after cleanup
         ee = expressionExperimentService.thawLite( ee );
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails? works fine if run later by cli
 
+        if ( hasData ) {
+            ee = processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
+        }
         return ee;
     }
 
@@ -272,11 +278,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * 
      * @param ee
      * @param unusedBADs
-     * @param maxSize
      * @return
      */
-    private BioAssayDimension doMultiSample( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs,
-            int maxSize ) {
+    private BioAssayDimension doMultiSample( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs ) {
+
+        int maxSize = 0;
         BioAssayDimension maxBAD = null;
         for ( BioAssay ba : ee.getBioAssays() ) {
             Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
