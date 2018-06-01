@@ -274,7 +274,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param ee ee
      * @return processed data vectors
      */
-    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
 
         if ( limit == null || limit < 0 ) {
             return this.getProcessedVectors( ee );
@@ -487,6 +487,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
         assert expressionExperiment != null;
+        assert expressionExperiment.getId() != null;
 
         /*
          * Get quantitation types that will be removed.
@@ -497,17 +498,22 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + "inner join e.processedExpressionDataVectors p where e.id = :id" )
                 .setParameter( "id", expressionExperiment.getId() ).list();
 
-        this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from ProcessedExpressionDataVector p where p.expressionExperiment = :ee" )
-                .setParameter( "ee", expressionExperiment ).executeUpdate();
+        Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
+        Hibernate.initialize( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( ) );
+        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
 
+        if(!vectors.isEmpty()) {
+            this.getSessionFactory().getCurrentSession().createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
+                    .setParameterList( "ids", EntityUtils.getIds( vectors ) ).executeUpdate();
+        }
         if ( !qtsToRemove.isEmpty() ) {
-            AbstractDao.log.info( "Deleting " + qtsToRemove + " old quantitation types" );
+            AbstractDao.log.info( "Deleting " + qtsToRemove.size() + " old quantitation types" );
             expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from QuantitationTypeImpl where id in :ids" )
-                    .setParameterList( "ids", qtsToRemove );
+                    .createQuery( "delete from QuantitationTypeImpl where id in (:ids)" )
+                    .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
         }
     }
 
