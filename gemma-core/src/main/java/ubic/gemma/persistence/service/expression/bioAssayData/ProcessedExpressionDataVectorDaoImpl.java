@@ -269,64 +269,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 .list();
     }
 
-    /**
-     * @param limit if non-null and positive, you will get a random set of vectors for the experiment
-     * @param ee ee
-     * @return processed data vectors
-     */
-    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
-
-        if ( limit == null || limit < 0 ) {
-            return this.getProcessedVectors( ee );
-        }
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        List<ProcessedExpressionDataVector> result;
-
-        Integer availableVectorCount = ee.getNumberOfDataVectors();
-        if ( availableVectorCount == null || availableVectorCount == 0 ) {
-            AbstractDao.log.info( "Experiment does not have vector count populated." );
-            // cannot fix this here, because we're read-only.
-        }
-
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee" );
-        q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
-        q.setMaxResults( limit );
-        if ( availableVectorCount != null && availableVectorCount > limit ) {
-            q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
-        }
-
-        // we should already be read-only, so this is probably pointless.
-        q.setReadOnly( true );
-
-        // and so this probably doesn't do anything useful.
-        q.setFlushMode( FlushMode.MANUAL );
-
-        //noinspection unchecked
-        result = q.list();
-        if ( timer.getTime() > 1000 )
-            AbstractDao.log
-                    .info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
-
-        if ( result.isEmpty() ) {
-            AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
-            return result;
-        }
-
-        this.thaw( result ); // needed?
-        return result;
-    }
-
     @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
 
         Collection<ArrayDesign> arrayDesigns = CommonQueries
                 .getArrayDesignsUsed( EntityUtils.getIds( expressionExperiments ),
-                        this.getSessionFactory().getCurrentSession() )
-                .keySet();
+                        this.getSessionFactory().getCurrentSession() ).keySet();
 
         // this could be further improved by getting probes specific to experiments in batches.
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
@@ -343,9 +292,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for ( Collection<CompositeSequence> batch : batchIterator ) {
 
             //language=HQL
-            final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
-                    + "dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                    + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
+            final String queryString =
+                    "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
+                            + "dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                            + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
             List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameter( "cs", batch ).setParameterList( "ees", expressionExperiments ).list();
@@ -382,8 +332,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         //language=HQL
-        final String queryString = "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
+        final String queryString =
+                "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                        + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "cs", cs2gene.keySet() ).setParameter( "eeid", expressionExperiment.getId() ).list();
@@ -406,8 +357,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         //language=HQL
-        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
-                + "where dedv.expressionExperiment.id = :ee";
+        final String queryString =
+                "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVector dedv "
+                        + "where dedv.expressionExperiment.id = :ee";
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", expressionExperiment.getId() ).list();
         Map<CompositeSequence, Double> result = new HashMap<>();
@@ -443,9 +395,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         //language=HQL
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
-                + "from ProcessedExpressionDataVector dedv " + " inner join dedv.designElement de  "
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
+        final String queryString =
+                "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
+                        + "from ProcessedExpressionDataVector dedv " + " inner join dedv.designElement de  "
+                        + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet() ) )
@@ -500,11 +453,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
         Hibernate.initialize( vectors );
-        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( ) );
+        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>() );
         this.getSessionFactory().getCurrentSession().update( expressionExperiment );
 
-        if(!vectors.isEmpty()) {
-            this.getSessionFactory().getCurrentSession().createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
+        if ( !vectors.isEmpty() ) {
+            this.getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
                     .setParameterList( "ids", EntityUtils.getIds( vectors ) ).executeUpdate();
         }
         if ( !qtsToRemove.isEmpty() ) {
@@ -610,6 +564,56 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
 
+    /**
+     * @param limit if non-null and positive, you will get a random set of vectors for the experiment
+     * @param ee    ee
+     * @return processed data vectors
+     */
+    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+
+        if ( limit == null || limit < 0 ) {
+            return this.getProcessedVectors( ee );
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<ProcessedExpressionDataVector> result;
+
+        Integer availableVectorCount = ee.getNumberOfDataVectors();
+        if ( availableVectorCount == null || availableVectorCount == 0 ) {
+            AbstractDao.log.info( "Experiment does not have vector count populated." );
+            // cannot fix this here, because we're read-only.
+        }
+
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee" );
+        q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
+        q.setMaxResults( limit );
+        if ( availableVectorCount != null && availableVectorCount > limit ) {
+            q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
+        }
+
+        // we should already be read-only, so this is probably pointless.
+        q.setReadOnly( true );
+
+        // and so this probably doesn't do anything useful.
+        q.setFlushMode( FlushMode.MANUAL );
+
+        //noinspection unchecked
+        result = q.list();
+        if ( timer.getTime() > 1000 )
+            AbstractDao.log
+                    .info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
+
+        if ( result.isEmpty() ) {
+            AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
+            return result;
+        }
+
+        this.thaw( result ); // needed?
+        return result;
+    }
+
     private void addToGene( RankMethod method, Map<Gene, Collection<Double>> result, Double rMean, Double rMax,
             Collection<Gene> genes4probe ) {
         for ( Gene gene : genes4probe ) {
@@ -646,16 +650,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
         // WARNING cache size() can be slow, esp. terracotta.
         AbstractDao.log.info( "Cached " + i + ", input " + newResults.size() + "; total cached: "
-        /* + this.processedDataVectorCache.size() */ );
+                /* + this.processedDataVectorCache.size() */ );
     }
 
     /**
      * We cache vectors at the experiment level. If we need subsets, we have to slice them out.
      *
-     * @param bioAssaySets that we exactly need the data for.
-     * @param genes that might have cached results
-     * @param results from the cache will be put here
-     * @param needToSearch experiments that need to be searched (not fully cached); this will be populated
+     * @param bioAssaySets  that we exactly need the data for.
+     * @param genes         that might have cached results
+     * @param results       from the cache will be put here
+     * @param needToSearch  experiments that need to be searched (not fully cached); this will be populated
      * @param genesToSearch that still need to be searched (not in cache)
      */
     private void checkCache( Collection<? extends BioAssaySet> bioAssaySets, Collection<Long> genes,
@@ -796,9 +800,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * @param data data
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably just
-     *         have one
-     *         (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629 for
-     *         details.
+     * have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629 for
+     * details.
      */
     private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
             Collection<? extends DesignElementDataVector> data ) {
@@ -829,9 +833,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * Determine the experiments that bioAssaySets refer to.
      *
      * @param bioAssaySets - either ExpressionExperiment or ExpressionExperimentSubSet (which has an associated
-     *        ExpressionExperiment, which is what we're after)
+     *                     ExpressionExperiment, which is what we're after)
      * @return Note that this collection can be smaller than the input, if two bioAssaySets come from (or are) the same
-     *         Experiment
+     * Experiment
      */
     private Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
         Collection<ExpressionExperiment> result = new HashSet<>();
@@ -998,7 +1002,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param cs2gene Map of probe to genes.
-     * @param ees ees
+     * @param ees     ees
      * @return map of vectors to genes.
      */
     private Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectors( Collection<Long> ees,
@@ -1019,7 +1023,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * This is an important method for fetching vectors.
      *
      * @param genes genes
-     * @param ees ees
+     * @param ees   ees
      * @return vectors, possibly subsetted.
      */
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
@@ -1049,8 +1053,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<ArrayDesign> arrays = CommonQueries
                 .getArrayDesignsUsed( EntityUtils.getIds( this.getExperiments( ees ) ),
-                        this.getSessionFactory().getCurrentSession() )
-                .keySet();
+                        this.getSessionFactory().getCurrentSession() ).keySet();
         assert !arrays.isEmpty();
         Map<Long, Collection<Long>> cs2gene = CommonQueries
                 .getCs2GeneIdMap( genesToSearch, EntityUtils.getIds( arrays ),
@@ -1250,7 +1253,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             if ( data.length != cols ) {
                 throw new IllegalStateException(
                         "Normalization failed: perhaps vector merge needs to be run on this experiment? (vector length="
-                                + data.length + "; " + cols + " bioAssays in bioassaydimension ID=" + v.getBioAssayDimension().getId() );
+                                + data.length + "; " + cols + " bioAssays in bioassaydimension ID=" + v
+                                .getBioAssayDimension().getId() );
             }
             for ( int j = 0; j < cols; j++ ) {
                 mat.set( i, j, data[j] );
@@ -1266,11 +1270,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param ee ee
+     * @param ee  ee
      * @param obs obs
      * @return Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include
-     *         just the
-     *         data for the subset.
+     * just the
+     * data for the subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             Collection<DoubleVectorValueObject> obs ) {
@@ -1310,10 +1314,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param ees Experiments and/or subsets required
+     * @param ees  Experiments and/or subsets required
      * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
      * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged. Otherwise
-     *         the data in a vector will be for the subset of samples in the ee subset.
+     * the data in a vector will be for the subset of samples in the ee subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             Collection<DoubleVectorValueObject> vecs ) {

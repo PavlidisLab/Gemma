@@ -48,7 +48,8 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 
-    @SuppressWarnings("unused") // Possible external use
+    @SuppressWarnings("unused")
+        // Possible external use
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
             Collection<Long> genes );
 
