@@ -1588,7 +1588,8 @@ public class ExpressionExperimentDaoImpl
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
-                + ObjectFilter.DAO_AD_ALIAS + " ";
+                + ObjectFilter.DAO_AD_ALIAS + " left join "+ ObjectFilter.DAO_EE_ALIAS + ".characteristics as "
+                + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1606,7 +1607,7 @@ public class ExpressionExperimentDaoImpl
         // Restrict to non-troubled EEs for non-administrators
         filters = getObjectFilters( filters );
 
-        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_EE_ALIAS + ".name, " // 1
                 + ObjectFilter.DAO_EE_ALIAS + ".source, " // 2
@@ -1647,8 +1648,10 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES " + "join " + ObjectFilter.DAO_EE_ALIAS
                 + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join "
                 + ObjectFilter.DAO_EE_ALIAS + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
-                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
-
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl "
+                + "left join "+ ObjectFilter.DAO_EE_ALIAS + ".characteristics as "
+                + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
+//        this.getSessionFactory().getCurrentSession().createQuery( queryString );
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
 
