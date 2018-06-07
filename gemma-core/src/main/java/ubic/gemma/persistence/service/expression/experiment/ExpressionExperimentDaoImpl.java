@@ -1586,8 +1586,8 @@ public class ExpressionExperimentDaoImpl
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(*) " // 0
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
-                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
-                + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
+                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA " + "left join " + ObjectFilter.DAO_EE_ALIAS
+                + ".quantitationTypes as qts left join BA.sampleUsed as SU left join SU.sourceTaxon as taxon left join BA.arrayDesignUsed as "
                 + ObjectFilter.DAO_AD_ALIAS + " left join "+ ObjectFilter.DAO_EE_ALIAS + ".characteristics as "
                 + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
 
