@@ -156,7 +156,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
          myPageSize : 50,
          title : 'Platforms',
          totalCount : 0,
-         showOrphans : false,
+         showOrphans : true,
          showMergees : true,
          showTroubled : true,
 
