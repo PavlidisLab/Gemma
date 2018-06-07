@@ -78,7 +78,7 @@ public class RootWebService extends WebService {
     private ResponseDataObject checkUser( String uName, HttpServletResponse sr ) {
         User user = userManager.getCurrentUser();
         if ( !user.getUserName().equals( uName ) ) {
-            Response.Status code = Response.Status.UNAUTHORIZED;
+            Response.Status code = Response.Status.FORBIDDEN;
             return Responder.code( code, new WellComposedErrorBody( code, ERROR_MSG_USER_INFO_ACCESS ), sr );
         }
         return Responder.autoCode( new UserValueObject( user ), sr );
