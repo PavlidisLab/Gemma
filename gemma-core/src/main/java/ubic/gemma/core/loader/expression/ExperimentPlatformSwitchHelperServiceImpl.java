@@ -19,14 +19,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -36,10 +34,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 @Service
 public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlatformSwitchHelperService {
     private static final Log log = LogFactory.getLog( ExperimentPlatformSwitchHelperServiceImpl.class );
-
-    @Autowired
-    private AnalysisUtilService analysisUtilService;
-
     @Autowired
     private AuditTrailService auditTrailService;
 
@@ -49,27 +43,21 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     @Autowired
     private RawExpressionDataVectorService rawVectorService;
 
-    @Autowired
-    private ProcessedExpressionDataVectorService procVectorService;
-
     @Override
     @Transactional
     public void persist( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         expressionExperimentService.update( ee );
+        rawVectorService.update( ee.getRawExpressionDataVectors() ); // no processed vectors at this point.
 
-        analysisUtilService.deleteOldAnalyses( ee );
-
-        procVectorService.update( ee.getProcessedExpressionDataVectors() );
-        rawVectorService.update( ee.getRawExpressionDataVectors() );
-
-        this.audit( ee, "Switch to use " + arrayDesign.getShortName() );
-
+        // a redundant check, but there have been problems.
         for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
             if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
                 throw new IllegalStateException( "A raw vector for QT =" + v.getQuantitationType()
                         + " was not correctly switched to the target platform " + arrayDesign );
             }
         }
+
+        this.audit( ee, "Switch to use " + arrayDesign.getShortName() );
 
         ExperimentPlatformSwitchHelperServiceImpl.log
                 .info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.

@@ -269,56 +269,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 .list();
     }
 
-    /**
-     * @param limit if non-null and positive, you will get a random set of vectors for the experiment
-     * @param ee    ee
-     * @return processed data vectors
-     */
-    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
-
-        if ( limit == null || limit < 0 ) {
-            return this.getProcessedVectors( ee );
-        }
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        List<ProcessedExpressionDataVector> result;
-
-        Integer availableVectorCount = ee.getNumberOfDataVectors();
-        if ( availableVectorCount == null || availableVectorCount == 0 ) {
-            AbstractDao.log.info( "Experiment does not have vector count populated." );
-            // cannot fix this here, because we're read-only.
-        }
-
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee" );
-        q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
-        q.setMaxResults( limit );
-        if ( availableVectorCount != null && availableVectorCount > limit ) {
-            q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
-        }
-
-        // we should already be read-only, so this is probably pointless.
-        q.setReadOnly( true );
-
-        // and so this probably doesn't do anything useful.
-        q.setFlushMode( FlushMode.MANUAL );
-
-        //noinspection unchecked
-        result = q.list();
-        if ( timer.getTime() > 1000 )
-            AbstractDao.log
-                    .info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
-
-        if ( result.isEmpty() ) {
-            AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
-            return result;
-        }
-
-        this.thaw( result ); // needed?
-        return result;
-    }
-
     @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
@@ -490,6 +440,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
         assert expressionExperiment != null;
+        assert expressionExperiment.getId() != null;
 
         /*
          * Get quantitation types that will be removed.
@@ -500,17 +451,23 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + "inner join e.processedExpressionDataVectors p where e.id = :id" )
                 .setParameter( "id", expressionExperiment.getId() ).list();
 
-        this.getSessionFactory().getCurrentSession()
-                .createQuery( "delete from ProcessedExpressionDataVector p where p.expressionExperiment = :ee" )
-                .setParameter( "ee", expressionExperiment ).executeUpdate();
+        Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
+        Hibernate.initialize( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>() );
+        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
 
+        if ( !vectors.isEmpty() ) {
+            this.getSessionFactory().getCurrentSession()
+                    .createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
+                    .setParameterList( "ids", EntityUtils.getIds( vectors ) ).executeUpdate();
+        }
         if ( !qtsToRemove.isEmpty() ) {
-            AbstractDao.log.info( "Deleting " + qtsToRemove + " old quantitation types" );
+            AbstractDao.log.info( "Deleting " + qtsToRemove.size() + " old quantitation types" );
             expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
             this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from QuantitationTypeImpl where id in :ids" )
-                    .setParameterList( "ids", qtsToRemove );
+                    .createQuery( "delete from QuantitationTypeImpl where id in (:ids)" )
+                    .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
         }
     }
 
@@ -605,6 +562,56 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String dedvRemovalQuery = "delete from ProcessedExpressionDataVector as dedv where dedv.quantitationType = ?";
         int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
         AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
+    }
+
+    /**
+     * @param limit if non-null and positive, you will get a random set of vectors for the experiment
+     * @param ee    ee
+     * @return processed data vectors
+     */
+    private Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
+
+        if ( limit == null || limit < 0 ) {
+            return this.getProcessedVectors( ee );
+        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<ProcessedExpressionDataVector> result;
+
+        Integer availableVectorCount = ee.getNumberOfDataVectors();
+        if ( availableVectorCount == null || availableVectorCount == 0 ) {
+            AbstractDao.log.info( "Experiment does not have vector count populated." );
+            // cannot fix this here, because we're read-only.
+        }
+
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( " from ProcessedExpressionDataVector dedv where dedv.expressionExperiment.id = :ee" );
+        q.setParameter( "ee", ee.getId(), LongType.INSTANCE );
+        q.setMaxResults( limit );
+        if ( availableVectorCount != null && availableVectorCount > limit ) {
+            q.setFirstResult( new Random().nextInt( availableVectorCount - limit ) );
+        }
+
+        // we should already be read-only, so this is probably pointless.
+        q.setReadOnly( true );
+
+        // and so this probably doesn't do anything useful.
+        q.setFlushMode( FlushMode.MANUAL );
+
+        //noinspection unchecked
+        result = q.list();
+        if ( timer.getTime() > 1000 )
+            AbstractDao.log
+                    .info( "Fetch " + limit + " vectors from " + ee.getShortName() + ": " + timer.getTime() + "ms" );
+
+        if ( result.isEmpty() ) {
+            AbstractDao.log.warn( "Experiment does not have any processed data vectors" );
+            return result;
+        }
+
+        this.thaw( result ); // needed?
+        return result;
     }
 
     private void addToGene( RankMethod method, Map<Gene, Collection<Double>> result, Double rMean, Double rMax,
@@ -1245,8 +1252,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
             if ( data.length != cols ) {
                 throw new IllegalStateException(
-                        "Normalization failed: perhaps vector merge needs to be run on this experiment? (vector legnth="
-                                + data.length + "; " + cols + " bioAssays in bioassaydimension" );
+                        "Normalization failed: perhaps vector merge needs to be run on this experiment? (vector length="
+                                + data.length + "; " + cols + " bioAssays in bioassaydimension ID=" + v
+                                .getBioAssayDimension().getId() );
             }
             for ( int j = 0; j < cols; j++ ) {
                 mat.set( i, j, data[j] );

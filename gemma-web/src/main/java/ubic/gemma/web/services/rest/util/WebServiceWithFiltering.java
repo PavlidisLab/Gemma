@@ -115,9 +115,9 @@ public abstract class WebServiceWithFiltering<O extends Identifiable, VO extends
         try {
             return Responder.autoCode( service.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter ), sr );
         } catch ( QueryException e ) {
-            if ( log.isDebugEnabled() ) {
+            //if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
-            }
+            //}
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     FilterArg.ERROR_MSG_MALFORMED_REQUEST );
             return Responder.code( error.getStatus(), error, sr );

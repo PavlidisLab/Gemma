@@ -343,8 +343,7 @@ public class DatasetsWebService extends
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
-            // Optional, default false
+            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,// Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         this.checkReqArg( component, "component" );

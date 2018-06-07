@@ -73,6 +73,9 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         this.name = entity.getName();
         this.description = entity.getDescription();
         for ( BioAssay bv : entity.getBioAssays() ) {
+            if (bv == null) {
+                throw new IllegalArgumentException("Null bioassay in " + entity);
+            }
             bioAssays.add( new BioAssayValueObject( bv, false ) );
         }
     }

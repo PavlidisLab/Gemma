@@ -6,10 +6,9 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 /**
  * A base class for filter arguments implementing methods common to all filter arguments.
@@ -56,8 +55,9 @@ public abstract class FilterArg extends MalformableArg {
         super( errorMessage, exception );
     }
 
-    public static FilterArg EMPTY_FILTER(){
-        return new FilterArg(null, null, null, null, null) {};
+    public static FilterArg EMPTY_FILTER() {
+        return new FilterArg( null, null, null, null, null ) {
+        };
     }
 
     /**
@@ -109,10 +109,9 @@ public abstract class FilterArg extends MalformableArg {
             if ( i == parts.length || parts[i].toLowerCase().equals( "and" ) ) {
                 // We either reached an 'AND', or the end of the string.
                 // Add the current disjunction.
-                propertyNames.add( propertyNamesDisjunction.toArray( new String[propertyNamesDisjunction.size()] ) );
-                propertyOperators
-                        .add( propertyOperatorsDisjunction.toArray( new String[propertyOperatorsDisjunction.size()] ) );
-                propertyValues.add( propertyValuesDisjunction.toArray( new String[propertyValuesDisjunction.size()] ) );
+                propertyNames.add( propertyNamesDisjunction.toArray( new String[0] ) );
+                propertyOperators.add( propertyOperatorsDisjunction.toArray( new String[0] ) );
+                propertyValues.add( propertyValuesDisjunction.toArray( new String[0] ) );
                 // Start new disjunction lists
                 propertyNamesDisjunction = new LinkedList<>();
                 propertyOperatorsDisjunction = new LinkedList<>();
@@ -128,7 +127,7 @@ public abstract class FilterArg extends MalformableArg {
     /**
      * Checks if property of given name exists in the given class. If the given string specifies
      * nested properties (E.g. curationDetails.troubled), only the substring before the first dot is evaluated and the
-     * rest of the string is processed in new recursion iteration.
+     * rest of the string is processed in a new recursive iteration.
      *
      * @param property the property to check for. If the string contains dot characters ('.'), only the part
      *                 before the first dot will be evaluated. Substring after the dot will be checked against the
@@ -142,6 +141,17 @@ public abstract class FilterArg extends MalformableArg {
         String[] parts = property.split( "\\.", 2 );
         Field field = checkAllFields( cls, parts[0] );
         Class<?> subCls = field.getType();
+
+        if ( Collection.class.isAssignableFrom( subCls ) ) {
+            ParameterizedType pt = ( ParameterizedType ) field.getGenericType();
+            for ( Type type : pt.getActualTypeArguments() ) {
+                if ( type instanceof Class ) {
+                    subCls = ( Class<?> ) type;
+                    break;
+                }
+            }
+        }
+
         if ( parts.length > 1 ) {
             return getPropertyType( parts[1], subCls );
         } else {
@@ -189,7 +199,7 @@ public abstract class FilterArg extends MalformableArg {
 
     /**
      * Creates an ArrayList of Object Filter arrays, that can be used as a filter parameter for service value object
-     * retrieval.
+     * retrieval. If there is an "in" operator, the required value will be converted into a collection of strings.
      *
      * @return an ArrayList of Object Filter arrays, each array represents a disjunction (OR) of filters. Arrays
      * then represent a conjunction (AND) with other arrays in the list.
@@ -209,7 +219,7 @@ public abstract class FilterArg extends MalformableArg {
 
                 ObjectFilter[] filterArray = new ObjectFilter[properties.length];
                 for ( int j = 0; j < properties.length; j++ ) {
-                    filterArray[j] = new ObjectFilter( properties[j], types[j], values[j], operators[j], objectAlias );
+                    filterArray[j] = getFilterAllowSpecials( properties[j], types[j], values[j], operators[j], objectAlias );
                 }
                 filterList.add( filterArray );
 
@@ -220,6 +230,40 @@ public abstract class FilterArg extends MalformableArg {
         }
 
         return filterList;
+    }
+
+    /**
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g characteristics on EEs.
+     * @param propertyName the referenced property name
+     * @param propertyType the referenced property type
+     * @param requiredValue the required value
+     * @param operator the operator
+     * @param objectAlias the object alias
+     * @return an object filter that accounts for all allowed possibilities.
+     */
+    private ObjectFilter getFilterAllowSpecials(String propertyName, Class propertyType, String requiredValue, String operator, String objectAlias){
+        // Convert to a collection if the current operator is an "in" operator.
+        Object finalValue = operator.equalsIgnoreCase( ObjectFilter.in ) ? convertCollection(requiredValue) : requiredValue;
+
+        // Allow characteristics property filtering
+        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+            propertyName = propertyName.replaceFirst( "characteristics.", "" );
+            objectAlias = ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+        }
+
+        return new ObjectFilter( propertyName, propertyType, finalValue, operator, objectAlias );
+    }
+
+    /**
+     * Tries to parse the given string value into a collection of strings.
+     * @param value the value to be parsed into a collection of strings. This should be a bracketed comma separated list
+     *              of strings.
+     * @return a collection of strings.
+     */
+    private Object convertCollection( String value ) {
+        value = value.replace( "(", "" );
+        value = value.replace( ")", "" );
+        return Arrays.asList(value.split("\\s*,\\s*"));
     }
 
 }
