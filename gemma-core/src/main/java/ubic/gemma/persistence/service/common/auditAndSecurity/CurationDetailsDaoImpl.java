@@ -50,7 +50,7 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
      */
     @Override
     public CurationDetails create() {
-        CurationDetails cd = new CurationDetails( new Date(), null, false, null, false, null, null );
+        CurationDetails cd = new CurationDetails( new Date(), null, true, null, false, null, null );
         return this.create( cd );
     }
 
