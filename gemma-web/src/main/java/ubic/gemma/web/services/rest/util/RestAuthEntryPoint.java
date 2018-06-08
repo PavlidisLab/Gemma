@@ -14,15 +14,21 @@ public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
 
     @Override
+    public void afterPropertiesSet() {
+        setRealmName( "Gemma rest api" );
+    }
+
+    @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
             final AuthenticationException authException ) {
 
         response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
-        response.addHeader( "WWW-Authenticate", "Basic realm=" + getRealmName() + "" );
+        // using 'xBasic' instead of 'basic' to prevent default browser login popup
+        response.addHeader( "WWW-Authenticate", "xBasic realm=" + getRealmName() + "" );
         response.setContentType( "application/json" );
 
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );
-        ResponseErrorObject errorObject = new ResponseErrorObject(errorBody);
+        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody );
         ObjectMapper mapperObj = new ObjectMapper();
 
         try {
@@ -31,10 +37,5 @@ public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
         } catch ( IOException e ) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        setRealmName("Gemma rest api");
     }
 }
