@@ -185,7 +185,7 @@ public class GeoFamilyParser implements Parser<Object> {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( string.equalsIgnoreCase( "cDNA" ) ) {
             sample.setType( "RNA" );
-        } else if ( string.equalsIgnoreCase( "RNA" ) ) {
+        } else if ( string.equalsIgnoreCase( "RNA" ) || string.equalsIgnoreCase( "transcriptomic" ) ) {
             sample.setType( "RNA" );
         } else if ( string.equalsIgnoreCase( "genomic" ) ) {
             sample.setType( "genomic" );
@@ -415,6 +415,8 @@ public class GeoFamilyParser implements Parser<Object> {
             case "valueType":
                 value = GeoDataset.convertStringToValueType( ( String ) value );
                 break;
+            default:
+                // no-op, just leave as a string
         }
 
         try {
@@ -494,11 +496,12 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Turns a line in the format #key = value into a column name and description. This is used to handle lines such as
      * (in a platform section of a GSE file):
+     * 
      * <pre>
      * #SEQ_LEN = Sequence length
      * </pre>
      *
-     * @param line        line
+     * @param line line
      * @param dataToAddTo GeoData object, must not be null.
      */
     private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
@@ -724,7 +727,8 @@ public class GeoFamilyParser implements Parser<Object> {
                     GeoFamilyParser.log
                             .debug( "Data column " + columnName + " will be skipped for " + this.currentSample()
                                     + " - it is an 'unwanted' quantitation type (column number " + currentIndex
-                                    .get( platformForSample ) + ", " + desiredColumnNumber
+                                            .get( platformForSample )
+                                    + ", " + desiredColumnNumber
                                     + "the quantitation type.)" );
             } else {
                 wantedQuantitationTypes.add( desiredColumnNumber );
@@ -768,12 +772,15 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse the column identifier strings from a GDS or GSE file.
      * In GSE files, in a 'platform' section, these become column descriptions for the platform descriptors.
      * For samples in GSE files, they become values for the data in the sample. For example
+     * 
      * <pre>
      * #ID_REF = probe id
      * #VALUE = RMA value
      * </pre>
+     * 
      * In GDS files, if we are in a 'dataset' section, these become "titles" for the samples if they aren't already
      * provided. Here is an example.
+     * 
      * <pre>
      * #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
      * #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
@@ -832,14 +839,15 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line in a 'dataset' section of a GDS file. This is metadata about the experiment.
      *
-     * @param line  line
+     * @param line line
      * @param value value
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void parseDatasetLine( String line, String value ) {
         if ( this.processPlatformsOnly )
             return;
-        /* *************************************************************************************************************
+        /*
+         * *************************************************************************************************************
          * DATASET
          **************************************************************************************************************/
         if ( this.startsWithIgnoreCase( line, "!Dataset_title" ) ) {
@@ -1074,12 +1082,13 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
      *
-     * @param line  line
+     * @param line line
      * @param value value
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void parsePlatformLine( String line, String value ) {
-        /* *************************************************************************************************************
+        /*
+         * *************************************************************************************************************
          * PLATFORM
          **************************************************************************************************************/
         if ( this.startsWithIgnoreCase( line, "!Platform_title" ) ) {
@@ -1267,8 +1276,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
         if ( previousNumTokens != null && tokens.length != previousNumTokens ) {
             GeoFamilyParser.log
-                    .warn( "Last line had " + ( previousNumTokens - 1 ) + " quantitation types, this one has " + (
-                            tokens.length - 1 ) );
+                    .warn( "Last line had " + ( previousNumTokens - 1 ) + " quantitation types, this one has " + ( tokens.length - 1 ) );
         }
 
         previousNumTokens = tokens.length;
@@ -1313,7 +1321,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse a line from a sample section of a GSE file. These contain details about the samples and the 'raw' data for
      * the sample.
      *
-     * @param line  line
+     * @param line line
      * @param value value
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
@@ -1321,7 +1329,8 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( this.processPlatformsOnly )
             return;
 
-        /* *************************************************************************************************************
+        /*
+         * *************************************************************************************************************
          * SAMPLE
          **************************************************************************************************************/
         if ( this.startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
@@ -1444,6 +1453,7 @@ public class GeoFamilyParser implements Parser<Object> {
                 this.checkDataCompleteness(); // because we don't get the table_end.
             }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_type" ) ) {
+            // e.g. SRA - this is not actually the type!
             this.sampleTypeSet( currentSampleAccession, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_comment" ) ) {
             // noop.
@@ -1460,13 +1470,13 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
             // see http://www.ncbi.nlm.nih.gov/geo/info/soft-seq.html
             // e.g. 'transcriptomic' - if not skip? GENOMIC, OTHER
+            if ( value.equals( "genomic" ) ) {
+                ///
+            }
+            this.sampleSetLibSource( currentSampleAccession, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
-            // e.g. 'RNA-seq'
-            // NOTE this doesn't match the strings used and there are other possibilities.
-            // Probably if library_strategy is here at all this should be true?
+            this.sampleSetLibStrategy( currentSampleAccession, value );
             this.sampleSet( currentSampleAccession, "mightNotHaveDataInFile", true );
-            // }
-
         } else if ( this.startsWithIgnoreCase( line, "!Sample_anchor" ) ) {
             // e.g. NlaIII for SAGE
         } else if ( this.startsWithIgnoreCase( line, "!Sample_tag_length" ) ) {
@@ -1479,16 +1489,76 @@ public class GeoFamilyParser implements Parser<Object> {
     }
 
     /**
+     * @param accession
+     * @param string
+     */
+    private void sampleSetLibSource( String accession, String string ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        if ( string.equalsIgnoreCase( "transcriptomic" ) ) {
+            sample.setLibSource( "transcriptomic" );
+        } else if ( string.equalsIgnoreCase( "genomic" ) ) {
+            sample.setLibSource( "genomic" );
+        } else {
+            throw new IllegalArgumentException( "Unknown library source: " + string );
+        }
+
+    }
+
+    /**
+     * @param accession
+     * @param string
+     */
+    private void sampleSetLibStrategy( String accession, String string ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        if ( string.equalsIgnoreCase( "RNA-Seq" ) ) {
+            sample.setLibStrategy( "RNA-Seq" );
+        } else if ( string.equalsIgnoreCase( "Bisulfite-Seq" ) ) {
+            sample.setLibStrategy( "Bisulfite-Seq" );
+        } else if ( string.equalsIgnoreCase( "DNase-Hypersensitivity" ) ) {
+            sample.setLibStrategy( "DNase-Hypersensitivity" );
+        } else if ( string.equalsIgnoreCase( "ATAC-seq" ) ) {
+            sample.setLibStrategy( "ATAC-seq" );
+        } else if ( string.equalsIgnoreCase( "ChIP-Seq" ) ) {
+            sample.setLibStrategy( "ChIP-Seq" );
+        } else if ( string.equalsIgnoreCase( "OTHER" ) ) {
+            sample.setLibStrategy( "OTHER" );
+        } else if ( string.equalsIgnoreCase( "MRE-Seq" ) ) {
+            sample.setLibStrategy( "MRE-Seq" );
+        } else if ( string.equalsIgnoreCase( "miRNA-Seq" ) ) {
+            sample.setLibStrategy( "miRNA-Seq" );
+        } else if ( string.equalsIgnoreCase( "RIP-Seq" ) ) {
+            sample.setLibStrategy( "RIP-Seq" );
+        } else if ( string.equalsIgnoreCase( "Hi-C" ) ) {
+            sample.setLibStrategy( "Hi-C" );
+        } else if ( string.equalsIgnoreCase( "ssRNA-seq" ) ) {
+            sample.setLibStrategy( "ssRNA-seq" );
+        } else if ( string.equalsIgnoreCase( "MBD-Seq" ) ) {
+            sample.setLibStrategy( "MBD-Seq" );
+        } else if ( string.equalsIgnoreCase( "FAIRE-seq" ) ) {
+            sample.setLibStrategy( "FAIRE-seq" );
+        } else if ( string.equalsIgnoreCase( "MeDIP-Seq" ) ) {
+            sample.setLibStrategy( "MeDIP-Seq" );
+        } else if ( string.equalsIgnoreCase( "MNase-Seq" ) ) {
+            sample.setLibStrategy( "MNase-Seq" );
+
+        } else {
+            throw new IllegalArgumentException( "Unknown library source: " + string );
+        }
+
+    }
+
+    /**
      * Parse a line from the "series" section of a GSE file. This contains annotations about the series.
      *
-     * @param line  line
+     * @param line line
      * @param value value
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void parseSeriesLine( String line, String value ) {
         if ( this.processPlatformsOnly )
             return;
-        /* *************************************************************************************************************
+        /*
+         * *************************************************************************************************************
          * SERIES
          **************************************************************************************************************/
         if ( this.startsWithIgnoreCase( line, "!Series_title" ) ) {
@@ -1637,11 +1707,12 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse a line from a "subset" section of a GDS file. This section contains information about experimental subsets
      * within a dataset. These usually correspond to different factor values such as "drug-treated" vs. "placebo".
      *
-     * @param line  line
+     * @param line line
      * @param value value
      */
     private void parseSubsetLine( String line, String value ) {
-        /* *************************************************************************************************************
+        /*
+         * *************************************************************************************************************
          * SUBSET
          **************************************************************************************************************/
         if ( this.startsWithIgnoreCase( line, "!Dataset_title" ) ) {

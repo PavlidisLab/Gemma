@@ -62,6 +62,37 @@ public class GeoDataset extends GeoData {
      * gene expression array-based, gene expression SAGE-based, gene expression MPSS-based, gene expression
      * RT-PCR-based, protein expression array-based, protein expression MS-based, array CGH, ChIP-chip, SNP
      *
+     * Complete list of possibilities according to Nathaniel (6/2018)
+     * 
+     * Expression profiling by high throughput sequencing
+     * Genome binding/occupancy profiling by high throughput sequencing
+     * Expression profiling by array
+     * Non-coding RNA profiling by array
+     * Genome variation profiling by genome tiling array
+     * Genome variation profiling by high throughput sequencing
+     * Other
+     * Non-coding RNA profiling by high throughput sequencing
+     * Genome variation profiling by SNP array
+     * SNP genotyping by SNP array
+     * Expression profiling by genome tiling array
+     * Genome variation profiling by array
+     * Expression profiling by RT-PCR
+     * Methylation profiling by high throughput sequencing
+     * Genome binding/occupancy profiling by genome tiling array
+     * Methylation profiling by genome tiling array
+     * Methylation profiling by array
+     * Genome binding/occupancy profiling by array
+     * Expression profiling by SAGE
+     * Protein profiling by protein array
+     * Genome binding/occupancy profiling by SNP array
+     * Non-coding RNA profiling by genome tiling array
+     * Third-party reanalysis
+     * Expression profiling by MPSS
+     * Expression profiling by SNP array
+     * Methylation profiling by SNP array
+     * Protein profiling by Mass Spec
+     *
+     * 
      * @param string experiment type string
      * @return experiment type object
      */
@@ -69,12 +100,18 @@ public class GeoDataset extends GeoData {
         switch ( string ) {
             case "Expression profiling by array":
             case "gene expression array-based":
+            case "Non-coding RNA profiling by array":
                 return ExperimentType.geneExpressionArraybased;
             case "gene expression SAGE-based":
+            case "Expression profiling by SAGE":
                 return ExperimentType.geneExpressionSAGEbased;
+            case "Expression profiling by high throughput sequencing":
             case "gene expression MPSS-based":
+            case "Expression profiling by MPSS":
+            case "Non-coding RNA profiling by high throughput sequencing":
                 return ExperimentType.geneExpressionMPSSBased;
             case "gene expression RT-PCR-based":
+            case "Expression profiling by RT-PCR":
                 return ExperimentType.geneExpressionRTPCRbased;
             case "protein expression array-based":
                 return ExperimentType.proteinExpressionArraybased;
@@ -85,17 +122,34 @@ public class GeoDataset extends GeoData {
             case "ChIP-chip":
                 return ExperimentType.ChIPChip;
             case "SNP":
+            case "Genome variation profiling by genome tiling array":
+            case "Genome variation profiling by SNP array":
                 return ExperimentType.SNP;
-            case "dual channel":  // legacy term.
+            case "dual channel": // legacy term.
                 GeoDataset.log
                         .warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
                 return ExperimentType.geneExpressionArraybased;
-            case "single channel":  // legacy term
+            case "single channel": // legacy term
                 GeoDataset.log
                         .warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
                 return ExperimentType.geneExpressionArraybased;
             case "Other":
-                // 5C experiments, etc.
+            case "Genome binding/occupancy profiling by high throughput sequencing":
+            case "Genome variation profiling by high throughput sequencing":
+            case "Expression profiling by genome tiling array":
+            case "Genome variation profiling by array":
+            case "Methylation profiling by high throughput sequencing":
+            case "Genome binding/occupancy profiling by genome tiling array":
+            case "Methylation profiling by genome tiling array":
+            case "Methylation profiling by array":
+            case "Genome binding/occupancy profiling by array":
+            case "Protein profiling by protein array":
+            case "Genome binding/occupancy profiling by SNP array":
+            case "Non-coding RNA profiling by genome tiling array":
+            case "Third-party reanalysis":
+            case "Expression profiling by SNP array":
+            case "Methylation profiling by SNP array":
+            case "Protein profiling by Mass Spec":
                 return ExperimentType.Other;
             default:
                 throw new IllegalArgumentException( "Unknown experiment type " + string );

@@ -74,7 +74,7 @@ GPL20982=GPL5175
 GPL21472=GPL5175
 GPL22891=GPL5175
 GPL22995=GPL5175
-
+GPL4814=GPL5175
 
 # RaEx-1_0-st
 # this list includes both alts of the gene and exon versions (if any)
