@@ -20,6 +20,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -48,6 +49,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String metadata;
     private String batchEffect;
     private String batchConfound;
+    private ArrayDesign originalPlatform;
 
     @Override
     public int hashCode() {
@@ -225,6 +227,14 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setBatchEffect( String batchEffect ) {
         this.batchEffect = batchEffect;
+    }
+
+    public ArrayDesign getOriginalPlatform() {
+        return originalPlatform;
+    }
+
+    public void setOriginalPlatform( ArrayDesign originalPlatform ) {
+        this.originalPlatform = originalPlatform;
     }
 
     public static final class Factory {
