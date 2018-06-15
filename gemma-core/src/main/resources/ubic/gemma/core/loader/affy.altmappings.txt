@@ -93,6 +93,11 @@ GPL20932=GPL17586
 GPL21339=GPL17586
 GPL24299=GPL17586
 
+# RTA-2_0
+# GPL23629 is the exon version
+GPL22388=GPL22388
+GPL23629=GPL22388
+
 #########################
 # gene arrays, some lack CDFs so run as an exon array
 
