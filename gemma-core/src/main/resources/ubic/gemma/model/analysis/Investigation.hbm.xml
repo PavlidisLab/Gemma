@@ -126,10 +126,6 @@
                     </key>
                     <one-to-many class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector"/>
                 </set>
-                <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"
-                             cascade="all" lazy="proxy" fetch="select">
-                    <column name="ORIGINAL_PLATFORM_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-                </many-to-one>
             </subclass>
             <subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet"
                       discriminator-value="ExpressionExperimentSubSet"
