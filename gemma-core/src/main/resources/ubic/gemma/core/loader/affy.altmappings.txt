@@ -200,8 +200,11 @@ GPL19433=GPL6244
 GPL20171=GPL6244
 GPL23526=GPL6244
 
-# Clariom_s_Human 
+# Clariom_s_Human
 GPL23159=GPL23159
+
+# Clariom_s_Mouse
+GPL23038=GPL23038
 
 
 # RaGene-1_0-st
