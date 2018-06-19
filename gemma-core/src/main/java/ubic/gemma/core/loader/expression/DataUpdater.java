@@ -862,6 +862,7 @@ public class DataUpdater {
             }
 
             bmMap.put( bm.getName(), bm );
+            bmMap.put( bioAssay.getName(), bm ); // this is okay, if we have only one platform, which should be the case.
 
             if ( bioAssay.getAccession() != null ) {
                 // e.g. GSM123455
@@ -1131,7 +1132,9 @@ public class DataUpdater {
             if ( toBeSwitched != null && !toBeSwitched.contains( ba ) )
                 continue;
 
+            ba.setOriginalPlatform( ba.getArrayDesignUsed() );
             ba.setArrayDesignUsed( targetPlatform );
+
             i++;
 
         }

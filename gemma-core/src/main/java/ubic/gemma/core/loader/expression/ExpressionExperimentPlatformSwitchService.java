@@ -144,7 +144,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             designElementMap.put( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE, elsWithNoSeq );
         }
 
-        boolean multiPlatformPerSample = this.checkMultiPerSample( ee, arrayDesign );
+        boolean multiPlatformPerSample = this.switchPlatform( ee, arrayDesign );
         /*
          * For a multiplatform-per-sample case ("Case 2", platforms are disjoint): (note that some samples might just be
          * on one platform...)
@@ -220,11 +220,12 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         return this.switchExperimentToArrayDesign( expExp, arrayDesign );
     }
 
-    private boolean checkMultiPerSample( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
+    private boolean switchPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         boolean multiPlatformPerSample = false;
         for ( BioAssay assay : ee.getBioAssays() ) {
 
             // Switch the assay to use the desired platform
+            assay.setOriginalPlatform( assay.getArrayDesignUsed() );
             assay.setArrayDesignUsed( arrayDesign );
 
             /*
