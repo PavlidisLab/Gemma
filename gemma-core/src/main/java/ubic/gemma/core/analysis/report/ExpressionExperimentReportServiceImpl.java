@@ -343,6 +343,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
+        HashMap<Long, Exception> failed = new HashMap<>();
+
         Calendar calendar = Calendar.getInstance();
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
 
@@ -351,12 +353,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         for ( ExpressionExperiment ee : ees ) {
             try {
                 recalculateExperimentBatchInfo( ee );
-            }catch(Exception e){
-                log.error( "Batch effect recalculation failed for experiment id "+ee.getId() );
+            } catch ( Exception e ) {
+                log.error( "Batch effect recalculation failed for experiment id " + ee.getId() );
                 e.printStackTrace();
+                failed.put( ee.getId(), e );
             }
         }
         log.info( "Finished batch info recalculation task." );
+        if ( !failed.isEmpty() ) {
+            log.warn( "! There were failures during the batch info recalculation: " );
+            for ( Long id : failed.keySet() ) {
+                log.warn( "EE ID " + id + " failed on: " + failed.get( id ) );
+            }
+        }
     }
 
     @Override
