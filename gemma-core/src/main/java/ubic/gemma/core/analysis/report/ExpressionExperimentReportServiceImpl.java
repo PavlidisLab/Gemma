@@ -349,30 +349,36 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
         log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
-            String confound = expressionExperimentService.getBatchConfound( ee );
-            String effect = expressionExperimentService.getBatchEffectDescription( ee );
-            boolean update = false;
-
-            if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
-                ee.setBatchConfound( confound );
-                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
-                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
-                update = true;
-            }
-
-            if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
-                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
-                ee.setBatchEffect( effect );
-                update = true;
-            }
-
-            if ( update ) {
-                log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
-                expressionExperimentService.update( ee );
-            }
+            recalculateExperimentBatchInfo( ee );
         }
         log.info( "Finished batch info recalculation task." );
+    }
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
+        String confound = expressionExperimentService.getBatchConfound( ee );
+        String effect = expressionExperimentService.getBatchEffectDescription( ee );
+        boolean update = false;
+
+        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
+            ee.setBatchConfound( confound );
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
+            update = true;
+        }
+
+        if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
+            ee.setBatchEffect( effect );
+            update = true;
+        }
+
+        if ( update ) {
+            log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
+            expressionExperimentService.update( ee );
+        }
     }
 
     private Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {

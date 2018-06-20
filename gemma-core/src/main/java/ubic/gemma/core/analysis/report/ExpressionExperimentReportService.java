@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.report;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 
 import java.util.Collection;
@@ -81,4 +82,11 @@ public interface ExpressionExperimentReportService {
     @SuppressWarnings("unused") // Used by scheduler
     @Secured({ "GROUP_AGENT" })
     void recalculateBatchInfo();
+
+    /**
+     * Recalculates the batch effect and batch confound information for the given dataset.
+     * @param ee the experiment to recalculate the batch properties for.
+     */
+    @Secured({ "GROUP_AGENT" })
+    void recalculateExperimentBatchInfo( ExpressionExperiment ee );
 }
