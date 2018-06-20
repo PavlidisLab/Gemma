@@ -349,7 +349,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
         log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
-            recalculateExperimentBatchInfo( ee );
+            try {
+                recalculateExperimentBatchInfo( ee );
+            }catch(Exception e){
+                log.error( "Batch effect recalculation failed for experiment id "+ee.getId() );
+                e.printStackTrace();
+            }
         }
         log.info( "Finished batch info recalculation task." );
     }
