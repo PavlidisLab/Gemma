@@ -468,8 +468,16 @@ public class ExpressionExperimentServiceImpl
         }
 
         StringBuilder result = new StringBuilder();
+        // Confounds have to be sorted in order to always get the same string
+        List<BatchConfoundValueObject> listConfounds = new ArrayList<>(confounds);
+        Collections.sort( listConfounds, new Comparator<BatchConfoundValueObject>() {
+            @Override
+            public int compare( BatchConfoundValueObject t0, BatchConfoundValueObject t1 ) {
+                return t0.toString().compareTo( t1.toString() );
+            }
+        } );
 
-        for ( BatchConfoundValueObject c : confounds ) {
+        for ( BatchConfoundValueObject c : listConfounds ) {
             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
                 if ( !result.toString().isEmpty() ) {
