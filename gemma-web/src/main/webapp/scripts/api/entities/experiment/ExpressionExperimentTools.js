@@ -1020,7 +1020,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var be = (ee.batchConfound !== null && ee.batchConfound !== "")
             ? {
                 html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
-                + ee.batchConfound + " (batch confound)"
+                + ee.batchConfound
             }
             : {
                 html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') + ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch confound not detected'
