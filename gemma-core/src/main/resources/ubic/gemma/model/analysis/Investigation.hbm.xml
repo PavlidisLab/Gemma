@@ -46,7 +46,7 @@
                 <column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </set>
-       
+
         <subclass name="ubic.gemma.model.expression.experiment.BioAssaySet"
                   abstract="true">
             <subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment"

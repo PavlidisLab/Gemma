@@ -343,36 +343,56 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
+        HashMap<Long, Exception> failed = new HashMap<>();
+
         Calendar calendar = Calendar.getInstance();
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
 
         Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
         log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
-            String confound = expressionExperimentService.getBatchConfound( ee );
-            String effect = expressionExperimentService.getBatchEffectDescription( ee );
-            boolean update = false;
-
-            if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
-                ee.setBatchConfound( confound );
-                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
-                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
-                update = true;
-            }
-
-            if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
-                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
-                ee.setBatchEffect( effect );
-                update = true;
-            }
-
-            if ( update ) {
-                log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
-                expressionExperimentService.update( ee );
+            try {
+                recalculateExperimentBatchInfo( ee );
+            } catch ( Exception e ) {
+                log.error( "Batch effect recalculation failed for experiment id " + ee.getId() );
+                e.printStackTrace();
+                failed.put( ee.getId(), e );
             }
         }
         log.info( "Finished batch info recalculation task." );
+        if ( !failed.isEmpty() ) {
+            log.warn( "! There were failures during the batch info recalculation: " );
+            for ( Long id : failed.keySet() ) {
+                log.warn( "EE ID " + id + " failed on: " + failed.get( id ) );
+            }
+        }
+    }
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
+        String confound = expressionExperimentService.getBatchConfound( ee );
+        String effect = expressionExperimentService.getBatchEffectDescription( ee );
+        boolean update = false;
+
+        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
+            ee.setBatchConfound( confound );
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
+            update = true;
+        }
+
+        if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
+            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
+            ee.setBatchEffect( effect );
+            update = true;
+        }
+
+        if ( update ) {
+            log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
+            expressionExperimentService.update( ee );
+        }
     }
 
     private Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {

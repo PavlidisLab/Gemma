@@ -11,7 +11,7 @@ d["ENSG00000000938",]
 
 y=voom(d, model.matrix(~ e$disease),plot=TRUE,lib.size=colSums(d))
 y$E["ENSG00000000938",] # this is correct; we have  8.857276  9.183446 11.344523 11.156209
-y$weights[3,] # we get  6.833731  6.610982 15.259802 15.224569 
+y$weights[3,] # we get  15.196517 15.011429  9.029577  5.309208 (different order)
 
 # without weights
 fit=lmFit(y$E,model.matrix(~ e$disease) )
@@ -29,7 +29,7 @@ topTable(fit, coef=2, sort.by="p")
 
 # with our weights
 # our weights are slightly different (lowess on small data set)
-w<-read.delim("GSE29006.diffex.test.weights.txt", sep='\t', header=F)
+w<-read.delim("GSE29006.diffex.test.weights.txt", sep='', header=F)
 # the ordering of this file is incorrect (sorry)
 w<-w[,c(3,4,1,2)]
 y$weights = w

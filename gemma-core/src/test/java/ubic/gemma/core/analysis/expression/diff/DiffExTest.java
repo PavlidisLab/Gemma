@@ -161,7 +161,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 ContrastResult contrast = r.getContrasts().iterator().next();
 
                 assertEquals( 0.007055717, r.getPvalue(),
-                        0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422; R with our weights: 0.009858270, 2.2317534; t=9.997007
+                        0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
                 // up to sign
                 assertEquals( 2.2300049, Math.abs( contrast.getCoefficient() ), 0.001 );
                 break;
@@ -178,12 +178,13 @@ public class DiffExTest extends AbstractGeoServiceTest {
         resultSet = results.getResultSets().iterator().next();
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
+                // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
-                assertEquals( 2.232816, Math.abs( contrast.getCoefficient() ), 0.001 ); // yes! 
-                assertEquals( 0.006680, contrast.getPvalue(), 0.00001 );
-                assertEquals( 12.17342, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006680, r.getPvalue(), 0.00001 );
+                assertEquals( 2.2728963, Math.abs( contrast.getCoefficient() ), 0.001 ); // yes! 
+                assertEquals( 0.006149004, contrast.getPvalue(), 0.00001 );
+                assertEquals( 12.693680, Math.abs( contrast.getTstat() ), 0.001 );
+                assertEquals( 0.006149004, r.getPvalue(), 0.00001 );
                 break;
             }
         }

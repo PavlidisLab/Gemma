@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -100,6 +101,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private AuditTrailService auditTrailService;
     @Autowired
     private OutlierDetectionService outlierDetectionService;
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Override
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
@@ -110,8 +113,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             this.removeInvalidatedData( ee );
             this.processForMissingValues( ee );
             processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-
-            return this.processExceptForVectorCreate( ee );
+            ee = this.processExceptForVectorCreate( ee );
+            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
+            return ee;
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
         }
@@ -126,13 +130,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 this.processForSampleCorrelation( ee );
                 this.processForMeanVarianceRelation( ee );
                 this.processForPca( ee );
+                expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
                 throw new PreprocessingException( e );
             }
         } else {
             this.process( ee );
         }
-
     }
 
     @Override
@@ -184,6 +188,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             this.removeInvalidatedData( ee );
             this.processExceptForVectorCreate( ee );
+            expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
 
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
@@ -210,7 +215,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return outliers;
     }
 
-    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ){
+    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
         // refresh into context.
         ee = expressionExperimentService.thawLite( ee );
 

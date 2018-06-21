@@ -35,10 +35,12 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class GeoSample extends GeoData implements Comparable<GeoData> {
 
-    private static final long serialVersionUID = -8820012224856178673L;
+    public enum LibraryStrategy {
+        OTHER, RNASEQ
+    }
+
     private static final Log log = LogFactory.getLog( GeoSample.class.getName() );
-    private final Collection<GeoReplication> replicates;
-    private final Collection<GeoVariable> variables;
+    private static final long serialVersionUID = -8820012224856178673L;
     // SAGE item
     private String anchor;
     private List<GeoChannel> channels;
@@ -47,19 +49,26 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private String hybProtocol = "";
     private boolean isGenePix = false;
     private String lastUpdateDate = "";
+    private String libSource;
+    private String libStrategy;
     private boolean mightNotHaveDataInFile = false;
     private Collection<GeoPlatform> platforms;
+    private final Collection<GeoReplication> replicates;
     private String scanProtocol = "";
     private Collection<String> seriesAppearsIn = new HashSet<>();
     private String supplementaryFile = "";
     private int tagCount;
     private int tagLength;
+
     /**
      * This is used to store the title for the sample as found in the GDS file, if it differs from the one in the GSE
      * file
      */
     private String titleInDataset = null;
+
     private String type = "DNA";
+
+    private final Collection<GeoVariable> variables;
     private boolean warnedAboutGenePix = false;
 
     public GeoSample() {
@@ -157,13 +166,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.anchor;
     }
 
-    /**
-     * @param anchor The anchor to set. (SAGE)
-     */
-    public void setAnchor( String anchor ) {
-        this.anchor = anchor;
-    }
-
     public GeoChannel getChannel( int i ) {
         if ( i <= 0 || i > channels.size() )
             throw new IllegalArgumentException(
@@ -191,22 +193,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.channels;
     }
 
-    public void setChannels( List<GeoChannel> channelData ) {
-        this.channels = channelData;
-    }
-
     /**
      * @return Returns the dataProcessing.
      */
     public String getDataProcessing() {
         return this.dataProcessing;
-    }
-
-    /**
-     * @param dataProcessing The dataProcessing to set.
-     */
-    public void setDataProcessing( String dataProcessing ) {
-        this.dataProcessing = dataProcessing;
     }
 
     /**
@@ -217,30 +208,10 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-        this.isGenePix = description.contains( "GenePix" );
-        if ( isGenePix && !this.warnedAboutGenePix ) {
-            GeoSample.log
-                    .warn( "GenePix data detected: Some unused quantitation types may be skipped (further warnings skipped)" );
-            warnedAboutGenePix = true;
-        }
-    }
-
-    /**
      * @return Returns the hybProtocol.
      */
     public String getHybProtocol() {
         return this.hybProtocol;
-    }
-
-    /**
-     * @param hybProtocol The hybProtocol to set.
-     */
-    public void setHybProtocol( String hybProtocol ) {
-        this.hybProtocol = hybProtocol;
     }
 
     /**
@@ -250,8 +221,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return lastUpdateDate;
     }
 
-    public void setLastUpdateDate( String lastUpdateDate ) {
-        this.lastUpdateDate = lastUpdateDate;
+    public String getLibSource() {
+        return this.libSource;
+    }
+
+    public String getLibStrategy() {
+        return this.libStrategy;
     }
 
     /**
@@ -307,19 +282,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.scanProtocol;
     }
 
-    /**
-     * @param scanProtocol The scanProtocol to set.
-     */
-    public void setScanProtocol( String scanProtocol ) {
-        this.scanProtocol = scanProtocol;
-    }
-
     public Collection<String> getSeriesAppearsIn() {
         return seriesAppearsIn;
-    }
-
-    public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
-        this.seriesAppearsIn = otherSeriesAppearsIn;
     }
 
     /**
@@ -327,10 +291,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      */
     public String getSupplementaryFile() {
         return supplementaryFile;
-    }
-
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
     }
 
     /**
@@ -341,32 +301,14 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     /**
-     * @param tagCount The tagCount to set. (SAGE)
-     */
-    public void setTagCount( int tagCount ) {
-        this.tagCount = tagCount;
-    }
-
-    /**
      * @return Returns the tagLength. (SAGE)
      */
     public int getTagLength() {
         return this.tagLength;
     }
 
-    /**
-     * @param tagLength The tagLength to set. (SAGE)
-     */
-    public void setTagLength( int tagLength ) {
-        this.tagLength = tagLength;
-    }
-
     public String getTitleInDataset() {
         return titleInDataset;
-    }
-
-    public void setTitleInDataset( String titleInDataset ) {
-        this.titleInDataset = titleInDataset;
     }
 
     /**
@@ -379,15 +321,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     /**
-     * Sets the sample type (ie. DNA, RNA, etc.)
-     *
-     * @param type new type
-     */
-    public void setType( String type ) {
-        this.type = type;
-    }
-
-    /**
      * @return Returns the variables.
      */
     public Collection<GeoVariable> getVariables() {
@@ -396,7 +329,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     /**
      * @return true if the data uses a platform that, generally, we can use the data from. Will be false for MPSS, SAGE
-     * and Exon array data.
+     *         and Exon array data.
      */
     public boolean hasUsableData() {
         if ( platforms == null || platforms.isEmpty() ) {
@@ -421,21 +354,107 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return mightNotHaveDataInFile;
     }
 
+    /**
+     * @param anchor The anchor to set. (SAGE)
+     */
+    public void setAnchor( String anchor ) {
+        this.anchor = anchor;
+    }
+
+    public void setChannels( List<GeoChannel> channelData ) {
+        this.channels = channelData;
+    }
+
+    /**
+     * @param dataProcessing The dataProcessing to set.
+     */
+    public void setDataProcessing( String dataProcessing ) {
+        this.dataProcessing = dataProcessing;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+        this.isGenePix = description.contains( "GenePix" );
+        if ( isGenePix && !this.warnedAboutGenePix ) {
+            GeoSample.log
+                    .warn( "GenePix data detected: Some unused quantitation types may be skipped (further warnings skipped)" );
+            warnedAboutGenePix = true;
+        }
+    }
+
+    /**
+     * @param hybProtocol The hybProtocol to set.
+     */
+    public void setHybProtocol( String hybProtocol ) {
+        this.hybProtocol = hybProtocol;
+    }
+
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
+    public void setLibSource( String libSource ) {
+        this.libSource = libSource;
+    }
+
+    public void setLibStrategy( String libStrategy ) {
+        this.libStrategy = libStrategy;
+    }
+
     public void setMightNotHaveDataInFile( boolean mightNotHaveDataInFile ) {
         this.mightNotHaveDataInFile = mightNotHaveDataInFile;
     }
 
-    @Override
-    public String toString() {
-        return super.toString() + ( this.getPlatforms().size() > 0 ?
-                " on " + ( this.getPlatforms().size() == 1 ?
-                        this.getPlatforms().iterator().next() :
-                        ( this.getPlatforms().size() + " platforms" ) ) :
-                "" );
+    /**
+     * @param scanProtocol The scanProtocol to set.
+     */
+    public void setScanProtocol( String scanProtocol ) {
+        this.scanProtocol = scanProtocol;
     }
 
-    public enum LibraryStrategy {
-        OTHER, RNASEQ
+    public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
+        this.seriesAppearsIn = otherSeriesAppearsIn;
+    }
+
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
+    }
+
+    /**
+     * @param tagCount The tagCount to set. (SAGE)
+     */
+    public void setTagCount( int tagCount ) {
+        this.tagCount = tagCount;
+    }
+
+    /**
+     * @param tagLength The tagLength to set. (SAGE)
+     */
+    public void setTagLength( int tagLength ) {
+        this.tagLength = tagLength;
+    }
+
+    public void setTitleInDataset( String titleInDataset ) {
+        this.titleInDataset = titleInDataset;
+    }
+
+    /**
+     * Sets the sample type (ie. DNA, RNA, etc.)
+     *
+     * @param type new type
+     */
+    public void setType( String type ) {
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ( this.getPlatforms().size() > 0
+                ? " on " + ( this.getPlatforms().size() == 1 ? this.getPlatforms().iterator().next() : ( this.getPlatforms().size() + " platforms" ) )
+                : "" );
     }
 
 }

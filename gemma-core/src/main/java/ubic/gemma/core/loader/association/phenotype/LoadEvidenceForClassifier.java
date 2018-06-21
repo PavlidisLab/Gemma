@@ -170,7 +170,6 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
         BibliographicReference bi = BibliographicReference.Factory.newInstance();
         bi.setPubAccession( de );
 
-        System.out.println( pubmed );
         BibliographicReference b = this.bibliographicReferenceService.find( bi );
 
         for ( MedicalSubjectHeading m : b.getMeshTerms() ) {

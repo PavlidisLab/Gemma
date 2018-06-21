@@ -43,9 +43,25 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     private Integer sequenceReadLength;
 
     private ArrayDesign arrayDesignUsed;
+    private ArrayDesign originalPlatform;
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
     private String metadata;
+
+    @Override
+    public int hashCode() {
+        int hashCode;
+
+        if ( this.getId() != null ) {
+            return 29 * this.getId().hashCode();
+        }
+        int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
+
+        int descHash = this.getDescription() == null ? 0 : this.getDescription().hashCode();
+        hashCode = 29 * nameHash + descHash;
+
+        return hashCode;
+    }
 
     @Override
     public boolean equals( Object object ) {
@@ -63,21 +79,6 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
         return this.getDescription() == null || that.getDescription() == null || this.getDescription()
                 .equals( that.getDescription() );
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode;
-
-        if ( this.getId() != null ) {
-            return 29 * this.getId().hashCode();
-        }
-        int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
-
-        int descHash = this.getDescription() == null ? 0 : this.getDescription().hashCode();
-        hashCode = 29 * nameHash + descHash;
-
-        return hashCode;
     }
 
     public DatabaseEntry getAccession() {
@@ -98,8 +99,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the
-     *         entity tracks
-     *         when this was done.
+     * entity tracks
+     * when this was done.
      */
     public Boolean getIsOutlier() {
         return this.isOutlier;
@@ -111,7 +112,7 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return Indicates the date that the assay was processed in the original study. This would correspond to "batch"
-     *         information and will often be a "scan date" or similar information extracted from the raw data files.
+     * information and will often be a "scan date" or similar information extracted from the raw data files.
      */
     public Date getProcessingDate() {
         return this.processingDate;
@@ -137,8 +138,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false
-     *         otherwise.
-     *         It should be left as null if it isn't known.
+     * otherwise.
+     * It should be left as null if it isn't known.
      */
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
@@ -150,8 +151,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the
-     *         total of the
-     *         values for the elements assayed.
+     * total of the
+     * values for the elements assayed.
      */
     public Integer getSequenceReadCount() {
         return this.sequenceReadCount;
@@ -163,9 +164,9 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the
-     *         length
-     *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
-     *         representing the mean read length.
+     * length
+     * for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
+     * representing the mean read length.
      */
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;
@@ -181,6 +182,14 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     public void setMetadata( String metadata ) {
         this.metadata = metadata;
+    }
+
+    public ArrayDesign getOriginalPlatform() {
+        return originalPlatform;
+    }
+
+    public void setOriginalPlatform( ArrayDesign originalPlatform ) {
+        this.originalPlatform = originalPlatform;
     }
 
     public static final class Factory {
