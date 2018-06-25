@@ -4,7 +4,7 @@
 # Usable for all places we use categories:
 http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
 http://purl.obolibrary.org/obo/OBI_0000181	population
-http://www.ebi.ac.uk/efo/EFO_0000322	cell line
+http://purl.obolibrary.org/obo/CLO_0000031	cell line
 http://www.ebi.ac.uk/efo/EFO_0000324	cell type
 http://www.ebi.ac.uk/efo/EFO_0000352	clinical history
 http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
