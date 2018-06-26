@@ -117,7 +117,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
                 "select g.id, g.description, count(m), g.name from GeneSet g"
-                        + " left join g.members m where g.id in (:ids) group by g.id" ).setParameterList( "ids", ids )
+                        + " left join g.members m where g.id in (:ids) group by g.id" )
+                .setParameterList( "ids", ids )
                 .list();
 
         Map<Long, Taxon> taxa = this.getTaxa( ids );
@@ -131,7 +132,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             dvo.setName( ( String ) oa[3] );
 
             Taxon t = taxa.get( dvo.getId() );
-            dvo.setTaxonId( t.getId() );
+            if ( t == null ) { // NPE bug 60
+                log.warn( "No taxon found for " + dvo );
+                continue;
+            }
+            dvo.setTaxonId( t.getId() ); 
             dvo.setTaxonName( t.getCommonName() );
             result.add( dvo );
         }
@@ -163,7 +168,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             return new HashSet<>();
         assert taxon != null;
         // slow? would it be faster to just findByName and then restrict taxon?
-        List result = this.getSessionFactory().getCurrentSession().createQuery(
+        List<?> result = this.getSessionFactory().getCurrentSession().createQuery(
                 "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
                 .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
         if ( timer.getTime() > 500 )
@@ -188,6 +193,12 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         return this.findByName( entity.getName() ).iterator().next();
     }
 
+    /**
+     * Retrieve taxa for genesets
+     * 
+     * @param ids
+     * @return
+     */
     private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
         // fast
         //noinspection unchecked
@@ -199,7 +210,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         Map<Long, Taxon> result = new HashMap<>();
         for ( Object[] o : q ) {
             //noinspection RedundantCast // Without casting we get suspicious call warning
-            if ( result.containsKey( ( Long ) o[0] ) ) {
+            if ( result.containsKey( o[0] ) ) {
                 throw new IllegalStateException( "More than one taxon in gene set id= " + o[0] );
             }
 
