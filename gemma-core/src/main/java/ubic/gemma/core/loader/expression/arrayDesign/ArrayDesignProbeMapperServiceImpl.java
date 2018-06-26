@@ -158,6 +158,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         int count = 0;
         int hits = 0;
+        int numWithNoResults = 0;
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
@@ -165,8 +166,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             Map<String, Collection<BlatAssociation>> results = this
                     .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
 
-            if ( results == null )
+            if ( results == null ) {
+                numWithNoResults++;
                 continue;
+            }
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
@@ -198,6 +201,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+
+        if ( numWithNoResults > 0 ) {
+            ArrayDesignProbeMapperServiceImpl.log.info( numWithNoResults + " had no blat results" );
+        }
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
