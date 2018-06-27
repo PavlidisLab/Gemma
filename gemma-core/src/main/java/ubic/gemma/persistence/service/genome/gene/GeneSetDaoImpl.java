@@ -132,7 +132,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             dvo.setName( ( String ) oa[3] );
 
             Taxon t = taxa.get( dvo.getId() );
-            if ( t == null ) { // NPE bug 60
+            if ( t == null ) { // NPE bug 60 - happens if we have leftover (empty) gene sets for taxa that were removed.
                 log.warn( "No taxon found for " + dvo );
                 continue;
             }
@@ -140,8 +140,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             dvo.setTaxonName( t.getCommonName() );
             result.add( dvo );
         }
-
-        return result;
+            return result;
     }
 
     @Override
