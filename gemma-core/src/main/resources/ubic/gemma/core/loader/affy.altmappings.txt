@@ -94,6 +94,9 @@ GPL20932=GPL17586
 GPL21339=GPL17586
 GPL24299=GPL17586
 
+# HT_MG-430A
+GPL8759=GPL8759
+
 #########################
 # gene arrays, some lack CDFs so run as an exon array
 
