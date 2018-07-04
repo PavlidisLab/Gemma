@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.externalDb;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +29,7 @@ import ubic.gemma.persistence.util.Settings;
 import java.util.Collection;
 
 /**
- * These tests require a populated Human database. Valid as of 11/2009.
+ * These tests require a populated Human database. Valid as of 11/2009 on hg19
  *
  * @author pavlidis
  */
@@ -44,7 +45,7 @@ public class GoldenPathQueryTest extends TestCase {
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
-        TestCase.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
+        Assert.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
     public final void testQueryMrna() {
@@ -54,9 +55,9 @@ public class GoldenPathQueryTest extends TestCase {
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
         // assertEquals( 3, actualValue.size() );
-        TestCase.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
+        Assert.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
         BlatResult r = actualValue.iterator().next();
-        TestCase.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
+        Assert.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
     public final void testQueryNoResult() {
@@ -65,7 +66,7 @@ public class GoldenPathQueryTest extends TestCase {
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
-        TestCase.assertEquals( 0, actualValue.size() );
+        Assert.assertEquals( 0, actualValue.size() );
     }
 
     @Override
