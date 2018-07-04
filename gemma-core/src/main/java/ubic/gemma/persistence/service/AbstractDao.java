@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -69,6 +70,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<T> load( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
@@ -78,6 +80,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional(readOnly = true)
     public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
@@ -85,6 +88,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<T> loadAll() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
@@ -94,7 +98,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public Integer countAll() {
         return ( ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( //language=none // Prevents unresolvable missing value warnings.
-                        "select count(*) from " + elementClass.getSimpleName() ).uniqueResult() ).intValue();
+                        "select count(*) from " + elementClass.getSimpleName() )
+                .uniqueResult() ).intValue();
     }
 
     @Override
@@ -115,6 +120,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional
     public void update( Collection<T> entities ) {
         for ( T entity : entities ) {
             this.update( entity );
@@ -122,16 +128,19 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional
     public void update( T entity ) {
         this.getSessionFactory().getCurrentSession().update( entity );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public T find( T entity ) {
         return this.load( entity.getId() );
     }
 
     @Override
+    @Transactional
     public T findOrCreate( T entity ) {
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
@@ -140,7 +149,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Does a like-match case insensitive search on given property and its value.
      *
-     * @param propertyName  the name of property to be matched.
+     * @param propertyName the name of property to be matched.
      * @param propertyValue the value to look for.
      * @return an entity whose property first like-matched the given value.
      */
@@ -155,7 +164,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Does a like-match case insensitive search on given property and its value.
      *
-     * @param propertyName  the name of property to be matched.
+     * @param propertyName the name of property to be matched.
      * @param propertyValue the value to look for.
      * @return a list of entities whose properties like-matched the given value.
      */
@@ -170,22 +179,33 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Lists all entities whose given property matches the given value.
      *
-     * @param propertyName  the name of property to be matched.
+     * @param propertyName the name of property to be matched.
      * @param propertyValue the value to look for.
      * @return a list of entities whose properties matched the given value.
      */
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
+
+        /*
+         * Disable flush to avoid NonNullability constraint failures, etc. prematurely when running this during object
+         * creation. This effectively makes this method read-only even in a read-write context. (the same setup might be
+         * needed for other methods)
+         */
+        FlushMode fm = this.getSessionFactory().getCurrentSession().getFlushMode();
+        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.MANUAL );
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.eq( propertyName, propertyValue ) );
         criteria.setMaxResults( 1 );
+
         //noinspection unchecked
-        return ( T ) criteria.uniqueResult();
+        T result = ( T ) criteria.uniqueResult();
+        this.getSessionFactory().getCurrentSession().setFlushMode( fm );
+        return result;
     }
 
     /**
      * Does a search on given property and its value.
      *
-     * @param propertyName  the name of property to be matched.
+     * @param propertyName the name of property to be matched.
      * @param propertyValue the value to look for.
      * @return an entity whose property first matched the given value.
      */
