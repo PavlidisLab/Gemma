@@ -96,14 +96,22 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
                     arrayDesignService.update( mergedAA );
 
                     mergedAA = arrayDesignService.thawLite( mergedAA );
-
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
                         arrayDesign.setMergedInto( null );
                         arrayDesignService.update( arrayDesign );
                     }
+
+                    for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( mergedAA ) ) {
+                        eeService.remove( e );
+                    }
+
                     arrayDesignService.remove( mergedAA );
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
+                        for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( arrayDesign ) ) {
+                            eeService.remove( e );
+                        }
                         arrayDesignService.remove( arrayDesign );
+
                     }
                 }
 
