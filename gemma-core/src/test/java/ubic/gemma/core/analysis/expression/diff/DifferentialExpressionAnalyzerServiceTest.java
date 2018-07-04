@@ -198,7 +198,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertTrue( !rs.getResults().isEmpty() );
-            assertEquals( 99, rs.getResults().size() );
+            assertTrue( rs.getResults().size() == 99 ); // sometimes get 10
         }
 
         /*
