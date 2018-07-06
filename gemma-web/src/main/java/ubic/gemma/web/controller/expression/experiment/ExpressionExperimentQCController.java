@@ -274,14 +274,14 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id              of experiment
-     * @param size            Multiplier on the cell size. 1 or null for standard small size.
-     * @param text            if true, output a tabbed file instead of a png
-     * @param showLabels      if the row and column labels of the matrix should be shown.
+     * @param id of experiment
+     * @param size Multiplier on the cell size. 1 or null for standard small size.
+     * @param text if true, output a tabbed file instead of a png
+     * @param showLabels if the row and column labels of the matrix should be shown.
      * @param contrVal
      * @param forceShowLabels forces the display of labels in the picture
-     * @param reg             uses the regressed matrix (if available).
-     * @param os              response output stream
+     * @param reg uses the regressed matrix (if available).
+     * @param os response output stream
      */
     @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
     public void visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
@@ -299,9 +299,8 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ee = expressionExperimentService.thawLiter( ee );
-        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ?
-                sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee ) :
-                sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee )
+                : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
             log.warn( "No correlation matrix for ee " + id );
             return;
@@ -354,10 +353,10 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id   of experiment
+     * @param id of experiment
      * @param size Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
-     * @param os   response output stream
+     * @param os response output stream
      * @return ModelAndView object if text is true, otherwise null
      */
     @RequestMapping("/expressionExperiment/visualizeMeanVariance.html")
@@ -398,7 +397,10 @@ public class ExpressionExperimentQCController extends BaseController {
             return mav;
         }
 
-        this.writeMeanVariance( os, mvr, size );
+        if ( !this.writeMeanVariance( os, mvr, size ) ) {
+            // FIXME might be something better to do
+            return null;
+        }
 
         return null;
     }
@@ -417,12 +419,12 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id         of the experiment
+     * @param id of the experiment
      * @param analysisId of the analysis
-     * @param rsid       resultSet Id
+     * @param rsid resultSet Id
      * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
-     * @param size       of the image.
-     * @param os         stream to write the image to.
+     * @param size of the image.
+     * @param os stream to write the image to.
      * @return null
      */
     @SuppressWarnings("SameReturnValue")
@@ -526,9 +528,9 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @return JFreeChart XYSeries representing the histogram.
      * @throws FileNotFoundException - only if the coexp dist is being read from a file; when migration to db storage is
-     *                               complete this can be removed
-     * @throws IOException           - only if the coexp dist is being read from a file; when migration to db storage is complete
-     *                               this can be removed
+     *         complete this can be removed
+     * @throws IOException - only if the coexp dist is being read from a file; when migration to db storage is complete
+     *         this can be removed
      */
     private XYSeries getCorrelHist( ExpressionExperiment ee ) throws IOException {
         CoexpCorrelationDistribution coexpCorrelationDistribution = coexpressionAnalysisService
@@ -1003,7 +1005,7 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param os  response output stream
+     * @param os response output stream
      * @param mvr MeanVarianceRelation object to plot
      * @return true if mvr data points were plotted
      */
@@ -1038,7 +1040,8 @@ public class ExpressionExperimentQCController extends BaseController {
         // adjust colors and shapes
         XYRegressionRenderer renderer = new XYRegressionRenderer();
         renderer.setBasePaint( Color.white );
-        int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
+        XYSeries series = collection.getSeries( 0 );
+        int alpha = series.getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
         renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
         renderer.setSeriesPaint( 1, Color.red );
         renderer.setSeriesStroke( 1, new BasicStroke( 1 ) );
@@ -1054,14 +1057,18 @@ public class ExpressionExperimentQCController extends BaseController {
         plot.setDomainGridlinesVisible( false );
 
         // adjust the chart domain and ranges
-        double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
-        double xRange = collection.getSeries( 0 ).getMaxX() - collection.getSeries( 0 ).getMinX();
+        double yRange = series.getMaxY() - series.getMinY();
+        double xRange = series.getMaxX() - series.getMinX();
+        if ( xRange < 0 ) {
+            log.warn( "Min X was greater than Max X: Max=" + series.getMaxY() + " Min= " + series.getMinY() );
+            return false;
+        }
         double ybuffer = ( yRange ) * OFFSET_FACTOR;
         double xbuffer = ( xRange ) * OFFSET_FACTOR;
-        double newYMin = collection.getSeries( 0 ).getMinY() - ybuffer;
-        double newYMax = collection.getSeries( 0 ).getMaxY() + ybuffer;
-        double newXMin = collection.getSeries( 0 ).getMinX() - xbuffer;
-        double newXMax = collection.getSeries( 0 ).getMaxX() + xbuffer;
+        double newYMin = series.getMinY() - ybuffer;
+        double newYMax = series.getMaxY() + ybuffer;
+        double newXMin = series.getMinX() - xbuffer;
+        double newXMax = series.getMaxX() + xbuffer;
 
         ValueAxis yAxis = new NumberAxis( "Variance" );
         yAxis.setRange( newYMin, newYMax );
@@ -1109,7 +1116,8 @@ public class ExpressionExperimentQCController extends BaseController {
 
         log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
                 + zscoreMax + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive
-                .max( filteredVars ) + ")." );
+                        .max( filteredVars )
+                + ")." );
 
         ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
         ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
