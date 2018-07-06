@@ -116,8 +116,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      *
      * @param arrayDesign array design
      * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name,
-     * gemma gene id, ncbi id] for a given probe id. format of string is geneSymbol then geneNames same as found
-     * in annotation file.
+     *         gemma gene id, ncbi id] for a given probe id. format of string is geneSymbol then geneNames same as found
+     *         in annotation file.
      */
     public static Map<Long, String[]> readAnnotationFileAsString( ArrayDesign arrayDesign ) {
         Map<Long, String[]> results = new HashMap<>();
@@ -150,10 +150,13 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         int FIELDS_PER_GENE = 5; // used to be 3, now is 5;
 
+        boolean warned = false;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             results.put( cs.getId(), new String[FIELDS_PER_GENE] );
-            if ( probeNameToId.containsKey( cs.getName() ) ) {
-                ArrayDesignAnnotationServiceImpl.log.warn( "Duplicate probe name: " + cs.getName() );
+            if ( probeNameToId.containsKey( cs.getName() ) && !warned ) {
+                ArrayDesignAnnotationServiceImpl.log
+                        .warn( "Duplicate probe name: " + cs.getName() + " for " + arrayDesign + " (further warnings suppressed)" );
+                warned = true;
             }
             probeNameToId.put( cs.getName(), cs.getId() );
         }
@@ -206,7 +209,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /**
      * @param arrayDesign to fetch annotations for.
-     * @param is          with the annotations
+     * @param is with the annotations
      * @return Map of composite sequence ids and transient (incomplete) genes. The genes only have the symbol filled in.
      */
     public static Map<Long, Collection<Gene>> readAnnotations( ArrayDesign arrayDesign, InputStream is ) {
@@ -514,7 +517,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /**
      * @param ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
-     *           only.
+     *        only.
      * @return the goTerms for a given gene, as configured
      */
     private Collection<OntologyTerm> getGoTerms( Collection<VocabCharacteristic> ontologyTerms, OutputType ty ) {

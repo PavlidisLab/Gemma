@@ -288,9 +288,8 @@ public class SearchServiceImpl implements SearchService {
                 eeIds.retainAll( EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) ) );
             }
         } else {
-            Collection<ExpressionExperiment> ees = ( taxon != null ) ?
-                    expressionExperimentService.findByTaxon( taxon ) :
-                    expressionExperimentService.loadAll();
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
+                    : expressionExperimentService.loadAll();
             for ( ExpressionExperiment ee : ees ) {
                 eeIds.add( ee.getId() );
             }
@@ -604,7 +603,7 @@ public class SearchServiceImpl implements SearchService {
      * search string (the returned collection of array designs does not contain duplicates).
      *
      * @param probeResults Collection of results from a previous CompositeSequence search. Can be null; otherwise used
-     *                     to avoid a second search for probes. The array designs for the probes are added to the final results.
+     *        to avoid a second search for probes. The array designs for the probes are added to the final results.
      */
     private Collection<SearchResult> arrayDesignSearch( SearchSettings settings,
             Collection<SearchResult> probeResults ) {
@@ -620,7 +619,7 @@ public class SearchServiceImpl implements SearchService {
             Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
             if ( nameResult != null )
                 for ( ArrayDesign ad : nameResult ) {
-                    results.add( new SearchResult( ad, 1.0 ) );
+                results.add( new SearchResult( ad, 1.0 ) );
                 }
         }
 
@@ -662,7 +661,7 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
-     *                                  for the genes are added to the final results.
+     *        for the genes are added to the final results.
      */
     private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
@@ -713,8 +712,7 @@ public class SearchServiceImpl implements SearchService {
                 if ( !classResults.isEmpty() ) {
                     String msg = "Found " + classResults.size() + " " + classToSearch.iterator().next().getSimpleName()
                             + " results from characteristic search.";
-                    if ( characterSearchResults.size()
-                            >= SearchServiceImpl.SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS ) {
+                    if ( characterSearchResults.size() >= SearchServiceImpl.SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS ) {
                         msg += " Total found > " + SearchServiceImpl.SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS
                                 + ", will not search for more entities.";
                     }
@@ -805,15 +803,16 @@ public class SearchServiceImpl implements SearchService {
      * with both of those terms. The use of OR is handled by the caller.
      *
      * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
-     *                ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
+     *        ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
      * @return SearchResults of CharacteristicObjects. Typically to be useful one needs to retrieve the 'parents'
-     * (entities which have been 'tagged' with the term) of those Characteristics
+     *         (entities which have been 'tagged' with the term) of those Characteristics
      */
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes, String query ) {
         StopWatch timer = this.startTiming();
 
         /*
-         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND neuron,
+         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
+         * neuron,
          * then we want to eventually return entities that are associated with both. We don't expect to find single
          * characteristics that match both.
          *
@@ -1052,7 +1051,7 @@ public class SearchServiceImpl implements SearchService {
      * for matches then converts those results to biosequences
      *
      * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
-     *                                  for the genes are added to the final results.
+     *        for the genes are added to the final results.
      */
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
@@ -1247,10 +1246,10 @@ public class SearchServiceImpl implements SearchService {
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      *
      * @param classes Class of objects to restrict the search to (typically ExpressionExperiment.class, for
-     *                example).
-     * @param terms   A list of ontology terms to search for
+     *        example).
+     * @param terms A list of ontology terms to search for
      * @return Collection of search results for the objects owning the found characteristics, where the owner is of
-     * class clazz
+     *         class clazz
      */
     private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
             Collection<OntologyTerm> terms ) {
@@ -1490,8 +1489,8 @@ public class SearchServiceImpl implements SearchService {
      * Convert hits from database searches into SearchResults.
      *
      * @param compassHitDerivedFrom SearchResult that these entities were derived from. For example, if you
-     *                              compass-searched for genes, and then used the genes to get sequences from the database, the gene is
-     *                              compassHitsDerivedFrom. If null, we treat this as a direct hit.
+     *        compass-searched for genes, and then used the genes to get sequences from the database, the gene is
+     *        compassHitsDerivedFrom. If null, we treat this as a direct hit.
      */
     private List<SearchResult> dbHitsToSearchResult( Collection<?> entities, SearchResult compassHitDerivedFrom,
             String matchText ) {
@@ -1499,7 +1498,7 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResult> results = new ArrayList<>();
         for ( Object e : entities ) {
             if ( e == null ) {
-                SearchServiceImpl.log.warn( "Null search result object" );
+                if ( SearchServiceImpl.log.isDebugEnabled() ) SearchServiceImpl.log.debug( "Null search result object" );
                 continue;
             }
             SearchResult esr = this.dbHitToSearchResult( compassHitDerivedFrom, e, matchText );
@@ -1680,7 +1679,7 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results will get
-     *                            filtered out Results with no taxon associated will also get removed.
+     *        filtered out Results with no taxon associated will also get removed.
      */
     private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results,
             boolean excludeWithoutTaxon ) {
@@ -1773,9 +1772,8 @@ public class SearchServiceImpl implements SearchService {
                     } else {
 
                         if ( c instanceof VocabCharacteristic && c.getValueUri() != null ) {
-                            matchedText =
-                                    "Ontology term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query="
-                                            + c.getValueUri() + "\">" + matchedText + "</a>";
+                            matchedText = "Ontology term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query="
+                                    + c.getValueUri() + "\">" + matchedText + "</a>";
                         }
                         results.add( new SearchResult( o, 1.0, matchedText ) );
                     }
@@ -1800,7 +1798,7 @@ public class SearchServiceImpl implements SearchService {
      * with no duplicates.
      *
      * @param returnOnDbHit if true and if there is a match for a gene from the database, return immediately - much
-     *                      faster
+     *        faster
      */
     private Collection<SearchResult> geneSearch( final SearchSettings settings, boolean returnOnDbHit ) {
 
@@ -1945,8 +1943,10 @@ public class SearchServiceImpl implements SearchService {
 
         if ( timer.getTime() > 100 ) {
             SearchServiceImpl.log.info( results.size() + " hits retrieved (out of " + Math
-                    .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in " + timer
-                    .getTime() + "ms" );
+                    .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
+                    + timer
+                            .getTime()
+                    + "ms" );
         }
         if ( timer.getTime() > 5000 ) {
             SearchServiceImpl.log
@@ -2007,8 +2007,7 @@ public class SearchServiceImpl implements SearchService {
                     continue;
                 Map<Long, SearchResult> rMap = new HashMap<>();
                 for ( SearchResult searchResult : r ) {
-                    if ( !rMap.containsKey( searchResult.getId() ) || ( rMap.get( searchResult.getId() ).getScore()
-                            < searchResult.getScore() ) ) {
+                    if ( !rMap.containsKey( searchResult.getId() ) || ( rMap.get( searchResult.getId() ).getScore() < searchResult.getScore() ) ) {
                         rMap.put( searchResult.getId(), searchResult );
                     }
                 }
@@ -2179,15 +2178,15 @@ public class SearchServiceImpl implements SearchService {
      * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
      * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
      *
-     * @param settings       Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
-     *                       objects tagged with those terms (if isUseCharacte = true)
-     * @param fillObjects    If false, the entities will not be filled in inside the searchsettings; instead, they will be
-     *                       nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
-     *                       entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
-     *                       false can be an optimization if all you need is the id. Note: filtering by taxon will not be done unless
-     *                       objects are filled
+     * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
+     *        objects tagged with those terms (if isUseCharacte = true)
+     * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
+     *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
+     *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
+     *        false can be an optimization if all you need is the id. Note: filtering by taxon will not be done unless
+     *        objects are filled
      * @param webSpeedSearch if true, this call is probably coming from a web app combo box and results will be limited
-     *                       to improve speed
+     *        to improve speed
      */
     private Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) {

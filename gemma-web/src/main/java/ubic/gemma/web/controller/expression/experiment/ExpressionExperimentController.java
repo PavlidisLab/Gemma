@@ -261,7 +261,7 @@ public class ExpressionExperimentController {
         if ( StringUtils.isBlank( searchString ) ) {
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "No search criteria provided" );
+                            .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids = expressionExperimentService.filter( searchString );
@@ -270,7 +270,7 @@ public class ExpressionExperimentController {
 
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "Your search yielded no results." );
+                            .addObject( "message", "Your search yielded no results." );
 
         }
 
@@ -278,7 +278,7 @@ public class ExpressionExperimentController {
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(),
                             true ) ).addObject( "message",
-                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+                                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         StringBuilder list = new StringBuilder();
@@ -288,13 +288,13 @@ public class ExpressionExperimentController {
 
         return new ModelAndView(
                 new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) )
-                .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+                        .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
      * AJAX TODO --- include a search of subsets.
      *
-     * @param query   search string
+     * @param query search string
      * @param taxonId (if null, all taxa are searched)
      * @return EE ids that match
      */
@@ -321,10 +321,10 @@ public class ExpressionExperimentController {
      * AJAX call
      *
      * @return a more informative description than the regular description 1st 120 characters of ee.description +
-     * Experimental Design information returned string contains HTML tags.
-     * TODO: Would be more generic if passed back a DescriptionValueObject that contains all the info necessary
-     * to reconstruct the HTML on the client side Currently only used by ExpressionExperimentGrid.js (row
-     * expander)
+     *         Experimental Design information returned string contains HTML tags.
+     *         TODO: Would be more generic if passed back a DescriptionValueObject that contains all the info necessary
+     *         to reconstruct the HTML on the client side Currently only used by ExpressionExperimentGrid.js (row
+     *         expander)
      */
     public String getDescription( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -511,20 +511,15 @@ public class ExpressionExperimentController {
             int newAssayCount = wn.getNewAssayCount();
 
             Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ?
-                    EntityUtils.getIds( newExpressionExperiments ) :
-                    new ArrayList<Long>();
+            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
+                    : new ArrayList<Long>();
             Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ?
-                    EntityUtils.getIds( updatedExpressionExperiments ) :
-                    new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
+                    ? EntityUtils.getIds( updatedExpressionExperiments )
+                    : new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ?
-                    newExpressionExperiments.size() :
-                    0;
-            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ?
-                    updatedExpressionExperiments.size() :
-                    0;
+            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
+            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
 
             /* Store counts for new and updated experiments by taxonId */
             Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
@@ -556,9 +551,7 @@ public class ExpressionExperimentController {
 
             boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 );
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
-            String date = ( wn.getDate() != null ) ?
-                    DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) :
-                    "";
+            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
 
             summary.element( "updateDate", date );
@@ -745,10 +738,11 @@ public class ExpressionExperimentController {
     /**
      * AJAX. Data summarizing the status of experiments.
      *
-     * @param taxonId    can be null
-     * @param limit      If &gt;0, get the most recently updated N experiments, where N &lt;= limit; or if &lt; 0, get the least
-     *                   recently updated; if 0, or null, return all.
-     * @param filter     if non-null, limit data sets to ones meeting criteria.
+     * @param taxonId can be null
+     * @param limit If &gt;0, get the most recently updated N experiments, where N &lt;= limit; or if &lt; 0, get the
+     *        least
+     *        recently updated; if 0, or null, return all.
+     * @param filter if non-null, limit data sets to ones meeting criteria.
      * @param showPublic return user's public datasets too
      * @return ee details vos
      */
@@ -812,7 +806,7 @@ public class ExpressionExperimentController {
      * AJAX (used by experimentAndExperimentGroupCombo.js)
      *
      * @param taxonId if the search should not be limited by taxon, pass in null
-     * @param query   query
+     * @param query query
      * @return Collection of SearchResultDisplayObjects
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
@@ -821,9 +815,9 @@ public class ExpressionExperimentController {
 
         // add session bound sets
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ?
-                sessionListManager.getModifiedExperimentSets( taxonId ) :
-                sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited )
+                ? sessionListManager.getModifiedExperimentSets( taxonId )
+                : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -864,7 +858,7 @@ public class ExpressionExperimentController {
     /**
      * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
      *
-     * @param request  request
+     * @param request request
      * @param response response
      * @return model and view
      */
@@ -971,7 +965,7 @@ public class ExpressionExperimentController {
     /**
      * shows a list of BioAssays for an expression experiment subset
      *
-     * @param request  request
+     * @param request request
      * @param response response
      * @return model and view
      */
@@ -1067,9 +1061,8 @@ public class ExpressionExperimentController {
         }
         if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription()
                 .equals( ee.getDescription() ) ) {
-            details +=
-                    ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
-                            + ")";
+            details += ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
+                    + ")";
             changed = true;
             ee.setDescription( command.getDescription() );
         }
@@ -1113,7 +1106,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX. Associate the given pubmedId with the given expression experiment.
      *
-     * @param eeId     ee id
+     * @param eeId ee id
      * @param pubmedId pubmed id
      * @return string
      */
@@ -1165,9 +1158,7 @@ public class ExpressionExperimentController {
         Collection<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        int count = SecurityUtil.isUserAdmin() ?
-                expressionExperimentService.countAll() :
-                expressionExperimentService.countNotTroubled();
+        int count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
 
         return new JsonReaderResponse<>( records, count );
     }
@@ -1192,7 +1183,8 @@ public class ExpressionExperimentController {
                 .identifyOutliersByMedianCorrelation( ee );
         count = outliers.size();
 
-        ExpressionExperimentController.log.info( count + " possible outliers detected." );
+        if ( count > 0 )
+            ExpressionExperimentController.log.info( count + " possible outliers detected." );
 
         return count;
     }
@@ -1224,7 +1216,7 @@ public class ExpressionExperimentController {
     /**
      * Sets batch information and related properties
      *
-     * @param ee          ee
+     * @param ee ee
      * @param finalResult result
      * @return ee details vo
      */
@@ -1244,7 +1236,7 @@ public class ExpressionExperimentController {
     /**
      * populates the publication and author information
      *
-     * @param ee          ee
+     * @param ee ee
      * @param finalResult result
      * @return ee details vo
      */
@@ -1303,7 +1295,7 @@ public class ExpressionExperimentController {
     /**
      * Checks and sets multiple technology types
      *
-     * @param ee          ee
+     * @param ee ee
      * @param finalResult result
      * @return ee details vo
      */
@@ -1322,7 +1314,7 @@ public class ExpressionExperimentController {
     /**
      * Check for multiple "preferred" qts and reprocessing.
      *
-     * @param ee          ee
+     * @param ee ee
      * @param finalResult result
      * @return ee details vo
      */
@@ -1351,7 +1343,7 @@ public class ExpressionExperimentController {
     /**
      * Checks and sets parent taxon and related properties
      *
-     * @param taxonId     taxon id
+     * @param taxonId taxon id
      * @param finalResult result
      * @return ee details vo
      */
@@ -1393,7 +1385,7 @@ public class ExpressionExperimentController {
      * Filter based on criteria of which events etc. the data sets have.
      *
      * @param eeValObjectCol ee vos
-     * @param filter         filter
+     * @param filter filter
      * @return filtered vos
      */
     private Collection<ExpressionExperimentDetailsValueObject> applyFilter(
@@ -1507,10 +1499,10 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param ids        - takes precedence
-     * @param limit      - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or all
-     *                   (limit == 0)
-     * @param filter     setting
+     * @param ids - takes precedence
+     * @param limit - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or all
+     *        (limit == 0)
+     * @param filter setting
      * @param showPublic return the user's public datasets as well
      * @return ee details vos
      */
@@ -1594,9 +1586,9 @@ public class ExpressionExperimentController {
     /**
      * Get the expression experiment value objects for the expression experiments.
      *
-     * @param taxon      can be null
-     * @param limit      limit
-     * @param eeIds      ee ids
+     * @param taxon can be null
+     * @param limit limit
+     * @param eeIds ee ids
      * @param showPublic show public
      * @return Collection<ExpressionExperimentValueObject>
      */
@@ -1638,8 +1630,8 @@ public class ExpressionExperimentController {
      * to the shouldBeTroubled parameter.
      *
      * @param shouldBeTroubled set to true if the filter should keep the EEVOs that are troubled, or false to keep only
-     *                         the not-troubled ones.
-     * @param eevos            ee vos
+     *        the not-troubled ones.
+     * @param eevos ee vos
      * @return ee vos
      */
     private <T extends ExpressionExperimentValueObject> List<T> returnTroubled( Collection<T> eevos,
@@ -1656,7 +1648,8 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it is true
+     * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it
+     * is true
      *
      * @param ees ees
      * @return ee detail vos
@@ -1716,7 +1709,7 @@ public class ExpressionExperimentController {
 
             return new TaskResult( taskCommand, new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                    .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+                            .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }

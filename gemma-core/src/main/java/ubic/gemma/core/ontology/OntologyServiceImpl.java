@@ -328,7 +328,7 @@ public class OntologyServiceImpl implements OntologyService {
                     .debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
-        Collection<? extends OntologyResource> results;
+        Collection<? extends OntologyResource> results = null;
         Collection<CharacteristicValueObject> searchResults = new HashSet<>();
 
         Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
@@ -339,10 +339,15 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService service : this.ontologyServices ) {
             if ( !service.isOntologyLoaded() )
                 continue;
-            results = service.findResources( queryString );
-
-            if ( results.isEmpty() )
+            
+            try {
+                results = service.findResources( queryString );
+            } catch ( Exception e ) {
+                log.warn( e.getMessage() ); // parse errors, etc.
+            }
+            if ( results == null || results.isEmpty() )
                 continue;
+            
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log
                         .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
@@ -684,7 +689,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
@@ -832,7 +837,7 @@ public class OntologyServiceImpl implements OntologyService {
     /**
      * Look for genes, but only for certain category Uris (genotype, etc.)
      *
-     * @param taxon         okay if null, but then all matches returned.
+     * @param taxon okay if null, but then all matches returned.
      * @param searchResults added to this
      */
     private void searchForGenes( String queryString, Taxon taxon,
@@ -857,8 +862,8 @@ public class OntologyServiceImpl implements OntologyService {
 
     /**
      * @param alreadyUsedResults items already in the system; remove singleton free-text terms.
-     * @param otherResults       other results
-     * @param searchTerm         the query
+     * @param otherResults other results
+     * @param searchTerm the query
      */
     private Collection<CharacteristicValueObject> sort( Map<String, CharacteristicValueObject> alreadyUsedResults,
             Collection<CharacteristicValueObject> otherResults, String searchTerm ) {
