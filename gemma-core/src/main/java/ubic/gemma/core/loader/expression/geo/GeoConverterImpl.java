@@ -1722,6 +1722,12 @@ public class GeoConverterImpl implements GeoConverter {
 
     }
 
+    /**
+     * Main method that converts a single (mono-species) GEO series to an ExpressionExperiment.
+     * 
+     * @param series
+     * @return ExpressionExperiment, or null if the series cannot be converted (wrong sample type, etc.)
+     */
     private ExpressionExperiment convertSeriesSingle( GeoSeries series ) {
         if ( series == null )
             return null;
@@ -1739,6 +1745,19 @@ public class GeoConverterImpl implements GeoConverter {
             GeoConverterImpl.log
                     .warn( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
             return null;
+        }
+
+        // GEO does not have the concept of a biomaterial.
+        Collection<GeoSample> allSeriesSamples = series.getSamples();
+        GeoConverterImpl.log.info( "Series has " + allSeriesSamples.size() + " samples in total" );
+
+        if ( samplesToSkip.size() == allSeriesSamples.size() ) {
+            GeoConverterImpl.log.info( "Series has no usable samples, conversion will be aborted" );
+            return null;
+        }
+
+        if ( samplesToSkip.size() > 0 ) {
+            GeoConverterImpl.log.info( samplesToSkip.size() + " samples will be skipped" );
         }
 
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
@@ -1796,12 +1815,6 @@ public class GeoConverterImpl implements GeoConverter {
 
         expExp.setExperimentalDesign( design );
 
-        // GEO does not have the concept of a biomaterial.
-        Collection<GeoSample> allSeriesSamples = series.getSamples();
-        GeoConverterImpl.log.info( "Series has " + series.getSamples().size() + " samples in total" );
-        if ( samplesToSkip.size() > 0 ) {
-            GeoConverterImpl.log.info( samplesToSkip.size() + " samples will be skipped" );
-        }
         expExp.setBioAssays( new HashSet<BioAssay>() );
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
