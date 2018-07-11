@@ -478,7 +478,7 @@ public class ExpressionExperimentController {
         JSONObject summary = new JSONObject();
         net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
 
-        long bioAssayCount = bioAssayService.countAll();
+        long bioMaterialCount = bioMaterialService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
         Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
 
@@ -508,7 +508,7 @@ public class ExpressionExperimentController {
         }
         if ( wn != null ) {
             // Get count for new assays
-            int newAssayCount = wn.getNewAssayCount();
+            int newBioMaterialCount = wn.getNewBioMaterialCount();
 
             Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
             Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
@@ -549,7 +549,7 @@ public class ExpressionExperimentController {
             Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
             int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
 
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 );
+            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newBioMaterialCount > 0 );
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
             String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
@@ -557,8 +557,8 @@ public class ExpressionExperimentController {
             summary.element( "updateDate", date );
             summary.element( "drawNewColumn", drawNewColumn );
             summary.element( "drawUpdatedColumn", drawUpdatedColumn );
-            if ( newAssayCount != 0 )
-                summary.element( "newBioAssayCount", new Long( newAssayCount ) );
+            if ( newBioMaterialCount != 0 )
+                summary.element( "newBioMaterialCount", new Long( newBioMaterialCount ) );
             if ( newArrayCount != 0 )
                 summary.element( "newArrayDesignCount", new Long( newArrayCount ) );
             if ( updatedArrayCount != 0 )
@@ -574,7 +574,7 @@ public class ExpressionExperimentController {
 
         }
 
-        summary.element( "bioAssayCount", bioAssayCount );
+        summary.element( "bioMaterialCount", bioMaterialCount );
         summary.element( "arrayDesignCount", arrayDesignCount );
 
         summary.element( "expressionExperimentCount", expressionExperimentCount );
