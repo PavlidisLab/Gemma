@@ -67,9 +67,8 @@ public class AclAdvice extends BaseAclAdvice {
          * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
          * would be expensive to traverse.F
          */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && (
-                propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                        .equals( "processedExpressionDataVectors" ) ) ) {
+        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
+                .equals( "processedExpressionDataVectors" ) ) ) {
             if ( AclAdvice.log.isTraceEnabled() )
                 AclAdvice.log.trace( "Skipping checking acl on vectors on " + object );
             return true;
@@ -99,13 +98,11 @@ public class AclAdvice extends BaseAclAdvice {
             BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
             ObjectIdentity oi_temp = this.makeObjectIdentity( bioAssaySet );
 
-            try {
-                parentAcl = this.getAclService().readAclById( oi_temp );
-            } catch ( NotFoundException nfe ) {
+            parentAcl = this.getAclService().readAclById( oi_temp );
+            if ( parentAcl == null ) {
                 // This is possible if making an EESubSet is part of the transaction.
                 parentAcl = this.getAclService().createAcl( oi_temp );
             }
-
             acl.setEntriesInheriting( true );
             acl.setParent( parentAcl );
             //noinspection UnusedAssignment //Owner of the experiment owns analyses even if administrator ran them.
