@@ -196,9 +196,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
         aclTestUtils.checkHasAclParent( analysis, ee );
 
+        Integer numVectors = expressionExperimentService.getDesignElementDataVectorCountById( ee.getId() );
+
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertTrue( !rs.getResults().isEmpty() );
-            assertTrue( rs.getResults().size() >= 10 ); // FIXME sometimes get 10, other 99 ... not sure why
+            assertEquals( numVectors.intValue(), rs.getResults().size() ); // sometimes get 10, other 99 ... not sure why
         }
 
         /*
@@ -221,7 +223,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
-        assertEquals( 99, readIn.rows() );
+        assertEquals( numVectors.intValue(), readIn.rows() );
         System.out.println( readIn.toString() );
         assertEquals( 9, readIn.columns() );
 
