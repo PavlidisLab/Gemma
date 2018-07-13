@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -38,10 +39,13 @@ public class AclTestUtils {
      * @param f f
      */
     public void checkDeletedAcl( Object f ) {
-
-        Acl acl = this.getAcl( f );
-        if ( acl != null ) {
+        try {
+            Acl acl = this.getAcl( f );
             fail( "Failed to  remove ACL for " + f + ", got " + acl );
+        } catch ( NotFoundException okaye ) {
+            // okay
+            if ( AclTestUtils.log.isDebugEnabled() )
+                AclTestUtils.log.debug( "As expected, there was no acl for " + f.getClass().getSimpleName() );
         }
     }
 
@@ -132,8 +136,12 @@ public class AclTestUtils {
     }
 
     public void checkHasAcl( Object f ) {
-        if ( null == aclService.readAclById( new AclObjectIdentity( f ) ) )
+        try {
+            aclService.readAclById( new AclObjectIdentity( f ) );
+            AclTestUtils.log.debug( "Have acl for " + f );
+        } catch ( NotFoundException okaye ) {
             fail( "Failed to create ACL for " + f );
+        }
     }
 
     public void checkHasAclParent( Object f, Object parent ) {
@@ -156,8 +164,15 @@ public class AclTestUtils {
     }
 
     public void checkLacksAcl( Object f ) {
-        if ( null != aclService.readAclById( new AclObjectIdentity( f ) ) )
+
+        try {
+
+            aclService.readAclById( new AclObjectIdentity( f ) );
             fail( "Should not have found an ACL" );
+
+        } catch ( NotFoundException okaye ) {
+            // good
+        }
     }
 
     public void update( MutableAcl acl ) {
