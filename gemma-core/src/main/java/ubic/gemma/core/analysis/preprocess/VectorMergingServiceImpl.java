@@ -205,7 +205,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             }
 
             // TRANSACTION
-            vectorMergingHelperService.persist( ee, type, newVectors );
+            vectorMergingHelperService.persist( ee, type, newVectors, oldVecs );
 
             if ( numAllMissing > 0 ) {
                 VectorMergingServiceImpl.log
@@ -216,8 +216,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 VectorMergingServiceImpl.log.info( missingValuesForQt + " total missing values: " + type );
             }
 
-            VectorMergingServiceImpl.log.info( "Removing " + oldVecs.size() + " old vectors for " + type );
-            rawExpressionDataVectorService.remove( oldVecs );
             numSuccessfulMergers++;
         } // for each quantitation type
 
@@ -230,7 +228,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
-        // refresh into context
+        // refresh into context (may be unnecessary)
         ee = expressionExperimentService.load( ee.getId() );
 
         // Several transactions

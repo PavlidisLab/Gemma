@@ -26,10 +26,12 @@ import java.util.Collection;
 public interface VectorMergingHelperService {
 
     /**
-     * @param expExp     the experiment
-     * @param type       the QT
+     * @param expExp the experiment
+     * @param type the QT
      * @param newVectors the new vectors
+     * @param oldVectors which will be removed
      */
-    void persist( ExpressionExperiment expExp, QuantitationType type, Collection<RawExpressionDataVector> newVectors );
+    void persist( ExpressionExperiment expExp, QuantitationType type, Collection<RawExpressionDataVector> newVectors,
+            Collection<RawExpressionDataVector> oldVectors );
 
 }

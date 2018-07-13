@@ -1671,12 +1671,20 @@ public class ExpressionExperimentDaoImpl
         return filters;
     }
 
+    /**
+     * ? Add constraints: security (permissions), filters on the query, and ordering.
+     * @param filters
+     * @param orderByProperty
+     * @param orderDesc
+     * @param queryString
+     * @return
+     */
     private Query postProcessVoQuery( ArrayList<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
             String queryString ) {
         queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
-        queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
+        queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id "; // FIXME why is this necessary?
         queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );

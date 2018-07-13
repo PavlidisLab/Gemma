@@ -60,11 +60,15 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
     @Override
     @Transactional
     public void persist( ExpressionExperiment ee, QuantitationType type,
-            Collection<RawExpressionDataVector> newVectors ) {
+            Collection<RawExpressionDataVector> newVectors, Collection<RawExpressionDataVector> oldVectors ) {
         if ( newVectors.size() > 0 ) {
             this.processedExpressionDataVectorService.removeProcessedDataVectors( ee );
             VectorMergingHelperServiceImpl.log.info( "Creating " + newVectors.size() + " new vectors for " + type );
             rawExpressionDataVectorService.create( newVectors );
+
+            VectorMergingHelperServiceImpl.log.info( "Removing " + oldVectors.size() + " old vectors for " + type );
+            rawExpressionDataVectorService.remove( oldVectors );
+
         } else {
             throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
         }
