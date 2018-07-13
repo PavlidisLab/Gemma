@@ -218,7 +218,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             VectorMergingServiceImpl.log.info( "Removing " + oldVecs.size() + " old vectors for " + type );
             rawExpressionDataVectorService.remove( oldVecs );
-            ee.getRawExpressionDataVectors().removeAll( oldVecs );
             numSuccessfulMergers++;
         } // for each quantitation type
 
@@ -231,6 +230,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
+        // refresh into context
+        ee = expressionExperimentService.load( ee.getId() );
+
         // Several transactions
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 
@@ -242,7 +244,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         // several transactions
         try {
             // reload to refresh into context
-            preprocessorService.process( expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) ) );
+            preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
             VectorMergingServiceImpl.log.error( "Error during postprocessing", e );
         }

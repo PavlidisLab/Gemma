@@ -117,8 +117,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
             }
         } catch ( Exception e ) {
-            // oh well. Test might fail, it might not.
-            log.info( e.getMessage(), e );
+            log.info( "Tear-down failed: " + e.getMessage() );
         }
     }
 
