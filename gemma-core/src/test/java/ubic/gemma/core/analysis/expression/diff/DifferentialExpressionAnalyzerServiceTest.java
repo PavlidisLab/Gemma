@@ -99,14 +99,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
 
-        if ( ee == null ) {
+        if ( ee != null ) tearDown();
 
-            geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Short" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Short" ) ) );
+        Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
+        ee = ( ExpressionExperiment ) results.iterator().next();
 
-        }
         processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
@@ -200,7 +199,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
             assertTrue( !rs.getResults().isEmpty() );
-            assertEquals( numVectors.intValue(), rs.getResults().size() ); // sometimes get 10, other 99 ... not sure why
+            assertEquals( numVectors.intValue(), rs.getResults().size() );
         }
 
         /*
