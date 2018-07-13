@@ -244,7 +244,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             // reload to refresh into context
             preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
-            VectorMergingServiceImpl.log.error( "Error during postprocessing", e );
+            VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
+        } catch ( Exception e ) {
+            VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
         }
 
         return ee;
