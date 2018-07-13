@@ -231,8 +231,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
-        //  expressionExperimentService.update( ee ); // this is not necessary and data are now out of sync with this instance
-
         // Several transactions
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 
@@ -244,7 +242,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         // several transactions
         try {
             // reload to refresh into context
-            preprocessorService.process( expressionExperimentService.load( ee.getId() ) );
+            preprocessorService.process( expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) ) );
         } catch ( PreprocessingException e ) {
             VectorMergingServiceImpl.log.error( "Error during postprocessing", e );
         }
