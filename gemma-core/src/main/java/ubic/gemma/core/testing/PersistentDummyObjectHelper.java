@@ -291,8 +291,8 @@ public class PersistentDummyObjectHelper {
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo );
         ee.setAccession( de1 );
 
-        ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
-        ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
+        ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), true, doSequence );
+        ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), true, doSequence );
         Collection<FactorValue> allFactorValues = new HashSet<>();
 
         ExperimentalDesign ed = this.getExperimentalDesign( allFactorValues );
@@ -437,8 +437,8 @@ public class PersistentDummyObjectHelper {
         if ( arrayDesign != null ) {
             bioAssays = this.getBioAssays( bioMaterials, arrayDesign );
         } else {
-            ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
-            ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
+            ArrayDesign adA = this.getTestPersistentArrayDesign( 0, true, false );
+            ArrayDesign adB = this.getTestPersistentArrayDesign( 0, true, false );
 
             Collection<BioAssay> bioAssaysA = this.getBioAssays( bioMaterials, adA );
             Collection<BioAssay> bioAssaysB = this.getBioAssays( bioMaterials, adB );

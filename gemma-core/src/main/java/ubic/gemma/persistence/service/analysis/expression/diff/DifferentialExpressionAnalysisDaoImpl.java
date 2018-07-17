@@ -397,6 +397,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 .setParameterList( "eeids", expressionExperimentIds ).setFirstResult( offset )
                 .setMaxResults( limit > 0 ? limit : -1 ).list();
 
+        /*
+         * FIXME the above query yields a warning "firstResult/maxResults specified with collection fetch; applying in memory!"
+         */
+        
         Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
         List<Object[]> fvs;
 

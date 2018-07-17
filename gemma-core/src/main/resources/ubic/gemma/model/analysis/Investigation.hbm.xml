@@ -112,14 +112,14 @@
                              fetch="select">
                     <column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                 </many-to-one>
-                <set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all">
+                <set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"  cascade="all,delete-orphan" >
                     <cache usage="read-write"/>
                     <key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
                         <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
                     </key>
                     <one-to-many class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector"/>
                 </set>
-                <set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all">
+                <set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all,delete-orphan">
                     <cache usage="read-write"/>
                     <key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
                         <column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>

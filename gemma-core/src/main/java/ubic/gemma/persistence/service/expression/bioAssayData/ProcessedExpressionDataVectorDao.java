@@ -89,15 +89,15 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    /**
-     * When the processed data is being computed separately.
-     *
-     * @param ee   ee
-     * @param data data
-     * @return ee
-     */
-    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> data );
+    //    /**
+    //     * When the processed data is being computed separately.
+    //     *
+    //     * @param ee   ee
+    //     * @param data data
+    //     * @return ee
+    //     */
+    //    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+    //            Collection<ProcessedExpressionDataVector> data );
 
     enum RankMethod {
         max, mean

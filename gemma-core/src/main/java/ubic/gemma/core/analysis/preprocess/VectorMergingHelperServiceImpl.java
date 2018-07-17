@@ -33,11 +33,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
 import java.util.Collection;
 
@@ -52,26 +51,21 @@ public class VectorMergingHelperServiceImpl implements VectorMergingHelperServic
     private static final Log log = LogFactory.getLog( VectorMergingHelperServiceImpl.class );
 
     @Autowired
-    protected RawExpressionDataVectorService rawExpressionDataVectorService;
-
-    @Autowired
-    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ExpressionExperimentDao expressionExperimentDao;
 
     @Override
     @Transactional
-    public void persist( ExpressionExperiment ee, QuantitationType type,
-            Collection<RawExpressionDataVector> newVectors, Collection<RawExpressionDataVector> oldVectors ) {
-        if ( newVectors.size() > 0 ) {
-            this.processedExpressionDataVectorService.removeProcessedDataVectors( ee );
-            VectorMergingHelperServiceImpl.log.info( "Creating " + newVectors.size() + " new vectors for " + type );
-            rawExpressionDataVectorService.create( newVectors );
+    public void persist( ExpressionExperiment ee,
+            Collection<RawExpressionDataVector> newVectors ) {
+        VectorMergingHelperServiceImpl.log
+                .info( "Creating " + newVectors.size() + " merged raw data vectors; removing " + ee.getRawExpressionDataVectors().size()
+                        + " old ones" );
 
-            VectorMergingHelperServiceImpl.log.info( "Removing " + oldVectors.size() + " old vectors for " + type );
-            rawExpressionDataVectorService.remove( oldVectors );
+        ee.getProcessedExpressionDataVectors().clear();
+        ee.getRawExpressionDataVectors().clear();
+        ee.getRawExpressionDataVectors().addAll( newVectors );
+        expressionExperimentDao.update( ee );
 
-        } else {
-            throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
-        }
     }
 
 }

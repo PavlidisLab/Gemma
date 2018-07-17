@@ -27,9 +27,11 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -104,10 +106,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             missingValueVectors = this.getMissingValueVectors( expressionExperiment );
         }
 
-        Collection<RawExpressionDataVector> preferredDataVectors = this.getPreferredDataVectors( expressionExperiment );
-        if ( preferredDataVectors.isEmpty() ) {
+        Collection<RawExpressionDataVector> rawPreferredDataVectors = this.getPreferredDataVectors( expressionExperiment );
+        if ( rawPreferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
+
+        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
+        QuantitationType preferredMaskedDataQuantitationType = this
+                .getPreferredMaskedDataQuantitationType( preferredDataVectorExemplar.getQuantitationType() );
+
+        Collection<RawExpressionDataVector> preferredDataVectors = ensureLog2Scale( rawPreferredDataVectors, preferredMaskedDataQuantitationType );
 
         Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
                 .maskAndUnpack( preferredDataVectors, missingValueVectors );
@@ -116,9 +124,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Create the vectors. Do a sanity check that we don't have more than we should
          */
         Collection<CompositeSequence> seenDes = new HashSet<>();
-        RawExpressionDataVector preferredDataVectorExemplar = preferredDataVectors.iterator().next();
-        QuantitationType preferredMaskedDataQuantitationType = this
-                .getPreferredMaskedDataQuantitationType( preferredDataVectorExemplar.getQuantitationType() );
 
         /*
          * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
@@ -162,10 +167,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
         }
 
-        // Ensure log2 scale
-        expressionExperiment.setProcessedExpressionDataVectors( ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( expressionExperiment.getProcessedExpressionDataVectors() ) );
-
         AbstractDao.log.info( "Persisting " + expressionExperiment.getProcessedExpressionDataVectors().size()
                 + " processed data vectors" );
 
@@ -179,6 +180,30 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return expressionExperiment;
 
+    }
+
+    /**
+     * Make sure the data are on a log2 scale
+     * 
+     * @param rawPreferredDataVectors
+     * @param preferredMaskedDataQuantitationType
+     * @return collection containing the vectors
+     */
+    public Collection<RawExpressionDataVector> ensureLog2Scale( Collection<RawExpressionDataVector> rawPreferredDataVectors,
+            QuantitationType preferredMaskedDataQuantitationType ) {
+        Collection<RawExpressionDataVector> preferredDataVectors = new HashSet<>();
+
+        if ( !preferredMaskedDataQuantitationType.getScale().equals( ScaleType.LOG2 ) ) {
+            log.info( "Converting from " + preferredMaskedDataQuantitationType.getScale() + " to log2" );
+            ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
+                    .ensureLog2Scale( preferredMaskedDataQuantitationType, new ExpressionDataDoubleMatrix( rawPreferredDataVectors ) );
+            preferredDataVectors.addAll( matrix.toRawDataVectors() );
+            preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
+            this.getSession().update( preferredMaskedDataQuantitationType );
+        } else {
+            preferredDataVectors.addAll( rawPreferredDataVectors );
+        }
+        return preferredDataVectors;
     }
 
     @Override
@@ -453,16 +478,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + "inner join e.processedExpressionDataVectors p where e.id = :id" )
                 .setParameter( "id", expressionExperiment.getId() ).list();
 
-        Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
-        Hibernate.initialize( vectors );
-        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>() );
-        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
+        //        Collection<ProcessedExpressionDataVector> vectors = expressionExperiment.getProcessedExpressionDataVectors();
+        //        Hibernate.initialize( vectors );
+        //        expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>() );
+        //        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
 
-        if ( !vectors.isEmpty() ) {
-            this.getSessionFactory().getCurrentSession()
-                    .createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
-                    .setParameterList( "ids", EntityUtils.getIds( vectors ) ).executeUpdate();
-        }
+        expressionExperiment.getProcessedExpressionDataVectors().clear();
+
+        //        if ( !vectors.isEmpty() ) {
+        //            this.getSessionFactory().getCurrentSession()
+        //                    .createQuery( "delete from ProcessedExpressionDataVector p where p.id in (:ids)" )
+        //                    .setParameterList( "ids", EntityUtils.getIds( vectors ) ).executeUpdate();
+        //        }
         if ( !qtsToRemove.isEmpty() ) {
             AbstractDao.log.info( "Deleting " + qtsToRemove.size() + " old quantitation types" );
             expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
@@ -472,42 +499,44 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                     .setParameterList( "ids", EntityUtils.getIds( qtsToRemove ) );
         }
     }
-
-    @Override
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> data ) {
-        if ( ee == null ) {
-            throw new IllegalStateException( "ExpressionExperiment cannot be null" );
-        }
-
-        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) this.getSessionFactory()
-                .getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
-
-        assert expressionExperiment != null;
-
-        this.removeProcessedDataVectors( expressionExperiment );
-
-        Hibernate.initialize( expressionExperiment );
-        Hibernate.initialize( expressionExperiment.getQuantitationTypes() );
-
-        data = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( data );
-
-        QuantitationType qt = data.iterator().next().getQuantitationType(); // assumes all are same.
-
-        expressionExperiment.setProcessedExpressionDataVectors( data );
-
-        this.getSessionFactory().getCurrentSession().saveOrUpdate( qt );
-        expressionExperiment.getQuantitationTypes().add( data.iterator().next().getQuantitationType() );
-        expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
-
-        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
-        assert expressionExperiment.getNumberOfDataVectors() != null;
-
-        this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
-
-        return expressionExperiment;
-
-    }
+    //
+    //    @Override
+    //    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+    //            Collection<ProcessedExpressionDataVector> data ) {
+    //        if ( ee == null ) {
+    //            throw new IllegalStateException( "ExpressionExperiment cannot be null" );
+    //        }
+    //
+    //        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) this.getSessionFactory()
+    //                .getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+    //
+    //        assert expressionExperiment != null;
+    //
+    //        this.removeProcessedDataVectors( expressionExperiment );
+    //
+    //        Hibernate.initialize( expressionExperiment );
+    //        Hibernate.initialize( expressionExperiment.getQuantitationTypes() );
+    //
+    //        data = ExpressionDataDoubleMatrixUtil.ensureLog2Scale( data );
+    //
+    //        QuantitationType qt = data.iterator().next().getQuantitationType(); // assumes all are same.
+    //        qt.setScale( ScaleType.LOG2 );
+    //        this.getSession().update( qt );
+    //
+    //        expressionExperiment.getProcessedExpressionDataVectors().addAll( data );
+    //
+    //        this.getSessionFactory().getCurrentSession().saveOrUpdate( qt );
+    //        expressionExperiment.getQuantitationTypes().add( data.iterator().next().getQuantitationType() );
+    //        expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
+    //
+    //        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
+    //        assert expressionExperiment.getNumberOfDataVectors() != null;
+    //
+    //        this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
+    //
+    //        return expressionExperiment;
+    //
+    //    }
 
     @Override
     public Collection<ProcessedExpressionDataVector> find( BioAssayDimension bioAssayDimension ) {
@@ -873,7 +902,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Make a quantitation type for attaching to the new processed data.
+     * Make a quantitation type for attaching to the new processed data - always log2 transformed
      *
      * @param preferredQt preferred QT
      * @return QT
@@ -902,6 +931,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         present.setIsRatio( preferredQt.getIsRatio() );
         present.setType( preferredQt.getType() );
+
         Long id = ( Long ) this.getSessionFactory().getCurrentSession().save( present );
         return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationTypeImpl.class, id );
     }

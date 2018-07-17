@@ -76,20 +76,20 @@ public class RawExpressionDataVector extends DesignElementDataVector {
             }
 
             return this.getDesignElement().getName().equals( that.getDesignElement().getName() ) && this
-                    .getQuantitationType().getName().equals( that.getQuantitationType().getName() ) && this
-                    .getBioAssayDimension().getName().equals( that.getBioAssayDimension().getName() );
+                    .getQuantitationType().getName().equals( that.getQuantitationType().getName() )
+                    && this
+                            .getBioAssayDimension().getName().equals( that.getBioAssayDimension().getName() );
         }
         return true;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() ) + (
-                this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() ) + (
-                this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() ) + (
-                this.getExpressionExperiment() == null ?
-                        "" :
-                        " EE=" + this.getExpressionExperiment().getName() + ", " + this.getData().length + " bytes" );
+        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() )
+                + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
+                + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
+                + ( this.getExpressionExperiment() == null ? ""
+                        : " EE=" + this.getExpressionExperiment().getName() + ", " + this.getData().length + " bytes" );
 
     }
 
@@ -98,15 +98,15 @@ public class RawExpressionDataVector extends DesignElementDataVector {
 
         // if it matters, just using the designelement name hashcode would probably be nearly good enough.
         if ( this.getDesignElement() != null ) {
-            hashCode += this.getDesignElement().getName().hashCode();
+            hashCode += this.getDesignElement().hashCode();
         }
 
         if ( this.getQuantitationType() != null ) {
-            hashCode += this.getQuantitationType().getName().hashCode();
+            hashCode += this.getQuantitationType().hashCode();
         }
 
         if ( this.getBioAssayDimension() != null ) {
-            hashCode += this.getBioAssayDimension().getName().hashCode();
+            hashCode += this.getBioAssayDimension().hashCode();
         }
 
         // least important as it is unlikely we would have multiple expression experiments in the same collection.

@@ -416,10 +416,6 @@
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.bioAssayDataVectors"
-           maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-           overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.processedExpressionDataVectors"
            maxElementsInMemory="100000" eternal="true" overflowToDisk="false"/>
 

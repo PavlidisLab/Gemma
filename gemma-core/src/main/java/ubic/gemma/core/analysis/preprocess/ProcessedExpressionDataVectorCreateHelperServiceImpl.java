@@ -89,8 +89,11 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
-        ee = this.processedExpressionDataVectorDao.createProcessedDataVectors( ee, vecs );
-        ee = this.eeService.thawLite( ee );
+        //        ee = this.processedExpressionDataVectorDao.createProcessedDataVectors( ee, vecs );
+        //        ee = this.eeService.thawLite( ee );
+
+        ee.getProcessedExpressionDataVectors().addAll( vecs );
+        expressionExperimentDao.update( ee );
 
         assert ee.getNumberOfDataVectors() != null;
         this.audit( ee );

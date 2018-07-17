@@ -201,7 +201,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( oldbs.size(), seenBs.size() );
 
         ee = eeService.thaw( ee );
-        assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
         ee = eeService.thaw( ee );
@@ -223,6 +222,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
                 .getProcessedDataVectors( ee );
 
         assertEquals( 72, pvs.size() );
+
+        assertEquals( 978, ee.getRawExpressionDataVectors().size() );
 
         ee = eeService.thaw( ee );
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService

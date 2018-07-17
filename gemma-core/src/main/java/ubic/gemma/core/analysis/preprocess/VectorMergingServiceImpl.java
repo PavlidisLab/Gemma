@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
@@ -148,6 +149,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
          * This will run into problems if there are excess quantitation types
          */
         int numSuccessfulMergers = 0;
+        Collection<RawExpressionDataVector> newVectors = new HashSet<>();
+
         for ( QuantitationType type : qt2Vec.keySet() ) {
 
             Collection<RawExpressionDataVector> oldVecs = qt2Vec.get( type );
@@ -167,7 +170,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             VectorMergingServiceImpl.log.info( "Processing " + oldVecs.size() + " vectors  for " + type );
 
-            Collection<RawExpressionDataVector> newVectors = new HashSet<>();
             int numAllMissing = 0;
             int missingValuesForQt = 0;
             for ( CompositeSequence de : deVMap.keySet() ) {
@@ -204,9 +206,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             }
 
-            // TRANSACTION
-            vectorMergingHelperService.persist( ee, type, newVectors, oldVecs );
-
             if ( numAllMissing > 0 ) {
                 VectorMergingServiceImpl.log
                         .info( numAllMissing + " vectors had all missing values and were junked for " + type );
@@ -219,17 +218,25 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             numSuccessfulMergers++;
         } // for each quantitation type
 
+        // Up to now, nothing has been changed in the database except we made a new bioassaydimension.
+
         if ( numSuccessfulMergers == 0 ) {
             /*
-             * Try to clean up
+             * Try to clean up before bailing
              */
             this.bioAssayDimensionService.remove( newBioAd );
             throw new IllegalStateException(
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
-        // refresh into context (may be unnecessary)
+        // TRANSACTION
+        log.info( ee.getRawExpressionDataVectors().size() );
+
+        vectorMergingHelperService.persist( ee, newVectors );
+
         ee = expressionExperimentService.load( ee.getId() );
+        ee = expressionExperimentService.thaw( ee );
+        log.info( ee.getRawExpressionDataVectors().size() );
 
         // Several transactions
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
@@ -241,11 +248,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         // several transactions
         try {
-            // reload to refresh into context
             preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
-            VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
-        } catch ( Exception e ) {
             VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
         }
 
