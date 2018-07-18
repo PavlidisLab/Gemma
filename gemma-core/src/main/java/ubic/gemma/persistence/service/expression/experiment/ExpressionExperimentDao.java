@@ -1,21 +1,31 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.InitializingBean;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
-
-import java.util.*;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -38,11 +48,11 @@ public interface ExpressionExperimentDao
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter );
+            boolean asc, List<ObjectFilter[]> filter );
 
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             Collection<Long> ids, Taxon taxon, int limit, int start );
@@ -112,9 +122,6 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
     Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
-
-    @Deprecated
-    Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 

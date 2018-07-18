@@ -36,7 +36,7 @@ import java.util.List;
 
 /**
  * @author pavlidis
- * @see Taxon
+ * @see    Taxon
  */
 @Repository
 public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
@@ -155,7 +155,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
 
     @Override
     public Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter ) {
+            List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
 
@@ -186,21 +186,21 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     /**
-     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                        description.
-     * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
-     * @return a hibernate Query object ready to be used for TaxonVO retrieval.
+     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                         description.
+     * @param  orderByProperty the property to order by.
+     * @param  orderDesc       whether the ordering is ascending or descending.
+     * @return                 a hibernate Query object ready to be used for TaxonVO retrieval.
      */
-    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_TAXON_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_TAXON_ALIAS + ", " // 1
-                + "ED, "  // 2
-                + "PT, "  // 3
-                + "PTT "  // 4
+                + "ED, " // 2
+                + "PT, " // 3
+                + "PTT " // 4
                 + "from Taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " " // taxon
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon as PT " // parent taxon

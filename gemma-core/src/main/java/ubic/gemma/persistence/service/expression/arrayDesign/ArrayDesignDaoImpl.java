@@ -49,7 +49,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
+ * @see    ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
@@ -532,9 +532,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllCompositeSequenceWithBioSequences() {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where cs.biologicalCharacteristic.sequence is not null";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " where cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
                 .next();
     }
@@ -543,9 +542,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list().iterator().next();
     }
@@ -554,9 +552,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllCompositeSequenceWithBlatResults() {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
                 .next();
     }
@@ -568,9 +565,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             throw new IllegalArgumentException();
         }
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BlatResult as blat where blat.querySequence != null and ar.id in (:ids)";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + ", BlatResult as blat where blat.querySequence != null and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list().iterator().next();
     }
@@ -579,10 +575,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllCompositeSequenceWithGenes() {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
                 .next();
     }
@@ -594,11 +589,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             throw new IllegalArgumentException();
         }
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar.id in (:ids)";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct=gp and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list().iterator().next();
     }
@@ -607,10 +601,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numAllGenes() {
         //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
+        final String queryString = "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
                 .next();
     }
@@ -622,11 +615,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             throw new IllegalArgumentException();
         }
         //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
+        final String queryString = "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list().iterator().next();
     }
@@ -635,9 +627,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -646,10 +637,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct bs2gp) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct as bs2gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
+        final String queryString = "select count (distinct bs2gp) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " , BioSequence2GeneProduct as bs2gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -666,9 +656,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString = "select count (distinct cs) from CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -677,9 +666,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -688,11 +676,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar = :ar";
+        final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " , BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -701,11 +688,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar = :ar";
+        final String queryString = "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -915,8 +901,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Loads a single value objects for the given array design.
      *
-     * @param e the array design to be converted to a value object
-     * @return a value object with properties of the given array design.
+     * @param  e the array design to be converted to a value object
+     * @return   a value object with properties of the given array design.
      */
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign e ) {
@@ -946,15 +932,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Queries the database to retrieve all array designs, based on the given parameters, and then
      * converts them to value objects.
      *
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
-     * @param orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @return list of value objects representing the ADs that matched the criteria.
+     * @param  offset  amount of ADs to skip.
+     * @param  limit   maximum amount of ADs to retrieve.
+     * @param  orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
+     * @param  asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @return         list of value objects representing the ADs that matched the criteria.
      */
     @Override
     public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+            boolean asc, List<ObjectFilter[]> filter ) {
         String orderByClause = this.getOrderByProperty( orderBy );
 
         // Compose query
@@ -970,8 +956,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Creates and orderBy parameter.
      *
-     * @param orderBy the property to order by, if null, default ordering is used.
-     * @return and order by parameter. Default ordering is id.
+     * @param  orderBy the property to order by, if null, default ordering is used.
+     * @return         and order by parameter. Default ordering is id.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1057,15 +1043,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
-    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
         // Restrict to non-troubled EEs for non-administrators
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( filters == null ) {
                 filters = new ArrayList<>( ArrayDesignDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            } else {
-                filters.ensureCapacity( filters.size() + ArrayDesignDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
             }
             filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
                     ObjectFilter.DAO_AD_ALIAS ) } );
@@ -1075,14 +1059,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + ObjectFilter.DAO_AD_ALIAS + ".name, " //1
                 + ObjectFilter.DAO_AD_ALIAS + ".shortName, " //2
                 + ObjectFilter.DAO_AD_ALIAS + ".technologyType, " //3
-                + ObjectFilter.DAO_AD_ALIAS + ".description, "  //4
+                + ObjectFilter.DAO_AD_ALIAS + ".description, " //4
                 + "m, " //5
                 + "s.lastUpdated, " //6
-                + "s.troubled, "  //7
+                + "s.troubled, " //7
                 + "s.needsAttention, " //8
-                + "s.curationNote, "  //9
+                + "s.curationNote, " //9
                 + "t.commonName, " //10
-                + "eNote, "  //11
+                + "eNote, " //11
                 + "eAttn, " //12
                 + "eTrbl " //13
                 + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS

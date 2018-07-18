@@ -33,6 +33,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
@@ -163,7 +164,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     Map<Long, AuditEvent> getLastAnnotationFile( Collection<Long> ids );
 
     /**
-     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id -&gt;
+     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id
+     * -&gt;
      * AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids );
@@ -184,15 +186,15 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
-     * excluded.
+     *         excluded.
      */
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
      *
-     * @param id The id of the array design
-     * @return The Set of Taxons for array design.
+     * @param  id The id of the array design
+     * @return    The Set of Taxons for array design.
      */
     Collection<Taxon> getTaxa( Long id );
 
@@ -217,7 +219,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     @Override
     Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter );
+            List<ObjectFilter[]> filter );
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations

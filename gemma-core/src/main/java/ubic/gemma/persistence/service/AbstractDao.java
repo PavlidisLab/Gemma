@@ -79,6 +79,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
                 .setParameterList( "ids", ids ).list();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public T load( Long id ) {
@@ -153,6 +154,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @param propertyValue the value to look for.
      * @return an entity whose property first like-matched the given value.
      */
+    @SuppressWarnings("unchecked")
     protected T findOneByStringProperty( String propertyName, String propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
@@ -183,6 +185,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @param propertyValue the value to look for.
      * @return a list of entities whose properties matched the given value.
      */
+    @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
 
         /*

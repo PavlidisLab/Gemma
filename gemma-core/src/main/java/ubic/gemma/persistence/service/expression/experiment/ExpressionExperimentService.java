@@ -122,7 +122,7 @@ public interface ExpressionExperimentService
 
     /**
      * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
-     * in multiple experiments in Gemma.
+     *         in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
@@ -217,23 +217,23 @@ public interface ExpressionExperimentService
     /**
      * Checks the experiment for a batch confound.
      *
-     * @param ee the experiment to check.
-     * @return a string describing the batch confound, or null if there was no batch confound.
+     * @param  ee the experiment to check.
+     * @return    a string describing the batch confound, or null if there was no batch confound.
      */
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     * null if there was no batch information available. Note that we don't look at every component, just the
-     * first few.
+     *         null if there was no batch information available. Note that we don't look at every component, just the
+     *         first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
     /**
      * Composes a string describing the batch effect state of the given experiment.
      *
-     * @param ee the experiment to get the batch effect for.
-     * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
+     * @param  ee the experiment to get the batch effect for.
+     * @return    a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
     String getBatchEffectDescription( ExpressionExperiment ee );
 
@@ -350,12 +350,12 @@ public interface ExpressionExperimentService
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter );
+            boolean asc, List<ObjectFilter[]> filter );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
@@ -386,11 +386,11 @@ public interface ExpressionExperimentService
     /**
      * Special method for front-end access
      *
-     * @param orderField the field to order the results by.
-     * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @return a list of EE details VOs representing experiments matching the given arguments.
+     * @param  orderField the field to order the results by.
+     * @param  descending whether the ordering by the orderField should be descending.
+     * @param  ids        only list specific ids.
+     * @param  taxon      only list experiments within specific taxon.
+     * @return            a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
@@ -409,8 +409,8 @@ public interface ExpressionExperimentService
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
      *
-     * @param vectors If they are from more than one platform, that will be dealt with.
-     * @return the updated Experiment
+     * @param  vectors If they are from more than one platform, that will be dealt with.
+     * @return         the updated Experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment replaceRawVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );

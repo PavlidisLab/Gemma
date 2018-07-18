@@ -25,6 +25,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see ubic.gemma.model.genome.Taxon
@@ -43,8 +44,8 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
     /**
      * Searches for a taxon by its scientific name, case insensitive.
      *
-     * @param scientificName the scientific name to be matched
-     * @return a Taxon whose scientific name matches the given string.
+     * @param  scientificName the scientific name to be matched
+     * @return                a Taxon whose scientific name matches the given string.
      */
     Taxon findByScientificName( String scientificName );
 
@@ -61,5 +62,5 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
 
     @Override
     Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter );
+            List<ObjectFilter[]> filter );
 }

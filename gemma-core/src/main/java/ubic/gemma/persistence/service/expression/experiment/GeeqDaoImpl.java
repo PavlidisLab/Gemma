@@ -70,7 +70,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
 
     @Override
     public Collection<GeeqValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter ) {
+            List<ObjectFilter[]> filter ) {
         throw new NotYetImplementedException(
                 "filtering not implemented for Geeq VOs, as they should come with EEs (filter the EEs instead)." );
     }

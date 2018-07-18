@@ -36,8 +36,8 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     /**
      * Splits string by the ',' comma character and trims the resulting strings.
      *
-     * @param arg the string to process
-     * @return trimmed strings exploded from the input.
+     * @param  arg the string to process
+     * @return     trimmed strings exploded from the input.
      */
     static String[] splitString( String arg ) {
         String[] array = arg.split( "," );
@@ -47,18 +47,21 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     }
 
     /**
-     * Combines the given filters with the properties in this array to create a final filter to be used for VO retrieval.
-     * Note that this does not check whether objects with identifiers in this array arg do actually exist. This merely creates
+     * Combines the given filters with the properties in this array to create a final filter to be used for VO
+     * retrieval.
+     * Note that this does not check whether objects with identifiers in this array arg do actually exist. This merely
+     * creates
      * a set of filters that should be used to impose restrictions in the database query.
      * You can call this#getPersistentObjects which does try to retrieve the corresponding objects, and consequently
      * does yield a 404 error if an object for any of the identifiers in this array arg does not exist.
      *
-     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @param filters the filters list to add the new filter to. Can be null.
-     * @return the same array list as given, with a new added element, or a new ArrayList, in case the given filters
-     * was null.
+     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
+     * @param  filters the filters list to add the new filter to. Can be null.
+     * @return         the same array list as given, with a new added element, or a new ArrayList, in case the given
+     *                 filters
+     *                 was null.
      */
-    public ArrayList<ObjectFilter[]> combineFilters( ArrayList<ObjectFilter[]> filters, S service ) {
+    public List<ObjectFilter[]> combineFilters( List<ObjectFilter[]> filters, S service ) {
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
@@ -71,11 +74,12 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
 
     /**
      * Retrieves the persistent objects for all the identifiers in this array arg.
-     * Note that if any of the values in the array do not map to an object (i.e. an object with such identifier does not exist),
+     * Note that if any of the values in the array do not map to an object (i.e. an object with such identifier does not
+     * exist),
      * a 404 error will be thrown.
      *
-     * @param service the service that will be used to retrieve the persistent objects.
-     * @return a collection of persistent objects matching the identifiers on this array arg.
+     * @param  service the service that will be used to retrieve the persistent objects.
+     * @return         a collection of persistent objects matching the identifiers on this array arg.
      */
     public Collection<O> getPersistentObjects( S service ) {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
@@ -107,11 +111,11 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     /**
      * Reads the given MutableArgs property name and checks whether it is null or empty.
      *
-     * @param arg     the MutableArg to retrieve the property name from.
-     * @param value   one of the values of the property that has been passed into this array arg.
-     * @param service service that may be used to retrieve the property from the MutableArg.
-     * @param <T>     type of the given MutableArg.
-     * @return the name of the property that the values in this arrayArg refer to.
+     * @param  arg     the MutableArg to retrieve the property name from.
+     * @param  value   one of the values of the property that has been passed into this array arg.
+     * @param  service service that may be used to retrieve the property from the MutableArg.
+     * @param          <T> type of the given MutableArg.
+     * @return         the name of the property that the values in this arrayArg refer to.
      */
     <T extends MutableArg<?, O, VO, S>> String checkPropertyNameString( T arg, String value, S service ) {
         String identifier = arg.getPropertyName( service );
@@ -123,8 +127,8 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     }
 
     /**
-     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @return the name of the property that the values in this array represent.
+     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
+     * @return         the name of the property that the values in this array represent.
      */
     private String getPropertyName( S service ) {
         if ( this.argValueName == null ) {
@@ -134,8 +138,8 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     }
 
     /**
-     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @return the type of the property that the values in this array represent.
+     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
+     * @return         the type of the property that the values in this array represent.
      */
     private Class<?> getPropertyType( S service ) {
         if ( argValueClass == null ) {

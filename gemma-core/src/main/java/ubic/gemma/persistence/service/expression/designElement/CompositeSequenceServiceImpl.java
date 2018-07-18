@@ -44,7 +44,7 @@ import java.util.*;
 /**
  * @author keshav
  * @author pavlidis
- * @see CompositeSequenceService
+ * @see    CompositeSequenceService
  */
 @Service
 public class CompositeSequenceServiceImpl
@@ -252,9 +252,8 @@ public class CompositeSequenceServiceImpl
 
     @Override
     public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
-        Collection<CompositeSequenceValueObject> vos = super
-                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+            boolean asc, List<ObjectFilter[]> filter ) {
+        Collection<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
         for ( CompositeSequenceValueObject vo : vos ) {
             // Not passing the vo since that would create data redundancy in the returned structure
             vo.setGeneMappingSummaries( this.getGeneMappingSummary(

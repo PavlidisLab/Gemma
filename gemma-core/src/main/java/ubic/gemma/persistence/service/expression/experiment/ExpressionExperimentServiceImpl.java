@@ -70,7 +70,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see ExpressionExperimentService
+ * @see    ExpressionExperimentService
  */
 @Service
 @Transactional
@@ -822,11 +822,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *        checking
-     *        the curation details of the object directly, as this method also checks all the array designs the given
-     *        experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @param  ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *            checking
+     *            the curation details of the object directly, as this method also checks all the array designs the
+     *            given
+     *            experiment belongs to.
+     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -864,7 +865,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *        be filled in with IC. A category and value must be provided.
+     *           be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override
@@ -979,7 +980,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+            boolean asc, List<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
