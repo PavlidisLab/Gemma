@@ -39,7 +39,7 @@ import java.util.HashSet;
  * <li>(Masked) Affymetrix GeneChip expression probe array... --- Description
  * </ol>
  *
- * @author keshav
+ * @author     keshav
  * @deprecated
  */
 @Deprecated
@@ -67,7 +67,6 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( fields[4].toLowerCase() );
-        t.setIsSpecies( true ); // assumption.
         t.setIsGenesUsable( true ); // assumption
         ad.setPrimaryTaxon( t );
 

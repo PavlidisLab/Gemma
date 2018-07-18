@@ -30,15 +30,11 @@ import java.util.Collection;
  */
 public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObject> {
 
-    Taxon findByAbbreviation( String abbreviation );
-
     Taxon findByCommonName( String commonName );
 
     Taxon findByScientificName( String scientificName );
 
     Taxon findByNcbiId( Long ncbiId );
-
-    Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -68,11 +64,6 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     Collection<Taxon> loadAllTaxaWithGenes();
-
-    /**
-     * @return Taxon that are species. (only returns usable taxa)
-     */
-    Collection<TaxonValueObject> getTaxaSpecies();
 
     Collection<TaxonValueObject> getTaxaWithEvidence();
 

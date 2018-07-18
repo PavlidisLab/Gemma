@@ -419,11 +419,6 @@ public class ExpressionExperimentSetServiceImpl
             return null;
         }
 
-        // get top level parent taxon
-        while ( eeTaxon.getParentTaxon() != null ) {
-            eeTaxon = eeTaxon.getParentTaxon();
-        }
-
         return eeTaxon;
     }
 }

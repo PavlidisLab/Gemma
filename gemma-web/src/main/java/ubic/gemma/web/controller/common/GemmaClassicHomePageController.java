@@ -35,7 +35,7 @@ import java.util.*;
 /**
  * Responsible for display of the Gemma home page.
  *
- * @author joseph
+ * @author     joseph
  * @deprecated
  */
 @Controller
@@ -65,7 +65,6 @@ public class GemmaClassicHomePageController {
         otherTaxa.setScientificName( "Other" );
         otherTaxa.setAbbreviation( "Other" );
         otherTaxa.setIsGenesUsable( false );
-        otherTaxa.setIsSpecies( false );
     }
 
     @RequestMapping(WebConstants.CLASSIC_HOME_PAGE)

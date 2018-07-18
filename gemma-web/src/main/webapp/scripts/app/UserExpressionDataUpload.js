@@ -510,18 +510,7 @@ Ext
 
          if ( k >= 0 ) {
             taxonArrayCombo.setTaxon( taxon.id );
-            arrayDesignCombo.taxonChanged( taxon.data );
-         } else if ( taxon.get( "parentTaxon" ) ) {
-            var parent = taxon.get( "parentTaxon" );
-            k = taxonArrayCombo.getStore().find( "id", parent.id );
-
-            if ( k < 0 ) {
-               Ext.Msg.alert( "Sorry", "There are no arrays for that taxon" );
-               return;
-            }
-
-            taxonArrayCombo.setTaxon( parent.id );
-            arrayDesignCombo.taxonChanged( parent );
+            arrayDesignCombo.taxonChanged( taxon.data ); 
          } else {
             Ext.Msg.alert( "Sorry", "There are no arrays for that taxon" );
          }

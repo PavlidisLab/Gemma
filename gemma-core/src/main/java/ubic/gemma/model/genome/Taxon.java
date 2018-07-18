@@ -31,12 +31,10 @@ public class Taxon implements Identifiable, java.io.Serializable {
     private String commonName;
     private String abbreviation;
     private Integer ncbiId;
-    private Boolean isSpecies;
     private Boolean isGenesUsable;
     private Integer secondaryNcbiId;
     private Long id;
     private ExternalDatabase externalDatabase;
-    private Taxon parentTaxon;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -153,28 +151,12 @@ public class Taxon implements Identifiable, java.io.Serializable {
         this.isGenesUsable = isGenesUsable;
     }
 
-    public Boolean getIsSpecies() {
-        return this.isSpecies;
-    }
-
-    public void setIsSpecies( Boolean isSpecies ) {
-        this.isSpecies = isSpecies;
-    }
-
     public Integer getNcbiId() {
         return this.ncbiId;
     }
 
     public void setNcbiId( Integer ncbiId ) {
         this.ncbiId = ncbiId;
-    }
-
-    public Taxon getParentTaxon() {
-        return this.parentTaxon;
-    }
-
-    public void setParentTaxon( Taxon parentTaxon ) {
-        this.parentTaxon = parentTaxon;
     }
 
     public String getScientificName() {
@@ -186,8 +168,9 @@ public class Taxon implements Identifiable, java.io.Serializable {
     }
 
     /**
-     * @return Represents a "secondary" Taxon id that is used for this species. The main example where this is necessary is
-     * budding yeast, which is id 4932 in GEO but genes use the (strain-specific) ID 559292.
+     * @return Represents a "secondary" Taxon id that is used for this species. The main example where this is necessary
+     *         is
+     *         budding yeast, which is id 4932 in GEO but genes use the (strain-specific) ID 559292.
      */
     public Integer getSecondaryNcbiId() {
         return this.secondaryNcbiId;
@@ -223,7 +206,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
             entity.setCommonName( commonName );
             entity.setAbbreviation( abbreviation );
             entity.setNcbiId( ncbiId );
-            entity.setIsSpecies( isSpecies );
             entity.setIsGenesUsable( isGenesUsable );
 
             return entity;

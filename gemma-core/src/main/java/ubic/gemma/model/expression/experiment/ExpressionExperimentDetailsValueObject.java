@@ -41,13 +41,11 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     private boolean reprocessedFromRawData;
     private boolean hasBatchInformation;
-    private String description;
     private String secondaryAccession;
     private String secondaryExternalDatabase;
     private String secondaryExternalUri;
     private String QChtml;
     private String lastArrayDesignUpdateDate;
-    private String parentTaxon;
     private Boolean hasMultiplePreferredQuantitationTypes = false;
     private Boolean hasMultipleTechnologyTypes = false;
     private Boolean hasCoexpressionAnalysis = null;
@@ -97,7 +95,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
         super( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
                 vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
-                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), vo.getParentTaxonId(),
+                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), 
                 vo.getExperimentalDesign(), vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(),
                 vo.getBioMaterialCount(), vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(),
                 vo.getIsPublic(), vo.getIsShared(), vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(),
@@ -132,9 +130,11 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     * @return The date the platform associated with the experiment was last updated. If there are multiple platforms this
-     * should be the date of the most recent modification of any of them. This is used to help flag experiments that
-     * need re-analysis due to changes in the underlying array design(s)
+     * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
+     *         this
+     *         should be the date of the most recent modification of any of them. This is used to help flag experiments
+     *         that
+     *         need re-analysis due to changes in the underlying array design(s)
      */
     public Date getDateArrayDesignLastUpdated() {
         return this.dateArrayDesignLastUpdated;
@@ -248,7 +248,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     * @return The number of experimental factors the experiment has (counting those that are populated with biomaterials)
+     * @return The number of experimental factors the experiment has (counting those that are populated with
+     *         biomaterials)
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
@@ -283,8 +284,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     * @return Details of samples that were removed (or marked as outliers). This can happen multiple times in the life of a
-     * data set, so this is a collection of AuditEvents.
+     * @return Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
+     *         of a
+     *         data set, so this is a collection of AuditEvents.
      */
     public Collection<AuditEventValueObject> getSampleRemovedFlags() {
         return this.sampleRemovedFlags;
@@ -381,8 +383,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress, this might
-     * be a link to the ArrayExpress version.
+     * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
+     *         this might
+     *         be a link to the ArrayExpress version.
      */
     public String getSecondaryAccession() {
         return this.secondaryAccession;
@@ -406,14 +409,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setSecondaryExternalUri( String secondaryExternalUri ) {
         this.secondaryExternalUri = secondaryExternalUri;
-    }
-
-    public String getParentTaxon() {
-        return parentTaxon;
-    }
-
-    public void setParentTaxon( String parentTaxon ) {
-        this.parentTaxon = parentTaxon;
     }
 
     public String getQChtml() {
@@ -471,7 +466,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return html-escaped string with trouble info.
-     * @see #getTroubleDetails(boolean)
+     * @see    #getTroubleDetails(boolean)
      */
     @Override
     public String getTroubleDetails() {
@@ -482,8 +477,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
      * MAKE SURE to fill the Array Design variable first!
      *
-     * @param htmlEscape whether to escape the returned string for html
-     * @return string with trouble info.
+     * @param  htmlEscape whether to escape the returned string for html
+     * @return            string with trouble info.
      */
     @Override
     public String getTroubleDetails( boolean htmlEscape ) {
@@ -522,15 +517,16 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     /**
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
-    @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
+    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
     public Boolean getActuallyTroubled() {
         return super.getTroubled();
     }
 
     /**
-     * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is troubled.
+     * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
+     *         troubled.
      */
-    @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
+    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
     public Boolean getPlatformTroubled() {
         if ( this.arrayDesigns == null ) {
             return null; // Just because dwr accesses this even when arrayDesigns is not set.

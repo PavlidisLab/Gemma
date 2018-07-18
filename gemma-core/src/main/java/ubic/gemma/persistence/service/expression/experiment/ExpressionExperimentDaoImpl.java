@@ -205,7 +205,7 @@ public class ExpressionExperimentDaoImpl
         //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
-                + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdated desc";
+                + " order by s.lastUpdated desc";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "taxon", taxon );
 
@@ -293,8 +293,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
         ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
-                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
         return this.loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
     }
@@ -316,8 +315,7 @@ public class ExpressionExperimentDaoImpl
             boolean descending, Taxon taxon ) {
 
         final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
-                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
         return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
     }
@@ -623,18 +621,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperiment> findByParentTaxon( Taxon taxon ) {
-        //language=HQL
-        final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.sampleUsed as sample "
-                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
-                .list();
-    }
-
-    @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
         //language=HQL
         final String queryString = "select ee from ExpressionExperiment as ee " + "inner join ee.quantitationTypes qt where qt = :qt ";
@@ -655,7 +641,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> findByTaxon( Taxon taxon ) {
         //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -814,15 +800,6 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
 
-        Map<Taxon, Taxon> taxonParents = new HashMap<>();
-
-        //noinspection unchecked
-        List<Object[]> tp = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select t, p from Taxon t left outer join t.parentTaxon p" ).list();
-        for ( Object[] o : tp ) {
-            taxonParents.put( ( Taxon ) o[0], ( Taxon ) o[1] );
-        }
-
         Map<Taxon, Long> taxonCount = new LinkedHashMap<>();
         String queryString = "select t, count(distinct ee) from ExpressionExperiment "
                 + "ee inner join ee.bioAssays as ba inner join ba.sampleUsed su "
@@ -834,19 +811,10 @@ public class ExpressionExperimentDaoImpl
         ScrollableResults list = queryObject.scroll();
         while ( list.next() ) {
             Taxon taxon = ( Taxon ) list.get( 0 );
-            Taxon parent = taxonParents.get( taxon );
             Long count = list.getLong( 1 );
 
-            if ( parent != null ) {
-                if ( !taxonCount.containsKey( parent ) ) {
-                    taxonCount.put( parent, 0L );
-                }
+            taxonCount.put( taxon, count );
 
-                taxonCount.put( parent, taxonCount.get( parent ) + count );
-
-            } else {
-                taxonCount.put( taxon, count );
-            }
         }
         return taxonCount;
 

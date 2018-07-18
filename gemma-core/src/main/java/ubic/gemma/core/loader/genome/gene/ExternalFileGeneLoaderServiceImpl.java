@@ -91,10 +91,11 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * If the gene already exists, then it is not modified, unless it lacks a gene product. In that case we add one and
      * return it.
      *
-     * @param fields A string array containing gene symbol, gene name and uniprot id.
-     * @param taxon Taxon relating to gene
-     * @return Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or invalid
-     *         fields) or modified.
+     * @param  fields A string array containing gene symbol, gene name and uniprot id.
+     * @param  taxon  Taxon relating to gene
+     * @return        Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or
+     *                invalid
+     *                fields) or modified.
      */
     private Gene createGene( String[] fields, Taxon taxon ) {
 
@@ -148,8 +149,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * When loading genes with a file each gene will have just 1 gene product. The gene product is a filler taking its
      * details from the gene.
      *
-     * @param gene The gene associated to this gene product
-     * @return Collection of gene products in this case just 1.
+     * @param  gene The gene associated to this gene product
+     * @return      Collection of gene products in this case just 1.
      */
     private GeneProduct createGeneProduct( Gene gene ) {
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
@@ -183,8 +184,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     /**
      * Creates a bufferedReader for gene file.
      *
-     * @param geneFile GeneFile including full path
-     * @return BufferedReader The bufferedReader for gene file.
+     * @param  geneFile    GeneFile including full path
+     * @return             BufferedReader The bufferedReader for gene file.
      * @throws IOException File can not be opened for reading such as does not exist.
      */
     private BufferedReader readFile( String geneFile ) throws IOException {
@@ -201,8 +202,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     /**
      * Read a gene file line, splitting the line into 3 strings.
      *
-     * @param line A line from the gene file
-     * @return Array of strings representing a line in a gene file.
+     * @param  line        A line from the gene file
+     * @return             Array of strings representing a line in a gene file.
      * @throws IOException Thrown if file is not readable
      */
     private String[] readLine( String line ) throws IOException {
@@ -222,24 +223,11 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     }
 
     /**
-     * Method to update taxon to indicate that genes have been loaded for that taxon. If the taxon has children taxa
-     * then those child genes should not be used and the flag for those child taxon set to false.
+     * Method to update taxon to indicate that genes have been loaded for that taxon.
      *
      * @param taxon The taxon to update
      */
     private void updateTaxonWithGenesLoaded( Taxon taxon ) {
-        Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
-        // if this taxon has children flag not to use their genes
-        if ( childTaxa != null && !childTaxa.isEmpty() ) {
-            for ( Taxon childTaxon : childTaxa ) {
-                if ( childTaxon != null && childTaxon.getIsGenesUsable() ) {
-                    childTaxon.setIsGenesUsable( false );
-                    taxonService.update( childTaxon );
-                    log.warn( "Child taxa" + childTaxon + " genes have been loaded parent taxa should suppressed" );
-                }
-            }
-        }
-        // set taxon flag indicating that use this taxon's genes
         if ( !taxon.getIsGenesUsable() ) {
             taxon.setIsGenesUsable( true );
             taxonService.update( taxon );
@@ -251,8 +239,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     /**
      * Method to validate that taxon is held in system.
      *
-     * @param taxonName Taxon common name
-     * @return Full Taxon details
+     * @param  taxonName                Taxon common name
+     * @return                          Full Taxon details
      * @throws IllegalArgumentException If taxon is not found in the system.
      */
     private Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {

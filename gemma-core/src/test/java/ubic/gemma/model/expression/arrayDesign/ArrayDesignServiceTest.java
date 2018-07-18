@@ -245,7 +245,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         Taxon secondTaxon = Taxon.Factory.newInstance();
         secondTaxon.setScientificName( taxonName2 );
         secondTaxon.setNcbiId( Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) ) );
-        secondTaxon.setIsSpecies( true );
         secondTaxon.setIsGenesUsable( true );
 
         for ( int i = 0; i < 3; i++ ) {

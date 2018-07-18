@@ -364,15 +364,6 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByName( name );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByParentTaxon(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByParentTaxon( final Taxon taxon ) {
-        return this.expressionExperimentDao.findByParentTaxon( taxon );
-    }
-
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {

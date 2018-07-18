@@ -66,8 +66,8 @@ public class GenePickerController {
     /**
      * AJAX
      *
-     * @param geneIds gene ids
-     * @return collection of gene entity objects; duplicates will be resolved.
+     * @param  geneIds gene ids
+     * @return         collection of gene entity objects; duplicates will be resolved.
      */
     public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
         if ( geneIds == null || geneIds.isEmpty() ) {
@@ -81,9 +81,9 @@ public class GenePickerController {
      * for AJAX get all genes in the given taxon that are annotated with the given go id, including its child terms in
      * the hierarchy
      *
-     * @param goId    GO id that must be in the format "GO_#######"
-     * @param taxonId must not be null and must correspond to a taxon
-     * @return Collection empty if goId was blank or taxonId didn't correspond to a taxon
+     * @param  goId    GO id that must be in the format "GO_#######"
+     * @param  taxonId must not be null and must correspond to a taxon
+     * @return         Collection empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
 
@@ -99,9 +99,9 @@ public class GenePickerController {
      * for AJAX get a gene set with all genes in the given taxon that are annotated with the given go id, including its
      * child terms in the hierarchy
      *
-     * @param goId    GO id that must be in the format "GO_#######"
-     * @param taxonId must not be null and must correspond to a taxon
-     * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
+     * @param  goId    GO id that must be in the format "GO_#######"
+     * @param  taxonId must not be null and must correspond to a taxon
+     * @return         GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public GOGroupValueObject getGeneSetByGOId( String goId, Long taxonId ) {
 
@@ -117,16 +117,6 @@ public class GenePickerController {
     public Collection<TaxonValueObject> getTaxa() {
 
         return taxonService.loadAllValueObjects();
-    }
-
-    /**
-     * AJAX
-     *
-     * @return Taxon that are species. (only returns usable taxa)
-     */
-    public Collection<TaxonValueObject> getTaxaSpecies() {
-
-        return taxonService.getTaxaSpecies();
     }
 
     /**
@@ -171,9 +161,9 @@ public class GenePickerController {
     /**
      * AJAX (used by GeneCombo.js)
      *
-     * @param query   query
-     * @param taxonId taxon id
-     * @return Collection of Gene entity objects
+     * @param  query   query
+     * @param  taxonId taxon id
+     * @return         Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
         return geneCoreService.searchGenes( query, taxonId );
@@ -182,17 +172,16 @@ public class GenePickerController {
     /**
      * AJAX (used by GeneAndGeneGroupCombo.js)
      *
-     * @param query   query
-     * @param taxonId can be null
-     * @return Collection of SearchResultDisplayObject
+     * @param  query   query
+     * @param  taxonId can be null
+     * @return         Collection of SearchResultDisplayObject
      */
     public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
 
         // get any session-bound groups
 
-        Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ?
-                sessionListManager.getModifiedGeneSets( taxonId ) :
-                sessionListManager.getModifiedGeneSets();
+        Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
+                : sessionListManager.getModifiedGeneSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -222,9 +211,9 @@ public class GenePickerController {
     /**
      * AJAX (used by Phenocarta)
      *
-     * @param query   query
-     * @param taxonId taxon id
-     * @return Collection of Gene entity objects
+     * @param  query   query
+     * @param  taxonId taxon id
+     * @return         Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
 
@@ -244,9 +233,9 @@ public class GenePickerController {
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      *
-     * @param query   A list of gene names (symbols), one per line.
-     * @param taxonId taxon id
-     * @return collection of gene value objects
+     * @param  query   A list of gene names (symbols), one per line.
+     * @param  taxonId taxon id
+     * @return         collection of gene value objects
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
         return geneSearchService.searchMultipleGenes( query, taxonId );
@@ -255,9 +244,9 @@ public class GenePickerController {
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      *
-     * @param query   A list of gene names (symbols), one per line.
-     * @param taxonId taxon id
-     * @return map with each gene-query as a key and a collection of the search-results as the value
+     * @param  query   A list of gene names (symbols), one per line.
+     * @param  taxonId taxon id
+     * @return         map with each gene-query as a key and a collection of the search-results as the value
      */
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
         return geneSearchService.searchMultipleGenesGetMap( query, taxonId );

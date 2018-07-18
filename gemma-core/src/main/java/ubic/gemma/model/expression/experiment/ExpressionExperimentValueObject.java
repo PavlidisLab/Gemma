@@ -33,7 +33,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String taxon;
     private String technologyType;
     private Long taxonId;
-    private Long parentTaxonId;
     private Long experimentalDesign;
     private Integer processedExpressionVectorCount;
     private Integer arrayDesignCount;
@@ -134,7 +133,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // Batch info
         batchEffect = ( String ) row[23];
         batchConfound = ( String ) row[24];
-        
+
         // 26-28 used in call to super.
 
         // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
@@ -148,7 +147,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
             String accession, String batchConfound, String batchEffect, String externalDatabase, String externalUri,
             String metadata, String shortName, String source, String taxon, String technologyType, Long taxonId,
-            Long parentTaxonId, Long experimentalDesign, Integer processedExpressionVectorCount,
+            Long experimentalDesign, Integer processedExpressionVectorCount,
             Integer arrayDesignCount, Integer bioMaterialCount, Boolean currentUserHasWritePermission,
             Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
@@ -170,7 +169,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = taxon;
         this.technologyType = technologyType;
         this.taxonId = taxonId;
-        this.parentTaxonId = parentTaxonId;
         this.experimentalDesign = experimentalDesign;
         this.processedExpressionVectorCount = processedExpressionVectorCount;
         this.arrayDesignCount = arrayDesignCount;
@@ -301,14 +299,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
-    }
-
-    public Long getParentTaxonId() {
-        return parentTaxonId;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
     }
 
     public Long getExperimentalDesign() {

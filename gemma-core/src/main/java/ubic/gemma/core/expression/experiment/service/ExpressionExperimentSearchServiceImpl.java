@@ -150,13 +150,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         // add every individual experiment to the set, grouped by taxon and also altogether.
         for ( SearchResultDisplayObject srdo : experiments ) {
 
-            // group by the Parent Taxon, for things like salmonid - see bug 3286
-            Long taxId;
-            if ( srdo.getParentTaxonId() != null ) {
-                taxId = srdo.getParentTaxonId();
-            } else {
-                taxId = srdo.getTaxonId();
-            }
+            Long taxId = srdo.getTaxonId();
 
             if ( !eeIdsByTaxonId.containsKey( taxId ) ) {
                 eeIdsByTaxonId.put( taxId, new HashSet<Long>() );
@@ -224,7 +218,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                     .info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
                             + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName()
                             + " valueObject:" + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] )
-                            .getResultValueObject().toString() );
+                                    .getResultValueObject().toString() );
         }
         return displayResults;
     }

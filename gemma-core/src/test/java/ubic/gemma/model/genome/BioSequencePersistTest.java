@@ -45,7 +45,6 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
-        t.setIsSpecies( true );
         t.setIsGenesUsable( true );
         bs.setTaxon( t );
 

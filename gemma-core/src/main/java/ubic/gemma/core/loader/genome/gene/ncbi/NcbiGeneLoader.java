@@ -148,16 +148,7 @@ public class NcbiGeneLoader {
                     continue;
                 }
 
-                Boolean genesUsableParent = false;
-                Taxon parentTaxon = taxon.getParentTaxon();
-                if ( parentTaxon != null && parentTaxon.getIsGenesUsable() ) {
-                    genesUsableParent = true;
-                    taxon.setIsGenesUsable( false );
-                    taxonService.update( taxon );
-                    NcbiGeneLoader.log
-                            .debug( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
-                }
-                if ( !taxon.getIsGenesUsable() && !genesUsableParent ) {
+                if ( !taxon.getIsGenesUsable() ) {
                     taxon.setIsGenesUsable( true );
                     taxonService.update( taxon );
                     NcbiGeneLoader.log.debug( "Updating taxon genes usable to true for taxon " + taxon );

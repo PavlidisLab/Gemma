@@ -55,7 +55,6 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         taxon.setIsGenesUsable( true );
-        taxon.setIsSpecies( true );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "new ad" );
@@ -77,8 +76,7 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
             DoubleMatrix<String, String> matrix = service.parse( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
-            Collection<DesignElementDataVector> selectedVectors = super
-                    .selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
+            Collection<DesignElementDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
             this.vectorsToMatrix( selectedVectors );
         }
 

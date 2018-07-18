@@ -69,15 +69,6 @@ public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValue
     }
 
     /**
-     * @see TaxonService#findByAbbreviation(String)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Taxon findByAbbreviation( final String abbreviation ) {
-        return this.taxonDao.findByAbbreviation( abbreviation );
-    }
-
-    /**
      * @see TaxonService#findByCommonName(String)
      */
     @Override
@@ -102,15 +93,6 @@ public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValue
     }
 
     /**
-     * @see TaxonService#findChildTaxaByParent(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
-        return this.taxonDao.findChildTaxaByParent( parentTaxa );
-    }
-
-    /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     @Override
@@ -126,21 +108,6 @@ public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValue
     }
 
     /**
-     * @return Taxon that are species. (only returns usable taxa)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaSpecies() {
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : this.loadAll() ) {
-            if ( taxon.getIsSpecies() ) {
-                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaSpecies;
-    }
-
-    /**
      * @return Taxon that are on NeuroCarta evidence
      */
     @Override
@@ -149,9 +116,7 @@ public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValue
 
         SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
         for ( Taxon taxon : this.taxonDao.findTaxonUsedInEvidence() ) {
-            if ( taxon.getIsSpecies() ) {
-                taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
-            }
+            taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
         }
         return taxaSpecies;
     }

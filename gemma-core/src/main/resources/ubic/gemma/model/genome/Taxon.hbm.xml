@@ -16,16 +16,10 @@
       </property>
       <property name="commonName" type="java.lang.String">
          <column name="COMMON_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-      </property>
-      <property name="abbreviation" type="java.lang.String">
-         <column name="ABBREVIATION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
-      </property>
+      </property> 
       <property name="ncbiId" type="java.lang.Integer">
          <column name="NCBI_ID" not-null="false" unique="true" sql-type="INTEGER"/>
-      </property>
-      <property name="isSpecies" type="java.lang.Boolean">
-         <column name="IS_SPECIES" not-null="true" unique="false" sql-type="TINYINT"/>
-      </property>
+      </property> 
       <property name="isGenesUsable" type="java.lang.Boolean">
          <column name="IS_GENES_USABLE" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
@@ -34,9 +28,6 @@
       </property>
       <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  cascade="none" lazy="proxy" fetch="select">
          <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-      <many-to-one name="parentTaxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
-         <column name="PARENT_TAXON_FK" not-null="false" sql-type="BIGINT"/>
-      </many-to-one>
+      </many-to-one> 
    </class>
 </hibernate-mapping>

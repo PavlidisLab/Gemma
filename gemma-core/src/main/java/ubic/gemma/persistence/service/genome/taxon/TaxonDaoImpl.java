@@ -90,11 +90,6 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public Taxon findByAbbreviation( final String abbreviation ) {
-        return this.findOneByStringProperty( "abbreviation", abbreviation );
-    }
-
-    @Override
     public Taxon findByCommonName( final String commonName ) {
         return this.findOneByStringProperty( "commonName", commonName );
     }
@@ -102,14 +97,6 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     @Override
     public Taxon findByScientificName( final String scientificName ) {
         return this.findOneByStringProperty( "scientificName", scientificName );
-    }
-
-    @Override
-    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
-                .setParameter( "parentTaxon", parentTaxon ).list();
     }
 
     @Override
@@ -126,7 +113,6 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
             @Override
             public void execute( Connection connection ) {
                 TaxonDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( taxon );
-                Hibernate.initialize( taxon.getParentTaxon() );
                 Hibernate.initialize( taxon.getExternalDatabase() );
                 TaxonDaoImpl.this.getSession().evict( taxon );
             }
@@ -173,12 +159,6 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
             if ( row[2] != null ) {
                 vo.setExternalDatabase( new ExternalDatabaseValueObject( ( ExternalDatabase ) row[2] ) );
             }
-            if ( row[3] != null ) {
-                vo.setParentTaxon( new TaxonValueObject( ( Taxon ) row[3] ) );
-                if ( row[4] != null ) {
-                    vo.getParentTaxon().setParentTaxon( new TaxonValueObject( ( Taxon ) row[4] ) );
-                }
-            }
             vos.add( vo );
         }
 
@@ -198,13 +178,9 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_TAXON_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_TAXON_ALIAS + ", " // 1
-                + "ED, " // 2
-                + "PT, " // 3
-                + "PTT " // 4
+                + "ED, " // 2 
                 + "from Taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " " // taxon
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
-                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon as PT " // parent taxon
-                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon.parentTaxon as PTT " // parent p taxon
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );

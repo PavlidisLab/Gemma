@@ -4,7 +4,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * String argument type for taxon API, referencing the Taxon scientific name, common name or abbreviation. Can also be null.
+ * String argument type for taxon API, referencing the Taxon scientific name, common name or abbreviation. Can also be
+ * null.
  *
  * @author tesarst
  */
@@ -32,10 +33,6 @@ public class TaxonStringArg extends TaxonArg<String> {
         if ( taxon != null ) {
             return "scientificName";
         }
-        taxon = service.findByAbbreviation( this.value );
-        if ( taxon != null ) {
-            return "abbreviation";
-        }
 
         return null;
     }
@@ -43,8 +40,8 @@ public class TaxonStringArg extends TaxonArg<String> {
     /**
      * Tries to retrieve a Taxon based on its names.
      *
-     * @param service the TaxonService that handles the search.
-     * @return Taxon or null if no taxon with any property matching this#value was found.
+     * @param  service the TaxonService that handles the search.
+     * @return         Taxon or null if no taxon with any property matching this#value was found.
      */
     private Taxon tryAllNameProperties( TaxonService service ) {
         // Most commonly used
@@ -52,10 +49,6 @@ public class TaxonStringArg extends TaxonArg<String> {
 
         if ( taxon == null ) {
             taxon = service.findByScientificName( this.value );
-        }
-
-        if ( taxon == null ) {
-            taxon = service.findByAbbreviation( this.value );
         }
 
         return taxon;

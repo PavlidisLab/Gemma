@@ -126,7 +126,8 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
 
         Option biomartFileNameLocal = OptionBuilder.hasArg().withDescription(
                 "Input File Path for biomart file should only be supplied when taxon supplied "
-                        + "Optional can only be " ).withLongOpt( "biomartFileName" ).create( 'b' );
+                        + "Optional can only be " )
+                .withLongOpt( "biomartFileName" ).create( 'b' );
         this.addOption( biomartFileNameLocal );
 
     }
@@ -245,7 +246,7 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
         if ( StringUtils.isNotBlank( taxonName ) ) {
             taxon = taxonService.findByCommonName( taxonName );
 
-            if ( taxon == null || !( taxon.getIsSpecies() ) || !( taxon.getIsGenesUsable() ) ) {
+            if ( taxon == null || !( taxon.getIsGenesUsable() ) ) {
                 throw new IllegalArgumentException( "The taxon common name supplied: " + taxonName
                         + " Either does not match anything in GEMMA, or is not a species or does have usable genes" );
             }
@@ -253,8 +254,8 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
         } else {
             for ( Taxon taxonGemma : taxonService.loadAll() ) {
                 // only those taxon that are species and have usable genes should be processed
-                if ( taxonGemma != null && taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable() && (
-                        taxonGemma.getCommonName() != null ) && !( taxonGemma.getCommonName().isEmpty() ) ) {
+                if ( taxonGemma != null && taxonGemma.getIsGenesUsable() && ( taxonGemma.getCommonName() != null )
+                        && !( taxonGemma.getCommonName().isEmpty() ) ) {
                     taxa.add( taxonGemma );
                 }
             }

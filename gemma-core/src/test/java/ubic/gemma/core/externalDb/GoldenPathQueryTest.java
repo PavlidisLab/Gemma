@@ -75,7 +75,6 @@ public class GoldenPathQueryTest extends TestCase {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
         t.setIsGenesUsable( true );
-        t.setIsSpecies( true );
 
         try {
             String databaseHost = Settings.getString( "gemma.testdb.host" );

@@ -540,10 +540,6 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
             if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
                 Hibernate
                         .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
-                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() );
-                if ( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() != null )
-                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon()
-                            .getExternalDatabase() );
             }
             Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
             if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {

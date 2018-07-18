@@ -115,8 +115,6 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByGene( Gene gene );
 
-    Collection<ExpressionExperiment> findByParentTaxon( Taxon taxon );
-
     ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );

@@ -39,7 +39,7 @@ import java.util.*;
 
 /**
  * @author paul
- * @see DifferentialExpressionAnalysis
+ * @see    DifferentialExpressionAnalysis
  */
 @Repository
 class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<DifferentialExpressionAnalysis>
@@ -137,16 +137,19 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
 
         // subset factorValues factors.
-        @SuppressWarnings("unchecked") Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate()
+        @SuppressWarnings("unchecked")
+        Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate()
                 .findByNamedParam(
                         "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
-                                + " join ssf.experimentalFactor efa where efa = :ef ", "ef", ef );
+                                + " join ssf.experimentalFactor efa where efa = :ef ",
+                        "ef", ef );
 
         // factors used in the analysis.
         //noinspection unchecked
         result.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from DifferentialExpressionAnalysis a join a.resultSets rs"
-                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ", "ef",
+                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ",
+                "ef",
                 ef ) );
 
         return result;
@@ -197,20 +200,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
          * Note: this query misses ExpressionExperimentSubSets. The native query was implemented because HQL was always
          * constructing a constraint on SubSets. See bug 2173.
          */
-        final String nativeQuery =
-                "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
-                        + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID "
-                        + " inner join BIO_MATERIAL bm ON bm.ID=ba.SAMPLE_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
-                        + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
-                        + " (:probes) ";
-
-        final String speciesConstraint = " and t.ID = :taxon";
-        final String parentTaxonConstraint = " and t.PARENT_TAXON_FK = :taxon";
+        final String queryToUse = "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
+                + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID "
+                + " inner join BIO_MATERIAL bm ON bm.ID=ba.SAMPLE_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
+                + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
+                + " (:probes) and t.ID = :taxon";
 
         Taxon taxon = gene.getTaxon();
-        String taxonConstraint = taxon.getIsSpecies() ? speciesConstraint : parentTaxonConstraint;
-
-        String queryToUse = nativeQuery + taxonConstraint;
 
         int batchSize = 1000;
         Collection<CompositeSequence> batch = new HashSet<>();
@@ -241,11 +237,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         StopWatch timer = new StopWatch();
         timer.start();
-        final String query =
-                "select distinct a from DifferentialExpressionAnalysis a inner join fetch a.resultSets res "
-                        + " inner join fetch res.baselineGroup"
-                        + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
-                        + " inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
+        final String query = "select distinct a from DifferentialExpressionAnalysis a inner join fetch a.resultSets res "
+                + " inner join fetch res.baselineGroup"
+                + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
+                + " inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
 
         //noinspection unchecked
         List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate()
@@ -398,9 +393,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 .setMaxResults( limit > 0 ? limit : -1 ).list();
 
         /*
-         * FIXME the above query yields a warning "firstResult/maxResults specified with collection fetch; applying in memory!"
+         * FIXME the above query yields a warning
+         * "firstResult/maxResults specified with collection fetch; applying in memory!"
          */
-        
+
         Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
         List<Object[]> fvs;
 

@@ -135,7 +135,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         Taxon t = Taxon.Factory.newInstance();
         t.setNcbiId( info.getTaxId() );
         t.setIsGenesUsable( false );
-        t.setIsSpecies( true );
         gene.setTaxon( t );
 
         /*
