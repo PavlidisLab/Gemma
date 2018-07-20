@@ -55,9 +55,6 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Integer countNotTroubled();
-
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      */
@@ -68,6 +65,15 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
+    boolean checkHasBatchInfo( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Integer countNotTroubled();
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
+
     /**
      * returns ids of search results
      *
@@ -75,50 +81,18 @@ public interface ExpressionExperimentService
      */
     Collection<Long> filter( String searchString );
 
+    /**
+     * Remove IDs of Experiments that are not from the given taxon
+     * 
+     * @param  id
+     * @param  taxon
+     * @return
+     */
+    Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment find( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
-
-    @Override
-    @Monitored
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( Long id );
-
-    /**
-     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
-     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically, though this behavior could be changed)
-     */
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    void update( ExpressionExperiment expressionExperiment );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
      * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
@@ -126,6 +100,9 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
@@ -145,8 +122,8 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByBioMaterial( BioMaterial bm );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }) // slight security overkill, if they got the biomaterial...
+    Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
      * Returns a collection of expression experiment ids that express the given gene above the given expression level
@@ -163,8 +140,8 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }) // slight security overkill, if they got the factorvalue...
+    Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> factorValues );
 
     /**
      * Returns a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
@@ -187,6 +164,10 @@ public interface ExpressionExperimentService
 
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
+
+    @Override
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
@@ -338,18 +319,26 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
+    boolean isRNASeq( ExpressionExperiment expressionExperiment );
+
+    boolean isTroubled( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> load( Collection<Long> ids );
+
+    @Override
+    @Monitored
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment load( Long id );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> loadAll();
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
-
-    /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
@@ -360,6 +349,19 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon );
+
+    /**
+     * Special method for front-end access
+     *
+     * @param  orderField the field to order the results by.
+     * @param  descending whether the ordering by the orderField should be descending.
+     * @param  ids        only list specific ids.
+     * @param  taxon      only list experiments within specific taxon.
+     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+            Collection<Long> ids, Taxon taxon, int limit, int start );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
@@ -378,17 +380,26 @@ public interface ExpressionExperimentService
             Collection<Long> ids );
 
     /**
-     * Special method for front-end access
-     *
-     * @param  orderField the field to order the results by.
-     * @param  descending whether the ordering by the orderField should be descending.
-     * @param  ids        only list specific ids.
-     * @param  taxon      only list experiments within specific taxon.
-     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
+     *      description (no but seriously do look it might not work as you would expect).
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            Collection<Long> ids, Taxon taxon, int limit, int start );
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, List<ObjectFilter[]> filter );
+
+    /**
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically, though this behavior could be changed)
+     */
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Long id );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.
@@ -409,25 +420,6 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment replaceRawVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Partially thaw the expression experiment given - do not thaw the raw data.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
-
-    boolean isTroubled( ExpressionExperiment expressionExperiment );
-
-    boolean isRNASeq( ExpressionExperiment expressionExperiment );
-
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.
      *
@@ -445,5 +437,22 @@ public interface ExpressionExperimentService
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
-    boolean checkHasBatchInfo( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Partially thaw the expression experiment given - do not thaw the raw data.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    void update( ExpressionExperiment expressionExperiment );
 }

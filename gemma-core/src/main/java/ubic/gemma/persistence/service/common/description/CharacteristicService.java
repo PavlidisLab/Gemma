@@ -60,6 +60,8 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
 
     /**
+     * FIXME: allow a third parameter to constrain on the owner of the owner e.g. EE for a biomaterial, so we can use distinct on that
+     *
      * @param classes            - constraint for who the 'owner' of the characteristic is.
      * @param characteristicUris characteristic uris
      * @return characteristics
@@ -82,6 +84,15 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @return characteristics
      */
     Collection<Characteristic> findByUri( String searchString );
+
+//    /**
+//     * Special method optimized to find characteristics associated with biomaterials.
+//     * A "representative" characteristic will be returned for each associated experiment.
+//     *
+//     * @param searchString
+//     * @return
+//     */
+//    Collection<Characteristic> findByValueBMEE( String searchString );
 
     /**
      * Returns a collection of characteristics that have a Value that match the given search string. The value is
@@ -108,12 +119,12 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     Map<Characteristic, Object> getParents( Collection<Class<?>> classes, Collection<Characteristic> characteristics );
 
-    /**
-     * @param classes constraint
-     * @param string  string value
-     * @return characteristics
-     */
-    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
+//    /**
+//     * @param classes constraint
+//     * @param string  string value
+//     * @return characteristics
+//     */
+//    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
     Collection<? extends Characteristic> findByCategory( String queryPrefix );
 

@@ -3,83 +3,100 @@
     "-//Compass/Compass Core Mapping DTD 2.2//EN"
     "http://www.compass-project.org/dtd/compass-core-mapping-2.2.dtd">
 
-<!--
-      This document is a Compass mapping file, allowing the Gemma objects to be indexed and searched. All "searchable"
-      expression experiment attributes (as well as associations) should be included here. author: keshav version: $Id:
-      expression_mappings.cpm.xml,v 1.5 2008/07/14 06:25:05 paul Exp $
-   -->
+<!-- This document is a Compass mapping file, allowing the Gemma objects to be indexed and searched. All "searchable" expression 
+	experiment attributes (as well as associations) should be included here. author: keshav -->
 <compass-core-mapping package="ubic.gemma.model">
-   <class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
-      <id name="id" />
-      <property name="name">
-         <meta-data>name</meta-data>
-         <meta-data>expression experiment name</meta-data>
-      </property>
-      <property name="description" >
-         <meta-data>description</meta-data> 
-         <meta-data>expression experiment description</meta-data>
-      </property>
-      <property name="shortName">
-         <meta-data>shortName</meta-data>
-         <meta-data>expression experiment short name</meta-data>
-      </property>
-      <component name="bioAssays" ref-alias="bioAssay" />
-      <component name="experimentalDesign" ref-alias="experimentalDesign" />
-      <component name="primaryPublication" ref-alias="primaryPublication" />
-      <component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
-   </class>
-   <class name="expression.bioAssay.BioAssay" alias="bioAssay" root="false">
-      <id name="id" />
-      <property name="name">
-         <meta-data>name</meta-data>
-      </property>
-      <property name="description">
-         <meta-data>description</meta-data>
-         <meta-data>bioassay description</meta-data>
-      </property>
-   </class>
-   <class name="expression.experiment.ExperimentalDesign" alias="experimentalDesign" root="false">
-      <id name="id" />
-      <component name="experimentalFactors" ref-alias="experimentalFactor" />
-   </class>
-   <class name="expression.experiment.ExperimentalFactor" alias="experimentalFactor" root="false">
-      <id name="id" />
-      <property name="name">
-         <meta-data>name</meta-data>
-      </property>
-      <property name="description">
-         <meta-data>description</meta-data>
-         <meta-data>experimentalFactor description</meta-data>
-      </property>
-   </class>
-   <class name="common.description.BibliographicReference" alias="primaryPublication" root="false">
-      <id name="id" />
-      <property name="authorList">
-         <meta-data>author List</meta-data>
-      </property>
-      <property name="title">
-         <meta-data>title</meta-data>
-      </property>
-      <property name="publication">
-         <meta-data>publication</meta-data>
-      </property>
-      <property name="abstractText">
-         <meta-data>abstract</meta-data>
-      </property>
-   </class>
-   <class name="common.description.BibliographicReference" alias="otherRelevantPublications" root="false">
-      <id name="id" />
-      <property name="authorList">
-         <meta-data>author List</meta-data>
-      </property>
-      <property name="title">
-         <meta-data>title</meta-data>
-      </property>
-      <property name="publication">
-         <meta-data>publication</meta-data>
-      </property>
-      <property name="abstractText">
-         <meta-data>abstract</meta-data>
-      </property>
-   </class>
+	<class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
+		<id name="id" />
+		<property name="name" />
+		<property name="description" />
+		<property name="shortName">
+		</property>
+		<component name="bioAssays" ref-alias="bioAssay" />
+		<component name="experimentalDesign" ref-alias="experimentalDesign" />
+		<component name="primaryPublication" ref-alias="primaryPublication" />
+		<component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
+		<component name="characteristics" ref-alias="characteristics" />
+	</class>
+	<class name="expression.bioAssay.BioAssay" alias="bioAssay" root="false">
+		<id name="id" />
+		<property name="name">
+		</property>
+		<property name="description">
+			<meta-data>bioassay description</meta-data>
+		</property>
+		<component name="sampleUsed" ref-alias="bioMaterial" />
+	</class>
+	<class name="expression.biomaterial.BioMaterial" alias="bioMaterial" root="false">
+		<id name="id" />
+		<property name="name" />
+		<property name="description" />
+		<component name="characteristics" ref-alias="bmcharacteristics " />
+	</class>
+	<class name="expression.experiment.ExperimentalDesign" alias="experimentalDesign" root="false">
+		<id name="id" />
+		<component name="experimentalFactors" ref-alias="experimentalFactor" />
+	</class>
+	<class name="expression.experiment.ExperimentalFactor" alias="experimentalFactor" root="false">
+		<id name="id" />
+		<property name="name">
+			<meta-data>name</meta-data>
+		</property>
+		<property name="description">
+			<meta-data>experimentalFactor description</meta-data>
+		</property>
+		<component name="factorValues" ref-alias="factorValue" />
+	</class>
+	<class name="expression.experiment.FactorValue" alias="factorValue" root="false">
+		<id name="id" />
+		<component name="characteristics" ref-alias="fvcharacteristics" />
+	</class>
+	<class name="common.description.BibliographicReference" alias="primaryPublication" root="false">
+		<id name="id" />
+		<property name="authorList">
+			<meta-data>publication author list</meta-data>
+		</property>
+		<property name="title">
+			<meta-data>publication title</meta-data>
+		</property>
+		<property name="publication">
+			<meta-data>publication</meta-data>
+		</property>
+		<property name="abstractText">
+			<meta-data>publication abstract</meta-data>
+		</property>
+	</class>
+	<class name="common.description.BibliographicReference" alias="otherRelevantPublications" root="false">
+		<id name="id" />
+		<property name="authorList">
+			<meta-data>other publication author List</meta-data>
+		</property>
+		<property name="title">
+			<meta-data>other publication title</meta-data>
+		</property>
+		<property name="publication">
+			<meta-data>other publication</meta-data>
+		</property>
+		<property name="abstractText">
+			<meta-data>other publication abstract</meta-data>
+		</property>
+	</class>
+	<class name="common.description.Characteristic" alias="characteristics" root="false">
+		<id name="id" />
+		<property name="value">
+			<meta-data>characteristic value</meta-data>
+		</property>
+	</class>
+	<class name="common.description.Characteristic" alias="bmcharacteristics" root="false">
+		<id name="id" />
+		<property name="value">
+			<meta-data>biomaterial characteristic value</meta-data>
+		</property>
+	</class>
+	<class name="common.description.Characteristic" alias="fvcharacteristics" root="false">
+		<id name="id" />
+		<property name="value">
+			<meta-data>factorvalue characteristic value</meta-data>
+		</property>
+	</class>
 </compass-core-mapping>

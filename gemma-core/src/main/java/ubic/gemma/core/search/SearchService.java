@@ -93,6 +93,8 @@ public interface SearchService {
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
 
     /**
+     * A search of experiments only
+     *
      * @param query   if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
      * @param taxonId required.
      * @return Collection of ids.

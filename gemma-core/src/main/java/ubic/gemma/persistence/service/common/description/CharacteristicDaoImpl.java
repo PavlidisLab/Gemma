@@ -18,11 +18,20 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -36,8 +45,6 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.*;
-
 /**
  * @author Luke
  * @author Paul
@@ -47,7 +54,7 @@ import java.util.*;
 public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
-    private static final int BATCH_SIZE = 1000;
+    private static final int BATCH_SIZE = 5000;
 
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
@@ -148,25 +155,44 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
                 .setParameter( "search", searchString ).list();
     }
 
-    @Override
-    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
-        Set<Characteristic> result = new HashSet<>();
+//    @Override
+//    public Collection<Characteristic> findByValueBMEE( String searchString ) {
+//        Set<Characteristic> result = new HashSet<>();
+//        final String queryString =
+//                "select distinct c, ee from ExpressionExperiment ee join ee.bioAssays as ba join ba.sampleUsed as bm "
+//                        + " join bm.characteristics as c where c.value like :v group by ee";
+//        /*
+//        We use a wildcard in this search, which could cause problems if the input string is really generic.
+//         */
+//        //noinspection unchecked
+//        for ( Object o : this.getSessionFactory().getCurrentSession().createQuery( queryString )
+//                .setParameter( "v", "%" + searchString + "%" ).list() ) {
+//            Object[] row = ( Object[] ) o;
+//            result.add( ( Characteristic ) row[0] );
+//        }
+//        return result;
+//    }
 
-        if ( classes.isEmpty() ) {
-            return result;
-        }
-
-        for ( Class<?> clazz : classes ) {
-            String field = this.getCharacteristicFieldName( clazz );
-            final String queryString =
-                    "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
-                            + " join parent." + field + " as char " + "where char.value like :v";
-            //noinspection unchecked
-            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameter( "v", string + "%" ).list() );
-        }
-        return result;
-    }
+//    @Override
+//    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String searchString ) {
+//        Set<Characteristic> result = new HashSet<>();
+//
+//        if ( classes.isEmpty() ) {
+//            return result;
+//        }
+//
+//        // note the wildcard in the query
+//        for ( Class<?> clazz : classes ) {
+//            String field = this.getCharacteristicFieldName( clazz );
+//            final String queryString =
+//                    "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
+//                            + " join parent." + field + " as char " + "where char.value like :v";
+//            //noinspection unchecked
+//            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+//                    .setParameter( "v", "%" + searchString + "%" ).list() );
+//        }
+//        return result;
+//    }
 
     @Override
     public Collection<Characteristic> findByValue( String search ) {

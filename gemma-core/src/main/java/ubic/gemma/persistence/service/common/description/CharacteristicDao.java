@@ -75,12 +75,19 @@ public interface CharacteristicDao
 
     Collection<Characteristic> findByUri( String searchString );
 
-    /**
-     * @param classes constraint of who the 'owner' of the Characteristic has to be.
-     * @param string  value
-     * @return characteristics
-     */
-    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
+//    /**
+//     * @param classes constraint of who the 'owner' of the Characteristic has to be.
+//     * @param string  value
+//     * @return characteristics
+//     */
+//    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
+//
+//    /**
+//     * specialized to find just one characteristic per expression experiment associated via biomaterials
+//     * @param searchString
+//     * @return
+//     */
+//    Collection<Characteristic> findByValueBMEE( String searchString );
 
     /**
      * Finds all Characteristics whose value match the given search term

@@ -39,9 +39,9 @@ public interface OntologyService extends InitializingBean {
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
      * of possible choices
      *
-     * @param searchQuery           search query
-     * @param useNeuroCartaOntology use neurocarta ontology
-     * @return characteristic vos
+     * @param  searchQuery           search query
+     * @param  useNeuroCartaOntology use neurocarta ontology
+     * @return                       characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology );
@@ -52,8 +52,8 @@ public interface OntologyService extends InitializingBean {
      * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
      * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
-     * @param search search
-     * @return a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
+     * @param  search search
+     * @return        a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
      */
     Collection<VocabCharacteristic> findTermAsCharacteristic( String search );
 
@@ -61,8 +61,8 @@ public interface OntologyService extends InitializingBean {
      * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
      * backed search, is inexact and for general terms can return a lot of results.
      *
-     * @param search search
-     * @return returns a collection of ontologyTerm's
+     * @param  search search
+     * @return        returns a collection of ontologyTerm's
      */
     Collection<OntologyTerm> findTerms( String search );
 
@@ -72,10 +72,11 @@ public interface OntologyService extends InitializingBean {
      * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
      * match the search term exactly
      *
-     * @param taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null, restriction is
-     *                         not used.
-     * @param givenQueryString query string
-     * @return characteristic vos
+     * @param  taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
+     *                          restriction is
+     *                          not used.
+     * @param  givenQueryString query string
+     * @return                  characteristic vos
      */
     Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon );
 
@@ -115,7 +116,7 @@ public interface OntologyService extends InitializingBean {
     HumanPhenotypeOntologyService getHumanPhenotypeOntologyService();
 
     /**
-     * @return the MammalianPhenotypeOntologyService for the specified URI
+     * @return the MammalianPhenotypeOntologyService
      */
     MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
 
@@ -125,21 +126,27 @@ public interface OntologyService extends InitializingBean {
     NIFSTDOntologyService getNifstfOntologyService();
 
     /**
-     * @return the ObiService for the specified URI
+     * @return the ObiService
      */
     ObiService getObiService();
 
     /**
-     * @param uri uri
-     * @return the OntologyResource for the specified URI
+     * 
+     * @return UberonService
+     */
+    UberonOntologyService getUberonService();
+
+    /**
+     * @param  uri uri
+     * @return     the OntologyResource
      */
     OntologyResource getResource( String uri );
 
     SequenceOntologyService getSequenceOntologyService();
 
     /**
-     * @param uri uri
-     * @return the OntologyTerm for the specified URI.
+     * @param  uri uri
+     * @return     the OntologyTerm for the specified URI.
      */
     OntologyTerm getTerm( String uri );
 

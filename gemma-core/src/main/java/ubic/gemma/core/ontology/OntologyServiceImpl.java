@@ -74,14 +74,19 @@ public class OntologyServiceImpl implements OntologyService {
     private final ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
     private final DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
     private final ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
+
     private final FMAOntologyService fmaOntologyService = new FMAOntologyService();
+
     private final GemmaOntologyService gemmaOntologyService = new GemmaOntologyService();
     private final HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
     private final HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
     private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
     private final MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+
+    @Deprecated
     private final NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
     private final ObiService obiService = new ObiService();
+
     private final Collection<AbstractOntologyService> ontologyServices = new ArrayList<>();
     private final SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
     private final UberonOntologyService uberonOntologyService = new UberonOntologyService();
@@ -339,7 +344,7 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService service : this.ontologyServices ) {
             if ( !service.isOntologyLoaded() )
                 continue;
-            
+
             try {
                 results = service.findResources( queryString );
             } catch ( Exception e ) {
@@ -347,7 +352,7 @@ public class OntologyServiceImpl implements OntologyService {
             }
             if ( results == null || results.isEmpty() )
                 continue;
-            
+
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log
                         .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
@@ -437,8 +442,14 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
+    @Deprecated
     public NIFSTDOntologyService getNifstfOntologyService() {
         return nifstdOntologyService;
+    }
+
+    @Override
+    public UberonOntologyService getUberonService() {
+        return this.uberonOntologyService;
     }
 
     @Override
@@ -495,7 +506,7 @@ public class OntologyServiceImpl implements OntologyService {
                 }
             } else {
                 if ( serv.isEnabled() )
-                    OntologyServiceImpl.log.info( "Not available for reindexing: " + serv );
+                    OntologyServiceImpl.log.info( "Not available for reindexing (not enabled or finished initialization): " + serv );
             }
         }
     }
@@ -837,7 +848,7 @@ public class OntologyServiceImpl implements OntologyService {
     /**
      * Look for genes, but only for certain category Uris (genotype, etc.)
      *
-     * @param taxon okay if null, but then all matches returned.
+     * @param taxon         okay if null, but then all matches returned.
      * @param searchResults added to this
      */
     private void searchForGenes( String queryString, Taxon taxon,
@@ -862,8 +873,8 @@ public class OntologyServiceImpl implements OntologyService {
 
     /**
      * @param alreadyUsedResults items already in the system; remove singleton free-text terms.
-     * @param otherResults other results
-     * @param searchTerm the query
+     * @param otherResults       other results
+     * @param searchTerm         the query
      */
     private Collection<CharacteristicValueObject> sort( Map<String, CharacteristicValueObject> alreadyUsedResults,
             Collection<CharacteristicValueObject> otherResults, String searchTerm ) {

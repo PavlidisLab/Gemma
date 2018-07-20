@@ -297,7 +297,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
+    public Map<ExpressionExperiment, BioMaterial> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
         return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
     }
 
@@ -342,7 +342,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
+    public Map<ExpressionExperiment, FactorValue> findByFactorValues( final Collection<FactorValue> factorValues ) {
         return this.expressionExperimentDao.findByFactorValues( factorValues );
     }
 
@@ -1005,6 +1005,17 @@ public class ExpressionExperimentServiceImpl
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#filterByTaxon(java.util.
+     * Collection, ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
+        return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
 
 }

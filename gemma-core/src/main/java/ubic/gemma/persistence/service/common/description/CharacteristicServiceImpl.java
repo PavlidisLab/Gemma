@@ -115,10 +115,15 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
         return charToParent;
     }
 
-    @Override
-    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
-        return this.characteristicDao.findByValue( classes, string );
-    }
+//    @Override
+//    public Collection<Characteristic> findByValueBMEE( String searchString ) {
+//        return this.characteristicDao.findByValueBMEE( searchString );
+//    }
+//
+//    @Override
+//    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
+//        return this.characteristicDao.findByValue( classes, string );
+//    }
 
     @Override
     public Collection<? extends Characteristic> findByCategory( String query ) {
