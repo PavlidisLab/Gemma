@@ -625,6 +625,10 @@ public class SearchServiceImpl implements SearchService {
             results.add( new SearchResult( arrayDesign, 0.9 ) );
         }
 
+        /*
+        FIXME: add merged platforms and subsumers
+         */
+
         results.addAll( this.compassArrayDesignSearch( settings ) );
         results.addAll( this.databaseArrayDesignSearch( settings ) );
 
@@ -1559,7 +1563,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /*
-         * Find data sets that match the platform
+         * Find data sets that match a platform. This will probably only be trigged if the search is for a GPL id.
          */
         if ( results.size() == 0 ) {
             Collection<SearchResult> matchingPlatforms = this.arrayDesignSearch( settings, null );
@@ -1569,13 +1573,18 @@ public class SearchServiceImpl implements SearchService {
                     Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )
-                        results.addAll( this.dbHitsToSearchResult( expressionExperiments, null ) );
+                        results.addAll( this.dbHitsToSearchResult( expressionExperiments, ad.getShortName() + " - " + ad.getName() ) );
                 }
             }
             if ( watch.getTime() > 1000 )
                 SearchServiceImpl.log
                         .info( "Expression Experiment platform search for '" + settings + "' took " + watch.getTime()
                                 + " ms, " + results.size() + " hits." );
+
+            if ( !results.isEmpty() ) {
+                return results;
+            }
+
             watch.reset();
             watch.start();
         }
