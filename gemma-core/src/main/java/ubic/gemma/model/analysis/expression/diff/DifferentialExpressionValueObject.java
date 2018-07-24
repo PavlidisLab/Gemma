@@ -58,7 +58,7 @@ public class DifferentialExpressionValueObject {
 
         this.contrasts = new ContrastsValueObject( this.id );
         for ( ContrastResult c : o.getContrasts() ) {
-            contrasts.addContrast( c.getId(), c.getFactorValue().getId(), c.getLogFoldChange(), c.getPvalue(),
+            contrasts.addContrast( c.getId(), c.getFactorValue() == null ? null : c.getFactorValue().getId(), c.getLogFoldChange(), c.getPvalue(),
                     c.getSecondFactorValue() == null ? null : c.getSecondFactorValue().getId() );
         }
     }
