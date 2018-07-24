@@ -2000,10 +2000,16 @@ public class SearchServiceImpl implements SearchService {
 
             SearchResult r = new SearchResult( hits.data( i ) );
 
+            // FIXME: score is generally (always?) NaN
+            double score = hits.score( i );
+            if ( Double.isNaN( score ) ) {
+                score = 1.0;
+            }
+
             /*
              * Always give compass hits a lower score so they can be differentiated from exact database hits.
              */
-            r.setScore( hits.score( i ) * SearchServiceImpl.COMPASS_HIT_SCORE_PENALTY_FACTOR );
+            r.setScore( score * SearchServiceImpl.COMPASS_HIT_SCORE_PENALTY_FACTOR );
 
             this.getHighlightedText( hits, i, r );
 
@@ -2243,7 +2249,6 @@ public class SearchServiceImpl implements SearchService {
         StopWatch watch = this.startTiming();
         String enhancedQuery = settings.getQuery().trim();
 
-        //noinspection ConstantConditions // Not obvious to me why that would have to be false.
         if ( StringUtils.isBlank( enhancedQuery )
                 || enhancedQuery.length() < SearchServiceImpl.MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || enhancedQuery.equals( "*" ) )
@@ -2303,16 +2308,13 @@ public class SearchServiceImpl implements SearchService {
                 if ( m instanceof ComponentMapping ) {
                     ClassMapping[] refClassMappings = ( ( ComponentMapping ) m ).getRefClassMappings();
                     this.process( refClassMappings, hits );
-                } else {
+                } else { // should be a ClassPropertyMapping
                     String name = m.getName();
                     for ( int i = 0; i < hits.getLength(); i++ ) {
                         try {
-                            // we might want to bail as soon as we find something?
-                            hits.highlighter( i ).fragment( name );
-                            if ( SearchServiceImpl.log.isDebugEnabled() )
-                                SearchServiceImpl.log.debug( "Cached " + name );
+                            String frag = hits.highlighter( i ).fragment( name );
                         } catch ( Exception e ) {
-                            break; // skip this property entirely...
+                            break; // skip this property entirely for all hits ...
                         }
                     }
                 }
