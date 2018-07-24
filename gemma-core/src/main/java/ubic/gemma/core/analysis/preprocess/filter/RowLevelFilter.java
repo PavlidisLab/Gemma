@@ -215,11 +215,11 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
                 break;
             }
             case MIN: {
-                criteria.set( i, Descriptive.min( rowAsList ) );
+                criteria.set( i, DescriptiveWithMissing.min( rowAsList ) );
                 break;
             }
             case MAX: {
-                criteria.set( i, Descriptive.max( rowAsList ) );
+                criteria.set( i, DescriptiveWithMissing.max( rowAsList ) );
                 break;
             }
             case MEAN: {
@@ -269,9 +269,10 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             for ( int j = 0; j < numCols; j++ ) {
                 Double item = row[j];
                 if ( Double.isNaN( item ) )
-                    rowAsList.set( j, 0 );
+                    rowAsList.set( j, Double.NaN );  // previously: we set to zero! Just leave it and use "stats with missing" classes.
                 else
                     rowAsList.set( j, item );
+                
                 if ( item < 0.0 || Double.isNaN( item ) ) {
                     numNeg++;
                 }
