@@ -34,7 +34,6 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -139,28 +138,29 @@ public class AclAdvice extends BaseAclAdvice {
                 .equals( "arrayDesignUsed" ) );
     }
 
-    @Override
-    protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
-
-        Class<?> parentClassType;
-        try {
-            parentClassType = Class.forName( parentAcl.getObjectIdentity().getType() );
-
-            /*
-             * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
-             * deleted. Otherwise we end up with cruft.
-             */
-            if ( LocalFile.class.isAssignableFrom( object.getClass() ) && Investigation.class
-                    .isAssignableFrom( parentClassType ) ) {
-                return true;
-            }
-        } catch ( ClassNotFoundException e ) {
-            throw new IllegalStateException(
-                    "Tried to identify class from name: " + parentAcl.getObjectIdentity().getType(), e );
-        }
-
-        return false;
-    }
+    // Localfiles are no longer persistent entites
+    //    @Override
+    //    protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
+    //
+    //        Class<?> parentClassType;
+    //        try {
+    //            parentClassType = Class.forName( parentAcl.getObjectIdentity().getType() );
+    //
+    //            /*
+    //             * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
+    //             * deleted. Otherwise we end up with cruft.
+    //             */
+    //            if ( LocalFile.class.isAssignableFrom( object.getClass() ) && Investigation.class
+    //                    .isAssignableFrom( parentClassType ) ) {
+    //                return true;
+    //            }
+    //        } catch ( ClassNotFoundException e ) {
+    //            throw new IllegalStateException(
+    //                    "Tried to identify class from name: " + parentAcl.getObjectIdentity().getType(), e );
+    //        }
+    //
+    //        return false;
+    //    }
 
     @Override
     protected boolean specialCaseToKeepPrivateOnCreation( Class<? extends Securable> clazz ) {
