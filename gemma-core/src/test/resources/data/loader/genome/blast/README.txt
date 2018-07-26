@@ -3,5 +3,6 @@
 makeblastdb  -parse_seqids  -in ../testsequence.fa -out testblastdb -dbtype nucl
 makeblastdb -parse_seqids -in ../gpl140.sequences.fasta -out testblastdbPartTwo -dbtype nucl
 
+# note that the  -long_seqids causes problems now
 blastdbcmd -db testblastdb -entry "M63012.1" -long_seqids
 blastdbcmd -long_seqids -db testblastdb -entry_batch  /var/tmp/file/with/list/of/accs

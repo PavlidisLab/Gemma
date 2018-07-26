@@ -39,6 +39,10 @@
 				<column name="VALUE_URI" not-null="false" unique="false"
 					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 			</property>
+			<property name="originalValue" type="java.lang.String">
+				<column name="ORIGINAL_VALUE" not-null="false" unique="false"
+					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+			</property>
 		</subclass>
 	</class>
 </hibernate-mapping>

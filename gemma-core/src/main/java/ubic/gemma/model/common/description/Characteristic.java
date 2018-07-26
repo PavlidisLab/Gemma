@@ -39,7 +39,6 @@ public class Characteristic extends Describable {
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
     private String value;
-    private String valueUri;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -82,20 +81,7 @@ public class Characteristic extends Describable {
         return "Category = " + this.getCategory() + " Value = " + this.getValue();
     }
 
-    /**
-     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
-     *         ontology
-     *         term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
-     *         the
-     *         abstract class.
-     */
-    public String getValueUri() {
-        return this.valueUri;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
-    }
+    
 
     /**
      * @return either the human readable form of the classUri or a free text version if no classUri exists

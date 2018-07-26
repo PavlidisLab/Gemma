@@ -372,7 +372,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( factorType.equalsIgnoreCase( "CATEGORICAL" ) ) {
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
-                VocabCharacteristic newVc = VocabCharacteristic.Factory.newInstance();
+                VocabCharacteristic newVc = VocabCharacteristic.Factory.newInstance();// FIXME since we don't have a value URI, why is this a vocabcharacteristic?
                 String category2 = category.getCategory();
                 assert category2 != null;
                 newVc.setCategory( category2 );

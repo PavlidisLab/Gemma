@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * ValueObject wrapper for a Characteristic.
+ * ValueObject wrapper for a Characteristic (including VocabCharacteristic)
  *
  * @see Characteristic
  */
@@ -81,7 +81,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     public CharacteristicValueObject( Characteristic characteristic ) {
         super( characteristic.getId() );
         if ( characteristic instanceof VocabCharacteristic ) {
-            this.valueUri = characteristic.getValueUri();
+            this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
             this.parseUrlId();
         }
         this.category = characteristic.getCategory();
@@ -274,7 +274,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         if ( valueUri == null )
             this.valueUri = null;
         else
-            this.valueUri = valueUri.toLowerCase();
+            this.valueUri = valueUri;
     }
 
     public void incrementOccurrenceCount() {

@@ -115,13 +115,14 @@ public class BaselineSelection {
         } else {
             for ( Characteristic c : factorValue.getCharacteristics() ) {
                 if ( c instanceof VocabCharacteristic ) {
-                    String valueUri = c.getValueUri();
+                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                    String valueUri = vc.getValueUri();
                     if ( StringUtils.isNotBlank( valueUri ) && BaselineSelection.controlGroupTerms
                             .contains( valueUri.toLowerCase() ) ) {
                         return true;
                     }
-                    if ( StringUtils.isNotBlank( c.getValue() ) && BaselineSelection.controlGroupTerms
-                            .contains( c.getValue().toLowerCase() ) ) {
+                    if ( StringUtils.isNotBlank( vc.getValue() ) && BaselineSelection.controlGroupTerms
+                            .contains( vc.getValue().toLowerCase() ) ) {
                         return true;
                     }
                 } else if ( StringUtils.isNotBlank( c.getValue() ) && BaselineSelection.controlGroupTerms
@@ -136,8 +137,8 @@ public class BaselineSelection {
     /**
      * Check if this factor value is the baseline, overriding other possible baselines.
      *
-     * @param fv factor value
-     * @return true if given fv is forced baseline
+     * @param  fv factor value
+     * @return    true if given fv is forced baseline
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
         if ( fv.getMeasurement() != null || fv.getCharacteristics().isEmpty() ) {
@@ -145,7 +146,8 @@ public class BaselineSelection {
         }
         for ( Characteristic c : fv.getCharacteristics() ) {
             if ( c instanceof VocabCharacteristic ) {
-                String valueUri = c.getValueUri();
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                String valueUri = vc.getValueUri();
                 if ( StringUtils.isNotBlank( valueUri ) && valueUri.toLowerCase()
                         .equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
                     return true;

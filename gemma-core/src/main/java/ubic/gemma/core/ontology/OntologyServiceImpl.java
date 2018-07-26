@@ -569,7 +569,7 @@ public class OntologyServiceImpl implements OntologyService {
             // characteristic
         }
 
-        if ( vc instanceof VocabCharacteristic && this.isObsolete( vc.getValueUri() ) ) {
+        if ( vc instanceof VocabCharacteristic && this.isObsolete( ( ( VocabCharacteristic ) vc ).getValueUri() ) ) {
             OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
             return;
         }
@@ -747,8 +747,8 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic && ( StringUtils.isNotBlank( c.getValueUri() ) ) ) {
-            return c.getValueUri().toLowerCase();
+        if ( c instanceof VocabCharacteristic && ( StringUtils.isNotBlank( ( ( VocabCharacteristic ) c ).getValueUri() ) ) ) {
+            return ( ( VocabCharacteristic ) c ).getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
     }

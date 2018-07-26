@@ -35,31 +35,6 @@ import java.util.Objects;
  */
 public class VocabCharacteristic extends Characteristic {
 
-    private static final long serialVersionUID = 9108913504702857653L;
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( !super.equals( object ) )
-            return false;
-        if ( !( object instanceof VocabCharacteristic ) )
-            return false;
-        VocabCharacteristic that = ( VocabCharacteristic ) object;
-        return Objects.equals( this.getCategoryUri(), that.getCategoryUri() ) && Objects
-                .equals( this.getValueUri(), that.getValueUri() );
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder( 17, 3 ).appendSuper( super.hashCode() ).append( this.getCategoryUri() )
-                .append( this.getValueUri() ).toHashCode();
-    }
-
-    @Override
-    public String toString() {
-        // return toString( 0 );
-        return super.toString() + " categoryUri=" + this.getCategoryUri() + " valueUri=" + this.getValueUri();
-    }
-
     public static final class Factory {
 
         public static VocabCharacteristic newInstance() {
@@ -79,6 +54,67 @@ public class VocabCharacteristic extends Characteristic {
             return entity;
         }
 
+    }
+
+    private static final long serialVersionUID = 9108913504702857653L;
+
+    /**
+     * Stores the value this characteristic had before it was assigned a URI for the term.
+     */
+    private String originalValue = null;
+
+    private String valueUri;
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( !super.equals( object ) )
+            return false;
+        if ( !( object instanceof VocabCharacteristic ) )
+            return false;
+        VocabCharacteristic that = ( VocabCharacteristic ) object;
+        return Objects.equals( this.getCategoryUri(), that.getCategoryUri() ) && Objects
+                .equals( this.getValueUri(), that.getValueUri() );
+    }
+
+    /**
+     * @return the originalValue
+     */
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    /**
+     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
+     *         ontology
+     *         term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
+     *         the
+     *         abstract class.
+     */
+    public String getValueUri() {
+        return this.valueUri;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder( 17, 3 ).appendSuper( super.hashCode() ).append( this.getCategoryUri() )
+                .append( this.getValueUri() ).toHashCode();
+    }
+
+    /**
+     * @param originalValue the originalValue to set
+     */
+    public void setOriginalValue( String originalValue ) {
+        this.originalValue = originalValue;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
+    }
+
+    @Override
+    public String toString() {
+        // return toString( 0 );
+        return super.toString() + " categoryUri=" + this.getCategoryUri() + " valueUri=" + this.getValueUri();
     }
 
 }

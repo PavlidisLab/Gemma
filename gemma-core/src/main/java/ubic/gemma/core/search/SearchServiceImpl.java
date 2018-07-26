@@ -141,7 +141,8 @@ public class SearchServiceImpl implements SearchService {
     private static final Log log = LogFactory.getLog( SearchServiceImpl.class.getName() );
 
     /**
-     * The maximum number of characteristics to retain; this has to be fairly high since a large number of characteristics
+     * The maximum number of characteristics to retain; this has to be fairly high since a large number of
+     * characteristics
      * will typically reduced down to a smaller number of annotated entities.
      */
     private static final int MAX_CHARACTERISTIC_SEARCH_RESULTS = 10000;
@@ -247,7 +248,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * @param unfilteredResults
+     * @param  unfilteredResults
      * @return
      */
     public Collection<SearchResult> filterExperimentHitsByTaxon( Collection<SearchResult> unfilteredResults, Taxon t ) {
@@ -476,8 +477,8 @@ public class SearchServiceImpl implements SearchService {
      * Checks settings for all do-search flags, except for gene (see
      * {@link #accreteResultsGenes(List, SearchSettings, boolean)}), and does the search if needed.
      *
-     * @param results the results to which should any new results be accreted.
-     * @return same object as given, possibly extended by new items from search.
+     * @param  results the results to which should any new results be accreted.
+     * @return         same object as given, possibly extended by new items from search.
      */
     private List<SearchResult> accreteResultsOthers( List<SearchResult> results, SearchSettings settings,
             boolean webSpeedSearch ) {
@@ -611,7 +612,7 @@ public class SearchServiceImpl implements SearchService {
             Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
             if ( nameResult != null )
                 for ( ArrayDesign ad : nameResult ) {
-                    results.add( new SearchResult( ad, 1.0 ) );
+                results.add( new SearchResult( ad, 1.0 ) );
                 }
         }
 
@@ -626,7 +627,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /*
-        FIXME: add merged platforms and subsumers
+         * FIXME: add merged platforms and subsumers
          */
 
         results.addAll( this.compassArrayDesignSearch( settings ) );
@@ -739,7 +740,8 @@ public class SearchServiceImpl implements SearchService {
         Collection<Characteristic> cs = new HashSet<>();
 
         /*
-         * Find terms that match the query (LARQ), and then use that to identify characteristics that have term associated
+         * Find terms that match the query (LARQ), and then use that to identify characteristics that have term
+         * associated
          */
         Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( query );
 
@@ -871,16 +873,17 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * Search for the Experiment query in ontologies, including items that are associated with children of matching query terms.
+     * Search for the Experiment query in ontologies, including items that are associated with children of matching
+     * query terms.
      * That is, 'brain' should return entities tagged as 'hippocampus'. This method will return results only up to
      * MAX_CHARACTERISTIC_SEARCH_RESULTS. It can handle AND in searches, so Parkinson's AND neuron finds items tagged
      * with both of those terms. The use of OR is handled by the caller.
      *
-     * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
-     *                ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
-     * @return SearchResults of CharacteristicObjects. Typically to be useful one needs to retrieve the
-     * 'parents'
-     * (entities which have been 'tagged' with the term) of those Characteristics
+     * @param  classes Classes of characteristic-bound entities. For example, to get matching characteristics of
+     *                 ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
+     * @return         SearchResults of CharacteristicObjects. Typically to be useful one needs to retrieve the
+     *                 'parents'
+     *                 (entities which have been 'tagged' with the term) of those Characteristics
      */
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes, String query ) {
         StopWatch timer = this.startTiming();
@@ -1158,12 +1161,12 @@ public class SearchServiceImpl implements SearchService {
      * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      *
-     * @param classes Class of objects to restrict the search to (typically ExpressionExperiment.class, for
-     *                example).
-     * @param terms   A list of ontology terms to search for
-     * @return Collection of search results for the objects owning the found characteristics, where the owner is
-     * of
-     * class clazz
+     * @param  classes Class of objects to restrict the search to (typically ExpressionExperiment.class, for
+     *                 example).
+     * @param  terms   A list of ontology terms to search for
+     * @return         Collection of search results for the objects owning the found characteristics, where the owner is
+     *                 of
+     *                 class clazz
      */
     private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
             Collection<OntologyTerm> terms ) {
@@ -1499,7 +1502,8 @@ public class SearchServiceImpl implements SearchService {
                                 + " ms, " + results.size() + " hits." );
 
             /*
-            If we get results here, probably we want to just stop immediately, because the user is searching for something exact.
+             * If we get results here, probably we want to just stop immediately, because the user is searching for
+             * something exact.
              */
             if ( !results.isEmpty() ) {
                 return results;
@@ -1535,7 +1539,8 @@ public class SearchServiceImpl implements SearchService {
         // if we still didn't find anything, keep looking
         if ( results.size() == 0 ) {
             /*
-             * Search for bib refs FIXME does this do anything, since we index the bibrefs associated with experiments directly?
+             * Search for bib refs FIXME does this do anything, since we index the bibrefs associated with experiments
+             * directly?
              */
             List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
                     .search( settings.getQuery() );
@@ -1679,8 +1684,8 @@ public class SearchServiceImpl implements SearchService {
     /**
      * Only used for experiment searches.
      *
-     * @param classes
-     * @param characteristic2entity
+     * @param  classes
+     * @param  characteristic2entity
      * @return
      */
     private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class<?>> classes,
@@ -1695,9 +1700,9 @@ public class SearchServiceImpl implements SearchService {
                 if ( clazz.isAssignableFrom( o.getClass() ) ) {
                     String matchedText;
 
-                    if ( c instanceof VocabCharacteristic && c.getValueUri() != null ) {
+                    if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
                         matchedText = "Tagged term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query="
-                                + c.getValueUri() + "\">" + c.getValue() + "</a>";
+                                + ( ( VocabCharacteristic ) c ).getValueUri() + "\">" + c.getValue() + "</a>";
                     } else {
                         matchedText = "Free text: " + c.getValue();
                     }
@@ -1926,7 +1931,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * Returns children one step down. getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
+     * Returns children one step down. getChildren can be very slow for 'high-level' classes like "neoplasm", so we use
+     * a cache.
      *
      * @param term starting point
      */
@@ -2023,7 +2029,7 @@ public class SearchServiceImpl implements SearchService {
             SearchServiceImpl.log.info( results.size() + " hits retrieved (out of " + Math
                     .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
                     + timer
-                    .getTime()
+                            .getTime()
                     + "ms" );
         }
         if ( timer.getTime() > 5000 ) {

@@ -468,7 +468,7 @@ public class BusinessKey {
     public static void checkKey( Characteristic ontologyEntry ) {
 
         if ( ontologyEntry instanceof VocabCharacteristic ) {
-            if ( ontologyEntry.getValueUri() == null )
+            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
                 throw new IllegalArgumentException();
         } else {
             if ( ontologyEntry.getValue() == null )

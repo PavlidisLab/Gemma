@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -48,7 +47,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 /**
  * @author Luke
  * @author Paul
- * @see Characteristic
+ * @see    Characteristic
  */
 @Repository
 public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, CharacteristicValueObject>
@@ -73,9 +72,8 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ?
-                        "desc" :
-                        "" ) ).setMaxResults( limit ).setFirstResult( start ).list();
+                "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
+                .setFirstResult( start ).list();
     }
 
     @Override
@@ -89,13 +87,15 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
     @Override
     public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
-        HashSet<Characteristic> result = new HashSet<>();
+
+        Collection<Characteristic> result = new HashSet<>();
+
+        if ( characteristicUris == null || characteristicUris.isEmpty() ) return result;
 
         for ( Class<?> clazz : classes ) {
             String field = this.getCharacteristicFieldName( clazz );
-            final String queryString =
-                    "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
-                            + " join parent." + field + " as char where char.valueUri in (:uriStrings) ";
+            final String queryString = "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
+                    + " join parent." + field + " as char where char.valueUri in (:uriStrings) ";
             //noinspection unchecked
             result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameterList( "uriStrings", characteristicUris ).list() );
@@ -106,7 +106,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
     @Override
     public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
-        HashSet<Characteristic> result = new HashSet<>();
+        Collection<Characteristic> result = new HashSet<>();
 
         if ( classesToFilterOn.isEmpty() ) {
             return result;
@@ -114,9 +114,8 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
         for ( Class<?> clazz : classesToFilterOn ) {
             String field = this.getCharacteristicFieldName( clazz );
-            final String queryString =
-                    "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
-                            + " join parent." + field + " as char " + "where char.valueUri = :uriString";
+            final String queryString = "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
+                    + " join parent." + field + " as char " + "where char.valueUri = :uriString";
             //noinspection unchecked
             result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameter( "uriString", uriString ).list() );
@@ -154,45 +153,6 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
                 .createQuery( "select char from VocabCharacteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
     }
-
-//    @Override
-//    public Collection<Characteristic> findByValueBMEE( String searchString ) {
-//        Set<Characteristic> result = new HashSet<>();
-//        final String queryString =
-//                "select distinct c, ee from ExpressionExperiment ee join ee.bioAssays as ba join ba.sampleUsed as bm "
-//                        + " join bm.characteristics as c where c.value like :v group by ee";
-//        /*
-//        We use a wildcard in this search, which could cause problems if the input string is really generic.
-//         */
-//        //noinspection unchecked
-//        for ( Object o : this.getSessionFactory().getCurrentSession().createQuery( queryString )
-//                .setParameter( "v", "%" + searchString + "%" ).list() ) {
-//            Object[] row = ( Object[] ) o;
-//            result.add( ( Characteristic ) row[0] );
-//        }
-//        return result;
-//    }
-
-//    @Override
-//    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String searchString ) {
-//        Set<Characteristic> result = new HashSet<>();
-//
-//        if ( classes.isEmpty() ) {
-//            return result;
-//        }
-//
-//        // note the wildcard in the query
-//        for ( Class<?> clazz : classes ) {
-//            String field = this.getCharacteristicFieldName( clazz );
-//            final String queryString =
-//                    "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
-//                            + " join parent." + field + " as char " + "where char.value like :v";
-//            //noinspection unchecked
-//            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-//                    .setParameter( "v", "%" + searchString + "%" ).list() );
-//        }
-//        return result;
-//    }
 
     @Override
     public Collection<Characteristic> findByValue( String search ) {
@@ -266,9 +226,8 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
             return;
 
         String field = this.getCharacteristicFieldName( parentClass );
-        final String queryString =
-                "select parent, char from " + parentClass.getSimpleName() + " as parent " + " join parent." + field
-                        + " as char " + "where char  in (:chars)";
+        final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent " + " join parent." + field
+                + " as char " + "where char  in (:chars)";
 
         for ( Object o : this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "chars", characteristics ).list() ) {

@@ -1,3 +1,7 @@
+-- already run
+alter table CHARACTERISTIC ADD COLUMN ORIGINAL_VALUE VARCHAR(255);
+-- populate for ones that haven't already been
+UPDATE CHARACTERISTIC SET ORIGINAL_VALUE=VALUE WHERE VALUE_URI IS NULL;
 -- make nullable
 alter table TAXON MODIFY IS_SPECIES tinyint(4);
 
