@@ -160,7 +160,7 @@ public class SimpleFastaCmd implements FastaCmd {
             }
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -" + dbOption + " " + database + " -" + entryBatchOption + " "
+        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids  -target_only -" + dbOption + " " + database + " -" + entryBatchOption + " "
                 + tmp.getAbsolutePath();
         SimpleFastaCmd.log.info( command );
         Process pr;
@@ -216,7 +216,7 @@ public class SimpleFastaCmd implements FastaCmd {
             blastHome = SimpleFastaCmd.blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -" + dbOption + " " + database + " -" + queryOption + " " + key;
+        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -target_only -" + dbOption + " " + database + " -" + queryOption + " " + key;
         Process pr = Runtime.getRuntime().exec( command, opts );
         log.info( StringUtils.join( opts, " " ) );
         SimpleFastaCmd.log.info( command );
