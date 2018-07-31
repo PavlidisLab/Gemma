@@ -43,6 +43,8 @@ http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
 # OK for EEtag only
 http://www.ebi.ac.uk/efo/EFO_0001426	study design
 # Never to use any more for ee tags, factors, factor values.
+# But can be used for biomaterial characteristics
+#http://www.ebi.ac.uk/efo/EFO_0000562	labelling
 #http://www.ebi.ac.uk/efo/EFO_0000688	sampling site
 #http://purl.obolibrary.org/obo/OBI_0000272	protocol
 #http://purl.obolibrary.org/obo/OBI_0100051	specimen
@@ -56,7 +58,6 @@ http://www.ebi.ac.uk/efo/EFO_0001426	study design
 #http://purl.org/obo/owl/SO#SO_0001023	allele
 #http://purl.org/obo/owl/SO#SO_0001024	haplotype
 #http://www.ebi.ac.uk/efo/EFO_0000683	replicate
-#http://www.ebi.ac.uk/efo/EFO_0000562	labelling
 #http://www.ebi.ac.uk/efo/EFO_0000568	light
 #http://www.ebi.ac.uk/efo/EFO_0000273	atmosphere
 #http://www.ebi.ac.uk/efo/EFO_0000659	ploidy
