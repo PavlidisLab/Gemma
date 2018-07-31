@@ -1808,14 +1808,18 @@ public class ExpressionExperimentDaoImpl
             Characteristic c = ( Characteristic ) o;
 
             // filter. Could include this in the query if it isn't too complicated.
-            if ( StringUtils.isBlank( c.getCategory() ) ) {
+            if ( StringUtils.isBlank( c.getCategoryUri() ) ) {
+                continue;
+            }
+
+            if ( StringUtils.isBlank( c.getValueUri() ) ) {
                 continue;
             }
 
             // if  ( !c.getCategory().equals( "organism part" )) {
             //}
 
-            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+            if ( c.getCategory().equals( "MaterialType" ) || c.getCategory().equals("molecular entity") || c.getCategory().equals("LabelCompound")) {
                 continue;
             }
 
@@ -1873,7 +1877,6 @@ public class ExpressionExperimentDaoImpl
                     .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" ) ) {
                 continue;
             }
-
 
             if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
                 // DE_include/exclude
