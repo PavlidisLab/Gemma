@@ -283,19 +283,20 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             BioMaterial sample = assay.getSampleUsed();
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
             result.add( bmvo );
-        }
 
-        organizeCharacteristics( result );
+         }
+
+        filterCharacteristics( result );
 
         return result;
     }
 
     /**
-     * Populate the characteristicValues that we want to display in columns in the biomaterialvalue table.
+     * Filter the characteristicValues to those that we want to display in columns in the biomaterialvalue table.
      *
      * @param result
      */
-    private void organizeCharacteristics( Collection<BioMaterialValueObject> result ) {
+    private void filterCharacteristics( Collection<BioMaterialValueObject> result ) {
 
         int c = result.size();
 
@@ -318,31 +319,39 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         find ones that don't have a value for each sample, or which have more values than samples, or which are constants
          */
         Collection<String> toremove = new HashSet<>();
-        for ( String cvo : map.keySet() ) {
-            if ( map.get( cvo ).size() != result.size() ) {
-                toremove.add( cvo );
+        for ( String category : map.keySet() ) {
+            if ( map.get( category ).size() != result.size() ) {
+                toremove.add( category );
+                continue;
+            }
+
+            // TODO add more exclusions; see also ExpresionExperimentDao.getAnnotationsByBioMaterials
+            if ( category.equals( "LabelCompound" ) || category.equals( "MaterialType" ) || category.equals( "molecular entity" ) ) {
+                toremove.add( category );
                 continue;
             }
 
             Collection<String> vals = new HashSet<>();
             boolean keeper = false;
-            for ( BioMaterialValueObject bm : map.get( cvo ) ) {
+            for ( BioMaterialValueObject bm : map.get( category ) ) {
                 for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
                     if ( StringUtils.isBlank( ch.getCategory() ) )
                         continue;
 
-                    if ( ch.getCategory().equals( cvo ) ) {
+                    if ( ch.getCategory().equals( category ) ) {
                         if ( !vals.contains( ch.getValue() ) ) {
-                            log.info( cvo + " -> " + ch.getValue() );
+                            if ( log.isDebugEnabled() )
+                                log.debug( category + " -> " + ch.getValue() );
                             vals.add( ch.getValue() );
                         }
 
                         // temporarily populate this into the biomaterial
-                        bm.getCharacteristicValues().put( cvo, ch.getValue() );
+                        bm.getCharacteristicValues().put( category, ch.getValue() );
                     }
                 }
                 if ( vals.size() > 1 ) {
-                    log.info( cvo + " -- Keeper with " + vals.size() + " values" );
+                    if ( log.isDebugEnabled() )
+                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
 
                     keeper = true;
                     break;
@@ -350,7 +359,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             }
 
             if ( !keeper ) {
-                toremove.add( cvo );
+                toremove.add( category );
             }
         }
 
