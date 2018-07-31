@@ -1816,9 +1816,6 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
-            // if  ( !c.getCategory().equals( "organism part" )) {
-            //}
-
             if ( c.getCategory().equals( "MaterialType" ) || c.getCategory().equals("molecular entity") || c.getCategory().equals("LabelCompound")) {
                 continue;
             }
@@ -1872,7 +1869,7 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
-            // timepoint.
+            // ignore timepoint.
             if ( StringUtils.isNotBlank( c.getCategoryUri() ) && c.getCategoryUri()
                     .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" ) ) {
                 continue;

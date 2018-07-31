@@ -617,8 +617,9 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
+     * Collect information about the sample into biomaterial characteristics and Treatments.
      * GEO does not keep track of 'biomaterials' that make up different channels. Therefore the two channels effectively
-     * make up a single biomaterial, as far as we're concerned. We're losing information here.
+     * make up a single biomaterial, as far as we're concerned. We're losing information in those cases.
      *
      * @param sample      sample
      * @param channel     channel
@@ -703,10 +704,8 @@ public class GeoConverterImpl implements GeoConverter {
             Characteristic sourceChar = Characteristic.Factory.newInstance();
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = this.trimString( channel.getSourceName() );
-            sourceChar.setCategory( "BioSource" );
-            sourceChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635" /*
-                                                                               * organism part; used to be 'biosource'
-                                                                               */ );
+            sourceChar.setCategory( "Organism part" ); // used to be "BioSource"
+            sourceChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635"  );
             sourceChar.setValue( characteristic );
             sourceChar.setOriginalValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -746,8 +745,8 @@ public class GeoConverterImpl implements GeoConverter {
             // This is typically something like "biotin-labeled nucleotides", which we can convert later.
             Characteristic labelChar = Characteristic.Factory.newInstance();
             labelChar.setDescription( "GEO Sample label" );
-            labelChar.setCategory( "LabelCompound" );
-            labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" /* labeling; used to be LabelCompound */ );
+            labelChar.setCategory( "labelling" );  /* used to be LabelCompound */
+            labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" );
             labelChar.setValue( characteristic );
             labelChar.setOriginalValue( characteristic );
             labelChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -2145,6 +2144,7 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000470";
             term = "environmental stress";
         } else if ( varType.equals( VariableType.species ) ) {
+            // ?
         } else if ( varType.equals( VariableType.specimen ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0100051";
             term = "specimen";
