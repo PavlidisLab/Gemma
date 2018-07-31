@@ -162,8 +162,8 @@ public class AnnotationValueObject {
 //        result = prime * result + ( ( className == null ) ? 0 : className.hashCode() );
 //        result = prime * result + ( ( classUri == null ) ? 0 : classUri.hashCode() );
  //       result = prime * result + ( ( objectClass == null ) ? 0 : objectClass.hashCode() );
-        result = prime * result + ( ( termName == null ) ? 0 : termName.hashCode() );
         result = prime * result + ( ( termUri == null ) ? 0 : termUri.hashCode() );
+        result = prime * result + ( ( termName == null ) ? 0 : termName.hashCode() );
         return result;
     }
 
@@ -210,13 +210,6 @@ public class AnnotationValueObject {
 //        } else if ( !objectClass.equals( other.objectClass ) ) {
 //            return false;
 //        }
-        if ( termName == null ) {
-            if ( other.termName != null ) {
-                return false;
-            }
-        } else if ( !termName.equals( other.termName ) ) {
-            return false;
-        }
         if ( termUri == null ) {
             if ( other.termUri != null ) {
                 return false;
@@ -224,6 +217,15 @@ public class AnnotationValueObject {
         } else if ( !termUri.equals( other.termUri ) ) {
             return false;
         }
+
+        if ( termName == null ) {
+            if ( other.termName != null ) {
+                return false;
+            }
+        } else if ( !termName.equals( other.termName ) ) {
+            return false;
+        }
+
         return true;
     }
 
