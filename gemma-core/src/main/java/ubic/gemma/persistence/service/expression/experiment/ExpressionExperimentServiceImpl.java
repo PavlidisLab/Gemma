@@ -433,7 +433,7 @@ public class ExpressionExperimentServiceImpl
         /*
          * add: certain selected (constant?) characteristics from biomaterials? (non-redudnant with tags)
          */
-       // annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
+        annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
 
         /*
          * Add: certain characteristics from factor values? (non-baseline, non-redudnant with tags). This is tricky because they are so specific...

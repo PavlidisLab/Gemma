@@ -416,6 +416,20 @@ a.info {
 	
 }
 
+/* sources of annotations */
+.fromBioMaterial {
+	background-color:#d1e4fd;
+	font-style:italic;
+}
+.fromFactorValue {
+	background-color:#FBF7AA;
+	font-style:italic;
+}
+.fromExperimentTag {
+	font-weight: bold;
+	background-color:#B0DE78;
+}
+
 a.info:hover {
 	z-index: 25;
 	background-color: #ff0;

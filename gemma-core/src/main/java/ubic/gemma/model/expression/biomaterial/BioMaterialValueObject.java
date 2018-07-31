@@ -64,6 +64,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private boolean basicFVs;
     private Date assayProcessingDate;
 
+    /*
+    * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
+     */
+    private Map<String, String> characteristicValues = new HashMap<>();
+
     /**
      * Required when using the class as a spring bean.
      */
@@ -112,6 +117,13 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
                  */
                 this.factorIdToFactorValueId.put( factorId, factorValues.get( factorValueId ) );
             }
+        }
+
+        for(Characteristic c : bm.getCharacteristics()) {
+            if  (StringUtils.isBlank( c.getCategory() )) {
+                continue;
+            }
+            this.characteristicValues.put(c.getCategory(), c.getValue());
         }
     }
 
@@ -209,6 +221,15 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
+    }
+
+    public Map<String, String> getCharacteristicValues() {
+        return characteristicValues;
+    }
+
+    // not used, managed internally
+    public void setCharacteristicValues( Map<String, String> characteristicValues ) {
+        this.characteristicValues = characteristicValues;
     }
 
     public void setFactorValueObjects( Collection<FactorValueValueObject> factorValueObjects ) {

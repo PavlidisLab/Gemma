@@ -66,13 +66,27 @@ Gemma.AnnotationDataView = Ext
             },
 
             /*
-             * TODO: make it easier to spot which ones come from BioMaterial, FactorValue
+             * For display of tags on expressionexperimentdetails page
+             * Make it easier to spot which ones come from BioMaterial, FactorValue
              */
             tpl: new Ext.XTemplate(
                 '<tpl for=".">',
-                '<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
-                + '<a ext:qtip="{className} : {termUri} via {objectClass} " href="' + ctxBasePath + '/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
+                    '<span class="ann-wrap" ext:qtip="{className}" >',
+                    '<tpl if="objectClass == \'BioMaterial\'">',
+                        '<span class="fromBioMaterial">',
+                    '</tpl>',
+                    '<tpl if="objectClass == \'FactorValue\'">',
+                        '<span class="fromFactorValue">',
+                    '</tpl>',
+                    '<tpl if="objectClass == \'ExperimentTag\'">',
+                        '<span class="fromExperimentTag">',
+                    '</tpl>',
+                    '<a ext:qtip="{className} : {termUri} via {objectClass} " href="' + ctxBasePath +
+                    '/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">' +
+                    '{termName}</a></span></span>&nbsp;&nbsp;',
                 '</tpl>'),
+
+
 
             itemSelector: 'ann-wrap',
             emptyText: 'No tags',

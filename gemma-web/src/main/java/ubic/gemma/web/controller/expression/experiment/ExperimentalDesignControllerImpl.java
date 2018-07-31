@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -284,7 +285,82 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             result.add( bmvo );
         }
 
+        organizeCharacteristics( result );
+
         return result;
+    }
+
+    /**
+     * Populate the characteristicValues that we want to display in columns in the biomaterialvalue table.
+     *
+     * @param result
+     */
+    private void organizeCharacteristics( Collection<BioMaterialValueObject> result ) {
+
+        int c = result.size();
+
+        // build map of categories to bmos. No category: can't use.
+        Map<String, Collection<BioMaterialValueObject>> map = new HashMap<>();
+        for ( BioMaterialValueObject bmo : result ) {
+            for ( CharacteristicValueObject ch : bmo.getCharacteristics() ) {
+
+                if ( StringUtils.isBlank( ch.getCategory() ) )
+                    continue;
+
+                if ( !map.containsKey( ch.getCategory() ) ) {
+                    map.put( ch.getCategory(), new HashSet<BioMaterialValueObject>() );
+                }
+                map.get( ch.getCategory() ).add( bmo );
+            }
+        }
+
+        /*
+        find ones that don't have a value for each sample, or which have more values than samples, or which are constants
+         */
+        Collection<String> toremove = new HashSet<>();
+        for ( String cvo : map.keySet() ) {
+            if ( map.get( cvo ).size() != result.size() ) {
+                toremove.add( cvo );
+                continue;
+            }
+
+            Collection<String> vals = new HashSet<>();
+            boolean keeper = false;
+            for ( BioMaterialValueObject bm : map.get( cvo ) ) {
+                for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
+                    if ( StringUtils.isBlank( ch.getCategory() ) )
+                        continue;
+
+                    if ( ch.getCategory().equals( cvo ) ) {
+                        if ( !vals.contains( ch.getValue() ) ) {
+                            log.info( cvo + " -> " + ch.getValue() );
+                            vals.add( ch.getValue() );
+                        }
+
+                        // temporarily populate this into the biomaterial
+                        bm.getCharacteristicValues().put( cvo, ch.getValue() );
+                    }
+                }
+                if ( vals.size() > 1 ) {
+                    log.info( cvo + " -- Keeper with " + vals.size() + " values" );
+
+                    keeper = true;
+                    break;
+                }
+            }
+
+            if ( !keeper ) {
+                toremove.add( cvo );
+            }
+        }
+
+        // finally, clean up the bmos.
+        for ( BioMaterialValueObject bmo : result ) {
+            for ( String lose : toremove ) {
+                bmo.getCharacteristicValues().remove( lose );
+            }
+        }
+
     }
 
     @Override

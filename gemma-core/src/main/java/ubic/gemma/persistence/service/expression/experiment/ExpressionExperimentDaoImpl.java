@@ -1802,19 +1802,22 @@ public class ExpressionExperimentDaoImpl
 
         Collection<AnnotationValueObject> results = new HashSet<>();
         /*
-         * TODO we need to filter these better
+         * TODO we need to filter these better; some criteria could be included in the query
          */
         for ( Object o : raw ) {
             Characteristic c = ( Characteristic ) o;
 
             // filter. Could include this in the query if it isn't too complicated.
-         //   if ( StringUtils.isBlank( c.getCategory() ) || !c.getCategory().equals( "organism part" ) ) {
-                //         continue;
-          //  }
+            if ( StringUtils.isBlank( c.getCategory() ) ) {
+                continue;
+            }
 
-            //            if (StringUtils.isBlank (c.getValueUri())) {
-            //                continue;
-            //            }
+            // if  ( !c.getCategory().equals( "organism part" )) {
+            //}
+
+            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+                continue;
+            }
 
             AnnotationValueObject annotationValue = new AnnotationValueObject();
             annotationValue.setClassName( c.getCategory() );
@@ -1845,7 +1848,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
         List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
                 + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
-                + "join fv.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
+                + "join fv.characteristics c where e.id= :eeid " ).setParameter( "eeid", eeId ).list();
 
         /*
          * FIXME filtering here is going to have to be more elaborate for this to be useful.
@@ -1854,6 +1857,11 @@ public class ExpressionExperimentDaoImpl
         for ( Object o : raw ) {
             Characteristic c = ( Characteristic ) o;
 
+            // ignore free text values
+            if ( StringUtils.isBlank( c.getValueUri() ) ) {
+                continue;
+            }
+
             // ignore baseline and batch factorvalues (could include in the query)
             if ( BaselineSelection.isBaselineCondition( c ) || ( StringUtils.isNotBlank( c.getCategory() ) && c.getCategory()
                     .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) ) {
@@ -1861,8 +1869,8 @@ public class ExpressionExperimentDaoImpl
             }
 
             // timepoint.
-            if (StringUtils.isNotBlank( c.getCategoryUri    () ) && c.getCategoryUri()
-                    .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" )) {
+            if ( StringUtils.isNotBlank( c.getCategoryUri() ) && c.getCategoryUri()
+                    .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" ) ) {
                 continue;
             }
 
@@ -1873,7 +1881,6 @@ public class ExpressionExperimentDaoImpl
                     continue;
                 if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00014" ) )
                     continue;
-
             }
 
             AnnotationValueObject annotationValue = new AnnotationValueObject();
