@@ -30,7 +30,7 @@ import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
@@ -138,14 +138,14 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindByGoId() {
 
-        VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
+        Characteristic oe = Characteristic.Factory.newInstance();
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
         oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( g, oe, GOEvidenceCode.EXP );
 
         gene2GoService.create( g2Go1 );
 
-        oe = VocabCharacteristic.Factory.newInstance();
+        oe = Characteristic.Factory.newInstance();
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
         oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance( g3, oe, GOEvidenceCode.EXP );

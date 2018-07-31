@@ -33,7 +33,6 @@ import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -300,7 +299,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
         } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
-                .equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
+                .equalsIgnoreCase( "ExperimentalDesign" )
+                || e.getClassDelegatingFor()
                 .endsWith( ".ExperimentalDesign" ) ) {
             designId = e.getId();
         } else {
@@ -513,15 +513,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 }
             }
 
-            /*
-             * at the moment, the characteristic is always going to be a VocabCharacteristic; if that changes, this will
-             * have to...
-             */
-            VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
+            Characteristic vc = ef.getCategory();
 
-            // VC can be null if this was imported from GEO etc.
+            //  can be null if this was imported from GEO etc.
             if ( vc == null ) {
-                vc = VocabCharacteristic.Factory.newInstance();
+                vc = Characteristic.Factory.newInstance();
             }
 
             // String originalCategoryUri = vc.getCategoryUri();
@@ -592,27 +588,29 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             } else {
 
-                if ( StringUtils.isNotBlank( fvvo.getValueUri() ) ) {
-                    c = VocabCharacteristic.Factory.newInstance();
-                } else {
-                    c = Characteristic.Factory.newInstance();
-                }
+                c = Characteristic.Factory.newInstance();
+
+            }
+
+            // For related code see CharacteristicUpdateTaskImpl
+
+            // preserve original data
+            if ( StringUtils.isBlank( c.getOriginalValue() ) ) {
+                c.setOriginalValue( c.getValue() );
             }
 
             c.setCategory( fvvo.getCategory() );
             c.setValue( fvvo.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                vc.setCategoryUri( fvvo.getCategoryUri() );
-                vc.setValueUri( fvvo.getValueUri() );
-            }
+            c.setCategoryUri( fvvo.getCategoryUri() );
+            c.setValueUri( fvvo.getValueUri() );
+
             c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
 
             if ( c.getId() != null ) {
                 characteristicService.update( c );
             } else {
                 fv.getCharacteristics().add( c );
-                factorValueService.update( fv );
+                factorValueService.update( fv ); // cascade
             }
 
         }
@@ -628,7 +626,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
         Characteristic c;
         if ( categoryUri != null ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
             vc.setCategoryUri( categoryUri );
             vc.setValueUri( categoryUri );
             c = vc;
@@ -642,13 +640,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     private Characteristic createTemplateCharacteristic( Characteristic source ) {
-        Characteristic template = ( source instanceof VocabCharacteristic ) ?
-                VocabCharacteristic.Factory.newInstance() :
-                Characteristic.Factory.newInstance();
+        Characteristic template = Characteristic.Factory.newInstance();
         template.setCategory( source.getCategory() );
-        if ( source instanceof VocabCharacteristic ) {
-            template.setCategoryUri( source.getCategoryUri() );
-        }
+        template.setCategoryUri( source.getCategoryUri() );
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
     }

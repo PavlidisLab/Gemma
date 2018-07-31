@@ -19,7 +19,7 @@
 package ubic.gemma.model.association;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.Serializable;
@@ -30,7 +30,7 @@ public abstract class Gene2OntologyEntryAssociation implements Identifiable, Ser
 
     final private Long id = null;
     final private Gene gene = null;
-    final private VocabCharacteristic ontologyEntry = null;
+    final private Characteristic ontologyEntry = null;
 
     public ubic.gemma.model.genome.Gene getGene() {
         return this.gene;
@@ -41,7 +41,7 @@ public abstract class Gene2OntologyEntryAssociation implements Identifiable, Ser
         return id;
     }
 
-    public VocabCharacteristic getOntologyEntry() {
+    public Characteristic getOntologyEntry() {
         return this.ontologyEntry;
     }
 

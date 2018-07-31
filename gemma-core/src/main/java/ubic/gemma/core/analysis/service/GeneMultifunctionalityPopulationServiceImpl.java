@@ -29,7 +29,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
@@ -117,8 +117,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     /**
      * Implementation of multifunctionality computations as described in Gillis and Pavlidis (2011) PLoS ONE 6:2:e17258.
      *
-     * @param gomap gomap
-     * @return map
+     * @param  gomap gomap
+     * @return       map
      */
     private Map<Gene, Multifunctionality> computeMultifunctionality( Map<Gene, Collection<String>> gomap ) {
 
@@ -211,7 +211,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         int count = 0;
         Map<Gene, Collection<String>> gomap = new HashMap<>();
         for ( Gene gene : genes ) {
-            Collection<VocabCharacteristic> annots = gene2GOService.findByGene( gene );
+            Collection<Characteristic> annots = gene2GOService.findByGene( gene );
 
             Collection<String> termsForGene = new HashSet<>();
 
@@ -224,8 +224,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
              * Propagate.
              */
 
-            for ( VocabCharacteristic t : annots ) {
-
+            for ( Characteristic t : annots ) {
                 if ( ontologyService.isObsolete( t.getValueUri() ) ) {
                     GeneMultifunctionalityPopulationServiceImpl.log
                             .warn( "Obsolete term annotated to " + gene + " : " + t );

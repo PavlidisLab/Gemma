@@ -31,6 +31,16 @@ public class AnnotationValueObject {
     private String termName;
     private String parentName;
     private String parentDescription;
+
+    @Override public String toString() {
+        return "AnnotationValueObject{" +
+                "classUri='" + classUri + '\'' +
+                ", className='" + className + '\'' +
+                ", termUri='" + termUri + '\'' +
+                ", termName='" + termName + '\'' +
+                '}';
+    }
+
     private String parentLink;
     private String parentOfParentName;
     private String parentOfParentDescription;
@@ -140,6 +150,81 @@ public class AnnotationValueObject {
 
     public String getTermName() {
         return termName;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+
+        if ( this.id != null ) return id.hashCode();
+
+//        result = prime * result + ( ( className == null ) ? 0 : className.hashCode() );
+//        result = prime * result + ( ( classUri == null ) ? 0 : classUri.hashCode() );
+ //       result = prime * result + ( ( objectClass == null ) ? 0 : objectClass.hashCode() );
+        result = prime * result + ( ( termName == null ) ? 0 : termName.hashCode() );
+        result = prime * result + ( ( termUri == null ) ? 0 : termUri.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
+        AnnotationValueObject other = ( AnnotationValueObject ) obj;
+
+        if ( id == null ) {
+            if ( other.id != null ) {
+                return false;
+            }
+        } else if ( !id.equals( other.id ) ) {
+            return false;
+        }
+
+//        if ( className == null ) {
+//            if ( other.className != null ) {
+//                return false;
+//            }
+//        } else if ( !className.equals( other.className ) ) {
+//            return false;
+//        }
+//        if ( classUri == null ) {
+//            if ( other.classUri != null ) {
+//                return false;
+//            }
+//        } else if ( !classUri.equals( other.classUri ) ) {
+//            return false;
+//        }
+
+//        if ( objectClass == null ) {
+//            if ( other.objectClass != null ) {
+//                return false;
+//            }
+//        } else if ( !objectClass.equals( other.objectClass ) ) {
+//            return false;
+//        }
+        if ( termName == null ) {
+            if ( other.termName != null ) {
+                return false;
+            }
+        } else if ( !termName.equals( other.termName ) ) {
+            return false;
+        }
+        if ( termUri == null ) {
+            if ( other.termUri != null ) {
+                return false;
+            }
+        } else if ( !termUri.equals( other.termUri ) ) {
+            return false;
+        }
+        return true;
     }
 
     public void setTermName( String ontologyTerm ) {

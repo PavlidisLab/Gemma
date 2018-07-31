@@ -11,7 +11,6 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -21,9 +20,9 @@ import java.util.Iterator;
  * the objects for client display, there is only one characteristic associated here.
  * Note: this used to be called FactorValueObject and now replaces the old FactorValueValueObject. Confusing!
  *
- * @author Paul
+ * @author     Paul
  * @deprecated aim towards using the FactorValueBasicValueObject. This one is confusing. Once usage of this
- * type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
+ *             type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
  */
 @Deprecated
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
@@ -70,12 +69,13 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     /**
-     * @param c     - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
-     *              FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
-     *              confuses things.
-     *              If c is null, the plain "value" is used.
-     * @param value value
-     * @deprecated see class deprecated note
+     * @param      c     - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
+     *                   FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this
+     *                   just
+     *                   confuses things.
+     *                   If c is null, the plain "value" is used.
+     * @param      value value
+     * @deprecated       see class deprecated note
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super( value.getId() );
@@ -259,11 +259,10 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         if ( c != null ) {
             this.setCategory( c.getCategory() );
             this.setValue( c.getValue() ); // clobbers if we set it already
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                this.setCategoryUri( vc.getCategoryUri() );
-                this.setValueUri( vc.getValueUri() );
-            }
+
+            this.setCategoryUri( c.getCategoryUri() );
+            this.setValueUri( c.getValueUri() );
+
         }
 
         /*
@@ -272,11 +271,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         Characteristic factorCategory = val.getExperimentalFactor().getCategory();
         if ( this.getCategory() == null && factorCategory != null ) {
             this.setCategory( factorCategory.getCategory() );
-
-            if ( factorCategory instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) factorCategory;
-                this.setCategoryUri( vc.getCategoryUri() );
-            }
+            this.setCategoryUri( factorCategory.getCategoryUri() );
 
         }
     }

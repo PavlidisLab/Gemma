@@ -1101,9 +1101,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         StringBuilder phenotypesUri = new StringBuilder();
 
                         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                            if ( cha instanceof VocabCharacteristic ) {
-                                VocabCharacteristic vc = ( VocabCharacteristic ) cha;
-                                phenotypesUri.append( vc.getValueUri() ).append( ";" );
+                            if ( StringUtils.isNotBlank( cha.getValueUri() ) ) {
+                                phenotypesUri.append( cha.getValueUri() ).append( ";" );
                             }
                         }
 
@@ -2034,9 +2033,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-
-            VocabCharacteristic phenotype = ( VocabCharacteristic ) cha;
+        for ( Characteristic phenotype : phenotypeAssociation.getPhenotypes() ) {
 
             CharacteristicValueObject updatedPhenotype = updatedPhenotypesMap.get( phenotype.getId() );
 
@@ -2048,7 +2045,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             // this phenotype was deleted
             else {
-                this.characteristicService.remove( cha );
+                this.characteristicService.remove( phenotype );
             }
         }
         phenotypeAssociation.getPhenotypes().clear();

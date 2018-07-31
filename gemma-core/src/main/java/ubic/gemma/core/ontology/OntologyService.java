@@ -20,7 +20,6 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -53,9 +52,9 @@ public interface OntologyService extends InitializingBean {
      * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
      * @param  search search
-     * @return        a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
+     * @return        a collection of Characteristics that are backed by the corresponding found OntologyTerm
      */
-    Collection<VocabCharacteristic> findTermAsCharacteristic( String search );
+    Collection<Characteristic> findTermAsCharacteristic( String search );
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
@@ -184,5 +183,5 @@ public interface OntologyService extends InitializingBean {
 
     void sort( List<CharacteristicValueObject> characteristics );
 
-    Collection<VocabCharacteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
+    Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
 }

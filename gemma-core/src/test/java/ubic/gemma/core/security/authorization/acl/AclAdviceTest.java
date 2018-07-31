@@ -38,7 +38,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -242,7 +242,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         securityService.makePublic( ee );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        VocabCharacteristic cat = VocabCharacteristic.Factory.newInstance();
+        Characteristic cat = Characteristic.Factory.newInstance();
         cat.setCategory( "foo" );
         cat.setCategoryUri( "bar" );
         ef.setName( "TESTING ACLS" );

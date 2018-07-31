@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -89,7 +88,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
                 Collection<Characteristic> chars = new HashSet<>();
-                VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+                Characteristic c = Characteristic.Factory.newInstance();
                 c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
                 c.setValue( batchId );
                 c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
@@ -120,8 +119,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
      * batches) are to be treated as the same batch (see implementation for details).
      *
-     * @param allDates all dates
-     * @return map
+     * @param  allDates all dates
+     * @return          map
      */
     Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<>( allDates );
@@ -284,10 +283,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /**
-     * @param earlierDate earlier date
-     * @param date data
-     * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should treat it as a
-     *         separate batch.
+     * @param  earlierDate earlier date
+     * @param  date        data
+     * @return             false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
+     *                     treat it as a
+     *                     separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
         return !DateUtils.isSameDay( date, earlierDate ) && DateUtils
@@ -295,8 +295,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 .before( date );
     }
 
-    private VocabCharacteristic getBatchFactorCategory() {
-        VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+    private Characteristic getBatchFactorCategory() {
+        Characteristic c = Characteristic.Factory.newInstance();
         c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
         c.setValue( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
         c.setValueUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );

@@ -34,11 +34,39 @@ import java.util.Objects;
  */
 public class Characteristic extends Describable {
 
+    public static final class Factory {
+
+        public static Characteristic newInstance() {
+            return new Characteristic();
+        }
+
+        public static Characteristic newInstance( String name, String description, String value, String valueUri,
+                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+            final Characteristic entity = new Characteristic();
+            entity.setName( name );
+            entity.setDescription( description );
+            entity.setValue( value );
+            entity.setValueUri( valueUri );
+            entity.setCategory( category );
+            entity.setCategoryUri( categoryUri );
+            entity.setEvidenceCode( evidenceCode );
+            return entity;
+        }
+    }
+
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
+
+    /**
+     * Stores the value this characteristic had before it was assigned a URI for the term.
+     */
+    private String originalValue = null;
+
     private String value;
+
+    private String valueUri;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -65,33 +93,17 @@ public class Characteristic extends Describable {
          */
         return Objects.equals( this.getCategory(), that.getCategory() ) && Objects
                 .equals( this.getValue(), that.getValue() );
-    }
 
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder( 17, 1 ).append( this.getId() ).append( this.getCategory() )
-                .append( this.getValue() ).toHashCode();
+        /*
+         * FIXME add uris
+         */
     }
-
-    @Override
-    public String toString() {
-        if ( StringUtils.isBlank( this.getCategory() ) ) {
-            return "[No category] Value = " + this.getValue();
-        }
-        return "Category = " + this.getCategory() + " Value = " + this.getValue();
-    }
-
-    
 
     /**
      * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
     public String getCategory() {
         return this.category;
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
     }
 
     /**
@@ -111,16 +123,15 @@ public class Characteristic extends Describable {
         return this.categoryUri;
     }
 
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
     }
 
-    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
-        this.evidenceCode = evidenceCode;
+    /**
+     * @return the originalValue
+     */
+    public String getOriginalValue() {
+        return originalValue;
     }
 
     /**
@@ -130,27 +141,60 @@ public class Characteristic extends Describable {
         return this.value;
     }
 
+    /**
+     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
+     *         ontology
+     *         term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
+     *         the
+     *         abstract class.
+     */
+    public String getValueUri() {
+        return this.valueUri;
+    }
+
+    @Override
+    public int hashCode() {
+
+        /*
+         * FIXME add uris
+         */
+        return new HashCodeBuilder( 17, 1 ).append( this.getId() ).append( this.getCategory() )
+                .append( this.getValue() ).toHashCode();
+    }
+
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
+    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    public void setOriginalValue( String originalValue ) {
+        this.originalValue = originalValue;
+    }
+
     public void setValue( String value ) {
         this.value = value;
     }
 
-    public static final class Factory {
+    /**
+     * @param uri
+     */
+    public void setValueUri( String uri ) {
+        this.valueUri = uri;
+    }
 
-        public static Characteristic newInstance() {
-            return new Characteristic();
+    @Override
+    public String toString() {
+        if ( StringUtils.isBlank( this.getCategory() ) ) {
+            return "[No category] Value = " + this.getValue();
         }
-
-        public static Characteristic newInstance( String name, String description, String value,
-                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
-            final Characteristic entity = new Characteristic();
-            entity.setName( name );
-            entity.setDescription( description );
-            entity.setValue( value );
-            entity.setCategory( category );
-            entity.setCategoryUri( categoryUri );
-            entity.setEvidenceCode( evidenceCode );
-            return entity;
-        }
+        return "Category = " + this.getCategory() + " Value = " + this.getValue();
     }
 
 }

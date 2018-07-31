@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.ejb.criteria.expression.function.AggregationFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,6 @@ import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -53,7 +53,7 @@ import java.util.Map;
  *
  * @author luke
  * @author paul
- * @see ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
+ * @see    ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
  */
 @Controller
 public class CharacteristicBrowserController {
@@ -135,27 +135,21 @@ public class CharacteristicBrowserController {
     }
 
     private void populateClassValues( Characteristic c, AnnotationValueObject avo ) {
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            avo.setClassUri( vc.getCategoryUri() );
-            avo.setTermUri( vc.getValueUri() );
-            avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-        } else {
-            avo.setObjectClass( Characteristic.class.getSimpleName() );
-        }
+        avo.setClassUri( c.getCategoryUri() );
+        avo.setTermUri( c.getValueUri() );
+        avo.setObjectClass( Characteristic.class.getSimpleName() );
     }
 
     public Integer count() {
         return characteristicService.countAll();
     }
 
-
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
         return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true, false );
     }
 
     /**
-     * @param searchFVs       Search factor values that lack characteristics -- that is, search the factorValue.value.
+     * @param searchFVs        Search factor values that lack characteristics -- that is, search the factorValue.value.
      * @param searchCategories Should the Category be searched, not just the Value?
      */
     public Collection<AnnotationValueObject> findCharacteristicsCustom( String valuePrefix, boolean searchNos,
@@ -176,10 +170,14 @@ public class CharacteristicBrowserController {
         for ( Object o : chars ) {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
+
             if ( ( searchEEs && parent instanceof ExpressionExperiment ) || ( searchBMs
-                    && parent instanceof BioMaterial ) || ( searchFVs && ( parent instanceof FactorValue
-                    || parent instanceof ExperimentalFactor ) ) || ( searchNos && parent == null ) || ( searchPAs
-                    && parent instanceof PhenotypeAssociation ) ) {
+                    && parent instanceof BioMaterial )
+                    || ( searchFVs && ( parent instanceof FactorValue
+                            || parent instanceof ExperimentalFactor ) )
+                    || ( searchNos && parent == null ) || ( searchPAs
+                            && parent instanceof PhenotypeAssociation ) ) {
+
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
@@ -195,10 +193,14 @@ public class CharacteristicBrowserController {
                 }
 
                 results.add( avo );
+
+                if (results.size() >= MAX_RESULTS ) {
+                    break;
+                }
             }
         }
 
-        if ( searchFVVs ) { // non-characteristics.
+        if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
             Collection<FactorValue> factorValues = factorValueService.findByValue( valuePrefix );
             for ( FactorValue factorValue : factorValues ) {
                 if ( factorValue.getCharacteristics().size() > 0 )
@@ -278,10 +280,11 @@ public class CharacteristicBrowserController {
             avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
             avo.setParentOfParentLink( AnchorTagUtil
                     .getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(),
-                            avo.getParentName() ) + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
-                    .getExpressionExperimentLink( ee.getId(),
-                            String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
-                                    ee.getShortName() ) ) );
+                            avo.getParentName() )
+                    + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
+                            .getExpressionExperimentLink( ee.getId(),
+                                    String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
+                                            ee.getShortName() ) ) );
         } else if ( parent instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) parent;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),

@@ -20,7 +20,7 @@ package ubic.gemma.persistence.service.association;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
@@ -43,9 +43,9 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
 
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
-    Collection<VocabCharacteristic> findByGene( Gene gene );
+    Collection<Characteristic> findByGene( Gene gene );
 
-    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes );
+    Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes );
 
     Collection<Gene> findByGOTerm( String goID, Taxon taxon );
 
@@ -53,9 +53,10 @@ public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociatio
     void removeAll();
 
     /**
-     * @param termsToFetch terms
-     * @param taxon        constraint
-     * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
+     * @param  termsToFetch terms
+     * @param  taxon        constraint
+     * @return              all the genes that match any of the terms. Used to fetch genes associated with a term +
+     *                      children.
      */
     Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon );
 

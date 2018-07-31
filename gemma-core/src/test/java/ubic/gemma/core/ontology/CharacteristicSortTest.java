@@ -18,7 +18,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.ArrayList;
@@ -29,10 +28,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Paul
  */
-public class CharacteristicSortTest extends BaseSpringContextTest {
+public class CharacteristicSortTest {
 
-    @Autowired
-    OntologyService ontologyService;
+    OntologyService ontologyService = new OntologyServiceImpl();
 
     @Test
     public final void testSortCharacteristics() {
@@ -40,41 +38,34 @@ public class CharacteristicSortTest extends BaseSpringContextTest {
 
         List<CharacteristicValueObject> cl = new ArrayList<>();
         cl.add( new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "g", "gggg", "gggg_", "g", null, null ) ) );
+                Characteristic.Factory.newInstance( "g", "gggg", "gggg_", null, "g", null, null ) ) );
 
         cl.add( new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "xused", "x", "xused", "x", null, null ) ) );
+                Characteristic.Factory.newInstance( "xused", "x", "xused", null, "x", null, null ) ) );
 
         // will be first
         CharacteristicValueObject a = new CharacteristicValueObject(
-                Characteristic.Factory.newInstance( "a", "a", "aused", "a", null, null ) );
+                Characteristic.Factory.newInstance( "a", "a", "aused", null, "a", null, null ) );
         a.setNumTimesUsed( 3 );
         a.setAlreadyPresentInDatabase( true );
         cl.add( a );
 
         CharacteristicValueObject vo = new CharacteristicValueObject(
-                VocabCharacteristic.Factory.newInstance( "b", "bbbb", "bbbbb", "http://bbbb", "b", null, null ) );
+                Characteristic.Factory.newInstance( "b", "bbbb", "bbbbb", "http://bbbb", "b", null, null ) );
         vo.setNumTimesUsed( 5 );
         vo.setAlreadyPresentInDatabase( true );
         cl.add( vo );
 
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
+        cl.add( new CharacteristicValueObject( Characteristic.Factory
                 .newInstance( "a", "aaaa", null, "aaaa_", "http://aaaa_", "a", null ) ) );
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
+        cl.add( new CharacteristicValueObject( Characteristic.Factory
                 .newInstance( "d", "dddd", null, "dddd_", "http://dddd_", "d", null ) ) );
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
+        cl.add( new CharacteristicValueObject( Characteristic.Factory
                 .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null ) ) );
 
         ontologyService.sort( cl );
 
         assertEquals( "bbbbb", cl.get( 0 ).getValue() );
-
-        // assertEquals( "x", cl.get( 2 ).getValue() );
-        // assertEquals( "aaaa", cl.get( 3 ).getValue() );
-        // assertEquals( "aaaf", cl.get( 4 ).getValue() );
-        //
-        // assertEquals( "d", cl.get( 5 ).getValue() );
-        // assertEquals( "gggg", cl.get( 6 ).getValue() );
 
     }
 }

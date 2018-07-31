@@ -20,6 +20,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -411,28 +413,51 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment expressionExperiment = this.load( eeId );
         Collection<AnnotationValueObject> annotations = new ArrayList<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+
             AnnotationValueObject annotationValue = new AnnotationValueObject();
             annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
+            annotationValue.setClassUri( c.getCategoryUri() );
             annotationValue.setTermName( c.getValue() );
+            annotationValue.setTermUri( c.getValueUri() );
             annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = this.getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null )
-                    annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = this.getLabelFromUri( vc.getValueUri() );
-                if ( termName != null )
-                    annotationValue.setTermName( termName );
-                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-            } else {
-                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
-            }
+            annotationValue.setObjectClass( "ExperimentTag" );
+
             annotations.add( annotationValue );
         }
+
+        /*
+         * If can be done without much slowdown:
+         */
+
+        /*
+         * add: certain selected (constant?) characteristics from biomaterials? (non-redudnant with tags)
+         */
+       // annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
+
+        /*
+         * Add: certain characteristics from factor values? (non-baseline, non-redudnant with tags). This is tricky because they are so specific...
+         */
+        annotations.addAll( this.getAnnotationsByFactorValues( eeId ) );
+
         return annotations;
+    }
+
+    /**
+     * @param  eeId
+     * @return
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
+    }
+
+    /**
+     * @param  eeId
+     * @return
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
+
     }
 
     @Override
@@ -839,7 +864,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Will add the vocab characteristic to the expression experiment and persist the changes.
+     * Will add the characteristic to the expression experiment and persist the changes.
      *
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
@@ -984,13 +1009,14 @@ public class ExpressionExperimentServiceImpl
         return false;
     }
 
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-
-        return null;
-    }
+    //    private String getLabelFromUri( String uri ) {
+    //        if ( StringUtils.isBlank( uri ) ) return null;
+    //        OntologyResource resource = ontologyService.getResource( uri );
+    //        if ( resource != null )
+    //            return resource.getLabel();
+    //
+    //        return null;
+    //    }
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map

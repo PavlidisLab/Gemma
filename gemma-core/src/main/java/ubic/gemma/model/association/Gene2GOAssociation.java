@@ -19,7 +19,8 @@
 package ubic.gemma.model.association;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 
 public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
@@ -33,7 +34,7 @@ public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationIm
 
     public static final class Factory {
 
-        public static Gene2GOAssociation newInstance( Gene gene, VocabCharacteristic ontologyEntry,
+        public static Gene2GOAssociation newInstance( Gene gene, Characteristic ontologyEntry,
                 GOEvidenceCode evidenceCode ) {
             final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociationImpl();
 

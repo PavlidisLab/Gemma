@@ -2,7 +2,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class CharacteristicBasicValueObject extends IdentifiableValueObject<Characteristic> {
@@ -33,9 +32,7 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
     public CharacteristicBasicValueObject( Characteristic c ) {
         super( c.getId() );
         this.value = c.getValue();
-        if ( c instanceof VocabCharacteristic ) {
-            this.valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-        }
+        this.valueUri = c.getValueUri();
         this.category = c.getCategory();
         this.categoryUri = c.getCategoryUri();
     }

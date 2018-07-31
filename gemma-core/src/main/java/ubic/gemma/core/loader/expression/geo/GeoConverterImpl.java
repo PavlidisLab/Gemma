@@ -65,7 +65,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -223,11 +222,11 @@ public class GeoConverterImpl implements GeoConverter {
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getType().toString() );
-        VocabCharacteristic term = VocabCharacteristic.Factory.newInstance();
+        Characteristic term = Characteristic.Factory.newInstance();
         this.convertVariableType( term, geoSubSet.getType() );
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
-        term.setValue( term.getCategory() );
-        term.setValueUri( term.getCategoryUri() );
+        term.setValue( term.getCategory() );// is this right?
+        term.setValueUri( term.getCategoryUri() ); // is this right?
         experimentalFactor.setCategory( term );
 
         experimentalFactor.setType( FactorType.CATEGORICAL );
@@ -685,6 +684,7 @@ public class GeoConverterImpl implements GeoConverter {
                     }
                     gemmaChar.setDescription( defaultDescription );
                     gemmaChar.setValue( value );
+                    gemmaChar.setOriginalValue( value );
                     gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
@@ -708,6 +708,7 @@ public class GeoConverterImpl implements GeoConverter {
                                                                                * organism part; used to be 'biosource'
                                                                                */ );
             sourceChar.setValue( characteristic );
+            sourceChar.setOriginalValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
@@ -748,6 +749,7 @@ public class GeoConverterImpl implements GeoConverter {
             labelChar.setCategory( "LabelCompound" );
             labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" /* labeling; used to be LabelCompound */ );
             labelChar.setValue( characteristic );
+            labelChar.setOriginalValue( characteristic );
             labelChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( labelChar );
         }
@@ -1468,8 +1470,8 @@ public class GeoConverterImpl implements GeoConverter {
     /*
      * Note that this is apparently never actually used?
      */
-    private VocabCharacteristic convertReplicatationType( ReplicationType repType ) {
-        VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
+    private Characteristic convertReplicatationType( ReplicationType repType ) {
+        Characteristic result = Characteristic.Factory.newInstance();
         result.setCategory( "replicate" );
         result.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000683" /* replicate */ );
         result.setEvidenceCode( GOEvidenceCode.IIA );
@@ -1489,6 +1491,8 @@ public class GeoConverterImpl implements GeoConverter {
         } else {
             throw new IllegalStateException( "Unhandled replication type: " + repType );
         }
+        
+        result.setOriginalValue( result.getValue() );
 
         return result;
 
@@ -1504,7 +1508,7 @@ public class GeoConverterImpl implements GeoConverter {
         result.setName( replication.getType().toString() );
         result.setDescription( replication.getDescription() );
         result.setType( FactorType.CATEGORICAL );
-        VocabCharacteristic term = this.convertReplicatationType( replication.getType() );
+        Characteristic term = this.convertReplicatationType( replication.getType() );
 
         result.setCategory( term );
         return result;
@@ -1513,7 +1517,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     private FactorValue convertReplicationToFactorValue( GeoReplication replication ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        VocabCharacteristic term = this.convertReplicatationType( replication.getType() );
+        Characteristic term = this.convertReplicatationType( replication.getType() );
         factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
         return factorValue;
@@ -1762,6 +1766,7 @@ public class GeoConverterImpl implements GeoConverter {
                 Characteristic o = Characteristic.Factory.newInstance();
                 o.setDescription( "GEO Keyword" );
                 o.setValue( keyWord );
+                o.setOriginalValue( keyWord ); // preserve
                 o.setEvidenceCode( GOEvidenceCode.IIA );
                 o.setDescription( "Keyword from GEO series definition file." );
             }
@@ -2032,11 +2037,12 @@ public class GeoConverterImpl implements GeoConverter {
         FactorValue factorValue = FactorValue.Factory.newInstance();
         Characteristic term = Characteristic.Factory.newInstance();
         this.convertVariableType( term, type );
-        if ( term.getCategory() != null ) {
+        if ( term.getCategory() != null ) { // is this right ???
             factorValue.setValue( value );
             return factorValue;
         }
         term.setValue( value );
+        term.setOriginalValue( value );
         factorValue.setValue( term.getValue() );
         factorValue.getCharacteristics().add( term );
         return factorValue;
@@ -2479,6 +2485,7 @@ public class GeoConverterImpl implements GeoConverter {
     private void doFallback( BioMaterial bioMaterial, String characteristic, String defaultDescription ) {
         Characteristic gemmaChar = Characteristic.Factory.newInstance();
         gemmaChar.setValue( characteristic );
+        gemmaChar.setOriginalValue( characteristic );
         gemmaChar.setDescription( defaultDescription );
         gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
         bioMaterial.getCharacteristics().add( gemmaChar );

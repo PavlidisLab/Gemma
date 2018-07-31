@@ -31,7 +31,6 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -91,21 +90,21 @@ public class SearchServiceTest extends BaseSpringContextTest {
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 
-        VocabCharacteristic eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
+        Characteristic eeCharSpinalCord = Characteristic.Factory.newInstance();
         eeCharSpinalCord.setCategory( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setCategoryUri( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setValue( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setValueUri( SearchServiceTest.SPINAL_CORD );
         characteristicService.create( eeCharSpinalCord );
 
-        VocabCharacteristic eeCharGeneURI = VocabCharacteristic.Factory.newInstance();
+        Characteristic eeCharGeneURI = Characteristic.Factory.newInstance();
         eeCharGeneURI.setCategory( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setCategoryUri( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValue( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValueUri( SearchServiceTest.GENE_URI );
         characteristicService.create( eeCharGeneURI );
 
-        VocabCharacteristic eeCharCortexURI = VocabCharacteristic.Factory.newInstance();
+        Characteristic eeCharCortexURI = Characteristic.Factory.newInstance();
         eeCharCortexURI.setCategory( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setCategoryUri( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setValue( SearchServiceTest.BRAIN_CAVITY );

@@ -83,7 +83,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -1700,9 +1699,9 @@ public class SearchServiceImpl implements SearchService {
                 if ( clazz.isAssignableFrom( o.getClass() ) ) {
                     String matchedText;
 
-                    if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
+                    if ( c.getValueUri() != null ) {
                         matchedText = "Tagged term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query="
-                                + ( ( VocabCharacteristic ) c ).getValueUri() + "\">" + c.getValue() + "</a>";
+                                + c.getValueUri() + "\">" + c.getValue() + "</a>";
                     } else {
                         matchedText = "Free text: " + c.getValue();
                     }

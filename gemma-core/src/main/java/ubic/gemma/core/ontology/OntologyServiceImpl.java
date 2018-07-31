@@ -37,7 +37,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -270,10 +269,10 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
+    public Collection<Characteristic> findTermAsCharacteristic( String search ) {
 
         String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<VocabCharacteristic> results = new HashSet<>();
+        Collection<Characteristic> results = new HashSet<>();
 
         if ( StringUtils.isBlank( query ) ) {
             return results;
@@ -569,7 +568,7 @@ public class OntologyServiceImpl implements OntologyService {
             // characteristic
         }
 
-        if ( vc instanceof VocabCharacteristic && this.isObsolete( ( ( VocabCharacteristic ) vc ).getValueUri() ) ) {
+        if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
             OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
             return;
         }
@@ -590,13 +589,13 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Convert raw ontology resources into VocabCharacteristics.
+     * Convert raw ontology resources into Characteristics.
      */
     @Override
-    public Collection<VocabCharacteristic> termsToCharacteristics(
+    public Collection<Characteristic> termsToCharacteristics(
             final Collection<? extends OntologyResource> terms ) {
 
-        Collection<VocabCharacteristic> results = new HashSet<>();
+        Collection<Characteristic> results = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
@@ -606,7 +605,7 @@ public class OntologyServiceImpl implements OntologyService {
             if ( res == null )
                 continue;
 
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
             if ( res instanceof OntologyTerm ) {
                 OntologyTerm term = ( OntologyTerm ) res;
                 vc.setValue( term.getTerm() );
@@ -633,17 +632,17 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Given a collection of ontology terms converts them to a collection of VocabCharacteristics
+     * Given a collection of ontology terms converts them to a collection of Characteristics
      */
-    private Collection<VocabCharacteristic> convert( final Collection<OntologyResource> resources ) {
+    private Collection<Characteristic> convert( final Collection<OntologyResource> resources ) {
 
-        Collection<VocabCharacteristic> converted = new HashSet<>();
+        Collection<Characteristic> converted = new HashSet<>();
 
         if ( ( resources == null ) || ( resources.isEmpty() ) )
             return converted;
 
         for ( OntologyResource res : resources ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
 
             // If there is no URI we don't want to send it back (ie useless)
             if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) )
@@ -747,8 +746,8 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic && ( StringUtils.isNotBlank( ( ( VocabCharacteristic ) c ).getValueUri() ) ) ) {
-            return ( ( VocabCharacteristic ) c ).getValueUri().toLowerCase();
+        if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
+            return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
     }
@@ -765,7 +764,7 @@ public class OntologyServiceImpl implements OntologyService {
      * for non-ncbi genes.
      */
     private Characteristic gene2Characteristic( Gene g ) {
-        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategory( "gene" );
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
         vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );

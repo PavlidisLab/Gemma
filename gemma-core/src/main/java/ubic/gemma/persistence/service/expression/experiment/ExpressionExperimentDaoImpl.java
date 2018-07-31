@@ -20,14 +20,21 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -50,7 +57,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @see    ubic.gemma.model.expression.experiment.ExpressionExperiment
+ * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
 public class ExpressionExperimentDaoImpl
@@ -95,7 +102,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
 
-        if (ids == null || ids.isEmpty() ) return new HashSet<>();
+        if ( ids == null || ids.isEmpty() )
+            return new HashSet<>();
 
         //language=HQL
         final String queryString = "select distinct ee.id from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
@@ -541,8 +549,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
         //language=HQL
-        final String queryString = "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
-                + " where ee.id in (:ids) ";
+        final String queryString =
+                "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
+                        + " where ee.id in (:ids) ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
@@ -606,8 +615,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param  Id if of the expression experiment
-     * @return    count of RAW vectors.
+     * @param Id if of the expression experiment
+     * @return count of RAW vectors.
      */
     @Override
     public Integer getDesignElementDataVectorCountById( long Id ) {
@@ -935,11 +944,11 @@ public class ExpressionExperimentDaoImpl
     /**
      * Special method for front-end access
      *
-     * @param  orderBy    the field to order the results by.
-     * @param  descending whether the ordering by the orderField should be descending.
-     * @param  ids        only list specific ids.
-     * @param  taxon      only list experiments within specific taxon.
-     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     * @param orderBy    the field to order the results by.
+     * @param descending whether the ordering by the orderField should be descending.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
+     * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
@@ -1083,14 +1092,14 @@ public class ExpressionExperimentDaoImpl
      * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
      * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
-     * @param  offset  amount of EEs to skip.
-     * @param  limit   maximum amount of EEs to retrieve.
-     * @param  orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                 be a property of EE itself, or any nested property that hibernate can reach.
-     *                 E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param  asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param  filter  see this#formRestrictionClause(ArrayList) filters argument for description.
-     * @return         list of value objects representing the EEs that matched the criteria.
+     * @param offset  amount of EEs to skip.
+     * @param limit   maximum amount of EEs to retrieve.
+     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
+     *                be a property of EE itself, or any nested property that hibernate can reach.
+     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
+     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
+     * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
@@ -1211,9 +1220,9 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
-     *             keeping before you can
-     *             remove the experiment. Attempting to call this method directly will likely result in
-     *             org.hibernate.exception.ConstraintViolationException
+     * keeping before you can
+     * remove the experiment. Attempting to call this method directly will likely result in
+     * org.hibernate.exception.ConstraintViolationException
      */
     @Override
     @Deprecated
@@ -1335,11 +1344,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                         description.
-     * @param  orderByProperty the property to order by.
-     * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for EEVO retrieval.
+     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                        description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
@@ -1394,7 +1403,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param  filters
+     * @param filters
      * @return
      */
     private List<ObjectFilter[]> getObjectFilters( List<ObjectFilter[]> filters ) {
@@ -1419,9 +1428,9 @@ public class ExpressionExperimentDaoImpl
      * multiple levels) are allowed. E.g: "accession", "curationDetails.lastUpdated",
      * "curationDetails.lastTroubledEvent.date"
      *
-     * @param  orderBy the order field requested by front end or API.
-     * @return         a string that can be used as the orderByProperty param in
-     *                 {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
+     * @param orderBy the order field requested by front end or API.
+     * @return a string that can be used as the orderByProperty param in
+     * {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1451,15 +1460,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param  offset      amount of EEs to skip.
-     * @param  limit       maximum amount of EEs to retrieve.
-     * @param  orderBy     the property to order by.
-     * @param  asc         whether the ordering is ascending or descending.
-     * @param  filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
-     * @param  disjunction true to signal that the filters property is a disjunction (OR). False will cause the
-     *                     filters property to be treated as a conjunction (AND).
-     *                     If you are passing a single filter, using <code>false</code> is slightly more effective;
-     * @return             a hibernate Query object ready to be used for EEVO retrieval.
+     * @param offset      amount of EEs to skip.
+     * @param limit       maximum amount of EEs to retrieve.
+     * @param orderBy     the property to order by.
+     * @param asc         whether the ordering is ascending or descending.
+     * @param filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
+     * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
+     *                    filters property to be treated as a conjunction (AND).
+     *                    If you are passing a single filter, using <code>false</code> is slightly more effective;
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     @SuppressWarnings("SameParameterValue") // Better reusability
     private Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit,
@@ -1527,10 +1536,10 @@ public class ExpressionExperimentDaoImpl
     /**
      * ? Add constraints: security (permissions), filters on the query, and ordering.
      *
-     * @param  filters
-     * @param  orderByProperty
-     * @param  orderDesc
-     * @param  queryString
+     * @param filters
+     * @param orderByProperty
+     * @param orderDesc
+     * @param queryString
      * @return
      */
     private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
@@ -1707,8 +1716,8 @@ public class ExpressionExperimentDaoImpl
     /**
      * Method for the front end display
      *
-     * @param  ee expression experiment to be thawed
-     * @return    thawed expression experiment.
+     * @param ee expression experiment to be thawed
+     * @return thawed expression experiment.
      */
     private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
         if ( ee == null ) {
@@ -1772,6 +1781,117 @@ public class ExpressionExperimentDaoImpl
                 //     Hibernate.initialize( bf.getPublicationTypes() );
             }
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#getAnnotationsByBioMaterials(java.
+     * lang.Long)
+     */
+    @Override
+    public Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
+        /*
+         * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
+         * work to do.
+         */
+        List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
+                + "join e.bioAssays ba join ba.sampleUsed bm "
+                + "join bm.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
+
+        Collection<AnnotationValueObject> results = new HashSet<>();
+        /*
+         * TODO we need to filter these better
+         */
+        for ( Object o : raw ) {
+            Characteristic c = ( Characteristic ) o;
+
+            // filter. Could include this in the query if it isn't too complicated.
+         //   if ( StringUtils.isBlank( c.getCategory() ) || !c.getCategory().equals( "organism part" ) ) {
+                //         continue;
+          //  }
+
+            //            if (StringUtils.isBlank (c.getValueUri())) {
+            //                continue;
+            //            }
+
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
+
+            annotationValue.setClassUri( c.getCategoryUri() );
+
+            annotationValue.setTermUri( c.getValueUri() );
+
+            annotationValue.setObjectClass( BioMaterial.class.getSimpleName() );
+
+            results.add( annotationValue );
+        }
+
+        return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#getAnnotationsByFactorvalues(java.
+     * lang.Long)
+     */
+    @Override
+    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
+        List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
+                + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
+                + "join fv.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
+
+        /*
+         * FIXME filtering here is going to have to be more elaborate for this to be useful.
+         */
+        Collection<AnnotationValueObject> results = new HashSet<>();
+        for ( Object o : raw ) {
+            Characteristic c = ( Characteristic ) o;
+
+            // ignore baseline and batch factorvalues (could include in the query)
+            if ( BaselineSelection.isBaselineCondition( c ) || ( StringUtils.isNotBlank( c.getCategory() ) && c.getCategory()
+                    .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) ) {
+                continue;
+            }
+
+            // timepoint.
+            if (StringUtils.isNotBlank( c.getCategoryUri    () ) && c.getCategoryUri()
+                    .equals( "http://www.ebi.ac.uk/efo/EFO_0000724" )) {
+                continue;
+            }
+
+
+            if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
+                // DE_include/exclude
+                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00013" ) )
+                    continue;
+                if ( c.getValueUri().equals( "http://purl.obolibrary.org/obo/TGEMO_00014" ) )
+                    continue;
+
+            }
+
+            AnnotationValueObject annotationValue = new AnnotationValueObject();
+            annotationValue.setClassName( c.getCategory() );
+            annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
+
+            annotationValue.setClassUri( c.getCategoryUri() );
+
+            annotationValue.setTermUri( c.getValueUri() );
+
+            annotationValue.setObjectClass( FactorValue.class.getSimpleName() );
+
+            results.add( annotationValue );
+        }
+
+        return results;
+
     }
 
 }

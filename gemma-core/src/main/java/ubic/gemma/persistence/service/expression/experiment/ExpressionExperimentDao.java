@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -160,4 +161,16 @@ public interface ExpressionExperimentDao
     ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
     ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param eeId
+     * @return 
+     */
+    Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
+
+    /**
+     * @param eeId
+     * @return 
+     */
+    Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
 }

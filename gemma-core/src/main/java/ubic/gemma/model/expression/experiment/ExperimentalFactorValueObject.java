@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -217,11 +216,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     }
 
     private String getCategoryUri( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            return vc.getCategoryUri();
-        }
-        return null;
+        return c.getCategoryUri();
 
     }
 

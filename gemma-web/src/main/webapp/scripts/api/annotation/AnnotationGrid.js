@@ -66,12 +66,12 @@ Gemma.AnnotationDataView = Ext
             },
 
             /*
-             * Assumes search scope should be experiments only ..
+             * TODO: make it easier to spot which ones come from BioMaterial, FactorValue
              */
             tpl: new Ext.XTemplate(
                 '<tpl for=".">',
                 '<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
-                + '<a ext:qtip="{className} : {termUri}" href="' + ctxBasePath + '/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
+                + '<a ext:qtip="{className} : {termUri} via {objectClass} " href="' + ctxBasePath + '/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
                 '</tpl>'),
 
             itemSelector: 'ann-wrap',
@@ -178,7 +178,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 p.body = "<p class='characteristic-body' >" + String.format("From {0}", record.data.parentOfParentLink)
                     + "</p>";
             }
-            return '';
+
+            if (this.grid.editable && !this.grid.showParent && record.get("objectClass") !== "ExperimentTag" ) {
+                return 'disabled';
+            } else {
+                return '';
+            }
         }
     },
 
@@ -277,6 +282,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 header: "Evidence",
                 dataIndex: "evidenceCode",
                 sortable: true
+            }, {
+                header: "From",
+                dataIndex: "objectClass",
+                sortable: true,
+                hidden: this.showParent? true : false,
+                tooltip: Gemma.HelpText.WidgetDefaults.AnnotationGrid.objectClassDescription
             }]
 
         });
@@ -361,10 +372,26 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             this.on("beforeedit", function (e) {
                 var row = e.record.data;
+
+                if (!this.showParent && e.record.get("objectClass") !== "ExperimentTag" ) {
+                    return false;
+                }
+
                 var col = this.getColumnModel().getColumnId(e.column);
                 if (col == VALUE_COLUMN) {
                     this.valueCombo.setCategory.call(this.valueCombo, row.className, row.classUri);
                 }
+
+                 return true;
+            });
+
+            this.on("afteredit", function(e) {
+                e.record.set("term", this.valueCombo.getCharacteristic().value);
+                e.record.set("termUri", this.valueCombo.getCharacteristic().valueUri);
+            //    e.record.set("category", this.categoryCombo.getTerm().get("term"));
+             //   e.record.set("categoryUri", this.categoryCombo.getTerm().get("uri"));
+
+                e.record;
             });
 
             if (this.getTopToolbar().deleteButton) {

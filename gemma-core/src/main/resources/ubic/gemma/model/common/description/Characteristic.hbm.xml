@@ -5,25 +5,29 @@
 
 <hibernate-mapping>
 	<class name="ubic.gemma.model.common.description.Characteristic" table="CHARACTERISTIC"
-           discriminator-value="Characteristic">
+		discriminator-value="Characteristic">
 		<cache usage="read-write" />
 		<id name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
 			<generator class="native">
 			</generator>
 		</id>
-		<discriminator column="class"/>
+		<discriminator column="class" />
 		<property name="name" type="java.lang.String">
-			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+			<column name="NAME" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
+			<column name="DESCRIPTION" not-null="false" unique="false"
+				sql-type="text character set latin1 collate latin1_swedish_ci" />
 		</property>
 		<property name="value" type="java.lang.String">
-			<column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+			<column name="VALUE" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
 		<property name="category" type="java.lang.String">
-			<column name="CATEGORY" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+			<column name="CATEGORY" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
 		<property name="categoryUri" type="java.lang.String">
 			<column name="CATEGORY_URI" not-null="false" unique="false"
@@ -33,16 +37,13 @@
 			<column name="EVIDENCE_CODE" not-null="false" unique="false"
 				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
-		<subclass name="ubic.gemma.model.common.description.VocabCharacteristic" discriminator-value="VocabCharacteristic"
-                  abstract="false">
-			<property name="valueUri" type="java.lang.String">
-				<column name="VALUE_URI" not-null="false" unique="false"
-					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
-			</property>
-			<property name="originalValue" type="java.lang.String">
-				<column name="ORIGINAL_VALUE" not-null="false" unique="false"
-					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
-			</property>
-		</subclass>
+		<property name="valueUri" type="java.lang.String">
+			<column name="VALUE_URI" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
+		<property name="originalValue" type="java.lang.String">
+			<column name="ORIGINAL_VALUE" not-null="false" unique="false"
+				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>
 	</class>
 </hibernate-mapping>

@@ -1001,7 +1001,6 @@
             <dwr:include method="y"/>
         </dwr:convert>
 
-        <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.VocabCharacteristic"/>
         <dwr:convert type="characteristicConverter" class="ubic.gemma.model.common.description.Characteristic"/>
         <dwr:convert type="goEvidenceCodeConverter" class="ubic.gemma.model.association.GOEvidenceCode"/>
         <dwr:convert type="classConverter" class="java.lang.Class"/>

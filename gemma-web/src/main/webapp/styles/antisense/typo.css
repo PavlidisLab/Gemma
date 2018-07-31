@@ -388,6 +388,15 @@ a.info {
 	color: darkgreen;
 }
 
+.disabled {
+	background-color: lightgrey;
+	color: grey;
+}
+
+.disabled-plain {
+	color: black;
+}
+
 /* colours for characteristics */
 .usedWithUri {
 	color: darkgreen;
@@ -481,10 +490,6 @@ a.tooltip:hover .tooltiptext {
 */
 .search-result-body { /*font-style: italic; */
 	
-}
-
-.disabled-plain {
-	color: black;
 }
 
 /*

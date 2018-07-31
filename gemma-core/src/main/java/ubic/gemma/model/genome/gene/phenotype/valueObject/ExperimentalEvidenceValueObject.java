@@ -20,10 +20,11 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.util.Collection;
 import java.util.TreeSet;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject<ExperimentalEvidence> {
 
@@ -48,23 +49,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
 
         if ( collectionCharacteristics != null ) {
             for ( Characteristic c : collectionCharacteristics ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    VocabCharacteristic voCha = ( VocabCharacteristic ) c;
 
-                    String valueUri = null;
+                CharacteristicValueObject chaValueObject = new CharacteristicValueObject( c.getId(),
+                        c.getValue(), c.getCategory(), c.getValueUri(), c.getCategoryUri() );
 
-                    if ( voCha.getValueUri() != null && !voCha.getValueUri().equals( "" ) ) {
-                        valueUri = voCha.getValueUri();
-                    }
+                this.experimentCharacteristics.add( chaValueObject );
 
-                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getId(),
-                            voCha.getValue(), voCha.getCategory(), valueUri, voCha.getCategoryUri() );
-
-                    this.experimentCharacteristics.add( chaValueObject );
-                } else {
-                    this.experimentCharacteristics
-                            .add( new CharacteristicValueObject( c.getId(), c.getValue(), c.getCategory() ) );
-                }
             }
         }
     }

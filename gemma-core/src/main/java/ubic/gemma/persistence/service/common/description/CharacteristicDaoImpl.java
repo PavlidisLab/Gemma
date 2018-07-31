@@ -35,7 +35,6 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -130,8 +129,10 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<>();
         Collection<Characteristic> results = new HashSet<>();
+        if ( uris.isEmpty() ) return results;
+
         //language=HQL
-        final String queryString = "from VocabCharacteristic where valueUri in (:uris)";
+        final String queryString = "from Characteristic where valueUri in (:uris)";
 
         for ( String uri : uris ) {
             batch.add( uri );
@@ -148,9 +149,10 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
     @Override
     public Collection<Characteristic> findByUri( String searchString ) {
+        if ( StringUtils.isBlank( searchString ) ) return new HashSet<>();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select char from VocabCharacteristic as char where  char.valueUri = :search" )
+                .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
     }
 
@@ -172,12 +174,11 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         if ( AbstractDao.log.isDebugEnabled() ) {
             Collection<String> uris = new HashSet<>();
             for ( Characteristic c : characteristics ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                    if ( vc.getValueUri() == null )
-                        continue;
-                    uris.add( vc.getValueUri() );
-                }
+
+                if ( c.getValueUri() == null )
+                    continue;
+                uris.add( c.getValueUri() );
+
             }
             AbstractDao.log.debug( "For class=" + parentClass.getSimpleName() + ": " + characteristics.size()
                     + " Characteristics have URIS:\n" + StringUtils.join( uris, "\n" ) );

@@ -21,7 +21,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * ValueObject wrapper for a Characteristic (including VocabCharacteristic)
+ * ValueObject wrapper for a Characteristic
  *
  * @see Characteristic
  */
@@ -80,9 +79,10 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
     public CharacteristicValueObject( Characteristic characteristic ) {
         super( characteristic.getId() );
-        if ( characteristic instanceof VocabCharacteristic ) {
-            this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
-            this.parseUrlId();
+        {
+            this.valueUri = characteristic.getValueUri();
+            if ( this.valueUri != null )
+                this.parseUrlId();
         }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
@@ -184,8 +184,8 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
         if ( this.value == null ) {
             return other.value == null;
-        } else
-            return this.value.equals( other.value );
+        }
+        return this.value.equals( other.value );
 
     }
 

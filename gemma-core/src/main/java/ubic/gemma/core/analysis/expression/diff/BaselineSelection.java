@@ -21,7 +21,6 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.HashSet;
@@ -97,6 +96,10 @@ public class BaselineSelection {
                 .add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
     }
 
+    /**
+     * @param factorValue
+     * @return
+     */
     public static boolean isBaselineCondition( FactorValue factorValue ) {
 
         if ( factorValue.getIsBaseline() != null )
@@ -114,45 +117,46 @@ public class BaselineSelection {
                     .contains( factorValue.getValue().toLowerCase() );
         } else {
             for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                    String valueUri = vc.getValueUri();
-                    if ( StringUtils.isNotBlank( valueUri ) && BaselineSelection.controlGroupTerms
-                            .contains( valueUri.toLowerCase() ) ) {
-                        return true;
-                    }
-                    if ( StringUtils.isNotBlank( vc.getValue() ) && BaselineSelection.controlGroupTerms
-                            .contains( vc.getValue().toLowerCase() ) ) {
-                        return true;
-                    }
-                } else if ( StringUtils.isNotBlank( c.getValue() ) && BaselineSelection.controlGroupTerms
-                        .contains( c.getValue().toLowerCase() ) ) {
+                if ( isBaselineCondition( c ) )
                     return true;
-                }
             }
         }
         return false;
     }
 
     /**
+     * @param c
+     * @return true if this looks like a baseline condition
+     */
+    public static boolean isBaselineCondition( Characteristic c ) {
+        String valueUri = c.getValueUri();
+
+        if ( StringUtils.isNotBlank( valueUri ) && BaselineSelection.controlGroupTerms
+                .contains( valueUri.toLowerCase() ) ) {
+            return true;
+        }
+
+        return StringUtils.isNotBlank( c.getValue() ) && BaselineSelection.controlGroupTerms
+                .contains( c.getValue().toLowerCase() );
+    }
+
+    /**
      * Check if this factor value is the baseline, overriding other possible baselines.
      *
-     * @param  fv factor value
-     * @return    true if given fv is forced baseline
+     * @param fv factor value
+     * @return true if given fv is forced baseline
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
         if ( fv.getMeasurement() != null || fv.getCharacteristics().isEmpty() ) {
             return false;
         }
         for ( Characteristic c : fv.getCharacteristics() ) {
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                String valueUri = vc.getValueUri();
-                if ( StringUtils.isNotBlank( valueUri ) && valueUri.toLowerCase()
-                        .equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
-                    return true;
-                }
+            String valueUri = c.getValueUri();
+            if ( StringUtils.isNotBlank( valueUri ) && valueUri.toLowerCase()
+                    .equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
+                return true;
             }
+
         }
         return false;
     }

@@ -30,7 +30,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
@@ -102,7 +102,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
              * Add up to 5 GO terms. Parents mean more will be added.
              */
             for ( int j = 0; j <= Math.floor( i / 20 ); j++ ) {
-                VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
+                Characteristic oe = Characteristic.Factory.newInstance();
                 oe.setValueUri( GeneOntologyService.BASE_GO_URI + goTerms[j] );
                 oe.setValue( goTerms[j] );
                 Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( gene, oe, GOEvidenceCode.EXP );

@@ -31,10 +31,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Luke
@@ -98,8 +95,12 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     @Override
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
+        Collection<Characteristic> needToSearch = new HashSet<>();
+        needToSearch.addAll(characteristics);
         for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
-            charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );
+            Map<Characteristic, Object> found = this.characteristicDao.getParents( parentClass, needToSearch );
+            charToParent.putAll( found );
+            needToSearch.removeAll( found.keySet() );
         }
         return charToParent;
     }

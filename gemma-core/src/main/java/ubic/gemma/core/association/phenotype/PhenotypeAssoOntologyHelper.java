@@ -17,7 +17,6 @@ package ubic.gemma.core.association.phenotype;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Collection;
@@ -36,48 +35,48 @@ public interface PhenotypeAssoOntologyHelper {
     /**
      * CharacteristicValueObject to Characteristic with no valueUri given
      *
-     * @param characteristicValueObject characteristic VO
-     * @return vocab characteristic
+     * @param  characteristicValueObject characteristic VO
+     * @return                           vocab characteristic
      */
-    VocabCharacteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject );
+    Characteristic characteristicValueObject2Characteristic( CharacteristicValueObject characteristicValueObject );
 
     /**
      * Giving some Ontology terms return all valueUri of Ontology Terms + children
      *
-     * @param ontologyTerms ontology terms
-     * @return all valueUri of Ontology Terms + children
+     * @param  ontologyTerms ontology terms
+     * @return               all valueUri of Ontology Terms + children
      */
     Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms );
 
     /**
      * For a valueUri return the OntologyTerm found
      *
-     * @param valueUri value uri
-     * @return ontology term
+     * @param  valueUri value uri
+     * @return          ontology term
      */
     OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException;
 
     /**
      * search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO
      *
-     * @param searchQuery query
-     * @return characteristic VOs
+     * @param  searchQuery query
+     * @return             characteristic VOs
      */
     Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery );
 
     /**
      * search the disease, hp and mp ontology for OntologyTerm
      *
-     * @param searchQuery free text query?
-     * @return terms
+     * @param  searchQuery free text query?
+     * @return             terms
      */
     Collection<OntologyTerm> findValueUriInOntology( String searchQuery );
 
     /**
      * Helper method. For a valueUri return the Characteristic (represents a phenotype)
      *
-     * @param valueUri value uri
-     * @return Characteristic
+     * @param  valueUri value uri
+     * @return          Characteristic
      */
     Characteristic valueUri2Characteristic( String valueUri );
 

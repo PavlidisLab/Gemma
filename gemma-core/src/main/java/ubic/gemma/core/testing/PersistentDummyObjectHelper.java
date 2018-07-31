@@ -745,7 +745,7 @@ public class PersistentDummyObjectHelper {
                     .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
             ef.setType( FactorType.CATEGORICAL );
-            VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+            Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "OrganismPart" );
             c.setName( "OrganismPart" );
             ef.setCategory( c );

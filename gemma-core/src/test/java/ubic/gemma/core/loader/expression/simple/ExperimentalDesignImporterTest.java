@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.testing.BaseSpringContextTest;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,7 +67,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     static void assertFv( FactorValue fv ) {
         if ( fv.getCharacteristics().size() > 0 ) {
-            VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
+            Characteristic c = fv.getCharacteristics().iterator().next();
             assertNotNull( c.getValue() );
             assertNotNull( c.getCategoryUri() );
         } else {

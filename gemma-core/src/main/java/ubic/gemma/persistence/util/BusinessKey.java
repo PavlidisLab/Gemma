@@ -166,12 +166,16 @@ public class BusinessKey {
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
-        if ( characteristic instanceof VocabCharacteristic ) {
-            BusinessKey.addRestrictions( queryObject, ( VocabCharacteristic ) characteristic );
+
+        if ( characteristic.getCategoryUri() != null ) {
+            queryObject.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
+        } else if ( characteristic.getCategory() != null ) {
+            queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+        }
+
+        if ( StringUtils.isNotBlank( characteristic.getValueUri() ) ) {
+            queryObject.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
         } else {
-            if ( characteristic.getCategory() != null ) {
-                queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
-            }
             assert characteristic.getValue() != null;
             queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
         }
@@ -338,23 +342,6 @@ public class BusinessKey {
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, VocabCharacteristic characteristic ) {
-
-        if ( characteristic.getCategoryUri() != null ) {
-            queryObject.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
-        } else if ( characteristic.getCategory() != null ) {
-            queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
-        }
-
-        if ( characteristic.getValueUri() != null ) {
-            queryObject.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
-        } else {
-            assert characteristic.getValue() != null;
-            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
-        }
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
         queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
                 .createCriteria( "externalDatabase" )
@@ -466,15 +453,8 @@ public class BusinessKey {
 
     @SuppressWarnings("WeakerAccess") // Consistency
     public static void checkKey( Characteristic ontologyEntry ) {
-
-        if ( ontologyEntry instanceof VocabCharacteristic ) {
-            if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
-                throw new IllegalArgumentException();
-        } else {
-            if ( ontologyEntry.getValue() == null )
-                throw new IllegalArgumentException();
-        }
-
+        if ( ontologyEntry.getValue() == null )
+            throw new IllegalArgumentException();
     }
 
     public static void checkKey( Contact contact ) {
@@ -661,20 +641,17 @@ public class BusinessKey {
 
                 Conjunction c = Restrictions.conjunction();
 
-                if ( characteristic instanceof VocabCharacteristic ) {
-                    VocabCharacteristic vc = ( VocabCharacteristic ) characteristic;
-                    if ( vc.getCategoryUri() != null ) {
-                        c.add( Restrictions.eq( "categoryUri", vc.getCategoryUri() ) );
-                    }
-                    if ( vc.getValueUri() != null ) {
-                        c.add( Restrictions.eq( "valueUri", vc.getValueUri() ) );
-                    }
+                if ( StringUtils.isNotBlank( characteristic.getCategoryUri() ) ) {
+                    c.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
+                }
+                if ( StringUtils.isNotBlank( characteristic.getValueUri() ) ) {
+                    c.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
                 }
 
-                if ( characteristic.getValue() != null )
+                if ( StringUtils.isNotBlank( characteristic.getValue() ) )
                     c.add( Restrictions.eq( "value", characteristic.getValue() ) );
 
-                if ( characteristic.getCategory() != null )
+                if ( StringUtils.isNotBlank( characteristic.getCategory() ) )
                     c.add( Restrictions.eq( "category", characteristic.getCategory() ) );
 
                 vdj.add( c );
@@ -805,7 +782,7 @@ public class BusinessKey {
         }
     }
 
-    private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry ) {
+    private static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry ) {
         Criteria innerQuery = queryObject.createCriteria( "ontologyEntry" );
         BusinessKey.addRestrictions( innerQuery, ontologyEntry );
     }

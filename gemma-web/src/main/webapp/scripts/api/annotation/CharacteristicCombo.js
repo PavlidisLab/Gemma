@@ -89,10 +89,12 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
         };
 
         this.on("select", function (combo, record, index) {
+
             this.characteristic.value = record.data.value;
             this.characteristic.valueUri = record.data.valueUri;
+
             /*
-             * The addition of '\t' is a complete hack to workaround an extjs limitation. It's to make sure extjs
+             * The addition of whitespace is a complete hack to workaround an extjs limitation. It's to make sure extjs
              * knows we want it to detect a change. See bug 1811
              */
             combo.setValue(record.data.value + "\t");
@@ -117,22 +119,14 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
         /*
          * check to see if the user has typed anything in the combo box (rather than selecting something); if they
          * have, remove the URI from the characteristic and update its value, so we end up with a plain text. See
-         * note about hack '\t' above.
+         * note about hack '\t' above. FIXME not sure this works as intended. Is this called?
          */
         if (this.getValue() != this.characteristic.value + "\t") {
-            this.characteristic.value = this.getValue();
-            this.characteristic.valueUri = null;
+           this.characteristic.value = this.getValue();
+           this.characteristic.valueUri = null;
         }
-
-        /*
-         * if we don't have a valueUri or categoryUri set, don't return URI fields or a VocabCharacteristic will be
-         * created when we only want a Characteristic...
-         */
-        return (this.characteristic.valueUri !== null || this.characteristic.categoryUri !== null) ? this.characteristic
-            : {
-                category: this.characteristic.category,
-                value: this.characteristic.value
-            };
+ 
+        return   this.characteristic ;
     },
 
     setCharacteristic: function (value, valueUri, category, categoryUri) {

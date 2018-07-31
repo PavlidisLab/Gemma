@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.geo.model;
 
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -166,14 +165,14 @@ public class GeoChannel {
     }
 
     /**
-     * Convert the molecule into a MGED Ontology-based MaterialType VocabCharacteristic. If "other" we just return a
+     * Convert the molecule into a MGED Ontology-based MaterialType Characteristic. If "other" we just return a
      * plain text value.
      *
      * @return characteristic
      */
     public Characteristic getMoleculeAsCharacteristic() {
 
-        VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
+        Characteristic result = Characteristic.Factory.newInstance();
         result.setDescription( "Material Type" );
         result.setCategory( "molecular entity" );
         result.setCategoryUri( "http://purl.obolibrary.org/obo/CHEBI_23367" );

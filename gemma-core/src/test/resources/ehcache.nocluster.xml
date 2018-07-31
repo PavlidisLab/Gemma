@@ -180,12 +180,6 @@
     <cache name="ubic.gemma.model.common.description.PropertyImpl" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.description.VocabCharacteristic" maxElementsInMemory="10000" eternal="false"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.common.description.VocabCharacteristic.properties" maxElementsInMemory="10000"
-           eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.common.description.MedicalSubjectHeading" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 

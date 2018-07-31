@@ -91,8 +91,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return this.persistExternalDatabase( ( ExternalDatabase ) entity );
         } else if ( entity instanceof Protocol ) {
             return this.persistProtocol( ( Protocol ) entity );
-        } else if ( entity instanceof VocabCharacteristic ) {
-            return null; // cascade
         } else if ( entity instanceof Characteristic ) {
             return null; // cascade
         } else if ( entity instanceof Collection ) {
