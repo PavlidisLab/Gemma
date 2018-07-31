@@ -200,15 +200,16 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
         /*
         Create columns for the biomaterial characteristics we want to display.
          */
-        for (var c in this.characteristics) {
-            if (!this.characteristics.hasOwnProperty(c)) {
+        for (var category in this.characteristics) {
+            if (!this.characteristics.hasOwnProperty(category)) {
                 continue;
             }
 
+            // dataIndex mustn't have spaces in them.
             columns.push({
-                id: c,
-                header: c + " (raw characteristic)",
-                dataIndex: "characteristic." + c,
+                id: category,
+                header: category + " (raw characteristic)",
+                dataIndex: "characteristic." + category.replace(/\s/g, "."),
                 width: 120,
                 tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
                 sortable: true
@@ -268,12 +269,12 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
         var bm = this.bioMaterials[0];
         if (bm.characteristicValues) {
             this.characteristics = bm.characteristicValues;
-            for (var c in bm.characteristicValues) {
-                if (!bm.characteristicValues.hasOwnProperty(c)) {
+            for (var category in bm.characteristicValues) {
+                if (!bm.characteristicValues.hasOwnProperty(category)) {
                     continue;
                 }
                 var o = {
-                    name: "characteristic." + c,
+                    name: "characteristic." + category.replace(/\s/g, "."),
                     type: "string"
                 };
                 fields.push(o);

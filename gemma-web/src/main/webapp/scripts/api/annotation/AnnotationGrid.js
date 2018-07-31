@@ -98,7 +98,12 @@ Gemma.AnnotationDataView = Ext
                         proxy: new Ext.data.DWRProxy(this.readMethod),
                         reader: new Ext.data.ListRangeReader({
                             id: "id"
-                        }, this.record)
+                        }, this.record) ,
+                        // to keep grouped by type
+                        sortInfo: {
+                            field: 'objectClass',
+                            direction: 'ASC'
+                        }
                     })
                 });
 
