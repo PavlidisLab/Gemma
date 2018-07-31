@@ -3,6 +3,7 @@ Ext.namespace('Gemma');
 Gemma.Renderers = {
 
     dateTimeRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+        if (value === '' || value === null) return "";
         var time = Date.parse(value);
         var options = {
             day: 'numeric',
@@ -16,6 +17,7 @@ Gemma.Renderers = {
     },
 
     dateRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+        if (value === '' || value === null) return "";
         try {
             var time = Date.parse(value);
             var options = {
@@ -30,7 +32,7 @@ Gemma.Renderers = {
             }
             return date.toLocaleDateString(undefined, options);
         } catch (err) {
-            console.error(err);
+            //console.error(err);
             return "";
         }
     },
