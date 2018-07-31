@@ -20,13 +20,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
@@ -42,7 +39,10 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -411,11 +411,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = this.load( eeId );
-        Collection<AnnotationValueObject> annotations = new ArrayList<>();
+        Collection<AnnotationValueObject> annotations = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
 
             AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
+         // annotationValue.setId( c.getId() ); // to avoid getting duplicates.
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setClassUri( c.getCategoryUri() );
             annotationValue.setTermName( c.getValue() );
@@ -436,7 +436,7 @@ public class ExpressionExperimentServiceImpl
         annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
 
         /*
-         * Add: certain characteristics from factor values? (non-baseline, non-redudnant with tags). This is tricky because they are so specific...
+         * Add: certain characteristics from factor values? (non-baseline, non-batch, non-redudnant with tags). This is tricky because they are so specific...
          */
         annotations.addAll( this.getAnnotationsByFactorValues( eeId ) );
 
