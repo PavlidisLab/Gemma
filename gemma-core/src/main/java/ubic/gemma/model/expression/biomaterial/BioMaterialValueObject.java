@@ -119,6 +119,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             }
         }
 
+        // used for display of characteristics in the biomaterial experimental design editor view.
         for(Characteristic c : bm.getCharacteristics()) {
             if  (StringUtils.isBlank( c.getCategory() )) {
                 continue;
