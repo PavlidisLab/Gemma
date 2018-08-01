@@ -419,15 +419,19 @@ a.info {
 /* sources of annotations */
 .fromBioMaterial {
 	background-color:#d1e4fd;
-	font-style:italic;
+	padding:5px;
+	border-radius:15px;
 }
 .fromFactorValue {
-	background-color:#FBF7AA;
-	font-style:italic;
+	background-color:#F0DE7D;
+	padding:5px;
+	border-radius:15px;
 }
 .fromExperimentTag {
 	font-weight: bold;
 	background-color:#B0DE78;
+	padding:5px;
+	border-radius:15px;
 }
 
 a.info:hover {
