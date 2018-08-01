@@ -704,8 +704,14 @@ public class GeoConverterImpl implements GeoConverter {
             Characteristic sourceChar = Characteristic.Factory.newInstance();
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = this.trimString( channel.getSourceName() );
-            sourceChar.setCategory( "Organism part" ); // used to be "BioSource"
-            sourceChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635"  );
+
+            /*
+            We once considered this like "organism part" but Biosource in GEO often (usually?) has information besides organism part
+            or else can be cell type. Best to leave it blank.
+             */
+            sourceChar.setCategory( "BioSource" );
+           // sourceChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635"  );
+
             sourceChar.setValue( characteristic );
             sourceChar.setOriginalValue( characteristic );
             sourceChar.setEvidenceCode( GOEvidenceCode.IIA );
