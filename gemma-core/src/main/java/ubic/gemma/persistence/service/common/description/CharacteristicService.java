@@ -105,7 +105,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
 
     /**
      * @param characteristics characteristics
-     * @return a map of the specified characteristics to their parent objects.
+     * @return a map of the specified characteristics to their annotated objects.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );

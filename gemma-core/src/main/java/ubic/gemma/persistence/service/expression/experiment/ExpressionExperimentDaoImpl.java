@@ -317,7 +317,6 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "fvId", factorValueId ).list();
 
         if ( results.size() == 0 ) {
-            AbstractDao.log.info( "There is no expression experiment that has factorValue ID= " + factorValueId );
             return null;
         }
 
@@ -329,24 +328,6 @@ public class ExpressionExperimentDaoImpl
 
         if ( fvs.isEmpty() )
             return new HashMap<>();
-
-        //        // we have to do this in two stages because there is no direct association from ED to EE via FV 
-        //        // but this may be doable in newer versions of Hibernate
-        //        // so first find the associated ExperimentalDesigns
-        //        List<Object> r1 = this.getSessionFactory().getCurrentSession().createQuery(
-        //                "select distinct ed, f from FactorValue f join f.experimentalFactor ef "
-        //                        + " join ef.experimentalDesign ed where f.id in (:ids) group by ed " )
-        //                .setParameterList( "ids", EntityUtils.getIds( fvs ) ).list();
-        //
-        //        if ( r1.isEmpty() ) {
-        //            return new HashMap<>();
-        //        }
-        //
-        //        Map<ExperimentalDesign, FactorValue> eds = new HashMap<>();
-        //        for ( Object o : r1 ) {
-        //            Object[] a = ( Object[] ) o;
-        //            eds.put( ( ExperimentalDesign ) a[0], ( FactorValue ) a[1] );
-        //        }
 
         //language=HQL
         final String queryString = "select distinct ee, f from ExpressionExperiment ee "

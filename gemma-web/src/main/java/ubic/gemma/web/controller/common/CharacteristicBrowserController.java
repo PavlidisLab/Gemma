@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,7 +53,7 @@ import java.util.Map;
  *
  * @author luke
  * @author paul
- * @see    ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
+ * @see ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
  */
 @Controller
 public class CharacteristicBrowserController {
@@ -174,9 +174,9 @@ public class CharacteristicBrowserController {
             if ( ( searchEEs && parent instanceof ExpressionExperiment ) || ( searchBMs
                     && parent instanceof BioMaterial )
                     || ( searchFVs && ( parent instanceof FactorValue
-                            || parent instanceof ExperimentalFactor ) )
+                    || parent instanceof ExperimentalFactor ) )
                     || ( searchNos && parent == null ) || ( searchPAs
-                            && parent instanceof PhenotypeAssociation ) ) {
+                    && parent instanceof PhenotypeAssociation ) ) {
 
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
@@ -194,7 +194,7 @@ public class CharacteristicBrowserController {
 
                 results.add( avo );
 
-                if (results.size() >= MAX_RESULTS ) {
+                if ( results.size() >= MAX_RESULTS ) {
                     break;
                 }
             }
@@ -249,53 +249,71 @@ public class CharacteristicBrowserController {
         taskRunningService.submitLocalTask( c );
     }
 
-    private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
-        if ( parent == null ) {
+    /**
+     *
+     * @param avo
+     * @param annotatedItem - the object that has the annotation, we want to find who "owns" it.
+     */
+    private void populateParentInformation( AnnotationValueObject avo, Object annotatedItem ) {
+
+        assert avo != null;
+
+        if ( annotatedItem == null ) {
             avo.setParentLink(
                     "[Parent hidden or not available, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
-        } else if ( parent instanceof ExpressionExperiment ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) parent;
+        } else if ( annotatedItem instanceof ExpressionExperiment ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) annotatedItem;
             avo.setParentName( String.format( "Experiment: %s", ee.getName() ) );
             avo.setParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentName() ) );
-        } else if ( parent instanceof BioMaterial ) {
-            BioMaterial bm = ( BioMaterial ) parent;
+        } else if ( annotatedItem instanceof BioMaterial ) {
+            BioMaterial bm = ( BioMaterial ) annotatedItem;
             avo.setParentName( String.format( "BioMat: %s", bm.getName() ) );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
 
-            if ( ee != null ) {
-                avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
-                // avo.setParentOfParentDescription( ee.getDescription() );
-                avo.setParentOfParentLink(
-                        AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
-            } else {
+            if ( ee == null ) {
                 log.warn( "Expression experiment for " + bm + " was null" );
+                return;
             }
-        } else if ( parent instanceof FactorValue ) {
-            FactorValue fv = ( FactorValue ) parent;
+            avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
+            // avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink(
+                    AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
+
+        } else if ( annotatedItem instanceof FactorValue ) {
+            FactorValue fv = ( FactorValue ) annotatedItem;
             avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
                     ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
-            ExpressionExperiment ee = experimentalDesignService
-                    .getExpressionExperiment( fv.getExperimentalFactor().getExperimentalDesign() );
+            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+
+
+            if ( ee == null ) {
+                log.warn( "Expression experiment for " + fv + " was null" );
+                return;
+            }
             avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
             avo.setParentOfParentLink( AnchorTagUtil
                     .getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(),
                             avo.getParentName() )
                     + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
-                            .getExpressionExperimentLink( ee.getId(),
-                                    String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
-                                            ee.getShortName() ) ) );
-        } else if ( parent instanceof ExperimentalFactor ) {
-            ExperimentalFactor ef = ( ExperimentalFactor ) parent;
+                    .getExpressionExperimentLink( ee.getId(),
+                            String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
+                                    ee.getShortName() ) ) );
+        } else if ( annotatedItem instanceof ExperimentalFactor ) {
+            ExperimentalFactor ef = ( ExperimentalFactor ) annotatedItem;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
                     "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
+            if ( ee == null ) {
+                log.warn( "Expression experiment for " + ef + " was null" );
+                return;
+            }
             avo.setParentOfParentName(
                     String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ), ee.getShortName() ) );
             avo.setParentOfParentLink(
                     AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
-        } else if ( parent instanceof PhenotypeAssociation ) {
-            PhenotypeAssociation pa = ( PhenotypeAssociation ) parent;
+        } else if ( annotatedItem instanceof PhenotypeAssociation ) {
+            PhenotypeAssociation pa = ( PhenotypeAssociation ) annotatedItem;
             avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );
             avo.setParentDescription( pa.getId().toString() );
         }
