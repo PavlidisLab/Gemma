@@ -207,7 +207,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             // dataIndex mustn't have spaces in them.
             columns.push({
-                id: category,
+                id: category.replace(/\s/g, "."),
                 header: category + " (raw characteristic)",
                 dataIndex: "characteristic." + category.replace(/\s/g, "."),
                 width: 120,
