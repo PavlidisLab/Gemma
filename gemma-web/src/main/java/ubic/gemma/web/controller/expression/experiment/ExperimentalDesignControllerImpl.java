@@ -347,7 +347,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             boolean keeper = false;
             bms:
             for ( BioMaterialValueObject bm : map.get( category ) ) {
-                log.info( "inspecting " + bm );
+               // log.info( "inspecting " + bm );
                 // Find the characteristic that had this category
                 for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
                     String mappedCategory = ch.getCategory();
