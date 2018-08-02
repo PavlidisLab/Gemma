@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.ejb.criteria.expression.function.AggregationFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,10 +42,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
@@ -152,18 +148,25 @@ public class CharacteristicBrowserController {
      * @param searchFVs        Search factor values that lack characteristics -- that is, search the factorValue.value.
      * @param searchCategories Should the Category be searched, not just the Value?
      */
-    public Collection<AnnotationValueObject> findCharacteristicsCustom( String valuePrefix, boolean searchNos,
+    public Collection<AnnotationValueObject> findCharacteristicsCustom( String queryString, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs,
             boolean searchCategories ) {
 
         List<AnnotationValueObject> results = new ArrayList<>();
-        if ( StringUtils.isBlank( valuePrefix ) ) {
+        if ( StringUtils.isBlank( queryString ) ) {
             return results;
         }
-        Collection<Characteristic> chars = characteristicService.findByValue( valuePrefix );
 
-        if ( searchCategories ) {
-            chars.addAll( characteristicService.findByCategory( valuePrefix ) );
+        Collection<Characteristic> chars = new HashSet<>();
+        if ( queryString.startsWith( "http://" ) ) {
+            chars = characteristicService.findByUri( queryString );
+        } else {
+
+            chars = characteristicService.findByValue( queryString );
+
+            if ( searchCategories ) {
+                chars.addAll( characteristicService.findByCategory( queryString ) );
+            }
         }
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
@@ -201,7 +204,7 @@ public class CharacteristicBrowserController {
         }
 
         if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
-            Collection<FactorValue> factorValues = factorValueService.findByValue( valuePrefix );
+            Collection<FactorValue> factorValues = factorValueService.findByValue( queryString );
             for ( FactorValue factorValue : factorValues ) {
                 if ( factorValue.getCharacteristics().size() > 0 )
                     continue;
@@ -221,7 +224,7 @@ public class CharacteristicBrowserController {
 
         }
 
-        log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to "
+        log.info( "Characteristic search for: '" + queryString + "*': " + results.size() + " results, returning up to "
                 + MAX_RESULTS );
         return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
     }
@@ -250,7 +253,6 @@ public class CharacteristicBrowserController {
     }
 
     /**
-     *
      * @param avo
      * @param annotatedItem - the object that has the annotation, we want to find who "owns" it.
      */
@@ -285,7 +287,6 @@ public class CharacteristicBrowserController {
             avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
                     ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-
 
             if ( ee == null ) {
                 log.warn( "Expression experiment for " + fv + " was null" );
