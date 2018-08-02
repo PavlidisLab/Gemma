@@ -64,6 +64,13 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private boolean basicFVs;
     private Date assayProcessingDate;
 
+    @Override public String toString() {
+        return "BioMaterialValueObject{" +
+                "assayName='" + assayName + '\'' +
+                ", id=" + id +
+                '}';
+    }
+
     /*
     * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
      */

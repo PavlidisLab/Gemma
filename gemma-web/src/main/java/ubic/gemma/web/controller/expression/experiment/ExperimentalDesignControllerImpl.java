@@ -284,7 +284,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
             result.add( bmvo );
 
-         }
+        }
 
         filterCharacteristics( result );
 
@@ -305,13 +305,24 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         for ( BioMaterialValueObject bmo : result ) {
             for ( CharacteristicValueObject ch : bmo.getCharacteristics() ) {
 
-                if ( StringUtils.isBlank( ch.getCategory() ) )
-                    continue;
+                String category = ch.getCategory();
+                if ( StringUtils.isBlank( category ) ) {
 
-                if ( !map.containsKey( ch.getCategory() ) ) {
-                    map.put( ch.getCategory(), new HashSet<BioMaterialValueObject>() );
+                    /*
+                    Experimental: split on ":", use first part as the category.
+                     */
+                    if ( ch.getValue().contains( ":" ) ) {
+                        String[] split = ch.getValue().split( ":" );
+                        category = StringUtils.strip( split[0] );
+                    } else {
+                        continue;
+                    }
                 }
-                map.get( ch.getCategory() ).add( bmo );
+
+                if ( !map.containsKey( category ) ) {
+                    map.put( category, new HashSet<BioMaterialValueObject>() );
+                }
+                map.get( category ).add( bmo );
             }
         }
 
@@ -320,6 +331,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
          */
         Collection<String> toremove = new HashSet<>();
         for ( String category : map.keySet() ) {
+           // log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
                 toremove.add( category );
                 continue;
@@ -333,32 +345,46 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             Collection<String> vals = new HashSet<>();
             boolean keeper = false;
+            bms:
             for ( BioMaterialValueObject bm : map.get( category ) ) {
+                log.info( "inspecting " + bm );
+                // Find the characteristic that had this category
                 for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
-                    if ( StringUtils.isBlank( ch.getCategory() ) )
-                        continue;
+                    String mappedCategory = ch.getCategory();
+                    String mappedValue = ch.getValue();
 
-                    if ( ch.getCategory().equals( category ) ) {
-                        if ( !vals.contains( ch.getValue() ) ) {
+                    if ( StringUtils.isBlank( mappedCategory ) ) {
+                        // redo split (will refactor later)
+                        if ( mappedValue.contains( ":" ) ) {
+                            String[] split = mappedValue.split( ":" );
+                            mappedCategory = StringUtils.strip( split[0] );
+                        } else {
+                            continue bms;
+                        }
+                    }
+
+                    if ( mappedCategory.equals( category ) ) {
+                        if ( !vals.contains( mappedValue ) ) {
                             if ( log.isDebugEnabled() )
-                                log.debug( category + " -> " + ch.getValue() );
-                            vals.add( ch.getValue() );
+                                log.debug( category + " -> " + mappedValue );
+                            vals.add( mappedValue );
                         }
 
-                        // temporarily populate this into the biomaterial
-                        bm.getCharacteristicValues().put( category, ch.getValue() );
+                        //  populate this into the biomaterial
+                        //  log.info( category + " -> " + mappedValue );
+                        bm.getCharacteristicValues().put( mappedCategory, mappedValue );
                     }
                 }
-                if ( vals.size() > 1 ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
 
-                    keeper = true;
-                    break;
-                }
+                //                if ( vals.size() > 1 ) {
+                //                    if ( log.isDebugEnabled() )
+                //                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
+                //
+                //                    keeper = true;
+                //                }
             }
 
-            if ( !keeper ) {
+            if ( vals.size() < 2 ) {
                 toremove.add( category );
             }
         }
