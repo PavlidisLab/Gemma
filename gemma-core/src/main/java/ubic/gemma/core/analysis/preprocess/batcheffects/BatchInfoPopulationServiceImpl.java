@@ -74,6 +74,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
         Characteristic c = ef.getCategory();
 
+        if (c == null) return false;
+
         boolean isBatchFactor = false;
 
         boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
