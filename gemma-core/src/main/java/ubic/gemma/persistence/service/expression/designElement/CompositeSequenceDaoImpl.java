@@ -63,33 +63,31 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
      * Add your 'where' clause to this.
      */
     //language=MySQL
-    private static final String nativeBaseSummaryQueryString =
-            "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
-                    + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
-                    + "gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
-                    + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId, ad.NAME as adName "
-                    + " from " + "COMPOSITE_SEQUENCE cs "
-                    + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                    + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
-                    + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-                    + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                    + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                    + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
-                    + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
+    private static final String nativeBaseSummaryQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
+            + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
+            + "gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
+            + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId, ad.NAME as adName "
+            + " from " + "COMPOSITE_SEQUENCE cs "
+            + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
+            + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
+            + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+            + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
+            + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
     /**
      * Add your 'where' clause to this. returns much less stuff.
      */
     //language=MySQL
-    private static final String nativeBaseSummaryShorterQueryString =
-            "SELECT cs.ID AS deID, cs.NAME AS deName, bs.NAME AS bsName, bsDb.ACCESSION AS bsdbacc, ssr.ID AS ssrid,"
-                    + " gene.ID AS gId,gene.OFFICIAL_SYMBOL AS gSymbol FROM COMPOSITE_SEQUENCE cs "
-                    + "LEFT JOIN BIO_SEQUENCE bs ON BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                    + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssr ON ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
-                    + "LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=bs.ID "
-                    + "LEFT JOIN DATABASE_ENTRY bsDb ON SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                    + "LEFT JOIN CHROMOSOME_FEATURE geneProductRNA ON (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                    + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
-                    + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) ";
+    private static final String nativeBaseSummaryShorterQueryString = "SELECT cs.ID AS deID, cs.NAME AS deName, bs.NAME AS bsName, bsDb.ACCESSION AS bsdbacc, ssr.ID AS ssrid,"
+            + " gene.ID AS gId,gene.OFFICIAL_SYMBOL AS gSymbol FROM COMPOSITE_SEQUENCE cs "
+            + "LEFT JOIN BIO_SEQUENCE bs ON BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+            + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssr ON ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+            + "LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=bs.ID "
+            + "LEFT JOIN DATABASE_ENTRY bsDb ON SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+            + "LEFT JOIN CHROMOSOME_FEATURE geneProductRNA ON (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+            + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
+            + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) ";
 
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
@@ -112,7 +110,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
     @Override
     public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+            boolean asc, List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
 
@@ -139,8 +137,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence ) {
         Collection<CompositeSequence> compositeSequences;
         //language=HQL
-        final String queryString =
-                "select distinct cs from CompositeSequence" + " cs where cs.biologicalCharacteristic = :id";
+        final String queryString = "select distinct cs from CompositeSequence" + " cs where cs.biologicalCharacteristic = :id";
         try {
             org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "id", bioSequence );
@@ -174,9 +171,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         //language=HQL
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
+        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
                 .list();
@@ -185,9 +181,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
         //language=HQL
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
+        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
                 .setMaxResults( limit ).setParameter( "gene", gene ).list();
@@ -196,9 +191,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
+        final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
+                + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
                 .setParameter( "arrayDesign", arrayDesign ).list();
@@ -362,10 +356,9 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         // gets all kinds of associations, not just blat.
         //language=HQL
-        final String queryString =
-                "select distinct gene from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
-                        + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
-                        + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        final String queryString = "select distinct gene from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
+                + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+                + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "cs", compositeSequence ).setFirstResult( offset )
@@ -419,8 +412,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         }
 
         // This uses the 'full' query, assuming that this list isn't too big.
-        String nativeQueryString =
-                CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
+        String nativeQueryString = CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
@@ -447,9 +439,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
         if ( numResults <= 0 ) {
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
-            final String queryString =
-                    CompositeSequenceDaoImpl.nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign
-                            .getId();
+            final String queryString = CompositeSequenceDaoImpl.nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign
+                    .getId();
             try {
                 org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
                         .createSQLQuery( queryString );
@@ -549,10 +540,6 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
             if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
                 Hibernate
                         .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
-                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() );
-                if ( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() != null )
-                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon()
-                            .getExternalDatabase() );
             }
             Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
             if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
@@ -670,10 +657,9 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         }
 
         //language=HQL
-        final String queryString =
-                "select cs,bas from CompositeSequence cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
-                        + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
-                        + "where bas.bioSequence=bs and cs in (:cs)";
+        final String queryString = "select cs,bas from CompositeSequence cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
+                + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
+                + "where bas.bioSequence=bs and cs in (:cs)";
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );
 
         for ( Object o : qr ) {
@@ -720,19 +706,19 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     /**
-     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                        description.
-     * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
-     * @return a hibernate Query object ready to be used for CSVO retrieval.
+     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                         description.
+     * @param  orderByProperty the property to order by.
+     * @param  orderDesc       whether the ordering is ascending or descending.
+     * @return                 a hibernate Query object ready to be used for CSVO retrieval.
      */
-    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_PROBE_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
-                + ObjectFilter.DAO_AD_ALIAS + " "  // 2
+                + ObjectFilter.DAO_AD_ALIAS + " " // 2
                 + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
                 + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " "//ad
                 + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()

@@ -6,7 +6,7 @@ Ext.namespace( 'Gemma' );
  * 
  * @class Gemma.TaxonCombo
  * @extends Ext.form.ComboBox
- *
+ * 
  */
 
 TaxonRecord = Ext.data.Record.create( [ {
@@ -24,8 +24,6 @@ TaxonRecord = Ext.data.Record.create( [ {
 }, {
    name : "scientificName",
    type : "string"
-}, {
-   name : "parentTaxon"
 } ] );
 
 Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
@@ -79,9 +77,7 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
        * Option to either display all taxa, those taxa that are a species or those taxa that have genes; or those which
        * have datasets.
        */
-      if ( this.isDisplayTaxonSpecies ) {
-         proxyTaxon = new Ext.data.DWRProxy( GenePickerController.getTaxaSpecies );
-      } else if ( this.isDisplayTaxonWithDatasets ) {
+      if ( this.isDisplayTaxonWithDatasets ) {
          proxyTaxon = new Ext.data.DWRProxy( GenePickerController.getTaxaWithDatasets );
       } else if ( this.isDisplayTaxonWithGenes ) {
          proxyTaxon = new Ext.data.DWRProxy( GenePickerController.getTaxaWithGenes );
@@ -122,8 +118,7 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
                var allTaxaRecord = new TaxonRecord( {
                   'id' : '-1',
                   'commonName' : 'All taxa',
-                  'scientificName' : 'All Taxa',
-                  'parentTaxon' : '-1'
+                  'scientificName' : 'All Taxa'
                } );
                this.insert( 0, [ allTaxaRecord ] );
                // using getStore().on('load', ...) will execute code before this call back has been run

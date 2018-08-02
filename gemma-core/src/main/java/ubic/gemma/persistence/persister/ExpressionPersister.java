@@ -474,8 +474,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private Compound persistCompound( Compound compound ) {
         if ( compound == null )
             return null;
-        if ( compound.getIsSolvent() == null )
-            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundDao.findOrCreate( compound );
     }
 

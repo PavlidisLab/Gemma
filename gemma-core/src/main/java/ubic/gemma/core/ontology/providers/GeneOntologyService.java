@@ -17,7 +17,7 @@ package ubic.gemma.core.ontology.providers;
 import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -37,21 +37,23 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * <p>
      * Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of queryGene and
-     * gene in the given collection. Returns a Map&lt;Gene,Collection&lt;OntologyEntries&gt;&gt;. The key is the gene (from the
+     * gene in the given collection. Returns a Map&lt;Gene,Collection&lt;OntologyEntries&gt;&gt;. The key is the gene
+     * (from the
      * [queryGene,gene] pair) and the values are a collection of the overlapping ontology entries.
      * </p>
      *
-     * @param queryGene query gene
-     * @param geneIds   gene ids
-     * @return map of gene ids to collections of ontologyTerms. This will always be populated but collection values
-     * will be empty when there is no overlap.
+     * @param  queryGene query gene
+     * @param  geneIds   gene ids
+     * @return           map of gene ids to collections of ontologyTerms. This will always be populated but collection
+     *                   values
+     *                   will be empty when there is no overlap.
      */
     Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds );
 
     /**
-     * @param queryGene1 query gene 1
-     * @param queryGene2 query gene 2
-     * @return Collection&gt;OntologyEntries&lt;s
+     * @param  queryGene1 query gene 1
+     * @param  queryGene2 query gene 2
+     * @return            Collection&gt;OntologyEntries&lt;s
      */
     Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 );
 
@@ -63,14 +65,14 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * Search by inexact string
      *
-     * @param queryString query string
-     * @return ontology terms
+     * @param  queryString query string
+     * @return             ontology terms
      */
     Collection<OntologyTerm> findTerm( String queryString );
 
     /**
-     * @param entry entry
-     * @return children, NOT including part-of relations.
+     * @param  entry entry
+     * @return       children, NOT including part-of relations.
      */
     Collection<OntologyTerm> getAllChildren( OntologyTerm entry );
 
@@ -78,14 +80,14 @@ public interface GeneOntologyService extends InitializingBean {
 
     /**
      * @return a collection of all existing GO term ids (GO_XXXXXXX) -- including the roots of the ontologies
-     * ('biological process' etc.)
+     *         ('biological process' etc.)
      */
     Collection<String> getAllGOTermIds();
 
     /**
-     * @param entries NOTE terms that are in this collection are NOT explicitly included; however, some of them may be
-     *                included incidentally if they are parents of other terms in the collection.
-     * @return ontology terms
+     * @param  entries NOTE terms that are in this collection are NOT explicitly included; however, some of them may be
+     *                 included incidentally if they are parents of other terms in the collection.
+     * @return         ontology terms
      */
     Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries );
 
@@ -95,8 +97,8 @@ public interface GeneOntologyService extends InitializingBean {
      * Return all the parents of GO OntologyEntry, up to the root, as well as terms that this has a restriction
      * relationship with (part_of). NOTE: the term itself is NOT included; nor is the root.
      *
-     * @param entry entry
-     * @return parents (excluding the root)
+     * @param  entry entry
+     * @return       parents (excluding the root)
      */
     Collection<OntologyTerm> getAllParents( OntologyTerm entry );
 
@@ -105,8 +107,8 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * Returns the immediate children of the given entry
      *
-     * @param entry entry
-     * @return children of entry, or null if there are no children (or if entry is null)
+     * @param  entry entry
+     * @return       children of entry, or null if there are no children (or if entry is null)
      */
 
     Collection<OntologyTerm> getChildren( OntologyTerm entry );
@@ -114,16 +116,17 @@ public interface GeneOntologyService extends InitializingBean {
     Collection<OntologyTerm> getChildren( OntologyTerm entry, boolean includePartOf );
 
     /**
-     * @param taxon taxon
-     * @param goId  go id
-     * @return Collection of all genes in the given taxon that are annotated with the given id, including its child
-     * terms in the hierarchy.
+     * @param  taxon taxon
+     * @param  goId  go id
+     * @return       Collection of all genes in the given taxon that are annotated with the given id, including its
+     *               child
+     *               terms in the hierarchy.
      */
     Collection<Gene> getGenes( String goId, Taxon taxon );
 
     /**
-     * @param gene Take a gene and return a set of all GO terms including the parents of each GO term
-     * @return ontology terms
+     * @param  gene Take a gene and return a set of all GO terms including the parents of each GO term
+     * @return      ontology terms
      */
     Collection<OntologyTerm> getGOTerms( Gene gene );
 
@@ -131,9 +134,9 @@ public interface GeneOntologyService extends InitializingBean {
      * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via
      * part-of relationships.
      *
-     * @param gene          gene
-     * @param includePartOf include part of
-     * @return ontology terms
+     * @param  gene          gene
+     * @param  includePartOf include part of
+     * @return               ontology terms
      */
     Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf );
 
@@ -141,10 +144,10 @@ public interface GeneOntologyService extends InitializingBean {
      * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via
      * part-of relationships.
      *
-     * @param gene          gene
-     * @param includePartOf include part of
-     * @param goAspect      limit only to the given aspect (pass null to use all)
-     * @return ontology terms
+     * @param  gene          gene
+     * @param  includePartOf include part of
+     * @param  goAspect      limit only to the given aspect (pass null to use all)
+     * @return               ontology terms
      */
     Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect );
 
@@ -153,35 +156,35 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * Return the immediate parent(s) of the given entry. The root node is never returned.
      *
-     * @param entry entry
-     * @return collection, because entries can have multiple parents. (only allroot is excluded)
+     * @param  entry entry
+     * @return       collection, because entries can have multiple parents. (only allroot is excluded)
      */
     Collection<OntologyTerm> getParents( OntologyTerm entry );
 
     /**
-     * @param entry         entry
-     * @param includePartOf include part of
-     * @return ontology terms
+     * @param  entry         entry
+     * @param  includePartOf include part of
+     * @return               ontology terms
      */
     Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf );
 
     GOAspect getTermAspect( String goId );
 
-    GOAspect getTermAspect( VocabCharacteristic goId );
+    GOAspect getTermAspect( Characteristic goId );
 
     /**
      * Return a definition for a GO Id.
      *
-     * @param goId e.g. GO:0094491
-     * @return Definition or null if there is no definition.
+     * @param  goId e.g. GO:0094491
+     * @return      Definition or null if there is no definition.
      */
     String getTermDefinition( String goId );
 
     /**
      * Return human-readable term ("protein kinase") for a GO Id.
      *
-     * @param goId go id
-     * @return term name
+     * @param  goId go id
+     * @return      term name
      */
     String getTermName( String goId );
 
@@ -190,32 +193,33 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * Determines if one ontology entry is a child (direct or otherwise) of a given parent term.
      *
-     * @param parent         parent
-     * @param potentialChild potential child
-     * @return is a child of
+     * @param  parent         parent
+     * @param  potentialChild potential child
+     * @return                is a child of
      */
     Boolean isAChildOf( OntologyTerm parent, OntologyTerm potentialChild );
 
     /**
      * Determines if one ontology entry is a parent (direct or otherwise) of a given child term.
      *
-     * @param child           child
-     * @param potentialParent potential parent
-     * @return True if potentialParent is in the parent graph of the child; false otherwise.
+     * @param  child           child
+     * @param  potentialParent potential parent
+     * @return                 True if potentialParent is in the parent graph of the child; false otherwise.
      */
     Boolean isAParentOf( OntologyTerm child, OntologyTerm potentialParent );
 
     /**
-     * @param goId e.g. GO:0000244 or as GO_0000244
-     * @return is valid go id
+     * @param  goId e.g. GO:0000244 or as GO_0000244
+     * @return      is valid go id
      */
     Boolean isAValidGOId( String goId );
 
     boolean isBiologicalProcess( OntologyTerm term );
 
     /**
-     * @return Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
-     * getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
+     * @return Used for determining if the Gene Ontology has finished loading into memory yet Although calls like
+     *         getParents,
+     *         getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
      */
     boolean isGeneOntologyLoaded();
 
@@ -228,24 +232,24 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * Returns GO Terms VOs for the given Gene.
      *
-     * @param gene the Gene to retrieve GO Terms for and convert them to VOs.
-     * @return Gene Ontology VOs representing all GO Terms associated with the given gene.
+     * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
+     * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
      */
     Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
 
     /**
      * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
      *
-     * @param terms the terms to be converted.
-     * @return collection of value objects representing the given terms.
+     * @param  terms the terms to be converted.
+     * @return       collection of value objects representing the given terms.
      */
     Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
 
     /**
-     * Converts the given  Ontology Term to a Gene Ontology Value Object.
+     * Converts the given Ontology Term to a Gene Ontology Value Object.
      *
-     * @param term the term to be converted.
-     * @return value object representing the given term.
+     * @param  term the term to be converted.
+     * @return      value object representing the given term.
      */
     GeneOntologyTermValueObject getValueObject( OntologyTerm term );
 

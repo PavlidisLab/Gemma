@@ -152,10 +152,10 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
             + '<td align="right" style="padding-right: 10px">' + '<b>{updatedArrayDesignCount}</b>&nbsp;&nbsp;'
             + '</td>' + '<td align="right">' + '<b>{newArrayDesignCount}</b>&nbsp;' + '</td>' + '</tr>' + '<tr>'
             + '<td style="padding-right: 10px">'
-            + '<span style="white-space: nowrap"> <!-- for IE --> <b>Assays:</b>' + '</span>' + '</td>'
-            + '<td align="right" style="padding-right: 10px">' + '{bioAssayCount}' + '</td>'
+            + '<span style="white-space: nowrap"> <!-- for IE --> <b>Samples:</b>' + '</span>' + '</td>'
+            + '<td align="right" style="padding-right: 10px">' + '{bioMaterialCount}' + '</td>'
             + '<td align="right" style="padding-right: 10px">' + '&nbsp;&nbsp;' + '</td>' + '<td align="right">'
-            + '<b>{newBioAssayCount}</b>&nbsp;' + '</td>' + '</tr>' + '</table>' + '</div>' + '</div>' + '</div>'
+            + '<b>{newBioMaterialCount}</b>&nbsp;' + '</td>' + '</tr>' + '</table>' + '</div>' + '</div>' + '</div>'
             + '</div>')
     });
 

@@ -46,8 +46,8 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query query
-     * @return search settings
+     * @param  query query
+     * @return       search settings
      */
     public static SearchSettings arrayDesignSearch( String query ) {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
@@ -59,8 +59,8 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query query
-     * @return search settings
+     * @param  query query
+     * @return       search settings
      */
     public static SearchSettings bibliographicReferenceSearch( String query ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -72,9 +72,9 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query       query
-     * @param arrayDesign the array design to limit the search to
-     * @return search settings
+     * @param  query       query
+     * @param  arrayDesign the array design to limit the search to
+     * @return             search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -87,8 +87,8 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query query
-     * @return search settings
+     * @param  query query
+     * @return       search settings
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
@@ -101,9 +101,9 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query query
-     * @param taxon the taxon to limit the search to
-     * @return search settings
+     * @param  query query
+     * @param  taxon the taxon to limit the search to
+     * @return       search settings
      */
     public static SearchSettings geneSearch( String query, Taxon taxon ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -145,10 +145,11 @@ public class SearchSettingsImpl extends SearchSettings {
 
     @Override
     public String toString() {
+        String tax = this.getTaxon() != null ? " [" + this.getTaxon().getCommonName() + "]" : "";
         if ( !StringUtils.isBlank( this.getTermUri() ) ) {
-            return this.getTermUri();
+            return this.getTermUri() + tax;
         }
-        return this.getQuery();
+        return this.getQuery() + tax;
     }
 
 }

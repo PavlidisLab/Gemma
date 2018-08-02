@@ -81,7 +81,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         zebraFish.setIsGenesUsable( true );
         zebraFish.setNcbiId( 7955 );
         zebraFish.setScientificName( "Danio rerio" );
-        zebraFish.setIsSpecies( true );
 
         persisterHelper.persist( zebraFish );
         taxa.add( ( Taxon ) persisterHelper.persist( zebraFish ) );
@@ -90,7 +89,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         rat.setIsGenesUsable( true );
         rat.setNcbiId( 10116 );
         rat.setScientificName( "Rattus norvegicus" );
-        rat.setIsSpecies( true );
         persisterHelper.persist( rat );
         taxa.add( ( Taxon ) persisterHelper.persist( rat ) );
 

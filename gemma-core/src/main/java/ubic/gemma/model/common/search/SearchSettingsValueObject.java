@@ -30,7 +30,7 @@ import java.io.Serializable;
 public class SearchSettingsValueObject implements Serializable {
 
     private static final long serialVersionUID = -934534534L;
-    private Integer maxResults = 500;
+    private Integer maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
     private ArrayDesign platformConstraint;
     private String query;
     private Boolean searchBibrefs = Boolean.TRUE;

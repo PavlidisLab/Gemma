@@ -69,8 +69,11 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
     loadMask: true,
     autoExpandColumn: 'bm-column',
-    fvMap: {},
+    fvMap: {}, // for columns of factors
+    bmCharMap: {}, // for extra columns of biomaterial characteristics
     rowsExpanded: false,
+
+    characteristics: {}, // ones we will display in columns
 
     /**
      * See ExperimentalDesignController.getExperimentalFactors and ExperimentalFactorValueObject AND
@@ -78,7 +81,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
      *
      * @param factors,
      *           fetched with getExperimentalFactors.
-     * @memberOf Gemma.BioMaterialGridF
+     * @memberOf Gemma.BioMaterialGrid
      */
     createColumns: function (factors) {
         var columns = [this.rowExpander, {
@@ -165,7 +168,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             // if (!continuous) {
             rend = this.createValueRenderer();
-            // }/
+            // }
 
             /*
              * Define the column for this particular factor.
@@ -192,6 +195,25 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 continuous: continuous
             });
 
+        }
+
+        /*
+        Create columns for the biomaterial characteristics we want to display.
+         */
+        for (var category in this.characteristics) {
+            if (!this.characteristics.hasOwnProperty(category)) {
+                continue;
+            }
+
+            // dataIndex mustn't have spaces in them.
+            columns.push({
+                id: category.replace(/\s/g, "."),
+                header: category + " (raw characteristic)",
+                dataIndex: "characteristic." + category.replace(/\s/g, "."),
+                width: 120,
+                tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
+                sortable: true
+            });
         }
 
         return columns;
@@ -241,6 +263,24 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 fields.push(o);
             }
         }
+
+        // Add one slot in the record per biomaterial characteristic.
+        // just look at one biomaterial as a representative.
+        var bm = this.bioMaterials[0];
+        if (bm.characteristicValues) {
+            this.characteristics = bm.characteristicValues;
+            for (var category in bm.characteristicValues) {
+                if (!bm.characteristicValues.hasOwnProperty(category)) {
+                    continue;
+                }
+                var o = {
+                    name: "characteristic." + category.replace(/\s/g, "."),
+                    type: "string"
+                };
+                fields.push(o);
+            }
+        }
+
         var record = Ext.data.Record.create(fields);
         return record;
     },
@@ -359,7 +399,8 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     var row = edited[i];
                     var bmvo = {
                         id: row.id,
-                        factorIdToFactorValueId: {}
+                        factorIdToFactorValueId: {},
+                        characteristicValues: {} // we don't edit this.
                     };
 
                     for (var j in row) {
@@ -415,6 +456,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
         for (var i = 0; i < this.bioMaterials.length; ++i) {
             var bmvo = this.bioMaterials[i];
 
+            // format for display.
             var chars = "";
             bmvo.characteristics.forEach(function (element) {
                 if (!element.category) {
@@ -444,6 +486,20 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     data[i].push(k);
                 } else {
                     data[i].push(""); // no value assigned.
+                }
+            }
+
+            // same treatment for the characteristics.
+            // note that we might have none.
+            for (var c in this.characteristics) {
+                if (!this.characteristics.hasOwnProperty(c)) {
+                    continue;
+                }
+                var cval = bmvo.characteristicValues[c];
+                if (cval) {
+                    data[i].push(cval);
+                } else {
+                    data[i].push(""); // shouldn't happen if we picked useful characteristics well.
                 }
             }
 

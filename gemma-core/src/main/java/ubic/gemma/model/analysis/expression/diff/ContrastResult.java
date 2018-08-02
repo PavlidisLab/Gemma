@@ -142,7 +142,7 @@ public class ContrastResult implements Identifiable, Serializable {
 
     @Override
     public String toString() {
-        return "Contrast for " + this.getFactorValue().toString();
+        return "Contrast for " + this.getFactorValue() == null ? "[continuous]" : this.getFactorValue().toString();
     }
 
     public static final class Factory {

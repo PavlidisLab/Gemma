@@ -9,8 +9,8 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,10 +27,10 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Adds all parameters contained in the filters argument to the Query.
      *
-     * @param query   the query that needs parameters populated.
+     * @param query the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
      */
-    protected static void addRestrictionParameters( Query query, ArrayList<ObjectFilter[]> filters ) {
+    protected static void addRestrictionParameters( Query query, List<ObjectFilter[]> filters ) {
         if ( !SecurityUtil.isUserAnonymous() && !SecurityUtil.isUserAdmin() ) {
             query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
         }
@@ -58,7 +58,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * Forms an order by clause for a hibernate query based on given arguments.
      *
      * @param orderByProperty the property the query should be ordered by.
-     * @param orderDesc       whether the ordering should be descending or ascending.
+     * @param orderDesc whether the ordering should be descending or ascending.
      * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
     protected static String formOrderByProperty( String orderByProperty, boolean orderDesc ) {
@@ -77,10 +77,10 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Adds a restriction clause based on the given filters, and includes ACL restrictions as well.
      *
-     * @param filters see formRestrictionClause( ArrayList, boolean );
+     * @param filters see formRestrictionClause( List, boolean );
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
+    protected static String formRestrictionClause( List<ObjectFilter[]> filters ) {
         return AbstractVoEnabledDao.formRestrictionClause( filters, true );
     }
 
@@ -88,14 +88,14 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * Creates a CNF restriction clause from the given Filters list.
      *
      * @param filters A list of filtering properties arrays.
-     *                Elements in each array will be in a disjunction (OR) with each other.
-     *                Arrays will then be in a conjunction (AND) with each other.
-     *                I.e. The filter will be in a conjunctive normal form.
-     *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
-     * @param addAcl  whether the acl restriction clause should also be added.
+     *        Elements in each array will be in a disjunction (OR) with each other.
+     *        Arrays will then be in a conjunction (AND) with each other.
+     *        I.e. The filter will be in a conjunctive normal form.
+     *        <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
+     * @param addAcl whether the acl restriction clause should also be added.
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters, boolean addAcl ) {
+    protected static String formRestrictionClause( List<ObjectFilter[]> filters, boolean addAcl ) {
         String queryString = addAcl ? AbstractVoEnabledDao.formAclRestrictionClause() : " ";
 
         if ( filters == null || filters.isEmpty() )
@@ -137,7 +137,8 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * Do not forget to populate the :userName parameter for non-admin logged users before using the string
      * to create a Query object.
      *
-     * @return a string that can be appended to a query string that was created using {@link this#formAclSelectClause(String, String)}.
+     * @return a string that can be appended to a query string that was created using
+     *         {@link this#formAclSelectClause(String, String)}.
      */
     private static String formAclRestrictionClause() {
         String queryString = "";
@@ -171,7 +172,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      *
      * @param filter the filter to create the parameter name out of.
      * @return a name unique to the provided filter that can be used in a hql query. returned string does not
-     * contain the leading ":" character that denotes a parameter keyword in the hql query.
+     *         contain the leading ":" character that denotes a parameter keyword in the hql query.
      */
     private static String formParamName( ObjectFilter filter ) {
         return filter.getObjectAlias() + filter.getPropertyName().replace( ".", "" );
@@ -196,17 +197,18 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Should be overridden for any entity that is expected to have pre-filtered VOs available
      *
-     * @param filter  see this#formRestrictionClause(ArrayList)
-     * @param limit   limit
-     * @param asc     ordering asc? false for desc
-     * @param offset  offset
+     * @param filter see this#formRestrictionClause(ArrayList)
+     * @param limit limit
+     * @param asc ordering asc? false for desc
+     * @param offset offset
      * @param orderBy order by property
-     * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters without the need to
-     * further be checked by ACLs.
+     * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters without the
+     *         need to
+     *         further be checked by ACLs.
      */
     @Override
     public Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter ) {
+            List<ObjectFilter[]> filter ) {
         throw new NotYetImplementedException( "This entity does not have pre-filtered VO retrieval implemented yet" );
     }
 }

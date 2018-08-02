@@ -871,8 +871,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         orderedPhenotypesFromOntology.addAll( phenotypesSubstring );
 
         // limit the size of the returned phenotypes to 100 terms
-        if ( orderedPhenotypesFromOntology.size()
-                > PhenotypeAssociationManagerServiceImpl.MAX_PHENOTYPES_FROM_ONTOLOGY ) {
+        if ( orderedPhenotypesFromOntology.size() > PhenotypeAssociationManagerServiceImpl.MAX_PHENOTYPES_FROM_ONTOLOGY ) {
             if ( timer.getTime() > 1000 ) {
                 PhenotypeAssociationManagerServiceImpl.log.info( "Phenotype search: " + timer.getTime() + "ms" );
             }
@@ -1079,9 +1078,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                         for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
                                 .getPhenotypeAssociationPublications() ) {
-                            String pubId =
-                                    phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
-                                            + ";";
+                            String pubId = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
+                                    + ";";
                             // primary should be order first
                             if ( phenotypeAssociationPublication.getType()
                                     .equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
@@ -1103,7 +1101,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         StringBuilder phenotypesUri = new StringBuilder();
 
                         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                            phenotypesUri.append( cha.getValueUri() ).append( ";" );
+                            if ( StringUtils.isNotBlank( cha.getValueUri() ) ) {
+                                phenotypesUri.append( cha.getValueUri() ).append( ";" );
+                            }
                         }
 
                         // this should never happen
@@ -1131,17 +1131,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         String description = phenotypeAssociation.getDescription();
 
                         // represents 1 evidence
-                        String evidenceLine =
-                                externalDatabaseValueObject.getName() + "\t" + phenotypeAssociation.getGene()
-                                        .getNcbiGeneId() + "\t" + phenotypeAssociation.getGene().getOfficialSymbol()
-                                        + "\t" + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
-                                        + StringUtils.removeEnd( phenotypes.toString(), ";" ) + "\t" + relationship
-                                        + "\t"
-                                        // relationship
-                                        // information
-                                        + StringUtils.removeEnd( phenotypesUri.toString(), ";" ) + "\t" + StringUtils
-                                        .removeEnd( pubmeds.toString(), ";" ) + "\t" + webLink + "\t" + isNegative
-                                        + "\t" + description + "\n";
+                        String evidenceLine = externalDatabaseValueObject.getName() + "\t" + phenotypeAssociation.getGene()
+                                .getNcbiGeneId() + "\t" + phenotypeAssociation.getGene().getOfficialSymbol()
+                                + "\t" + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
+                                + StringUtils.removeEnd( phenotypes.toString(), ";" ) + "\t" + relationship
+                                + "\t"
+                                // relationship
+                                // information
+                                + StringUtils.removeEnd( phenotypesUri.toString(), ";" ) + "\t" + StringUtils
+                                        .removeEnd( pubmeds.toString(), ";" )
+                                + "\t" + webLink + "\t" + isNegative
+                                + "\t" + description + "\n";
 
                         fileWriterDataSource.write( evidenceLine );
                         if ( !externalDatabaseValueObject.getName().contains( "OMIM" ) )
@@ -1203,8 +1203,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Convert an collection of evidence entities to their corresponding value objects
      *
-     * @param phenotypeAssociations The List of entities we need to convert to value object
-     * @return Collection<EvidenceValueObject> the converted results
+     * @param  phenotypeAssociations The List of entities we need to convert to value object
+     * @return                       Collection<EvidenceValueObject> the converted results
      */
     private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> convert2ValueObjects(
             Collection<? extends PhenotypeAssociation> phenotypeAssociations ) {
@@ -1228,8 +1228,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Convert an evidence entity to its corresponding value object
      *
-     * @param phe The phenotype Entity
-     * @return Collection<EvidenceValueObject> its corresponding value object
+     * @param  phe The phenotype Entity
+     * @return     Collection<EvidenceValueObject> its corresponding value object
      */
     private EvidenceValueObject<? extends PhenotypeAssociation> convert2ValueObjects( PhenotypeAssociation phe ) {
 
@@ -1317,8 +1317,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param ontologyTrees ontology trees
-     * @return Changing the root names and the order to present them
+     * @param  ontologyTrees ontology trees
+     * @return               Changing the root names and the order to present them
      */
     private Collection<TreeCharacteristicValueObject> customTreeFeatures(
             Collection<TreeCharacteristicValueObject> ontologyTrees ) {
@@ -1341,9 +1341,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param evidence evidence
-     * @param pubmed   pub med
-     * @return Populates the ValidateEvidenceValueObject with the correct flags if necessary
+     * @param  evidence evidence
+     * @param  pubmed   pub med
+     * @return          Populates the ValidateEvidenceValueObject with the correct flags if necessary
      */
     private ValidateEvidenceValueObject determineSameGeneAndPhenotypeAnnotated(
             EvidenceValueObject<PhenotypeAssociation> evidence, String pubmed ) {
@@ -1414,7 +1414,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     if ( evidence.getPhenotypes().size() == bibliographicPhenotypesValueObject.getPhenotypesValues()
                             .size() && evidence.getPhenotypes()
-                            .containsAll( bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
+                                    .containsAll( bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
                         validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
                         validateEvidenceValueObject.getProblematicEvidenceIds()
                                 .add( bibliographicPhenotypesValueObject.getEvidenceId() );
@@ -1454,8 +1454,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param evidence the evidence
-     * @return Checks to see if the evidence is already in the database
+     * @param  evidence the evidence
+     * @return          Checks to see if the evidence is already in the database
      */
     private EvidenceValueObject evidenceAlreadyInDatabase(
             EvidenceValueObject<? extends PhenotypeAssociation> evidence ) {
@@ -1547,10 +1547,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      *
-     * @param isAdmin,                can see everything
-     * @param noElectronicAnnotation, if true don't include evidence code IEA
-     * @param evidenceFilter          evidence filter
-     * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
+     * @param                 isAdmin, can see everything
+     * @param                 noElectronicAnnotation, if true don't include evidence code IEA
+     * @param  evidenceFilter evidence filter
+     * @return                Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as
+     *                        trees
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( EvidenceFilter evidenceFilter,
             boolean isAdmin, boolean noElectronicAnnotation ) {
@@ -1710,9 +1711,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param phenotypesWithChildren phenotypes
-     * @return add all the keySet together and return a set representing all children for all valueUri given (collapse the map
-     * down to a single set)
+     * @param  phenotypesWithChildren phenotypes
+     * @return                        add all the keySet together and return a set representing all children for all
+     *                                valueUri given (collapse the map
+     *                                down to a single set)
      */
     private Set<String> findAllPossibleChildren( Map<String, Set<String>> phenotypesWithChildren ) {
 
@@ -1730,9 +1732,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * present in the database(all children of phenotype) : Map<String(parent phenotype), Set<String>(all children of
      * phenotype)>
      *
-     * @param usedPhenotypes       the URIs of all phenotypes actually used in the database.
-     * @param phenotypesValuesUris URIs
-     * @return map of terms to their children. The term itself is included.
+     * @param  usedPhenotypes       the URIs of all phenotypes actually used in the database.
+     * @param  phenotypesValuesUris URIs
+     * @return                      map of terms to their children. The term itself is included.
      */
     private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUris,
             Collection<String> usedPhenotypes ) {
@@ -1800,9 +1802,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param evidenceFilter evidence filter
-     * @param geneId         Gemma's identifier
-     * @return find Homologue-linked Evidence for a gene
+     * @param  evidenceFilter evidence filter
+     * @param  geneId         Gemma's identifier
+     * @return                find Homologue-linked Evidence for a gene
      */
     private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findHomologueEvidence( Long geneId,
             EvidenceFilter evidenceFilter ) {
@@ -1894,10 +1896,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param taxon                      taxon
-     * @param ontologyTermsFound         ontology terms found
-     * @param phenotypesFoundAndChildren phenotypes found and their children
-     * @return For a given Ontology Term, count the occurence of the term + children in the database
+     * @param  taxon                      taxon
+     * @param  ontologyTermsFound         ontology terms found
+     * @param  phenotypesFoundAndChildren phenotypes found and their children
+     * @return                            For a given Ontology Term, count the occurence of the term + children in the
+     *                                    database
      */
     private Collection<CharacteristicValueObject> findPhenotypeCount( Collection<OntologyTerm> ontologyTermsFound,
             Taxon taxon, Set<String> phenotypesFoundAndChildren ) {
@@ -1939,8 +1942,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * @param geneId gene id
-     * @return Given a geneId finds all phenotypes for that gene
+     * @param  geneId gene id
+     * @return        Given a geneId finds all phenotypes for that gene
      */
     private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
 
@@ -2030,9 +2033,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-
-            VocabCharacteristic phenotype = ( VocabCharacteristic ) cha;
+        for ( Characteristic phenotype : phenotypeAssociation.getPhenotypes() ) {
 
             CharacteristicValueObject updatedPhenotype = updatedPhenotypesMap.get( phenotype.getId() );
 
@@ -2044,7 +2045,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             // this phenotype was deleted
             else {
-                this.characteristicService.remove( cha );
+                this.characteristicService.remove( phenotype );
             }
         }
         phenotypeAssociation.getPhenotypes().clear();
@@ -2054,8 +2055,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * used when we add an evidence and search for phenotype to add, other places too adds a wildcard to the search
      *
-     * @param query query
-     * @return the string with an added wildcard to it.
+     * @param  query query
+     * @return       the string with an added wildcard to it.
      */
     private String prepareOntologyQuery( String query ) {
 

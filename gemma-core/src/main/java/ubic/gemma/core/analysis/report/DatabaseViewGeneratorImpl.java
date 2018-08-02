@@ -29,7 +29,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -142,11 +141,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                         String uri = "";
 
-                        if ( c instanceof VocabCharacteristic ) {
-                            VocabCharacteristic vocabCharacteristic = ( VocabCharacteristic ) c;
-                            if ( StringUtils.isNotBlank( vocabCharacteristic.getValueUri() ) )
-                                uri = vocabCharacteristic.getValueUri();
-                        }
+                        if ( StringUtils.isNotBlank( c.getValueUri() ) )
+                            uri = c.getValueUri();
 
                         writer.write( String.format( "%d\t%s\t%s\n", gemmaId, c.getValue(), uri ) );
 
@@ -289,7 +285,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                         for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                             factorName.append( ef.getName() ).append( "," );
-                            if ( ef.getCategory() instanceof VocabCharacteristic ) {
+                            if ( StringUtils.isNotBlank( ef.getCategory().getCategoryUri() ) ) {
                                 factorURI.append( ef.getCategory().getCategoryUri() ).append( "," );
                             }
                         }

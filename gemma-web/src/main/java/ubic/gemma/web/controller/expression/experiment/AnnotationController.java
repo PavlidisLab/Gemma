@@ -42,7 +42,7 @@ import java.util.HashSet;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
- * OntologyService and the ExpressionExperimentAnnotator
+ * OntologyService and the CharacteristicService. Edits to characteristics are handled by
  *
  * @author paul
  * @see ubic.gemma.web.controller.common.CharacteristicBrowserController for related methods.

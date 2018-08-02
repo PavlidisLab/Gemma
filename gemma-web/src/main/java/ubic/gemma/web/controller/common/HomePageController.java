@@ -74,7 +74,6 @@ public class HomePageController {
         otherTaxa.setScientificName( "Other" );
         otherTaxa.setAbbreviation( "Other" );
         otherTaxa.setIsGenesUsable( false );
-        otherTaxa.setIsSpecies( false );
     }
 
     /**

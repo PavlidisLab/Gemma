@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.persistence.Transient;
@@ -63,10 +62,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
                 .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic )
-                    builder.append( c.hashCode() );
-                else
-                    builder.append( c.hashCode() );
+                builder.append( c.hashCode() );
             }
         }
         return builder.toHashCode();
@@ -155,7 +151,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
 
     /**
      * @return True if this is to be considered the baseline condition. This is ignored if the factor is numeric
-     * (non-categorical).
+     *         (non-categorical).
      */
     public Boolean getIsBaseline() {
         return this.isBaseline;

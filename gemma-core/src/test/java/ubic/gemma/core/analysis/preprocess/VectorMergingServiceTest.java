@@ -96,21 +96,28 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
                     arrayDesignService.update( mergedAA );
 
                     mergedAA = arrayDesignService.thawLite( mergedAA );
-
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
                         arrayDesign.setMergedInto( null );
                         arrayDesignService.update( arrayDesign );
                     }
+
+                    for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( mergedAA ) ) {
+                        eeService.remove( e );
+                    }
+
                     arrayDesignService.remove( mergedAA );
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
+                        for ( ExpressionExperiment e : arrayDesignService.getExpressionExperiments( arrayDesign ) ) {
+                            eeService.remove( e );
+                        }
                         arrayDesignService.remove( arrayDesign );
+
                     }
                 }
 
             }
         } catch ( Exception e ) {
-            // oh well. Test might fail, it might not.
-            log.info( e.getMessage(), e );
+            log.info( "Tear-down failed: " + e.getMessage() );
         }
     }
 
@@ -194,7 +201,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( oldbs.size(), seenBs.size() );
 
         ee = eeService.thaw( ee );
-        assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
         ee = eeService.thaw( ee );
@@ -216,6 +222,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
                 .getProcessedDataVectors( ee );
 
         assertEquals( 72, pvs.size() );
+
+        assertEquals( 978, ee.getRawExpressionDataVectors().size() );
 
         ee = eeService.thaw( ee );
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService

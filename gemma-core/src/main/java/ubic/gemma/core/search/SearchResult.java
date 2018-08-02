@@ -130,14 +130,12 @@ public class SearchResult implements Comparable<SearchResult>, Identifiable {
             return false;
         if ( resultClass == null ) {
             return other.resultClass == null;
-        } else
-            return resultClass.getName().equals( other.resultClass.getName() );
+        }
+        return resultClass.getName().equals( other.resultClass.getName() );
     }
 
     @Override
     public String toString() {
-        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ?
-                "'" + this.highlightedText + "'" :
-                "(?)" );
+        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }

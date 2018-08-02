@@ -19,13 +19,14 @@
 
 package ubic.gemma.web.remote;
 
-import org.apache.commons.lang3.StringUtils;
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ParseUtil;
 import org.directwebremoting.dwrp.ProtocolConstants;
 import org.directwebremoting.extend.*;
 import org.directwebremoting.util.LocalUtil;
 import org.directwebremoting.util.Messages;
+
+import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,24 +65,7 @@ public class CharacteristicConverter extends BeanConverter {
         try {
             Map<String, String> tokens = extractInboundTokens( paramType, value );
 
-            Object bean;
-
-            // Figure out if it is a VocabCharacteristic (if it has a non-null valueUri). Because the client is "dumb"
-            // usually there is a "null" valueUri.
-            if ( tokens.containsKey( "valueUri" ) ) {
-                String[] split = ParseUtil.splitInbound( tokens.get( "valueUri" ) );
-                String splitValue = split[LocalUtil.INBOUND_INDEX_VALUE];
-                String splitType = split[LocalUtil.INBOUND_INDEX_TYPE];
-
-                InboundVariable nested = new InboundVariable( iv.getLookup(), null, splitType, splitValue );
-                if ( StringUtils.isBlank( nested.getValue() ) || "null".equals( nested.getValue() ) ) {
-                    bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
-                } else {
-                    bean = ubic.gemma.model.common.description.VocabCharacteristic.Factory.newInstance();
-                }
-            } else {
-                bean = ubic.gemma.model.common.description.Characteristic.Factory.newInstance();
-            }
+            Object bean = Characteristic.Factory.newInstance();
 
             if ( instanceType != null ) {
                 inctx.addConverted( iv, instanceType, bean );
@@ -100,24 +84,6 @@ public class CharacteristicConverter extends BeanConverter {
 
                 Property property = properties.get( key );
                 if ( property == null ) {
-                    // This will happen for valueUri all the time when the valueUri is blank
-                    // log.warn( "Missing java bean property to match javascript property: " + key
-                    // + ". For causes see debug level logs:" );
-                    //
-                    // log.debug( "- The javascript may be refer to a property that does not exist" );
-                    // log.debug( "- You may be missing the correct setter: set" + Character.toTitleCase( key.charAt( 0
-                    // ) )
-                    // + key.substring( 1 ) + "()" );
-                    // log.debug( "- The property may be excluded using include or exclude rules." );
-                    //
-                    // StringBuffer all = new StringBuffer();
-                    // for ( Iterator<String> pit = properties.keySet().iterator(); pit.hasNext(); ) {
-                    // all.append( pit.next() );
-                    // if ( pit.hasNext() ) {
-                    // all.append( ',' );
-                    // }
-                    // }
-                    // log.debug( "Fields exist for (" + all + ")." );
                     continue;
                 }
 
@@ -135,11 +101,10 @@ public class CharacteristicConverter extends BeanConverter {
                 // Unfortunate hack. Change the properties association to be a Set instead of a Collection in the
                 // model; Model think this is a generic Collection, Hibernate thinks its a Set. DWR converts collections
                 // to ArrayLists... *sigh* Hibernate then dies of a class cast exception. All because of a general type
-                // of
-                // Collection
+                // of Collection
                 if ( ( key.equals( "properties" ) ) && ( output instanceof ArrayList ) ) {
                     ArrayList<Object> propertyList = ( ArrayList<Object> ) output;
-                    output = new HashSet<Object>( propertyList );
+                    output = new HashSet<>( propertyList );
                 }
 
                 property.setValue( bean, output );

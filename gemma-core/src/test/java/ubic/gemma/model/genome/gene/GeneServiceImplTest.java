@@ -62,7 +62,6 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
         t.setScientificName( "moose" );
-        t.setIsSpecies( true );
         t.setIsGenesUsable( true );
         // tDAO.create( t );
 

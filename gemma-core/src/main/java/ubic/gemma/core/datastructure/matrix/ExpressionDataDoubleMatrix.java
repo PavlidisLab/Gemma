@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -104,7 +105,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Create a data matrix like sourceMatrix but use the values from dataMatrix.
      *
      * @param sourceMatrix source matrix
-     * @param dataMatrix   the rows can be different than the original matrix, but the columns must be the same.
+     * @param dataMatrix the rows can be different than the original matrix, but the columns must be the same.
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
@@ -127,7 +128,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * Create a matrix based on another one's selected rows.
      *
-     * @param rowsToUse    rows
+     * @param rowsToUse rows
      * @param sourceMatrix matrix
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
@@ -165,8 +166,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Create a matrix given a 'raw' matrix that uses the same samples as the experiment. Only simple situations are
      * supported (one platform, not subsetting the dataset).
      *
-     * @param ee     to be associated with this
-     * @param qt     to be associated with this
+     * @param ee to be associated with this
+     * @param qt to be associated with this
      * @param matrix with valid row and column elements, and the data
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
@@ -422,13 +423,47 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return result;
     }
 
+    /**
+     * Same as toProcessedDataVectors but uses RawExpressionDataVector
+     * 
+     * @return Convert this to a collection of vectors.
+     */
+    public Collection<RawExpressionDataVector> toRawDataVectors() {
+        Collection<RawExpressionDataVector> result = new HashSet<>();
+        QuantitationType qt = this.getQuantitationTypes().iterator().next();
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+        if ( this.getQuantitationTypes().size() > 1 ) {
+            throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
+        }
+
+        for ( int i = 0; i < this.rows(); i++ ) {
+
+            Double[] data = this.getRow( i );
+
+            RawExpressionDataVector v = RawExpressionDataVector.Factory.newInstance();
+            v.setBioAssayDimension( this.getBestBioAssayDimension() );
+            v.setDesignElement( this.getRowNames().get( i ) );
+            v.setQuantitationType( qt );
+            v.setData( bac.doubleArrayToBytes( data ) );
+            v.setExpressionExperiment( this.expressionExperiment );
+            // we don't fill in the ranks because we only have the mean value here.
+
+            result.add( v );
+        }
+        
+        assert result.size() == this.rows();
+
+        return result;
+    }
+
     public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
         return matrix;
     }
 
     /**
      * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
-     * vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
      */
     public Map<CompositeSequence, Double> getRanks() {
         return this.ranks;
@@ -452,7 +487,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Sets the row of matrix to the input data.
      *
      * @param rowIndex The row index of the data in the matrix to be replaced.
-     * @param data     The input data.
+     * @param data The input data.
      */
     @SuppressWarnings("unused") // Useful interface
     public void setRow( int rowIndex, Double[] data ) {

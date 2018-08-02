@@ -50,7 +50,6 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
         taxon.setIsGenesUsable( true );
         taxon.setNcbiId( 10090 );
         taxon.setScientificName( "Mus musculus" );
-        taxon.setIsSpecies( true );
         taxa = new ArrayList<>();
         taxa.add( taxon );
 
@@ -87,7 +86,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest {
                 // count how many 1
                 else if ( biomart.getEntrezgenes().size() == 1 ) {
                     counterEnsemblToOneGeneids++;
-                }// how many 0- should be null
+                } // how many 0- should be null
                 else {
                     countHowManyNoGenes++;
                 }

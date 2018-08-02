@@ -12,7 +12,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
 <meta name="description"
-      content="Database of gene expression data and other genomics data in a meta-analysis framework, running under open source software."/>
+      content="Database of curated, reanalyzed genomics datasets for meta-analysis"/>
 
 <meta name="keywords"
       content="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>

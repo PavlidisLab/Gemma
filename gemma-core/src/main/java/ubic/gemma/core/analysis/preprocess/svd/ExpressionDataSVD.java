@@ -116,6 +116,13 @@ public class ExpressionDataSVD {
                     "After filtering, this data set has more samples than rows; SVD not supported." );
         }
 
+        // if we want to filter by expression. Problem: choosing threshold. Filtering by variance (lightly, as above) is okay.
+        //        if (!expressionData.getQuantitationTypes().iterator().next().getIsRatio()) {
+        //            RowLevelFilter explevelFilt = new RowLevelFilter();
+        //            rlf.setMethod( Method.MEAN );
+        //            rlf.setLowCut( 0.3, true );
+        //        }
+
         this.normalized = normalizeMatrix;
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = this.expressionData.getMatrix();
 

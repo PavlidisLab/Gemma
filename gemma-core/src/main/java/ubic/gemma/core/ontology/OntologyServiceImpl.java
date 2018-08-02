@@ -37,7 +37,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -74,14 +73,19 @@ public class OntologyServiceImpl implements OntologyService {
     private final ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
     private final DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
     private final ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
+
     private final FMAOntologyService fmaOntologyService = new FMAOntologyService();
+
     private final GemmaOntologyService gemmaOntologyService = new GemmaOntologyService();
     private final HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
     private final HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
     private final MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
     private final MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+
+    @Deprecated
     private final NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
     private final ObiService obiService = new ObiService();
+
     private final Collection<AbstractOntologyService> ontologyServices = new ArrayList<>();
     private final SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
     private final UberonOntologyService uberonOntologyService = new UberonOntologyService();
@@ -265,10 +269,10 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
+    public Collection<Characteristic> findTermAsCharacteristic( String search ) {
 
         String query = OntologySearch.stripInvalidCharacters( search );
-        Collection<VocabCharacteristic> results = new HashSet<>();
+        Collection<Characteristic> results = new HashSet<>();
 
         if ( StringUtils.isBlank( query ) ) {
             return results;
@@ -328,7 +332,7 @@ public class OntologyServiceImpl implements OntologyService {
                     .debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
-        Collection<? extends OntologyResource> results;
+        Collection<? extends OntologyResource> results = null;
         Collection<CharacteristicValueObject> searchResults = new HashSet<>();
 
         Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
@@ -339,10 +343,15 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService service : this.ontologyServices ) {
             if ( !service.isOntologyLoaded() )
                 continue;
-            results = service.findResources( queryString );
 
-            if ( results.isEmpty() )
+            try {
+                results = service.findResources( queryString );
+            } catch ( Exception e ) {
+                log.warn( e.getMessage() ); // parse errors, etc.
+            }
+            if ( results == null || results.isEmpty() )
                 continue;
+
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log
                         .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
@@ -432,8 +441,14 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
+    @Deprecated
     public NIFSTDOntologyService getNifstfOntologyService() {
         return nifstdOntologyService;
+    }
+
+    @Override
+    public UberonOntologyService getUberonService() {
+        return this.uberonOntologyService;
     }
 
     @Override
@@ -490,7 +505,7 @@ public class OntologyServiceImpl implements OntologyService {
                 }
             } else {
                 if ( serv.isEnabled() )
-                    OntologyServiceImpl.log.info( "Not available for reindexing: " + serv );
+                    OntologyServiceImpl.log.info( "Not available for reindexing (not enabled or finished initialization): " + serv );
             }
         }
     }
@@ -553,7 +568,7 @@ public class OntologyServiceImpl implements OntologyService {
             // characteristic
         }
 
-        if ( vc instanceof VocabCharacteristic && this.isObsolete( vc.getValueUri() ) ) {
+        if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
             OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
             return;
         }
@@ -574,13 +589,13 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Convert raw ontology resources into VocabCharacteristics.
+     * Convert raw ontology resources into Characteristics.
      */
     @Override
-    public Collection<VocabCharacteristic> termsToCharacteristics(
+    public Collection<Characteristic> termsToCharacteristics(
             final Collection<? extends OntologyResource> terms ) {
 
-        Collection<VocabCharacteristic> results = new HashSet<>();
+        Collection<Characteristic> results = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
@@ -590,7 +605,7 @@ public class OntologyServiceImpl implements OntologyService {
             if ( res == null )
                 continue;
 
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
             if ( res instanceof OntologyTerm ) {
                 OntologyTerm term = ( OntologyTerm ) res;
                 vc.setValue( term.getTerm() );
@@ -617,17 +632,17 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Given a collection of ontology terms converts them to a collection of VocabCharacteristics
+     * Given a collection of ontology terms converts them to a collection of Characteristics
      */
-    private Collection<VocabCharacteristic> convert( final Collection<OntologyResource> resources ) {
+    private Collection<Characteristic> convert( final Collection<OntologyResource> resources ) {
 
-        Collection<VocabCharacteristic> converted = new HashSet<>();
+        Collection<Characteristic> converted = new HashSet<>();
 
         if ( ( resources == null ) || ( resources.isEmpty() ) )
             return converted;
 
         for ( OntologyResource res : resources ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
 
             // If there is no URI we don't want to send it back (ie useless)
             if ( ( res.getUri() == null ) || StringUtils.isEmpty( res.getUri() ) )
@@ -684,7 +699,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
@@ -731,7 +746,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic && ( StringUtils.isNotBlank( c.getValueUri() ) ) ) {
+        if ( StringUtils.isNotBlank( c.getValueUri() ) ) {
             return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
@@ -749,7 +764,7 @@ public class OntologyServiceImpl implements OntologyService {
      * for non-ncbi genes.
      */
     private Characteristic gene2Characteristic( Gene g ) {
-        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategory( "gene" );
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
         vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );

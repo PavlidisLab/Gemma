@@ -28,10 +28,7 @@ import java.util.Collection;
  */
 public interface RawExpressionDataVectorService extends DesignElementDataVectorService<RawExpressionDataVector> {
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<RawExpressionDataVector> create( Collection<RawExpressionDataVector> vectors );
-
+  
     @Override
     @Secured({ "GROUP_ADMIN" })
     RawExpressionDataVector load( Long id );

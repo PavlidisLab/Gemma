@@ -19,7 +19,7 @@
 package ubic.gemma.persistence.service.association;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
@@ -40,16 +40,16 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
-    Collection<VocabCharacteristic> findByGene( Gene gene );
+    Collection<Characteristic> findByGene( Gene gene );
 
-    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind );
+    Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> needToFind );
 
     Collection<Gene> findByGoTerm( String goId, Taxon taxon );
 
     Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
 
     @SuppressWarnings("unused")
-        // Ensures consistency
+    // Ensures consistency
     Collection<Gene> getGenes( Collection<String> ids );
 
     Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );

@@ -30,7 +30,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private Boolean isSpecies;
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
-    private TaxonValueObject parentTaxon;
 
     public TaxonValueObject( Taxon taxon ) {
         super( taxon.getId() );
@@ -40,9 +39,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
         this.setNcbiId( taxon.getNcbiId() );
         this.setIsGenesUsable( taxon.getIsGenesUsable() );
-        this.setIsSpecies( taxon.getIsSpecies() );
-        this.setParentTaxon(
-                taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
 
         if ( taxon.getExternalDatabase() != null ) {
             this.setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
@@ -103,14 +99,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     public void setNcbiId( Integer ncbiId ) {
         this.ncbiId = ncbiId;
-    }
-
-    public TaxonValueObject getParentTaxon() {
-        return this.parentTaxon;
-    }
-
-    public void setParentTaxon( TaxonValueObject parentTaxon ) {
-        this.parentTaxon = parentTaxon;
     }
 
     public String getScientificName() {

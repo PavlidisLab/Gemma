@@ -33,11 +33,11 @@ import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -283,9 +283,119 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             BioMaterial sample = assay.getSampleUsed();
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
             result.add( bmvo );
+
         }
 
+        filterCharacteristics( result );
+
         return result;
+    }
+
+    /**
+     * Filter the characteristicValues to those that we want to display in columns in the biomaterialvalue table.
+     *
+     * @param result
+     */
+    private void filterCharacteristics( Collection<BioMaterialValueObject> result ) {
+
+        int c = result.size();
+
+        // build map of categories to bmos. No category: can't use.
+        Map<String, Collection<BioMaterialValueObject>> map = new HashMap<>();
+        for ( BioMaterialValueObject bmo : result ) {
+            for ( CharacteristicValueObject ch : bmo.getCharacteristics() ) {
+
+                String category = ch.getCategory();
+                if ( StringUtils.isBlank( category ) ) {
+
+                    /*
+                    Experimental: split on ":", use first part as the category.
+                     */
+                    if ( ch.getValue().contains( ":" ) ) {
+                        String[] split = ch.getValue().split( ":" );
+                        category = StringUtils.strip( split[0] );
+                    } else {
+                        continue;
+                    }
+                }
+
+                if ( !map.containsKey( category ) ) {
+                    map.put( category, new HashSet<BioMaterialValueObject>() );
+                }
+                map.get( category ).add( bmo );
+            }
+        }
+
+        /*
+        find ones that don't have a value for each sample, or which have more values than samples, or which are constants
+         */
+        Collection<String> toremove = new HashSet<>();
+        for ( String category : map.keySet() ) {
+           // log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
+            if ( map.get( category ).size() != result.size() ) {
+                toremove.add( category );
+                continue;
+            }
+
+            // TODO add more exclusions; see also ExpresionExperimentDao.getAnnotationsByBioMaterials
+            if ( category.equals( "LabelCompound" ) || category.equals( "MaterialType" ) || category.equals( "molecular entity" ) ) {
+                toremove.add( category );
+                continue;
+            }
+
+            Collection<String> vals = new HashSet<>();
+            boolean keeper = false;
+            bms:
+            for ( BioMaterialValueObject bm : map.get( category ) ) {
+                log.info( "inspecting " + bm );
+                // Find the characteristic that had this category
+                for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
+                    String mappedCategory = ch.getCategory();
+                    String mappedValue = ch.getValue();
+
+                    if ( StringUtils.isBlank( mappedCategory ) ) {
+                        // redo split (will refactor later)
+                        if ( mappedValue.contains( ":" ) ) {
+                            String[] split = mappedValue.split( ":" );
+                            mappedCategory = StringUtils.strip( split[0] );
+                        } else {
+                            continue bms;
+                        }
+                    }
+
+                    if ( mappedCategory.equals( category ) ) {
+                        if ( !vals.contains( mappedValue ) ) {
+                            if ( log.isDebugEnabled() )
+                                log.debug( category + " -> " + mappedValue );
+                            vals.add( mappedValue );
+                        }
+
+                        //  populate this into the biomaterial
+                        //  log.info( category + " -> " + mappedValue );
+                        bm.getCharacteristicValues().put( mappedCategory, mappedValue );
+                    }
+                }
+
+                //                if ( vals.size() > 1 ) {
+                //                    if ( log.isDebugEnabled() )
+                //                        log.debug( category + " -- Keeper with " + vals.size() + " values" );
+                //
+                //                    keeper = true;
+                //                }
+            }
+
+            if ( vals.size() < 2 ) {
+                toremove.add( category );
+            }
+        }
+
+        // finally, clean up the bmos.
+        for ( BioMaterialValueObject bmo : result ) {
+            for ( String lose : toremove ) {
+                bmo.getCharacteristicValues().remove( lose );
+            }
+        }
+
     }
 
     @Override
@@ -300,7 +410,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
         } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
-                .equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
+                .equalsIgnoreCase( "ExperimentalDesign" )
+                || e.getClassDelegatingFor()
                 .endsWith( ".ExperimentalDesign" ) ) {
             designId = e.getId();
         } else {
@@ -513,15 +624,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 }
             }
 
-            /*
-             * at the moment, the characteristic is always going to be a VocabCharacteristic; if that changes, this will
-             * have to...
-             */
-            VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
+            Characteristic vc = ef.getCategory();
 
-            // VC can be null if this was imported from GEO etc.
+            //  can be null if this was imported from GEO etc.
             if ( vc == null ) {
-                vc = VocabCharacteristic.Factory.newInstance();
+                vc = Characteristic.Factory.newInstance();
             }
 
             // String originalCategoryUri = vc.getCategoryUri();
@@ -592,27 +699,29 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             } else {
 
-                if ( StringUtils.isNotBlank( fvvo.getValueUri() ) ) {
-                    c = VocabCharacteristic.Factory.newInstance();
-                } else {
-                    c = Characteristic.Factory.newInstance();
-                }
+                c = Characteristic.Factory.newInstance();
+
+            }
+
+            // For related code see CharacteristicUpdateTaskImpl
+
+            // preserve original data
+            if ( StringUtils.isBlank( c.getOriginalValue() ) ) {
+                c.setOriginalValue( c.getValue() );
             }
 
             c.setCategory( fvvo.getCategory() );
             c.setValue( fvvo.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                vc.setCategoryUri( fvvo.getCategoryUri() );
-                vc.setValueUri( fvvo.getValueUri() );
-            }
+            c.setCategoryUri( fvvo.getCategoryUri() );
+            c.setValueUri( fvvo.getValueUri() );
+
             c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
 
             if ( c.getId() != null ) {
                 characteristicService.update( c );
             } else {
                 fv.getCharacteristics().add( c );
-                factorValueService.update( fv );
+                factorValueService.update( fv ); // cascade
             }
 
         }
@@ -628,7 +737,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
         Characteristic c;
         if ( categoryUri != null ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            Characteristic vc = Characteristic.Factory.newInstance();
             vc.setCategoryUri( categoryUri );
             vc.setValueUri( categoryUri );
             c = vc;
@@ -642,13 +751,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     private Characteristic createTemplateCharacteristic( Characteristic source ) {
-        Characteristic template = ( source instanceof VocabCharacteristic ) ?
-                VocabCharacteristic.Factory.newInstance() :
-                Characteristic.Factory.newInstance();
+        Characteristic template = Characteristic.Factory.newInstance();
         template.setCategory( source.getCategory() );
-        if ( source instanceof VocabCharacteristic ) {
-            template.setCategoryUri( source.getCategoryUri() );
-        }
+        template.setCategoryUri( source.getCategoryUri() );
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
     }

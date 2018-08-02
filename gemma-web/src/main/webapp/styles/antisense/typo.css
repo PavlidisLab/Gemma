@@ -388,6 +388,15 @@ a.info {
 	color: darkgreen;
 }
 
+.disabled {
+	background-color: lightgrey;
+	color: grey;
+}
+
+.disabled-plain {
+	color: black;
+}
+
 /* colours for characteristics */
 .usedWithUri {
 	color: darkgreen;
@@ -405,6 +414,27 @@ a.info {
 
 .unusedNoUri {
 	
+}
+
+/* sources of annotations */
+.fromBioMaterial {
+	background-color:#d1e4fd;
+	padding:3px;
+	line-height: 1.5em;
+	border-radius:15px;
+}
+.fromFactorValue {
+	background-color:#F0DE7D;
+	padding:3px;
+	line-height: 1.5em;
+	border-radius:15px;
+}
+.fromExperimentTag {
+	font-weight: bold;
+	background-color:#B0DE78;
+	padding:3px;
+	line-height: 1.5em;
+	border-radius:15px;
 }
 
 a.info:hover {
@@ -481,10 +511,6 @@ a.tooltip:hover .tooltiptext {
 */
 .search-result-body { /*font-style: italic; */
 	
-}
-
-.disabled-plain {
-	color: black;
 }
 
 /*

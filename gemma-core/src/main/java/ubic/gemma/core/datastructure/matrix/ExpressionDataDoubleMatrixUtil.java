@@ -54,7 +54,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * we store log2cpm as the processed data, so that is what would generally be used).
      *
      * @param quantitationType QT
-     * @param dmatrix          matrix
+     * @param dmatrix matrix
      * @return ee data double matrix
      */
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
@@ -90,40 +90,14 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     /**
-     * Ensures that the given data is on a Log2 scale. Also changes the QT appropriately.
-     *
-     * @param data the data to have a Log2 scale ensured
-     * @return data transformed to a Log2 scale, unless they were already on the scale.
-     */
-    public static Collection<ProcessedExpressionDataVector> ensureLog2Scale(
-            Collection<ProcessedExpressionDataVector> data ) {
-
-        QuantitationType qt = data.iterator().next().getQuantitationType();
-        // Ensure the data is on a Log2 scale.
-        ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( qt, new ExpressionDataDoubleMatrix( data ) );
-
-        // Change the QT information if necessary
-        if ( qt.getScale() != ScaleType.LOG2 ) {
-            log.info( " Changing scale of QT " + qt.getId() + " to LOG2!" );
-            data = matrix.toProcessedDataVectors();
-            for ( ProcessedExpressionDataVector v : data ) {
-                v.getQuantitationType().setScale( ScaleType.LOG2 );
-            }
-        }
-
-        return data;
-    }
-
-    /**
      * Ensures that the given matrix is on a Log2 scale.
      * ! Does not update the QT !
      *
      * @param quantitationType the quantitation type to be checked for the scale.
-     * @param dmatrix          the matrix to be transformed to a log2 scale if necessary.
+     * @param dmatrix the matrix to be transformed to a log2 scale if necessary.
      * @return a data matrix that is guaranteed to be on a log2 scale.
      */
-    private static ExpressionDataDoubleMatrix ensureLog2Scale( QuantitationType quantitationType,
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( QuantitationType quantitationType,
             ExpressionDataDoubleMatrix dmatrix ) {
         ScaleType scaleType = ExpressionDataDoubleMatrixUtil.findScale( quantitationType, dmatrix.getMatrix() );
 
@@ -155,7 +129,7 @@ public class ExpressionDataDoubleMatrixUtil {
 
     /**
      * @param quantitationType QT
-     * @param namedMatrix      named matrix
+     * @param namedMatrix named matrix
      * @return ScaleType
      * @see ExpressionExperimentFilter for a related implementation.
      */
@@ -297,7 +271,7 @@ public class ExpressionDataDoubleMatrixUtil {
     /**
      * Divide all values by the dividend
      *
-     * @param matrix   matrix
+     * @param matrix matrix
      * @param dividend dividend
      * @throws IllegalArgumentException if dividend == 0.
      */
@@ -323,7 +297,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
      *
      * @param matrix matrix
-     * @param mask   if null, masking is not attempted.
+     * @param mask if null, masking is not attempted.
      */
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
         if ( mask == null )

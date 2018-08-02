@@ -52,51 +52,9 @@ import static org.junit.Assert.*;
  */
 public class GeoConverterTest extends BaseSpringContextTest {
 
-    private static boolean doneSetup = false;
     private final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private GeoConverter gc;
-
-    @Before
-    public void setUp() {
-        if ( GeoConverterTest.doneSetup )
-            return;
-        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
-
-        GeoConverterTest.doneSetup = true;
-    }
-
-    /*
-     * quantitation type problem. See bug 1760
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    public void test5091() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-        try (InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) )) {
-
-            parser.parse( is );
-        }
-
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        assertEquals( 1, ees.size() );
-
-        ExpressionExperiment ee = ees.iterator().next();
-        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-            if ( qt.getName().equals( "VALUE" ) ) {
-                assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
-                return;
-            }
-        }
-        fail( "Didn't find the 'value' quantitation type" );
-    }
 
     /*
      * Bug 3976: make sure we skip non-expression data sets.
@@ -107,66 +65,10 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
-        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
                 .convert( series );
         assertTrue( r.isEmpty() );
-    }
-
-    /*
-     * GSE2388 is an example of where the array and sample taxon do not match. This test checks that the biomaterial and
-     * array taxons are set correctly.
-     *
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    @Transactional
-    public void testArrayTaxonDifferentToSampleTaxon() throws Exception {
-
-        Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
-        assertNotNull( rainbowTrout );
-        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
-        assertNotNull( atlanticSalm );
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE2388_family.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2388" );
-        GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap()
-                .get( "GPL966" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        // assert that the biomaterials have been set as one taxon
-        Object seriesResult = gc.convert( series );
-        assertNotNull( seriesResult );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) seriesResult;
-        ExpressionExperiment exper = ees.iterator().next();
-        Collection<BioAssay> bioassays = exper.getBioAssays();
-        BioMaterial material = bioassays.iterator().next().getSampleUsed();
-        Taxon taxon = material.getSourceTaxon();
-        assertEquals( "Oncorhynchus kisutch", taxon.getScientificName() );
-
-        // assert that the platform is another taxon
-
-        Object resultPlatForm = gc.convert( platform );
-        ArrayDesign ad = ( ArrayDesign ) resultPlatForm;
-        assertNotNull( ad );
-        Set<Taxon> taxa = new HashSet<>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs != null ) {
-                assertNotNull( bs.getTaxon() );
-                log.info( bs.getTaxon() );
-                taxa.add( bs.getTaxon() );
-            }
-        }
-        // can be empty taxon if the probe does not have a sequence which is why taxon size is 3.
-        assertEquals( 2, taxa.size() );
-        assertTrue( taxa.contains( rainbowTrout ) );
-        assertTrue( taxa.contains( atlanticSalm ) );
-
     }
 
     @Test
@@ -457,7 +359,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
         ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
 
@@ -466,46 +369,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         String acc = seq.getSequenceDatabaseEntry().getAccession();
         assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
         assertTrue( !acc.startsWith( "IMAGE" ) );
-    }
-
-    /*
-     * Problem with QT being interpreted as String instead of Double.
-     */
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testConvertGSE5091() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-        try (InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) )) {
-
-            parser.parse( is );
-        }
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        assertEquals( 1, ees.size() );
-
-        ExpressionExperiment ee = ees.iterator().next();
-
-        Collection<QuantitationType> quantitationTypes = ee.getQuantitationTypes();
-
-        for ( QuantitationType quantitationType : quantitationTypes ) {
-            // log.info(quantitationType);
-            if ( quantitationType.getName().equals( "VALUE" ) ) {
-                /*
-                 * Here's the problem. Of course it works fine...
-                 */
-                assertEquals( PrimitiveType.DOUBLE, quantitationType.getRepresentation() );
-                assertTrue( quantitationType.getIsPreferred() );
-                return;
-            }
-        }
-
-        fail( "Expected to find 'VALUE' with type Double" );
     }
 
     @SuppressWarnings("unchecked")
@@ -665,28 +528,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testConvertMultiTaxonPlatformGSE28843() throws Exception {
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE28843.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
-                .get( "GSE28843" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-        Object result = this.gc.convert( series );
-        assertNotNull( result );
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
-        assertEquals( 1, ees.size() );
-        Taxon primaryTaxon = ees.iterator().next().getBioAssays().iterator().next().getArrayDesignUsed()
-                .getPrimaryTaxon();
-        assertEquals( "salmonid", primaryTaxon.getCommonName() );
-    }
-
     @Test
     public void testConvertWithLotsOfPlatforms() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass()
@@ -717,43 +558,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Set<?> result = ( Set<?> ) this.gc.convert( series );
         ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
         assertEquals( 66, e.getRawExpressionDataVectors().size() );
-    }
-
-    /*
-     * Test logic to evaluate a primary array taxon Either from platform taxon, common parent taxon or probe taxon.
-     */
-    @Test
-    public final void testGetPrimaryArrayTaxon() {
-        Collection<Taxon> platformTaxa = new HashSet<>();
-        Collection<String> probeTaxa = new ArrayList<>();
-        Taxon salmonid = taxonService.findByCommonName( "salmonid" );
-        Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
-        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
-
-        assertNotNull( rainbowTrout );
-        assertNotNull( atlanticSalm );
-
-        atlanticSalm.setParentTaxon( salmonid );
-        rainbowTrout.setParentTaxon( salmonid );
-        Taxon human = taxonService.findByCommonName( "human" );
-
-        platformTaxa.add( atlanticSalm );
-        probeTaxa.add( "ssal" );
-        probeTaxa.add( "omyk" );
-        probeTaxa.add( "ssal" );
-        // test get primary taxon from the array design platform if only one
-        Taxon primaryTaxon = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals( "atlantic salmon", primaryTaxon.getCommonName() );
-        // test that can work out parent taxon
-        platformTaxa.add( rainbowTrout );
-        Taxon primaryTaxonTwo = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals( "salmonid", primaryTaxonTwo.getCommonName() );
-
-        // test that if no common parent taxon take most common taxon on probe
-        platformTaxa.add( human );
-        Taxon primaryTaxonThree = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals( "atlantic salmon", primaryTaxonThree.getCommonName() );
-
     }
 
     /*
@@ -903,54 +707,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
             assertTrue( "Got: " + bs.getName(),
                     !bs.getName().startsWith( "IMAGE" ) || bs.getSequenceDatabaseEntry() == null );
         }
-    }
-
-    /*
-     * Method to test that an array design can have multiple taxa stored against it and that if abbreviations used as
-     * probe names mapped to the scientific names correctly if the abbreviation is stored in DB.
-     */
-    @Test
-    public void testMultipleTaxaIdentifiedBYAbbreviationsOnArrayWithOrganismColumn() throws Exception {
-
-        Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
-        Taxon whiteFish = taxonService.findByAbbreviation( "cclu" );
-        Taxon rainbowSmelt = taxonService.findByAbbreviation( "omor" );
-        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
-
-        assertNotNull( atlanticSalm );
-
-        gc = this.getBean( GeoConverter.class ); // prototype bean.
-
-        InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GPL2899_family.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        // parse only the plaform
-        parser.setProcessPlatformsOnly( true );
-        parser.parse( is );
-
-        GeoPlatform platform = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap()
-                .get( "GPL2899" );
-        Object result = gc.convert( platform );
-        ArrayDesign ad = ( ArrayDesign ) result;
-
-        assertNotNull( ad );
-        Set<Taxon> taxa = new HashSet<>();
-        BioSequence bs;
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-
-            bs = cs.getBiologicalCharacteristic();
-            if ( bs != null ) {
-                assertNotNull( bs.getTaxon() );
-                taxa.add( bs.getTaxon() );
-            }
-        }
-        assertEquals( 4, taxa.size() );
-
-        // original file has five taxa, test file just kept four.
-        assertTrue( taxa.contains( atlanticSalm ) );
-        assertTrue( taxa.contains( rainbowTroat ) );
-        assertTrue( taxa.contains( whiteFish ) );
-        assertTrue( taxa.contains( rainbowSmelt ) );
     }
 
     @Test

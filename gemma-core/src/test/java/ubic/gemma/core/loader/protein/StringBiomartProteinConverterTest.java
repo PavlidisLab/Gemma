@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
  * Test of string biomart protein converter, ensuring that if given 3 string interactions they map correctly to biomart
  * file with many to many relationships.
  *
- * @author ldonnison
+ * @author     ldonnison
  * @deprecated use the stored ensembl ids instead in Gemma
  */
 @Deprecated
@@ -60,7 +60,6 @@ public class StringBiomartProteinConverterTest {
         taxon.setIsGenesUsable( true );
         taxon.setNcbiId( 10090 );
         taxon.setScientificName( "Mus musculus" );
-        taxon.setIsSpecies( true );
         taxa.add( taxon );
         try {
             BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
@@ -122,7 +121,9 @@ public class StringBiomartProteinConverterTest {
     /*
      * ENSMUSP00000111623 is mapped to two ncbi ids (100040601 and 245269). ENSMUSP00000100396: is mapped to three ncbi
      * ids 100044026, 100043270, 100043197 Should result in returning a collection of 6 which is 2 *3 =6 Test method for
-     * {@link ubic.gemma.core.loader.protein.StringProteinProteinInteractionConverter#convert(ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction)}
+     * {@link
+     * ubic.gemma.core.loader.protein.StringProteinProteinInteractionConverter#convert(ubic.gemma.core.loader.protein.
+     * string.model.StringProteinProteinInteraction)}
      */
     @Test
     public void testConvertStringProteinProteinInteraction() {

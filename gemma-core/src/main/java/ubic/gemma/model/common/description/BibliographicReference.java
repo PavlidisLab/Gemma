@@ -46,7 +46,13 @@ public class BibliographicReference extends Describable {
     private String annotatedAbstract;
     private DatabaseEntry pubAccession;
     private Boolean retracted = false;
+
+    /**
+     * @deprecated  never used
+     */
+    @Deprecated
     private Collection<Characteristic> annotations = new HashSet<>();
+
     private Collection<MedicalSubjectHeading> meshTerms = new HashSet<>();
     private Collection<Keyword> keywords = new HashSet<>();
     private Collection<Compound> chemicals = new HashSet<>();
@@ -70,10 +76,12 @@ public class BibliographicReference extends Describable {
         this.annotatedAbstract = annotatedAbstract;
     }
 
+    // never used
     public Collection<Characteristic> getAnnotations() {
         return this.annotations;
     }
 
+    // never used
     public void setAnnotations( Collection<Characteristic> annotations ) {
         this.annotations = annotations;
     }

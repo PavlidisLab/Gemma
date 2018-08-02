@@ -40,7 +40,6 @@ import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.SearchIndex;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -93,8 +92,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private OntModel model;
 
     /**
-     * @param term the term
-     * @return Usual formatted GO id, e.g., GO:0039392
+     * @param  term the term
+     * @return      Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( Characteristic term ) {
         String uri = term.getValue();
@@ -102,8 +101,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param term ontology term
-     * @return Usual formatted GO id, e.g., GO:0039392
+     * @param  term ontology term
+     * @return      Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( OntologyTerm term ) {
         if ( term == null )
@@ -117,8 +116,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param goId e.g. GO:0001312
-     * @return null if not found
+     * @param  goId e.g. GO:0001312
+     * @return      null if not found
      */
     public static OntologyTerm getTermForId( String goId ) {
         if ( GeneOntologyServiceImpl.uri2Term == null )
@@ -132,8 +131,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param uri uri
-     * @return null if not found
+     * @param  uri uri
+     * @return     null if not found
      */
     public static OntologyTerm getTermForURI( String uri ) {
         if ( GeneOntologyServiceImpl.uri2Term == null || !GeneOntologyServiceImpl.uri2Term.containsKey( uri ) )
@@ -378,8 +377,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( cachedTerms == null ) {
             Collection<OntologyTerm> allGOTermSet = new HashSet<>();
 
-            Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
-            for ( VocabCharacteristic c : annotations ) {
+            Collection<Characteristic> annotations = gene2GOAssociationService.findByGene( gene );
+            for ( Characteristic c : annotations ) {
                 if ( !GeneOntologyServiceImpl.uri2Term.containsKey( c.getValueUri() ) ) {
                     GeneOntologyServiceImpl.log
                             .warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
@@ -456,7 +455,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public GOAspect getTermAspect( VocabCharacteristic goId ) {
+    public GOAspect getTermAspect( Characteristic goId ) {
         String string = GeneOntologyServiceImpl.asRegularGoId( goId );
         return this.getTermAspect( string );
     }
@@ -525,7 +524,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
         return GeneOntologyServiceImpl.uri2Term.containsKey( GeneOntologyServiceImpl.toUri( goId ) )
                 || GeneOntologyServiceImpl.uri2Term
-                .containsKey( GeneOntologyServiceImpl.toUri( goId.replaceFirst( "_", ":" ) ) );
+                        .containsKey( GeneOntologyServiceImpl.toUri( goId.replaceFirst( "_", ":" ) ) );
     }
 
     @Override
@@ -616,10 +615,10 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param gene          gene
-     * @param goAspect      go aspect
-     * @param includePartOf include part of
-     * @return collection of ontology terms
+     * @param  gene          gene
+     * @param  goAspect      go aspect
+     * @param  includePartOf include part of
+     * @return               collection of ontology terms
      */
     public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
         return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );
@@ -788,7 +787,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     /**
      * @return Given an ontology term recursively determines all the children and adds them to a cache (same as
-     * getAllParents but the recursive code is a little cleaner and doesn't use and accumulator)
+     *         getAllParents but the recursive code is a little cleaner and doesn't use and accumulator)
      */
     private synchronized Collection<OntologyTerm> getDescendants( OntologyTerm entry, boolean includePartOf ) {
 

@@ -286,7 +286,8 @@ Gemma.HelpText.WidgetDefaults = {
       taggingHelpText : "Select a 'category' for the term; then enter a term, "
          + "choosing from existing terms if possible. "
          + "Click 'create' to save it. You can also edit existing terms;"
-         + " click 'save' to make the change stick, or 'delete' to remove a selected tag."
+         + " click 'save' to make the change stick, or 'delete' to remove a selected tag.",
+       objectClassDescription : "How this annotation is associated. Indirect annotations are not editable here."
    },
    ArrayDesignsNonPagingGrid : {
       emptyText : 'Either you didn\'t select any platforms, or you don\'t have permissions to view the ones you chose.',

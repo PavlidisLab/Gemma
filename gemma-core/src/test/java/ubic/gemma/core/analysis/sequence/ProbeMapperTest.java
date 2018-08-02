@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Unaware of the database.
+ * Unaware of the Gemma database but uses the hg19 and mm10 databases (tests will not work with hg38)
  *
  * @author pavlidis
  */
@@ -52,25 +53,25 @@ public class ProbeMapperTest extends TestCase {
     public void testComputeSpecificityA() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
-        TestCase.assertEquals( expected, actual, 0.0001 );
+        Assert.assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityB() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 200 / 750.0;
-        TestCase.assertEquals( expected, actual, 0.0001 );
+        Assert.assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityC() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 50 / 750.0;
-        TestCase.assertEquals( expected, actual, 0.0001 );
+        Assert.assertEquals( expected, actual, 0.0001 );
     }
 
     public void testComputeSpecificityD() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
-        TestCase.assertEquals( expected, actual, 0.0001 );
+        Assert.assertEquals( expected, actual, 0.0001 );
     }
 
     /*
@@ -81,9 +82,9 @@ public class ProbeMapperTest extends TestCase {
     public void testLocateGene() {
 
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
-        TestCase.assertEquals( 6, products.size() );
+        Assert.assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
-        TestCase.assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+        Assert.assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
     }
 
     /*
@@ -93,9 +94,9 @@ public class ProbeMapperTest extends TestCase {
     public void testLocateGeneOnWrongStrand() {
 
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
-        TestCase.assertEquals( 1, products.size() );
+        Assert.assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
-        TestCase.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
+        Assert.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
     public void testProcessBlatResults() {
@@ -106,8 +107,8 @@ public class ProbeMapperTest extends TestCase {
         ProbeMapper pm = new ProbeMapperImpl();
         Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres, config );
 
-        TestCase.assertTrue( "No results", res.values().size() > 0 );
-        TestCase.assertTrue( "No results", res.values().iterator().next().size() > 0 );
+        Assert.assertTrue( "No results", res.values().size() > 0 );
+        Assert.assertTrue( "No results", res.values().iterator().next().size() > 0 );
 
         boolean found = false;
         for ( Collection<BlatAssociation> r : res.values() ) {
@@ -118,7 +119,7 @@ public class ProbeMapperTest extends TestCase {
             }
         }
 
-        TestCase.assertTrue( found );
+        Assert.assertTrue( found );
     }
 
     public void testIntronIssues() {
@@ -128,11 +129,11 @@ public class ProbeMapperTest extends TestCase {
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
                         ThreePrimeDistanceMethod.RIGHT, config );
 
-        TestCase.assertTrue( !results.isEmpty() );
+        Assert.assertTrue( !results.isEmpty() );
         for ( BlatAssociation blatAssociation : results ) {
             ProbeMapperTest.log.debug( blatAssociation );
             if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {
-                TestCase.fail( "Should not have gotten NBPF10" );
+                Assert.fail( "Should not have gotten NBPF10" );
             }
         }
     }

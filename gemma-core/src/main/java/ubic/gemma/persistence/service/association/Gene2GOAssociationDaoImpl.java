@@ -26,7 +26,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -37,7 +37,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @see ubic.gemma.model.association.Gene2GOAssociation
+ * @see    ubic.gemma.model.association.Gene2GOAssociation
  */
 @Repository
 public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> implements Gene2GOAssociationDao {
@@ -62,7 +62,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Collection<VocabCharacteristic> findByGene( Gene gene ) {
+    public Collection<Characteristic> findByGene( Gene gene ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene" )
@@ -70,8 +70,8 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind ) {
-        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<>();
+    public Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> needToFind ) {
+        Map<Gene, Collection<Characteristic>> result = new HashMap<>();
         StopWatch timer = new StopWatch();
         timer.start();
         int batchSize = 200;
@@ -125,7 +125,8 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
-                        + "where geneAss.ontologyEntry.value in ( :goIDs)" ).setParameterList( "goIDs", ids ).list();
+                        + "where geneAss.ontologyEntry.value in ( :goIDs)" )
+                .setParameterList( "goIDs", ids ).list();
     }
 
     @Override
@@ -162,11 +163,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         AbstractDao.log.info( "Deleted: " + total );
     }
 
-    private Map<? extends Gene, ? extends Collection<VocabCharacteristic>> fetchBatch( Set<Gene> batch ) {
+    private Map<? extends Gene, ? extends Collection<Characteristic>> fetchBatch( Set<Gene> batch ) {
         Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
         //language=HQL
         final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
-        Map<Gene, Collection<VocabCharacteristic>> results = new HashMap<>();
+        Map<Gene, Collection<Characteristic>> results = new HashMap<>();
         Query query = this.getHibernateTemplate().getSessionFactory().getCurrentSession().createQuery( queryString );
         query.setFetchSize( batch.size() );
         query.setParameterList( "genes", giMap.keySet() );
@@ -175,11 +176,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         for ( Object object : o ) {
             Object[] oa = ( Object[] ) object;
             Long g = ( Long ) oa[0];
-            VocabCharacteristic vc = ( VocabCharacteristic ) oa[1];
+            Characteristic vc = ( Characteristic ) oa[1];
             Gene gene = giMap.get( g );
             assert gene != null;
             if ( !results.containsKey( gene ) ) {
-                results.put( gene, new HashSet<VocabCharacteristic>() );
+                results.put( gene, new HashSet<Characteristic>() );
             }
             results.get( gene ).add( vc );
         }

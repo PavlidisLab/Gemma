@@ -76,7 +76,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     public void setUp() throws Exception {
         ee = eeService.findByShortName( "GSE2982" );
         if ( ee != null ) {
-            eeService.remove( ee ); // might work, but array designs might be in the way.
+            eeService.remove( ee );
         }
 
         geoService.setGeoDomainObjectGenerator(
@@ -228,7 +228,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
                     throw new IllegalStateException( "Need to remove this data set before test is run" );
                 }
 
-            } catch(ObjectNotFoundException e ){
+            } catch ( ObjectNotFoundException e ) {
                 bad = true;
             }
         } while ( bad ); // This is to fight an odd race condition that does not seem to occur in production, see git issue #45

@@ -28,7 +28,6 @@ import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.*;
@@ -112,21 +111,20 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     }
 
     @Override
-    public VocabCharacteristic characteristicValueObject2Characteristic(
+    public Characteristic characteristicValueObject2Characteristic(
             CharacteristicValueObject characteristicValueObject ) {
 
-        VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
+        Characteristic characteristic = Characteristic.Factory.newInstance();
         characteristic.setCategory( characteristicValueObject.getCategory() );
         characteristic.setCategoryUri( characteristicValueObject.getCategoryUri() );
         characteristic.setValue( characteristicValueObject.getValue() );
 
-        if ( characteristic.getValueUri() != null && !characteristic.getValueUri().equals( "" ) ) {
+        if ( StringUtils.isNotBlank( characteristicValueObject.getValueUri() ) ) {
             characteristic.setValueUri( characteristicValueObject.getValueUri() );
         } else {
 
             // format the query for lucene to look for ontology terms with an exact match for the value
-            String value =
-                    "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
+            String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
             Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
 
@@ -214,7 +212,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
             OntologyTerm o = findOntologyTermByUri( valueUri );
             if ( o == null )
                 return null;
-            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+            Characteristic myPhenotype = Characteristic.Factory.newInstance();
             myPhenotype.setValueUri( o.getUri() );
             myPhenotype.setValue( o.getLabel() );
             myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
@@ -231,7 +229,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
      * Ontology term to CharacteristicValueObject
      *
      * @return collection of the input, converted to 'shell' CharacteristicValueObjects (which have other slots we want
-     * to use)
+     *         to use)
      */
     private Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
             Collection<OntologyTerm> ontologyTerms ) {

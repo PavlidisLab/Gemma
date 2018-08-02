@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
@@ -54,11 +53,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-
-    @Before
-    public void setUp() {
-        this.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-    }
 
     @Test
     public void testMissingValue() throws Exception {
@@ -230,37 +224,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
         assertEquals( 10, calls.size() );
 
-    }
-
-    /**
-     * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
-     */
-    @Test
-    public void testMissingValueGSE5091() throws Exception {
-        ExpressionExperiment old = eeService.findByShortName( "GSE5091" );
-        if ( old != null )
-            eeService.remove( old );
-
-        InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
-        GeoFamilyParser parser = new GeoFamilyParser();
-        parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-        series.setSampleCorrespondence( correspondence );
-
-        gc = this.getBean( GeoConverter.class );
-
-        Object result = this.gc.convert( series );
-
-        assertNotNull( result );
-        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
-
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
-        Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
-
-        assertEquals( 10, calls.size() );
     }
 
     /**

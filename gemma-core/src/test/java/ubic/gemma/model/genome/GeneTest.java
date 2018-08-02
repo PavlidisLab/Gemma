@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 /**
@@ -38,7 +39,7 @@ public class GeneTest extends TestCase {
         a.setOfficialSymbol( "foo" );
         b.setOfficialSymbol( "foo" );
 
-        TestCase.assertFalse( a.equals( b ) );
+        Assert.assertFalse( a.equals( b ) );
 
     }
 
@@ -49,7 +50,7 @@ public class GeneTest extends TestCase {
         a.setNcbiGeneId( 1234 );
         b.setNcbiGeneId( 1234 );
 
-        TestCase.assertEquals( a, b );
+        Assert.assertEquals( a, b );
 
     }
 
@@ -64,7 +65,7 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( bTax );
 
-        TestCase.assertFalse( a.equals( b ) );
+        Assert.assertFalse( a.equals( b ) );
 
     }
 
@@ -79,7 +80,7 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( aTax );
 
-        TestCase.assertEquals( a, b );
+        Assert.assertEquals( a, b );
 
     }
 
@@ -96,7 +97,7 @@ public class GeneTest extends TestCase {
         a.setPhysicalLocation( aLoc );
         b.setPhysicalLocation( aLoc );
 
-        TestCase.assertEquals( a, b );
+        Assert.assertEquals( a, b );
 
     }
 
@@ -105,11 +106,9 @@ public class GeneTest extends TestCase {
         super.setUp();
         aTax = Taxon.Factory.newInstance();
         aTax.setScientificName( "Foobius Barius" );
-        aTax.setIsSpecies( true );
         aTax.setIsGenesUsable( true );
         bTax = Taxon.Factory.newInstance();
         bTax.setScientificName( "Barioobius foobarius" );
-        bTax.setIsSpecies( true );
         bTax.setIsGenesUsable( true );
         Chromosome c = new Chromosome( "X", aTax );
 

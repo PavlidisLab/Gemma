@@ -65,7 +65,6 @@ public class TaxonParser extends BasicLineMapParser<Integer, Taxon> {
             Taxon t = Taxon.Factory.newInstance();
             t.setNcbiId( ncbiid );
             t.setIsGenesUsable( false );
-            t.setIsSpecies( true );
             results.put( ncbiid, t );
         }
 

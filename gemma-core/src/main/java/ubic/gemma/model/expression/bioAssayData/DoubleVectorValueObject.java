@@ -21,8 +21,11 @@ package ubic.gemma.model.expression.bioAssayData;
 import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -67,8 +70,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * bioassay dimension.
      *
      * @param bioassaySet, possibly a subset, which we are going to slice.
-     * @param bad          all we nee is the id, the name and the list of bioassays from this.S
-     * @param vec          VO
+     * @param bad all we nee is the id, the name and the list of bioassays from this.S
+     * @param vec VO
      */
     public DoubleVectorValueObject( ExpressionExperimentSubSet bioassaySet, DoubleVectorValueObject vec,
             BioAssayDimensionValueObject bad ) {
@@ -113,10 +116,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
      *
-     * @param dimToMatch   ensure that the vector missing values to match the locations of any bioassays in dimToMatch
-     *                     that aren't in the dedv's bioAssayDimension.
-     * @param genes        genes
-     * @param dedv         dedv
+     * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
+     *        that aren't in the dedv's bioAssayDimension.
+     * @param genes genes
+     * @param dedv dedv
      * @param vectorsBadVo BA dimension vo
      */
     public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
@@ -205,7 +208,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
-     * @return If this returns non-null, it means the vector is a slice of another vector identified by the return value.
+     * @return If this returns non-null, it means the vector is a slice of another vector identified by the return
+     *         value.
      */
     public Long getSourceVectorId() {
         return sourceVectorId;
@@ -221,7 +225,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     /**
      * @return true if the data has been rearranged relative to the bioassay dimension (as a matter of practice the
-     * bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
+     *         bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
      */
     public boolean isReorganized() {
         return reorganized;
@@ -256,10 +260,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
-     * @param ee                      required
-     * @param cs                      required
+     * @param ee required
+     * @param cs required
      * @param updatedQuantitationType required because this might be changed.
-     * @return design element data vector
+     * @return design element data vector; log2 isensured.
      */
     public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
             QuantitationType updatedQuantitationType ) {
@@ -281,6 +285,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setQuantitationType( updatedQuantitationType );
 
         result.setDesignElement( cs );
+
         result.setData( DataVectorValueObject.byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }

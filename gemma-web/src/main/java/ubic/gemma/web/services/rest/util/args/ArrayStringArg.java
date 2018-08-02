@@ -25,9 +25,11 @@ public class ArrayStringArg extends ArrayArg<String> {
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request arrayString argument
-     * @return an instance of ArrayStringArg representing array of strings from the input string, or a malformed ArrayStringArg that will throw an
-     * {@link GemmaApiException} when accessing its value, if the input String can not be converted into an array of strings.
+     * @param  s the request arrayString argument
+     * @return   an instance of ArrayStringArg representing array of strings from the input string, or a malformed
+     *           ArrayStringArg that will throw an
+     *           {@link GemmaApiException} when accessing its value, if the input String can not be converted into an
+     *           array of strings.
      */
     @SuppressWarnings("unused")
     public static ArrayStringArg valueOf( final String s ) {

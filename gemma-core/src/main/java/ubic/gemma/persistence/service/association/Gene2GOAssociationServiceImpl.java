@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
@@ -41,7 +41,7 @@ import java.util.Map;
 
 /**
  * @author klc
- * @see Gene2GOAssociationService
+ * @see    Gene2GOAssociationService
  */
 @Service
 public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssociation>
@@ -75,14 +75,14 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     }
 
     @Override
-    public Collection<VocabCharacteristic> findByGene( Gene gene ) {
+    public Collection<Characteristic> findByGene( Gene gene ) {
 
         Element element = this.gene2goCache.get( gene );
 
         if ( element != null ) //noinspection unchecked
-            return ( Collection<VocabCharacteristic> ) element.getObjectValue();
+            return ( Collection<Characteristic> ) element.getObjectValue();
 
-        Collection<VocabCharacteristic> re = this.gene2GOAssociationDao.findByGene( gene );
+        Collection<Characteristic> re = this.gene2GOAssociationDao.findByGene( gene );
 
         this.gene2goCache.put( new Element( gene, re ) );
 
@@ -93,15 +93,15 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
-        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<>();
+    public Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes ) {
+        Map<Gene, Collection<Characteristic>> result = new HashMap<>();
 
         Collection<Gene> needToFind = new HashSet<>();
         for ( Gene gene : genes ) {
             Element element = this.gene2goCache.get( gene );
 
             if ( element != null )
-                result.put( gene, ( Collection<VocabCharacteristic> ) element.getObjectValue() );
+                result.put( gene, ( Collection<Characteristic> ) element.getObjectValue() );
             else
                 needToFind.add( gene );
         }

@@ -22,7 +22,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -120,7 +121,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );
 
-        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        Characteristic vc = Characteristic.Factory.newInstance();
         vc.setValue( "foo" );
         vc.setCategory( "bar" );
         vc.setCategoryUri( "bar" );

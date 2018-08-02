@@ -100,10 +100,10 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
     }
 
     /**
-     * @param geneSets                gene sets
-     * @param includeOnesWithoutGenes should empty sets get removed?
-     * @param light                   Don't fill in the gene ids. Should be faster
-     * @return list of gene set value objects
+     * @param  geneSets                gene sets
+     * @param  includeOnesWithoutGenes should empty sets get removed?
+     * @param  light                   Don't fill in the gene ids. Should be faster
+     * @return                         list of gene set value objects
      */
     private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes, boolean light ) {
@@ -156,9 +156,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         Taxon tax = this.geneSetService.getTaxon( gs );
         if ( tax != null ) {
-            while ( tax.getParentTaxon() != null ) {
-                tax = tax.getParentTaxon();
-            }
+
             sbgsvo.setTaxonId( tax.getId() );
             sbgsvo.setTaxonName( tax.getCommonName() );
         }

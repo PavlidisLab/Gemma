@@ -191,11 +191,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Double correctedPvalue = dear.getCorrectedPvalue();
             Double pvalue = dear.getPvalue();
 
-            String formattedCP = correctedPvalue == null ?
-                    "" :
-                    String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, correctedPvalue );
-            String formattedP =
-                    pvalue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pvalue );
+            String formattedCP = correctedPvalue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, correctedPvalue );
+            String formattedP = pvalue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pvalue );
             probeBuffer.append( "\t" ).append( formattedCP ).append( "\t" ).append( formattedP );
 
         }
@@ -495,7 +492,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             zipOut.write( analysisData.getBytes() );
             zipOut.closeEntry();
 
-            differentialExpressionAnalysisService.thaw( analysis );
+            if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
+                differentialExpressionAnalysisService.thaw( analysis );
 
             // Add a file for each result set with contrasts information.
             int i = 0;
@@ -550,11 +548,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
                 Double coefficient = contrast.getCoefficient();
                 Double pValue = contrast.getPvalue();
-                String formattedPvalue =
-                        pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
-                String formattedCoefficient = coefficient == null ?
-                        "" :
-                        String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, coefficient );
+                String formattedPvalue = pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
+                String formattedCoefficient = coefficient == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, coefficient );
                 String contrastData = "\t" + formattedCoefficient + "\t" + formattedPvalue;
 
                 rowBuffer.append( contrastData );
@@ -591,13 +586,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     Double foldChange = contrast.getLogFoldChange();
                     Double pValue = contrast.getPvalue();
                     Double tStat = contrast.getTstat();
-                    String formattedPvalue =
-                            pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
-                    String formattedFoldChange = foldChange == null ?
-                            "" :
-                            String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, foldChange );
-                    String formattedTState =
-                            tStat == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, tStat );
+                    String formattedPvalue = pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
+                    String formattedFoldChange = foldChange == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, foldChange );
+                    String formattedTState = tStat == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, tStat );
                     String contrastData = "\t" + formattedFoldChange + "\t" + formattedTState + "\t" + formattedPvalue;
                     assert contrast.getFactorValue() != null;
 
@@ -622,10 +613,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /**
      * Checks whether the given file is ok to return, or it should be regenerated.
      *
-     * @param forceWrite whether the file should be overridden even if found.
-     * @param f          the file to check.
-     * @param check      the file will be considered invalid after this date.
-     * @return true, if the given file is ok to be returned, false if it should be regenerated.
+     * @param  forceWrite whether the file should be overridden even if found.
+     * @param  f          the file to check.
+     * @param  check      the file will be considered invalid after this date.
+     * @return            true, if the given file is ok to be returned, false if it should be regenerated.
      */
     private boolean checkFileOkToReturn( boolean forceWrite, File f, Date check ) {
         Date modified = new Date( f.lastModified() );
@@ -677,10 +668,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     /**
      * Given diff exp analysis and gene annotation generate header and tab delimited data. The output is qValue....
+     * 
+     * @param analaysis (might not be persistent)
      */
     private String convertDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis,
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
-        analysis = differentialExpressionAnalysisService.thawFully( analysis );
+        if ( analysis.getId() != null ) analysis = differentialExpressionAnalysisService.thawFully( analysis );
         Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
         if ( results == null || results.isEmpty() ) {
             ExpressionDataFileServiceImpl.log.warn( "No differential expression results found for " + analysis );
@@ -795,7 +788,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     /**
      * @return Map of composite sequence ids to an array of strings: [probe name, genes symbol(s), gene Name(s), gemma
-     * id(s), ncbi id(s)].
+     *         id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annotations = new HashMap<>();

@@ -253,8 +253,9 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
             PhysicalLocation physicalLocation = gp.getPhysicalLocation();
 
             if ( physicalLocation == null ) {
-                AbstractService.log.warn( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
-                        + ") has no location." );
+                if ( AbstractService.log.isDebugEnabled() )
+                    AbstractService.log.debug( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
+                            + ") has no location." );
                 continue;
             }
             // Only add if the physical location of the product is different from any we already know.

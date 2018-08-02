@@ -677,6 +677,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
         arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        this.configure( arrayDesign );
         CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         for ( String probeName : this.probeNames ) {
@@ -687,7 +688,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            probe = compositeSequenceService.thaw( probe );
+            compositeSequenceService.thaw( Collections.singleton( probe ) );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

@@ -7,6 +7,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by tesarst on 01/06/17.
@@ -42,7 +43,7 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
 
     @Override
     public Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter ) {
+            List<ObjectFilter[]> filter ) {
         return voDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 

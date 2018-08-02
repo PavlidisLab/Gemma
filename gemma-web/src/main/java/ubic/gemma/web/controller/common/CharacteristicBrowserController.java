@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,6 @@ import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -43,10 +42,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
@@ -135,51 +131,56 @@ public class CharacteristicBrowserController {
     }
 
     private void populateClassValues( Characteristic c, AnnotationValueObject avo ) {
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            avo.setClassUri( vc.getCategoryUri() );
-            avo.setTermUri( vc.getValueUri() );
-            avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-        } else {
-            avo.setObjectClass( Characteristic.class.getSimpleName() );
-        }
+        avo.setClassUri( c.getCategoryUri() );
+        avo.setTermUri( c.getValueUri() );
+        avo.setObjectClass( Characteristic.class.getSimpleName() );
     }
 
     public Integer count() {
         return characteristicService.countAll();
     }
 
-
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
         return findCharacteristicsCustom( valuePrefix, true, true, true, true, true, true, false );
     }
 
     /**
-     * @param searchFVs       Search factor values that lack characteristics -- that is, search the factorValue.value.
+     * @param searchFVs        Search factor values that lack characteristics -- that is, search the factorValue.value.
      * @param searchCategories Should the Category be searched, not just the Value?
      */
-    public Collection<AnnotationValueObject> findCharacteristicsCustom( String valuePrefix, boolean searchNos,
+    public Collection<AnnotationValueObject> findCharacteristicsCustom( String queryString, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchPAs, boolean searchFVVs,
             boolean searchCategories ) {
 
         List<AnnotationValueObject> results = new ArrayList<>();
-        if ( StringUtils.isBlank( valuePrefix ) ) {
+        if ( StringUtils.isBlank( queryString ) ) {
             return results;
         }
-        Collection<Characteristic> chars = characteristicService.findByValue( valuePrefix );
 
-        if ( searchCategories ) {
-            chars.addAll( characteristicService.findByCategory( valuePrefix ) );
+        Collection<Characteristic> chars = new HashSet<>();
+        if ( queryString.startsWith( "http://" ) ) {
+            chars = characteristicService.findByUri( queryString );
+        } else {
+
+            chars = characteristicService.findByValue( queryString );
+
+            if ( searchCategories ) {
+                chars.addAll( characteristicService.findByCategory( queryString ) );
+            }
         }
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
         for ( Object o : chars ) {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
+
             if ( ( searchEEs && parent instanceof ExpressionExperiment ) || ( searchBMs
-                    && parent instanceof BioMaterial ) || ( searchFVs && ( parent instanceof FactorValue
-                    || parent instanceof ExperimentalFactor ) ) || ( searchNos && parent == null ) || ( searchPAs
+                    && parent instanceof BioMaterial )
+                    || ( searchFVs && ( parent instanceof FactorValue
+                    || parent instanceof ExperimentalFactor ) )
+                    || ( searchNos && parent == null ) || ( searchPAs
                     && parent instanceof PhenotypeAssociation ) ) {
+
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
@@ -195,11 +196,15 @@ public class CharacteristicBrowserController {
                 }
 
                 results.add( avo );
+
+                if ( results.size() >= MAX_RESULTS ) {
+                    break;
+                }
             }
         }
 
-        if ( searchFVVs ) { // non-characteristics.
-            Collection<FactorValue> factorValues = factorValueService.findByValue( valuePrefix );
+        if ( results.size() < MAX_RESULTS && searchFVVs ) { // non-characteristics.
+            Collection<FactorValue> factorValues = factorValueService.findByValue( queryString );
             for ( FactorValue factorValue : factorValues ) {
                 if ( factorValue.getCharacteristics().size() > 0 )
                     continue;
@@ -219,7 +224,7 @@ public class CharacteristicBrowserController {
 
         }
 
-        log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results, returning up to "
+        log.info( "Characteristic search for: '" + queryString + "*': " + results.size() + " results, returning up to "
                 + MAX_RESULTS );
         return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
     }
@@ -247,52 +252,69 @@ public class CharacteristicBrowserController {
         taskRunningService.submitLocalTask( c );
     }
 
-    private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
-        if ( parent == null ) {
+    /**
+     * @param avo
+     * @param annotatedItem - the object that has the annotation, we want to find who "owns" it.
+     */
+    private void populateParentInformation( AnnotationValueObject avo, Object annotatedItem ) {
+
+        assert avo != null;
+
+        if ( annotatedItem == null ) {
             avo.setParentLink(
                     "[Parent hidden or not available, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
-        } else if ( parent instanceof ExpressionExperiment ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) parent;
+        } else if ( annotatedItem instanceof ExpressionExperiment ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) annotatedItem;
             avo.setParentName( String.format( "Experiment: %s", ee.getName() ) );
             avo.setParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentName() ) );
-        } else if ( parent instanceof BioMaterial ) {
-            BioMaterial bm = ( BioMaterial ) parent;
+        } else if ( annotatedItem instanceof BioMaterial ) {
+            BioMaterial bm = ( BioMaterial ) annotatedItem;
             avo.setParentName( String.format( "BioMat: %s", bm.getName() ) );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
 
-            if ( ee != null ) {
-                avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
-                // avo.setParentOfParentDescription( ee.getDescription() );
-                avo.setParentOfParentLink(
-                        AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
-            } else {
+            if ( ee == null ) {
                 log.warn( "Expression experiment for " + bm + " was null" );
+                return;
             }
-        } else if ( parent instanceof FactorValue ) {
-            FactorValue fv = ( FactorValue ) parent;
+            avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
+            // avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink(
+                    AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
+
+        } else if ( annotatedItem instanceof FactorValue ) {
+            FactorValue fv = ( FactorValue ) annotatedItem;
             avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
                     ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
-            ExpressionExperiment ee = experimentalDesignService
-                    .getExpressionExperiment( fv.getExperimentalFactor().getExperimentalDesign() );
+            ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+
+            if ( ee == null ) {
+                log.warn( "Expression experiment for " + fv + " was null" );
+                return;
+            }
             avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
             avo.setParentOfParentLink( AnchorTagUtil
                     .getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(),
-                            avo.getParentName() ) + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
+                            avo.getParentName() )
+                    + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil
                     .getExpressionExperimentLink( ee.getId(),
                             String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ),
                                     ee.getShortName() ) ) );
-        } else if ( parent instanceof ExperimentalFactor ) {
-            ExperimentalFactor ef = ( ExperimentalFactor ) parent;
+        } else if ( annotatedItem instanceof ExperimentalFactor ) {
+            ExperimentalFactor ef = ( ExperimentalFactor ) annotatedItem;
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
                     "Exp Fac: " + ef.getName() + " (" + StringUtils.abbreviate( ef.getDescription(), 50 ) + ")" ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
+            if ( ee == null ) {
+                log.warn( "Expression experiment for " + ef + " was null" );
+                return;
+            }
             avo.setParentOfParentName(
                     String.format( "%s (%s)", StringUtils.abbreviate( ee.getName(), 80 ), ee.getShortName() ) );
             avo.setParentOfParentLink(
                     AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
-        } else if ( parent instanceof PhenotypeAssociation ) {
-            PhenotypeAssociation pa = ( PhenotypeAssociation ) parent;
+        } else if ( annotatedItem instanceof PhenotypeAssociation ) {
+            PhenotypeAssociation pa = ( PhenotypeAssociation ) annotatedItem;
             avo.setParentLink( "PhenotypeAssoc: " + pa.getGene().getOfficialSymbol() );
             avo.setParentDescription( pa.getId().toString() );
         }

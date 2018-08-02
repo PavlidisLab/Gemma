@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.biomaterial;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,6 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -73,7 +73,8 @@ public class BioMaterialController {
      * AJAX
      *
      * @param factorValueId given a collection of biomaterial ids, and a factor value id will add that factor value to
-     *                      all of the biomaterials in the collection. If the factor is already defined for one of the biomaterials
+     *                      all of the biomaterials in the collection. If the factor is already defined for one of the
+     *                      biomaterials
      *                      will remove the previous one and add the new one.
      */
     public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator factorValueId ) {
@@ -136,17 +137,20 @@ public class BioMaterialController {
             if ( c.getEvidenceCode() != null ) {
                 annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
             }
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null )
-                    annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null )
-                    annotationValue.setTermName( termName );
-            }
+
+            annotationValue.setClassUri( c.getCategoryUri() );
+            String className = getLabelFromUri( c.getCategoryUri() );
+
+            if ( className != null )
+                annotationValue.setClassName( className );
+
+            annotationValue.setTermUri( c.getValueUri() );
+
+            String termName = getLabelFromUri( c.getValueUri() );
+
+            if ( termName != null )
+                annotationValue.setTermName( termName );
+
             annotation.add( annotationValue );
         }
         return annotation;
@@ -238,6 +242,7 @@ public class BioMaterialController {
     }
 
     private String getLabelFromUri( String uri ) {
+        if ( StringUtils.isBlank( uri ) ) return null;
         OntologyResource resource = ontologyService.getResource( uri );
         if ( resource != null )
             return resource.getLabel();

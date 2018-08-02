@@ -849,10 +849,7 @@ GenePickerController.searchGenesWithNCBIId = function (p0, p1, callback) {
 };
 GenePickerController.getTaxa = function (callback) {
     dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxa', callback);
-};
-GenePickerController.getTaxaSpecies = function (callback) {
-    dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaSpecies', callback);
-};
+}; 
 GenePickerController.getTaxaWithGenes = function (callback) {
     dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithGenes', callback);
 };

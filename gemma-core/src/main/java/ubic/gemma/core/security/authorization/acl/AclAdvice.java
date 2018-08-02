@@ -34,7 +34,6 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -67,9 +66,8 @@ public class AclAdvice extends BaseAclAdvice {
          * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
          * would be expensive to traverse.F
          */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && (
-                propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                        .equals( "processedExpressionDataVectors" ) ) ) {
+        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
+                .equals( "processedExpressionDataVectors" ) ) ) {
             if ( AclAdvice.log.isTraceEnabled() )
                 AclAdvice.log.trace( "Skipping checking acl on vectors on " + object );
             return true;
@@ -99,13 +97,11 @@ public class AclAdvice extends BaseAclAdvice {
             BioAssaySet bioAssaySet = experimentAnalysis.getExperimentAnalyzed();
             ObjectIdentity oi_temp = this.makeObjectIdentity( bioAssaySet );
 
-            try {
-                parentAcl = this.getAclService().readAclById( oi_temp );
-            } catch ( NotFoundException nfe ) {
+            parentAcl = this.getAclService().readAclById( oi_temp );
+            if ( parentAcl == null ) {
                 // This is possible if making an EESubSet is part of the transaction.
                 parentAcl = this.getAclService().createAcl( oi_temp );
             }
-
             acl.setEntriesInheriting( true );
             acl.setParent( parentAcl );
             //noinspection UnusedAssignment //Owner of the experiment owns analyses even if administrator ran them.
@@ -142,28 +138,29 @@ public class AclAdvice extends BaseAclAdvice {
                 .equals( "arrayDesignUsed" ) );
     }
 
-    @Override
-    protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
-
-        Class<?> parentClassType;
-        try {
-            parentClassType = Class.forName( parentAcl.getObjectIdentity().getType() );
-
-            /*
-             * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
-             * deleted. Otherwise we end up with cruft.
-             */
-            if ( LocalFile.class.isAssignableFrom( object.getClass() ) && Investigation.class
-                    .isAssignableFrom( parentClassType ) ) {
-                return true;
-            }
-        } catch ( ClassNotFoundException e ) {
-            throw new IllegalStateException(
-                    "Tried to identify class from name: " + parentAcl.getObjectIdentity().getType(), e );
-        }
-
-        return false;
-    }
+    // Localfiles are no longer persistent entites
+    //    @Override
+    //    protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
+    //
+    //        Class<?> parentClassType;
+    //        try {
+    //            parentClassType = Class.forName( parentAcl.getObjectIdentity().getType() );
+    //
+    //            /*
+    //             * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
+    //             * deleted. Otherwise we end up with cruft.
+    //             */
+    //            if ( LocalFile.class.isAssignableFrom( object.getClass() ) && Investigation.class
+    //                    .isAssignableFrom( parentClassType ) ) {
+    //                return true;
+    //            }
+    //        } catch ( ClassNotFoundException e ) {
+    //            throw new IllegalStateException(
+    //                    "Tried to identify class from name: " + parentAcl.getObjectIdentity().getType(), e );
+    //        }
+    //
+    //        return false;
+    //    }
 
     @Override
     protected boolean specialCaseToKeepPrivateOnCreation( Class<? extends Securable> clazz ) {

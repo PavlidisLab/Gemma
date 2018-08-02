@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -26,10 +25,10 @@ import java.util.Collection;
 public interface VectorMergingHelperService {
 
     /**
-     * @param expExp     the experiment
-     * @param type       the QT
+     * @param expExp the experiment
      * @param newVectors the new vectors
+     * @param oldVectors which will be removed
      */
-    void persist( ExpressionExperiment expExp, QuantitationType type, Collection<RawExpressionDataVector> newVectors );
+    void persist( ExpressionExperiment expExp, Collection<RawExpressionDataVector> newVectors );
 
 }

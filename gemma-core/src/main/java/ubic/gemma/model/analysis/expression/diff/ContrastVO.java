@@ -35,7 +35,7 @@ public class ContrastVO {
     public ContrastVO( Long id, Long factorValueId, Double logFoldchange, Double pvalue, Long secondFactorValueId ) {
         super();
         this.id = id;
-        this.factorValueId = factorValueId;
+        this.factorValueId = factorValueId; // can be null if it's a continuous factor
         this.logFoldChange = logFoldchange;
         this.secondFactorValueId = secondFactorValueId;
 

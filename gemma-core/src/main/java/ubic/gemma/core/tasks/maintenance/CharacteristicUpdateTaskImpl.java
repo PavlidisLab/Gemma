@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -29,7 +29,6 @@ import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -43,6 +42,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
+ * This handles characteristic updates from the client: experiment tags, characteristic browser
+ *
  * @author paul
  */
 @Component
@@ -100,8 +101,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         }
     }
 
-    private VocabCharacteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
-        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+    private Characteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
+        Characteristic vc = Characteristic.Factory.newInstance();
         vc.setId( avo.getId() );
         vc.setCategory( avo.getClassName() );
         vc.setCategoryUri( avo.getClassUri() );
@@ -121,7 +122,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             if ( avo.getObjectClass() != null && avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
                 continue;
 
-            VocabCharacteristic vc = convertAvo2Characteristic( avo );
+            Characteristic vc = convertAvo2Characteristic( avo );
 
             result.add( vc );
         }
@@ -131,10 +132,11 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     /**
      * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
      *
-     * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
-     *         Characteristic.
+     * @return for each given AnnotationValueObject, the corresponding FactorValue with an
+     * associated persistent
+     * Characteristic.
      * @throws IllegalStateException if the corresponding FactorValue already has at least one Characteristic. This
-     *         method is just intended for filling that in if it's empty.
+     *                               method is just intended for filling that in if it's empty.
      */
     private Collection<FactorValue> convertToFactorValuesWithCharacteristics( Collection<AnnotationValueObject> avos ) {
         Collection<FactorValue> result = new HashSet<>();
@@ -159,14 +161,14 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                         "Don't use the annotator to update factor values that already have characteristics" );
             }
 
-            VocabCharacteristic vc = convertAvo2Characteristic( avo );
+            Characteristic vc = convertAvo2Characteristic( avo );
             vc.setId( null );
 
             if ( vc.getEvidenceCode() == null ) {
                 vc.setEvidenceCode( GOEvidenceCode.IC );
             }
 
-            vc = ( VocabCharacteristic ) characteristicService.create( vc );
+            vc = characteristicService.create( vc );
 
             fv.setValue( vc.getValue() );
             fv.getCharacteristics().add( vc );
@@ -200,6 +202,15 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     }
 
+    /**
+     * Update characteristics.
+     * <p>
+     * This is used for Experiment tags and the Characteristic browser.
+     * <p>
+     * For experimental designs, see ExperimentalDesignController.
+     *
+     * @return
+     */
     private TaskResult doUpdate() {
         Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();
         if ( avos.size() == 0 )
@@ -237,15 +248,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 continue;
             }
 
-            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromClient : null;
-            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromDatabase : null;
-
-            /*
-             * if one of the characteristics is a VocabCharacteristic and the other is not, we have to change the
-             * characteristic in the database so that it matches the one from the client; since we can't change the
-             * class of the object, we have to remove the old characteristic and make a new one of the appropriate
-             * class.
-             */
             Object parent = charToParent.get( cFromDatabase );
 
             /*
@@ -256,56 +258,30 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 throw new AccessDeniedException( "Access is denied" );
             }
 
-            if ( vcFromClient != null && vcFromDatabase == null ) {
-                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                vc.setValue( StringUtils.strip( cFromDatabase.getValue() ) );
-                vc.setEvidenceCode( cFromDatabase.getEvidenceCode() );
-                vc.setDescription( cFromDatabase.getDescription() );
-                vc.setCategory( cFromDatabase.getCategory() );
-                vc.setName( cFromDatabase.getName() );
+            assert cFromDatabase != null;
 
-                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( vc );
-
-                removeFromParent( cFromDatabase, parent );
-                characteristicService.remove( cFromDatabase );
-                addToParent( vcFromDatabase, parent );
-                cFromDatabase = vcFromDatabase;
-            } else if ( vcFromClient == null && vcFromDatabase != null ) {
-                cFromDatabase = characteristicService.create( Characteristic.Factory
-                        .newInstance( vcFromDatabase.getName(), vcFromDatabase.getDescription(),
-                                StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
-                                vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
-                removeFromParent( vcFromDatabase, parent );
-                characteristicService.remove( vcFromDatabase );
-                addToParent( cFromDatabase, parent );
+            // preserve original data (which might have been entered by us, but may be from GEO)
+            if ( StringUtils.isBlank( cFromDatabase.getOriginalValue() ) ) {
+                cFromDatabase.setOriginalValue( cFromDatabase.getValue() );
             }
 
-            /*
-             * at this point, cFromDatabase points to the class-corrected characteristic in the database that must be
-             * updated with the information coming from the client.
-             */
-            assert cFromDatabase != null;
-            cFromDatabase.setValue( cFromClient.getValue() );
-            cFromDatabase.setCategory( cFromClient.getCategory() );
-            if ( cFromDatabase instanceof VocabCharacteristic ) {
-                vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
+            cFromDatabase.setValue( StringUtils.strip( cFromClient.getValue() ) ); // remove whitespace we added to force dirty check
+            cFromDatabase.setCategory( StringUtils.strip( cFromClient.getCategory() ) );
 
-                if ( vcFromClient != null ) {
-                    if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null || !vcFromDatabase
-                            .getValueUri().equals( vcFromClient.getValueUri() ) ) {
-                        log.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
-                                + " -> " + vcFromClient.getValueUri() + " associated with " + parent );
-                        vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
-                    }
+            if ( ( cFromDatabase.getValueUri() == null && cFromClient.getValueUri() != null ) || ( cFromDatabase.getValueUri() != null
+                    && !cFromDatabase
+                    .getValueUri().equals( cFromClient.getValueUri() ) ) ) {
+                log.info( "Characteristic value update: " + cFromDatabase + " " + cFromDatabase.getValueUri()
+                        + " -> " + cFromClient.getValueUri() + " associated with " + parent );
+                cFromDatabase.setValueUri( cFromClient.getValueUri() );
+            }
 
-                    if ( vcFromDatabase.getCategory() == null || vcFromDatabase.getCategoryUri() == null
-                            || !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
-                        log.info( "Characteristic category update: " + vcFromDatabase + " " + vcFromDatabase
-                                .getCategoryUri() + " -> " + vcFromClient.getCategoryUri() + " associated with "
-                                + parent );
-                        vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
-                    }
-                }
+            if ( ( cFromDatabase.getCategoryUri() == null && cFromClient.getCategoryUri() != null ) || ( cFromDatabase.getCategoryUri() != null
+                    && !cFromDatabase.getCategoryUri().equals( cFromClient.getCategoryUri() ) ) ) {
+                log.info( "Characteristic category update: " + cFromDatabase + " " + cFromDatabase
+                        .getCategoryUri() + " -> " + cFromClient.getCategoryUri() + " associated with "
+                        + parent );
+                cFromDatabase.setCategoryUri( cFromClient.getCategoryUri() );
             }
 
             if ( cFromClient.getEvidenceCode() == null ) {
@@ -317,6 +293,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 }
                 cFromDatabase.setEvidenceCode( cFromClient.getEvidenceCode() ); // let them change it.
             }
+
             characteristicService.update( cFromDatabase );
         }
         timer.stop();

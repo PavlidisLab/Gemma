@@ -45,7 +45,7 @@ import java.util.List;
 
 /**
  * @author nicolas
- * @see PhenotypeAssoManagerServiceHelper
+ * @see    PhenotypeAssoManagerServiceHelper
  */
 @Component
 
@@ -124,9 +124,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                 }
             }
 
-            for ( Characteristic cha : experiment.getCharacteristics() ) {
+            for ( Characteristic experimentCharacteristic : experiment.getCharacteristics() ) {
 
-                VocabCharacteristic experimentCharacteristic = ( VocabCharacteristic ) cha;
                 CharacteristicValueObject experimentCharacteristicVO = new CharacteristicValueObject(
                         experimentCharacteristic );
 
@@ -142,19 +141,19 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
                     } else {
 
                         // different values found
-                        VocabCharacteristic vocabCharacteristic = this.ontologyHelper
+                        Characteristic characteristic = this.ontologyHelper
                                 .characteristicValueObject2Characteristic( updatedCharacteristic );
 
-                        experimentCharacteristic.setValueUri( vocabCharacteristic.getValueUri() );
-                        experimentCharacteristic.setValue( vocabCharacteristic.getValue() );
-                        experimentCharacteristic.setCategory( vocabCharacteristic.getCategory() );
-                        experimentCharacteristic.setCategoryUri( vocabCharacteristic.getCategoryUri() );
+                        experimentCharacteristic.setValueUri( characteristic.getValueUri() );
+                        experimentCharacteristic.setValue( characteristic.getValue() );
+                        experimentCharacteristic.setCategory( characteristic.getCategory() );
+                        experimentCharacteristic.setCategoryUri( characteristic.getCategoryUri() );
                         finalCharacteristics.add( experimentCharacteristic );
                     }
                 }
                 // this experimentCharacteristic was deleted
                 else {
-                    this.characteristicService.remove( cha );
+                    this.characteristicService.remove( experimentCharacteristic );
                 }
             }
             experiment.getCharacteristics().clear();
@@ -211,8 +210,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+     * @param  evidenceValueObject the evidence we want to convert
+     * @return                     PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2DifferentialExpressionEvidence(
             DiffExpressionEvidenceValueObject evidenceValueObject ) {
@@ -233,8 +232,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+     * @param  evidenceValueObject the evidence we want to convert
+     * @return                     PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2ExperimentalEvidence(
             ExperimentalEvidenceValueObject evidenceValueObject ) {
@@ -339,7 +338,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
             for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
 
-                VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
+                Characteristic experimentCha = Characteristic.Factory.newInstance();
 
                 experimentCha.setValue( chaValueObject.getValue() );
                 experimentCha.setCategory( chaValueObject.getCategory() );
@@ -358,8 +357,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+     * @param  evidenceValueObject the evidence we want to convert
+     * @return                     PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
 
@@ -373,8 +372,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     }
 
     /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
+     * @param  evidenceValueObject the evidence we want to convert
+     * @return                     PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
 
@@ -518,7 +517,8 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     /**
      * Populate the phenotypes for an PhenotypeAssociation using an EvidenceValueObject
      *
-     * @param phe                 The phenotype association (parent class of an evidence) we are interested in populating
+     * @param phe                 The phenotype association (parent class of an evidence) we are interested in
+     *                            populating
      * @param evidenceValueObject the value object representing a phenotype
      */
     private void populatePheAssoPhenotypes( PhenotypeAssociation phe,

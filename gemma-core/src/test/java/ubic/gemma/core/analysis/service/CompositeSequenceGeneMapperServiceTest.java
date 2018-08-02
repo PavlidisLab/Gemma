@@ -102,7 +102,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
             try {
                 geneService.remove( gene );
             } catch ( Exception ignored ) {
-
+                // not a problem, we have genes from other tests, etc.
             }
         }
     }
@@ -112,7 +112,8 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );
-        @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
+        @SuppressWarnings("unchecked")
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
                 .fetchAndLoad( arrayAccession, true, true, false );
         ad = ads.iterator().next();
 

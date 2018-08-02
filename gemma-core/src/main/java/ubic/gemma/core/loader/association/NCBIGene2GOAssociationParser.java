@@ -24,9 +24,9 @@ import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
@@ -38,6 +38,7 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * This parses GO annotations from NCBI. See <a href="ftp://ftp.ncbi.nih.gov/gene/DATA/README">readme</a>.
+ * 
  * <pre>
  * tax_id:
  * the unique identifier provided by NCBI Taxonomy
@@ -130,8 +131,8 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     /**
      * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
      *
-     * @param line line
-     * @return Object
+     * @param  line line
+     * @return      Object
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public Gene2GOAssociation mapFromGene2GO( String line ) {
@@ -159,7 +160,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         gene.setNcbiGeneId( Integer.parseInt( values[GENE_ID] ) );
 
         gene.setTaxon( taxaNcbiIds.get( taxonId ) );
-        VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
+        Characteristic oe = Characteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
         oe.setValue( value );

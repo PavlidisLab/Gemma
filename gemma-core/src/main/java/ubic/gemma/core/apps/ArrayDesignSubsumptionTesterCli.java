@@ -99,7 +99,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     @Override
     public String getShortDesc() {
-        return "Test two array designs to see if one subsumes the other (in terms of sequences analyzed)"
+        return "Test array designs to see if one subsumes other(s) (in terms of sequences analyzed)"
                 + ", and if so update their information";
     }
 

@@ -32,10 +32,12 @@ public class ArrayCompositeSequenceArg
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request arrayCompositeSequence argument
-     * @return an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from the input string,
-     * or a malformed ArrayCompositeSequenceArg that will throw an {@link GemmaApiException} when accessing its value, if the
-     * input String can not be converted into an array of CompositeSequence identifiers.
+     * @param  s the request arrayCompositeSequence argument
+     * @return   an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from
+     *           the input string,
+     *           or a malformed ArrayCompositeSequenceArg that will throw an {@link GemmaApiException} when accessing
+     *           its value, if the
+     *           input String can not be converted into an array of CompositeSequence identifiers.
      */
     @SuppressWarnings("unused")
     public static ArrayCompositeSequenceArg valueOf( final String s ) {
@@ -50,7 +52,7 @@ public class ArrayCompositeSequenceArg
         this.arrayDesign = arrayDesign;
     }
 
-    public ArrayList<ObjectFilter[]> getPlatformFilter() {
+    public List<ObjectFilter[]> getPlatformFilter() {
         ObjectFilter filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(),
                 ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS );
         return ObjectFilter.singleFilter( filter );
@@ -71,26 +73,3 @@ public class ArrayCompositeSequenceArg
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

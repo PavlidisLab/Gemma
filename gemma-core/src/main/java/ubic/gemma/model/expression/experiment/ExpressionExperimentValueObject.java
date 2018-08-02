@@ -33,7 +33,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String taxon;
     private String technologyType;
     private Long taxonId;
-    private Long parentTaxonId;
     private Long experimentalDesign;
     private Integer processedExpressionVectorCount;
     private Integer arrayDesignCount;
@@ -65,16 +64,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.name = ee.getName();
         this.source = ee.getSource();
         this.description = ee.getDescription();
-        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
-                ee.getBioAssays().size() :
-                null;
-        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ?
-                ee.getAccession().toString() :
-                null;
-        this.experimentalDesign =
-                ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ?
-                        ee.getExperimentalDesign().getId() :
-                        null;
+        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ? ee.getBioAssays().size() : null;
+        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ? ee.getAccession().toString() : null;
+        this.experimentalDesign = ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() )
+                ? ee.getExperimentalDesign().getId()
+                : null;
     }
 
     /**
@@ -83,8 +77,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * @param row the database row to read the VO parameters from
      */
     public ExpressionExperimentValueObject( Object[] row, Integer totalInBatch ) {
-        super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[29], ( Boolean ) row[15],
-                ( AuditEvent ) row[28], ( String ) row[16], ( AuditEvent ) row[27] );
+        super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[27], ( Boolean ) row[15],
+                ( AuditEvent ) row[26], ( String ) row[16], ( AuditEvent ) row[25] );
 
         // EE
         this.name = ( String ) row[1];
@@ -111,6 +105,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = ( String ) row[11];
         this.taxonId = ( Long ) row[12];
 
+        // 13, 14 15 16 used in call to super
+
         // Counts
         this.bioAssayCount = ( ( Long ) row[17] ).intValue();
         this.arrayDesignCount = ( ( Long ) row[18] ).intValue();
@@ -118,33 +114,31 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
         // Other
         this.experimentalDesign = ( Long ) row[20];
-        this.parentTaxonId = ( Long ) row[21];
 
         // ACL
-        AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
+        AclObjectIdentity aoi = ( AclObjectIdentity ) row[21];
 
         boolean[] permissions = EntityUtils.getPermissions( aoi );
         this.setIsPublic( permissions[0] );
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
 
-        if ( row[23] instanceof AclPrincipalSid ) {
-            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
+        if ( row[22] instanceof AclPrincipalSid ) {
+            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[22] ).getPrincipal(),
                     SecurityUtil.getCurrentUsername() ) );
         } else {
             this.setUserOwned( false );
         }
 
         // Batch info
-        batchEffect = ( String ) row[25];
-        batchConfound = ( String ) row[26];
+        batchEffect = ( String ) row[23];
+        batchConfound = ( String ) row[24];
+
+        // 26-28 used in call to super.
 
         // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
-        geeq = row[30] == null ?
-                null :
-                SecurityUtil.isUserAdmin() ?
-                        new GeeqAdminValueObject( ( Geeq ) row[30] ) :
-                        new GeeqValueObject( ( Geeq ) row[30] );
+        geeq = row[28] == null ? null
+                : SecurityUtil.isUserAdmin() ? new GeeqAdminValueObject( ( Geeq ) row[28] ) : new GeeqValueObject( ( Geeq ) row[28] );
 
         // meta info
         this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
@@ -153,7 +147,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
             String accession, String batchConfound, String batchEffect, String externalDatabase, String externalUri,
             String metadata, String shortName, String source, String taxon, String technologyType, Long taxonId,
-            Long parentTaxonId, Long experimentalDesign, Integer processedExpressionVectorCount,
+            Long experimentalDesign, Integer processedExpressionVectorCount,
             Integer arrayDesignCount, Integer bioMaterialCount, Boolean currentUserHasWritePermission,
             Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
@@ -175,7 +169,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = taxon;
         this.technologyType = technologyType;
         this.taxonId = taxonId;
-        this.parentTaxonId = parentTaxonId;
         this.experimentalDesign = experimentalDesign;
         this.processedExpressionVectorCount = processedExpressionVectorCount;
         this.arrayDesignCount = arrayDesignCount;
@@ -306,14 +299,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
-    }
-
-    public Long getParentTaxonId() {
-        return parentTaxonId;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
     }
 
     public Long getExperimentalDesign() {

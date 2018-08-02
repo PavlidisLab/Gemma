@@ -29,7 +29,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformation
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -69,22 +68,21 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private AuditEventService auditEventService;
 
     /**
-     * @param ef ef
-     * @return true if the factor seems to be a 'batch' factor.
+     * @param  ef ef
+     * @return    true if the factor seems to be a 'batch' factor.
      */
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
         Characteristic c = ef.getCategory();
+
+        if (c == null) return false;
 
         boolean isBatchFactor = false;
 
         boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
 
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic v = ( VocabCharacteristic ) c;
-            if ( v.getCategory() != null && v.getCategory()
-                    .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
-                isBatchFactor = true;
-            }
+        if ( c.getCategory() != null && c.getCategory()
+                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
+            isBatchFactor = true;
         } else if ( looksLikeBatch ) {
             isBatchFactor = true;
         }
@@ -130,8 +128,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     /**
      * Currently only supports GEO
      *
-     * @param ee ee
-     * @return local file
+     * @param  ee ee
+     * @return    local file
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
@@ -144,9 +142,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
-     * @param ee    ee
-     * @return boolean
+     * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
+     * @param  ee    ee
+     * @return       boolean
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
@@ -165,8 +163,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         if ( !dates.isEmpty() ) {
-            int numberOfBatches =
-                    factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
+            int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
 
             List<Date> allDates = new ArrayList<>( dates.values() );
             Collections.sort( allDates );
@@ -177,7 +174,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                             + " batches." );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
                     batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                            + " batches.", "Dates of sample runs: " + datesString );
+                            + " batches.",
+                    "Dates of sample runs: " + datesString );
             return true;
         }
 
@@ -185,8 +183,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param ee ee
-     * @return true if it needs processing
+     * @param  ee ee
+     * @return    true if it needs processing
      */
     private boolean needToRun( ExpressionExperiment ee ) {
 

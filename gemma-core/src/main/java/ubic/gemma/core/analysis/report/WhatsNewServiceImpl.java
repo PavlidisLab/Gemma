@@ -138,7 +138,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( newExpressionExperiments ) );
         wn.setUpdatedEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( updatedExpressionExperiments ) );
 
-        wn.setNewAssayCount( this.getAssayCount( newExpressionExperiments ) );
+        wn.setNewBioMaterialCount( this.getBioMaterialCount( newExpressionExperiments ) );
 
         return wn;
     }
@@ -311,15 +311,13 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     /**
      * @param ees a collection of expression experiments
-     * @return the number of assays in all the expression experiments passed in
+     * @return the number of biomaterials in all the expression experiments passed in
      */
-    private int getAssayCount( Collection<ExpressionExperiment> ees ) {
+    private int getBioMaterialCount( Collection<ExpressionExperiment> ees ) {
 
         int count = 0;
         for ( ExpressionExperiment ee : ees ) {
-            ee = expressionExperimentService.load( ee.getId() );
-            ee = expressionExperimentService.thaw( ee );
-            count += ee.getBioAssays().size();
+            count += this.expressionExperimentService.getBioMaterialCount( ee );
         }
         return count;
     }
@@ -400,7 +398,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             throws IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream( newObjects );
                 ObjectInputStream ois = new ObjectInputStream( fis )) {
-            @SuppressWarnings("unchecked") Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
+            @SuppressWarnings("unchecked")
+            Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
                     .readObject();
             return aos;
         }

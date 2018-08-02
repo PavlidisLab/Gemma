@@ -187,7 +187,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
          * @param experimentDetails.QChtml
          * @param experimentDetails.hasMultiplePreferredQuantitationTypes
          * @param experimentDetails.hasMultipleTechnologyTypes
-         * @param experimentDetails.parentTaxonId
          * @param experimentDetails.externalDatabase
          * @param experimentDetails.coexpressionLinkCount
          * @param experimentDetails.bioAssayCount
@@ -294,9 +293,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         });
         var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
             eeId: eeId,
-            visPanel: viz,
-            taxonId: experimentDetails.parentTaxonId
-            // showRefresh : (isAdmin || this.editable)
+            visPanel: viz 
+            // ,showRefresh : (isAdmin || this.editable)
         });
         geneTBar.on('refreshVisualisation', function () {
             viz.loadFromParam({

@@ -25,7 +25,6 @@ import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -62,9 +61,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         Characteristic category = ef.getCategory();
         if ( category != null ) {
             efvo.setCategory( category.getCategory() );
-            if ( category instanceof VocabCharacteristic ) {
-                efvo.setCategoryUri( category.getCategoryUri() );
-            }
+            efvo.setCategoryUri( category.getCategoryUri() );
         }
         Collection<FactorValue> fvs = ef.getFactorValues();
         StringBuilder factorValuesAsString = new StringBuilder( StringUtils.EMPTY );

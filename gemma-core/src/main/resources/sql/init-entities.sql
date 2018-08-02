@@ -65,13 +65,13 @@ insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (2, 1);
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (3, 2);
 
 -- taxa
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Homo sapiens","human","9606",1,1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Mus musculus","mouse","10090",1,1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Rattus norvegicus","rat","10116",1,1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE,SECONDARY_NCBI_ID) values ("Saccharomyces cerevisiae","yeast","4932",1,1,559292);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Danio rerio","zebrafish","7955",1,1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1,1);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1,1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Homo sapiens","human","9606",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Mus musculus","mouse","10090",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Rattus norvegicus","rat","10116",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE,SECONDARY_NCBI_ID) values ("Saccharomyces cerevisiae","yeast","4932",1,559292);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Danio rerio","zebrafish","7955",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1);
 
 -- external databases
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI,  TYPE) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", "LITERATURE");

@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
@@ -138,8 +139,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         BioAssayDimension newBioAd = this.getNewBioAssayDimension( sortedOldDims );
         int totalBioAssays = newBioAd.getBioAssays().size();
-        assert totalBioAssays == ee.getBioAssays().size() :
-                "experiment has " + ee.getBioAssays().size() + " but new bioAssayDimension has " + totalBioAssays;
+        assert totalBioAssays == ee.getBioAssays().size() : "experiment has " + ee.getBioAssays().size() + " but new bioAssayDimension has "
+                + totalBioAssays;
 
         Map<QuantitationType, Collection<RawExpressionDataVector>> qt2Vec = this
                 .getVectors( ee, qts, allOldBioAssayDims );
@@ -148,6 +149,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
          * This will run into problems if there are excess quantitation types
          */
         int numSuccessfulMergers = 0;
+        Collection<RawExpressionDataVector> newVectors = new HashSet<>();
+
         for ( QuantitationType type : qt2Vec.keySet() ) {
 
             Collection<RawExpressionDataVector> oldVecs = qt2Vec.get( type );
@@ -167,7 +170,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             VectorMergingServiceImpl.log.info( "Processing " + oldVecs.size() + " vectors  for " + type );
 
-            Collection<RawExpressionDataVector> newVectors = new HashSet<>();
             int numAllMissing = 0;
             int missingValuesForQt = 0;
             for ( CompositeSequence de : deVMap.keySet() ) {
@@ -204,9 +206,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
             }
 
-            // TRANSACTION
-            vectorMergingHelperService.persist( ee, type, newVectors );
-
             if ( numAllMissing > 0 ) {
                 VectorMergingServiceImpl.log
                         .info( numAllMissing + " vectors had all missing values and were junked for " + type );
@@ -216,22 +215,28 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                 VectorMergingServiceImpl.log.info( missingValuesForQt + " total missing values: " + type );
             }
 
-            VectorMergingServiceImpl.log.info( "Removing " + oldVecs.size() + " old vectors for " + type );
-            rawExpressionDataVectorService.remove( oldVecs );
-            ee.getRawExpressionDataVectors().removeAll( oldVecs );
             numSuccessfulMergers++;
         } // for each quantitation type
 
+        // Up to now, nothing has been changed in the database except we made a new bioassaydimension.
+
         if ( numSuccessfulMergers == 0 ) {
             /*
-             * Try to clean up
+             * Try to clean up before bailing
              */
             this.bioAssayDimensionService.remove( newBioAd );
             throw new IllegalStateException(
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
-        expressionExperimentService.update( ee );
+        // TRANSACTION
+        log.info( ee.getRawExpressionDataVectors().size() );
+
+        vectorMergingHelperService.persist( ee, newVectors );
+
+        ee = expressionExperimentService.load( ee.getId() );
+        ee = expressionExperimentService.thaw( ee );
+        log.info( ee.getRawExpressionDataVectors().size() );
 
         // Several transactions
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
@@ -243,10 +248,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         // several transactions
         try {
-
             preprocessorService.process( ee );
         } catch ( PreprocessingException e ) {
-            VectorMergingServiceImpl.log.error( "Error during postprocessing", e );
+            VectorMergingServiceImpl.log.error( "Error during postprocessing: " + e.getMessage(), e );
         }
 
         return ee;
@@ -345,9 +349,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * @param de             de
-     * @param data           data
-     * @param oldDim         old dim
+     * @param de de
+     * @param data data
+     * @param oldDim old dim
      * @param representation representation
      * @return The number of missing values which were added.
      */
@@ -404,6 +408,11 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         return deVMap;
     }
 
+    /**
+     * 
+     * @param sortedOldDims
+     * @return persistent bioassaydimension (either re-used or a new one)
+     */
     private BioAssayDimension getNewBioAssayDimension( List<BioAssayDimension> sortedOldDims ) {
         return this.combineBioAssayDimensions( sortedOldDims );
     }
@@ -411,8 +420,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Get the current set of vectors that need to be updated.
      *
-     * @param expExp             ee
-     * @param qts                - only used to check for problems.
+     * @param expExp ee
+     * @param qts - only used to check for problems.
      * @param allOldBioAssayDims old BA dims
      * @return map
      */
@@ -461,10 +470,10 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Make a (non-persistent) vector that has the right bioAssayDimension, designelement and quantitationtype.
      *
-     * @param expExp   ee
+     * @param expExp ee
      * @param newBioAd new BA dim
-     * @param type     type
-     * @param de       de
+     * @param type type
+     * @param de de
      * @return raw data vector
      */
     private RawExpressionDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
@@ -479,11 +488,11 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /**
      * @param sortedOldDims sorted old dims
-     * @param newBioAd      new BA dims
-     * @param type          type
-     * @param de            de
-     * @param dedvs         dedvs
-     * @param mergedData    starts out empty, is initalized to the new data.
+     * @param newBioAd new BA dims
+     * @param type type
+     * @param de de
+     * @param dedvs dedvs
+     * @param mergedData starts out empty, is initalized to the new data.
      * @return number of values missing
      */
     private int makeMergedData( List<BioAssayDimension> sortedOldDims, BioAssayDimension newBioAd,

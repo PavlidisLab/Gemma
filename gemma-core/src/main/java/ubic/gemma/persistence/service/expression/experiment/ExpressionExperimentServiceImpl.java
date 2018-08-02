@@ -24,7 +24,6 @@ import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
@@ -40,7 +39,10 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -70,7 +72,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see ExpressionExperimentService
+ * @see    ExpressionExperimentService
  */
 @Service
 @Transactional
@@ -209,7 +211,7 @@ public class ExpressionExperimentServiceImpl
             vec.setQuantitationType( newQt );
         }
 
-        ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors );
+        ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors ); // FIXME should be able to just do ee.getRawExpressionDataVectors.addAll(newVectors)
 
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
@@ -297,7 +299,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
+    public Map<ExpressionExperiment, BioMaterial> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
         return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
     }
 
@@ -342,7 +344,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
+    public Map<ExpressionExperiment, FactorValue> findByFactorValues( final Collection<FactorValue> factorValues ) {
         return this.expressionExperimentDao.findByFactorValues( factorValues );
     }
 
@@ -362,15 +364,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByName( final String name ) {
         return this.expressionExperimentDao.findByName( name );
-    }
-
-    /**
-     * @see ExpressionExperimentService#findByParentTaxon(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByParentTaxon( final Taxon taxon ) {
-        return this.expressionExperimentDao.findByParentTaxon( taxon );
     }
 
     @Override
@@ -418,30 +411,53 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = this.load( eeId );
-        Collection<AnnotationValueObject> annotations = new ArrayList<>();
+        Collection<AnnotationValueObject> annotations = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+
             AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
+         // annotationValue.setId( c.getId() ); // to avoid getting duplicates.
             annotationValue.setClassName( c.getCategory() );
+            annotationValue.setClassUri( c.getCategoryUri() );
             annotationValue.setTermName( c.getValue() );
+            annotationValue.setTermUri( c.getValueUri() );
             annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = this.getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null )
-                    annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = this.getLabelFromUri( vc.getValueUri() );
-                if ( termName != null )
-                    annotationValue.setTermName( termName );
-                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
-            } else {
-                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
-            }
+            annotationValue.setObjectClass( "ExperimentTag" );
+
             annotations.add( annotationValue );
         }
+
+        /*
+         * If can be done without much slowdown:
+         */
+
+        /*
+         * add: certain selected (constant?) characteristics from biomaterials? (non-redudnant with tags)
+         */
+        annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
+
+        /*
+         * Add: certain characteristics from factor values? (non-baseline, non-batch, non-redudnant with tags). This is tricky because they are so specific...
+         */
+        annotations.addAll( this.getAnnotationsByFactorValues( eeId ) );
+
         return annotations;
+    }
+
+    /**
+     * @param  eeId
+     * @return
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
+    }
+
+    /**
+     * @param  eeId
+     * @return
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
+
     }
 
     @Override
@@ -469,7 +485,7 @@ public class ExpressionExperimentServiceImpl
 
         StringBuilder result = new StringBuilder();
         // Confounds have to be sorted in order to always get the same string
-        List<BatchConfoundValueObject> listConfounds = new ArrayList<>(confounds);
+        List<BatchConfoundValueObject> listConfounds = new ArrayList<>( confounds );
         Collections.sort( listConfounds, new Comparator<BatchConfoundValueObject>() {
             @Override
             public int compare( BatchConfoundValueObject t0, BatchConfoundValueObject t1 ) {
@@ -768,10 +784,10 @@ public class ExpressionExperimentServiceImpl
         for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
             qtsToRemove.add( oldV.getQuantitationType() );
         }
-        rawExpressionDataVectorDao.remove( eeToUpdate.getRawExpressionDataVectors() );
-        processedVectorService.remove( eeToUpdate.getProcessedExpressionDataVectors() );
-        eeToUpdate.getProcessedExpressionDataVectors().clear();
-        eeToUpdate.getRawExpressionDataVectors().clear();
+        rawExpressionDataVectorDao.remove( eeToUpdate.getRawExpressionDataVectors() ); // should not be necessary
+        processedVectorService.remove( eeToUpdate.getProcessedExpressionDataVectors() ); // should not be necessary
+        eeToUpdate.getProcessedExpressionDataVectors().clear(); // this should be sufficient
+        eeToUpdate.getRawExpressionDataVectors().clear(); // should be sufficient
 
         // These QTs might still be getting used by the replaced vectors.
         for ( RawExpressionDataVector newVec : newVectors ) {
@@ -822,11 +838,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *           checking
-     *           the curation details of the object directly, as this method also checks all the array designs the given
-     *           experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @param  ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *            checking
+     *            the curation details of the object directly, as this method also checks all the array designs the
+     *            given
+     *            experiment belongs to.
+     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -847,7 +864,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Will add the vocab characteristic to the expression experiment and persist the changes.
+     * Will add the characteristic to the expression experiment and persist the changes.
      *
      * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
@@ -974,12 +991,12 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+            boolean asc, List<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
@@ -992,17 +1009,18 @@ public class ExpressionExperimentServiceImpl
         return false;
     }
 
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-
-        return null;
-    }
+    //    private String getLabelFromUri( String uri ) {
+    //        if ( StringUtils.isBlank( uri ) ) return null;
+    //        OntologyResource resource = ontologyService.getResource( uri );
+    //        if ( resource != null )
+    //            return resource.getLabel();
+    //
+    //        return null;
+    //    }
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
@@ -1013,6 +1031,17 @@ public class ExpressionExperimentServiceImpl
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#filterByTaxon(java.util.
+     * Collection, ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
+        return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
 
 }

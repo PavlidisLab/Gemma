@@ -57,8 +57,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private String name;
     // the query exactly as entered by the user.
     private String originalQuery;
-    // for grouping.
-    private Long parentTaxonId;
+
     private Class<?> resultClass;
     /**
      * The actual underlying valueobject; class is of resultClass.
@@ -103,8 +102,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * GeneValueObject, GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and
      * SearchObjects containing an object of any of those types
      *
-     * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
-     * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
+     * @param  results a collection of SearchResult objects to create SearchResultDisplayObjects for
+     * @return         a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
      */
     public static List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
             List<SearchResult> results ) {
@@ -169,21 +168,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.originalQuery = originalQuery;
     }
 
-    public Long getParentTaxonId() {
-        return parentTaxonId;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
-    }
-
     public Class<?> getResultClass() {
         return this.resultClass;
     }
 
     /**
      * @return the resultValueObject, which will be (for the example of genes) a GeneValueObject or a
-     * GeneSetValueObject, which also has several subclasses (SessionBound etc.)
+     *         GeneSetValueObject, which also has several subclasses (SessionBound etc.)
      */
     public Object getResultValueObject() {
         return resultValueObject;
@@ -303,7 +294,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.size = 1;
         this.taxonId = expressionExperiment.getTaxonId();
 
-        this.parentTaxonId = expressionExperiment.getParentTaxonId();
         this.taxonName = expressionExperiment.getTaxon();
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();

@@ -101,7 +101,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         taxon.setIsGenesUsable( true );
-        taxon.setIsSpecies( true );
         metaData.setTaxon( taxon );
         metaData.setName( "ee" );
         metaData.setQuantitationTypeName( "testing" );

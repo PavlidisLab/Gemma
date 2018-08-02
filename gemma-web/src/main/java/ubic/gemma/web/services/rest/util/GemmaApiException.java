@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util;
 
 import javax.ws.rs.core.Response;
-import java.io.Serializable;
 
 /**
  * Exception for the REST API related issues.
@@ -9,7 +8,7 @@ import java.io.Serializable;
  * @author tesarst
  */
 @SuppressWarnings("WeakerAccess") // Getters used by RS serializer.
-public class GemmaApiException extends RuntimeException implements Serializable {
+public class GemmaApiException extends RuntimeException {
 
     private final Response.Status code;
     private ResponseErrorObject errorObject;

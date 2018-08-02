@@ -30,7 +30,8 @@ public abstract class SearchSettings implements Identifiable, Serializable {
      * How many results per result type are allowed. This implies that if you search for multiple types of things, you
      * can get more than this.
      */
-    private static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 500;
+    static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 5000;
+    
     /**
      * The serial version UID of this class. Needed for serialization.
      */
