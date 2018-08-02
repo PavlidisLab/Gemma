@@ -101,19 +101,6 @@
 		<property name="registryNumber">
 			<meta-data>registryNumber</meta-data>
 		</property>
-		<component name="externalLIMS" ref-alias="externalLIMS" />
-		<component name="compoundIndices" ref-alias="compoundIndices" />
-	</class>
-	<class name="common.description.DatabaseEntry" alias="externalLIMS" root="false">
-		<id name="id" />
-		<property name="accession">
-			<meta-data>accession</meta-data>
-		</property>
-	</class>
-	<class name="common.description.Characteristic" alias="compoundIndices" root="false">
-		<id name="id" />
-		<property name="value">
-			<meta-data>value</meta-data>
-		</property>
-	</class>
+ 	</class> 
+
 </compass-core-mapping>

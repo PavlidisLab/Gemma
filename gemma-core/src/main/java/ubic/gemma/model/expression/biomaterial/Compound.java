@@ -25,10 +25,7 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8136911145519622152L;
-    private Boolean isSolvent;
     private String registryNumber;
-    private ubic.gemma.model.common.description.DatabaseEntry externalLIMS;
-    private ubic.gemma.model.common.description.Characteristic compoundIndices;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -36,30 +33,6 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
      * @author Paul
      */
     public Compound() {
-    }
-
-    public ubic.gemma.model.common.description.Characteristic getCompoundIndices() {
-        return this.compoundIndices;
-    }
-
-    public void setCompoundIndices( ubic.gemma.model.common.description.Characteristic compoundIndices ) {
-        this.compoundIndices = compoundIndices;
-    }
-
-    public ubic.gemma.model.common.description.DatabaseEntry getExternalLIMS() {
-        return this.externalLIMS;
-    }
-
-    public void setExternalLIMS( ubic.gemma.model.common.description.DatabaseEntry externalLIMS ) {
-        this.externalLIMS = externalLIMS;
-    }
-
-    public Boolean getIsSolvent() {
-        return this.isSolvent;
-    }
-
-    public void setIsSolvent( Boolean isSolvent ) {
-        this.isSolvent = isSolvent;
     }
 
     /**
@@ -80,16 +53,11 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
         }
 
         public static ubic.gemma.model.expression.biomaterial.Compound newInstance( String name, String description,
-                Boolean isSolvent, String registryNumber,
-                ubic.gemma.model.common.description.DatabaseEntry externalLIMS,
-                ubic.gemma.model.common.description.Characteristic compoundIndices ) {
+                String registryNumber ) {
             final ubic.gemma.model.expression.biomaterial.Compound entity = new ubic.gemma.model.expression.biomaterial.CompoundImpl();
             entity.setName( name );
             entity.setDescription( description );
-            entity.setIsSolvent( isSolvent );
             entity.setRegistryNumber( registryNumber );
-            entity.setExternalLIMS( externalLIMS );
-            entity.setCompoundIndices( compoundIndices );
             return entity;
         }
     }

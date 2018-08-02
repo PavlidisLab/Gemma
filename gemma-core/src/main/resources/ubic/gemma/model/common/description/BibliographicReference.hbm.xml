@@ -62,6 +62,8 @@
       <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
          <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
+
+      <!-- NEVER USED -->
       <set name="annotations" lazy="true" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
@@ -69,6 +71,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
+
       <set name="meshTerms" lazy="true" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">

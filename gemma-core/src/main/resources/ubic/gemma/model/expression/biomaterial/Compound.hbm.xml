@@ -17,17 +17,8 @@
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="isSolvent" type="java.lang.Boolean">
-         <column name="IS_SOLVENT" not-null="false" unique="false" sql-type="TINYINT"/>
-      </property>
       <property name="registryNumber" type="java.lang.String">
          <column name="REGISTRY_NUMBER" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="externalLIMS" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
-         <column name="EXTERNAL_L_I_M_S_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
-      <many-to-one name="compoundIndices" class="ubic.gemma.model.common.description.Characteristic"  cascade="all" lazy="false" fetch="select">
-         <column name="COMPOUND_INDICES_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
    </class>
 </hibernate-mapping>
