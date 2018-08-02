@@ -116,64 +116,6 @@ Gemma.AnnotationDataView = Ext
 
         });
 
-/*
- * Experimental, not used yet.
- */
-Gemma.CharacteristicPagingStore = Ext.extend(Ext.data.Store, {
-    constructor: function (config) {
-        Gemma.CharacteristicPagingStore.superclass.constructor.call(this, config);
-    },
-    remoteSort: true,
-    proxy: new Ext.data.DWRProxy({
-        apiActionToHandlerMap: {
-            read: {
-                dwrFunction: CharacteristicBrowserController.browse,
-                getDwrArgsFunction: function (request) {
-                    var params = request.params;
-                    return [params];
-                }
-            }
-        }
-    }),
-
-    reader: new Ext.data.JsonReader({
-        root: 'records', // required.
-        successProperty: 'success', // same as default.
-        messageProperty: 'message', // optional
-        totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
-        idProperty: "id", // same as default
-        fields: [{
-            name: "id",
-            type: "int"
-        }, {
-            name: "objectClass"
-        }, {
-            name: "classUri"
-        }, {
-            name: "className"
-        }, {
-            name: "termUri"
-        }, {
-            name: "termName"
-        }, {
-            name: "parentLink"
-        }, {
-            name: "parentDescription"
-        }, {
-            name: "parentOfParentLink"
-        }, {
-            name: "parentOfParentDescription"
-        }, {
-            name: "evidenceCode"
-        }]
-    }),
-
-    writer: new Ext.data.JsonWriter({
-        writeAllFields: true
-    })
-
-});
-
 /**
  *
  * @class Gemma.AnnotationGrid
@@ -265,6 +207,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
         return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.termUri);
     },
 
+    categoryStyler: function (value, metadata, record, row, col, ds) {
+        return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.classUri);
+    },
+
     termUriStyler: function (value, metadata, record, row, col, ds) {
         if (record.get('termUri')) {
             return String.format("<a target='_blank' href='{0}'>{0}</a>", record.get('termUri'));
@@ -278,6 +224,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             columns: [{
                 header: "Category",
                 dataIndex: "className",
+                renderer: this.categoryStyler.createDelegate(this),
                 sortable: true
             }, {
                 header: "Term",
@@ -356,8 +303,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             var CATEGORY_COLUMN = 0;
             var VALUE_COLUMN = 1;
-            var PARENT_COLUMN = 2;
-            var EVIDENCE_COLUMN = 3;
+            var VALUE_URI_COLUMN = 2;
+            var PARENT_COLUMN = 3;
+            var EVIDENCE_COLUMN = 4;
 
             // Category setup
             this.categoryCombo = new Gemma.CategoryCombo({
@@ -392,6 +340,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             this.on("beforeedit", function (e) {
                 var row = e.record.data;
 
+                // this applies to the mini-view on experiment pages
                 if (!this.showParent && e.record.get("objectClass") !== "ExperimentTag" ) {
                     return false;
                 }
@@ -405,12 +354,13 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
             });
 
             this.on("afteredit", function(e) {
-                e.record.set("term", this.valueCombo.getCharacteristic().value);
-                e.record.set("termUri", this.valueCombo.getCharacteristic().valueUri);
-            //    e.record.set("category", this.categoryCombo.getTerm().get("term"));
-             //   e.record.set("categoryUri", this.categoryCombo.getTerm().get("uri"));
-
-                e.record;
+                if (e.column == VALUE_COLUMN) {
+                    e.record.set("term", this.valueCombo.getCharacteristic().value);
+                    e.record.set("termUri", this.valueCombo.getCharacteristic().valueUri);
+                } else if (e.column == CATEGORY_COLUMN) {
+                   e.record.set("className", this.categoryCombo.getTerm().term);
+                   e.record.set("classUri", this.categoryCombo.getTerm().uri);
+                }
             });
 
             if (this.getTopToolbar().deleteButton) {

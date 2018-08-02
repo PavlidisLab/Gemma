@@ -266,7 +266,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             }
 
             cFromDatabase.setValue( StringUtils.strip( cFromClient.getValue() ) ); // remove whitespace we added to force dirty check
-            cFromDatabase.setCategory( cFromClient.getCategory() );
+            cFromDatabase.setCategory( StringUtils.strip( cFromClient.getCategory() ) );
 
             if ( ( cFromDatabase.getValueUri() == null && cFromClient.getValueUri() != null ) || ( cFromDatabase.getValueUri() != null
                     && !cFromDatabase

@@ -119,9 +119,9 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
         /*
          * check to see if the user has typed anything in the combo box (rather than selecting something); if they
          * have, remove the URI from the characteristic and update its value, so we end up with a plain text. See
-         * note about hack '\t' above. FIXME not sure this works as intended. Is this called?
+         * note about hack '\t' above.
          */
-        if (this.getValue() != this.characteristic.value + "\t") {
+        if (this.characteristic.value  && this.getValue() != this.characteristic.value + "\t") {
            this.characteristic.value = this.getValue();
            this.characteristic.valueUri = null;
         }
