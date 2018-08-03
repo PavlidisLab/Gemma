@@ -95,12 +95,19 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
             /*
              * The addition of whitespace is a complete hack to workaround an extjs limitation. It's to make sure extjs
-             * knows we want it to detect a change. See bug 1811
+             * knows we want it to detect a change - that we've made a selection. It also guarantees that the "value" shown is different from the
+             * underlying record. See bug 1811
              */
-            combo.setValue(record.data.value + "\t");
+            combo.setValue(record.data.value );
 
             // Otherwise the combo is only firing this event after losing focus
-            this.fireEvent("change", combo);
+        //    this.fireEvent("change", combo);
+        });
+
+        this.on("change", function (combo, newValue, oldValue ) {
+
+            this.characteristic.value = newValue;
+
         });
 
     },
@@ -121,10 +128,10 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
          * have, remove the URI from the characteristic and update its value, so we end up with a plain text. See
          * note about hack '\t' above.
          */
-        if (this.characteristic.value  && this.getValue() != this.characteristic.value + "\t") {
-           this.characteristic.value = this.getValue();
-           this.characteristic.valueUri = null;
-        }
+        // if (this.characteristic.value  && this.getValue() != this.characteristic.value ) {
+        //    this.characteristic.value = this.getValue();
+        //    this.characteristic.valueUri = null;
+        // }
  
         return   this.characteristic ;
     },

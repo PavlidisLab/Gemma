@@ -207,9 +207,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             // dataIndex mustn't have spaces in them.
             columns.push({
-                id: category.replace(/\s/g, "."),
+                id: category.replace(/[\s-+=]/g, "."),
                 header: category + " (raw characteristic)",
-                dataIndex: "characteristic." + category.replace(/\s/g, "."),
+                dataIndex: "characteristic." + category.replace(/[\s-+=]/g, "."),
                 width: 120,
                 tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
                 sortable: true
@@ -274,7 +274,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     continue;
                 }
                 var o = {
-                    name: "characteristic." + category.replace(/\s/g, "."),
+                    name: "characteristic." + category.replace(/[\s-+=]/g, "."),
                     type: "string"
                 };
                 fields.push(o);
