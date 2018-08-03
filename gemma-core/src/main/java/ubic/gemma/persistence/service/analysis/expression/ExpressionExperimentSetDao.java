@@ -20,10 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
@@ -81,7 +78,7 @@ public interface ExpressionExperimentSetDao
     Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds, boolean loadEEIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id );
+    Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id );
 
     /**
      * @param id        id

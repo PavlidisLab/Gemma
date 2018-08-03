@@ -3,6 +3,7 @@ package ubic.gemma.core.tasks.visualization;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
@@ -17,12 +18,12 @@ public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = -8510536003059837349L;
     private final Collection<GeneValueObject> geneGroup;
-    private final Collection<ExpressionExperimentValueObject> experimentGroup;
+    private final Collection<ExpressionExperimentDetailsValueObject> experimentGroup;
     private final String geneGroupName;
     private final String experimentGroupName;
 
     public DifferentialExpressionSearchTaskCommand( Collection<GeneValueObject> geneGroup,
-            Collection<ExpressionExperimentValueObject> experimentGroup, String geneGroupName,
+            Collection<ExpressionExperimentDetailsValueObject> experimentGroup, String geneGroupName,
             String experimentGroupName ) {
 
         assert !geneGroup.isEmpty();
@@ -43,7 +44,7 @@ public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
         return geneGroup;
     }
 
-    public Collection<ExpressionExperimentValueObject> getExperimentGroup() {
+    public Collection<ExpressionExperimentDetailsValueObject> getExperimentGroup() {
         return experimentGroup;
     }
 
