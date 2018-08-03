@@ -412,10 +412,12 @@ public class ExpressionExperimentServiceImpl
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = this.load( eeId );
         Collection<AnnotationValueObject> annotations = new HashSet<>();
+
+        Collection<String> seenTerms = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
 
             AnnotationValueObject annotationValue = new AnnotationValueObject();
-         // annotationValue.setId( c.getId() ); // to avoid getting duplicates.
+            annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setClassUri( c.getCategoryUri() );
             annotationValue.setTermName( c.getValue() );
@@ -424,6 +426,7 @@ public class ExpressionExperimentServiceImpl
             annotationValue.setObjectClass( "ExperimentTag" );
 
             annotations.add( annotationValue );
+            seenTerms.add(annotationValue.getTermName());
         }
 
         /*
@@ -433,12 +436,22 @@ public class ExpressionExperimentServiceImpl
         /*
          * add: certain selected (constant?) characteristics from biomaterials? (non-redudnant with tags)
          */
-        annotations.addAll( this.getAnnotationsByBioMaterials( eeId ) );
+        for(AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId )) {
+            if (!seenTerms.contains( v.getTermName() )) {
+                annotations.add( v );
+            }
+            seenTerms.add(v.getTermName());
+        }
 
         /*
          * Add: certain characteristics from factor values? (non-baseline, non-batch, non-redudnant with tags). This is tricky because they are so specific...
          */
-        annotations.addAll( this.getAnnotationsByFactorValues( eeId ) );
+         for(AnnotationValueObject v: this.getAnnotationsByFactorValues( eeId ) ) {
+             if (!seenTerms.contains( v.getTermName() )) {
+                 annotations.add( v );
+             }
+             seenTerms.add(v.getTermName());
+         }
 
         return annotations;
     }
