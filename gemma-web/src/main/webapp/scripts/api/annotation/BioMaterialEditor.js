@@ -1,5 +1,16 @@
 Ext.namespace('Gemma');
 
+String.prototype.hashCode = function() {
+    var hash = 0, i, chr;
+    if (this.length === 0) return hash;
+    for (i = 0; i < this.length; i++) {
+        chr   = this.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return "" + Math.abs(hash) + "a";
+};
+
 Gemma.BioMaterialEditor = function (config) {
     this.originalConfig = config;
     this.expressionExperiment = {
@@ -205,11 +216,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 continue;
             }
 
-            // dataIndex mustn't have spaces in them.
             columns.push({
-                id: category.replace(/[\s-+=]/g, "."),
+                id: "char" + category.hashCode(),
                 header: category + " (raw characteristic)",
-                dataIndex: "characteristic." + category.replace(/[\s-+=]/g, "."),
+                dataIndex: "char" + category.hashCode(),
                 width: 120,
                 tooltip: "A non-constant Biomaterial characteristic displayed for reference purposes.",
                 sortable: true
@@ -274,7 +284,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     continue;
                 }
                 var o = {
-                    name: "characteristic." + category.replace(/[\s-+=]/g, "."),
+                    name: "char" + category.hashCode(),
                     type: "string"
                 };
                 fields.push(o);
