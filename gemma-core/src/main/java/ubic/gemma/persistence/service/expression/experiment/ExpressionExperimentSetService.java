@@ -20,10 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
@@ -94,7 +91,7 @@ public interface ExpressionExperimentSetService
      * @return value objects or an empty set
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id );
+    Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id );
 
     ExpressionExperimentSet initAutomaticallyGeneratedExperimentSet(
             Collection<ExpressionExperiment> expressionExperiments, Taxon taxon );

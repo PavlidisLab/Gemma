@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
@@ -172,11 +173,9 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * @param limit to return only up to a given number of experiments, e.g. for a preview of the set.
      */
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long groupId, final Integer limit ) {
+    public Collection<ExpressionExperimentDetailsValueObject> getExperimentsInSet( Long groupId, final Integer limit ) {
 
-        // FIXME inefficient....difficult to get a subset efficiently with security filtering; could use
-        // EntityUtils.securityFilter
-        Collection<ExpressionExperimentValueObject> experimentInSet = expressionExperimentSetService
+        Collection<ExpressionExperimentDetailsValueObject> experimentInSet = expressionExperimentSetService
                 .getExperimentValueObjectsInSet( groupId );
 
         if ( limit != null && limit > 0 && limit < experimentInSet.size() ) {

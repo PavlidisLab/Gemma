@@ -48,10 +48,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String lastArrayDesignUpdateDate;
     private Boolean hasMultiplePreferredQuantitationTypes = false;
     private Boolean hasMultipleTechnologyTypes = false;
-    private Boolean hasCoexpressionAnalysis = null;
-    private Boolean hasDifferentialExpressionAnalysis = null;
-    private Boolean hasBothIntensities;
-    private Boolean hasEitherIntensity;
+    private Boolean hasCoexpressionAnalysis = false;
+    private Boolean hasDifferentialExpressionAnalysis = false;
+    private Boolean hasBothIntensities = false;
+    private Boolean hasEitherIntensity = false;
     private CitationValueObject primaryCitation;
     private Collection<ArrayDesignValueObject> arrayDesigns;
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;

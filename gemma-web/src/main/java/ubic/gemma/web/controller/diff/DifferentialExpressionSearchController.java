@@ -200,7 +200,7 @@ public class DifferentialExpressionSearchController {
 
         log.info( "Starting gene x condition search..." );
         // Load experiments
-        Collection<ExpressionExperimentValueObject> experiments;
+        Collection<ExpressionExperimentDetailsValueObject> experiments;
         List<String> datasetGroupNames = new ArrayList<>();
         if ( eevo.getExpressionExperimentIds().isEmpty() ) {
             if ( eevo.getId() != null ) {
@@ -299,13 +299,13 @@ public class DifferentialExpressionSearchController {
                 .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
     }
 
-    private Collection<ExpressionExperimentValueObject> loadExperimentsByIds( Collection<Long> ids ) {
+    private Collection<ExpressionExperimentDetailsValueObject> loadExperimentsByIds( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             throw new IllegalArgumentException( "No ids were provided" );
         }
 
-        Collection<ExpressionExperimentValueObject> experiments = expressionExperimentService
-                .loadValueObjects( ids, false );
+        Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
+                .loadDetailsValueObjects(null, false, ids, null, 0,0 );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

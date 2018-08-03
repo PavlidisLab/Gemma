@@ -94,7 +94,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         assertEquals( 1, eeSet.getExperiments().size() );
 
-        Collection<ExpressionExperimentValueObject> experimentValueObjectsInSet = expressionExperimentSetService
+        Collection<ExpressionExperimentDetailsValueObject> experimentValueObjectsInSet = expressionExperimentSetService
                 .getExperimentValueObjectsInSet( id );
 
         assertEquals( 1, experimentValueObjectsInSet.size() );

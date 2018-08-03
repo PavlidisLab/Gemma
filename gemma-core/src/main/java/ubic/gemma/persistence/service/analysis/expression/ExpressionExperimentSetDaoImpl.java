@@ -27,10 +27,7 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -104,11 +101,11 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
+    public Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id ) {
         //noinspection unchecked
-        return expressionExperimentDao.loadValueObjects( this.getSessionFactory().getCurrentSession().createQuery(
+        return expressionExperimentDao.loadDetailsValueObjects( null, false, this.getSessionFactory().getCurrentSession().createQuery(
                 "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
-                .setParameter( "id", id ).list(), false );
+                .setParameter( "id", id ).list(), null, 0, 0 );
     }
 
     @Override

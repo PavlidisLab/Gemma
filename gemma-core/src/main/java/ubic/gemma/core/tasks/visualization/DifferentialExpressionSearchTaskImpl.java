@@ -71,7 +71,7 @@ public class DifferentialExpressionSearchTaskImpl
 
     private String experimentGroupName;
 
-    private Collection<ExpressionExperimentValueObject> experimentGroup;
+    private Collection<ExpressionExperimentDetailsValueObject> experimentGroup;
 
     @Autowired
     private ExpressionExperimentSubSetService experimentSubSetService;

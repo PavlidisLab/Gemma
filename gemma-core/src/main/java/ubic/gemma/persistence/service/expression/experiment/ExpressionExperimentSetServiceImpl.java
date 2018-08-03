@@ -25,10 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
@@ -192,7 +189,7 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
+    public Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id ) {
         return this.expressionExperimentSetDao.getExperimentValueObjectsInSet( id );
     }
 
