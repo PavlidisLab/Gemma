@@ -178,7 +178,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_TAXON_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_TAXON_ALIAS + ", " // 1
-                + "ED, " // 2 
+                + "ED " // 2
                 + "from Taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " " // taxon
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
