@@ -311,7 +311,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                     /*
                     Experimental: split on ":", use first part as the category.
                      */
-                    if ( ch.getValue().contains( ":" ) ) {
+                    if ( StringUtils.isNotBlank( ch.getValue() ) && ch.getValue().contains( ":" ) ) {
                         String[] split = ch.getValue().split( ":" );
                         category = StringUtils.strip( split[0] );
                     } else {
@@ -331,7 +331,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
          */
         Collection<String> toremove = new HashSet<>();
         for ( String category : map.keySet() ) {
-           // log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
+            // log.info( ">>>>>>>>>> " + category + ", " + map.get( category ).size() + " items" );
             if ( map.get( category ).size() != result.size() ) {
                 toremove.add( category );
                 continue;
@@ -347,7 +347,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             boolean keeper = false;
             bms:
             for ( BioMaterialValueObject bm : map.get( category ) ) {
-               // log.info( "inspecting " + bm );
+                // log.info( "inspecting " + bm );
                 // Find the characteristic that had this category
                 for ( CharacteristicValueObject ch : bm.getCharacteristics() ) {
                     String mappedCategory = ch.getCategory();
@@ -355,7 +355,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
                     if ( StringUtils.isBlank( mappedCategory ) ) {
                         // redo split (will refactor later)
-                        if ( mappedValue.contains( ":" ) ) {
+                        if ( StringUtils.isNotBlank( mappedValue ) && mappedValue.contains( ":" ) ) {
                             String[] split = mappedValue.split( ":" );
                             mappedCategory = StringUtils.strip( split[0] );
                         } else {
