@@ -355,12 +355,14 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
             this.on("afteredit", function(e) {
                 if (e.column == VALUE_COLUMN) {
-                    e.record.set("term", this.valueCombo.getCharacteristic().value);
-                    e.record.set("termUri", this.valueCombo.getCharacteristic().valueUri);
+                    var c = this.valueCombo.getCharacteristic();
+                    e.record.set("term", c.value);
+                    e.record.set("termUri", c.valueUri);
                 } else if (e.column == CATEGORY_COLUMN) {
                    e.record.set("className", this.categoryCombo.getTerm().term);
                    e.record.set("classUri", this.categoryCombo.getTerm().uri);
                 }
+
             });
 
             if (this.getTopToolbar().deleteButton) {

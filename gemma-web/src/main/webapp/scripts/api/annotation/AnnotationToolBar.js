@@ -103,6 +103,7 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
                     panel.annotationGrid.loadMask.show();
                     panel.createHandler(characteristic, panel.annotationGrid.refresh.createDelegate(panel.annotationGrid));
                     panel.charCombo.reset();
+                    panel.charCombo.clearCharacteristic();
                     panel.descriptionField.reset();
                     panel.termNotNull = false;
                     panel.createButton.disable();
@@ -136,9 +137,18 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
                 disabled: true,
                 handler: function () {
                     panel.annotationGrid.loadMask.show();
+                    // AJAX call to e.g. CharacteristicBrowserController.updateCharacteristics
                     panel.saveHandler(
                         panel.annotationGrid.getEditedCharacteristics(),
                         panel.annotationGrid.refresh.createDelegate(panel.annotationGrid));
+
+                    // probably not necessary since we didn't use the combo?
+                    panel.charCombo.reset();
+                    panel.charCombo.clearCharacteristic();
+
+                    // necessary to avoid carryover
+                    panel.annotationGrid.valueCombo.clearCharacteristic();
+
                     panel.saveButton.disable();
                 },
                 scope: this

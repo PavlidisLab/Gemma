@@ -639,6 +639,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
                     // categoryCombo.reset();
                     this.charCombo.reset();
                     this.fireEvent("create", this.factorValue, c);
+                    this.charCombo.clearCharacteristic(); // avoid carryover to next edit
                 }
             },
             scope: this
