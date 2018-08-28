@@ -163,6 +163,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
             experimentalDesign: this.experimentalDesign
         });
 
+        this.tbar.on("save", function(e){
+            this.valueCombo.clearCharacteristic(); // might not be necessary but can't hurt
+        }, this);
+
         var FACTOR_VALUE_COLUMN = 0; // The id.
         var CATEGORY_COLUMN = 1;
         var VALUE_COLUMN = 2;
@@ -188,6 +192,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     var c = this.valueCombo.getCharacteristic.call(this.valueCombo);
                     e.record.set("value", c.value);
                     e.record.set("valueUri", c.valueUri);
+                    this.valueCombo.clearCharacteristic.call(this.valueCombo); // avoid carryover
                 }
                 this.getView().refresh();
             });
