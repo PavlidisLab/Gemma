@@ -40,6 +40,12 @@ import java.util.Map;
 public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
+    /**
+     * 
+     * @param ee
+     * @param vectors non-persistent, all of the same quantitationtype
+     * @return
+     */
     @Secured({ "GROUP_USER" })
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vectors );

@@ -49,7 +49,7 @@ Gemma.CategoryCombo = Ext.extend(Ext.form.ComboBox, {
         this.on("change", function (combo) {
             if(combo.value){
                 this.selectedTerm = combo.store.data.items[combo.selectedIndex].data;
-                combo.setValue(this.selectedTerm.term + "\t");
+                combo.setValue(this.selectedTerm.term);
             }else{
                 this.selectedTerm = undefined;
             }

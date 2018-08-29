@@ -81,33 +81,31 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
         Gemma.CharacteristicCombo.superclass.initComponent.call(this);
 
+        // FIXME do we use the category? since that's in a separate combo etc.
         this.characteristic = {
             category: null,
             categoryUri: null,
             value: null,
-            valueUri: null
+            valueUri: null,
+            isSelection : false // fixme
         };
 
         this.on("select", function (combo, record, index) {
-
             this.characteristic.value = record.data.value;
             this.characteristic.valueUri = record.data.valueUri;
+            this.characteristic.isSelection = true;
 
-            /*
-             * The addition of whitespace is a complete hack to workaround an extjs limitation. It's to make sure extjs
-             * knows we want it to detect a change - that we've made a selection. It also guarantees that the "value" shown is different from the
-             * underlying record. See bug 1811
-             */
             combo.setValue(record.data.value );
 
-            // Otherwise the combo is only firing this event after losing focus
-        //    this.fireEvent("change", combo);
         });
 
+        // happens when we are doing free text or when combo loses focus
         this.on("change", function (combo, newValue, oldValue ) {
-
             this.characteristic.value = newValue;
-
+            if (!this.characteristic.isSelection) {
+                // then user typed in free text. FIXME this doesn't have the desired effect
+                this.characteristic.valueUri = null;
+            }
         });
 
     },
@@ -122,28 +120,32 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
     },
 
     getCharacteristic: function () {
-
-        /*
-         * check to see if the user has typed anything in the combo box (rather than selecting something); if they
-         * have, remove the URI from the characteristic and update its value, so we end up with a plain text. See
-         * note about hack '\t' above.
-         */
-        // if (this.characteristic.value  && this.getValue() != this.characteristic.value ) {
-        //    this.characteristic.value = this.getValue();
-        //    this.characteristic.valueUri = null;
-        // }
- 
-        return   this.characteristic ;
+        return this.characteristic ;
     },
 
-    setCharacteristic: function (value, valueUri, category, categoryUri) {
-        this.characteristic.value = value;
-        this.characteristic.valueUri = valueUri;
-        this.characteristic.category = category;
-        this.characteristic.categoryUri = categoryUri;
-        this.setValue(value);
+    // setCharacteristic: function (value, valueUri, category, categoryUri) {
+    //     this.characteristic.value = value;
+    //     this.characteristic.valueUri = valueUri;
+    //     this.characteristic.category = category;
+    //     this.characteristic.categoryUri = categoryUri;
+    //     this.setValue(value);
+    // },
+
+    clearCharacteristic : function() {
+       this.characteristic.value = null;
+       this.characteristic.valueUri = null;
+       this.setValue("");
+       // do not clear the category as it is probably still being displayed; it will be reset when the container updates it.
+       //   this.characteristic.category = null;
+       //   this.characteristic.categoryUri = null;
+       this.setValue("");
     },
 
+    /**
+     * Used to store the category information when container's category combo changes. This is a bit weird but at least information is all in one place
+     * @param category
+     * @param categoryUri
+     */
     setCategory: function (category, categoryUri) {
         this.characteristic.category = category;
         this.characteristic.categoryUri = categoryUri;

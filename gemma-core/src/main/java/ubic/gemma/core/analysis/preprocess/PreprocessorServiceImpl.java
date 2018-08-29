@@ -14,10 +14,14 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
@@ -38,9 +42,6 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-
-import java.util.Collection;
-import java.util.LinkedList;
 
 /**
  * Encapsulates steps that are done to expression data sets after they are loaded, or which can be triggered by certain
@@ -113,7 +114,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             this.removeInvalidatedData( ee );
             this.processForMissingValues( ee );
             processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            ee = this.processExceptForVectorCreate( ee );
+            ee = this.processExceptForVectorCreate( ee, true );
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
             return ee;
         } catch ( Exception e ) {
@@ -121,10 +122,14 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
+    /*
+     * Only used for TwoChannelMissingValueCLI? Possibly redundant? FIXME
+     */
     @Override
     public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
         if ( light ) {
             try {
+                // we dont do processForMissingValues missing values 
                 this.removeInvalidatedData( ee );
                 processedExpressionDataVectorService.computeProcessedExpressionData( ee );
                 this.processForSampleCorrelation( ee );
@@ -139,6 +144,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
+    /* used for situations where we don't need to recreate the processed data e.g. when the experimental design is updated */
     @Override
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
@@ -150,10 +156,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         this.checkArrayDesign( ee );
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee ); // need to get at vectors
 
         this.checkCorrectable( ee, force );
-
 
         /*
          * If there are predicted outliers, but which we decide are okay, we just go ahead.
@@ -172,7 +177,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
-            // Convert to vectors
+            // Convert to vectors (persist QT)
             processedExpressionDataVectorService
                     .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
@@ -187,7 +192,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             auditTrailService.addUpdateEvent( ee, eventType, note, detail );
 
             this.removeInvalidatedData( ee );
-            this.processExceptForVectorCreate( ee );
+            this.processExceptForVectorCreate( ee, false ); // don't batch correct again!
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
 
         } catch ( Exception e ) {
@@ -198,9 +203,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
      *
-     * @param ee the expression experiment to be checked
-     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
-     * of.
+     * @param  ee the expression experiment to be checked
+     * @return    a collection of outlier details that contains all the outliers that the expression experiment is aware
+     *            of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = new LinkedList<>();
@@ -215,18 +220,20 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return outliers;
     }
 
-    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
+    private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
         // refresh into context.
         ee = expressionExperimentService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
 
         // batch correct
-        try {
-            this.batchCorrect( ee, false );
-        } catch ( PreprocessingException e ) {
-            log.error( e.getMessage() );
-            log.warn( "Batch correction skipped, proceeding with experiment preprocessing..." );
+        if ( batchCorrect ) {
+            try {
+                this.batchCorrect( ee, false );
+            } catch ( PreprocessingException e ) {
+                log.error( e.getMessage() );
+                log.warn( "Batch correction skipped, proceeding with experiment preprocessing..." );
+            }
         }
 
         /*
@@ -346,6 +353,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return correctedData;
     }
 
+    /**
+     *
+     * @param  ee
+     * @return    processed data vectors; if they don't exist, create them. They will be thawed in either case.
+     */
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );

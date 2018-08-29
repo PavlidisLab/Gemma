@@ -42,8 +42,9 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService; 
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -57,7 +58,7 @@ import java.util.*;
  * Transactional methods.
  *
  * @author Paul
- * @see ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
+ * @see    ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
  */
 @Service
 public class ProcessedExpressionDataVectorCreateHelperServiceImpl
@@ -78,21 +79,30 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
-    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
+    private QuantitationTypeService quantitationTypeService;
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
+    @SuppressWarnings("unchecked")
     @Override
+    @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
-        //        ee = this.processedExpressionDataVectorDao.createProcessedDataVectors( ee, vecs );
-        //        ee = this.eeService.thawLite( ee );
 
+        // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
+        QuantitationType qt = vecs.iterator().next().getQuantitationType();
+        qt = quantitationTypeService.create( qt );
+        for ( ProcessedExpressionDataVector v : vecs ) {
+            v.setQuantitationType( qt );
+        }
+
+        ee.getProcessedExpressionDataVectors().clear();
         ee.getProcessedExpressionDataVectors().addAll( vecs );
+
         expressionExperimentDao.update( ee );
 
         assert ee.getNumberOfDataVectors() != null;
