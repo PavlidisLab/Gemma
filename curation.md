@@ -27,7 +27,7 @@ Each expression platform (i.e. microarray type or “array design”) was re-ann
 ## Data Annotation
 
 In addition to the free text imported along with the data, we are manually curating the data in Gemma to provide high-quality annotations. By ‘annotation’ we refer primarily to descriptive terms applied to each data set, and to the detailed description of the experimental design. Experimental designs are available on import of data from GEO in some cases (as “GEO subsets”). In all other cases, a curator uses the Gemma administrative tools to label each sample according to factors such as tissue and treatment. Experiments themselves are ‘tagged’ with terms describing the study at a higher level. For both types of annotations, as much as is practical we use terms from the MGED Ontology and other Open Biomedical Ontologies  including the human disease ontology [24], the foundational model of anatomy, the chemical entities of biological interest and NIFSTD. Among the benefits of using ontologies are more uniformity within Gemma and better interoperation with other resources. At this writing, nearly all data sets in Gemma have experimental design details as well as broad annotations at the data set level. These annotations are used to help locate data sets in searches, as well as in performing statistical analyses.
-To find out more about how you can edit the experimental design of your own data, please visit our [Experimental Designs](exp_design.md) page.
+To find out more about how you can edit the experimental design of your own data, please visit our [Experimental Designs](designs.md) page.
 
 ## Quality control
 
