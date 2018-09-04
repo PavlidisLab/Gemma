@@ -37,7 +37,7 @@ Quality control in Gemma is both at the level of the data set and the level of a
 
 Outliers are only flagged after a more detailed review, which includes referring back to the original publication and in some cases contacting the original authors for confirmation. We also visualize the distribution of correlations between probes, which is relevant to coexpression analysis. Datasets with “anomalous” correlation distributions (showing strong skew) are flagged. At the level of annotations, most data sets have been reviewed by at least two curators to ensure that experimental designs and other aspects of the experiment are described accurately and to help ensure uniformity and coherence of annotations across studies.
 
-The list of experiments with removed outliers can be [accessed through the Gemma website here](https://dev.gemma.msl.ubc.ca/expressionExperimentsWithQC.html).
+The list of experiments with removed outliers can be [accessed through the Gemma website here](https://gemma.msl.ubc.ca/expressionExperimentsWithQC.html).
 
 Another quality control step is looking at possible batch effects. The process is as follows:
 
