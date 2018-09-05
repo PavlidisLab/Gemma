@@ -27,6 +27,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -37,7 +38,10 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author kelsey
@@ -50,13 +54,18 @@ public interface ExpressionExperimentService
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 
     /**
-     * @param fv must already have the experimental factor filled in
+     * @param ee experiment.
+     * @param fv must already have the experimental factor filled in.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
+    void addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
+     *
+     * @param eeToUpdate experiment to be updated.
+     * @param newVectors vectors to be added.
+     * @return updated experiment.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment addRawVectors( ExpressionExperiment eeToUpdate,
@@ -70,23 +79,20 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Integer countNotTroubled();
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
-
     /**
-     * returns ids of search results
+     * returns ids of search results.
      *
-     * @return collection of ids or an empty collection
+     * @param searchString search string
+     * @return collection of ids or an empty collection.
      */
     Collection<Long> filter( String searchString );
 
     /**
-     * Remove IDs of Experiments that are not from the given taxon
-     * 
-     * @param  id
-     * @param  taxon
-     * @return
+     * Remove IDs of Experiments that are not from the given taxon.
+     *
+     * @param ids   collection to purge.
+     * @param taxon taxon to retain.
+     * @return purged IDs.
      */
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
@@ -94,9 +100,50 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
+    @Override
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> load( Collection<Long> ids );
+
+    @Override
+    @Monitored
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment load( Long id );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> loadAll();
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Long id );
+
     /**
-     * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
-     *         in multiple experiments in Gemma.
+     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
+     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
+     * will not be deleted automatically).
+     *
+     * @param expressionExperiment experiment to be deleted.
+     */
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( ExpressionExperiment expressionExperiment );
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    void update( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param accession accession
+     * @return Experiments which have the given accession. There can be more than one, because one GEO accession can result
+     * in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
@@ -105,28 +152,34 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
-     * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
+     * @param bibRef bibliographic reference
+     * @return a collection of EE that have that reference that BibliographicReference
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
     /**
-     * Given a bioAssay returns an expressionExperiment
+     * @param ba bio material
+     * @return experiment the given bioassay is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay ba );
+    ExpressionExperiment findByBioAssay( BioAssay ba );
 
     /**
-     * Given a bioMaterial returns an expressionExperiment
+     * @param bm bio material
+     * @return experiment the given biomaterial is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByBioMaterial( BioMaterial bm );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }) // slight security overkill, if they got the biomaterial...
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+        // slight security overkill, if they got the biomaterial...
     Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
-     * Returns a collection of expression experiment ids that express the given gene above the given expression level
+     * @param gene gene
+     * @param rank rank
+     * @return a collection of expression experiment ids that express the given gene above the given expression level
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, double rank );
@@ -140,11 +193,13 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByFactorValue( Long factorValueId );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" }) // slight security overkill, if they got the factorvalue...
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+        // slight security overkill, if they got the factorvalue...
     Map<ExpressionExperiment, FactorValue> findByFactorValues( Collection<FactorValue> factorValues );
 
     /**
-     * Returns a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
+     * @param gene gene
+     * @return a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
      * hybridizes to the given Gene)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -165,25 +220,24 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
-
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 
     /**
-     * Get the map of ids to number of terms associated with each expression experiment.
+     * @param ids ids
+     * @return the map of ids to number of terms associated with each expression experiment.
      */
     Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
 
     /**
-     * Get the terms associated this expression experiment.
+     * @param eeId experiment id.
+     * @return the terms associated this expression experiment.
      */
     Collection<AnnotationValueObject> getAnnotations( Long eeId );
 
     /**
-     * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
+     * @param expressionExperiment experiment
+     * @return a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
      * ExpressionExperiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -192,34 +246,37 @@ public interface ExpressionExperimentService
     /**
      * Checks the experiment for a batch confound.
      *
-     * @param  ee the experiment to check.
-     * @return    a string describing the batch confound, or null if there was no batch confound.
+     * @param ee the experiment to check.
+     * @return a string describing the batch confound, or null if there was no batch confound.
      */
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
+     * @param ee experiment
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     *         null if there was no batch information available. Note that we don't look at every component, just the
-     *         first few.
+     * null if there was no batch information available. Note that we don't look at every component, just the
+     * first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
     /**
      * Composes a string describing the batch effect state of the given experiment.
      *
-     * @param  ee the experiment to get the batch effect for.
-     * @return    a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
+     * @param ee the experiment to get the batch effect for.
+     * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
     String getBatchEffectDescription( ExpressionExperiment ee );
 
     /**
-     * Retrieve the BioAssayDimensions for the study.
+     * @param expressionExperiment experiment
+     * @return the BioAssayDimensions for the study.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
-     * Counts the number of biomaterials associated with this expression experiment.
+     * @param expressionExperiment experiment
+     * @return the amount of biomaterials associated with the given expression experiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
@@ -233,42 +290,48 @@ public interface ExpressionExperimentService
     Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * Get the date of the last time any of the array designs associated with this experiment were updated.
+     * @param expressionExperiment experiment
+     * @return the date of the last time any of the array designs associated with this experiment were updated.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Date getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment );
 
     /**
-     * Gets the AuditEvents of the latest link analyses for the specified expression experiment ids. This returns a map
+     * @param ids ids
+     * @return AuditEvents of the latest link analyses for the specified expression experiment ids. This returns a map
      * of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastLinkAnalysis( Collection<Long> ids );
 
     /**
-     * Gets the AuditEvents of the latest missing value analysis for the specified expression experiment ids. This
+     * @param ids ids
+     * @return AuditEvents of the latest missing value analysis for the specified expression experiment ids. This
      * returns a map of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastMissingValueAnalysis( Collection<Long> ids );
 
     /**
-     * Gets the AuditEvents of the latest rank computation for the specified expression experiment ids. This returns a
+     * @param ids ids
+     * @return AuditEvents of the latest rank computation for the specified expression experiment ids. This returns a
      * map of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 
     /**
-     * Function to get a count of expression experiments, grouped by Taxon
+     * @return a count of expression experiments, grouped by Taxon
      */
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
-     * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
+     * @param ids ids
+     * @return map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
      */
     Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
 
     /**
-     * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
+     * @param ids ids
+     * @return map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials and only factors that aren't batch
      */
     Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
@@ -276,17 +339,22 @@ public interface ExpressionExperimentService
     /**
      * Iterates over the quantitation types for a given expression experiment and returns the preferred quantitation
      * types.
+     *
+     * @param ee experiment
+     * @return quantitation types
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<QuantitationType> getPreferredQuantitationType( ExpressionExperiment EE );
+    Collection<QuantitationType> getPreferredQuantitationType( ExpressionExperiment ee );
 
     /**
-     * Function to get a count of an expressionExperiment's design element data vectors, grouped by quantitation type
+     * @param id id
+     * @return count of an expressionExperiment's design element data vectors, grouped by quantitation type
      */
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long Id );
+    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id );
 
     /**
-     * Return all the quantitation types used by the given expression experiment
+     * @param expressionExperiment experiment
+     * @return all the quantitation types used by the given expression experiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
@@ -294,6 +362,10 @@ public interface ExpressionExperimentService
     /**
      * Get the quantitation types for the expression experiment, for the array design specified. This is really only
      * useful for expression experiments that use more than one array design.
+     *
+     * @param expressionExperiment experiment
+     * @param arrayDesign          platform
+     * @return quantitation type
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
@@ -304,7 +376,8 @@ public interface ExpressionExperimentService
             Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * Return any ExpressionExperimentSubSets this Experiment might have.
+     * @param expressionExperiment experiment
+     * @return any ExpressionExperimentSubSets this Experiment might have.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
@@ -314,7 +387,8 @@ public interface ExpressionExperimentService
     /**
      * Returns the taxon of the given expressionExperiment.
      *
-     * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples)
+     * @param bioAssaySet bioAssaySet.
+     * @return taxon, or null if the experiment taxon cannot be determined (i.e., if it has no samples).
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
@@ -324,21 +398,17 @@ public interface ExpressionExperimentService
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
-
-    @Override
-    @Monitored
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadAll();
-
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
+
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, List<ObjectFilter[]> filter );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
@@ -353,11 +423,13 @@ public interface ExpressionExperimentService
     /**
      * Special method for front-end access
      *
-     * @param  orderField the field to order the results by.
-     * @param  descending whether the ordering by the orderField should be descending.
-     * @param  ids        only list specific ids.
-     * @param  taxon      only list experiments within specific taxon.
-     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     * @param orderField the field to order the results by.
+     * @param descending whether the ordering by the orderField should be descending.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
+     * @param limit      limit
+     * @param start      offset
+     * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
@@ -370,7 +442,9 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
+     * @param ids           ids to load
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
+     * @return value objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
@@ -380,30 +454,10 @@ public interface ExpressionExperimentService
             Collection<Long> ids );
 
     /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter );
-
-    /**
-     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
-     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically, though this behavior could be changed)
-     */
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( Long id );
-
-    /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.
      *
+     * @param ee experiment
+     * @param qt quantitation type
      * @return number of vectors removed.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -414,8 +468,9 @@ public interface ExpressionExperimentService
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
      *
-     * @param  vectors If they are from more than one platform, that will be dealt with.
-     * @return         the updated Experiment
+     * @param ee      experiment
+     * @param vectors If they are from more than one platform, that will be dealt with.
+     * @return the updated Experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment replaceRawVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
@@ -445,14 +500,13 @@ public interface ExpressionExperimentService
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
+     *
+     * @param expressionExperiment experiment
+     * @return thawed experiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
-
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    void update( ExpressionExperiment expressionExperiment );
 }

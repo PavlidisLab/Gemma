@@ -52,6 +52,9 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
 
     /**
      * Gets the expression experiment for the specified experimental design object
+     *
+     * @param experimentalDesign experimental design
+     * @return experiment the given design belongs to
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );

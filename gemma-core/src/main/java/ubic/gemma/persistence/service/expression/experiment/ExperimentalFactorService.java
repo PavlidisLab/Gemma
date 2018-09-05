@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,8 @@ public interface ExperimentalFactorService
 
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
+     *
+     * @param experimentalFactor the factor to be deleted
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void delete( ExperimentalFactor experimentalFactor );
@@ -55,12 +57,12 @@ public interface ExperimentalFactorService
     ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor load( java.lang.Long id );
-
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExperimentalFactor> load( Collection<Long> ids );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExperimentalFactor load( java.lang.Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

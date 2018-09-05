@@ -15,34 +15,22 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
 
     /**
      * Load a value object corresponding to an entity
-     * 
-     * @param entity
-     * @return
+     *
+     * @param entity the entity to turn into a value object
+     * @return a value object
      */
     VO loadValueObject( O entity );
 
     /**
-     * Load value objects corresponding to entities 
-     * @param entities
-     * @return
+     * Load value objects corresponding to entities
+     *
+     * @param entities the entities to turn into value objects
+     * @return a collection of value objects
      */
     Collection<VO> loadValueObjects( Collection<O> entities );
 
-    /**
-     * 
-     * @return
-     */
     Collection<VO> loadAllValueObjects();
 
-    /**
-     * 
-     * @param offset
-     * @param limit
-     * @param orderBy
-     * @param asc
-     * @param filter
-     * @return
-     */
     Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }

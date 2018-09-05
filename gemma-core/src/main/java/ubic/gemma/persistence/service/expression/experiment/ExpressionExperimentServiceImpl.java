@@ -72,7 +72,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see    ExpressionExperimentService
+ * @see ExpressionExperimentService
  */
 @Service
 @Transactional
@@ -140,7 +140,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
+    public void addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
         fv.setSecurityOwner( experiment );
@@ -153,13 +153,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
         expressionExperimentDao.update( experiment );
-        return fv;
 
-    }
-
-    @Override
-    public Integer countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
     }
 
     @Override
@@ -211,7 +205,8 @@ public class ExpressionExperimentServiceImpl
             vec.setQuantitationType( newQt );
         }
 
-        ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors ); // FIXME should be able to just do ee.getRawExpressionDataVectors.addAll(newVectors)
+        ee = rawExpressionDataVectorDao.addVectors( ee.getId(),
+                newVectors ); // FIXME should be able to just do ee.getRawExpressionDataVectors.addAll(newVectors)
 
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
@@ -225,6 +220,37 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         return this.expressionExperimentDao.browse( start, limit );
+    }
+
+    @Override
+    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+        if ( !hasBatchInformation ) {
+            boolean allBAsHaveDate = true;
+            ee = this.thawBioAssays( ee );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getProcessingDate() == null ) {
+                    allBAsHaveDate = false;
+                    break;
+                }
+            }
+            if ( allBAsHaveDate ) {
+                hasBatchInformation = true;
+            }
+        }
+        return hasBatchInformation;
+    }
+
+    @Override
+    public Integer countNotTroubled() {
+        return this.expressionExperimentDao.countNotTroubled();
     }
 
     /**
@@ -253,9 +279,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
+    public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
+        return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
 
     /**
@@ -264,6 +289,12 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
+        return this.expressionExperimentDao.findByAccession( accession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
@@ -426,51 +457,31 @@ public class ExpressionExperimentServiceImpl
             annotationValue.setObjectClass( "ExperimentTag" );
 
             annotations.add( annotationValue );
-            seenTerms.add(annotationValue.getTermName());
+            seenTerms.add( annotationValue.getTermName() );
         }
 
-        /*
-         * If can be done without much slowdown:
-         */
 
         /*
-         * add: certain selected (constant?) characteristics from biomaterials? (non-redudnant with tags)
+         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from biomaterials? (non-redundant with tags)
          */
-        for(AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId )) {
-            if (!seenTerms.contains( v.getTermName() )) {
+        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
+            if ( !seenTerms.contains( v.getTermName() ) ) {
                 annotations.add( v );
             }
-            seenTerms.add(v.getTermName());
+            seenTerms.add( v.getTermName() );
         }
 
         /*
-         * Add: certain characteristics from factor values? (non-baseline, non-batch, non-redudnant with tags). This is tricky because they are so specific...
+         * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline, non-batch, non-redundant with tags). This is tricky because they are so specific...
          */
-         for(AnnotationValueObject v: this.getAnnotationsByFactorValues( eeId ) ) {
-             if (!seenTerms.contains( v.getTermName() )) {
-                 annotations.add( v );
-             }
-             seenTerms.add(v.getTermName());
-         }
+        for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
+            if ( !seenTerms.contains( v.getTermName() ) ) {
+                annotations.add( v );
+            }
+            seenTerms.add( v.getTermName() );
+        }
 
         return annotations;
-    }
-
-    /**
-     * @param  eeId
-     * @return
-     */
-    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
-    }
-
-    /**
-     * @param  eeId
-     * @return
-     */
-    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
-
     }
 
     @Override
@@ -666,8 +677,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
-        return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long id ) {
+        return this.expressionExperimentDao.getQuantitationTypeCountById( id );
     }
 
     @Override
@@ -709,6 +720,32 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
+    }
+
+    /**
+     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *           checking
+     *           the curation details of the object directly, as this method also checks all the array designs the
+     *           given
+     *           experiment belongs to.
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     */
+    @Override
+    public boolean isTroubled( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails().getTroubled() )
+            return true;
+        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
+        for ( ArrayDesign ad : ads ) {
+            if ( ad.getCurationDetails().getTroubled() )
+                return true;
+        }
+        return false;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
             boolean descending ) {
@@ -726,6 +763,12 @@ public class ExpressionExperimentServiceImpl
     public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
             boolean descending, Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
+            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -752,12 +795,6 @@ public class ExpressionExperimentServiceImpl
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
         return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
-            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -827,55 +864,6 @@ public class ExpressionExperimentServiceImpl
         return ee;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
-    }
-
-    @Override
-    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
-    }
-
-    /**
-     * @param  ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *            checking
-     *            the curation details of the object directly, as this method also checks all the array designs the
-     *            given
-     *            experiment belongs to.
-     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
-     */
-    @Override
-    public boolean isTroubled( ExpressionExperiment ee ) {
-        if ( ee.getCurationDetails().getTroubled() )
-            return true;
-        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
-        for ( ArrayDesign ad : ads ) {
-            if ( ad.getCurationDetails().getTroubled() )
-                return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
-        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
-    }
-
     /**
      * Will add the characteristic to the expression experiment and persist the changes.
      *
@@ -905,29 +893,26 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
-        boolean hasBatchInformation = false;
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thaw( expressionExperiment );
+    }
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
-            }
-        }
-        if ( !hasBatchInformation ) {
-            boolean allBAsHaveDate = true;
-            ee = this.thawBioAssays( ee );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getProcessingDate() == null ) {
-                    allBAsHaveDate = false;
-                    break;
-                }
-            }
-            if ( allBAsHaveDate ) {
-                hasBatchInformation = true;
-            }
-        }
-        return hasBatchInformation;
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+    }
+
+    @Override
+    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
     }
 
     @Override
@@ -1003,14 +988,23 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
+     * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    }
+
+    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
+    }
+
+    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
+        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
+
     }
 
     private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
@@ -1022,18 +1016,11 @@ public class ExpressionExperimentServiceImpl
         return false;
     }
 
-    //    private String getLabelFromUri( String uri ) {
-    //        if ( StringUtils.isBlank( uri ) ) return null;
-    //        OntologyResource resource = ontologyService.getResource( uri );
-    //        if ( resource != null )
-    //            return resource.getLabel();
-    //
-    //        return null;
-    //    }
-
     /**
+     * @param ees  experiments
+     * @param type event type
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
@@ -1044,17 +1031,6 @@ public class ExpressionExperimentServiceImpl
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#filterByTaxon(java.util.
-     * Collection, ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
-        return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
 
 }

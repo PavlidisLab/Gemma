@@ -64,17 +64,23 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.name = ee.getName();
         this.source = ee.getSource();
         this.description = ee.getDescription();
-        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ? ee.getBioAssays().size() : null;
-        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ? ee.getAccession().toString() : null;
-        this.experimentalDesign = ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() )
-                ? ee.getExperimentalDesign().getId()
-                : null;
+        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
+                ee.getBioAssays().size() :
+                null;
+        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ?
+                ee.getAccession().toString() :
+                null;
+        this.experimentalDesign =
+                ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ?
+                        ee.getExperimentalDesign().getId() :
+                        null;
     }
 
     /**
      * Constructor for creating an EEVO from a database row retrieved in the DAO
      *
-     * @param row the database row to read the VO parameters from
+     * @param row          the database row to read the VO parameters from
+     * @param totalInBatch the number indicating how many VOs have been returned in the database query along with this one
      */
     public ExpressionExperimentValueObject( Object[] row, Integer totalInBatch ) {
         super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[27], ( Boolean ) row[15],
@@ -137,8 +143,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // 26-28 used in call to super.
 
         // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
-        geeq = row[28] == null ? null
-                : SecurityUtil.isUserAdmin() ? new GeeqAdminValueObject( ( Geeq ) row[28] ) : new GeeqValueObject( ( Geeq ) row[28] );
+        geeq = row[28] == null ?
+                null :
+                SecurityUtil.isUserAdmin() ?
+                        new GeeqAdminValueObject( ( Geeq ) row[28] ) :
+                        new GeeqValueObject( ( Geeq ) row[28] );
 
         // meta info
         this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
@@ -147,9 +156,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
             String accession, String batchConfound, String batchEffect, String externalDatabase, String externalUri,
             String metadata, String shortName, String source, String taxon, String technologyType, Long taxonId,
-            Long experimentalDesign, Integer processedExpressionVectorCount,
-            Integer arrayDesignCount, Integer bioMaterialCount, Boolean currentUserHasWritePermission,
-            Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
+            Long experimentalDesign, Integer processedExpressionVectorCount, Integer arrayDesignCount,
+            Integer bioMaterialCount, Boolean currentUserHasWritePermission, Boolean currentUserIsOwner,
+            Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
             AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
             AuditEventValueObject lastNoteUpdateEvent, GeeqValueObject geeqValueObject ) {

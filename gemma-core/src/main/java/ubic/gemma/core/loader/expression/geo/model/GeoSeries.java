@@ -33,12 +33,39 @@ import java.util.*;
 @SuppressWarnings("unused") // Possible external use
 public class GeoSeries extends GeoData {
 
-    public enum SeriesType {
-        geneExpressionByArray, geneExpressionBySAGE, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, genomeVariationByGenomeTiling, methylationArraybased, methylationByGenomeTiling, nonCodingRNAProfilingArraybased, nonCodingRNAProfilingBySequencing, other, thirdPartyReanalysis,
-    }
-
     private static final Logger log = LoggerFactory.getLogger( GeoSeries.class );
     private static final long serialVersionUID = -1058350558444775537L;
+    private final Collection<GeoSample> samples;
+    private final Collection<SeriesType> seriesTypes = new HashSet<>();
+    private final Collection<String> subSeries;
+    private final Map<Integer, GeoVariable> variables;
+    private Collection<GeoContact> contributers;
+    private Collection<GeoDataset> dataSets;
+    private boolean isSubSeries = false;
+    private boolean isSuperSeries = false;
+    private Collection<String> keyWords;
+    private String lastUpdateDate = "";
+    private String overallDesign = "";
+    private Collection<String> pubmedIds;
+    private Map<Integer, GeoReplication> replicates;
+    private GeoSampleCorrespondence sampleCorrespondence;
+    private String summary = "";
+    private String supplementaryFile = "";
+    private GeoValues values;
+    private Collection<String> webLinks;
+
+    public GeoSeries() {
+        keyWords = new HashSet<>();
+        pubmedIds = new HashSet<>();
+        variables = new HashMap<>();
+        replicates = new HashMap<>();
+        webLinks = new HashSet<>();
+        contributers = new HashSet<>();
+        samples = new HashSet<>();
+        dataSets = new HashSet<>();
+        values = new GeoValues();
+        subSeries = new HashSet<>();
+    }
 
     /**
      * See also GeoDataset.convertStringToExperimentType
@@ -75,15 +102,11 @@ public class GeoSeries extends GeoData {
                 .equalsIgnoreCase( "cell_type_comparison_design" ) ) {
             return SeriesType.other;
         } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
-                || string
-                        .equalsIgnoreCase( "time-course" )
-                || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
-                        .equalsIgnoreCase( "SuperSeries" )
-                || string.equalsIgnoreCase( "Logical set" ) || string
-                        .equalsIgnoreCase( "DNA Oligonucleotide Array" )
-                || string
-                        .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
+                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" ) || string
+                .equalsIgnoreCase( "time-course" ) || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
+                .equalsIgnoreCase( "SuperSeries" ) || string.equalsIgnoreCase( "Logical set" ) || string
+                .equalsIgnoreCase( "DNA Oligonucleotide Array" ) || string
+                .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
             // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
             // different than 'Other' (note capitalization). The old meaning is still expression arrays.
             return SeriesType.geneExpressionByArray;
@@ -96,40 +119,6 @@ public class GeoSeries extends GeoData {
             //
             // throw new IllegalArgumentException( "Unknown series type '" + string + "'" );
         }
-    }
-
-    private Collection<GeoContact> contributers;
-    private Collection<GeoDataset> dataSets;
-    private boolean isSubSeries = false;
-    private boolean isSuperSeries = false;
-    private Collection<String> keyWords;
-    private String lastUpdateDate = "";
-    private String overallDesign = "";
-    private Collection<String> pubmedIds;
-    private Map<Integer, GeoReplication> replicates;
-    private GeoSampleCorrespondence sampleCorrespondence;
-    private final Collection<GeoSample> samples;
-    private final Collection<SeriesType> seriesTypes = new HashSet<>();
-    private final Collection<String> subSeries;
-    private String summary = "";
-    private String supplementaryFile = "";
-    private GeoValues values;
-
-    private final Map<Integer, GeoVariable> variables;
-
-    private Collection<String> webLinks;
-
-    public GeoSeries() {
-        keyWords = new HashSet<>();
-        pubmedIds = new HashSet<>();
-        variables = new HashMap<>();
-        replicates = new HashMap<>();
-        webLinks = new HashSet<>();
-        contributers = new HashSet<>();
-        samples = new HashSet<>();
-        dataSets = new HashSet<>();
-        values = new GeoValues();
-        subSeries = new HashSet<>();
     }
 
     public void addContributer( GeoContact contributer ) {
@@ -194,6 +183,13 @@ public class GeoSeries extends GeoData {
         return this.contributers;
     }
 
+    /**
+     * @param contributers The contributers to set.
+     */
+    public void setContributers( Collection<GeoContact> contributers ) {
+        this.contributers = contributers;
+    }
+
     public Collection<GeoDataset> getDatasets() {
         return this.dataSets;
     }
@@ -206,12 +202,26 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param type The type to set.
+     */
+    public void setKeyWords( Collection<String> type ) {
+        this.keyWords = type;
+    }
+
+    /**
      * Returns the date the series was last updated.
      *
      * @return String
      */
     public String getLastUpdateDate() {
         return lastUpdateDate;
+    }
+
+    /**
+     * @param lastUpdateDate the date the series was last updated.
+     */
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
     /**
@@ -222,10 +232,24 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param overallDesign The overallDesign to set.
+     */
+    public void setOverallDesign( String overallDesign ) {
+        this.overallDesign = overallDesign;
+    }
+
+    /**
      * @return Returns the pubmedIds.
      */
     public Collection<String> getPubmedIds() {
         return this.pubmedIds;
+    }
+
+    /**
+     * @param pubmedIds The pubmedIds to set.
+     */
+    public void setPubmedIds( Collection<String> pubmedIds ) {
+        this.pubmedIds = pubmedIds;
     }
 
     /**
@@ -236,10 +260,24 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param replicates The replicates to set.
+     */
+    public void setReplicates( Map<Integer, GeoReplication> replicates ) {
+        this.replicates = replicates;
+    }
+
+    /**
      * @return Returns the sampleCorrespondence.
      */
     public GeoSampleCorrespondence getSampleCorrespondence() {
         return this.sampleCorrespondence;
+    }
+
+    /**
+     * @param sampleCorrespondence The sampleCorrespondence to set.
+     */
+    public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
+        this.sampleCorrespondence = sampleCorrespondence;
     }
 
     public Collection<GeoSample> getSamples() {
@@ -264,6 +302,10 @@ public class GeoSeries extends GeoData {
         return this.summary;
     }
 
+    public void setSummaries( String summary ) {
+        this.summary = summary;
+    }
+
     /**
      * @return String
      */
@@ -271,8 +313,16 @@ public class GeoSeries extends GeoData {
         return supplementaryFile;
     }
 
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
+    }
+
     public GeoValues getValues() {
         return values;
+    }
+
+    public void setValues( GeoValues values ) {
+        this.values = values;
     }
 
     /**
@@ -300,6 +350,13 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * @param webLinks The webLinks to set.
+     */
+    public void setWebLinks( Collection<String> webLinks ) {
+        this.webLinks = webLinks;
+    }
+
+    /**
      * @return the isSubSeries
      */
     public boolean isSubSeries() {
@@ -314,9 +371,9 @@ public class GeoSeries extends GeoData {
     }
 
     /**
-     * Clean up samples we have decided are ineliglible (i.e., non transcriptomic)
-     * 
-     * @param samplesToSkip
+     * Clean up samples we have decided are ineligible (i.e., non transcriptomic)
+     *
+     * @param samplesToSkip the samples to remove
      */
     public void removeSamples( Collection<GeoSample> samplesToSkip ) {
         if ( samplesToSkip == null || samplesToSkip.isEmpty() ) {
@@ -330,13 +387,6 @@ public class GeoSeries extends GeoData {
      */
     public void setContact( GeoContact contact ) {
         this.contact = contact;
-    }
-
-    /**
-     * @param contributers The contributers to set.
-     */
-    public void setContributers( Collection<GeoContact> contributers ) {
-        this.contributers = contributers;
     }
 
     public void setDataSets( Collection<GeoDataset> dataSets ) {
@@ -357,65 +407,8 @@ public class GeoSeries extends GeoData {
         this.isSuperSeries = isSuperSeries;
     }
 
-    /**
-     * @param type The type to set.
-     */
-    public void setKeyWords( Collection<String> type ) {
-        this.keyWords = type;
-    }
-
-    /**
-     * @param lastUpdateDate the date the series was last updated.
-     */
-    public void setLastUpdateDate( String lastUpdateDate ) {
-        this.lastUpdateDate = lastUpdateDate;
-    }
-
-    /**
-     * @param overallDesign The overallDesign to set.
-     */
-    public void setOverallDesign( String overallDesign ) {
-        this.overallDesign = overallDesign;
-    }
-
-    /**
-     * @param pubmedIds The pubmedIds to set.
-     */
-    public void setPubmedIds( Collection<String> pubmedIds ) {
-        this.pubmedIds = pubmedIds;
-    }
-
-    /**
-     * @param replicates The replicates to set.
-     */
-    public void setReplicates( Map<Integer, GeoReplication> replicates ) {
-        this.replicates = replicates;
-    }
-
-    /**
-     * @param sampleCorrespondence The sampleCorrespondence to set.
-     */
-    public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
-        this.sampleCorrespondence = sampleCorrespondence;
-    }
-
-    public void setSummaries( String summary ) {
-        this.summary = summary;
-    }
-
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
-    }
-
-    public void setValues( GeoValues values ) {
-        this.values = values;
-    }
-
-    /**
-     * @param webLinks The webLinks to set.
-     */
-    public void setWebLinks( Collection<String> webLinks ) {
-        this.webLinks = webLinks;
+    public enum SeriesType {
+        geneExpressionByArray, geneExpressionBySAGE, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, genomeVariationByGenomeTiling, methylationArraybased, methylationByGenomeTiling, nonCodingRNAProfilingArraybased, nonCodingRNAProfilingBySequencing, other, thirdPartyReanalysis,
     }
 
 }
