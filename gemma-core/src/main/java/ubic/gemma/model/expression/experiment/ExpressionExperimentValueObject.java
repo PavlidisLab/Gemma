@@ -358,40 +358,14 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.currentUserIsOwner = currentUserIsOwner;
     }
 
-    public Boolean getPublic() {
-        return isPublic;
-    }
-
-    public void setPublic( Boolean aPublic ) {
-        isPublic = aPublic;
-    }
-
-    public Boolean getShared() {
-        return isShared;
-    }
-
-    public void setShared( Boolean shared ) {
-        isShared = shared;
-    }
-
     @Override
     public boolean getIsPublic() {
         return this.isPublic;
     }
 
     @Override
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    @Override
     public boolean getIsShared() {
         return this.isShared;
-    }
-
-    @Override
-    public void setIsShared( boolean isShared ) {
-        this.isShared = isShared;
     }
 
     @Override
@@ -411,6 +385,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( this.currentUserIsOwner == null )
             return false;
         return this.currentUserIsOwner;
+    }
+
+    @Override
+    public void setIsPublic( boolean b ) {
+        this.isPublic = b;
+    }
+
+    @Override
+    public void setIsShared( boolean b ) {
+        this.isShared = b;
     }
 
     @Override
