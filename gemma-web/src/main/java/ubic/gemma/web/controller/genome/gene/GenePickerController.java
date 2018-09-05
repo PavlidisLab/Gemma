@@ -46,9 +46,6 @@ import java.util.*;
 public class GenePickerController {
 
     @Autowired
-    private GeneCoreService geneCoreService;
-
-    @Autowired
     private GeneSearchService geneSearchService;
 
     @Autowired
@@ -166,7 +163,7 @@ public class GenePickerController {
      * @return         Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
-        return geneCoreService.searchGenes( query, taxonId );
+        return geneService.searchGenes( query, taxonId );
     }
 
     /**
@@ -217,7 +214,7 @@ public class GenePickerController {
      */
     public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
 
-        Collection<GeneValueObject> geneValueObjects = this.geneCoreService.searchGenes( query, taxonId );
+        Collection<GeneValueObject> geneValueObjects = this.geneService.searchGenes( query, taxonId );
 
         Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<>();
 
