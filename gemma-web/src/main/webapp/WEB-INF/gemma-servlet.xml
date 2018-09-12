@@ -650,12 +650,6 @@
         </dwr:remote>
     </bean>
 
-    <bean id="linkOutController" class="ubic.gemma.web.controller.LinkOutController">
-        <dwr:remote javascript="LinkOutController">
-            <dwr:include method="getAllenBrainAtlasLink"/>
-        </dwr:remote>
-    </bean>
-
     <bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityControllerImpl">
         <dwr:remote javascript="SecurityController">
             <dwr:include method="addUserToGroup"/>

@@ -62,7 +62,7 @@ public class XMLUtils {
         return r;
     }
 
-    public static String extractOneChild( Node parent, String elementName ) {
+    public static String extractOneChildText( Node parent, String elementName ) {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
             Node jitem = jNodes.item( q );
@@ -71,6 +71,17 @@ public class XMLUtils {
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
                 return XMLUtils.getTextValue( ( Element ) jitem );
+            }
+        }
+        return null;
+    }
+
+    public static Node extractOneChild( Node parent, String elementName ) {
+        NodeList jNodes = parent.getChildNodes();
+        for ( int q = 0; q < jNodes.getLength(); q++ ) {
+            Node jitem = jNodes.item( q );
+            if ( jitem.getNodeName().equals( elementName ) ) {
+                return jitem;
             }
         }
         return null;

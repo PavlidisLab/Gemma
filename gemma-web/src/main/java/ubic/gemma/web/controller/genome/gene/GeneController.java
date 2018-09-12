@@ -94,13 +94,13 @@ public class GeneController extends BaseController {
     @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
     public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
         Collection<ImageValueObject> images = new ArrayList<>();
-        GeneValueObject gene = geneService.loadValueObjectById( geneId );
+        Gene gene = geneService.load( geneId );
 
         String queryGeneSymbol = gene.getOfficialSymbol();
-        GeneValueObject mouseGene = gene;
+        Gene mouseGene = gene;
         boolean usingHomologue = false;
-        if ( !gene.getTaxonCommonName().equals( "mouse" ) ) {
-            mouseGene = this.homologeneService.getHomologueValueObject( geneId, "mouse" );
+        if ( !gene.getTaxon().getCommonName().equals( "mouse" ) ) {
+            mouseGene = this.homologeneService.getHomologue( gene, taxonService.findByCommonName( "mouse" ));
             usingHomologue = true;
         }
 
@@ -108,7 +108,7 @@ public class GeneController extends BaseController {
             Collection<ImageSeries> imageSeries;
 
             try {
-                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene );
                 String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
 
                 Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );

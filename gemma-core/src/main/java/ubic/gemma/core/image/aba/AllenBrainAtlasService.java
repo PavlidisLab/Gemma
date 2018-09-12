@@ -15,6 +15,7 @@
 package ubic.gemma.core.image.aba;
 
 import org.w3c.dom.Document;
+import ubic.gemma.model.genome.Gene;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,72 +29,66 @@ import java.util.Collection;
 public interface AllenBrainAtlasService {
 
     /**
-     * http://brain-map.org
+     * http://api.brain-map.org/api/v2/data
      */
-    String API_BASE_URL = "http://www.brain-map.org";
+    String API_BASE_URL = "http://api.brain-map.org/api/v2";
     /**
-     * /aba/api/gene/[geneSymbol].xml";
+     * /Gene/query.xml?criteria=rma::criteria,[entrez_id$eq**NCBI_ID**]";
      */
-    String GET_GENE_URL = "/aba/api/gene/@.xml";
+    String GET_GENE_URL = "/data/Gene/query.xml?criteria=rma::criteria,[entrez_id$eq@]";
     /**
-     * /aba/api/imageseries/[imageSeriesId].xml
+     * /SectionDataSet/query.xml?criteria=rma::criteria,genes[entrez_id$eq**NCBI_ID**]
      */
-    String GET_IMAGESERIES_URL = "/aba/api/imageseries/@.xml";
+    String GET_IMAGESERIES_URL = "/data/SectionDataSet/query.xml?criteria=rma::criteria,genes[entrez_id$eq@],rma::include,section_images";
     /**
      * /aba/api/neuroblast/[structure]/[imageseriesid].xml
      */
-    String GET_NEUROBLAST_URL = "/aba/api/neuroblast/@/@.xml";
+    String GET_NEUROBLAST_URL = "/aba/api/neuroblast/@/@.xml"; //FIXME
     /**
      * /aba/api/neuroblast/[structure]/[imageseriesid]/[Sagittal | Coronal].xml
      */
-    String GET_NEUROBLAST_PLANE_URL = "/aba/api/neuroblast/@/@/@.xml";
+    String GET_NEUROBLAST_PLANE_URL = "/aba/api/neuroblast/@/@/@.xml";//FIXME
     /**
      * /aba/api/expression/[imageSeriesId].sva
      */
-    String GET_EXPRESSION_VOLUME_URL = "/aba/api/expression/@.sva";
+    String GET_EXPRESSION_VOLUME_URL = "/aba/api/expression/@.sva";//FIXME
     /**
      * /aba/api/expression/imageseries/[imageSeriesId].xml
      */
-    String GET_EXPRESSION_INFO_URL = "/aba/api/expression/imageseries/@.xml";
+    String GET_EXPRESSION_INFO_URL = "/aba/api/expression/imageseries/@.xml";//FIXME
     /**
      * /aba/api/ara/[Sagittal | Coronal].xml
      */
-    String GET_ATLAS_INFO_URL = "/aba/api/ara/@.xml";
+    String GET_ATLAS_INFO_URL = "/aba/api/ara/@.xml";//FIXME
     /**
      * /aba/api/atlas/map/[imageseriesid].map
      */
-    String GET_ATLAS_IMAGE_MAP_URL = "/aba/api/atlas/map/@.map";
+    String GET_ATLAS_IMAGE_MAP_URL = "/aba/api/atlas/map/@.map";//FIXME
     /**
      * /aba/api/image/info?path=[the actual path to the image, as recovered from the imageSeries.xml]
      */
-    String GET_IMAGE_INFO_BYPATH_URL = "/aba/api/image/info?path=@";
+    String GET_IMAGE_INFO_BYPATH_URL = "/aba/api/image/info?path=@";//FIXME
     /**
      * /aba/api/image/info/[imageId].xml
      */
-    String GET_IMAGE_INFO_BYID_URL = "/aba/api/image/info/@.xml";
+    String GET_IMAGE_INFO_BYID_URL = "/aba/api/image/info/@.xml";//FIXME
     /**
-     * /aba/api/image?zoom=[image tier; usually 0-6, or -1 for highest tier]&amp;path=[actual path, as above]
+     * /image_download/**IMAGE ID**?downsample=**SIZE REDUCTION FACTOR**
      */
-    String GET_IMAGE_URL = "/aba/api/image?mime=@&zoom=@&path=@";
+    String GET_IMAGE_URL = "/image_download/@?downsample=@";
     /**
      * /aba/api/image?zoom=[tier]&amp;top=[unscaled pixel top]&amp;left=[unscaled pixel left]&amp;width=[actual pixel
      * width]&amp;height=[actual pixel height]&amp;path=[as above]
      */
-    String GET_IMAGE_ROI_URL = "/aba/api/image?mime=@&zoom=@&top=@&left=@&width=@&height=@&path=@";
+    String GET_IMAGE_ROI_URL = "/aba/api/image?mime=@&zoom=@&top=@&left=@&width=@&height=@&path=@";//FIXME
     /**
      * /aba/api/gene/search?term=[some text, which will be used in a contains query for symbol, name &amp; aliases]
      */
-    String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";
+    String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";//FIXME
     /**
      * For showing details about gene information on the allen brain atlas web site
      */
-    String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";
-    /**
-     * requesting an ROI with MIME_IMAGE from a browser will let the image be shown within the browser; using
-     * MIME_APPLICATION will cause the user to prompt to download.
-     */
-    Integer MIME_IMAGE = 2;
-    Integer MIME_APPLICATION = 1;
+    String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";//FIXME
 
     /**
      * @param imageseriesId image series ID
@@ -167,11 +162,11 @@ public interface AllenBrainAtlasService {
      * Returns AbaGene object for a gene symbol. If it fails to find a gene using the given string it tries the first
      * letter capitalized string.
      *
-     * @param givenGene given gene
-     * @return AbaGene
-     * @throws IOException if there is a problem while manipulating the file
+     * @param gene gene to look up in ABA.
+     * @return AbaGene.
+     * @throws IOException if there is a problem while manipulating the file.
      */
-    AbaGene getGene( String givenGene ) throws IOException;
+    AbaGene getGene( Gene gene ) throws IOException;
 
     /**
      * Given a valid official symbol for a gene (case sensitive) returns an allen brain atals gene details URL
@@ -219,12 +214,11 @@ public interface AllenBrainAtlasService {
             Integer mimeType, OutputStream out ) throws IOException;
 
     /**
-     * ImageSeriesID is an integer; find these as part of the return document from the Genes method.
      *
-     * @param imageseriesId image series id
+     * @param gene the gene to get the series for.
      * @return collection of images
      */
-    Collection<Image> getImageSeries( Integer imageseriesId );
+    ImageSeries getImageSeries( Gene gene );
 
     /**
      * Returns a collection of images from all the imageSeries given (1 imageSeries can have many images)
@@ -248,7 +242,7 @@ public interface AllenBrainAtlasService {
      * @return all the image series that contain saggital images for the given gene
      * @throws IOException if there is a problem while manipulating the file
      */
-    Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException;
+    Collection<ImageSeries> getRepresentativeSaggitalImages( Gene gene ) throws IOException;
 
     /**
      * @return Is verbose logging on?

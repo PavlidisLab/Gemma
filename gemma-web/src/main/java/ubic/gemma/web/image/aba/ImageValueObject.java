@@ -58,10 +58,9 @@ public class ImageValueObject implements java.io.Serializable {
 
         for ( Image i : images ) {
             if ( i == null ) continue;
-            converted.add( new ImageValueObject( i.getDisplayName(), i.getId(), i.getPosition(), i
-                    .getReferenceAtlasIndex(), i.getThumbnailUrl(), i.getZoomifiedNisslUrl(), i
-                    .getExpressionThumbnailUrl(), i.getDownloadImagePath(), i.getDownloadExpressionPath(), i
-                    .getHeight(), i.getWidth(), abaGeneURL, abaHomologousMouseGene, queryGeneSymbol, usingHomologue ) );
+            converted.add( new ImageValueObject( i.getDisplayName(), i.getId(), 0, 0, "", "",
+                    "", i.getDownloadImagePath(), i.getDownloadExpressionPath(),
+                    0, 0, abaGeneURL, abaHomologousMouseGene, queryGeneSymbol, usingHomologue ) );
         }
 
         return converted;

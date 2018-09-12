@@ -28,6 +28,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
@@ -159,13 +160,11 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     @Override
-    public AbaGene getGene( String givenGene ) throws IOException {
-        AbaGene result = this.getGene( givenGene, false );
+    public AbaGene getGene( Gene gene ) throws IOException {
+        AbaGene result = this.fetchGene( gene );
         if ( result == null ) {
-            result = this.getGene( givenGene, true );
-        }
-        if ( result == null ) {
-            AllenBrainAtlasServiceImpl.log.info( givenGene + " not found in aba" );
+            AllenBrainAtlasServiceImpl.log.info( "Gene " + gene.getOfficialSymbol() + ", ID " + gene.getId()
+                    + " could not be retrieved aba." );
         }
         return result;
     }
@@ -187,13 +186,13 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     @Override
-    public Collection<Image> getImageSeries( Integer imageSeriesId ) {
+    public ImageSeries getImageSeries( Gene gene ) {
 
-        File outputFile = this.getFile( "ImageseriesId_" + imageSeriesId.toString() );
+        File outputFile = this.getFile( "ImageseriesId_" + gene.getNcbiGeneId().toString() );
         Document imageSeriesDoc;
 
         try (FileOutputStream out = new FileOutputStream( outputFile )) {
-            this.getImageSeries( imageSeriesId, out );
+            this.getImageSeries( gene, out );
         } catch ( Exception e ) {
             AllenBrainAtlasServiceImpl.log.error( e.getMessage(), e.getCause() );
             return null;
@@ -206,8 +205,23 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             return null;
         }
 
-        NodeList idList = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes();
-        return this.getImageSeriesResults( idList );
+        NodeList sectionDataSets = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes().item( 0 ).getChildNodes();
+
+        for ( int i = 0; i < sectionDataSets.getLength(); i++ ) {
+            Node node = sectionDataSets.item( i );
+            if ( node.getNodeName().equals( "section-data-set" ) ) {
+                Integer id = Integer.parseInt( XMLUtils.extractOneChildText( node, "id" ) );
+
+                ImageSeries is = new ImageSeries( id );
+                is.setImages( this.getImageSeriesImages(
+                        XMLUtils.extractOneChild( node, "section-images" ).getChildNodes() ) );
+                return is;
+            }
+        }
+
+        AllenBrainAtlasServiceImpl.log
+                .error( "Image series for gene ID " + gene.getId() + " could not be retrieved from ABA." );
+        return null;
     }
 
     @Override
@@ -222,7 +236,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
                 for ( Image img : is.getImages() ) {
                     // Convert the urls into fully qualified ones for ez displaying
-                    String args[] = { "2", "2", img.getDownloadExpressionPath() };
+                    String args[] = { img.getId().toString(), "5" };
                     img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
                     img.setExpressionThumbnailUrl(
                             AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
@@ -246,35 +260,26 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     @Override
-    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException {
-
-        AbaGene grin1 = this.getGene( gene );
-        if ( grin1 == null )
-            return null;
+    public Collection<ImageSeries> getRepresentativeSaggitalImages( Gene gene ) {
 
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<>();
 
-        for ( ImageSeries is : grin1.getImageSeries() ) {
-            if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
+        ImageSeries is = this.getImageSeries( gene );
 
-                Collection<Image> images = this.getImageSeries( is.getImageSeriesId() );
-                Collection<Image> representativeImages = new HashSet<>();
+        Collection<Image> representativeImages = new HashSet<>();
 
-                for ( Image img : images ) {
-                    if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
-                        representativeImages.add( img );
-                    }
-                }
-
-                if ( representativeImages.isEmpty() )
-                    continue;
-
-                // Only add if there is something to add
-                is.setImages( representativeImages );
-                representativeSaggitalImages.add( is );
+        for ( Image img : is.getImages() ) {
+            if ( img != null ) { // && ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 )
+                representativeImages.add( img );
             }
         }
-        // grin1.setImageSeries( representativeSaggitalImages );
+
+        if ( representativeImages.isEmpty() )
+            return null;
+
+        // Only add if there is something to add
+        is.setImages( representativeImages );
+        representativeSaggitalImages.add( is );
 
         return representativeSaggitalImages;
 
@@ -286,7 +291,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     /*
-     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
+     * Convenience method for striping out the images from the image series. Also fully qualifies URLs for link to allen
      * brain atlas web site
      */
     @Override
@@ -319,129 +324,16 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( AllenBrainAtlasService.API_BASE_URL + urlPattern );
     }
 
-    /**
-     * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
-     *
-     * @param givenGene   symbol of gene that will be used to search ABA.
-     * @param correctCase correct case.
-     * @return ABA gene
-     * @throws IOException when there are IO problems.
-     */
-    protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
-        String gene = givenGene;
+    protected boolean getGene( Gene gene, OutputStream out ) throws IOException {
 
-        if ( correctCase ) {
-            gene = this.correctCase( gene );
-        }
-
-        File outputFile = this.getFile( gene );
-        Document geneDoc = null;
-
-        try (FileOutputStream out = new FileOutputStream( outputFile )) {
-            this.getGene( gene, out );
-        }
-
-        try (FileInputStream input = new FileInputStream( outputFile )) {
-            geneDoc = XMLUtils.openAndParse( input );
-        } catch ( ParserConfigurationException pce ) {
-            AllenBrainAtlasServiceImpl.log.warn( pce );
-            return null;
-        } catch ( SAXException se ) {
-            AllenBrainAtlasServiceImpl.log.warn( se );
-        } catch ( FileNotFoundException fnfe ) {
-            return null;
-        }
-
-        if ( geneDoc == null ) {
-            return null;
-        }
-
-        Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );
-        Integer geneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "genename" );
-        String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "genesymbol" );
-        String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "entrezgeneid" );
-        Integer entrezGeneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
-
-        xmlData = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" );
-        String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
-
-        String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
-
-        if ( geneId == null && geneSymbol == null )
-            return null;
-
-        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl,
-                null );
-
-        NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
-
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            Node item = idList.item( i );
-
-            if ( !item.getNodeName().equals( "image-series" ) ) {
-                continue;
-            }
-
-            NodeList imageSeriesList = item.getChildNodes();
-
-            for ( int j = 0; j < imageSeriesList.getLength(); j++ ) {
-
-                Node imageSeries = imageSeriesList.item( j );
-
-                NodeList childNodes = imageSeries.getChildNodes();
-                Integer imageSeriesId = null;
-                String plane = null;
-
-                for ( int m = 0; m < childNodes.getLength(); m++ ) {
-
-                    Node c = childNodes.item( m );
-                    String n = c.getNodeName();
-                    switch ( n ) {
-                        case "imageseriesid":
-                            imageSeriesId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                            break;
-                        case "plane":
-                            plane = XMLUtils.getTextValue( ( Element ) c );
-                            break;
-                        default:
-                            // Just skip and check the next one.
-                    }
-
-                }
-
-                if ( imageSeriesId != null && plane != null ) {
-                    ImageSeries is = new ImageSeries( imageSeriesId, plane );
-                    geneData.addImageSeries( is );
-                    AllenBrainAtlasServiceImpl.log.debug( "added image series to gene data" );
-                } else {
-                    AllenBrainAtlasServiceImpl.log
-                            .debug( "Skipping adding imageSeries to gene because data is missing" );
-                }
-
-            }
-        }
-
-        return geneData;
-
-    }
-
-    protected boolean getGene( String gene, OutputStream out ) throws IOException {
-
-        String args[] = { gene };
+        String args[] = { gene.getNcbiGeneId().toString() };
         String getGeneUrl = this.buildUrlString( AllenBrainAtlasService.GET_GENE_URL, args );
 
         return ( this.doPageDownload( getGeneUrl, out ) );
     }
 
-    protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
-            throws IOException {
-        String args[] = { mimeType.toString(), zoom.toString(), imagePath };
+    protected boolean getImage( Integer imageId, Integer downsample, OutputStream out ) throws IOException {
+        String args[] = { imageId.toString(), downsample.toString() };
         String getImageUrl = this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args );
 
         return ( this.doPageDownload( getImageUrl, out ) );
@@ -463,9 +355,9 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( this.doPageDownload( getImageInfoUrl, out ) );
     }
 
-    protected void getImageSeries( Integer imageSeriesId, OutputStream out ) throws IOException {
+    protected void getImageSeries( Gene gene, OutputStream out ) throws IOException {
 
-        String args[] = { imageSeriesId.toString() };
+        String args[] = { gene.getNcbiGeneId().toString() };
         String getImageSeriesUrl = this.buildUrlString( AllenBrainAtlasService.GET_IMAGESERIES_URL, args );
 
         this.doPageDownload( getImageSeriesUrl, out );
@@ -487,28 +379,81 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( this.doPageDownload( getNeuroblastUrl, out ) );
     }
 
-    private Collection<Image> getImageSeriesResults( NodeList idList ) {
-        Collection<Image> results = new HashSet<>();
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            Node item = idList.item( i );
+    /**
+     * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
+     *
+     * @param gene the gene to look for in ABA.
+     * @return ABA gene
+     * @throws IOException              when there are IO problems.
+     * @throws IllegalArgumentException when the given gene does not have an NCBI ID.
+     */
+    private AbaGene fetchGene( Gene gene ) throws IOException {
 
-            if ( !item.getNodeName().equals( "images" ) )
-                continue;
+        if ( gene.getNcbiGeneId() == null )
+            throw new IllegalArgumentException( "Gene ID " + gene.getId() + " has null NCBI ID. Can not browse ABA." );
 
-            NodeList imageList = item.getChildNodes();
+        File outputFile = this.getFile( gene.getNcbiGeneId().toString() );
+        Document geneDoc = null;
 
-            for ( int j = 0; j < imageList.getLength(); j++ ) {
-                this.processImageNode( results, imageList.item( j ) );
-            }
+        try (FileOutputStream out = new FileOutputStream( outputFile )) {
+            this.getGene( gene, out );
         }
+
+        try (FileInputStream input = new FileInputStream( outputFile )) {
+            geneDoc = XMLUtils.openAndParse( input );
+        } catch ( ParserConfigurationException | FileNotFoundException e ) {
+            AllenBrainAtlasServiceImpl.log.warn( e );
+            return null;
+        } catch ( SAXException e ) {
+            AllenBrainAtlasServiceImpl.log.warn( e );
+        }
+
+        if ( geneDoc == null ) {
+            AllenBrainAtlasServiceImpl.log.warn( "ABA XML did not contain any data." );
+            return null;
+        }
+
+        Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "id" );
+        Integer geneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "name" );
+        String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "acronym" );
+        String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "entrez-id" );
+        String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
+
+        String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
+
+        if ( geneId == null && geneSymbol == null ) {
+            AllenBrainAtlasServiceImpl.log.warn( "ABA XML file did not contain gene ID and symbol." );
+            return null;
+        }
+
+        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, ncbiAccessionNumber, geneUrl, null );
+
+        NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
+
+        return geneData;
+    }
+
+    private Collection<Image> getImageSeriesImages( NodeList sectionImages ) {
+        Collection<Image> results = new HashSet<>();
+
+        for ( int j = 0; j < sectionImages.getLength(); j++ ) {
+            this.processImageNode( results, sectionImages.item( j ) );
+        }
+
         return results;
     }
 
-    private void processImageNode( Collection<Image> results, Node image ) {
-        if ( !image.getNodeName().equals( "image" ) )
+    private void processImageNode( Collection<Image> results, Node imageNode ) {
+        if ( !imageNode.getNodeName().equals( "section-image" ) )
             return;
 
-        XmlImageProperties imgProps = new XmlImageProperties( image );
+        XmlImageProperties imgProps = new XmlImageProperties( imageNode );
 
         Integer imageId = imgProps.getImageId();
         String downloadImagePath = imgProps.getDownloadImagePath();
@@ -521,7 +466,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             results.add( img );
         } else {
             AllenBrainAtlasServiceImpl.log
-                    .info( "Skipping adding image to collection cause necessary data missing after parsing image xml" );
+                    .info( "Skipping adding image to collection because necessary data missing after parsing image xml" );
         }
     }
 
@@ -648,11 +593,10 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     private class XmlImageProperties {
-        private NodeList childNodes;
         private Integer imageId;
         private String displayName;
-        private Integer position;
-        private Integer referenceAtlasIndex;
+        private Integer position = 0;
+        private Integer referenceAtlasIndex = 0;
         private String thumbnailUrl;
         private String zoomifiedNisslUrl;
         private String expressionThumbnailUrl;
@@ -660,8 +604,45 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         private String downloadExpressionPath;
 
         public XmlImageProperties( Node image ) {
-            this.childNodes = image.getChildNodes();
-            this.initialize();
+            NodeList childNodes = image.getChildNodes();
+
+            for ( int m = 0; m < childNodes.getLength(); m++ ) {
+
+                Node c = childNodes.item( m );
+                String n = c.getNodeName();
+                switch ( n ) {
+                    case "#text":
+                        continue; // added to make faster as half of comparisons are empty nodes of this type!
+                    case "id":
+                        imageId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                        break;
+                    //                    case "imagedisplayname":
+                    //                        displayName = XMLUtils.getTextValue( ( Element ) c );
+                    //                        break;
+                    //                    case "position":
+                    //                        position = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                    //                        break;
+                    //                    case "referenceatlasindex":
+                    //                        referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                    //                        break;
+                    //                    case "thumbnailurl":
+                    //                        thumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
+                    //                        break;
+                    //                    case "zoomifiednisslurl":
+                    //                        zoomifiedNisslUrl = XMLUtils.getTextValue( ( Element ) c );
+                    //                        break;
+                    //                    case "expressthumbnailurl":
+                    //                        expressionThumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
+                    //                        break;
+                    case "path":
+                        downloadImagePath = XMLUtils.getTextValue( ( Element ) c );
+                        break;
+                    case "expression-path":
+                        downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );
+                        break;
+                    default:
+                }
+            }
         }
 
         public Integer getImageId() {
@@ -700,54 +681,5 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             return downloadExpressionPath;
         }
 
-        private void initialize() {
-            imageId = null;
-            displayName = null;
-            position = null;
-            referenceAtlasIndex = null;
-            thumbnailUrl = null;
-            zoomifiedNisslUrl = null;
-            expressionThumbnailUrl = null;
-            downloadImagePath = null;
-            downloadExpressionPath = null;
-
-            for ( int m = 0; m < childNodes.getLength(); m++ ) {
-
-                Node c = childNodes.item( m );
-                String n = c.getNodeName();
-                switch ( n ) {
-                    case "#text":
-                        continue; // added to make faster as half of comparisons are empty nodes of this type!
-                    case "imageid":
-                        imageId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        break;
-                    case "imagedisplayname":
-                        displayName = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    case "position":
-                        position = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        break;
-                    case "referenceatlasindex":
-                        referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        break;
-                    case "thumbnailurl":
-                        thumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    case "zoomifiednisslurl":
-                        zoomifiedNisslUrl = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    case "expressthumbnailurl":
-                        expressionThumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    case "downloadImagePath":
-                        downloadImagePath = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    case "downloadExpressionPath":
-                        downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );
-                        break;
-                    default:
-                }
-            }
-        }
     }
 }

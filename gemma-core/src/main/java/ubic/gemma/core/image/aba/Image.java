@@ -28,15 +28,15 @@ public class Image {
 
     private String displayName;
     private Integer id;
-    private Integer position;
-    private Integer referenceAtlasIndex;
+    private Integer position = 0;
+    private Integer referenceAtlasIndex = 0;
     private String thumbnailUrl;
     private String zoomifiedNisslUrl;
     private String expressionThumbnailUrl;
     private String downloadImagePath;
     private String downloadExpressionPath;
-    private Integer height;
-    private Integer width;
+    private Integer height = 0;
+    private Integer width = 0;
 
     public Image() {
         super();

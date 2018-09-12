@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * A class that represents the ImageSeries information gotten from the alan brain atlas
+ * A class that represents the ImageSeries information returned from the alan brain atlas
  *
  * @author kelsey
  */
@@ -30,13 +30,11 @@ import java.util.HashSet;
 public class ImageSeries {
 
     private Integer imageSeriesId;
-    private String plane;
     private Collection<Image> images;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public ImageSeries( Integer imageSeriesId, String plane ) {
+    public ImageSeries( Integer imageSeriesId ) {
         this.imageSeriesId = imageSeriesId;
-        this.plane = plane;
     }
 
     @SuppressWarnings("unused") // Possible external use
@@ -54,6 +52,7 @@ public class ImageSeries {
         this.images = images;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     public Integer getImageSeriesId() {
         return imageSeriesId;
     }
@@ -63,12 +62,4 @@ public class ImageSeries {
         this.imageSeriesId = imageSeriesId;
     }
 
-    public String getPlane() {
-        return plane;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setPlane( String plane ) {
-        this.plane = plane;
-    }
 }
