@@ -8,8 +8,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend(Ext.Panel, {
     padding: 10,
     defaults: {
         border: false,
-        autoScroll: true,
-        overflow: true
+        autoScroll: false
     },
     listeners: {
         'afterrender': function (c) {
@@ -17,9 +16,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend(Ext.Panel, {
         }
     },
 
-    /**
-     * @memberOf Gemma.GeneAllenBrainAtlasImage
-     */
+
     initComponent: function () {
 
         Gemma.GeneAllenBrainAtlasImages.superclass.initComponent.call(this);
@@ -31,49 +28,52 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend(Ext.Panel, {
                 });
             }
             this.loadMask.show();
-            GeneController.loadAllenBrainImages(this.geneId, function (imageObjects) {
+            var self = this;
+            GeneController.loadGeneDetails(this.geneId, function (gene) {
+                GeneController.getGeneABALink(gene.id, function (geneUrl) {
+                    GeneController.loadAllenBrainImages(gene.id, function (imageObjects) {
 
-                this.loadMask.hide();
-                if (!imageObjects || imageObjects.length === 0) {
-                    this.add({
-                        html: 'No images available'
+                        self.loadMask.hide();
+
+                        var img = imageObjects[0];
+                        self.add({
+                            html: '<h3>Allen Brain Atlas expression pattern' + '<i class="qtp fa fa-question-circle fa-fw" title="'
+                            + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
+                            + '</i>' + '<a title="Go to Allen Brain Atlas details for '
+                            + gene.officialSymbol + '" href="' + geneUrl + '" target="_blank">'
+                            + '<img src="' + ctxBasePath + '/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>'
+                        });
+                        var i;
+                        var imgs = "";
+                        for (i = 0; i < imageObjects.length; i++) {
+                            img = imageObjects[i];
+
+                            var smallExpLink = img.url + "=expression";
+                            var largeExpLink = smallExpLink.replace("downsample=5", "downsample=3");
+
+                            imgs +=
+                                '<span style="cursor: pointer; padding: 8px">'
+                                + '<a title="Allen Brain Atlas Image for ' + img.displayName + ', click to enlarge" '
+                                + 'onClick="Gemma.geneLinkOutPopUp( &#34; ' + largeExpLink + ' &#34; )">'
+                                + '<img src="' + smallExpLink + '" /> </a>' +
+                                '</span>';
+                        }
+
+                        if (imgs.length > 0) {
+                            self.add({
+                                html: '' + imgs
+                            });
+                        } else {
+                            self.add({
+                                html: 'No images available'
+                            });
+                        }
+
+                        self.doLayout();
+
                     });
-
-                } else {
-
-                    var img = imageObjects[0];
-                    var homologueText = (img.usingHomologue) ? 'Images are for homologous mouse gene: '
-                        + '<a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id=' + img.abaHomologousMouseGene.id + '">'
-                        + img.abaHomologousMouseGene.officialSymbol + ' [' + img.abaHomologousMouseGene.taxonCommonName
-                        + ']</a>' : '';
-                    this.add({
-                        html: '<h3>Allen Brain Atlas expression pattern' + '<i class="qtp fa fa-question-circle fa-fw" title="'
-                        + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
-                        + '</i>' + '<a title="Go to Allen Brain Atlas details for '
-                        + img.queryGeneSymbol + '" href="' + img.abaGeneURL + '" target="_blank">'
-                        + '<img src="' + ctxBasePath + '/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>' + '<p>'
-                        + homologueText + '<p/>'
-                    });
-                    var i;
-                    var imgs = "";
-                    for (i = 0; i < imageObjects.length; i++) {
-                        img = imageObjects[i];
-                        var largeLink = img.downloadExpressionPath.replace("downsample=5", "downsample=3");
-                        imgs +=
-                            '<span style="cursor: pointer; padding: 8px">'
-                            + '<a title="Allen Brain Atlas Image for ' + img.queryGeneSymbol + ', click to enlarge" '
-                            + 'onClick="Gemma.geneLinkOutPopUp( &#34; ' + largeLink + ' &#34; )">'
-                            + '<img src="' + img.downloadExpressionPath + '" /> </a>' +
-                            '</span>';
-                    }
-                    this.add({
-                        html: '' + imgs
-                    });
-
-                    this.doLayout();
-                }
-
-            }.createDelegate(this));
+                });
+            }.createDelegate(self));
         });
     }
 });

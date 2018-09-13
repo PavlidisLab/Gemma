@@ -306,6 +306,7 @@
             <dwr:include method="loadGeneDetails"/>
             <dwr:include method="loadGeneEvidence"/>
             <dwr:include method="loadAllenBrainImages"/>
+            <dwr:include method="getGeneABALink"/>
         </dwr:remote>
     </bean>
 
@@ -827,7 +828,7 @@
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.web.util.upload.UploadInfo"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.image.aba.ImageValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.core.image.aba.Image"/>
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile"/>

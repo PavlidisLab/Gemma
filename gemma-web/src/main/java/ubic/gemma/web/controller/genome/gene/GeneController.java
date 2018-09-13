@@ -32,7 +32,6 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
-import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -46,7 +45,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
-import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,8 +63,6 @@ public class GeneController extends BaseController {
 
     @Autowired
     private AllenBrainAtlasService allenBrainAtlasService;
-    @Autowired
-    private HomologeneService homologeneService;
     @Autowired
     private GeneService geneService;
     @Autowired
@@ -92,30 +88,15 @@ public class GeneController extends BaseController {
      * AJAX NOTE: this method updates the value object passed in
      */
     @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
-    public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
-        Collection<ImageValueObject> images = new ArrayList<>();
+    public Collection<Image> loadAllenBrainImages( Long geneId ) {
+        Collection<Image> images = new ArrayList<>();
         Gene gene = geneService.load( geneId );
 
-        String queryGeneSymbol = gene.getOfficialSymbol();
-        Gene mouseGene = gene;
-        boolean usingHomologue = false;
-        if ( !gene.getTaxon().getCommonName().equals( "mouse" ) ) {
-            mouseGene = this.homologeneService.getHomologue( gene, taxonService.findByCommonName( "mouse" ));
-            usingHomologue = true;
-        }
-
-        if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries;
+        if ( gene != null ) {
 
             try {
-                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene );
-                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-
-                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject
-                        .convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ),
-                                queryGeneSymbol, usingHomologue );
-
+                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getSagittalImageSeries( gene );
+                return allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
             }
@@ -141,6 +122,13 @@ public class GeneController extends BaseController {
 
         return gvo;
     }
+
+    @SuppressWarnings("unused") // Frontend ajax use, gene page
+    public String getGeneABALink( Long geneId ) {
+        return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
+    }
+
+    ;
 
     /**
      * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.image.aba;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -25,9 +27,8 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Alan brain Atlas service test.
@@ -45,45 +46,38 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     @Autowired
     private TaxonService taxonService = null;
 
+    private Gene gene;
+
+    @Before
+    public void SetUp() {
+        gene = Gene.Factory.newInstance();
+        gene.setName( "glutamate receptor, ionotropic, NMDA1 (zeta 1)" );
+        gene.setOfficialSymbol( "grin1" );
+        gene.setNcbiGeneId( 14810 );
+        gene.setTaxon( taxonService.findByCommonName( "mouse" ) );
+
+        this.persisterHelper.persistOrUpdate( gene );
+    }
+
+    @After
+    public void Cleanup() {
+        this.geneService.remove( gene );
+    }
+
     @Test
     public void testGetGene() throws Exception {
         AbaGene abaGene;
-        Gene gene = geneService.findByOfficialSymbol( "grin1", taxonService.findByCommonName( "Mouse" ) );
+        Gene gene = geneService.findByOfficialSymbol( "grin1", taxonService.findByCommonName( "mouse" ) );
 
-        try {
-            abaGene = abaService.getGene( gene );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
-            throw e;
+        if ( gene == null ) {
+            log.error( "Mouse Grin1 gene could not be found in Gemma" );
         }
 
-        Collection<ImageSeries> representativeSaggitalImages = new HashSet<>();
+        abaGene = abaService.getGene( gene );
 
-        for ( ImageSeries is : abaGene.getImageSeries() ) {
-            if ( is == null )
-                continue;
-
-            ImageSeries imageSeries = abaService.getImageSeries( gene );
-            Collection<Image> representativeImages = new HashSet<>();
-
-            for ( Image img : imageSeries.getImages() ) {
-                if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
-                    representativeImages.add( img );
-                }
-            }
-
-            if ( representativeImages.isEmpty() )
-                continue;
-
-            // Only add if there is something to add
-            is.setImages( representativeImages );
-            representativeSaggitalImages.add( is );
-
-        }
-        abaGene.setImageSeries( representativeSaggitalImages );
+        assertNotNull( abaGene );
+        assertNotNull( abaGene.getImageSeries() );
+        assertTrue( !abaGene.getImageSeries().isEmpty() );
     }
 
 }

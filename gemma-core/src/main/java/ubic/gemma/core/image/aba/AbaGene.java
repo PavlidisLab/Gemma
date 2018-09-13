@@ -131,13 +131,7 @@ public class AbaGene {
                 sb.append( "\t ==> " );
                 sb.append( "\t \t image id: " ).append( img.getId() );
                 sb.append( " \t \t Display Name: " ).append( img.getDisplayName() );
-                sb.append( " \t \t Expression Image Path Url: " ).append( img.getDownloadExpressionPath() );
-                sb.append( " \t \t Image path url: " ).append( img.getDownloadImagePath() );
-                sb.append( " \t \t Expression thumbnail url: " ).append( img.getExpressionThumbnailUrl() );
-                sb.append( " \t \t thumbnail url: " ).append( img.getThumbnailUrl() );
-                sb.append( " \t \t zoomified Nissl Url: " ).append( img.getZoomifiedNisslUrl() );
-                sb.append( " \t \t Posisiton: " ).append( img.getPosition() );
-                sb.append( " \t \t Reference Atlas Index: " ).append( img.getReferenceAtlasIndex() );
+                sb.append( " \t \t Image Url: " ).append( img.getUrl() );
                 sb.append( "\n" );
             }
 
