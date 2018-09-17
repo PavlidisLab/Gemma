@@ -366,14 +366,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         var qBatchEffErr =
             Number(ee.geeq.qScoreBatchInfo) === -1 ? "There is no batch information" :
-                ee.geeq.batchCorrected === true ? "Data was batch-corrected." : "";
+                Number(ee.geeq.qScoreBatchEffect) === 0.0 && Number(ee.geeq.qScoreBatchConfound) < 1 ? "Batch confound detected, batch effect detection skipped." :
+                    ee.geeq.batchCorrected === true ? "Data was batch-corrected." : "";
 
         var qBatchEffDesc =
             ee.geeq.manualBatchEffectActive === true ? "Manually set value, detected score was: " + ee.geeq.qScoreBatchEffect :
                 Number(ee.geeq.qScoreBatchInfo) === -1 ? "There were problems when checking for batch effect." :
                     Number(ee.geeq.qScoreBatchEffect) === -1 ? "Experiment has a strong batch effect: the batch p-value is less than 0.0001. Try to batch-correct." :
-                        Number(ee.geeq.qScoreBatchEffect) === 0.0 ? "The experiment has some batch effect: the batch p-value is within [0.1, 0.0001]. Try to batch-correct." :
-                            "The experiment has no or very weak batch effect: the batch p-value is more than 0.1.";
+                        Number(ee.geeq.qScoreBatchEffect) === 0.0 && Number(ee.geeq.qScoreBatchConfound) < 1 ? "Batch effect score defaults to 0 when data is confounded with batches." :
+                            Number(ee.geeq.qScoreBatchEffect) === 0.0 ? "The experiment has some batch effect: the batch p-value is within [0.1, 0.0001]. Try to batch-correct." :
+                                "The experiment has no or very weak batch effect: the batch p-value is more than 0.1.";
 
         var qBatchConfErr =
             Number(ee.geeq.qScoreBatchInfo) === -1 ? "There is no batch information" :
@@ -465,12 +467,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         bconfExtra.add(foldButton);
 
         bconfExtra.add(new Ext.Button({
-            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch confound',
-            tooltip: 'Run geeq only for the batch confound sub-score (refreshes page).',
+            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch info',
+            tooltip: 'Run geeq only for the batch info related scores (refreshes page).',
             handler: function (b, e) {
-                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch confound");
+                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch info");
                 b.setDisabled(true);
-                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "bconf", {
+                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "batch", {
                     callback: function () {
                         window.location.reload();
                     }
@@ -558,12 +560,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         beffExtra.add(foldButton);
 
         beffExtra.add(new Ext.Button({
-            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch effect',
-            tooltip: 'Run geeq only for the batch effect sub-score (refreshes page).',
+            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch info',
+            tooltip: 'Run geeq only for the batch info related scores (refreshes page).',
             handler: function (b, e) {
-                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch effect");
+                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch info");
                 b.setDisabled(true);
-                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "beff", {
+                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "batch", {
                     callback: function () {
                         window.location.reload();
                     }

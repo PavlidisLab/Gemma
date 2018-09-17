@@ -26,8 +26,7 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject> {
     String OPT_MODE_ALL = "all";
-    String OPT_MODE_B_EFFECT = "beff";
-    String OPT_MODE_B_CONFOUND = "bconf";
+    String OPT_MODE_BATCH = "batch";
     String OPT_MODE_REPS = "reps";
     String OPT_MODE_PUB = "pub";
 
