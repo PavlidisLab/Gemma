@@ -49,7 +49,8 @@ public interface AllenBrainAtlasService {
     Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries );
 
     /**
-     * Given a Gene, returns all the image series that contain sagittal images for the given gene.
+     * Given a Gene, returns all the image series that contain sagittal images for the given gene. Each series
+     * will only contain one image from the middle of the series.
      *
      * @param gene gene to look for
      * @return all the image series that contain sagittal images for the given gene

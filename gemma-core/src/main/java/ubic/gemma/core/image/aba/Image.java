@@ -33,7 +33,7 @@ public class Image {
     private String affPath;
     private String addExpressionPath;
     private String url;
-    private int sectionNumber;
+    private Integer sectionNumber;
 
     public Image( String displayName, int id, int height, int width, String affPath, String affExpressionPath,
             String url, int sectionNumber ) {
@@ -80,7 +80,7 @@ public class Image {
         return url;
     }
 
-    public int getSectionNumber() {
+    public Integer getSectionNumber() {
         return sectionNumber;
     }
 
