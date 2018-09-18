@@ -46,9 +46,8 @@ class AbaLoader {
      * 2nd parameter: Image space
      * - 9 for coronal
      * - 10 for sagittal
-     * 3rd parameter: max x-coordinate of slice
      */
-    private static final String GET_IMAGESERIES_URL = "/data/SectionDataSet/query.xml?criteria=rma::criteria,genes[entrez_id$eq@],reference_space[id$eq@],rma::include,section_images[x$lt@]";
+    private static final String GET_IMAGE_SERIES_URL = "/data/SectionDataSet/query.xml?criteria=rma::criteria,genes[entrez_id$eq@],reference_space[id$eq@],rma::include,section_images";
 
     private static final Log log = LogFactory.getLog( AbaLoader.class.getName() );
 
@@ -110,8 +109,8 @@ class AbaLoader {
 
     private void writeSagittalImageSeries( Gene gene, OutputStream out ) throws IOException {
 
-        String args[] = { gene.getNcbiGeneId().toString(), "10", "2600" };
-        String getImageSeriesUrl = this.buildUrlString( AbaLoader.GET_IMAGESERIES_URL, args );
+        String args[] = { gene.getNcbiGeneId().toString(), "10" };
+        String getImageSeriesUrl = this.buildUrlString( AbaLoader.GET_IMAGE_SERIES_URL, args );
 
         this.writeUrlResponse( getImageSeriesUrl, out );
     }

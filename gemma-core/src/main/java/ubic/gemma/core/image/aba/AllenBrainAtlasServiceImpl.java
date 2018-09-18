@@ -27,9 +27,7 @@ import org.w3c.dom.NodeList;
 import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
 import ubic.gemma.model.genome.Gene;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Acts as a convenient front end to the Allen Brain Atlas REST (web) services Used the ABAApi.java as the original
@@ -117,8 +115,44 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
         Document imageSeriesDoc = loader.getAbaGeneSagittalImages( gene );
 
-        NodeList sectionDataSets = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes().item( 0 ).getChildNodes();
+        Collection<ImageSeries> imageSeries = this.extractSeries( imageSeriesDoc );
 
+        return stripImageSeries( imageSeries );
+    }
+
+    /**
+     * Scans the given series and returns new series only containing the image of the middle section.
+     * @param imageSeries the series to strip.
+     */
+    private Collection<ImageSeries> stripImageSeries(Collection<ImageSeries> imageSeries){
+        Collection<ImageSeries> strippedSeries = new LinkedList<>();
+
+        int i = 1;
+        for(ImageSeries is : imageSeries){
+            List<Image> images = is.getImages();
+
+            if(!images.isEmpty()) {
+
+                // Sort by image section number
+                Collections.sort( images, new Comparator<Image>() {
+                    @Override
+                    public int compare( Image image, Image t1 ) {
+                        return image.getSectionNumber().compareTo( t1.getSectionNumber() );
+                    }
+                } );
+
+                // Create new IS and add the middle picture
+                ImageSeries newIs = new ImageSeries( is.getImageSeriesId() );
+                newIs.addImage( images.get( images.size() / 2 ) );
+                strippedSeries.add( newIs );
+            }
+        }
+
+        return strippedSeries;
+    }
+
+    private Collection<ImageSeries> extractSeries(Document imageSeriesDoc){
+        NodeList sectionDataSets = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes().item( 0 ).getChildNodes();
         Collection<ImageSeries> series = new LinkedList<>();
 
         for ( int i = 0; i < sectionDataSets.getLength(); i++ ) {
@@ -142,13 +176,12 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                 series.add( is );
             }
         }
-
         return series;
     }
 
     @SuppressWarnings("ConstantConditions") // Handled with the catch block
-    private Collection<Image> getImageSeriesImages( NodeList sectionImages ) {
-        Collection<Image> results = new HashSet<>();
+    private List<Image> getImageSeriesImages( NodeList sectionImages ) {
+        List<Image> results = new LinkedList<>();
 
         for ( int j = 0; j < sectionImages.getLength(); j++ ) {
             Node imageNode = sectionImages.item( j );

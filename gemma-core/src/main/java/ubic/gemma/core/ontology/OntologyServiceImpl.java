@@ -301,8 +301,14 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService ontology : ontologyServices ) {
             if ( ontology.isOntologyLoaded() ) {
                 Collection<OntologyTerm> found = ontology.findTerm( query );
-                if ( found != null )
-                    results.addAll( found );
+                if ( found != null ){
+                    for(OntologyTerm t : found){
+                        if(!t.isTermObsolete()){
+                            results.add( t );
+                        }
+                    }
+                }
+
             }
         }
 
@@ -356,6 +362,7 @@ public class OntologyServiceImpl implements OntologyService {
                 OntologyServiceImpl.log
                         .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
                                 + watch.getTime() + " ms" );
+
             searchResults.addAll( CharacteristicValueObject
                     .characteristic2CharacteristicVO( this.termsToCharacteristics( results ) ) );
 
@@ -564,13 +571,11 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         if ( vc.getEvidenceCode() == null ) {
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added
-            // characteristic
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
         }
 
         if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
-            OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
-            return;
+            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
         }
 
         if ( ee == null )
@@ -600,28 +605,13 @@ public class OntologyServiceImpl implements OntologyService {
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
 
-        for ( OntologyResource res : terms ) {
+        for ( OntologyResource term : terms ) {
 
-            if ( res == null )
+            if ( term == null )
                 continue;
 
-            Characteristic vc = Characteristic.Factory.newInstance();
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
-                vc.setValueUri( term.getUri() );
-                vc.setDescription( term.getComment() );
-            } else if ( res instanceof OntologyIndividual ) {
-                OntologyIndividual indi = ( OntologyIndividual ) res;
-                vc.setValue( indi.getLabel() );
-                vc.setValueUri( indi.getUri() );
-                vc.setDescription( "Individual" );
-            } else {
-                OntologyServiceImpl.log.warn( "What is it? " + res );
-                continue;
-            }
-
-            if ( vc.getValue() == null )
+            Characteristic vc = termToCharacteristic( term );
+            if ( vc == null )
                 continue;
             results.add( vc );
 
@@ -629,6 +619,36 @@ public class OntologyServiceImpl implements OntologyService {
         OntologyServiceImpl.log.debug( "returning " + results.size() + " terms after filter" );
 
         return results;
+    }
+
+    private Characteristic termToCharacteristic( OntologyResource res ) {
+        if(isObsolete( res.getUri() )){
+            log.warn( "Skipping an obsolete term: "+res.getLabel()+" / "+res.getUri() );
+            return null;
+        }
+
+        Characteristic vc = Characteristic.Factory.newInstance();
+        if ( res instanceof OntologyTerm ) {
+            OntologyTerm term = ( OntologyTerm ) res;
+            vc.setValue( term.getTerm() );
+            vc.setValueUri( term.getUri() );
+            vc.setDescription( term.getComment() );
+        } else if ( res instanceof OntologyIndividual ) {
+            OntologyIndividual indi = ( OntologyIndividual ) res;
+            vc.setValue( indi.getLabel() );
+            vc.setValueUri( indi.getUri() );
+            vc.setDescription( "Individual" );
+        } else {
+            OntologyServiceImpl.log.warn( "This is neither an OntologyTerm or an OntologyIndividual: " + res );
+            return null;
+        }
+
+        if ( vc.getValue() == null ) {
+            log.warn( "Skipping a characteristic with no value: "+res.getLabel()+" / "+res.getUri() );
+            return null;
+        }
+
+        return vc;
     }
 
     /**
@@ -894,6 +914,12 @@ public class OntologyServiceImpl implements OntologyService {
 
             // don't show singletons of free-text terms.
             if ( c.getValueUri() == null && c.getNumTimesUsed() < 2 ) {
+                continue;
+            }
+
+            //Skip obsolete terms
+            if(this.isObsolete( c.getValueUri() )){
+                log.warn( "Skipping an obsolete term: "+c.getValue()+" / "+c.getValueUri() );
                 continue;
             }
 
