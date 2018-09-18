@@ -14,25 +14,33 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.SecuredNotChild;
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.hibernate.proxy.HibernateProxyHelper;
+
+import gemma.gsec.model.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 /**
  * @author paul
  */
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
+
+    public static final class Factory {
+
+        public static ExpressionExperiment newInstance() {
+            return new ExpressionExperiment();
+        }
+
+    }
 
     private static final long serialVersionUID = -1342753625018841735L;
     private DatabaseEntry accession;
@@ -51,14 +59,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String batchConfound;
 
     @Override
-    public int hashCode() {
-        int result = 1;
-        if ( this.getId() != null ) {
-            return this.getId().hashCode();
-        } else if ( this.getShortName() != null ) {
-            return this.getShortName().hashCode();
-        }
-        return result;
+    public ExpressionExperimentValueObject createValueObject() {
+        return new ExpressionExperimentValueObject( this );
     }
 
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
@@ -80,17 +82,16 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return false;
     }
 
-    @Override
-    public String toString() {
-        return super.toString() + " (" + this.getShortName() + ")";
-    }
-
     public DatabaseEntry getAccession() {
         return this.accession;
     }
 
-    public void setAccession( DatabaseEntry accession ) {
-        this.accession = accession;
+    public String getBatchConfound() {
+        return batchConfound;
+    }
+
+    public String getBatchEffect() {
+        return batchEffect;
     }
 
     @Override
@@ -99,21 +100,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    @Override
-    public ExpressionExperimentValueObject createValueObject() {
-        return new ExpressionExperimentValueObject( this );
+    public CurationDetails getCurationDetails() {
+        return this.curationDetails;
     }
 
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
-    }
-
-    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
-        this.experimentalDesign = experimentalDesign;
     }
 
     @SuppressWarnings("unused")
@@ -121,17 +113,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return geeq;
     }
 
-    @SuppressWarnings("unused")
-    public void setGeeq( Geeq geeq ) {
-        this.geeq = geeq;
-    }
-
     public MeanVarianceRelation getMeanVarianceRelation() {
         return this.meanVarianceRelation;
     }
 
-    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
-        this.meanVarianceRelation = meanVarianceRelation;
+    public String getMetadata() {
+        return metadata;
     }
 
     /**
@@ -141,46 +128,25 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.numberOfDataVectors;
     }
 
-    public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
-        this.numberOfDataVectors = numberOfDataVectors;
-    }
-
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
         return this.processedExpressionDataVectors;
-    }
-
-    public void setProcessedExpressionDataVectors(
-            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
-        this.processedExpressionDataVectors = processedExpressionDataVectors;
     }
 
     public Collection<QuantitationType> getQuantitationTypes() {
         return this.quantitationTypes;
     }
 
-    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
-        this.quantitationTypes = quantitationTypes;
-    }
-
     public Collection<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
     }
 
-    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
-        this.rawExpressionDataVectors = rawExpressionDataVectors;
-    }
-
     /**
      * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past
-     * we often
-     * used names like "alizadeh-lymphoma".
+     *         we often
+     *         used names like "alizadeh-lymphoma".
      */
     public String getShortName() {
         return this.shortName;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
     }
 
     /**
@@ -190,21 +156,32 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.source;
     }
 
-    public void setSource( String source ) {
-        this.source = source;
+    @Override
+    public int hashCode() {
+        int result = 1;
+        if ( this.getId() != null ) {
+            return this.getId().hashCode();
+        } else if ( this.getShortName() != null ) {
+            return this.getShortName().hashCode();
+        }
+        return result;
     }
 
-    public String getMetadata() {
-        return metadata;
+    public void setAccession( DatabaseEntry accession ) {
+        this.accession = accession;
     }
 
-    public void setMetadata( String metadata ) {
-        this.metadata = metadata;
+    public void setBatchConfound( String batchConfound ) {
+        this.batchConfound = batchConfound;
+    }
+
+    public void setBatchEffect( String batchEffect ) {
+        this.batchEffect = batchEffect;
     }
 
     @Override
-    public CurationDetails getCurationDetails() {
-        return this.curationDetails;
+    public void setBioAssays( Collection<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
     }
 
     @Override
@@ -212,28 +189,51 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
-    public String getBatchConfound() {
-        return batchConfound;
+    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+        this.experimentalDesign = experimentalDesign;
     }
 
-    public void setBatchConfound( String batchConfound ) {
-        this.batchConfound = batchConfound;
+    @SuppressWarnings("unused")
+    public void setGeeq( Geeq geeq ) {
+        this.geeq = geeq;
     }
 
-    public String getBatchEffect() {
-        return batchEffect;
+    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
+        this.meanVarianceRelation = meanVarianceRelation;
     }
 
-    public void setBatchEffect( String batchEffect ) {
-        this.batchEffect = batchEffect;
+    public void setMetadata( String metadata ) {
+        this.metadata = metadata;
     }
 
-    public static final class Factory {
+    public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
+        this.numberOfDataVectors = numberOfDataVectors;
+    }
 
-        public static ExpressionExperiment newInstance() {
-            return new ExpressionExperiment();
-        }
+    public void setProcessedExpressionDataVectors(
+            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
+        this.processedExpressionDataVectors = processedExpressionDataVectors;
+    }
 
+    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
+        this.quantitationTypes = quantitationTypes;
+    }
+
+    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
+        this.rawExpressionDataVectors = rawExpressionDataVectors;
+    }
+
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
+    }
+
+    public void setSource( String source ) {
+        this.source = source;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + " (" + this.getShortName() + ")";
     }
 
 }

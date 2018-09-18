@@ -378,7 +378,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return null;
             }
 
-            this.writeVectors( f, type.getRepresentation(), vectors, geneAnnotations );
+            this.writeVectors( f, vectors, geneAnnotations );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -460,7 +460,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return null;
             }
 
-            this.writeJson( f, type.getRepresentation(), vectors );
+            this.writeJson( f, vectors );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -1079,10 +1079,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
-    private void writeJson( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors )
+    private void writeJson( File file, Collection<DesignElementDataVector> vectors )
             throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
@@ -1112,11 +1112,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     }
 
-    private void writeVectors( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors,
+    private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
 
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
