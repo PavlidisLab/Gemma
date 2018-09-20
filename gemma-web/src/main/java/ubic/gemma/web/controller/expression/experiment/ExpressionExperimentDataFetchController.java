@@ -38,15 +38,14 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
@@ -58,8 +57,13 @@ import java.util.HashSet;
 @Controller
 public class ExpressionExperimentDataFetchController {
 
-    public static final String DATA_DIR =
-            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
+    private static final String[] META_FILES = { //
+            "%s.alignment.metadata",                                    // Alignment metadata
+            "%s.base.metadata",                                         // Base metadata
+            "MultiQCReports" + File.separatorChar + "multiqc_report.html",  // Multi-QC report
+            "configurations" + File.separatorChar                        // Configuration
+    };
+
     @Autowired
     private TaskRunningService taskRunningService;
     @Autowired
@@ -78,33 +82,86 @@ public class ExpressionExperimentDataFetchController {
      */
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        String dir = ExpressionDataFileService.DATA_DIR;
+        this.downloadFromDir( request, response, dir );
+    }
 
-        String file = request.getParameter( "file" );
-
-        if ( StringUtils.isBlank( file ) ) {
-            throw new IllegalArgumentException( "The file name cannot be blank" );
-        }
-
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
-        File f = new File( fullFilePath );
-
-        if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + fullFilePath );
-        }
-
-        // response.setContentType( "application/octet-stream" ); // see Bug4206
-        response.setContentLength( ( int ) f.length() );
-        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
-        FileInputStream in = new FileInputStream( f );
-        FileCopyUtils.copy( in, response.getOutputStream() );
-        response.flushBuffer();
+    @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public void downloadMetaFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+        IllegalArgumentException e = new IllegalArgumentException( "The experiment ID parameter is invalid." );
+        ExpressionExperiment ee;
 
         try {
-            in.close();
-        } catch ( IOException e ) {
 
+            String eeId = request.getParameter( "id" );
+            if ( StringUtils.isBlank( eeId ) ) {
+                throw e;
+            }
+
+            ee = expressionExperimentService.load( Long.parseLong( eeId ) );
+        } catch( NumberFormatException ne ){
+            throw e;
         }
 
+        String dir = ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar;
+        this.downloadFromDir( request, response, dir );
+    }
+
+    /**
+     * Scans the metadata directory for any files associated with the given experiment.
+     *
+     * @param eeId the id of the experiment to scan for the metadata for.
+     * @return an array of file names available in the metadata directory for the given experiment.
+     */
+    public String[] getMetadataFileUris( Long eeId ) {
+
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Experiment with given ID does not exist." );
+        }
+
+        String[] uris = new String[ExpressionExperimentDataFetchController.META_FILES.length];
+
+        int i = 0;
+        for ( String path : ExpressionExperimentDataFetchController.META_FILES ) {
+
+            // Some files are prefixed with the experiments accession
+            String fPath = path.contains( "%" ) ? String.format( path, ee.getShortName() ) : path;
+            File file = new File(
+                    ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + fPath );
+
+            if ( !file.exists() || !file.canRead() ) {
+                continue;
+            }
+
+            String uri = null;
+
+            if ( file.isDirectory() ) {
+                // We expect this for the Configurations directory
+                File[] files = file.listFiles();
+                if ( files != null && files.length > 0 ) {
+                    List<File> fList = Arrays.asList( files );
+
+                    // Sort by last modified, we only want the newest file
+                    Collections.sort( fList, new Comparator<File>() {
+                        @Override
+                        public int compare( File file, File t1 ) {
+                            return Long.compare( file.lastModified(), t1.lastModified() );
+                        }
+                    } );
+
+                    uri = fPath + fList.get( 0 ).getName();
+                }
+            } else {
+                uri = fPath;
+            }
+
+            if ( uri != null ) {
+                uris[i++] = uri;
+            }
+        }
+
+        return uris;
     }
 
     /**
@@ -139,11 +196,13 @@ public class ExpressionExperimentDataFetchController {
     }
 
     public File getOutputFile( String filename ) {
-        String fullFilePath = ExpressionExperimentDataFetchController.DATA_DIR + filename;
+        String fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
         File f = new File( fullFilePath );
         File parentDir = f.getParentFile();
-        if ( !parentDir.exists() )
+        if ( !parentDir.exists() ) {
+            //noinspection ResultOfMethodCallIgnored
             parentDir.mkdirs();
+        }
         return f;
     }
 
@@ -151,11 +210,38 @@ public class ExpressionExperimentDataFetchController {
         this.quantitationTypeService = quantitationTypeService;
     }
 
+    private void downloadFromDir( HttpServletRequest request, HttpServletResponse response, String dir )
+            throws IOException {
+        String file = request.getParameter( "file" );
+
+        if ( StringUtils.isBlank( file ) ) {
+            throw new IllegalArgumentException( "The file name cannot be blank" );
+        }
+
+        File f = new File( dir + file );
+
+        if ( !f.canRead() ) {
+            throw new IOException( "Cannot read from " + dir + file );
+        }
+
+        response.setContentLength( ( int ) f.length() );
+        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
+        FileInputStream in = new FileInputStream( f );
+        FileCopyUtils.copy( in, response.getOutputStream() );
+        response.flushBuffer();
+
+        try {
+            in.close();
+        } catch ( IOException ignored ) {
+
+        }
+    }
+
     class CoExpressionDataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
-        public CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
+        CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
             super( eeId );
         }
 
@@ -191,7 +277,7 @@ public class ExpressionExperimentDataFetchController {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
-        public DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
+        DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
             super( command );
         }
 
@@ -222,7 +308,7 @@ public class ExpressionExperimentDataFetchController {
 
             /* if qt is not set, send the data for the filtered matrix */
             QuantitationType qType = null;
-            ExpressionExperiment ee = null;
+            ExpressionExperiment ee;
 
             /* design file */
             if ( eedId != null ) {
@@ -308,7 +394,7 @@ public class ExpressionExperimentDataFetchController {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );
 
-        public DiffExpressionDataWriterTask( ExpressionExperimentDataFetchCommand command ) {
+        DiffExpressionDataWriterTask( ExpressionExperimentDataFetchCommand command ) {
             super( command );
         }
 

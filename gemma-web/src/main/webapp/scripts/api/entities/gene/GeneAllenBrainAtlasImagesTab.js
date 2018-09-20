@@ -53,7 +53,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend(Ext.Panel, {
 
                             imgs +=
                                 '<span style="cursor: pointer; padding: 8px">'
-                                + '<a title="Allen Brain Atlas Image for ' + img.displayName + ', click to enlarge" '
+                                + '<a title="'+ img.displayName + ', click to enlarge" '
                                 + 'onClick="Gemma.geneLinkOutPopUp( &#34; ' + largeExpLink + ' &#34; )">'
                                 + '<img src="' + smallExpLink + '" /> </a>' +
                                 '</span>';

@@ -53,6 +53,7 @@
                 <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController
                 </prop>
                 <prop key="/getData.html">expressionExperimentDataFetchController</prop>
+                <prop key="/getMetaData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/checkJobProgress.html">taskCompletionController</prop>
                 <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
                 <prop key="/gene/*">geneController</prop>
@@ -458,6 +459,7 @@
           class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchController">
         <dwr:remote javascript="ExpressionExperimentDataFetchController">
             <dwr:include method="getDataFile"/>
+            <dwr:include method="getMetadataFileUris"/>
             <dwr:include method="getCoExpressionDataFile"/>
             <dwr:include method="getDiffExpressionDataFile"/>
         </dwr:remote>

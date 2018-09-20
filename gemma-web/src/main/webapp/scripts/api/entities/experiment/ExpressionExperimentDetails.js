@@ -32,7 +32,8 @@ Gemma.ExpressionExperimentDetails = Ext
             /**
              * @memberOf Gemma.ExpressionExperimentDetails
              */
-            renderArrayDesigns: function (arrayDesigns) {
+            renderArrayDesigns: function (ee) {
+                var arrayDesigns = ee.arrayDesigns;
                 var result = '';
                 for (var i = 0; i < arrayDesigns.length; i++) {
                     var ad = arrayDesigns[i];
@@ -47,6 +48,12 @@ Gemma.ExpressionExperimentDetails = Ext
                         result = result + "<br/>";
                     }
                 }
+
+                if (ee.lastArrayDesignUpdateDate) {
+                    result += "<div class='dark-gray v-padded'>The last time a platform associated with this experiment was updated: " +
+                        +Gemma.Renderers.dateTimeRenderer(ee.lastArrayDesignUpdateDate) + "</div>"
+                }
+
                 return result;
             },
             renderCoExpressionLinkCount: function (ee) {
@@ -65,9 +72,6 @@ Gemma.ExpressionExperimentDetails = Ext
 
             },
 
-            /**
-             *
-             */
             renderSourceDatabaseEntry: function (ee) {
                 var result = '';
 
@@ -89,6 +93,37 @@ Gemma.ExpressionExperimentDetails = Ext
 
                 return result;
 
+            },
+
+            renderMetadata: function (ee) {
+
+                ExpressionExperimentDataFetchController.getMetadataFileUris(ee.id, {
+                    callback: function (files) {
+                        var result = "";
+                        var hasFiles = false;
+
+                        files.forEach(function (file) {
+                            if (file != null) {
+                                hasFiles = true;
+                                result +=
+                                    "<div class='v-padded'>" +
+                                    "   <a target='_blank' href='" + ctxBasePath + "/getMetaData.html?id="
+                                    + ee.id + "&file=" + file + "' ext:qtip='Download file " + file
+                                    + "'><i class='gray-blue fa fa-download'></i> " + file + "</a>" +
+                                    "</div>";
+                            }
+                        });
+
+
+                        if (!hasFiles) {
+                            result = "<span class='dark-gray'> Not available for this experiment </span>";
+                        }
+
+                        Ext.getCmp("metadata-row").update(result);
+                    }
+                });
+
+                return "";
             },
 
             /**
@@ -123,7 +158,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 if (ee.needsAttention === true) {
                     result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores may change significantly.')
                 }
-                if (ee.geeq !== null ){
+                if (ee.geeq !== null) {
                     result = result + getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
                 }
 
@@ -702,16 +737,16 @@ Gemma.ExpressionExperimentDetails = Ext
                                         fieldLabel: 'Profiles',
                                         // id: 'processedExpressionVectorCount-region',
                                         html: '<div id="downloads"> '
-                                        + this.renderProcessedExpressionVectorCount(e)
-                                        + '&nbsp;&nbsp;'
-                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
-                                        + e.id
-                                        + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
-                                        + e.id
-                                        + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
-                                        + '<i class="qtp fa fa-question-circle fa-fw"></i>'
-                                        + '</div>',
+                                            + this.renderProcessedExpressionVectorCount(e)
+                                            + '&nbsp;&nbsp;'
+                                            + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
+                                            + e.id
+                                            + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
+                                            + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
+                                            + e.id
+                                            + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
+                                            + '<i class="qtp fa fa-question-circle fa-fw"></i>'
+                                            + '</div>',
                                         width: 400,
                                         listeners: {
                                             'afterrender': function (c) {
@@ -727,8 +762,8 @@ Gemma.ExpressionExperimentDetails = Ext
                                         }
                                     }, {
                                         fieldLabel: 'Platforms',
-                                        html: this.renderArrayDesigns(e.arrayDesigns),
-                                        width: 480
+                                        html: this.renderArrayDesigns(e),
+                                        width: 600
                                     }, {
                                         fieldLabel: 'Coexpr. Links',
                                         html: this.renderCoExpressionLinkCount(e),
@@ -765,10 +800,11 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: this.renderSourceDatabaseEntry(e)
                                     },
                                     {
-                                        html: 'The last time a platform associated with this experiment was updated: '
-                                        + Gemma.Renderers.dateTimeRenderer(e.lastArrayDesignUpdateDate),
-                                        hidden: !e.lastArrayDesignUpdateDate
-                                    }]
+                                        fieldLabel: 'Metadata',
+                                        id: "metadata-row",
+                                        html: this.renderMetadata(e)
+                                    }
+                                ]
                             }]
                     });
 
