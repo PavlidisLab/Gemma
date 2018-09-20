@@ -50,8 +50,8 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.lastArrayDesignUpdateDate) {
-                    result += "<div class='dark-gray v-padded'>The last time a platform associated with this experiment was updated: " +
-                        +Gemma.Renderers.dateTimeRenderer(ee.lastArrayDesignUpdateDate) + "</div>"
+                    result += "<div class='dark-gray v-padded'>The last time a platform associated with this experiment was updated: "
+                        + Gemma.Renderers.dateTimeRenderer(ee.lastArrayDesignUpdateDate) + "</div>"
                 }
 
                 return result;
