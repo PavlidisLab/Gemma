@@ -44,7 +44,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -57,12 +56,13 @@ import java.util.*;
 @Controller
 public class ExpressionExperimentDataFetchController {
 
-    private static final String[] META_FILES = { //
-            "%s.alignment.metadata",                                    // Alignment metadata
-            "%s.base.metadata",                                         // Base metadata
-            "MultiQCReports" + File.separatorChar + "multiqc_report.html",  // Multi-QC report
-            "configurations" + File.separatorChar                        // Configuration
-    };
+    private static final MetaFileType[] META_FILE_TYPES = {
+            new MetaFileType( 1, ".base.metadata", "Base metadata", ".base.metadata.txt", false, true ),
+            new MetaFileType( 2, ".alignment.metadata", "Alignment metadata", ".alignment.metadata.txt", false, true ),
+            new MetaFileType( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "Multi-QC Report",
+                    ".multiqc.report.html", false, false ),
+            new MetaFileType( 4, "configurations" + File.separatorChar, "Configurations", ".configurations.txt", true,
+                    false ) };
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -82,86 +82,85 @@ public class ExpressionExperimentDataFetchController {
      */
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        String dir = ExpressionDataFileService.DATA_DIR;
-        this.downloadFromDir( request, response, dir );
+        this.download( response, ExpressionDataFileService.DATA_DIR + request.getParameter( "file" ), null );
     }
 
     @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadMetaFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        IllegalArgumentException e = new IllegalArgumentException( "The experiment ID parameter is invalid." );
-        ExpressionExperiment ee;
+        IllegalArgumentException e = new IllegalArgumentException(
+                "The experiment ID and file type ID parameters must be valid identifiers." );
 
         try {
 
-            String eeId = request.getParameter( "id" );
-            if ( StringUtils.isBlank( eeId ) ) {
+            String eeId = request.getParameter( "eeId" );
+            String typeId = request.getParameter( "typeId" );
+            if ( StringUtils.isBlank( eeId ) || StringUtils.isBlank( typeId ) ) {
                 throw e;
             }
 
-            ee = expressionExperimentService.load( Long.parseLong( eeId ) );
-        } catch( NumberFormatException ne ){
+            ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
+            MetaFileType type = this.getType( Integer.parseInt( typeId ) );
+            if ( type == null ) {
+                throw e;
+            }
+
+            File file = new File( ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
+                    .getFileName( ee ) );
+
+            String dir = ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
+                    .getFileName( ee );
+
+            // If this is a directory, check if we can read the most recent file.
+            if ( type.isDirectory() ) {
+                File fNew = this.getNewestFile( file );
+                if ( fNew != null ) {
+                    dir += fNew.getName();
+                }
+            }
+
+            this.download( response, dir, type.getDownloadName( ee ) );
+
+        } catch ( NumberFormatException ne ) {
             throw e;
         }
-
-        String dir = ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar;
-        this.downloadFromDir( request, response, dir );
     }
 
     /**
      * Scans the metadata directory for any files associated with the given experiment.
      *
      * @param eeId the id of the experiment to scan for the metadata for.
-     * @return an array of file names available in the metadata directory for the given experiment.
+     * @return an array of files available in the metadata directory for the given experiment.
      */
-    public String[] getMetadataFileUris( Long eeId ) {
+    public MetaFile[] getMetadataFiles( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment with given ID does not exist." );
         }
 
-        String[] uris = new String[ExpressionExperimentDataFetchController.META_FILES.length];
+        MetaFile[] metaFiles = new MetaFile[ExpressionExperimentDataFetchController.META_FILE_TYPES.length];
 
         int i = 0;
-        for ( String path : ExpressionExperimentDataFetchController.META_FILES ) {
+        for ( MetaFileType type : ExpressionExperimentDataFetchController.META_FILE_TYPES ) {
 
             // Some files are prefixed with the experiments accession
-            String fPath = path.contains( "%" ) ? String.format( path, ee.getShortName() ) : path;
-            File file = new File(
-                    ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + fPath );
+            File file = new File( ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
+                    .getFileName( ee ) );
 
-            if ( !file.exists() || !file.canRead() ) {
+            // Check if we can read the file
+            if ( !file.canRead() ) {
                 continue;
             }
 
-            String uri = null;
-
-            if ( file.isDirectory() ) {
-                // We expect this for the Configurations directory
-                File[] files = file.listFiles();
-                if ( files != null && files.length > 0 ) {
-                    List<File> fList = Arrays.asList( files );
-
-                    // Sort by last modified, we only want the newest file
-                    Collections.sort( fList, new Comparator<File>() {
-                        @Override
-                        public int compare( File file, File t1 ) {
-                            return Long.compare( file.lastModified(), t1.lastModified() );
-                        }
-                    } );
-
-                    uri = fPath + fList.get( 0 ).getName();
-                }
-            } else {
-                uri = fPath;
+            // If this is a directory, check if we can read the most recent file.
+            if ( type.isDirectory() && this.getNewestFile( file ) == null ) {
+                continue;
             }
 
-            if ( uri != null ) {
-                uris[i++] = uri;
-            }
+            metaFiles[i++] = new MetaFile( type.getId(), type.getDisplayName() );
         }
 
-        return uris;
+        return metaFiles;
     }
 
     /**
@@ -210,22 +209,55 @@ public class ExpressionExperimentDataFetchController {
         this.quantitationTypeService = quantitationTypeService;
     }
 
-    private void downloadFromDir( HttpServletRequest request, HttpServletResponse response, String dir )
-            throws IOException {
-        String file = request.getParameter( "file" );
+    /**
+     * @param file a directory to scan
+     * @return the file in the directory that was last modified, or null, if such file doesn't exist or is not readable.
+     */
+    private File getNewestFile( File file ) {
+        File[] files = file.listFiles();
+        if ( files != null && files.length > 0 ) {
+            List<File> fList = Arrays.asList( files );
 
-        if ( StringUtils.isBlank( file ) ) {
+            // Sort by last modified, we only want the newest file
+            Collections.sort( fList, new Comparator<File>() {
+                @Override
+                public int compare( File file, File t1 ) {
+                    return Long.compare( file.lastModified(), t1.lastModified() );
+                }
+            } );
+
+            if ( fList.get( 0 ).canRead() ) {
+                return fList.get( 0 );
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param response     the http response to download to.
+     * @param path         the file path to download from
+     * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
+     *                     of the file will be used.
+     * @throws IOException if the file in the given path can not be read.
+     */
+    private void download( HttpServletResponse response, String path, String downloadName ) throws IOException {
+
+        if ( StringUtils.isBlank( path ) ) {
             throw new IllegalArgumentException( "The file name cannot be blank" );
         }
 
-        File f = new File( dir + file );
+        File f = new File( path );
 
         if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + dir + file );
+            throw new IOException( "Cannot read from " + path );
+        }
+
+        if ( StringUtils.isBlank( downloadName ) ) {
+            downloadName = f.getName();
         }
 
         response.setContentLength( ( int ) f.length() );
-        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
+        response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
         FileInputStream in = new FileInputStream( f );
         FileCopyUtils.copy( in, response.getOutputStream() );
         response.flushBuffer();
@@ -235,6 +267,15 @@ public class ExpressionExperimentDataFetchController {
         } catch ( IOException ignored ) {
 
         }
+    }
+
+    private MetaFileType getType( int id ) {
+        for ( MetaFileType t : ExpressionExperimentDataFetchController.META_FILE_TYPES ) {
+            if ( t.getId() == id )
+                return t;
+        }
+
+        return null;
     }
 
     class CoExpressionDataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
@@ -453,3 +494,53 @@ public class ExpressionExperimentDataFetchController {
     }
 
 }
+
+class MetaFileType {
+
+    private int id;
+    private String fileName;
+    private String displayName;
+    private String downloadName;
+    private Boolean isDirectory;
+    private Boolean isNamePrefixed;
+
+    /**
+     * @param id             the identifier of the meta file type.
+     * @param fileName       the name of the file in the filesystem.
+     * @param downloadName   the string that will be used as the file name when the user downloads it. This name will always be
+     *                       prefixed with the accession (sort name) of the experiment.
+     * @param displayName    the string that will be displayed publicly to describe this file.
+     * @param isDirectory    whether this file represents a directory.
+     * @param isNamePrefixed whether the fileName has to be prefixed with the experiment accession name.
+     */
+    MetaFileType( int id, String fileName, String displayName, String downloadName, Boolean isDirectory,
+            Boolean isNamePrefixed ) {
+        this.id = id;
+        this.displayName = displayName;
+        this.fileName = fileName;
+        this.downloadName = downloadName;
+        this.isDirectory = isDirectory;
+        this.isNamePrefixed = isNamePrefixed;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    String getDisplayName() {
+        return displayName;
+    }
+
+    String getFileName( ExpressionExperiment ee ) {
+        return ( isNamePrefixed ? ee.getShortName() : "" ) + fileName;
+    }
+
+    Boolean isDirectory() {
+        return isDirectory;
+    }
+
+    String getDownloadName( ExpressionExperiment ee ) {
+        return ee.getShortName() + downloadName;
+    }
+}
+

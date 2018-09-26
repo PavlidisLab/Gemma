@@ -459,7 +459,7 @@
           class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchController">
         <dwr:remote javascript="ExpressionExperimentDataFetchController">
             <dwr:include method="getDataFile"/>
-            <dwr:include method="getMetadataFileUris"/>
+            <dwr:include method="getMetadataFiles"/>
             <dwr:include method="getCoExpressionDataFile"/>
             <dwr:include method="getDiffExpressionDataFile"/>
         </dwr:remote>
@@ -813,6 +813,7 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.MetaFile"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand"/>
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt"/>

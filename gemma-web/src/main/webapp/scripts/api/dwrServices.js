@@ -625,9 +625,9 @@ ExpressionExperimentDataFetchController.getDataFile = function (p0, callback) {
     dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
         'getDataFile', p0, callback);
 };
-ExpressionExperimentDataFetchController.getMetadataFileUris = function (p0, callback) {
+ExpressionExperimentDataFetchController.getMetadataFiles = function (p0, callback) {
     dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
-        'getMetadataFileUris', p0, callback);
+        'getMetadataFiles', p0, callback);
 };
 ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function (p0, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDiffExpressionDataFile?"

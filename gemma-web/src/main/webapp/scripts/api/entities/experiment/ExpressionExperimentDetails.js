@@ -97,7 +97,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
             renderMetadata: function (ee) {
 
-                ExpressionExperimentDataFetchController.getMetadataFileUris(ee.id, {
+                ExpressionExperimentDataFetchController.getMetadataFiles(ee.id, {
                     callback: function (files) {
                         var result = "";
                         var hasFiles = false;
@@ -107,9 +107,9 @@ Gemma.ExpressionExperimentDetails = Ext
                                 hasFiles = true;
                                 result +=
                                     "<div class='v-padded'>" +
-                                    "   <a target='_blank' href='" + ctxBasePath + "/getMetaData.html?id="
-                                    + ee.id + "&file=" + file + "' ext:qtip='Download file " + file
-                                    + "'><i class='gray-blue fa fa-download'></i> " + file + "</a>" +
+                                    "   <a target='_blank' href='" + ctxBasePath + "/getMetaData.html?eeId="
+                                    + ee.id + "&typeId=" + file.typeId + "' ext:qtip='Download file " + file.displayName
+                                    + "'><i class='gray-blue fa fa-download'></i> " + file.displayName + "</a>" +
                                     "</div>";
                             }
                         });
