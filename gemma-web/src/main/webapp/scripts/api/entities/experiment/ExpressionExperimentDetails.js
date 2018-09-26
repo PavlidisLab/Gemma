@@ -95,37 +95,6 @@ Gemma.ExpressionExperimentDetails = Ext
 
             },
 
-            renderMetadata: function (ee) {
-
-                ExpressionExperimentDataFetchController.getMetadataFiles(ee.id, {
-                    callback: function (files) {
-                        var result = "";
-                        var hasFiles = false;
-
-                        files.forEach(function (file) {
-                            if (file != null) {
-                                hasFiles = true;
-                                result +=
-                                    "<div class='v-padded'>" +
-                                    "   <a target='_blank' href='" + ctxBasePath + "/getMetaData.html?eeId="
-                                    + ee.id + "&typeId=" + file.typeId + "' ext:qtip='Download file " + file.displayName
-                                    + "'><i class='gray-blue fa fa-download'></i> " + file.displayName + "</a>" +
-                                    "</div>";
-                            }
-                        });
-
-
-                        if (!hasFiles) {
-                            result = "<span class='dark-gray'> Not available for this experiment </span>";
-                        }
-
-                        Ext.getCmp("metadata-row").update(result);
-                    }
-                });
-
-                return "";
-            },
-
             /**
              * Link for samples details page.
              *
@@ -798,11 +767,6 @@ Gemma.ExpressionExperimentDetails = Ext
                                     {
                                         fieldLabel: 'Source',
                                         html: this.renderSourceDatabaseEntry(e)
-                                    },
-                                    {
-                                        fieldLabel: 'Metadata',
-                                        id: "metadata-row",
-                                        html: this.renderMetadata(e)
                                     }
                                 ]
                             }]

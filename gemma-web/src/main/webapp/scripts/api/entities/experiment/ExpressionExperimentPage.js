@@ -146,7 +146,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
                 this.checkURLforInitialTab();
                 this.setActiveTab(this.initialTab);
-
             }.createDelegate(this),
             errorHandler: Gemma.genericErrorHandler
         });
@@ -169,6 +168,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
         }, this);
     },
+
     initFromExperimentValueObject: function (experimentDetails, isAdmin) {
 
         /**
@@ -228,6 +228,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         this.adjustForIsAdmin(isAdmin, this.editable);
 
     },
+
     makeDetailsTab: function (experimentDetails) {
         return new Gemma.ExpressionExperimentDetails({
             title: 'Overview',
@@ -250,6 +251,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             }
         });
     },
+
     makeDesignTab: function (experimentDetails) {
         var batchInfo = '<div class="ed-batch-info">' + getBatchInfoBadges(experimentDetails) + '</div>';
 
@@ -276,6 +278,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             }
         };
     },
+
     makeVisualisationTab: function (experimentDetails, isAdmin) {
         var eeId = this.eeId;
         var title = "Data for a 'random' sampling of probes";
@@ -293,7 +296,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         });
         var geneTBar = new Gemma.VisualizationWidgetGeneSelectionToolbar({
             eeId: eeId,
-            visPanel: viz 
+            visPanel: viz
             // ,showRefresh : (isAdmin || this.editable)
         });
         geneTBar.on('refreshVisualisation', function () {
@@ -310,6 +313,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             tbar: geneTBar
         };
     },
+
     makeDiagnosticsTab: function (experimentDetails, isAdmin) {
 
         var refreshDiagnosticsLink = '';
@@ -325,15 +329,81 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             },
             hidden: (this.editable || isAdmin)
         });
+
+        var metaRow = new Ext.Panel(
+            {
+                fieldLabel: 'Metadata',
+                id: 'metadata-row',
+                border: false
+            }
+        );
+
+        this.renderMetadata(experimentDetails, metaRow);
+
         return {
             title: 'Diagnostics',
             itemId: 'diagnostics',
-            items: [this.refreshDiagnosticsBtn, {
-                html: experimentDetails.QChtml,
-                border: false
-            }]
+            items: [
+                this.refreshDiagnosticsBtn,
+                {
+                    baseCls: 'x-plain-panel',
+                    bodyStyle: 'padding:10px',
+                    html: experimentDetails.QChtml,
+                    border: false
+                },
+                new Ext.Panel({
+                    baseCls: 'x-plain-panel',
+                    bodyStyle: 'padding:10px',
+                    ref: 'metadataPanel',
+                    border: false,
+                    items: [
+                        {
+                            layout: 'form',
+                            defaults: {
+                                border: false
+                            },
+                            items: [
+                                metaRow
+                            ]
+                        }
+                    ]
+                })
+            ]
         };
+
     },
+
+    renderMetadata: function (ee, metaRow) {
+
+        ExpressionExperimentDataFetchController.getMetadataFiles(ee.id, {
+            callback: function (files) {
+                var result = "";
+                var hasFiles = false;
+
+                files.forEach(function (file) {
+                    if (file != null) {
+                        hasFiles = true;
+                        result +=
+                            "<div class='v-padded'>" +
+                            "   <a target='_blank' href='" + ctxBasePath + "/getMetaData.html?eeId="
+                            + ee.id + "&typeId=" + file.typeId + "' ext:qtip='Download file " + file.displayName
+                            + "'><i class='gray-blue fa fa-download'></i> " + file.displayName + "</a>" +
+                            "</div>";
+                    }
+                });
+
+
+                if (!hasFiles) {
+                    result = "<span class='dark-gray'> Not available for this experiment </span>";
+                }
+
+                metaRow.html = result;
+            }
+        });
+
+        return "";
+    },
+
     adjustForIsAdmin: function (isAdmin, isEditable) {
         // hide/show 'refresh' link to diagnostics tab
         this.refreshDiagnosticsBtn.setVisible(isAdmin || isEditable);
