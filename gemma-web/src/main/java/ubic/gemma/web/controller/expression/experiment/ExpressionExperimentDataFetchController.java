@@ -57,11 +57,11 @@ import java.util.*;
 public class ExpressionExperimentDataFetchController {
 
     private static final MetaFileType[] META_FILE_TYPES = {
-            new MetaFileType( 1, ".base.metadata", "Base metadata", ".base.metadata.txt", false, true ),
-            new MetaFileType( 2, ".alignment.metadata", "Alignment metadata", ".alignment.metadata.txt", false, true ),
+            new MetaFileType( 1, ".base.metadata", "Sequence analysis summary", ".seq.analysis.sum.txt", false, true ),
+            new MetaFileType( 2, ".alignment.metadata", "Alignment statistics", ".alignment.statistics.txt", false, true ),
             new MetaFileType( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "Multi-QC Report",
                     ".multiqc.report.html", false, false ),
-            new MetaFileType( 4, "configurations" + File.separatorChar, "Configurations", ".configurations.txt", true,
+            new MetaFileType( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings", ".pipeline.config.txt", true,
                     false ) };
 
     @Autowired

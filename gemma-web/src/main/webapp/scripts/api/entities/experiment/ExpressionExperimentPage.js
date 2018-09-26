@@ -332,7 +332,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
         var metaRow = new Ext.Panel(
             {
-                fieldLabel: 'Metadata',
+                fieldLabel: 'Preprocessing metadata',
                 id: 'metadata-row',
                 border: false
             }
