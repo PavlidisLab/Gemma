@@ -260,7 +260,7 @@
         <dependency>
             <groupId>pavlab</groupId>
             <artifactId>gemma-gsec</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>0.0.2</version>
             <type>jar</type>
         </dependency>
         <dependency>
