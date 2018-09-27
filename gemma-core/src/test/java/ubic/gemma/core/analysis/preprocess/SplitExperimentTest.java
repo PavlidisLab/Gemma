@@ -36,6 +36,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -120,10 +121,17 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertEquals( splitOn.getFactorValues().size(), results.size() );
 
         for ( ExpressionExperiment e : results ) {
+            e = eeService.thaw( e );
+
             Collection<RawExpressionDataVector> rvs = e.getRawExpressionDataVectors();
             assertEquals( 100, rvs.size() );
+
+            Collection<ProcessedExpressionDataVector> pvs = e.getProcessedExpressionDataVectors();
+            assertEquals( 100, pvs.size() );
+
             RawExpressionDataVector rv = rvs.iterator().next();
             assertTrue( rv.getQuantitationType().getIsPreferred() );
+            assertEquals( 2, e.getOtherParts().size() );
         }
     }
 

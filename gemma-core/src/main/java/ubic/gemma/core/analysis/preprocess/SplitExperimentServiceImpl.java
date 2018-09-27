@@ -147,7 +147,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split.setCurationDetails( curationDetailsDao.create() ); // not sure anything we want to copy
 
-            split.setMetadata( toSplit.getMetadata() ); // might no longer be accurate/relevant?
+            split.setMetadata( toSplit.getMetadata() ); // FIXME clone?
 
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
@@ -161,40 +161,51 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split.setOwner( toSplit.getOwner() );
             split.setSource( toSplit.getSource() );
-            // split.setRelatedTo ... FIXME keep track of this being related to other parts of the split (which might be more than 2 parts)
+            // split.setRelatedTo ... FIXME ? keep track of this being related to other parts of the split (which might be more than 2 parts)
 
             // add the biomaterials
             Map<BioAssay, BioAssay> old2cloneBA = new HashMap<>();
             List<BioMaterial> bms = new ArrayList<>();
             Collection<FactorValue> usedFactorValues = new HashSet<>();
             for ( BioAssay ba : toSplit.getBioAssays() ) {
-
+                boolean kept = false;
                 BioMaterial bm = ba.getSampleUsed();
+
+                // identify samples we want to include
                 for ( FactorValue fv : bm.getFactorValues() ) {
-
-                    FactorValue clonedFv = old2cloneFV.get( fv );
-
                     if ( fv.equals( splitValue ) ) {
                         assert !bms.contains( bm );
                         bms.add( bm );
-
                         BioAssay newBa = this.cloneBioAssay( ba );
-
-                        // remove the factor we are using to split on
-                        newBa.getSampleUsed().getFactorValues().remove( clonedFv );
-
                         old2cloneBA.put( ba, newBa );
+                        kept = true;
                     }
-
-                    usedFactorValues.add( fv );
                 }
+
+                if ( kept ) {
+                    // copy other factor values over
+                    BioAssay newBa = old2cloneBA.get( ba );
+                    for ( FactorValue fv : bm.getFactorValues() ) {
+                        if ( fv.equals( splitValue ) ) {
+                            // make a BioMaterial characteristic so we don't lose the information (might be redundant)
+                            for ( Characteristic c : fv.getCharacteristics() ) {
+                                newBa.getSampleUsed().getCharacteristics().add( this.cloneCharacteristic( c ) );
+                            }
+                            continue;
+                        }
+                        newBa.getSampleUsed().getFactorValues().add( old2cloneFV.get( fv ) );
+                        usedFactorValues.add( old2cloneFV.get( fv ) );
+                    }
+                }
+
             }
 
-            // remove other unused factorvalues from the design
+            // remove unused factorvalues from the design
+            Collection<ExperimentalFactor> toRemoveFactors = new HashSet<>();
             for ( ExperimentalFactor ef : split.getExperimentalDesign().getExperimentalFactors() ) {
                 Collection<FactorValue> toRemove = new HashSet<>();
-                for ( FactorValue fv : ef.getFactorValues() ) {
-                    if ( !usedFactorValues.contains( old2cloneFV.get( fv ) ) ) {
+                for ( FactorValue fv : ef.getFactorValues() ) { // these are clones
+                    if ( !usedFactorValues.contains( fv ) ) {
                         toRemove.add( fv );
                     }
                 }
@@ -202,6 +213,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 if ( ef.getFactorValues().removeAll( toRemove ) ) {
                     log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber );
                 }
+
+                if ( ef.getFactorValues().isEmpty() ) {
+                    toRemoveFactors.add( ef );
+                }
+            }
+            // remove unused factors
+            if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
+                log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
 
             // here we're using the original bms; we'll replace them later
@@ -225,7 +244,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     assert v.getDesignElement() != null;
                     assert v.getDesignElement().getArrayDesign() != null;
                     assert v.getDesignElement().getArrayDesign().getId() != null;
-                 }
+                }
                 log.info( split.getShortName() + ": Adding " + rawDataVectors.size() + " raw data vectors for " + clonedQt + " preferred="
                         + clonedQt.getIsPreferred() );
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
@@ -252,7 +271,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             securityService.makePublic( split ); // FIXME temporary 
             result.add( split );
 
-            // postprocess
+            // postprocess. One problem can be that now we may have batches that are singletons etc.
             try {
                 preprocessor.process( split );
             } catch ( PreprocessingException e ) {
@@ -260,8 +279,20 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
         }
 
-        // Clean the experiment: remove diff and coex analyses, PCA, correlation matrices, processed data vectors
-        dataFileService.deleteAllFiles( toSplit );
+        for ( ExpressionExperiment split : result ) {
+            for ( ExpressionExperiment split2 : result ) {
+                if ( split.equals( split2 ) ) continue;
+                split.getOtherParts().add( split2 );
+            }
+
+        }
+
+        for ( ExpressionExperiment split : result ) {
+            eeService.update( split );
+        }
+
+        // Clean the source experiment? remove diff and coex analyses, PCA, correlation matrices, processed data vectors
+        // dataFileService.deleteAllFiles( toSplit );
         // delete the old experiment (maybe not yet... in case ...
         // eeService.remove(toSplit);
 
@@ -304,6 +335,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setType( ef.getType() );
             clone.getFactorValues().addAll( this.cloneFactorValues( ef.getFactorValues(), clone, old2cloneFV ) );
             result.add( clone );
+        //    assert clone.getId() == null;
         }
         return result;
     }
@@ -322,7 +354,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setIsBaseline( fv.getIsBaseline() );
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
-            result.add( fv );
+            result.add( clone );
             assert !old2cloneFV.containsKey( fv );
             old2cloneFV.put( fv, clone );
         }
@@ -393,7 +425,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private Characteristic cloneCharacteristic( Characteristic c ) {
         Characteristic clone = Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
                 c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
-        //  clone = characteristicDao.create( clone );
         return clone;
     }
 
@@ -487,8 +518,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         BioAssayDimension result = BioAssayDimension.Factory.newInstance();
         result.getBioAssays().addAll( bioAssays );
-        result.setName( "" ); // FIXME might want to fill something in...
-        result.setDescription( bioAssays.size() + " bioAssays extracted from source experiment " + ee.getShortName() );
+        result.setName( "For  " + bioAssays.size() + " bioAssays " );
+        result.setDescription( bioAssays.size() + " bioAssays extracted via split from source experiment " + ee.getShortName() );
 
         assert result.getBioAssays().size() == samplesToUse.size();
         return result;

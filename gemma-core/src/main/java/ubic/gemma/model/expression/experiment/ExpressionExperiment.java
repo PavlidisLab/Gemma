@@ -44,19 +44,24 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     private static final long serialVersionUID = -1342753625018841735L;
     private DatabaseEntry accession;
+    private String batchConfound;
+    private String batchEffect;
     private CurationDetails curationDetails;
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;
+    private String metadata;
     private Integer numberOfDataVectors;
+    /**
+     * If this experiment was split off of a larger experiment, link to its relatives.
+     */
+    private Collection<ExpressionExperiment> otherParts = new HashSet<>();
     private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private Collection<QuantitationType> quantitationTypes = new HashSet<>();
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
+    
     private String source;
-    private String metadata;
-    private String batchEffect;
-    private String batchConfound;
 
     @Override
     public ExpressionExperimentValueObject createValueObject() {
@@ -126,6 +131,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      */
     public Integer getNumberOfDataVectors() {
         return this.numberOfDataVectors;
+    }
+
+    public Collection<ExpressionExperiment> getOtherParts() {
+        return otherParts;
     }
 
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
@@ -208,6 +217,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
         this.numberOfDataVectors = numberOfDataVectors;
+    }
+
+    public void setOtherParts( Collection<ExpressionExperiment> otherParts ) {
+        this.otherParts = otherParts;
     }
 
     public void setProcessedExpressionDataVectors(
