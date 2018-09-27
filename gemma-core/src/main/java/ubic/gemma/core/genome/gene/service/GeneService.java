@@ -91,6 +91,8 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      */
     Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds );
 
+    @SuppressWarnings("UnusedReturnValue")
+        // Consistency
     Collection<Gene> findByOfficialName( String officialName );
 
     Collection<Gene> findByOfficialNameInexact( String officialName );
@@ -106,7 +108,7 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      *
      * @param query   query
      * @param taxonId taxon id
-     * @return map of gene symbol (tolowercase()) to the gene. The actual query that led to the gene is not retained.
+     * @return map of lower-cased gene symbol  to the gene. The actual query that led to the gene is not retained.
      */
     Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId );
 
@@ -153,6 +155,13 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      */
     Collection<Gene> loadAll( Taxon taxon );
 
+    /**
+     * Returns a detailVO for a geneDd This method may be unnecessary now that we have put all the logic into the
+     * GeneService
+     *
+     * @param id The gene id
+     * @return GeneDetailsValueObject a representation of that gene
+     */
     GeneValueObject loadFullyPopulatedValueObject( Long id );
 
     GeneValueObject loadGenePhenotypes( Long geneId );
@@ -194,4 +203,5 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     Gene thawLiter( Gene gene );
 
+    Collection<GeneValueObject> searchGenes( String query, Long taxonId );
 }

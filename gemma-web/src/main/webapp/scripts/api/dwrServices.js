@@ -625,6 +625,10 @@ ExpressionExperimentDataFetchController.getDataFile = function (p0, callback) {
     dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
         'getDataFile', p0, callback);
 };
+ExpressionExperimentDataFetchController.getMetadataFiles = function (p0, callback) {
+    dwr.engine._execute(ExpressionExperimentDataFetchController._path, 'ExpressionExperimentDataFetchController',
+        'getMetadataFiles', p0, callback);
+};
 ExpressionExperimentDataFetchController.getDiffExpressionDataFile = function (p0, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/ExpressionExperimentDataFetchController/getDiffExpressionDataFile?"
         + p0);
@@ -815,6 +819,10 @@ GeneController.loadGeneEvidence = function (p0, p1, p2, p3, p4, callback) {
 GeneController.loadAllenBrainImages = function (p0, callback) {
     googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/loadAllenBrainImages");
     dwr.engine._execute(GeneController._path, 'GeneController', 'loadAllenBrainImages', p0, callback);
+};
+GeneController.getGeneABALink = function (p0, callback) {
+    googleAnalyticsTrackPageviewIfConfigured("/Gemma/GeneController/getGeneABALink");
+    dwr.engine._execute(GeneController._path, 'GeneController', 'getGeneABALink', p0, callback);
 };
 // ====================================================================================
 if (typeof GenePickerController === 'undefined') {

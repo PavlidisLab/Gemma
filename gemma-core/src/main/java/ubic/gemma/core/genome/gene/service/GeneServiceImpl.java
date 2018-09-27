@@ -33,6 +33,7 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValue
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,6 +50,7 @@ import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -79,6 +81,8 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
     private HomologeneService homologeneService;
     @Autowired
     private SearchService searchService;
+    @Autowired
+    private TaxonService taxonService;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -199,7 +203,8 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
             annotationValueObject.setId( assoc.getOntologyEntry().getId() );
             annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
             annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
-            annotationValueObject.setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
+            annotationValueObject
+                    .setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
             annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
             annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
             annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
@@ -254,8 +259,9 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
 
             if ( physicalLocation == null ) {
                 if ( AbstractService.log.isDebugEnabled() )
-                    AbstractService.log.debug( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
-                            + ") has no location." );
+                    AbstractService.log
+                            .debug( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
+                                    + ") has no location." );
                 continue;
             }
             // Only add if the physical location of the product is different from any we already know.
@@ -469,6 +475,41 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
     @Transactional(readOnly = true)
     public Gene thawLiter( Gene gene ) {
         return this.geneDao.thawLiter( gene );
+    }
+
+    /**
+     * Search for genes (by name or symbol)
+     *
+     * @param taxonId, can be null to not constrain by taxon
+     * @return Collection of Gene entity objects
+     */
+    @Override
+    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
+
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = this.taxonService.load( taxonId );
+        }
+        SearchSettings settings = SearchSettingsImpl.geneSearch( query, taxon );
+        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+
+        Collection<Gene> genes = new HashSet<>();
+        if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
+            GeneServiceImpl.log.info( "No Genes for search: " + query + " taxon=" + taxonId );
+            return new HashSet<>();
+        }
+        GeneServiceImpl.log
+                .info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
+
+        for ( SearchResult sr : geneSearchResults ) {
+            Gene g = ( Gene ) sr.getResultObject();
+            g = this.thaw( g );
+            genes.add( g );
+            GeneServiceImpl.log.debug( "Gene search result: " + g.getOfficialSymbol() );
+        }
+        Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
+        GeneServiceImpl.log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
+        return geneValueObjects;
     }
 
 }

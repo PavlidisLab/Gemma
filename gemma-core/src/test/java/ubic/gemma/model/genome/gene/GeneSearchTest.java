@@ -21,7 +21,6 @@ package ubic.gemma.model.genome.gene;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
@@ -31,56 +30,15 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author cmcdonald
  */
-public class GeneCoreServiceTest extends BaseSpringContextTest {
+public class GeneSearchTest extends BaseSpringContextTest {
 
     @Autowired
-    private GeneService geneDao = null;
-
-    @Autowired
-    private GeneCoreService geneCoreService = null;
-
-    @Test
-    public void testLoadGeneDetails() {
-        Gene gene = Gene.Factory.newInstance();
-
-        Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
-        gene.setNcbiGeneId( id );
-        gene.setName( "test_genedao" );
-        gene.setOfficialName( "test_genedao" );
-        gene.setOfficialSymbol( "test_genedao" );
-
-        Taxon human = taxonService.findByCommonName( "human" );
-        gene.setTaxon( human );
-        PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
-        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
-        pl1.setChromosome( chromosome );
-        pl1.setNucleotide( 10000010L );
-        pl1.setNucleotideLength( 1001 );
-        pl1.setStrand( "-" );
-        gene.setPhysicalLocation( pl1 );
-
-        gene = geneDao.create( gene );
-        Long idWeWant = gene.getId();
-
-        gene.setId( null );
-        Gene g = geneDao.find( gene );
-        assertNotNull( g );
-        assertEquals( idWeWant, g.getId() );
-
-        GeneValueObject gvo = geneCoreService.loadGeneDetails( idWeWant );
-
-        assertEquals( gvo.getName(), g.getName() );
-
-        geneDao.remove( g );
-
-    }
+    private GeneService geneService = null;
 
     @Test
     public void testSearchGenes() {
@@ -104,9 +62,9 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
         pl1.setStrand( "-" );
         gene.setPhysicalLocation( pl1 );
 
-        gene = geneDao.create( gene );
+        gene = geneService.create( gene );
 
-        Collection<GeneValueObject> searchResults = geneCoreService.searchGenes( "test_search", 1L );
+        Collection<GeneValueObject> searchResults = geneService.searchGenes( "test_search", 1L );
 
         assertNotNull( searchResults );
 
@@ -114,7 +72,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
 
         assertNotNull( gvo );
 
-        geneDao.remove( gene );
+        geneService.remove( gene );
 
     }
 

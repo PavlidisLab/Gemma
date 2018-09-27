@@ -31,8 +31,7 @@ public class AbaGene {
     private Integer geneId;
     private String geneSymbol;
     private String geneName;
-    private Integer entrezGeneId;
-    private String ncbiAccession;
+    private String ncbiId;
     private Collection<ImageSeries> imageSeries;
     private String geneUrl;
 
@@ -42,32 +41,23 @@ public class AbaGene {
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public AbaGene( Integer geneId, String geneSymbol, String geneName, Integer entrezGeneId, String ncbiAccession,
-            String geneUrl, Collection<ImageSeries> imageSeries ) {
+    public AbaGene( Integer geneId, String geneSymbol, String geneName, String ncbiId, String geneUrl, Collection<ImageSeries> imageSeries ) {
         this();
         this.geneId = geneId;
         this.geneSymbol = geneSymbol;
         this.geneName = geneName;
-        this.entrezGeneId = entrezGeneId;
-        this.ncbiAccession = ncbiAccession;
+        this.ncbiId = ncbiId;
         this.imageSeries = imageSeries;
         this.geneUrl = geneUrl;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     public void addImageSeries( ImageSeries is ) {
         if ( imageSeries == null )
             imageSeries = new HashSet<>();
 
         imageSeries.add( is );
 
-    }
-
-    public Integer getEntrezGeneId() {
-        return entrezGeneId;
-    }
-
-    public void setEntrezGeneId( Integer entrezGeneId ) {
-        this.entrezGeneId = entrezGeneId;
     }
 
     public Integer getGeneId() {
@@ -102,20 +92,22 @@ public class AbaGene {
         this.geneUrl = geneUrl;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     public Collection<ImageSeries> getImageSeries() {
         return imageSeries;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     public void setImageSeries( Collection<ImageSeries> imageSeries ) {
         this.imageSeries = imageSeries;
     }
 
-    public String getNcbiAccession() {
-        return ncbiAccession;
+    public String getNcbiId() {
+        return ncbiId;
     }
 
-    public void setNcbiAccession( String ncbiAccession ) {
-        this.ncbiAccession = ncbiAccession;
+    public void setNcbiId( String ncbiId ) {
+        this.ncbiId = ncbiId;
     }
 
     @Override
@@ -124,14 +116,12 @@ public class AbaGene {
         sb.append( "GeneId: " ).append( this.geneId ).append( "\n" );
         sb.append( "GeneSymbol: " ).append( this.geneSymbol ).append( "\n" );
         sb.append( "GeneName: " ).append( this.geneName ).append( "\n" );
-        sb.append( "EntrezId: " ).append( this.entrezGeneId ).append( "\n" );
-        sb.append( "NCBI Accession: " ).append( this.ncbiAccession ).append( "\n" );
+        sb.append( "NCBI Accession: " ).append( this.ncbiId ).append( "\n" );
         sb.append( "aba Gene Url: " ).append( this.geneUrl ).append( "\n" );
 
         for ( ImageSeries is : imageSeries ) {
             sb.append( "==> " );
             sb.append( "\t image series id: " ).append( is.getImageSeriesId() );
-            sb.append( " \t plane: " ).append( is.getPlane() );
             sb.append( "\n" );
 
             if ( is.getImages() == null )
@@ -141,13 +131,7 @@ public class AbaGene {
                 sb.append( "\t ==> " );
                 sb.append( "\t \t image id: " ).append( img.getId() );
                 sb.append( " \t \t Display Name: " ).append( img.getDisplayName() );
-                sb.append( " \t \t Expression Image Path Url: " ).append( img.getDownloadExpressionPath() );
-                sb.append( " \t \t Image path url: " ).append( img.getDownloadImagePath() );
-                sb.append( " \t \t Expression thumbnail url: " ).append( img.getExpressionThumbnailUrl() );
-                sb.append( " \t \t thumbnail url: " ).append( img.getThumbnailUrl() );
-                sb.append( " \t \t zoomified Nissl Url: " ).append( img.getZoomifiedNisslUrl() );
-                sb.append( " \t \t Posisiton: " ).append( img.getPosition() );
-                sb.append( " \t \t Reference Atlas Index: " ).append( img.getReferenceAtlasIndex() );
+                sb.append( " \t \t Image Url: " ).append( img.getUrl() );
                 sb.append( "\n" );
             }
 

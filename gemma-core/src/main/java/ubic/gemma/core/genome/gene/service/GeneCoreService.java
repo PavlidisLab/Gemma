@@ -26,14 +26,6 @@ import java.util.Collection;
 public interface GeneCoreService {
 
     /**
-     * Returns a detailVO for a geneId
-     *
-     * @param geneId The gene id
-     * @return GeneDetailsValueObject a representation of that gene
-     */
-    GeneValueObject loadGeneDetails( long geneId );
-
-    /**
      * Search for genes (by name or symbol)
      *
      * @param query    query

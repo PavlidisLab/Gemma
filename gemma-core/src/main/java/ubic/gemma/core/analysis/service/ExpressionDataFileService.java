@@ -36,8 +36,8 @@ import java.util.Map;
 public interface ExpressionDataFileService {
 
     String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
-    String DATA_DIR =
-            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
+    String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
+    String METADATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "metadata" + File.separatorChar;
 
     String DATA_FILE_SUFFIX = ".data.txt";
 

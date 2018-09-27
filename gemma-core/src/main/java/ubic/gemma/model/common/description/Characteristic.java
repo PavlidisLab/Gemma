@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,44 +34,107 @@ import java.util.Objects;
  */
 public class Characteristic extends Describable {
 
-    public static final class Factory {
-
-        public static Characteristic newInstance() {
-            return new Characteristic();
-        }
-
-        public static Characteristic newInstance( String name, String description, String value, String valueUri,
-                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
-            final Characteristic entity = new Characteristic();
-            entity.setName( name );
-            entity.setDescription( description );
-            entity.setValue( value );
-            entity.setValueUri( valueUri );
-            entity.setCategory( category );
-            entity.setCategoryUri( categoryUri );
-            entity.setEvidenceCode( evidenceCode );
-            return entity;
-        }
-    }
-
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
-
     /**
      * Stores the value this characteristic had before it was assigned a URI for the term.
      */
     private String originalValue = null;
-
     private String value;
-
     private String valueUri;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Characteristic() {
+    }
+
+    /**
+     * @return either the human readable form of the classUri or a free text version if no classUri exists
+     */
+    public String getCategory() {
+        return this.category;
+    }
+
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
+    /**
+     * @return The URI of the class that this is an instance of. Will only be different from the termUri when the class
+     * is
+     * effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we
+     * can
+     * more readily group together Characteristics that are instances of the same class. For example: If the
+     * classUri is
+     * "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and
+     * the
+     * termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared
+     * as
+     * associations with this.
+     */
+    public String getCategoryUri() {
+        return this.categoryUri;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
+    public GOEvidenceCode getEvidenceCode() {
+        return this.evidenceCode;
+    }
+
+    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    /**
+     * @return the originalValue
+     */
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue( String originalValue ) {
+        this.originalValue = originalValue;
+    }
+
+    /**
+     * @return The human-readable term (e.g., "OrganismPart"; "kinase")
+     */
+    public String getValue() {
+        return this.value;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    /**
+     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
+     * ontology
+     * term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
+     * the
+     * abstract class.
+     */
+    public String getValueUri() {
+        return this.valueUri;
+    }
+
+    public void setValueUri( String uri ) {
+        this.valueUri = uri;
+    }
+
+    @Override
+    public int hashCode() {
+
+        if ( this.getId() != null ) return this.getId().hashCode();
+
+        return new HashCodeBuilder( 17, 1 ).append( this.getCategory() )
+                .append( this.getValue() ).toHashCode();
     }
 
     @Override
@@ -99,101 +162,32 @@ public class Characteristic extends Describable {
          */
     }
 
-    /**
-     * @return either the human readable form of the classUri or a free text version if no classUri exists
-     */
-    public String getCategory() {
-        return this.category;
-    }
-
-    /**
-     * @return The URI of the class that this is an instance of. Will only be different from the termUri when the class
-     *         is
-     *         effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we
-     *         can
-     *         more readily group together Characteristics that are instances of the same class. For example: If the
-     *         classUri is
-     *         "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and
-     *         the
-     *         termUri can be the same; for example, for "Age", if the "Age" is defined through its properties declared
-     *         as
-     *         associations with this.
-     */
-    public String getCategoryUri() {
-        return this.categoryUri;
-    }
-
-    public GOEvidenceCode getEvidenceCode() {
-        return this.evidenceCode;
-    }
-
-    /**
-     * @return the originalValue
-     */
-    public String getOriginalValue() {
-        return originalValue;
-    }
-
-    /**
-     * @return The human-readable term (e.g., "OrganismPart"; "kinase")
-     */
-    public String getValue() {
-        return this.value;
-    }
-
-    /**
-     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL
-     *         ontology
-     *         term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for
-     *         the
-     *         abstract class.
-     */
-    public String getValueUri() {
-        return this.valueUri;
-    }
-
-    @Override
-    public int hashCode() {
-
-        if ( this.getId() != null ) return this.getId().hashCode();
-
-        return new HashCodeBuilder( 17, 1 ).append( this.getCategory() )
-                .append( this.getValue() ).toHashCode();
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public void setOriginalValue( String originalValue ) {
-        this.originalValue = originalValue;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @param uri
-     */
-    public void setValueUri( String uri ) {
-        this.valueUri = uri;
-    }
-
     @Override
     public String toString() {
         if ( StringUtils.isBlank( this.getCategory() ) ) {
             return "[No category] Value = " + this.getValue();
         }
         return "Category = " + this.getCategory() + " Value = " + this.getValue();
+    }
+
+    public static final class Factory {
+
+        public static Characteristic newInstance() {
+            return new Characteristic();
+        }
+
+        public static Characteristic newInstance( String name, String description, String value, String valueUri,
+                String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+            final Characteristic entity = new Characteristic();
+            entity.setName( name );
+            entity.setDescription( description );
+            entity.setValue( value );
+            entity.setValueUri( valueUri );
+            entity.setCategory( category );
+            entity.setCategoryUri( categoryUri );
+            entity.setEvidenceCode( evidenceCode );
+            return entity;
+        }
     }
 
 }

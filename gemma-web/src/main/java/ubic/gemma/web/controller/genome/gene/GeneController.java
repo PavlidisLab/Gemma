@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,13 +27,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
-import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -47,7 +45,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.ControllerUtils;
-import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,8 +64,6 @@ public class GeneController extends BaseController {
     @Autowired
     private AllenBrainAtlasService allenBrainAtlasService;
     @Autowired
-    private HomologeneService homologeneService;
-    @Autowired
     private GeneService geneService;
     @Autowired
     private TaxonService taxonService;
@@ -76,19 +71,13 @@ public class GeneController extends BaseController {
     private GeneSetService geneSetService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired
-    private GeneCoreService geneCoreService;
 
-    /**
-     * For ajax
-     */
+    @SuppressWarnings("WeakerAccess") // Frontend ajax access
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         return geneService.findGOTerms( geneId );
     }
 
-    /**
-     * For ajax.
-     */
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
@@ -98,30 +87,16 @@ public class GeneController extends BaseController {
     /**
      * AJAX NOTE: this method updates the value object passed in
      */
-    public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
-        Collection<ImageValueObject> images = new ArrayList<>();
-        GeneValueObject gene = geneService.loadValueObjectById( geneId );
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
+    public Collection<Image> loadAllenBrainImages( Long geneId ) {
+        Collection<Image> images = new ArrayList<>();
+        Gene gene = geneService.load( geneId );
 
-        String queryGeneSymbol = gene.getOfficialSymbol();
-        GeneValueObject mouseGene = gene;
-        boolean usingHomologue = false;
-        if ( !gene.getTaxonCommonName().equals( "mouse" ) ) {
-            mouseGene = this.homologeneService.getHomologueValueObject( geneId, "mouse" );
-            usingHomologue = true;
-        }
-
-        if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries;
+        if ( gene != null ) {
 
             try {
-                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
-                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-
-                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject
-                        .convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ),
-                                queryGeneSymbol, usingHomologue );
-
+                Collection<ImageSeries> imageSeries = allenBrainAtlasService.getSagittalImageSeries( gene );
+                return allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
             }
@@ -129,19 +104,16 @@ public class GeneController extends BaseController {
         return images;
     }
 
-    /**
-     * AJAX used for gene page
-     */
+    @SuppressWarnings("unused") // Frontend ajax use, gene page
     public GeneValueObject loadGeneDetails( Long geneId ) {
-        // return geneCoreService.loadGeneDetails( geneId );
-        GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
+        GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
         Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
                 .findEvidenceByGeneId( geneId, new HashSet<String>(),
                         new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-        Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iter = collEVO.iterator();
+        Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
         Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
-        while ( iter.hasNext() ) {
-            EvidenceValueObject evo = iter.next();
+        while ( iterator.hasNext() ) {
+            EvidenceValueObject<? extends PhenotypeAssociation> evo = iterator.next();
             if ( !evo.isHomologueEvidence() )
                 collFilteredDVO.addAll( evo.getPhenotypes() );
         }
@@ -151,21 +123,31 @@ public class GeneController extends BaseController {
         return gvo;
     }
 
+    @SuppressWarnings("unused") // Frontend ajax use, gene page
+    public String getGeneABALink( Long geneId ) {
+        return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
+    }
+
+    ;
+
     /**
      * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
      */
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
-            Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId,
+            boolean showOnlyEditable, Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
                         new HashSet<String>() :
                         new HashSet<>( Arrays.asList( phenotypeValueUris ) ),
                 new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
 
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend ajax access
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         return geneService.loadGenePhenotypes( geneId );
     }
 
+    @SuppressWarnings("unused") // Required
     @RequestMapping(value = { "/showGene.html", "/" }, method = RequestMethod.GET)
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
@@ -192,15 +174,14 @@ public class GeneController extends BaseController {
                 geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
 
             } else if ( StringUtils.isNotBlank( ensemblId ) ) {
-                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = Collections.singleton( geneService
-                        .findByEnsemblId( ensemblId ));
+                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = Collections
+                        .singleton( geneService.findByEnsemblId( ensemblId ) );
 
-                if ( foundGenes.size() == 1 ) {
-                    Gene gene = foundGenes.iterator().next();
-                    if ( gene != null ) {
-                        geneVO = geneService.loadValueObjectById( gene.getId() );
-                    }
+                Gene gene = foundGenes.iterator().next();
+                if ( gene != null ) {
+                    geneVO = geneService.loadValueObjectById( gene.getId() );
                 }
+
             } else if ( StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName ) ) {
                 Taxon taxon = taxonService.findByCommonName( taxonName );
                 if ( taxon != null ) {
@@ -235,39 +216,7 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    /**
-     * @return ModelAndView
-     */
-    @RequestMapping(value = { "/showGenes.html", "/show.html" }, method = RequestMethod.GET)
-    public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-        Collection<GeneValueObject> genes = new ArrayList<>();
-        // if no IDs are specified, then show an error message
-        if ( sId == null ) {
-            addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
-        }
-
-        // if ids are specified, then display only those genes
-        else {
-            String[] idList = StringUtils.split( sId, ',' );
-
-            for ( String anIdList : idList ) {
-                Long id = Long.parseLong( anIdList );
-                GeneValueObject gene = geneService.loadValueObjectById( id );
-                if ( gene == null ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-                }
-                genes.add( gene );
-            }
-        }
-        /*
-         * FIXME this view doesn't exist!
-         */
-        return new ModelAndView( "genes" ).addObject( "genes", genes );
-
-    }
-
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend access
     @RequestMapping("/downloadGeneList.html")
     protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
 

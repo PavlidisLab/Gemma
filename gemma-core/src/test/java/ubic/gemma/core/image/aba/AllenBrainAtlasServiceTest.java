@@ -18,15 +18,17 @@
  */
 package ubic.gemma.core.image.aba;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Alan brain Atlas service test.
@@ -38,76 +40,44 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     @Autowired
     private AllenBrainAtlasService abaService = null;
 
-    @Test
-    public void testGetGene() throws Exception {
-        AbaGene grin1;
+    @Autowired
+    private GeneService geneService = null;
 
-        try {
-            grin1 = abaService.getGene( "Grin1" );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
-            throw e;
-        }
+    @Autowired
+    private TaxonService taxonService = null;
 
-        Collection<ImageSeries> representativeSaggitalImages = new HashSet<>();
+    private Gene gene;
 
-        for ( ImageSeries is : grin1.getImageSeries() ) {
-            if ( is == null )
-                continue;
-            if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
+    @Before
+    public void SetUp() {
+        gene = Gene.Factory.newInstance();
+        gene.setName( "glutamate receptor, ionotropic, NMDA1 (zeta 1)" );
+        gene.setOfficialSymbol( "grin1" );
+        gene.setNcbiGeneId( 14810 );
+        gene.setTaxon( taxonService.findByCommonName( "mouse" ) );
 
-                Collection<Image> images = abaService.getImageSeries( is.getImageSeriesId() );
-                Collection<Image> representativeImages = new HashSet<>();
-
-                for ( Image img : images ) {
-                    if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
-                        representativeImages.add( img );
-                    }
-                }
-
-                if ( representativeImages.isEmpty() )
-                    continue;
-
-                // Only add if there is something to add
-                is.setImages( representativeImages );
-                representativeSaggitalImages.add( is );
-            }
-        }
-        grin1.setImageSeries( representativeSaggitalImages );
-
-        // log.info( grin1 );
+        this.persisterHelper.persistOrUpdate( gene );
     }
 
-    /**
-     * Not all ABA genes have the only the first letter capitalized
-     */
+    @After
+    public void Cleanup() {
+        this.geneService.remove( gene );
+    }
+
     @Test
-    public void testGetGeneCapitals() {
-        AbaGene gene = null;
+    public void testGetGene() throws Exception {
+        AbaGene abaGene;
+        Gene gene = geneService.findByOfficialSymbol( "grin1", taxonService.findByCommonName( "mouse" ) );
 
-        try {
-            gene = abaService.getGene( "BC004044" );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
-        }
-        assertNotNull( gene );
-
-        try {
-            gene = abaService.getGene( "grin1" );
-        } catch ( IOException e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "Server error from Allen Atlas: skipping test" );
-                return;
-            }
+        if ( gene == null ) {
+            log.error( "Mouse Grin1 gene could not be found in Gemma" );
         }
 
-        assertNotNull( gene );
+        abaGene = abaService.getGene( gene );
+
+        assertNotNull( abaGene );
+        assertNotNull( abaGene.getImageSeries() );
+        assertTrue( !abaGene.getImageSeries().isEmpty() );
     }
 
 }

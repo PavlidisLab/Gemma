@@ -62,6 +62,7 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
      * @param limit             limit
      * @param compositeSequence sequence
      * @param offset            offset
+     * @return collection of genes
      */
     Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
