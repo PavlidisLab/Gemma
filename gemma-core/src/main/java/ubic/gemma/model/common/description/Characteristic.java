@@ -155,10 +155,9 @@ public class Characteristic extends Describable {
     @Override
     public int hashCode() {
 
-        /*
-         * FIXME add uris
-         */
-        return new HashCodeBuilder( 17, 1 ).append( this.getId() ).append( this.getCategory() )
+        if ( this.getId() != null ) return this.getId().hashCode();
+
+        return new HashCodeBuilder( 17, 1 ).append( this.getCategory() )
                 .append( this.getValue() ).toHashCode();
     }
 

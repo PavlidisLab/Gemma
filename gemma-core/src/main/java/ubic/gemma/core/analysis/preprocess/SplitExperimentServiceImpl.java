@@ -31,17 +31,17 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import gemma.gsec.SecurityService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.common.measurement.MeasurementKind;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -82,6 +83,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     @Autowired
     private Persister persister;
 
+    @Autowired
+    private SecurityService securityService;
+
+    @Autowired
+    private ExpressionDataFileService dataFileService;
+
     /*
      * (non-Javadoc)
      * 
@@ -92,9 +99,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn ) {
 
         toSplit = eeService.thawLite( toSplit );
-
-        // Clean the experiment: remove diff and coex analyses, PCA, correlation matrices, processed data vectors
-        // TODO
 
         Collection<ExpressionExperiment> result = new HashSet<>();
 
@@ -126,17 +130,20 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         // stub the new experiments and create new names; all other information should be retained. Permissions should be the same. 
         // Audit events should start over with a notated create event
-        int i = 0;
-        for ( FactorValue fv : splitOn.getFactorValues() ) {
-            i++;
+        int splitNumber = 0;
+
+        for ( FactorValue splitValue : splitOn.getFactorValues() ) {
+            splitNumber++;
             ExpressionExperiment split = ExpressionExperiment.Factory.newInstance();
-            split.setShortName( sourceShortName + "." + i );
+            split.setShortName( sourceShortName + "." + splitNumber );
 
             // copy everything but samples over
-            split.setName( "Split part " + i + " " + " from " + toSplit.getName() );
+            split.setName( "Split part " + splitNumber + " of: " + toSplit.getName() + " ["
+                    + splitValue.getExperimentalFactor().getCategory().getValue() + " = "
+                    + splitValue.getValue() + "]" );
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
-            split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) ); // which might no longer be accurate...
+            split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
 
             split.setCurationDetails( curationDetailsDao.create() ); // not sure anything we want to copy
 
@@ -144,51 +151,105 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
-            split.setAccession( toSplit.getAccession() );
+            split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique
 
-            split.setExperimentalDesign( this.cloneExperimentalDesign( toSplit.getExperimentalDesign() ) );
+            Map<FactorValue, FactorValue> old2cloneFV = new HashMap<>();
+
+            split.setExperimentalDesign( this.cloneExperimentalDesign( toSplit.getExperimentalDesign(), old2cloneFV ) );
 
             // starting with a fresh audit trail, assuming that's the right thing to do.
 
             split.setOwner( toSplit.getOwner() );
             split.setSource( toSplit.getSource() );
-            // split.setRelatedTo... keep track of this being related to other parts of the split (which might be more than 2 parts)
+            // split.setRelatedTo ... FIXME keep track of this being related to other parts of the split (which might be more than 2 parts)
 
             // add the biomaterials
+            Map<BioAssay, BioAssay> old2cloneBA = new HashMap<>();
             List<BioMaterial> bms = new ArrayList<>();
+            Collection<FactorValue> usedFactorValues = new HashSet<>();
             for ( BioAssay ba : toSplit.getBioAssays() ) {
-                BioAssay newBa = this.cloneBioAssay( ba );
 
                 BioMaterial bm = ba.getSampleUsed();
-                bms.add( bm );
-                for ( FactorValue fvs : bm.getFactorValues() ) {
-                    if ( fvs.equals( fv ) ) { // FIXME this won't work since we have now cloned the factor values
-                        split.getBioAssays().add( ba );
-                        bm.getFactorValues().remove( fvs ); // remove the factor we are using to split on
+                for ( FactorValue fv : bm.getFactorValues() ) {
+
+                    FactorValue clonedFv = old2cloneFV.get( fv );
+
+                    if ( fv.equals( splitValue ) ) {
+                        assert !bms.contains( bm );
+                        bms.add( bm );
+
+                        BioAssay newBa = this.cloneBioAssay( ba );
+
+                        // remove the factor we are using to split on
+                        newBa.getSampleUsed().getFactorValues().remove( clonedFv );
+
+                        old2cloneBA.put( ba, newBa );
+                    }
+
+                    usedFactorValues.add( fv );
+                }
+            }
+
+            // remove other unused factorvalues from the design
+            for ( ExperimentalFactor ef : split.getExperimentalDesign().getExperimentalFactors() ) {
+                Collection<FactorValue> toRemove = new HashSet<>();
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    if ( !usedFactorValues.contains( old2cloneFV.get( fv ) ) ) {
+                        toRemove.add( fv );
                     }
                 }
 
-                split.getBioAssays().add( newBa );
+                if ( ef.getFactorValues().removeAll( toRemove ) ) {
+                    log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber );
+                }
             }
+
+            // here we're using the original bms; we'll replace them later
+            BioAssayDimension newBAD = makeBioAssayDimension( bms, toSplit );
 
             for ( QuantitationType qt : qt2mat.keySet() ) {
 
-                QuantitationType clonedQt = this.cloneQt( qt );
+                QuantitationType clonedQt = this.cloneQt( qt, split );
+
                 split.getQuantitationTypes().add( clonedQt );
 
-                // careful that these bms are same as the ones associated with the vectors, not the clones
+                // these bms are same as the ones associated with the vectors, not the clones
                 ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ( ExpressionDataDoubleMatrix ) qt2mat.get( qt ),
-                        bms, makeBioAssayDimension( bms, toSplit ) );
+                        bms, newBAD );
 
                 Collection<RawExpressionDataVector> rawDataVectors = expressionDataMatrix.toRawDataVectors();
                 for ( RawExpressionDataVector v : rawDataVectors ) {
                     v.setQuantitationType( clonedQt );
-                }
-
+                    v.setExpressionExperiment( split );
+                    assert v.getBioAssayDimension().equals( newBAD );
+                    assert v.getDesignElement() != null;
+                    assert v.getDesignElement().getArrayDesign() != null;
+                    assert v.getDesignElement().getArrayDesign().getId() != null;
+                 }
+                log.info( split.getShortName() + ": Adding " + rawDataVectors.size() + " raw data vectors for " + clonedQt + " preferred="
+                        + clonedQt.getIsPreferred() );
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
+            // now replace the bms in the newBAD with the clones
+            List<BioAssay> badBAs = newBAD.getBioAssays();
+            List<BioAssay> replaceBAs = new ArrayList<>();
+            for ( BioAssay ba : badBAs ) {
+                BioAssay clonedBA = old2cloneBA.get( ba );
+                assert clonedBA != null;
+                assert clonedBA.getSampleUsed().getId() == null;
+                replaceBAs.add( clonedBA );
+            }
+            newBAD.getBioAssays().clear();
+            newBAD.getBioAssays().addAll( replaceBAs );
+            assert replaceBAs.size() == badBAs.size();
+
+            split.getBioAssays().clear();
+            split.getBioAssays().addAll( replaceBAs );
+
             split = ( ExpressionExperiment ) persister.persist( split );
+
+            securityService.makePublic( split ); // FIXME temporary 
             result.add( split );
 
             // postprocess
@@ -199,6 +260,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
         }
 
+        // Clean the experiment: remove diff and coex analyses, PCA, correlation matrices, processed data vectors
+        dataFileService.deleteAllFiles( toSplit );
         // delete the old experiment (maybe not yet... in case ...
         // eeService.remove(toSplit);
 
@@ -207,9 +270,10 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  experimentalDesign
-     * @return
+     * @param  old2cloneFV
+     * @return                    non-persistent clone
      */
-    private ExperimentalDesign cloneExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+    private ExperimentalDesign cloneExperimentalDesign( ExperimentalDesign experimentalDesign, Map<FactorValue, FactorValue> old2cloneFV ) {
         ExperimentalDesign clone = ExperimentalDesign.Factory.newInstance();
         clone.setDescription( experimentalDesign.getDescription() );
         clone.setName( experimentalDesign.getName() );
@@ -218,16 +282,18 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setReplicateDescription( experimentalDesign.getReplicateDescription() );
         clone.setTypes( this.cloneCharacteristics( experimentalDesign.getTypes() ) );
 
-        clone.getExperimentalFactors().addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors() ) );
+        clone.getExperimentalFactors().addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors(), old2cloneFV ) );
 
         return clone;
     }
 
     /**
      * @param  experimentalFactors
-     * @return
+     * @param  old2cloneFV
+     * @return                     non-persistent clones
      */
-    private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+    private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors,
+            Map<FactorValue, FactorValue> old2cloneFV ) {
         Collection<ExperimentalFactor> result = new HashSet<>();
         for ( ExperimentalFactor ef : experimentalFactors ) {
             ExperimentalFactor clone = ExperimentalFactor.Factory.newInstance();
@@ -236,7 +302,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setName( ef.getName() );
             clone.setDescription( ef.getDescription() );
             clone.setType( ef.getType() );
-            clone.getFactorValues().addAll( this.cloneFactorValues( ef.getFactorValues(), clone ) );
+            clone.getFactorValues().addAll( this.cloneFactorValues( ef.getFactorValues(), clone, old2cloneFV ) );
             result.add( clone );
         }
         return result;
@@ -244,9 +310,11 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  factorValues
-     * @return
+     * @param  old2cloneFV
+     * @return              non-persistent clone
      */
-    private Collection<FactorValue> cloneFactorValues( Collection<FactorValue> factorValues, ExperimentalFactor ef ) {
+    private Collection<FactorValue> cloneFactorValues( Collection<FactorValue> factorValues, ExperimentalFactor ef,
+            Map<FactorValue, FactorValue> old2cloneFV ) {
         Collection<FactorValue> result = new HashSet<>();
         for ( FactorValue fv : factorValues ) {
             FactorValue clone = FactorValue.Factory.newInstance( ef );
@@ -255,6 +323,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setValue( fv.getValue() );
             clone.setMeasurement( this.cloneMeasurement( fv.getMeasurement() ) );
             result.add( fv );
+            assert !old2cloneFV.containsKey( fv );
+            old2cloneFV.put( fv, clone );
         }
 
         return result;
@@ -262,7 +332,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  measurement
-     * @return
+     * @return             non-persistent clone
      */
     private Measurement cloneMeasurement( Measurement measurement ) {
 
@@ -279,34 +349,38 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  qt
-     * @return    peristent new copy of qt
+     * @return    clone
      */
-    private QuantitationType cloneQt( QuantitationType qt ) {
-        QuantitationType result = QuantitationType.Factory.newInstance();
-        result.setDescription( qt.getDescription() );
-        result.setName( qt.getName() );
-        result.setGeneralType( qt.getGeneralType() );
-        result.setIsBackground( qt.getIsBackground() );
-        result.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
-        result.setIsBatchCorrected( qt.getIsBatchCorrected() );
-        result.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
-        result.setIsNormalized( qt.getIsNormalized() );
-        result.setIsPreferred( qt.getIsPreferred() );
-        result.setIsRatio( qt.getIsRatio() );
-        result.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
-        result.setRepresentation( qt.getRepresentation() );
-        result.setType( qt.getType() );
-        result.setScale( qt.getScale() );
+    private QuantitationType cloneQt( QuantitationType qt, ExpressionExperiment split ) {
+        QuantitationType clone = QuantitationType.Factory.newInstance();
+        clone.setDescription( qt.getDescription() + " (created for split: " + split.getShortName() + ")" );
+        clone.setName( qt.getName() );
+        clone.setGeneralType( qt.getGeneralType() );
+        clone.setIsBackground( qt.getIsBackground() );
+        clone.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
+        clone.setIsBatchCorrected( qt.getIsBatchCorrected() );
+        clone.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
+        clone.setIsNormalized( qt.getIsNormalized() );
+        clone.setIsPreferred( qt.getIsPreferred() );
+        clone.setIsRatio( qt.getIsRatio() );
+        clone.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
+        clone.setRepresentation( qt.getRepresentation() );
+        clone.setType( qt.getType() );
+        clone.setScale( qt.getScale() );
 
-        return ( QuantitationType ) persister.persist( qt );
+        return clone;
     }
 
+    /**
+     * @param  ch
+     * @return    clones
+     */
     private Collection<Characteristic> cloneCharacteristics( Collection<Characteristic> ch ) {
         Collection<Characteristic> result = new HashSet<>();
         for ( Characteristic c : ch ) {
             Characteristic clone = cloneCharacteristic( c );
 
-            result.add( ( Characteristic ) persister.persist( clone ) );
+            result.add( clone );
 
         }
         return result;
@@ -314,11 +388,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  c
-     * @return
+     * @return   clone
      */
     private Characteristic cloneCharacteristic( Characteristic c ) {
         Characteristic clone = Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
                 c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
+        //  clone = characteristicDao.create( clone );
         return clone;
     }
 
@@ -326,7 +401,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * Deeply clone a bioAssay
      * 
      * @param  ba
-     * @return
+     * @return    non-persistent clone
      */
     private BioAssay cloneBioAssay( BioAssay ba ) {
         BioAssay clone = BioAssay.Factory.newInstance();
@@ -351,7 +426,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  accession
-     * @return
+     * @return           non-persistent clone
      */
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
         if ( de == null ) return null;
@@ -361,11 +436,11 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  sampleUsed
-     * @return
+     * @return            non-persistent clone
      */
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( bm.getName() );
+        clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name so we don't confuse this with the previous one in 'findorcreate()';
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );
@@ -381,7 +456,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  treatments
-     * @return
+     * @return            non-persistent clones
      */
     private Collection<Treatment> cloneTreatments( Collection<Treatment> ts ) {
         Collection<Treatment> result = new HashSet<>();
@@ -396,18 +471,26 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
+    /**
+     * 
+     * @param  samplesToUse (cloned)
+     * @param  ee
+     * @return              non-persistent populated BAD
+     */
     private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse, ExpressionExperiment ee ) {
 
         List<BioAssay> bioAssays = new ArrayList<>();
         for ( BioMaterial bm : samplesToUse ) {
-            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
+            BioAssay ba = bm.getBioAssaysUsedIn().iterator().next();
+            bioAssays.add( ba );
         }
 
         BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-        result.setBioAssays( bioAssays );
-        result.setName( "" );
+        result.getBioAssays().addAll( bioAssays );
+        result.setName( "" ); // FIXME might want to fill something in...
         result.setDescription( bioAssays.size() + " bioAssays extracted from source experiment " + ee.getShortName() );
 
+        assert result.getBioAssays().size() == samplesToUse.size();
         return result;
     }
 }

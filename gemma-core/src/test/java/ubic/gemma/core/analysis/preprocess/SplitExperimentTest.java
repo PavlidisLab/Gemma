@@ -30,11 +30,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import gemma.gsec.SecurityService;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -65,16 +67,19 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     private ExperimentalFactor splitOn = null;
 
-    ExpressionExperiment ee = null;
+    @Autowired
+    private SecurityService securityService;
+
+    private ExpressionExperiment ee = null;
 
     @Before
     public void setup() throws Exception, PreprocessingException {
-        
+
         String geoId = "GSE17183";
-        
+
         ExpressionExperiment oldee = eeService.findByShortName( geoId );
-        if (oldee != null) eeService.remove( oldee );
-        
+        if ( oldee != null ) eeService.remove( oldee );
+
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
 
@@ -83,6 +88,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         this.ee = ees.iterator().next();
 
         ee = eeService.thaw( ee );
+
+        securityService.makePublic( ee );
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/analysis/preprocess/2877_GSE17183_expdesign.data.txt" )) {
@@ -103,14 +110,21 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     @After
     public void teardown() throws Exception {
-        eeService.remove( results );
+        //   eeService.remove( results );
     }
 
     @Test
     public void test() throws Exception {
 
         this.results = splitService.split( ee, splitOn );
-        assertEquals( 2, results.size() );
+        assertEquals( splitOn.getFactorValues().size(), results.size() );
+
+        for ( ExpressionExperiment e : results ) {
+            Collection<RawExpressionDataVector> rvs = e.getRawExpressionDataVectors();
+            assertEquals( 100, rvs.size() );
+            RawExpressionDataVector rv = rvs.iterator().next();
+            assertTrue( rv.getQuantitationType().getIsPreferred() );
+        }
     }
 
 }
