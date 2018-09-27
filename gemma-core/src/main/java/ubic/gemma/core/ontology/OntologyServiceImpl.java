@@ -301,8 +301,14 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService ontology : ontologyServices ) {
             if ( ontology.isOntologyLoaded() ) {
                 Collection<OntologyTerm> found = ontology.findTerm( query );
-                if ( found != null )
-                    results.addAll( found );
+                if ( found != null ) {
+                    for ( OntologyTerm t : found ) {
+                        if ( !t.isTermObsolete() ) {
+                            results.add( t );
+                        }
+                    }
+                }
+
             }
         }
 
@@ -347,7 +353,7 @@ public class OntologyServiceImpl implements OntologyService {
             try {
                 results = service.findResources( queryString );
             } catch ( Exception e ) {
-                log.warn( e.getMessage() ); // parse errors, etc.
+                OntologyServiceImpl.log.warn( e.getMessage() ); // parse errors, etc.
             }
             if ( results == null || results.isEmpty() )
                 continue;
@@ -356,6 +362,7 @@ public class OntologyServiceImpl implements OntologyService {
                 OntologyServiceImpl.log
                         .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
                                 + watch.getTime() + " ms" );
+
             searchResults.addAll( CharacteristicValueObject
                     .characteristic2CharacteristicVO( this.termsToCharacteristics( results ) ) );
 
@@ -447,13 +454,13 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public UberonOntologyService getUberonService() {
-        return this.uberonOntologyService;
+    public ObiService getObiService() {
+        return obiService;
     }
 
     @Override
-    public ObiService getObiService() {
-        return obiService;
+    public UberonOntologyService getUberonService() {
+        return this.uberonOntologyService;
     }
 
     @Override
@@ -505,7 +512,8 @@ public class OntologyServiceImpl implements OntologyService {
                 }
             } else {
                 if ( serv.isEnabled() )
-                    OntologyServiceImpl.log.info( "Not available for reindexing (not enabled or finished initialization): " + serv );
+                    OntologyServiceImpl.log
+                            .info( "Not available for reindexing (not enabled or finished initialization): " + serv );
             }
         }
     }
@@ -564,13 +572,11 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         if ( vc.getEvidenceCode() == null ) {
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added
-            // characteristic
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
         }
 
         if ( StringUtils.isNotBlank( vc.getValueUri() ) && this.isObsolete( vc.getValueUri() ) ) {
-            OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
-            return;
+            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
         }
 
         if ( ee == null )
@@ -592,36 +598,20 @@ public class OntologyServiceImpl implements OntologyService {
      * Convert raw ontology resources into Characteristics.
      */
     @Override
-    public Collection<Characteristic> termsToCharacteristics(
-            final Collection<? extends OntologyResource> terms ) {
+    public Collection<Characteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
 
         Collection<Characteristic> results = new HashSet<>();
 
         if ( ( terms == null ) || ( terms.isEmpty() ) )
             return results;
 
-        for ( OntologyResource res : terms ) {
+        for ( OntologyResource term : terms ) {
 
-            if ( res == null )
+            if ( term == null )
                 continue;
 
-            Characteristic vc = Characteristic.Factory.newInstance();
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
-                vc.setValueUri( term.getUri() );
-                vc.setDescription( term.getComment() );
-            } else if ( res instanceof OntologyIndividual ) {
-                OntologyIndividual indi = ( OntologyIndividual ) res;
-                vc.setValue( indi.getLabel() );
-                vc.setValueUri( indi.getUri() );
-                vc.setDescription( "Individual" );
-            } else {
-                OntologyServiceImpl.log.warn( "What is it? " + res );
-                continue;
-            }
-
-            if ( vc.getValue() == null )
+            Characteristic vc = this.termToCharacteristic( term );
+            if ( vc == null )
                 continue;
             results.add( vc );
 
@@ -629,6 +619,94 @@ public class OntologyServiceImpl implements OntologyService {
         OntologyServiceImpl.log.debug( "returning " + results.size() + " terms after filter" );
 
         return results;
+    }
+
+    @Override
+    public Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step ) {
+        Map<String, CharacteristicValueObject> vos = new HashMap<>();
+
+        int minId = start;
+        int maxId = step;
+
+        int nullCnt = 0;
+        int obsoleteCnt = 0;
+
+        // Loading all characteristics in steps
+        while ( maxId < stop ) {
+
+            OntologyServiceImpl.log.info( "Checking characteristics with IDs between " + minId + " and " + maxId );
+
+            List<Long> ids = new ArrayList<>( step );
+            for ( int i = minId; i < maxId + 1; i++ ) {
+                ids.add( ( long ) i );
+            }
+
+            minId = maxId + 1;
+            maxId += step;
+
+            Collection<Characteristic> chars = characteristicService.load( ids );
+
+            if ( chars == null || chars.isEmpty() ) {
+                OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
+                continue;
+            } else {
+                OntologyServiceImpl.log.info(
+                        "Found " + chars.size() + " characteristics in the current ID range, checking for obsoletes." );
+            }
+
+            // Detect obsoletes
+            for ( Characteristic ch : chars ) {
+                if ( StringUtils.isBlank( ch.getValueUri() ) ) {
+                    nullCnt++;
+                } else if ( this.isObsolete( ch.getValueUri() ) ) {
+                    String key = this.foundValueKey( ch );
+                    if ( !vos.containsKey( key ) ) {
+                        vos.put( key, new CharacteristicValueObject( ch ) );
+                    }
+                    vos.get( key ).incrementOccurrenceCount();
+                    obsoleteCnt++;
+                    OntologyServiceImpl.log.info( "Found obsolete term: " + ch.getValue() + " / " + ch.getValueUri() );
+                }
+            }
+
+            ids.clear();
+            chars.clear();
+        }
+
+        OntologyServiceImpl.log.info( "Terms with empty uri: " + nullCnt );
+        OntologyServiceImpl.log.info( "Obsolete terms found: " + obsoleteCnt );
+
+        return vos;
+    }
+
+    private Characteristic termToCharacteristic( OntologyResource res ) {
+        if ( this.isObsolete( res.getUri() ) ) {
+            OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + res.getLabel() + " / " + res.getUri() );
+            return null;
+        }
+
+        Characteristic vc = Characteristic.Factory.newInstance();
+        if ( res instanceof OntologyTerm ) {
+            OntologyTerm term = ( OntologyTerm ) res;
+            vc.setValue( term.getTerm() );
+            vc.setValueUri( term.getUri() );
+            vc.setDescription( term.getComment() );
+        } else if ( res instanceof OntologyIndividual ) {
+            OntologyIndividual indi = ( OntologyIndividual ) res;
+            vc.setValue( indi.getLabel() );
+            vc.setValueUri( indi.getUri() );
+            vc.setDescription( "Individual" );
+        } else {
+            OntologyServiceImpl.log.warn( "This is neither an OntologyTerm or an OntologyIndividual: " + res );
+            return null;
+        }
+
+        if ( vc.getValue() == null ) {
+            OntologyServiceImpl.log.warn( "Skipping a characteristic with no value: " + res.getLabel() + " / " + res.getUri() );
+            return null;
+        }
+
+        return vc;
     }
 
     /**
@@ -699,7 +777,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                                    .size() );
+                            .size() );
 
     }
 
@@ -894,6 +972,12 @@ public class OntologyServiceImpl implements OntologyService {
 
             // don't show singletons of free-text terms.
             if ( c.getValueUri() == null && c.getNumTimesUsed() < 2 ) {
+                continue;
+            }
+
+            //Skip obsolete terms
+            if ( this.isObsolete( c.getValueUri() ) ) {
+                OntologyServiceImpl.log.warn( "Skipping an obsolete term: " + c.getValue() + " / " + c.getValueUri() );
                 continue;
             }
 

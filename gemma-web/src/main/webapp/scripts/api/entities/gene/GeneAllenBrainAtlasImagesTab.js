@@ -1,102 +1,101 @@
-Ext.namespace( 'Gemma' );
+Ext.namespace('Gemma');
 
 /**
  * need to set geneId as config
  */
-Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
-   geneId : null,
-   padding : 10,
-   defaults : {
-      border : false
-   },
-   listeners : {
-      'afterrender' : function( c ) {
-         jQuery( 'i[title]' ).qtip();
-      }
-   },
+Gemma.GeneAllenBrainAtlasImages = Ext.extend(Ext.Panel, {
+    geneId: null,
+    padding: 10,
+    defaults: {
+        border: false,
+        autoScroll: false
+    },
+    listeners: {
+        'afterrender': function (c) {
+            jQuery('i[title]').qtip();
+        }
+    },
 
-   /**
-    * @memberOf Gemma.GeneAllenBrainAtlasImage
-    */
-   initComponent : function() {
 
-      Gemma.GeneAllenBrainAtlasImages.superclass.initComponent.call( this );
-      this.on( 'render', function() {
-         if ( !this.loadMask ) {
-            this.loadMask = new Ext.LoadMask( this.getEl(), {
-               msg : Gemma.StatusText.Loading.generic,
-               msgCls : 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
-            } );
-         }
-         this.loadMask.show();
-         GeneController.loadAllenBrainImages( this.geneId, function( imageObjects ) {
+    initComponent: function () {
 
-            this.loadMask.hide();
-            if ( !imageObjects || imageObjects.length === 0 ) {
-               this.add( {
-                  html : 'No images available'
-               } );
-
-            } else {
-
-               var img = imageObjects[0];
-               var homologueText = (img.usingHomologue) ? 'Images are for homologous mouse gene: '
-                  + '<a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id=' + img.abaHomologousMouseGene.id + '">'
-                  + img.abaHomologousMouseGene.officialSymbol + ' [' + img.abaHomologousMouseGene.taxonCommonName
-                  + ']</a>' : '';
-               this.add( {
-                  html : '<h3>Allen Brain Atlas expression pattern' + '<i class="qtp fa fa-question-circle fa-fw" title="'
-                     + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
-                     + '</i>' + '<a title="Go to Allen Brain Atlas details for '
-                     + img.queryGeneSymbol + '" href="' + img.abaGeneURL + '" target="_blank">'
-                     + '<img src="' + ctxBasePath + '/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>' + '<p>'
-                     + homologueText + '<p/>'
-               } );
-               var i;
-               for (i = 0; i < imageObjects.length; i++) {
-                  img = imageObjects[i];
-                  var tmpThumblink = img.downloadExpressionPath.replace( "zoom=2", "zoom=0" );
-                  this.add( {
-                     html : '<div style="cursor: pointer; float: left; padding: 8px">'
-                        + '<a title="Allen Brain Atlas Image for ' + img.queryGeneSymbol + ', click to enlarge" '
-                        + 'onClick="Gemma.geneLinkOutPopUp( &#34; ' + img.downloadExpressionPath + ' &#34; )">'
-                        + '<img src="' + tmpThumblink + '" /> </a>' +
-                        // this link is broken:'<img src="'+img.expressionThumbnailUrl+'" /> </a>'+
-                        '</div>'
-                  } );
-               }
-               this.doLayout();
+        Gemma.GeneAllenBrainAtlasImages.superclass.initComponent.call(this);
+        this.on('render', function () {
+            if (!this.loadMask) {
+                this.loadMask = new Ext.LoadMask(this.getEl(), {
+                    msg: Gemma.StatusText.Loading.generic,
+                    msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+                });
             }
+            this.loadMask.show();
+            var self = this;
+            GeneController.loadGeneDetails(this.geneId, function (gene) {
+                GeneController.getGeneABALink(gene.id, function (geneUrl) {
+                    GeneController.loadAllenBrainImages(gene.id, function (imageObjects) {
 
-         }.createDelegate( this ) );
-      } );
-   }
-} );
-Ext.reg( 'geneallenbrainatlasimages', Gemma.GeneAllenBrainAtlasImages );
+                        self.loadMask.hide();
 
-Gemma.geneLinkOutPopUp = function( abaImageUrl ) {
+                        var img = imageObjects[0];
+                        self.add({
+                            html: '<h3>Allen Brain Atlas expression pattern' + '<i class="qtp fa fa-question-circle fa-fw" title="'
+                            + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
+                            + '</i>' + '<a title="Go to Allen Brain Atlas details for '
+                            + gene.officialSymbol + '" href="' + geneUrl + '" target="_blank">'
+                            + '<img src="' + ctxBasePath + '/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>'
+                        });
+                        var i;
+                        var imgs = "";
+                        for (i = 0; i < imageObjects.length; i++) {
+                            img = imageObjects[i];
 
-   if ( abaImageUrl === null ) {
-      return;
-   }
+                            var smallExpLink = img.url + "=expression";
+                            var largeExpLink = smallExpLink.replace("downsample=5", "downsample=3");
 
-   var abaWindowId = "geneDetailsAbaWindow";
-   var win = Ext.getCmp( abaWindowId );
-   if ( win ) {
-      win.close();
-   }
+                            imgs +=
+                                '<span style="cursor: pointer; padding: 8px">'
+                                + '<a title="'+ img.displayName + ', click to enlarge" '
+                                + 'onClick="Gemma.geneLinkOutPopUp( &#34; ' + largeExpLink + ' &#34; )">'
+                                + '<img src="' + smallExpLink + '" /> </a>' +
+                                '</span>';
+                        }
 
-   win = new Ext.Window( {
-      html : "<img src='" + abaImageUrl + "'>",
-      id : abaWindowId,
-      stateful : false,
-   // Allen no longer gives colour images.
-   // title : "<img height='15' src='" + ctxBasePath + "/images/abaExpressionLegend.gif'>"//
-   // ,
-   // width : 500,
-   // height : 400,
-   // autoScroll : true
-   } );
-   win.show( this );
+                        if (imgs.length > 0) {
+                            self.add({
+                                html: '' + imgs
+                            });
+                        } else {
+                            self.add({
+                                html: 'No images available'
+                            });
+                        }
+
+                        self.doLayout();
+
+                    });
+                });
+            }.createDelegate(self));
+        });
+    }
+});
+Ext.reg('geneallenbrainatlasimages', Gemma.GeneAllenBrainAtlasImages);
+
+Gemma.geneLinkOutPopUp = function (abaImageUrl) {
+
+    if (abaImageUrl === null) {
+        return;
+    }
+
+    var abaWindowId = "geneDetailsAbaWindow";
+    var win = Ext.getCmp(abaWindowId);
+    if (win) {
+        win.close();
+    }
+
+    win = new Ext.Window({
+        html: "<img src='" + abaImageUrl + "'>",
+        id: abaWindowId,
+        stateful: false
+    });
+    win.show(this);
 
 };

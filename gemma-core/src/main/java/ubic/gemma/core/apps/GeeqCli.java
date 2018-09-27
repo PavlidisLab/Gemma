@@ -71,8 +71,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //
                         + "\n " + OPT_MODE_ALL + " - runs all scoring" //
-                        + "\n " + OPT_MODE_B_EFFECT + "- recalcualtes batch effect score" //
-                        + "\n " + OPT_MODE_B_CONFOUND + " - recalculates batch confound score" //
+                        + "\n " + OPT_MODE_BATCH + "- recalcualtes batch related scores - info, confound and batch effect" //
                         + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
                         + "\n " + OPT_MODE_PUB + " - recalculates score for publication" ).hasArg().build();
         this.addOption( modeOption );

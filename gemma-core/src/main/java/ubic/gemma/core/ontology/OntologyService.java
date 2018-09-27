@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Paul
@@ -38,9 +39,9 @@ public interface OntologyService extends InitializingBean {
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
      * of possible choices
      *
-     * @param  searchQuery           search query
-     * @param  useNeuroCartaOntology use neurocarta ontology
-     * @return                       characteristic vos
+     * @param searchQuery           search query
+     * @param useNeuroCartaOntology use neurocarta ontology
+     * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
             boolean useNeuroCartaOntology );
@@ -51,8 +52,8 @@ public interface OntologyService extends InitializingBean {
      * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
      * match the search term. this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
-     * @param  search search
-     * @return        a collection of Characteristics that are backed by the corresponding found OntologyTerm
+     * @param search search
+     * @return a collection of Characteristics that are backed by the corresponding found OntologyTerm
      */
     Collection<Characteristic> findTermAsCharacteristic( String search );
 
@@ -60,8 +61,8 @@ public interface OntologyService extends InitializingBean {
      * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
      * backed search, is inexact and for general terms can return a lot of results.
      *
-     * @param  search search
-     * @return        returns a collection of ontologyTerm's
+     * @param search search
+     * @return returns a collection of ontologyTerm's
      */
     Collection<OntologyTerm> findTerms( String search );
 
@@ -71,11 +72,11 @@ public interface OntologyService extends InitializingBean {
      * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
      * match the search term exactly
      *
-     * @param  taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
-     *                          restriction is
-     *                          not used.
-     * @param  givenQueryString query string
-     * @return                  characteristic vos
+     * @param taxon            Only used if we're going to search for genes or taxon is otherwise relevant; if null,
+     *                         restriction is
+     *                         not used.
+     * @param givenQueryString query string
+     * @return characteristic vos
      */
     Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon );
 
@@ -130,22 +131,21 @@ public interface OntologyService extends InitializingBean {
     ObiService getObiService();
 
     /**
-     * 
      * @return UberonService
      */
     UberonOntologyService getUberonService();
 
     /**
-     * @param  uri uri
-     * @return     the OntologyResource
+     * @param uri uri
+     * @return the OntologyResource
      */
     OntologyResource getResource( String uri );
 
     SequenceOntologyService getSequenceOntologyService();
 
     /**
-     * @param  uri uri
-     * @return     the OntologyTerm for the specified URI.
+     * @param uri uri
+     * @return the OntologyTerm for the specified URI.
      */
     OntologyTerm getTerm( String uri );
 
@@ -184,4 +184,6 @@ public interface OntologyService extends InitializingBean {
     void sort( List<CharacteristicValueObject> characteristics );
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
+
+    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
 }

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.FlushMode;
@@ -132,6 +133,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( rawPreferredDataVectors.isEmpty() ) {
             throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
         }
+
+        removeDuplicateElements( rawPreferredDataVectors );
 
         RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
         QuantitationType preferredMaskedDataQuantitationType = this
@@ -1298,6 +1301,39 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         return unpackedData;
+    }
+
+    /**
+     * @param rawPreferredDataVectors
+     */
+    private void removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
+        /*
+         * Remove rows that are duplicates for the same design element. This can happen for data sets that were merged.
+         * We arbitrarily throw one out.
+         */
+        int maxWarn = 10;
+        int warned = 0;
+        Set<CompositeSequence> seenDes = new HashSet<>();
+        Collection<RawExpressionDataVector> toRemove = new HashSet<>();
+        for ( RawExpressionDataVector rdv : rawPreferredDataVectors ) {
+            CompositeSequence de = rdv.getDesignElement();
+
+            if ( seenDes.contains( de ) ) {
+                if ( warned <= maxWarn ) {
+                    log.info( "Duplicate vector for: " + de );
+                    warned++;
+                }
+                if ( warned == maxWarn ) {
+                    log.info( "Further warnings skipped" );
+                }
+                toRemove.add( rdv );
+            }
+            seenDes.add( de );
+        }
+        if ( !toRemove.isEmpty() ) {
+            rawPreferredDataVectors.removeAll( toRemove );
+            log.info( "Removed " + toRemove.size() + " duplicate elements, " + rawPreferredDataVectors.size() + " remain" );
+        }
     }
 
     /**

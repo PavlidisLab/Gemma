@@ -96,10 +96,6 @@ public class BaselineSelection {
                 .add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
     }
 
-    /**
-     * @param factorValue
-     * @return
-     */
     public static boolean isBaselineCondition( FactorValue factorValue ) {
 
         if ( factorValue.getIsBaseline() != null )
@@ -125,7 +121,7 @@ public class BaselineSelection {
     }
 
     /**
-     * @param c
+     * @param c characteristic
      * @return true if this looks like a baseline condition
      */
     public static boolean isBaselineCondition( Characteristic c ) {

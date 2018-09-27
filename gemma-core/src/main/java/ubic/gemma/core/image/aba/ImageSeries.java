@@ -20,9 +20,11 @@ package ubic.gemma.core.image.aba;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * A class that represents the ImageSeries information gotten from the alan brain atlas
+ * A class that represents the ImageSeries information returned from the alan brain atlas
  *
  * @author kelsey
  */
@@ -30,30 +32,29 @@ import java.util.HashSet;
 public class ImageSeries {
 
     private Integer imageSeriesId;
-    private String plane;
-    private Collection<Image> images;
+    private List<Image> images;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public ImageSeries( Integer imageSeriesId, String plane ) {
+    public ImageSeries( Integer imageSeriesId ) {
         this.imageSeriesId = imageSeriesId;
-        this.plane = plane;
     }
 
     @SuppressWarnings("unused") // Possible external use
     public void addImage( Image image ) {
         if ( this.images == null )
-            this.images = new HashSet<>();
+            this.images = new LinkedList<>();
         this.images.add( image );
     }
 
-    public Collection<Image> getImages() {
+    public List<Image> getImages() {
         return images;
     }
 
-    public void setImages( Collection<Image> images ) {
+    public void setImages( List<Image> images ) {
         this.images = images;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     public Integer getImageSeriesId() {
         return imageSeriesId;
     }
@@ -63,12 +64,4 @@ public class ImageSeries {
         this.imageSeriesId = imageSeriesId;
     }
 
-    public String getPlane() {
-        return plane;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setPlane( String plane ) {
-        this.plane = plane;
-    }
 }

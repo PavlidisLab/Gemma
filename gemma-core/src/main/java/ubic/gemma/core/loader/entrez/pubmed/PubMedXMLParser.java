@@ -407,7 +407,7 @@ public class PubMedXMLParser {
                     bibRef.setAuthorList( this.extractAuthorList( item.getChildNodes() ) );
                     break;
                 case "Pagination":
-                    bibRef.setPages( XMLUtils.extractOneChild( item, "MedlinePgn" ) );
+                    bibRef.setPages( XMLUtils.extractOneChildText( item, "MedlinePgn" ) );
                     break;
                 case "Abstract":
                     // abstracts can have parts

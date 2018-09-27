@@ -107,8 +107,12 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         ExpressionExperiment ee;
 
-        // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
-        // if ( oldee != null ) experimentService.remove( oldee ); // maybe okay?
+        // These tests were failing due to too many requests being made to geo, this is a workaround
+        try {
+            Thread.sleep( 1000 );
+        } catch ( InterruptedException ex ) {
+            Thread.currentThread().interrupt();
+        }
 
         try {
             // RNA-seq data.
@@ -206,14 +210,20 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     /*
      * More realistic test of RNA seq. GSE19166
-     *
-
      */
     @Test
     public void testLoadRNASeqData() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ExpressionExperiment ee;
+
+        // These tests were failing due to too many requests being made to geo, this is a workaround
+        try {
+            Thread.sleep( 1000 );
+        } catch ( InterruptedException ex ) {
+            Thread.currentThread().interrupt();
+        }
+
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
@@ -289,7 +299,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     /*
      * Test case where some samples cannot be used.
-     *
      */
     @Test
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
@@ -301,6 +310,13 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         }
 
         assertTrue( experimentService.findByShortName( "GSE29006" ) == null );
+
+        // These tests were failing due to too many requests being made to geo, this is a workaround
+        try {
+            Thread.sleep( 1000 );
+        } catch ( InterruptedException ex ) {
+            Thread.currentThread().interrupt();
+        }
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );

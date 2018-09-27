@@ -101,16 +101,17 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         Collection<QuantitationType> qts = eeService.getPreferredQuantitationType( ee );
 
+        if( qts == null || qts.size() < 1 || qts.iterator().next() == null ){
+            throw new IllegalArgumentException(
+                    "Experiment must have a preferred quantitation type to replace data for" );
+        }
+
         if ( qts.size() > 1 ) {
             throw new IllegalArgumentException(
                     "Experiment must have just one preferred quantitation type to replace data for" );
         }
 
         QuantitationType qt = qts.iterator().next();
-        if ( qt == null ) {
-            throw new IllegalArgumentException(
-                    "Experiment must have a preferred quantitation type to replace data for" );
-        }
 
         try {
             DoubleMatrixReader reader = new DoubleMatrixReader();

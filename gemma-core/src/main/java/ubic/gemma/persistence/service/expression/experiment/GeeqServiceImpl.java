@@ -198,15 +198,10 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                             GeeqServiceImpl.LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
                     gq = this.scoreAll( ee );
                     break;
-                case GeeqService.OPT_MODE_B_EFFECT:
+                case GeeqService.OPT_MODE_BATCH:
                     Log.info( this.getClass(),
-                            GeeqServiceImpl.LOG_PREFIX + " Starting batch effect geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyBatchEffect( ee );
-                    break;
-                case GeeqService.OPT_MODE_B_CONFOUND:
-                    Log.info( this.getClass(),
-                            GeeqServiceImpl.LOG_PREFIX + " Starting batch confound geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyBatchConfound( ee );
+                            GeeqServiceImpl.LOG_PREFIX + " Starting batch info, confound and batch effect geeq re-scoring for ee id " + eeId );
+                    gq = this.scoreOnlyBatchArtifacts( ee );
                     break;
                 case GeeqService.OPT_MODE_REPS:
                     Log.info( this.getClass(),
@@ -238,7 +233,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         gq = this.updateSuitabilityScore( gq );
 
         // Add note if experiment curation not finished
-        if(ee.getCurationDetails().getNeedsAttention()){
+        if ( ee.getCurationDetails().getNeedsAttention() ) {
             gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
         }
 
@@ -299,23 +294,18 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.scorePlatformsTech( ads, gq );
         this.scoreReplicates( ee, gq );
         boolean hasBatchInfo = this.scoreBatchInfo( ee, gq );
-        this.scoreBatchEffect( ee, gq, hasBatchInfo );
-        this.scoreBatchConfound( ee, gq, hasBatchInfo );
+        boolean hasBatchConfound = this.scoreBatchConfound( ee, gq, hasBatchInfo );
+        this.scoreBatchEffect( ee, gq, hasBatchInfo, hasBatchConfound );
 
         return gq;
     }
 
-    private Geeq scoreOnlyBatchEffect( ExpressionExperiment ee ) {
+    private Geeq scoreOnlyBatchArtifacts( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
-        this.scoreBatchEffect( ee, gq, this.scoreBatchInfo( ee, gq ) );
-        return gq;
-    }
-
-    private Geeq scoreOnlyBatchConfound( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLiter( ee );
-        Geeq gq = ee.getGeeq();
-        this.scoreBatchConfound( ee, gq, this.scoreBatchInfo( ee, gq ) );
+        boolean info = this.scoreBatchInfo( ee, gq );
+        boolean confound = this.scoreBatchConfound( ee, gq, info );
+        this.scoreBatchEffect( ee, gq, info, confound );
         return gq;
     }
 
@@ -563,14 +553,14 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         return hasInfo;
     }
 
-    private void scoreBatchEffect( ExpressionExperiment ee, Geeq gq, boolean infoDetected ) {
+    private void scoreBatchEffect( ExpressionExperiment ee, Geeq gq, boolean infoDetected, boolean confound ) {
         double score;
         boolean hasInfo = true;
         boolean hasStrong = false;
         boolean hasNone = false;
         boolean corrected = false;
 
-        if ( infoDetected ) {
+        if ( infoDetected && !confound ) {
             boolean manual = gq.isManualBatchEffectActive();
             if ( !manual ) {
                 BatchEffectDetails be = expressionExperimentService.getBatchEffect( ee );
@@ -588,7 +578,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             }
         }
 
-        score = !infoDetected || !hasInfo ?
+        score =  !infoDetected || !hasInfo || confound ?
                 GeeqServiceImpl.P_00 :
                 hasStrong ?
                         GeeqServiceImpl.BATCH_EFF_STRONG :
@@ -597,7 +587,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         gq.setqScoreBatchEffect( score );
     }
 
-    private void scoreBatchConfound( ExpressionExperiment ee, Geeq gq, boolean infoDetected ) {
+    private boolean scoreBatchConfound( ExpressionExperiment ee, Geeq gq, boolean infoDetected ) {
         double score;
         boolean hasConfound = false;
 
@@ -618,6 +608,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                 GeeqServiceImpl.P_00 :
                 hasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
         gq.setqScoreBatchConfound( score );
+
+        return hasConfound;
     }
 
     /*
@@ -654,7 +646,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE.equalsIgnoreCase( fv.getDescriptiveString() ) ) {
+                if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE
+                        .equalsIgnoreCase( fv.getDescriptiveString() ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {
                     if ( !keepEfs.contains( ef ) && keepEfs.size() <= GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK ) {

@@ -53,6 +53,7 @@
                 <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController
                 </prop>
                 <prop key="/getData.html">expressionExperimentDataFetchController</prop>
+                <prop key="/getMetaData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/checkJobProgress.html">taskCompletionController</prop>
                 <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
                 <prop key="/gene/*">geneController</prop>
@@ -306,6 +307,7 @@
             <dwr:include method="loadGeneDetails"/>
             <dwr:include method="loadGeneEvidence"/>
             <dwr:include method="loadAllenBrainImages"/>
+            <dwr:include method="getGeneABALink"/>
         </dwr:remote>
     </bean>
 
@@ -457,6 +459,7 @@
           class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchController">
         <dwr:remote javascript="ExpressionExperimentDataFetchController">
             <dwr:include method="getDataFile"/>
+            <dwr:include method="getMetadataFiles"/>
             <dwr:include method="getCoExpressionDataFile"/>
             <dwr:include method="getDiffExpressionDataFile"/>
         </dwr:remote>
@@ -650,12 +653,6 @@
         </dwr:remote>
     </bean>
 
-    <bean id="linkOutController" class="ubic.gemma.web.controller.LinkOutController">
-        <dwr:remote javascript="LinkOutController">
-            <dwr:include method="getAllenBrainAtlasLink"/>
-        </dwr:remote>
-    </bean>
-
     <bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityControllerImpl">
         <dwr:remote javascript="SecurityController">
             <dwr:include method="addUserToGroup"/>
@@ -816,6 +813,7 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.MetaFile"/>
 
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand"/>
         <dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt"/>
@@ -833,7 +831,7 @@
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.web.util.upload.UploadInfo"/>
-        <dwr:convert type="bean" class="ubic.gemma.web.image.aba.ImageValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.core.image.aba.Image"/>
 
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.FactorProfile"/>
         <dwr:convert type="bean" class="ubic.gemma.web.controller.visualization.GeneExpressionProfile"/>

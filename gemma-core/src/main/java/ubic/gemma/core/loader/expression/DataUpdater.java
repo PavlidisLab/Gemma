@@ -122,10 +122,10 @@ public class DataUpdater {
      * "right" platform when the one originally used was an alt CDF or exon-level, so be sure never to use an alt CDF
      * for processing raw data.
      *
-     * @param ee ee
-     * @param pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
-     *        exon-level)
-     * @throws IOException when IO problems occur.
+     * @param  ee                  ee
+     * @param  pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
+     *                             exon-level)
+     * @throws IOException         when IO problems occur.
      */
     public void addAffyDataFromAPTOutput( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
@@ -173,14 +173,14 @@ public class DataUpdater {
      * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
      * type we use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param ee ee
-     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
-     *        switched to use it.
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param ee                  ee
+     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
+     *                            switched to use it.
+     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads is paired reads
-     * @param readLength read length
+     * @param isPairedReads       is paired reads
+     * @param readLength          read length
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
@@ -241,11 +241,12 @@ public class DataUpdater {
      * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
      * a preferred quantitation type, an error will be thrown.
      *
-     * @param ee ee
-     * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
-     *        for a multi-platform dataset)
-     * @param data to slot in
-     * @return ee
+     * @param  ee             ee
+     * @param  targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
+     *                        this
+     *                        for a multi-platform dataset)
+     * @param  data           to slot in
+     * @return                ee
      */
     ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
@@ -298,9 +299,9 @@ public class DataUpdater {
     /**
      * Generic. Remove all raw data for an experiment
      *
-     * @param ee experiment
-     * @param qt quantitation type
-     * @return amount of vectors removed
+     * @param  ee experiment
+     * @param  qt quantitation type
+     * @return    amount of vectors removed
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
     int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
@@ -365,11 +366,11 @@ public class DataUpdater {
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
      *
-     * @param ee ee
-     * @param targetPlatform (this only works for a single-platform data set)
-     * @param qt qt
-     * @param data data
-     * @return ee
+     * @param  ee             ee
+     * @param  targetPlatform (this only works for a single-platform data set)
+     * @param  qt             qt
+     * @param  data           data
+     * @return                ee
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
@@ -565,11 +566,11 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee the experiment to be modified
-     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
-     *        experiment will be switched to it if necessary.
-     * @param data the data to be used
-     * @return ee
+     * @param  ee             the experiment to be modified
+     * @param  targetPlatform the platform for the new data (this can only be used for single-platform data sets). The
+     *                        experiment will be switched to it if necessary.
+     * @param  data           the data to be used
+     * @return                ee
      */
     ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -630,9 +631,9 @@ public class DataUpdater {
     /**
      * RNA-seq
      *
-     * @param ee experiment
+     * @param ee            experiment
      * @param countEEMatrix count ee matrix
-     * @param readLength read length
+     * @param readLength    read length
      * @param isPairedReads is paired reads
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
@@ -656,8 +657,8 @@ public class DataUpdater {
      * Generic
      *
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee ee
-     * @param note note
+     * @param ee      ee
+     * @param note    note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
         AuditEventType eventType;
@@ -674,10 +675,10 @@ public class DataUpdater {
     /**
      * RNA-seq
      *
-     * @param ee experiment
-     * @param countMatrix count matrix
-     * @param allowMissingSamples allow missing samples
-     * @return experiment
+     * @param  ee                  experiment
+     * @param  countMatrix         count matrix
+     * @param  allowMissingSamples allow missing samples
+     * @return                     experiment
      */
     private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
             DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
@@ -737,10 +738,11 @@ public class DataUpdater {
     /**
      * Affymetrix
      *
-     * @param ee (lightly thawed)
-     * @param files CEL files
-     * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily the
-     *         "original platform".
+     * @param  ee    (lightly thawed)
+     * @param  files CEL files
+     * @return       Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily
+     *               the
+     *               "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee,
             Collection<LocalFile> files ) {
@@ -772,6 +774,7 @@ public class DataUpdater {
             ArrayDesign originalPlatform = arrayDesignService.findByShortName( originalPlatName );
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
 
+            log.info( targetPlatform + " associated with " + chip2bms.get( chipname ).size() + " samples based on CEL files ('" + chipname + "')" );
             targetPlatform2BioAssays.put( targetPlatform, chip2bms.get( chipname ) );
         }
         return targetPlatform2BioAssays;
@@ -782,8 +785,8 @@ public class DataUpdater {
      * versions of exon
      * arrays - no custom CDFs!
      *
-     * @param ad array design we are starting with
-     * @return platform we should actually use. It can be the same as the input (thawed)
+     * @param  ad array design we are starting with
+     * @return    platform we should actually use. It can be the same as the input (thawed)
      */
     private ArrayDesign getAffymetrixTargetPlatform( ArrayDesign ad ) {
 
@@ -826,8 +829,8 @@ public class DataUpdater {
     }
 
     /**
-     * @param a auditable
-     * @return true if auditable has vector merge event
+     * @param  a auditable
+     * @return   true if auditable has vector merge event
      */
     private boolean hasVectorMergeEvent( Auditable a ) {
 
@@ -846,8 +849,8 @@ public class DataUpdater {
     /**
      * Generic (non-Affymetrix)
      *
-     * @param ee ee
-     * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
+     * @param  ee ee
+     * @return    map of strings to biomaterials, where the keys are likely column names used in the input files.
      */
     private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
         Map<String, BioMaterial> bmMap = new HashMap<>();
@@ -922,11 +925,11 @@ public class DataUpdater {
     /**
      * Non-Affymetrix
      *
-     * @param ee experiment
-     * @param targetPlatform target platform
-     * @param data data
-     * @param qt QT
-     * @return raw vectors
+     * @param  ee             experiment
+     * @param  targetPlatform target platform
+     * @param  data           data
+     * @param  qt             QT
+     * @return                raw vectors
      */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
@@ -974,8 +977,8 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param preferred preffered
-     * @return QT
+     * @param  preferred preffered
+     * @return           QT
      */
     private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
@@ -1013,8 +1016,8 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param ee experiment
-     * @param rawMatrix raw matrix
+     * @param ee          experiment
+     * @param rawMatrix   raw matrix
      * @param finalMatrix final matrix
      */
     private void matchBioMaterialsToColNames( ExpressionExperiment ee, DoubleMatrix<String, String> rawMatrix,
@@ -1040,9 +1043,9 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param rawMatrix matrix
-     * @param targetArrayDesign ad
-     * @return matrix with row names fixed up. ColumnNames still need to be done.
+     * @param  rawMatrix         matrix
+     * @param  targetArrayDesign ad
+     * @return                   matrix with row names fixed up. ColumnNames still need to be done.
      */
     private DoubleMatrix<CompositeSequence, BioMaterial> matchElementsToRowNames( ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> rawMatrix ) {
@@ -1102,8 +1105,8 @@ public class DataUpdater {
     /**
      * Generic
      *
-     * @param ee experiment
-     * @return experiment
+     * @param  ee experiment
+     * @return    experiment
      */
     private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
@@ -1119,10 +1122,11 @@ public class DataUpdater {
      * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
      * will be done)
      *
-     * @param ee presumed thawed
-     * @param targetPlatform target platform
-     * @param toBeSwitched if necessary, specific which bioassays need to be switched (case: merged and re-run); or null
-     * @return how many were switched
+     * @param  ee             presumed thawed
+     * @param  targetPlatform target platform
+     * @param  toBeSwitched   if necessary, specific which bioassays need to be switched (case: merged and re-run); or
+     *                        null
+     * @return                how many were switched
      */
     private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform,
             Collection<BioAssay> toBeSwitched ) {

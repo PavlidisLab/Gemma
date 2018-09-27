@@ -154,7 +154,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
         return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct g from Gene as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon" )
+                "select distinct g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
@@ -589,7 +589,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     }
 
     /**
-     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     * @param  filters         see {@link this#formRestrictionClause(List)} filters argument for
      *                         description.
      * @param  orderByProperty the property to order by.
      * @param  orderDesc       whether the ordering is ascending or descending.

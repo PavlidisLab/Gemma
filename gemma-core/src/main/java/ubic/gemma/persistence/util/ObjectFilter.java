@@ -35,10 +35,10 @@ public class ObjectFilter {
     /**
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
      *
-     * @param propertyType the type of the property that will be checked.
-     * @param objectAlias alias of the relevant object to use in the final hql query
-     * @param operator operator the operator for this filter
-     * @param propertyName property name
+     * @param propertyType  the type of the property that will be checked.
+     * @param objectAlias   alias of the relevant object to use in the final hql query
+     * @param operator      operator the operator for this filter
+     * @param propertyName  property name
      * @param requiredValue required value
      * @see ObjectFilter#ObjectFilter(String, Object, String, String)
      */
@@ -56,21 +56,21 @@ public class ObjectFilter {
     /**
      * Creates a new ObjectFilter with a value of type that the given requiredValue object is.
      *
-     * @param propertyName the name of a property that will be checked.
+     * @param propertyName  the name of a property that will be checked.
      * @param requiredValue the value that the property will be checked for. Null objects are not allowed for operators
-     *        "lessThan", "greaterThan" and "in".
-     * @param operator the operator that will be used to compare the value of the object. The requiredValue will
-     *        be the right operand of the given operator.
-     *        Demonstration in pseudo-code: if( object.value lessThan requiredValue) return object.
-     *        The {@link ObjectFilter#in} operator means that the given requiredValue is expected to be a
-     *        {@link java.util.Collection}, and the checked property has to be equal to at least one of the
-     *        values contained within that <i>List</i>.
-     * @param objectAlias The alias of the object in the query. See the DAO for the filtered object to see what
-     *        the alias in the query is. E.g for {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
-     *        the alias is 'ee', as seen in
-     *        {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
+     *                      "lessThan", "greaterThan" and "in".
+     * @param operator      the operator that will be used to compare the value of the object. The requiredValue will
+     *                      be the right operand of the given operator.
+     *                      Demonstration in pseudo-code: if( object.value lessThan requiredValue) return object.
+     *                      The {@link ObjectFilter#in} operator means that the given requiredValue is expected to be a
+     *                      {@link java.util.Collection}, and the checked property has to be equal to at least one of the
+     *                      values contained within that <i>List</i>.
+     * @param objectAlias   The alias of the object in the query. See the DAO for the filtered object to see what
+     *                      the alias in the query is. E.g for {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
+     *                      the alias is 'ee', as seen in
+     *                      {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl#getLoadValueObjectsQueryString(List, String, boolean)}.
      * @throws IllegalArgumentException if the given operator is the "in" operator but the
-     *         given requiredValue is not an instance of Iterable.
+     *                                  given requiredValue is not an instance of Iterable.
      */
     public ObjectFilter( String propertyName, Object requiredValue, String operator, String objectAlias ) {
         this.propertyName = propertyName;
@@ -84,7 +84,7 @@ public class ObjectFilter {
     /**
      * @param filter the filter to create the ArrayList with
      * @return an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of the
-     *         only array in the list.
+     * only array in the list.
      */
     public static List<ObjectFilter[]> singleFilter( ObjectFilter filter ) {
         List<ObjectFilter[]> filters = new ArrayList<>();
@@ -114,14 +114,14 @@ public class ObjectFilter {
      * Converts the given value to be of the given property type. For primitive number types, the wrapper class is used.
      *
      * @param requiredValue the Object to be converted into the desired type.
-     * @param propertyType the type that the given value should be converted to.
+     * @param propertyType  the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
      */
     private Object convertToParamType( Object requiredValue, Class propertyType ) {
         if ( Iterable.class.isAssignableFrom( requiredValue.getClass() ) ) {
             // We got a collection
             @SuppressWarnings("unchecked") // Assuming default is string
-            Collection<String> reqCol = ( Collection<String> ) requiredValue;
+                    Collection<String> reqCol = ( Collection<String> ) requiredValue;
             if ( String.class.isAssignableFrom( propertyType ) ) {
                 return requiredValue;
             }
@@ -158,9 +158,9 @@ public class ObjectFilter {
 
     private void checkTypeCorrect() {
         if ( requiredValue == null && ( // Check null for disallowed operators
-        operator.equals( ObjectFilter.greaterThan ) || // gt
-                operator.equals( ObjectFilter.lessThan ) ) // lt
-        ) {
+                operator.equals( ObjectFilter.greaterThan ) || // gt
+                        operator.equals( ObjectFilter.lessThan ) ) // lt
+                ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
         } else if ( operator.equals( ObjectFilter.in ) ) { // Check 'in' conditions
             if ( !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
@@ -168,16 +168,13 @@ public class ObjectFilter {
                         "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
-                .isAssignableFrom( propertyType )
-                || ( this
-                        .isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
-        ) {
+                .isAssignableFrom( propertyType ) || ( this
+                .isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
+                ) {
             throw new IllegalArgumentException(
                     "requiredValue for property " + propertyName + " has to be assignable from " + propertyType
-                            .getName() + " or null, but the requiredValue class is  "
-                            + requiredValue.getClass()
-                                    .getName()
-                            + "." );
+                            .getName() + " or null, but the requiredValue class is  " + requiredValue.getClass()
+                            .getName() + "." );
         } else if ( operator.equals( ObjectFilter.like ) && ( propertyType == null || !String.class
                 .isAssignableFrom( propertyType ) ) ) {
             throw new IllegalArgumentException(
@@ -195,19 +192,19 @@ public class ObjectFilter {
      * @return true, if the two given classes represent the same number type.
      */
     private boolean isSameOrWrapperType( Class cls1, Class cls2 ) {
-        return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) )
-                && ( Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
-                || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) )
-                        && ( Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) ) // integer
-                || ( ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) )
-                        && ( Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) ) // float
-                || ( ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) )
-                        && ( Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) ) // long
-                || ( ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) )
-                        && ( Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) ) // short
-                || ( ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) )
-                        && ( Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
-                || ( ( Boolean.class.isAssignableFrom( cls1 ) || boolean.class.isAssignableFrom( cls1 ) )
-                        && ( Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
+        return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) ) && (
+                Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
+                || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) ) && (
+                Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) ) // integer
+                || ( ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) ) && (
+                Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) ) // float
+                || ( ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) ) && (
+                Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) ) // long
+                || ( ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) ) && (
+                Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) ) // short
+                || ( ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) ) && (
+                Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
+                || ( ( Boolean.class.isAssignableFrom( cls1 ) || boolean.class.isAssignableFrom( cls1 ) ) && (
+                Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
     }
 }

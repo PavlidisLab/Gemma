@@ -25,9 +25,8 @@ import java.util.Collection;
 public interface VectorMergingHelperService {
 
     /**
-     * @param expExp the experiment
+     * @param expExp     the experiment
      * @param newVectors the new vectors
-     * @param oldVectors which will be removed
      */
     void persist( ExpressionExperiment expExp, Collection<RawExpressionDataVector> newVectors );
 
