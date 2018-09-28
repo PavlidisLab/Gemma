@@ -108,7 +108,7 @@ public class ExpressionExperimentDataFetchController {
             String dir = ExpressionDataFileService.METADATA_DIR + this.getEEFolderName( ee ) + File.separatorChar + type
                     .getFileName( ee );
 
-            File file = new File(dir);
+            File file = new File( dir );
 
             // If this is a directory, check if we can read the most recent file.
             if ( type.isDirectory() ) {
@@ -223,9 +223,7 @@ public class ExpressionExperimentDataFetchController {
         if ( StringUtils.isBlank( sName ) ) {
             return ee.getId().toString();
         }
-        sName = sName.replaceAll( "\\.\\d+$", "" );
-        System.out.println("Folder name: "+sName);
-        return sName;
+        return sName.replaceAll( "\\.\\d+$", "" );
     }
 
     /**
