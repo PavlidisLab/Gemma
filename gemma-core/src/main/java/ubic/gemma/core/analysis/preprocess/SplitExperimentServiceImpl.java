@@ -32,9 +32,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import gemma.gsec.SecurityService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -54,6 +56,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
 /**
  * 
@@ -89,6 +92,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     @Autowired
     private ExpressionDataFileService dataFileService;
 
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
     /*
      * (non-Javadoc)
      * 
@@ -100,13 +106,21 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         toSplit = eeService.thawLite( toSplit );
 
-        Collection<ExpressionExperiment> result = new HashSet<>();
-
-        String sourceShortName = toSplit.getShortName();
+        if ( !toSplit.getOtherParts().isEmpty() ) {
+            throw new IllegalArgumentException( "You cannot split an experiment that was already created by a split" );
+        }
 
         if ( eeService.getArrayDesignsUsed( toSplit ).size() > 1 ) {
             throw new IllegalArgumentException( "Cannot split experiments that are on more than one platform" );
         }
+
+        if ( BatchInfoPopulationServiceImpl.isBatchFactor( splitOn ) ) {
+            throw new IllegalArgumentException( "Do not split experiments on 'batch'" );
+        }
+
+        Collection<ExpressionExperiment> result = new HashSet<>();
+
+        String sourceShortName = toSplit.getShortName();
 
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( toSplit );
 
@@ -144,11 +158,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
-
             split.setCurationDetails( curationDetailsDao.create() ); // not sure anything we want to copy
-
-            split.setMetadata( toSplit.getMetadata() ); // FIXME clone?
-
+            split.setMetadata( toSplit.getMetadata() ); // FIXME clone? Not actually used?
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
             split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique
@@ -268,7 +279,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split = ( ExpressionExperiment ) persister.persist( split );
 
-            securityService.makePublic( split ); // FIXME temporary 
+            // securityService.makePublic( split ); // temporary 
             result.add( split );
 
             // postprocess. One problem can be that now we may have batches that are singletons etc.
@@ -291,10 +302,27 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             eeService.update( split );
         }
 
+        /*
+         * Create a new "experiment set" that groups them together (not sure we'll keep this) Do we make the "source"
+         * part of this set?
+         */
+        ExpressionExperimentSet g = ExpressionExperimentSet.Factory.newInstance();
+        g.setDescription( "Parts of " + toSplit.getShortName() + " that were split on " + splitOn.getName() );
+        g.setName( toSplit.getShortName() + " splits" );
+        g.setTaxon( toSplit.getBioAssays().iterator().next().getSampleUsed().getSourceTaxon() );
+        g.getExperiments().addAll( result );
+        this.expressionExperimentSetService.create( g );
+
+        //   securityService.makePublic( g ); // at some point this would happen
+
+        // FIXME
         // Clean the source experiment? remove diff and coex analyses, PCA, correlation matrices, processed data vectors
         // dataFileService.deleteAllFiles( toSplit );
-        // delete the old experiment (maybe not yet... in case ...
+        // delete it?
         // eeService.remove(toSplit);
+        // OR perhaps only
+        // securityService.makePrivate( toSplit );
+        // Or mark it as troubled?
 
         return result;
     }
@@ -335,7 +363,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setType( ef.getType() );
             clone.getFactorValues().addAll( this.cloneFactorValues( ef.getFactorValues(), clone, old2cloneFV ) );
             result.add( clone );
-        //    assert clone.getId() == null;
+            //    assert clone.getId() == null;
         }
         return result;
     }
