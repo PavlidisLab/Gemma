@@ -29,7 +29,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
     private static final long serialVersionUID = 9219471082900615778L;
     private String scientificName;
     private String commonName;
-    private String abbreviation;
     private Integer ncbiId;
     private Boolean isGenesUsable;
     private Integer secondaryNcbiId;
@@ -104,18 +103,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
         if ( this.getNcbiId() != null ) {
             buf.append( " NCBI id=" ).append( this.getNcbiId() );
         }
-        if ( this.getAbbreviation() != null ) {
-            buf.append( " Abbreviation =" ).append( this.getAbbreviation() );
-        }
         return buf.toString();
-    }
-
-    public String getAbbreviation() {
-        return this.abbreviation;
-    }
-
-    public void setAbbreviation( String abbreviation ) {
-        this.abbreviation = abbreviation;
     }
 
     public String getCommonName() {
@@ -199,12 +187,10 @@ public class Taxon implements Identifiable, java.io.Serializable {
             return new Taxon();
         }
 
-        public static Taxon newInstance( String scientificName, String commonName, String abbreviation, Integer ncbiId,
-                Boolean isSpecies, Boolean isGenesUsable ) {
+        public static Taxon newInstance( String scientificName, String commonName, Integer ncbiId, Boolean isGenesUsable ) {
             final Taxon entity = new Taxon();
             entity.setScientificName( scientificName );
             entity.setCommonName( commonName );
-            entity.setAbbreviation( abbreviation );
             entity.setNcbiId( ncbiId );
             entity.setIsGenesUsable( isGenesUsable );
 

@@ -96,7 +96,7 @@
 			<meta-data>term</meta-data>
 		</property>
 	</class>
-	<class name="expression.biomaterial.CompoundImpl" alias="chemicals" root="false">
+	<class name="expression.biomaterial.Compound" alias="chemicals" root="false">
 		<id name="id" />
 		<property name="registryNumber">
 			<meta-data>registryNumber</meta-data>

@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.expression.biomaterial.CompoundImpl" table="COMPOUND">
+   <class name="ubic.gemma.model.expression.biomaterial.Compound" table="COMPOUND">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>

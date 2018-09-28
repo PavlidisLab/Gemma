@@ -11,7 +11,7 @@ import javax.ws.rs.core.Response;
 
 /**
  * Class representing and API call argument that can represent various identifiers of different types.
- * E.g a taxon can be represented by Long number (ID) or multiple String properties (scientific/common name, abbreviation).
+ * E.g a taxon can be represented by Long number (ID) or multiple String properties (scientific/common name).
  *
  * @param <A>  the type that the argument is expected to mutate to.
  * @param <O>  the persistent object type.
