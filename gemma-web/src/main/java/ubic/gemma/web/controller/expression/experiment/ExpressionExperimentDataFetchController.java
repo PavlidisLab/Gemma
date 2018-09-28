@@ -58,11 +58,12 @@ public class ExpressionExperimentDataFetchController {
 
     private static final MetaFileType[] META_FILE_TYPES = {
             new MetaFileType( 1, ".base.metadata", "Sequence analysis summary", ".seq.analysis.sum.txt", false, true ),
-            new MetaFileType( 2, ".alignment.metadata", "Alignment statistics", ".alignment.statistics.txt", false, true ),
+            new MetaFileType( 2, ".alignment.metadata", "Alignment statistics", ".alignment.statistics.txt", false,
+                    true ),
             new MetaFileType( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "Multi-QC Report",
                     ".multiqc.report.html", false, false ),
-            new MetaFileType( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings", ".pipeline.config.txt", true,
-                    false ) };
+            new MetaFileType( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings",
+                    ".pipeline.config.txt", true, false ) };
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -104,11 +105,10 @@ public class ExpressionExperimentDataFetchController {
                 throw e;
             }
 
-            File file = new File( ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
-                    .getFileName( ee ) );
-
-            String dir = ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
+            String dir = ExpressionDataFileService.METADATA_DIR + this.getEEFolderName( ee ) + File.separatorChar + type
                     .getFileName( ee );
+
+            File file = new File(dir);
 
             // If this is a directory, check if we can read the most recent file.
             if ( type.isDirectory() ) {
@@ -144,8 +144,9 @@ public class ExpressionExperimentDataFetchController {
         for ( MetaFileType type : ExpressionExperimentDataFetchController.META_FILE_TYPES ) {
 
             // Some files are prefixed with the experiments accession
-            File file = new File( ExpressionDataFileService.METADATA_DIR + ee.getShortName() + File.separatorChar + type
-                    .getFileName( ee ) );
+            File file = new File(
+                    ExpressionDataFileService.METADATA_DIR + this.getEEFolderName( ee ) + File.separatorChar + type
+                            .getFileName( ee ) );
 
             // Check if we can read the file
             if ( !file.canRead() ) {
@@ -207,6 +208,24 @@ public class ExpressionExperimentDataFetchController {
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
+     *
+     * @param ee the experiment to get the folder name for.
+     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
+     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
+     * any reason, the experiments ID will be used.
+     */
+    private String getEEFolderName( ExpressionExperiment ee ) {
+        String sName = ee.getShortName();
+        if ( StringUtils.isBlank( sName ) ) {
+            return ee.getId().toString();
+        }
+        sName = sName.replaceAll( "\\.\\d+$", "" );
+        System.out.println("Folder name: "+sName);
+        return sName;
     }
 
     /**
