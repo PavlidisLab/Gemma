@@ -1,6 +1,3 @@
--- removal of VocabCharacteristic concept.
-alter table CHARACTERISTIC drop column class;
-
 -- starting to get rid of Compound
 
 alter table COMPOUND drop column COMPOUND_INDICES_FK;
