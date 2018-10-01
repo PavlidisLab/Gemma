@@ -92,13 +92,6 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult() ).intValue();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#filterByTaxon(java.util.Collection,
-     * ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
 
@@ -1079,13 +1072,6 @@ public class ExpressionExperimentDaoImpl
         return this.thaw( expressionExperiment, false );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#getAnnotationsByBioMaterials(java.
-     * lang.Long)
-     */
     @Override
     public Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
         /*
@@ -1135,13 +1121,6 @@ public class ExpressionExperimentDaoImpl
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#getAnnotationsByFactorvalues(java.
-     * lang.Long)
-     */
     @Override
     public Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId ) {
         List raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
