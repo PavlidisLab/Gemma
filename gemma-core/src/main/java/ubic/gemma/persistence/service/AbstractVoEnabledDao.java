@@ -64,6 +64,11 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     protected static String formOrderByProperty( String orderByProperty, boolean orderDesc ) {
         if ( Strings.isNullOrEmpty( orderByProperty ) )
             return "";
+        if(orderByProperty.endsWith( ".size" )){
+            // This will crate an order by count clause, stripping the object alias and size suffix
+            orderByProperty = "count( distinct " + orderByProperty.split( "\\." )[1] + ")";
+        }
+
         return "order by " + orderByProperty + ( orderDesc ? " desc " : " " );
     }
 
