@@ -1214,7 +1214,7 @@ public class ExpressionExperimentDaoImpl
 
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
-        Query queryCnt = this.getCountVosQueryString( filter, orderByProperty, !asc );
+
         query.setCacheable( true );
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
@@ -1222,7 +1222,10 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> list = query.list();
         List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
 
+        Query queryCnt = this.getCountVosQueryString( filter, orderByProperty, !asc );
+        queryCnt.setCacheable( true );
         int totalCnt = queryCnt.list().size();
+
         for ( Object[] row : list ) {
             ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row, totalCnt );
             vos.add( vo );
@@ -1375,7 +1378,7 @@ public class ExpressionExperimentDaoImpl
         filters = getObjectFilters( filters );
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(*) " // 0
+        String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id " // 0
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join SU.sourceTaxon as taxon left join BA.arrayDesignUsed as "
