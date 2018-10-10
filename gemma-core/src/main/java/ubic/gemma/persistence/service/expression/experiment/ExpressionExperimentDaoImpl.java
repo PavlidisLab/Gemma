@@ -1448,7 +1448,8 @@ public class ExpressionExperimentDaoImpl
                 + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
                 + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
                 + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
-                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl " + "left join "
+                + ObjectFilter.DAO_EE_ALIAS + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
