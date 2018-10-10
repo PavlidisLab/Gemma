@@ -83,10 +83,12 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
      * @param noteEvent      the last event that updated the curation note property
      */
     protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent troubleEvent,
-            Boolean needsAttention, AuditEvent attentionEvent, String curationNote, AuditEvent noteEvent ) {
+            Boolean needsAttention, AuditEvent attentionEvent, String curationNote, AuditEvent noteEvent, Integer totalInBatch ) {
         this( id, lastUpdated, troubled, troubleEvent == null ? null : new AuditEventValueObject( troubleEvent ),
                 needsAttention, attentionEvent == null ? null : new AuditEventValueObject( attentionEvent ),
                 curationNote, noteEvent == null ? null : new AuditEventValueObject( noteEvent ) );
+        // meta info
+        this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
     }
 
     public Date getLastUpdated() {
