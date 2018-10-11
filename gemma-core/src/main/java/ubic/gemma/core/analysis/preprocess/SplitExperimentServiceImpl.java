@@ -159,20 +159,17 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
             split.setCurationDetails( curationDetailsDao.create() ); // not sure anything we want to copy
-            split.setMetadata( toSplit.getMetadata() ); // FIXME clone? Not actually used?
+            split.setMetadata( toSplit.getMetadata() ); // 
             split.setPrimaryPublication( toSplit.getPrimaryPublication() );
             split.getOtherRelevantPublications().addAll( toSplit.getOtherRelevantPublications() );
-            split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique
-
-            Map<FactorValue, FactorValue> old2cloneFV = new HashMap<>();
-
-            split.setExperimentalDesign( this.cloneExperimentalDesign( toSplit.getExperimentalDesign(), old2cloneFV ) );
-
-            // starting with a fresh audit trail, assuming that's the right thing to do.
-
+            split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique, so have to clone
             split.setOwner( toSplit.getOwner() );
             split.setSource( toSplit.getSource() );
             // split.setRelatedTo ... FIXME ? keep track of this being related to other parts of the split (which might be more than 2 parts)
+            // starting with a fresh audit trail.
+
+            Map<FactorValue, FactorValue> old2cloneFV = new HashMap<>();
+            split.setExperimentalDesign( this.cloneExperimentalDesign( toSplit.getExperimentalDesign(), old2cloneFV ) );
 
             // add the biomaterials
             Map<BioAssay, BioAssay> old2cloneBA = new HashMap<>();
