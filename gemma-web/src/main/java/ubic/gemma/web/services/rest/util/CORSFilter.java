@@ -23,6 +23,7 @@ public class CORSFilter implements Filter {
         final HttpServletResponse response = ( HttpServletResponse ) res;
         if ( "OPTIONS".equalsIgnoreCase( ( ( HttpServletRequest ) req ).getMethod() ) ) {
             response.setStatus( HttpServletResponse.SC_OK );
+            response.addHeader("Access-Control-Allow-Headers", "**Authorization**,authorization"); // necessary for vue gembrow access
         } else {
             chain.doFilter( req, res );
         }

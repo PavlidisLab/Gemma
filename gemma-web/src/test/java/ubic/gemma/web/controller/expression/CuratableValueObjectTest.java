@@ -74,8 +74,8 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         assertTrue( arrayDesign.getAuditTrail() != null );
 
         Taxon taxon = Taxon.Factory
-                .newInstance( "text taxon scientific name " + RandomStringUtils.randomAlphanumeric( 8 ),
-                        RandomStringUtils.randomAlphanumeric( 8 ), "ttxn", 0, false, true );
+                .newInstance( "text taxon scientific name " + RandomStringUtils.randomAlphanumeric( 8 ), "ttxn", 0,
+                        true );
         this.persisterHelper.persist( taxon );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();

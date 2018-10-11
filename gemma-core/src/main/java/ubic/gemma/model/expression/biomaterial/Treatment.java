@@ -25,12 +25,12 @@ import ubic.gemma.model.common.Describable;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class Treatment extends Describable {
+public class Treatment extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = 7148213633537076048L;
+    private static final long serialVersionUID = 265514192370169605L;
     private Integer orderApplied = 1;
 
     /**
@@ -53,7 +53,7 @@ public abstract class Treatment extends Describable {
     public static final class Factory {
 
         public static ubic.gemma.model.expression.biomaterial.Treatment newInstance() {
-            return new ubic.gemma.model.expression.biomaterial.TreatmentImpl();
+            return new ubic.gemma.model.expression.biomaterial.Treatment();
         }
 
     }

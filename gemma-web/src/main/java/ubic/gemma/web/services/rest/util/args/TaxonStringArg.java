@@ -4,7 +4,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * String argument type for taxon API, referencing the Taxon scientific name, common name or abbreviation. Can also be
+ * String argument type for taxon API, referencing the Taxon scientific name or common name. Can also be
  * null.
  *
  * @author tesarst
@@ -13,7 +13,7 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
-        setNullCause( "common or scientific name, or abbreviation,", "Taxon" );
+        setNullCause( "common or scientific name, ", "Taxon" );
     }
 
     @Override

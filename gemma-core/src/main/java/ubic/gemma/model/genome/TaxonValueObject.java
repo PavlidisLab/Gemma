@@ -25,7 +25,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     private String scientificName;
     private String commonName;
-    private String abbreviation;
     private Integer ncbiId;
     private Boolean isSpecies;
     private Boolean isGenesUsable;
@@ -35,7 +34,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         super( taxon.getId() );
         this.setScientificName( taxon.getScientificName() );
         this.setCommonName( taxon.getCommonName() );
-        this.setAbbreviation( taxon.getAbbreviation() );
 
         this.setNcbiId( taxon.getNcbiId() );
         this.setIsGenesUsable( taxon.getIsGenesUsable() );
@@ -51,14 +49,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     public static TaxonValueObject fromEntity( Taxon taxon ) {
         return new TaxonValueObject( taxon );
-    }
-
-    public String getAbbreviation() {
-        return this.abbreviation;
-    }
-
-    public void setAbbreviation( String abbreviation ) {
-        this.abbreviation = abbreviation;
     }
 
     public String getCommonName() {

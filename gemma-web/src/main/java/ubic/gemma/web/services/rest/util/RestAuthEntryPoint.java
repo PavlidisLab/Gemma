@@ -25,6 +25,7 @@ public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
         response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + getRealmName() + "" );
+        response.addHeader("Access-Control-Allow-Headers", "**Authorization**,authorization"); // necessary for vue gembrow access
         response.setContentType( "application/json" );
 
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );

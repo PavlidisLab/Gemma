@@ -29,18 +29,18 @@
             <li>Do you need to log in?</li>
             <c:choose>
                 <c:when test="${not empty param.exception}">
-                    <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${param.exception.message}">Email us</a> about
+                    <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(param.exception.message)}">Email us</a> about
                         the problem.
                     </li>
                 </c:when>
                 <c:when test="${not empty requestScope['javax.servlet.error.exception']}">
                     <li>
-                        <a href="mailto:pavlab-support@msl.ubc.ca?subject=${requestScope['javax.servlet.error.exception']}">Email
+                        <a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['javax.servlet.error.exception'])}">Email
                             us</a> about the problem.
                     </li>
                 </c:when>
                 <c:when test="${not empty requestScope['exception']}">
-                    <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${requestScope['exception']}">Email us</a>
+                    <li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${fn:escapeXml(requestScope['exception'])}">Email us</a>
                         about the problem.
                     </li>
                 </c:when>
@@ -58,7 +58,7 @@
     <c:choose>
         <c:when test="${not empty param.exception}">
             <p>
-                <c:out value="${param.exception.message}"/>
+                <c:out value="${fn:escapeXml(param.exception.message)}"/>
             </p>
 
             <security:authorize access="hasRole('GROUP_ADMIN')">
@@ -69,7 +69,7 @@
         <c:when test="${not empty requestScope['javax.servlet.error.exception']}">
 
             <p>
-                <c:out value="${requestScope['javax.servlet.error.exception'].message}"/>
+                <c:out value="${fn:escapeXml(requestScope['javax.servlet.error.exception'].message)}"/>
             </p>
 
             <security:authorize access="hasRole('GROUP_ADMIN')">
@@ -80,7 +80,7 @@
 
         <c:when test="${not empty requestScope['exception']}">
             <p>
-                <c:out value="${requestScope['exception'].message}"/>
+                <c:out value="${fn:escapeXml(requestScope['exception'].message)}"/>
             </p>
 
             <security:authorize access="hasRole('GROUP_ADMIN')">

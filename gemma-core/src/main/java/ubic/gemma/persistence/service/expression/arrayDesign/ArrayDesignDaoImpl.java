@@ -506,7 +506,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS );
         Query queryObject = this.getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
 
-        return this.processADValueObjectQueryResults( eeCounts, queryObject );
+        return this.processADValueObjectQueryResults( eeCounts, queryObject, 0 );
     }
 
     @Override
@@ -925,7 +925,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Collection<ArrayDesignValueObject> loadAllValueObjects() {
         Query queryObject = this.getLoadValueObjectsQueryString( null, null, false );
-        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject );
+        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject, 0 );
     }
 
     /**
@@ -941,16 +941,19 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
-        String orderByClause = this.getOrderByProperty( orderBy );
+        String orderByProperty = this.getOrderByProperty( orderBy );
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
+        Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
 
-        query.setCacheable( true );
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
 
-        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), query );
+        Query queryCnt = this.getCountVosQueryString( filter, orderByProperty, !asc );
+        queryCnt.setCacheable( true );
+        int totalCnt = queryCnt.list().size();
+
+        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), query, totalCnt );
     }
 
     /**
@@ -1043,17 +1046,24 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
+    private Query getCountVosQueryString(List<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc){
+        // Restrict to non-troubled EEs for non-administrators
+        filters = getObjectFilters( filters );
+
+        String queryString = "select " + ObjectFilter.DAO_AD_ALIAS + ".id " //0
+                + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS
+                + ".curationDetails s join " + ObjectFilter.DAO_AD_ALIAS + ".primaryTaxon t left join "
+                + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m ";
+
+        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
+    }
+
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
         // Restrict to non-troubled EEs for non-administrators
-        if ( !SecurityUtil.isUserAdmin() ) {
-            if ( filters == null ) {
-                filters = new ArrayList<>( ArrayDesignDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            }
-            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.DAO_AD_ALIAS ) } );
-        }
+        filters = getObjectFilters( filters );
 
         String queryString = "select " + ObjectFilter.DAO_AD_ALIAS + ".id, " //0
                 + ObjectFilter.DAO_AD_ALIAS + ".name, " //1
@@ -1074,6 +1084,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m left join s.lastNeedsAttentionEvent as eAttn "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
+        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
+    }
+
+    private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
+            String queryString ) {
         queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
@@ -1087,11 +1102,22 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return query;
     }
 
+    private List<ObjectFilter[]> getObjectFilters( List<ObjectFilter[]> filters ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
+            if ( filters == null ) {
+                filters = new ArrayList<>( ArrayDesignDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
+            }
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.DAO_AD_ALIAS ) } );
+        }
+        return filters;
+    }
+
     /**
      * Process query results for LoadAllValueObjects or LoadValueObjects
      */
     private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
-            final Query query ) {
+            final Query query, int totalCnt ) {
         query.setCacheable( true );
 
         //noinspection unchecked
@@ -1099,7 +1125,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Collection<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
 
         for ( Object[] row : list ) {
-            ArrayDesignValueObject vo = new ArrayDesignValueObject( row );
+            ArrayDesignValueObject vo = new ArrayDesignValueObject( row, totalCnt );
 
             Long id = ( Long ) row[0];
             if ( eeCounts == null || !eeCounts.containsKey( id ) ) {

@@ -181,7 +181,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         var suitExtra = this.suitExtraRendeder(ee);
         sHead.add(this.geeqRowRenderer("Public suitability score", ee.geeq.publicSuitabilityScore,
-            "This is the suitability score that is currently publicly displayed.", "", 2, null, suitExtra));
+            "This is the suitability score that is currently publicly displayed.", "", 2, null, suitExtra, true));
         if (this.allowScoreOverride) sHead.add(suitExtra);
         this.allowSuitInput(ee.geeq.manualSuitabilityOverride);
 
@@ -308,7 +308,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         var qualExtra = this.qualExtraRendeder(ee);
         qHead.add(this.geeqRowRenderer("Public quality score", ee.geeq.publicQualityScore,
-            "This is the quality score that is currently publicly displayed.", "", 2, null, qualExtra));
+            "This is the quality score that is currently publicly displayed.", "", 2, null, qualExtra, true));
         if (this.allowScoreOverride) qHead.add(qualExtra);
         this.allowQualInput(ee.geeq.manualQualityOverride);
 
@@ -898,9 +898,9 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         if (nr && allow) nr.removeAttribute("disabled");
     },
 
-    geeqRowRenderer: function (label, value, labelDesc, valueDesc, valDecimals, warning, extra) {
+    geeqRowRenderer: function (label, value, labelDesc, valueDesc, valDecimals, warning, extra, normalizeColor) {
         if (valDecimals === undefined) valDecimals = 1;
-        var valColor = scoreToColor(Number(value));
+        var valColor = normalizeColor ? scoreToColorNormalized(Number(value)) : scoreToColor(Number(value));
         var valNumber = roundScore(value, valDecimals);
         var cls = valNumber < 0 ? "negative" : "positive";
         var html =

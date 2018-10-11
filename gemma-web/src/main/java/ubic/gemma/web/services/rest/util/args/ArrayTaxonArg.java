@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
-            + "ID, NCBI ID, scientific name, common name or abbreviation, or multiple, separated by (',') character. "
+            + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Taxon identifiers";
 

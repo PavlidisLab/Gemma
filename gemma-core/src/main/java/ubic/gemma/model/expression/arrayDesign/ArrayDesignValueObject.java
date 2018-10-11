@@ -139,9 +139,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = technologyType;
     }
 
-    public ArrayDesignValueObject( Object[] row ) {
+    public ArrayDesignValueObject( Object[] row, Integer totalInBatch ) {
         super( ( Long ) row[0], ( Date ) row[6], ( Boolean ) row[7], ( AuditEvent ) row[13], ( Boolean ) row[8],
-                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11] );
+                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11], totalInBatch );
 
         this.name = ( String ) row[1];
         this.shortName = ( String ) row[2];

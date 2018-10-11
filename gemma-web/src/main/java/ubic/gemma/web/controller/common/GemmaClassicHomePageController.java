@@ -63,7 +63,6 @@ public class GemmaClassicHomePageController {
         otherTaxa.setId( -1L );
         otherTaxa.setCommonName( "Other" );
         otherTaxa.setScientificName( "Other" );
-        otherTaxa.setAbbreviation( "Other" );
         otherTaxa.setIsGenesUsable( false );
     }
 

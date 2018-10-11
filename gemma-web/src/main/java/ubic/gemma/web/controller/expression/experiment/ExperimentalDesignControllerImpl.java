@@ -202,6 +202,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( fv == null ) {
             throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
         }
+        
+        if ( StringUtils.isBlank( c.getCategory() ) ) {
+            throw new IllegalArgumentException("The category cannot be blank for " + c);
+        }
 
         if ( fv.getCharacteristics() == null ) {
             fv.setCharacteristics( new HashSet<Characteristic>() );

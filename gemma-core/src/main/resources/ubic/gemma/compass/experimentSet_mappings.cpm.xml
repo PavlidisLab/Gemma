@@ -28,9 +28,6 @@
 		<property name="commonName">
 			<meta-data>common name</meta-data>
 		</property>
-		<property name="abbreviation">
-			<meta-data>abbreviation</meta-data>
-		</property>
 		<property name="ncbiId">
 			<meta-data>ncbi id</meta-data>
 		</property>

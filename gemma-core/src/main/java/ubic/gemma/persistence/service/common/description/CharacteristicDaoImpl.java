@@ -36,7 +36,7 @@ import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
+import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -245,7 +245,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
             field = "ontologyEntry";
         else if ( parentClass.isAssignableFrom( PhenotypeAssociation.class ) ) {
             field = "phenotypes";
-        } else if ( parentClass.isAssignableFrom( TreatmentImpl.class ) ) {
+        } else if ( parentClass.isAssignableFrom( Treatment.class ) ) {
             field = "action";
         } else if ( parentClass.isAssignableFrom( BioMaterial.class ) ) {
             field = "characteristics";
