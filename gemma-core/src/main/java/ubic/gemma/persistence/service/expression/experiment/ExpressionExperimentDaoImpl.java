@@ -1433,7 +1433,7 @@ public class ExpressionExperimentDaoImpl
                 + "s.troubled, " // 14
                 + "s.needsAttention, " // 15
                 + "s.curationNote, " // 16
-                + "count(distinct BA), " // 17
+                + "count(distinct "+ObjectFilter.DAO_BIOASSAY_ALIAS+"), " // 17
                 + "count(distinct " + ad + "), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
@@ -1445,8 +1445,8 @@ public class ExpressionExperimentDaoImpl
                 + "eAttn, " // 26
                 + "eTrbl, " // 27
                 + ObjectFilter.DAO_GEEQ_ALIAS //28
-                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as BA "
-                + " join BA.sampleUsed as SU join BA.arrayDesignUsed as " + ad
+                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ObjectFilter.DAO_BIOASSAY_ALIAS
+                + " join "+ObjectFilter.DAO_BIOASSAY_ALIAS+".sampleUsed as SU join "+ObjectFilter.DAO_BIOASSAY_ALIAS+".arrayDesignUsed as " + ad
                 + " join SU.sourceTaxon as taxon left join " + ee + ".accession acc "
                 + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
                 + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
@@ -1492,7 +1492,7 @@ public class ExpressionExperimentDaoImpl
                 orderByField = "taxon.id";
                 break;
             case "bioAssayCount":
-                orderByField = "count(BA)";
+                orderByField = "count("+ObjectFilter.DAO_BIOASSAY_ALIAS+")";
                 break;
             case "lastUpdated":
                 orderByField = "s.lastUpdated";
