@@ -251,6 +251,12 @@ public abstract class FilterArg extends MalformableArg {
             objectAlias = ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
         }
 
+        // Allow bioAssays property filtering
+        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+            propertyName = propertyName.replaceFirst( "bioAssays.", "" );
+            objectAlias = ObjectFilter.DAO_BIOASSAY_ALIAS;
+        }
+
         return new ObjectFilter( propertyName, propertyType, finalValue, operator, objectAlias );
     }
 

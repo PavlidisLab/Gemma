@@ -81,7 +81,7 @@ public class RootWebService extends WebService {
 
         // Check the logged in user is the one we are retrieving the info for
         if ( !user.getUserName().equals( uName ) ) {
-            Response.Status code = Response.Status.UNAUTHORIZED;
+            Response.Status code = Response.Status.FORBIDDEN;
             return Responder.code( code, new WellComposedErrorBody( code, ERROR_MSG_USER_INFO_ACCESS ), sr );
         }
 
