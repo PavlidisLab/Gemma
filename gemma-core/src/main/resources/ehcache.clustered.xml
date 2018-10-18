@@ -1447,7 +1447,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.Treatment" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1456,7 +1456,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.compoundMeasurements"
+	<cache name="ubic.gemma.model.expression.biomaterial.Treatment.compoundMeasurements"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
 		timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
@@ -1466,7 +1466,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.sourceBioMaterialMeasurement"
+	<cache name="ubic.gemma.model.expression.biomaterial.Treatment.sourceBioMaterialMeasurement"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
 		timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
@@ -1476,7 +1476,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.protocolApplications"
+	<cache name="ubic.gemma.model.expression.biomaterial.Treatment.protocolApplications"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
 		timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
@@ -1486,7 +1486,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.CompoundImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.Compound" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1495,7 +1495,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.CompoundImpl.componentCompounds" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.Compound.componentCompounds" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

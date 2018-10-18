@@ -2098,8 +2098,6 @@ public class SearchServiceImpl implements SearchService {
                 nameToTaxonMap.put( taxon.getScientificName().trim().toLowerCase(), taxon );
             if ( taxon.getCommonName() != null )
                 nameToTaxonMap.put( taxon.getCommonName().trim().toLowerCase(), taxon );
-            if ( taxon.getAbbreviation() != null )
-                nameToTaxonMap.put( taxon.getAbbreviation().trim().toLowerCase(), taxon );
         }
 
         // Loop through again breaking up multi-word taxon database names.

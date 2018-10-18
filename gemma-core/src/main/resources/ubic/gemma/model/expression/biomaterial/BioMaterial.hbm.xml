@@ -40,7 +40,7 @@
          <key foreign-key="TREATMENT_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.biomaterial.TreatmentImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.biomaterial.Treatment"/>
       </set>
       <set name="characteristics" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />

@@ -75,7 +75,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Retrieves single taxon based on the given identifier.
      *
      * @param taxaArg a list of identifiers, separated by commas (','). Identifiers can be the any of
-     *                taxon ID, scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
+     *                taxon ID, scientific name, common name. It is recommended to use ID for efficiency.
      *                <p>
      *                Only datasets that user has access to will be available.
      *                </p>
@@ -100,7 +100,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Finds genes overlapping a given region.
      *
      * @param taxonArg       can either be Taxon ID or one of its string identifiers:
-     *                       scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     *                       scientific name, common name. It is recommended to use the ID for efficiency.
      * @param chromosomeName - eg: 3, 21, X
      * @param strand         - '+' or '-'. Defaults to '+'. (WIP, currently does not do anything).
      * @param start          - start of the region (nucleotide position).
@@ -128,7 +128,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Retrieves genes matching the identifier on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -148,7 +148,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Retrieves gene evidence for the gene on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -170,7 +170,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Retrieves gene location for the gene on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -191,7 +191,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     *                 scientific name, common name. It is recommended to use the ID for efficiency.
      * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
      * filter, offset, limit and sort arguments.
      */

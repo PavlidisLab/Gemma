@@ -17,6 +17,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collection;
 
 /**
  * Handles calls to the root API url and user info api
@@ -64,7 +65,7 @@ public class RootWebService extends WebService {
      * @param uName the username
      */
     @GET
-    @Path("users/{uname: [a-zA-Z0-9]+}")
+    @Path("users/{uname: [a-zA-Z0-9_]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @PreAuthorize("hasRole('GROUP_USER')")
@@ -77,11 +78,24 @@ public class RootWebService extends WebService {
 
     private ResponseDataObject checkUser( String uName, HttpServletResponse sr ) {
         User user = userManager.getCurrentUser();
+
+        // Check the logged in user is the one we are retrieving the info for
         if ( !user.getUserName().equals( uName ) ) {
             Response.Status code = Response.Status.UNAUTHORIZED;
             return Responder.code( code, new WellComposedErrorBody( code, ERROR_MSG_USER_INFO_ACCESS ), sr );
         }
-        return Responder.autoCode( new UserValueObject( user ), sr );
+
+        // Convert to a VO and check for admin
+        UserValueObject uvo = new UserValueObject( user );
+        Collection<String> groups = userManager.findGroupsForUser( user.getUserName() );
+        for ( String g : groups ) {
+            if ( g.equals( "Administrators" ) ) {
+                uvo.setCurrentGroup( g );
+                uvo.setInGroup( true );
+            }
+        }
+
+        return Responder.autoCode( uvo, sr );
     }
 
     @SuppressWarnings("unused") // Getters used during RS serialization

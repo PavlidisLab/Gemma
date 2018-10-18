@@ -527,23 +527,23 @@
     <cache name="ubic.gemma.model.expression.biomaterial.BioMaterial.bioAssaysUsedIn" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl" maxElementsInMemory="10000" eternal="false"
+    <cache name="ubic.gemma.model.expression.biomaterial.Treatment" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.compoundMeasurements" maxElementsInMemory="10000"
+    <cache name="ubic.gemma.model.expression.biomaterial.Treatment.compoundMeasurements" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.sourceBioMaterialMeasurement"
+    <cache name="ubic.gemma.model.expression.biomaterial.Treatment.sourceBioMaterialMeasurement"
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.TreatmentImpl.protocolApplications" maxElementsInMemory="10000"
+    <cache name="ubic.gemma.model.expression.biomaterial.Treatment.protocolApplications" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.CompoundImpl" maxElementsInMemory="10000" eternal="false"
+    <cache name="ubic.gemma.model.expression.biomaterial.Compound" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.expression.biomaterial.CompoundImpl.componentCompounds" maxElementsInMemory="10000"
+    <cache name="ubic.gemma.model.expression.biomaterial.Compound.componentCompounds" maxElementsInMemory="10000"
            eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.expression.biomaterial.CompoundMeasurementImpl" maxElementsInMemory="10000"

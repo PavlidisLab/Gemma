@@ -18,13 +18,15 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import ubic.gemma.model.common.Describable;
+
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class Compound extends ubic.gemma.model.common.Describable {
+public class Compound extends Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = 8136911145519622152L;
+    private static final long serialVersionUID = -6782144197298874202L;
     private String registryNumber;
 
     /**
@@ -48,13 +50,12 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
 
     public static final class Factory {
 
-        public static ubic.gemma.model.expression.biomaterial.Compound newInstance() {
-            return new ubic.gemma.model.expression.biomaterial.CompoundImpl();
+        public static Compound newInstance() {
+            return new Compound();
         }
 
-        public static ubic.gemma.model.expression.biomaterial.Compound newInstance( String name, String description,
-                String registryNumber ) {
-            final ubic.gemma.model.expression.biomaterial.Compound entity = new ubic.gemma.model.expression.biomaterial.CompoundImpl();
+        public static Compound newInstance( String name, String description, String registryNumber ) {
+            final Compound entity = new Compound();
             entity.setName( name );
             entity.setDescription( description );
             entity.setRegistryNumber( registryNumber );

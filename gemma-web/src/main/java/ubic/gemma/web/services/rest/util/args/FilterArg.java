@@ -233,7 +233,7 @@ public abstract class FilterArg extends MalformableArg {
     }
 
     /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g characteristics on EEs.
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
      * @param propertyName the referenced property name
      * @param propertyType the referenced property type
      * @param requiredValue the required value

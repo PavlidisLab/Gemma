@@ -9,6 +9,21 @@ function scoreToColor(i) {
     return 'hsl(' + hue + ', 100%, 70%)';
 }
 
+function scoreToColorNormalized(i) {
+    // < 0.1 -> 0; > 0.6 -> 1; 0.3 -> middle;
+    i = i * 1.6; // Puts 0.3 almost in the middle (close enough)
+
+    // Cut off anything > 1
+    i = i > 1 ? 1 : i;
+
+    // Cut off negative values
+    i = i < 0 ? 0 : i;
+
+    // hsl red = 0° and green = 120°
+    var hue = i * 120;
+    return 'hsl(' + hue + ', 100%, 70%)';
+}
+
 function getStatusBadge(faIconClass, colorClass, title, qTip) {
     return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
         '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
@@ -16,12 +31,12 @@ function getStatusBadge(faIconClass, colorClass, title, qTip) {
 
 function getGeeqBadges(quality, suitability) {
     return '' +
-        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(quality)) + '" ' +
+        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
         'ext:qtip="Quality:&nbsp;' + roundScore(quality, 1) + '<br/>' +
         'Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data." >' +
         getGeeqIcon(Number(quality)) + "" +
         '</span>' +
-        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(suitability)) + '" ' +
+        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(suitability)) + '" ' +
         'ext:qtip="Suitability:&nbsp;' + roundScore(suitability, 1) + '<br/>' +
         'Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma." >' +
         getGeeqIcon(Number(suitability)) + "" +
@@ -35,13 +50,13 @@ function getGeeqIcon(score) {
 function getGeeqIconColored(score) {
     return '' +
         '<span class="fa fa-lg fa-stack" ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) + '">' +
-        '   <i class="fa fa-stack-1x fa-circle" style="color: ' + scoreToColor(Number(score)) + '"></i>' +
+        '   <i class="fa fa-stack-1x fa-circle" style="color: ' + scoreToColorNormalized(Number(score)) + '"></i>' +
         '   <i class="fa fa-stack-1x ' + getSmileyCls(score) + '"></i></span>' +
         '</span>'
 }
 
 function getSmileyCls(score) {
-    return score > 0.3 ? "fa-smile-o" : score > -0.3 ? "fa-meh-o" : "fa-frown-o";
+    return score > 0.45 ? "fa-smile-o" : score > 0.1 ? "fa-meh-o" : "fa-frown-o";
 }
 
 function roundScore(value, valDecimals) {

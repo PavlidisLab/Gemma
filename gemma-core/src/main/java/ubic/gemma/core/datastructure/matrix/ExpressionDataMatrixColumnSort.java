@@ -628,7 +628,9 @@ public class ExpressionDataMatrixColumnSort {
             } else {
                 List<BioMaterial> orderedChunk = ExpressionDataMatrixColumnSort
                         .orderBiomaterialsBySortedFactors( chunk, factorsStillToDo );
-                result.addAll( orderedChunk );
+                if ( orderedChunk != null ) {
+                    result.addAll( orderedChunk );
+                }
             }
         }
 

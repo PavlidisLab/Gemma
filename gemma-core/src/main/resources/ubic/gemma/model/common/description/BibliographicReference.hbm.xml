@@ -91,7 +91,7 @@
          <key foreign-key="COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC">
             <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.biomaterial.CompoundImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.biomaterial.Compound"/>
       </set>
    </class>
 </hibernate-mapping>
