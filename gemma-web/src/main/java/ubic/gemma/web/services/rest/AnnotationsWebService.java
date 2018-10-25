@@ -25,9 +25,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
@@ -40,8 +46,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * RESTful interface for annotations.
@@ -54,8 +59,9 @@ public class AnnotationsWebService extends WebService {
     private static final String URL_PREFIX = "http://";
 
     private OntologyService ontologyService;
-    private ExpressionExperimentSearchService expressionExperimentSearchService;
+    private SearchService searchService;
     private CharacteristicService characteristicService;
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * Required by spring
@@ -67,12 +73,12 @@ public class AnnotationsWebService extends WebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public AnnotationsWebService( OntologyService ontologyService,
-            ExpressionExperimentSearchService expressionExperimentSearchService,
-            CharacteristicService characteristicService ) {
+    public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
+            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService ) {
         this.ontologyService = ontologyService;
-        this.expressionExperimentSearchService = expressionExperimentSearchService;
+        this.searchService = searchService;
         this.characteristicService = characteristicService;
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -131,7 +137,45 @@ public class AnnotationsWebService extends WebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder
-                .autoCode( expressionExperimentSearchService.searchExpressionExperiments( query.getValue() ), sr );
+                .autoCode( expressionExperimentService.loadValueObjects( this.searchEEs( query.getValue() ), false ),
+                        sr );
+    }
+
+    /**
+     * Performs a dataset search for each given value, then intersects the results to create a final set of dataset IDs.
+     * @param values the values that the datasets should match.
+     * @return set of IDs that satisfy all given search values.
+     */
+    private Collection<Long> searchEEs( List<String> values ) {
+        Set<Long> ids = new HashSet<>();
+        for ( String value : values ) {
+            Set<Long> valueIds = new HashSet<>();
+
+            SearchSettings settings = new SearchSettingsImpl();
+            settings.setQuery( value );
+            settings.setSearchGenes( false );
+            settings.setSearchPlatforms( false );
+            settings.setSearchExperimentSets( false );
+            settings.setSearchPhenotypes( false );
+            settings.setSearchProbes( false );
+            settings.setSearchGeneSets( false );
+            settings.setSearchBioSequences( false );
+            settings.setSearchBibrefs( false );
+
+            Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
+            List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
+
+            for ( SearchResult result : eeResults ) {
+                valueIds.add( result.getId() );
+            }
+
+            if ( ids.isEmpty() ) {
+                ids = valueIds;
+            } else {
+                ids.retainAll( valueIds );
+            }
+        }
+        return ids;
     }
 
     /**
