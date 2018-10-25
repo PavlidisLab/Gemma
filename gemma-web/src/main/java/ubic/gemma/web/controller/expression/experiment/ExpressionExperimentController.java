@@ -31,7 +31,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
@@ -261,7 +260,7 @@ public class ExpressionExperimentController {
         if ( StringUtils.isBlank( searchString ) ) {
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                            .addObject( "message", "No search criteria provided" );
+                    .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids = expressionExperimentService.filter( searchString );
@@ -270,7 +269,7 @@ public class ExpressionExperimentController {
 
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                            .addObject( "message", "Your search yielded no results." );
+                    .addObject( "message", "Your search yielded no results." );
 
         }
 
@@ -278,7 +277,7 @@ public class ExpressionExperimentController {
             return new ModelAndView(
                     new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(),
                             true ) ).addObject( "message",
-                                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         StringBuilder list = new StringBuilder();
@@ -288,15 +287,15 @@ public class ExpressionExperimentController {
 
         return new ModelAndView(
                 new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) )
-                        .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+                .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
      * AJAX TODO --- include a search of subsets.
      *
-     * @param  query   search string
-     * @param  taxonId (if null, all taxa are searched)
-     * @return         EE ids that match
+     * @param query   search string
+     * @param taxonId (if null, all taxa are searched)
+     * @return EE ids that match
      */
     public Collection<Long> find( String query, Long taxonId ) {
         ExpressionExperimentController.log.info( "Search: query='" + query + "' taxon=" + taxonId );
@@ -321,10 +320,10 @@ public class ExpressionExperimentController {
      * AJAX call
      *
      * @return a more informative description than the regular description 1st 120 characters of ee.description +
-     *         Experimental Design information returned string contains HTML tags.
-     *         TODO: Would be more generic if passed back a DescriptionValueObject that contains all the info necessary
-     *         to reconstruct the HTML on the client side Currently only used by ExpressionExperimentGrid.js (row
-     *         expander)
+     * Experimental Design information returned string contains HTML tags.
+     * TODO: Would be more generic if passed back a DescriptionValueObject that contains all the info necessary
+     * to reconstruct the HTML on the client side Currently only used by ExpressionExperimentGrid.js (row
+     * expander)
      */
     public String getDescription( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -511,15 +510,20 @@ public class ExpressionExperimentController {
             int newBioMaterialCount = wn.getNewBioMaterialCount();
 
             Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
-                    : new ArrayList<Long>();
+            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ?
+                    EntityUtils.getIds( newExpressionExperiments ) :
+                    new ArrayList<Long>();
             Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
-                    ? EntityUtils.getIds( updatedExpressionExperiments )
-                    : new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ?
+                    EntityUtils.getIds( updatedExpressionExperiments ) :
+                    new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
-            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
+            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ?
+                    newExpressionExperiments.size() :
+                    0;
+            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ?
+                    updatedExpressionExperiments.size() :
+                    0;
 
             /* Store counts for new and updated experiments by taxonId */
             Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
@@ -549,9 +553,12 @@ public class ExpressionExperimentController {
             Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
             int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
 
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newBioMaterialCount > 0 );
+            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0
+                    || newBioMaterialCount > 0 );
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
-            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
+            String date = ( wn.getDate() != null ) ?
+                    DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) :
+                    "";
             date = date.replace( '-', ' ' );
 
             summary.element( "updateDate", date );
@@ -585,8 +592,8 @@ public class ExpressionExperimentController {
     /**
      * AJAX; Populate all the details.
      *
-     * @param  id Identifier for the experiment
-     * @return    ee details vo
+     * @param id Identifier for the experiment
+     * @return ee details vo
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
@@ -646,8 +653,8 @@ public class ExpressionExperimentController {
     /**
      * AJAX - for display in tables. Don't retrieve too much detail.
      *
-     * @param  ids of EEs to load
-     * @return     security-filtered set of value objects.
+     * @param ids of EEs to load
+     * @return security-filtered set of value objects.
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExpressionExperiments( List<Long> ids ) {
         if ( ids.isEmpty() ) {
@@ -669,8 +676,8 @@ public class ExpressionExperimentController {
     /**
      * AJAX - for display in tables. Get more details.
      *
-     * @param  ids of EEs to load
-     * @return     security-filtered set of value objects.
+     * @param ids of EEs to load
+     * @return security-filtered set of value objects.
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadDetailedExpressionExperiments(
             Collection<Long> ids ) {
@@ -721,8 +728,8 @@ public class ExpressionExperimentController {
     /**
      * AJAX - for display in tables
      *
-     * @param  eeId ee id
-     * @return      security-filtered set of value objects.
+     * @param eeId ee id
+     * @return security-filtered set of value objects.
      */
     public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeId ) {
 
@@ -737,14 +744,14 @@ public class ExpressionExperimentController {
     /**
      * AJAX. Data summarizing the status of experiments.
      *
-     * @param  taxonId    can be null
-     * @param  limit      If &gt;0, get the most recently updated N experiments, where N &lt;= limit; or if &lt; 0, get
-     *                    the
-     *                    least
-     *                    recently updated; if 0, or null, return all.
-     * @param  filter     if non-null, limit data sets to ones meeting criteria.
-     * @param  showPublic return user's public datasets too
-     * @return            ee details vos
+     * @param taxonId    can be null
+     * @param limit      If &gt;0, get the most recently updated N experiments, where N &lt;= limit; or if &lt; 0, get
+     *                   the
+     *                   least
+     *                   recently updated; if 0, or null, return all.
+     * @param filter     if non-null, limit data sets to ones meeting criteria.
+     * @param showPublic return user's public datasets too
+     * @return ee details vos
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, Boolean showPublic ) {
@@ -793,8 +800,8 @@ public class ExpressionExperimentController {
      * Remove the primary publication for the given expression experiment (by id). The reference is not actually deleted
      * from the system. AJAX
      *
-     * @param  eeId ee id
-     * @return      string
+     * @param eeId ee id
+     * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     public String removePrimaryPublication( Long eeId ) {
@@ -805,9 +812,9 @@ public class ExpressionExperimentController {
     /**
      * AJAX (used by experimentAndExperimentGroupCombo.js)
      *
-     * @param  taxonId if the search should not be limited by taxon, pass in null
-     * @param  query   query
-     * @return         Collection of SearchResultDisplayObjects
+     * @param taxonId if the search should not be limited by taxon, pass in null
+     * @param query   query
+     * @return Collection of SearchResultDisplayObjects
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
         boolean taxonLimited = ( taxonId != null );
@@ -815,9 +822,9 @@ public class ExpressionExperimentController {
 
         // add session bound sets
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited )
-                ? sessionListManager.getModifiedExperimentSets( taxonId )
-                : sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ?
+                sessionListManager.getModifiedExperimentSets( taxonId ) :
+                sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -846,8 +853,8 @@ public class ExpressionExperimentController {
     /**
      * AJAX (used by ExperimentCombo.js)
      *
-     * @param  query query
-     * @return       Collection of expression experiment entity objects
+     * @param query query
+     * @return Collection of expression experiment entity objects
      */
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
@@ -858,9 +865,9 @@ public class ExpressionExperimentController {
     /**
      * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
      *
-     * @param  request  request
-     * @param  response response
-     * @return          model and view
+     * @param request  request
+     * @param response response
+     * @return model and view
      */
     @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" })
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
@@ -965,9 +972,9 @@ public class ExpressionExperimentController {
     /**
      * shows a list of BioAssays for an expression experiment subset
      *
-     * @param  request  request
-     * @param  response response
-     * @return          model and view
+     * @param request  request
+     * @param response response
+     * @return model and view
      */
     @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
     public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
@@ -1061,8 +1068,9 @@ public class ExpressionExperimentController {
         }
         if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription()
                 .equals( ee.getDescription() ) ) {
-            details += ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
-                    + ")";
+            details +=
+                    ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
+                            + ")";
             changed = true;
             ee.setDescription( command.getDescription() );
         }
@@ -1106,9 +1114,9 @@ public class ExpressionExperimentController {
     /**
      * AJAX. Associate the given pubmedId with the given expression experiment.
      *
-     * @param  eeId     ee id
-     * @param  pubmedId pubmed id
-     * @return          string
+     * @param eeId     ee id
+     * @param pubmedId pubmed id
+     * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - possibly used in JS
     public String updatePubMed( Long eeId, String pubmedId ) {
@@ -1158,7 +1166,9 @@ public class ExpressionExperimentController {
         Collection<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        int count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
+        int count = SecurityUtil.isUserAdmin() ?
+                expressionExperimentService.countAll() :
+                expressionExperimentService.countNotTroubled();
 
         return new JsonReaderResponse<>( records, count );
     }
@@ -1179,8 +1189,7 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = outlierDetectionService
-                .identifyOutliersByMedianCorrelation( ee );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         count = outliers.size();
 
         if ( count > 0 )
@@ -1216,9 +1225,9 @@ public class ExpressionExperimentController {
     /**
      * Sets batch information and related properties
      *
-     * @param  ee          ee
-     * @param  finalResult result
-     * @return             ee details vo
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
      */
     private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
@@ -1236,9 +1245,9 @@ public class ExpressionExperimentController {
     /**
      * populates the publication and author information
      *
-     * @param  ee          ee
-     * @param  finalResult result
-     * @return             ee details vo
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
      */
     private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
@@ -1263,8 +1272,8 @@ public class ExpressionExperimentController {
     /**
      * Loads, checks not null, and thaws the array designs the given EE is associated with.
      *
-     * @param  ee ee
-     * @return    ads
+     * @param ee ee
+     * @return ads
      */
     private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -1279,8 +1288,8 @@ public class ExpressionExperimentController {
     /**
      * Loads, checks not null, and thaws the ee with given ID;
      *
-     * @param  id id
-     * @return    ee
+     * @param id id
+     * @return ee
      */
     private ExpressionExperiment getEESafely( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -1295,9 +1304,9 @@ public class ExpressionExperimentController {
     /**
      * Checks and sets multiple technology types
      *
-     * @param  ee          ee
-     * @param  finalResult result
-     * @return             ee details vo
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
      */
     private ExpressionExperimentDetailsValueObject setMultipleTechTypes(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
@@ -1314,9 +1323,9 @@ public class ExpressionExperimentController {
     /**
      * Check for multiple "preferred" qts and reprocessing.
      *
-     * @param  ee          ee
-     * @param  finalResult result
-     * @return             ee details vo
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
      */
     private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
@@ -1359,9 +1368,9 @@ public class ExpressionExperimentController {
     /**
      * Filter based on criteria of which events etc. the data sets have.
      *
-     * @param  eeValObjectCol ee vos
-     * @param  filter         filter
-     * @return                filtered vos
+     * @param eeValObjectCol ee vos
+     * @param filter         filter
+     * @return filtered vos
      */
     private Collection<ExpressionExperimentDetailsValueObject> applyFilter(
             Collection<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
@@ -1474,13 +1483,13 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param  ids        - takes precedence
-     * @param  limit      - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or
-     *                    all
-     *                    (limit == 0)
-     * @param  filter     setting
-     * @param  showPublic return the user's public datasets as well
-     * @return            ee details vos
+     * @param ids        - takes precedence
+     * @param limit      - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or
+     *                   all
+     *                   (limit == 0)
+     * @param filter     setting
+     * @param showPublic return the user's public datasets as well
+     * @return ee details vos
      */
     private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, boolean showPublic ) {
@@ -1502,8 +1511,8 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param  request                  request
-     * @return                          bio assay set
+     * @param request request
+     * @return bio assay set
      * @throws IllegalArgumentException if a matching EE can't be loaded
      */
     private BioAssaySet getExpressionExperimentFromRequest( HttpServletRequest request ) {
@@ -1562,11 +1571,11 @@ public class ExpressionExperimentController {
     /**
      * Get the expression experiment value objects for the expression experiments.
      *
-     * @param  taxon      can be null
-     * @param  limit      limit
-     * @param  eeIds      ee ids
-     * @param  showPublic show public
-     * @return            Collection<ExpressionExperimentValueObject>
+     * @param taxon      can be null
+     * @param limit      limit
+     * @param eeIds      ee ids
+     * @param showPublic show public
+     * @return Collection<ExpressionExperimentValueObject>
      */
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             List<Long> eeIds, Integer limit, boolean showPublic ) {
@@ -1605,10 +1614,10 @@ public class ExpressionExperimentController {
      * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is equal
      * to the shouldBeTroubled parameter.
      *
-     * @param  shouldBeTroubled set to true if the filter should keep the EEVOs that are troubled, or false to keep only
-     *                          the not-troubled ones.
-     * @param  eevos            ee vos
-     * @return                  ee vos
+     * @param shouldBeTroubled set to true if the filter should keep the EEVOs that are troubled, or false to keep only
+     *                         the not-troubled ones.
+     * @param eevos            ee vos
+     * @return ee vos
      */
     private <T extends ExpressionExperimentValueObject> List<T> returnTroubled( Collection<T> eevos,
             boolean shouldBeTroubled ) {
@@ -1627,8 +1636,8 @@ public class ExpressionExperimentController {
      * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it
      * is true
      *
-     * @param  ees ees
-     * @return     ee detail vos
+     * @param ees ees
+     * @return ee detail vos
      */
     private List<ExpressionExperimentDetailsValueObject> returnNeedsAttention(
             Collection<ExpressionExperimentDetailsValueObject> ees ) {
@@ -1685,7 +1694,7 @@ public class ExpressionExperimentController {
 
             return new TaskResult( taskCommand, new ModelAndView(
                     new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
-                            .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+                    .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }

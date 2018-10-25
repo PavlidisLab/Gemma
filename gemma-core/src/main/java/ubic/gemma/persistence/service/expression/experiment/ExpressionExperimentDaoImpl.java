@@ -1416,6 +1416,7 @@ public class ExpressionExperimentDaoImpl
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String ee = ObjectFilter.DAO_EE_ALIAS;
         String ad = ObjectFilter.DAO_AD_ALIAS;
+        String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
         String queryString = "select " + ee + ".id as id, " // 0
                 + ee + ".name, " // 1
                 + ee + ".source, " // 2
@@ -1433,7 +1434,7 @@ public class ExpressionExperimentDaoImpl
                 + "s.troubled, " // 14
                 + "s.needsAttention, " // 15
                 + "s.curationNote, " // 16
-                + "count(distinct "+ObjectFilter.DAO_BIOASSAY_ALIAS+"), " // 17
+                + "count(distinct "+ba+"), " // 17
                 + "count(distinct " + ad + "), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
@@ -1445,14 +1446,14 @@ public class ExpressionExperimentDaoImpl
                 + "eAttn, " // 26
                 + "eTrbl, " // 27
                 + ObjectFilter.DAO_GEEQ_ALIAS //28
-                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ObjectFilter.DAO_BIOASSAY_ALIAS
-                + " join "+ObjectFilter.DAO_BIOASSAY_ALIAS+".sampleUsed as SU join "+ObjectFilter.DAO_BIOASSAY_ALIAS+".arrayDesignUsed as " + ad
+                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ba
+                + " join "+ba+".sampleUsed as SU join "+ba+".arrayDesignUsed as " + ad
                 + " join SU.sourceTaxon as taxon left join " + ee + ".accession acc "
                 + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
                 + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
                 + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl " + "left join "
-                + ObjectFilter.DAO_EE_ALIAS + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
+                + ee + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1492,7 +1493,7 @@ public class ExpressionExperimentDaoImpl
                 orderByField = "taxon.id";
                 break;
             case "bioAssayCount":
-                orderByField = "count("+ObjectFilter.DAO_BIOASSAY_ALIAS+")";
+                orderByField = "size("+ObjectFilter.DAO_EE_ALIAS+".bioAssays)";
                 break;
             case "lastUpdated":
                 orderByField = "s.lastUpdated";
