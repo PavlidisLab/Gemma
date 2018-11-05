@@ -30,20 +30,18 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.ArrayStringArg;
+import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
@@ -55,7 +53,8 @@ import java.util.*;
  */
 @Component
 @Path("/annotations")
-public class AnnotationsWebService extends WebService {
+public class AnnotationsWebService extends
+        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
     private static final String URL_PREFIX = "http://";
 
     private OntologyService ontologyService;
@@ -75,6 +74,7 @@ public class AnnotationsWebService extends WebService {
     @Autowired
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService ) {
+        super( expressionExperimentService );
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
@@ -124,25 +124,43 @@ public class AnnotationsWebService extends WebService {
 
     /**
      * Does a search for datasets containing characteristics matching the given string.
+     * If filter, offset, limit or sort parameters are provided, acts same as
+     * {@link WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) }.
      *
      * @param query the search query. Either plain text, or an ontology term URI
-     * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
+     * @return response data object with a collection of dataset that match the search query.
      * @see ExpressionExperimentSearchService#searchExpressionExperiments(String) for better description of the search process.
      */
     @GET
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasets( // Params:
             @PathParam("query") ArrayStringArg query, // Required
+            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder
-                .autoCode( expressionExperimentService.loadValueObjects( this.searchEEs( query.getValue() ), false ),
-                        sr );
+
+        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+
+        if ( filter.getObjectFilters() != null || offset.getValue() != 0 || limit.getValue() != 0 || !sort.getField()
+                .equals( "id" ) || !sort.isAsc() ) {
+            // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
+            // this without cluttering the code.
+            return super
+                    .some( ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
+                            sr );
+        }
+        return Responder.autoCode( expressionExperimentService.loadValueObjects( foundIds, false ), sr );
+
     }
 
     /**
      * Performs a dataset search for each given value, then intersects the results to create a final set of dataset IDs.
+     *
      * @param values the values that the datasets should match.
      * @return set of IDs that satisfy all given search values.
      */
