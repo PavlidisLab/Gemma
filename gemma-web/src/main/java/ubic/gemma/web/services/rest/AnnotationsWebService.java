@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
@@ -61,6 +62,7 @@ public class AnnotationsWebService extends
     private SearchService searchService;
     private CharacteristicService characteristicService;
     private ExpressionExperimentService expressionExperimentService;
+    private TaxonService taxonService;
 
     /**
      * Required by spring
@@ -73,12 +75,14 @@ public class AnnotationsWebService extends
      */
     @Autowired
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
-            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService ) {
+            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
+            TaxonService taxonService ) {
         super( expressionExperimentService );
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
         this.expressionExperimentService = expressionExperimentService;
+        this.taxonService = taxonService;
     }
 
     /**
@@ -143,7 +147,6 @@ public class AnnotationsWebService extends
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( filter.getObjectFilters() != null || offset.getValue() != 0 || limit.getValue() != 0 || !sort.getField()
@@ -155,7 +158,36 @@ public class AnnotationsWebService extends
                             sr );
         }
         return Responder.autoCode( expressionExperimentService.loadValueObjects( foundIds, false ), sr );
+    }
 
+    /**
+     * Same as {@link this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}, but
+     * also filters by taxon.
+     * @see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
+     */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/search/{query}/datasets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject taxonDatasets( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("query") ArrayStringArg query, // Required
+            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+
+        if(foundIds.isEmpty()){
+            return Responder.autoCode( foundIds, sr );
+        }
+
+        return Responder.autoCode( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
+                ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) )
+                        .combineFilters( filter.getObjectFilters(), expressionExperimentService ),
+                offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ), sr );
     }
 
     /**
@@ -182,6 +214,10 @@ public class AnnotationsWebService extends
 
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
             List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
+
+            if(eeResults == null){
+                return ids;
+            }
 
             for ( SearchResult result : eeResults ) {
                 valueIds.add( result.getId() );
