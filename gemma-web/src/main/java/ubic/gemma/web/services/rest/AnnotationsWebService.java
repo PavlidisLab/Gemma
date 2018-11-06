@@ -38,6 +38,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -93,7 +94,7 @@ public class AnnotationsWebService extends
     public ResponseDataObject all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**
@@ -123,7 +124,7 @@ public class AnnotationsWebService extends
             @PathParam("query") ArrayStringArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( getTerms( query ), sr );
+        return Responder.autoCode( this.getTerms( query ), sr );
     }
 
     /**
@@ -149,6 +150,11 @@ public class AnnotationsWebService extends
     ) {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
+        if ( foundIds.isEmpty() ) {
+            return Responder.autoCode( foundIds, sr );
+        }
+
+        // If there are filters other than the search query, intersect the results.
         if ( filter.getObjectFilters() != null || offset.getValue() != 0 || limit.getValue() != 0 || !sort.getField()
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
@@ -157,12 +163,15 @@ public class AnnotationsWebService extends
                     .some( ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
                             sr );
         }
+
+        // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
         return Responder.autoCode( expressionExperimentService.loadValueObjects( foundIds, false ), sr );
     }
 
     /**
      * Same as {@link this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}, but
      * also filters by taxon.
+     *
      * @see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
      */
     @GET
@@ -180,14 +189,15 @@ public class AnnotationsWebService extends
     ) {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
-        if(foundIds.isEmpty()){
+        if ( foundIds.isEmpty() ) {
             return Responder.autoCode( foundIds, sr );
         }
 
+        // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
         return Responder.autoCode( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) )
-                        .combineFilters( filter.getObjectFilters(), expressionExperimentService ),
-                offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ), sr );
+                        .combineFilters( filter.getObjectFilters(), expressionExperimentService ), offset.getValue(),
+                limit.getValue(), sort.getField(), sort.isAsc() ), sr );
     }
 
     /**
@@ -198,6 +208,7 @@ public class AnnotationsWebService extends
      */
     private Collection<Long> searchEEs( List<String> values ) {
         Set<Long> ids = new HashSet<>();
+        boolean firstRun = true;
         for ( String value : values ) {
             Set<Long> valueIds = new HashSet<>();
 
@@ -215,19 +226,24 @@ public class AnnotationsWebService extends
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
             List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
 
-            if(eeResults == null){
-                return ids;
+            if ( eeResults == null ) {
+                return new HashSet<>(); // No terms found for the current term means the intersection will be empty.
             }
 
+            // Working only with IDs
             for ( SearchResult result : eeResults ) {
                 valueIds.add( result.getId() );
             }
 
-            if ( ids.isEmpty() ) {
+            // Intersecting with previous results
+            if ( firstRun ) {
+                // In the first run we keep the whole list od IDs
                 ids = valueIds;
             } else {
+                // Intersecting with the IDs found in the current run
                 ids.retainAll( valueIds );
             }
+            firstRun = false;
         }
         return ids;
     }
@@ -242,11 +258,11 @@ public class AnnotationsWebService extends
         Collection<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
-            if ( query.startsWith( URL_PREFIX ) ) {
-                addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
+            if ( query.startsWith( AnnotationsWebService.URL_PREFIX ) ) {
+                this.addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) ) );
             } else {
-                addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, true ) );
+                this.addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, true ) );
             }
         }
         return vos;
