@@ -16,6 +16,7 @@ public class ObjectFilter {
     public static final String DAO_GENE_ALIAS = "gene";
     public static final String DAO_GEEQ_ALIAS = "geeq";
     public static final String DAO_CHARACTERISTIC_ALIAS = "ch";
+    public static final String DAO_BIOASSAY_ALIAS = "ba";
 
     public static final String is = "=";
     public static final String isNot = "!=";
