@@ -58,7 +58,7 @@ Gemma.ExpressionExperimentDetails = Ext
             },
             renderCoExpressionLinkCount: function (ee) {
 
-                if (ee.coexpressionLinkCount === null) {
+                if (!ee.hasCoexpressionAnalysis) {
                     return "Unavailable"; // analysis not run.
                 }
 
@@ -68,7 +68,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     ee.id);
                 var count;
 
-                return ee.coexpressionLinkCount + "&nbsp;" + downloadCoExpressionDataLink;
+                return "Available" + downloadCoExpressionDataLink;
 
             },
 
@@ -733,11 +733,14 @@ Gemma.ExpressionExperimentDetails = Ext
                                         fieldLabel: 'Platforms',
                                         html: this.renderArrayDesigns(e),
                                         width: 600
-                                    }, {
+                                    }
+                                    /* hidden temporarily*/
+                                     , {
                                         fieldLabel: 'Coexpr. Links',
                                         html: this.renderCoExpressionLinkCount(e),
                                         width: 80
-                                    }, {
+                                    }
+                                    , {
                                         fieldLabel: 'Differential Expr. Analyses',
                                         items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
                                             experimentDetails: e,
