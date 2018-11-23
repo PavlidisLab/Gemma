@@ -30,17 +30,23 @@ function getStatusBadge(faIconClass, colorClass, title, qTip) {
 }
 
 function getGeeqBadges(quality, suitability) {
-    return '' +
+    var val = '';
+    val = val   +
         '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
         'ext:qtip="Quality:&nbsp;' + roundScore(quality, 1) + '<br/>' +
         'Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data." >' +
         getGeeqIcon(Number(quality)) + "" +
-        '</span>' +
-        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(suitability)) + '" ' +
+        '</span>';
+
+    var isUserAdmin = (Ext.get('hasAdmin') && Ext.get('hasAdmin').getValue() === 'true') ? true : false;
+    if (isUserAdmin) {
+        val = val + '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(suitability)) + '" ' +
         'ext:qtip="Suitability:&nbsp;' + roundScore(suitability, 1) + '<br/>' +
         'Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma." >' +
         getGeeqIcon(Number(suitability)) + "" +
         '</span>';
+    }
+    return val;
 }
 
 function getGeeqIcon(score) {
