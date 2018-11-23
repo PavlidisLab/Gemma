@@ -299,7 +299,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
-                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+               // eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() ); // not used
+                eeVo.setHasCoexpressionAnalysis( cacheVo.getHasCoexpressionAnalysis() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
                 eeVo.setLastUpdated( cacheVo.getLastUpdated() );

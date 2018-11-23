@@ -74,7 +74,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Integer pubmedId;
     private Integer numAnnotations;
     private Integer numPopulatedFactors;
-    private Integer coexpressionLinkCount = null;
+ //   private Integer coexpressionLinkCount = null;
     private Collection<AuditEventValueObject> sampleRemovedFlags;
     private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
 
@@ -121,13 +121,13 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         this.batchFetchEventType = batchFetchEventType;
     }
 
-    public Integer getCoexpressionLinkCount() {
-        return this.coexpressionLinkCount;
-    }
-
-    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-        this.coexpressionLinkCount = coexpressionLinkCount;
-    }
+//    public Integer getCoexpressionLinkCount() {
+//        return this.coexpressionLinkCount;
+//    }
+//
+//    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+//        this.coexpressionLinkCount = coexpressionLinkCount;
+//    }
 
     /**
      * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
