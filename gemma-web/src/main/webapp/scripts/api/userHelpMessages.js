@@ -440,7 +440,7 @@ Gemma.HelpText.WidgetDefaults = {
          + 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements',
        dataReprocessed : "Reprocessed from raw data by Gemma.",
        dataExternal : "Data are from external source.",
-       noBatchInfo : "There is no batch factor and some of the bio assays do not have a processing date."
+       noBatchInfo : "There is no batch factor."
    },
    ExpressionExperimentGrid : {
    // only column TTs, skipped
