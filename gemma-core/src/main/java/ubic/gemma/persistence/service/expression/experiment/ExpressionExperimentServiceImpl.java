@@ -577,6 +577,8 @@ public class ExpressionExperimentServiceImpl
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
                 result = "This data set may have a batch artifact" + pc + ", p=" + String
                         .format( "%.5g", beDetails.getPvalue() );
+            } else {
+                result = "No batch effect was detected";
             }
         }
         return Strings.emptyToNull( result );
