@@ -120,6 +120,7 @@ public class Geeq implements Identifiable, Serializable {
      *
      * @param id the unique ID of the instance this object represents
      */
+    @SuppressWarnings("unused")
     private void setId( Long id ) {
         this.id = id;
     }
@@ -353,14 +354,15 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * @return Number of replicates - ee has to have design and more than one condition
-     * -1.0 if lowest replicate amount &lt; 4 &amp; !=1 or if there are problems
-     * +0.0 if lowest replicate amount &lt; 10 &amp; !=1
+     * -1.0 if lowest replicate amount &lt; GEEQ_WORST_REPLICATION_THRESHOLD &amp; !=1 or if there are problems
+     * +0.0 if lowest replicate amount &lt; GEEQ_MEDIUM_REPLICATION_THRESHOLD &amp; !=1
      * +1.0 otherwise
      * extra (in replicatesIssues):
      * 1 if the experiment has no design
      * 2 if there were no factor values found
      * 3 if all replicate amounts were 1
      * 4 if lowest replicate was 0 (that really should not happen though)
+     * See GeeqServiceImpl for thresholds
      */
     public double getqScoreReplicates() {
         return qScoreReplicates;
@@ -384,7 +386,7 @@ public class Geeq implements Identifiable, Serializable {
     }
 
     /**
-     * @return Batch effect without batch correction. Can ve overridden.
+     * @return Batch effect without batch correction. Can be overridden.
      * -1.0 if batch pVal &lt; 0.0001 or (manualHasStrongBatchEffect &amp; manualBatchEffectActive)
      * +1.0 if batch pVal &gt; 0.1 or (!manualHasNoBatchEffect &amp; manualBatchEffectActive)
      * +0.0 otherwise
@@ -563,8 +565,8 @@ public class Geeq implements Identifiable, Serializable {
         this.otherIssues = otherIssues;
     }
 
-    public void addOtherIssues( String otherIssues ) {
-        this.otherIssues += otherIssues + "\n";
+    public void addOtherIssues( String issue ) {
+        this.otherIssues += issue + "\n";
     }
 
 }
