@@ -434,7 +434,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             /*
              * FIXME we don't deal with miRNA platforms correctly
              */
-            
+
             // human, rat, mouse, zebrafish and worm all have on the order 20k protein-coding genes.
             if ( taxon.getCommonName().equals( "human" ) || taxon.getCommonName().equals( "rat" ) || taxon.getCommonName().equals( "mouse" )
                     || taxon.getCommonName().equals( "zebrafish" ) || taxon.getCommonName().equals( "worm" ) ) {
@@ -473,7 +473,15 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         if ( cnt > 500 ) {
             score = GeeqServiceImpl.N_10;
         } else {
-            score = cnt < 6 ? GeeqServiceImpl.N_10 : cnt < 10 ? GeeqServiceImpl.N_03 : cnt < 20 ? GeeqServiceImpl.P_03 : GeeqServiceImpl.P_10;
+            if ( cnt < 6 ) {
+                score = GeeqServiceImpl.N_10;
+            } else if ( cnt < 10 ) {
+                score = GeeqServiceImpl.N_03;
+            } else if ( cnt < 20 ) {
+                score = GeeqServiceImpl.P_00;
+            } else {
+                score = GeeqServiceImpl.P_10;
+            }
         }
         gq.setsScoreSampleSize( score );
     }
@@ -587,14 +595,14 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             }
         } else { // no information, so we give no penalty or bonus
             score = GeeqServiceImpl.P_00;
-            gq.setReplicatesIssues( ( byte ) 1 );
+            gq.setReplicatesIssues( ( byte ) 1 ); // no factors
         }
 
         // extra details
-        if ( replicates == -1 ) { // no data
-            gq.setReplicatesIssues( ( byte ) 2 ); // redundant with no factors
-        } else if ( replicates == 1 ) { // redundant if GEEQ_WORST_REPLICATION_THRESHOLD == 2
-            gq.setReplicatesIssues( ( byte ) 3 );
+        if ( replicates == -1 ) {
+            gq.setReplicatesIssues( ( byte ) 2 ); // somewhat redundant with no factors
+        } else if ( replicates == -2 ) {
+            gq.setReplicatesIssues( ( byte ) 3 ); // ALL values have only one sample (no replication at all)
         } else if ( replicates == 0 ) { // shouldn't happen
             gq.setReplicatesIssues( ( byte ) 4 );
         }
@@ -685,7 +693,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      *
      * @param  ee an expression experiment to get the count for.
      * @return    the lowest number of replicates (ignoring factor value combinations with only one replicate),
-     *            or 1 if all factor value combinations were present only once, or -1, if there were no usable factors
+     *            or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable factors
      *            to begin with.
      */
     private int leastReplicates( ExpressionExperiment ee ) {
@@ -727,7 +735,14 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         List<Integer> counts = new ArrayList<>( factors.values() );
         Collections.sort( counts );
 
-        return ( counts.isEmpty() ? -1 : counts.get( 0 ) );
+        if ( counts.isEmpty() ) {
+            return -1;
+        } else if ( counts.get( counts.size() - 1 ) == 1 ) {
+            return -2; // all conditions have only one replicate
+        } else {
+            return counts.get( 0 );
+        }
+
     }
 
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {

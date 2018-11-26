@@ -230,18 +230,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                             "Platform(s) used (on average) by at least 100 experiments.";
 
         var sPlatfSizeDesc =
-            Number(ee.geeq.sScoreAvgPlatformSize) === -1 ? "Platform has (or all platforms have on average) less than 5k elements." :
-                Number(ee.geeq.sScoreAvgPlatformSize) === -0.5 ? "Platform has (or all platforms have on average) less than 10k elements." :
-                    Number(ee.geeq.sScoreAvgPlatformSize) === 0.0 ? "Platform has (or all platforms have on average) less than 15k elements." :
-                        Number(ee.geeq.sScoreAvgPlatformSize) === 0.5 ? "Platform has (or all platforms have on average) less than 18k elements." :
-                            "Platform has (or all paltforms have on average) at least 18k elements.";
+            Number(ee.geeq.sScoreAvgPlatformSize) === -1 ? "Platform has (or all platforms have on average) very low gene covrage." :
+                Number(ee.geeq.sScoreAvgPlatformSize) === -0.5 ? "Platform has (or all platforms have on average) low gene coverage." :
+                    Number(ee.geeq.sScoreAvgPlatformSize) === 0.0 ? "Platform has (or all platforms have on average) moderate gene coverage." :
+                        Number(ee.geeq.sScoreAvgPlatformSize) === 0.5 ? "Platform has (or all platforms have on average) good gene coverage." :
+                            "Platform has (or all paltforms have on average) excellent gene coverage.";
 
         var sSizeDesc =
-            Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 20 samples. Experiments this size are no longer accepted in Gemma." :
-                Number(ee.geeq.sScoreSampleSize) === -0.3 ? "The experiment has less than 50 samples." :
-                    Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 100 samples." :
-                        Number(ee.geeq.sScoreSampleSize) === 0.3 ? "The experiment has less than 200 samples." :
-                            "The experiment has at least 200 samples.";
+            Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 6 samples or more than 500 samples" :
+                Number(ee.geeq.sScoreSampleSize) === -0.3 ? "The experiment has less than 10 samples." :
+                    Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 20 samples." : "The experiment has at least 20 samples.";
 
         var sRawDesc =
             Number(ee.geeq.sScoreRawData) === -1 ? "Experiment has no raw data available (data are from external source). Try obtaining the raw data."
@@ -349,16 +347,17 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 "The experiment is NOT on a two-color platform.";
 
         var qReplErr =
-            Number(ee.geeq.replicatesIssues) === 1 ? "There is no experimental design for this experiment!" :
-                Number(ee.geeq.replicatesIssues) === 2 ? "There are no factor values!" :
-                    Number(ee.geeq.replicatesIssues) === 3 ? "All factor-value combinations have only 1 replicate." :
-                        Number(ee.geeq.replicatesIssues) === 4 ? "The lowest replicate amount was 0 - this should be technically impossible, please report immediately!" :
+            Number(ee.geeq.replicatesIssues) === 1 ? "There is no experimental design for this experiment" :
+                Number(ee.geeq.replicatesIssues) === 2 ? "There are no factor values" :
+                    Number(ee.geeq.replicatesIssues) === 3 ? "All factor-value combinations have no replicates." :
+                        Number(ee.geeq.replicatesIssues) === 4 ? "The lowest replicate amount was 0 - this should be impossible, please report" :
                             "";
 
+        // These thresholds are defined 
         var qReplDesc =
-            Number(ee.geeq.qScoreReplicates) === -1 ? "There is a factor-value combination that has less than 4 replicates." :
-                Number(ee.geeq.qScoreReplicates) === 0.0 ? "There is a factor-value combination that has less than 10 replicates. " :
-                    "All factor-value combinations have at least 10 replicates";
+            Number(ee.geeq.qScoreReplicates) === -1 ? "There is a factor-value combination that has very few or no replicates." :
+                Number(ee.geeq.qScoreReplicates) === 0.0 ? "There is a factor-value combination that has moderately few replicates. " :
+                    "All factor-value combinations have a good number of replicates";
 
         var qBatchInfoDesc =
             Number(ee.geeq.qScoreBatchInfo) === -1 ? "The experiment has no batch info. Try filling it in." : "" +
