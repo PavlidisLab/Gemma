@@ -393,6 +393,11 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
+    /**
+     * 
+     * @param expressionExperiment
+     * @return true if this experiment was run on a sequencing-based platform. 
+     */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );

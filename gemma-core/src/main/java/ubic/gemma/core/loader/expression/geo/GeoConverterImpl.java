@@ -236,9 +236,9 @@ public class GeoConverterImpl implements GeoConverter {
      * probeTaxa are looked at and the most common probe taxa is calculated as the primary taxon 4. No taxon found
      * throws an error
      *
-     * @param platformTaxa Collection of taxa that were given on the GEO array submission as platform taxa
-     * @param probeTaxa    Collection of taxa strings defining the taxon of each probe on the array.
-     * @return Primary taxon of array as determined by this method
+     * @param  platformTaxa Collection of taxa that were given on the GEO array submission as platform taxa
+     * @param  probeTaxa    Collection of taxa strings defining the taxon of each probe on the array.
+     * @return              Primary taxon of array as determined by this method
      */
     @Override
     public Taxon getPrimaryArrayTaxon( Collection<Taxon> platformTaxa, Collection<String> probeTaxa )
@@ -461,10 +461,10 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param bioMaterial        BA
-     * @param experimentalFactor exp factor
-     * @return true if the biomaterial already has a factorvalue for the given experimentalFactor;
-     * false otherwise.
+     * @param  bioMaterial        BA
+     * @param  experimentalFactor exp factor
+     * @return                    true if the biomaterial already has a factorvalue for the given experimentalFactor;
+     *                            false otherwise.
      */
     private boolean alreadyHasFactorValueForFactor( BioMaterial bioMaterial, ExperimentalFactor experimentalFactor ) {
         for ( FactorValue fv : bioMaterial.getFactorValues() ) {
@@ -490,9 +490,11 @@ public class GeoConverterImpl implements GeoConverter {
         for ( GeoDataset dataset : series.getDatasets() ) {
             // This doesn't cover every possibility...
             if ( dataset.getExperimentType().equals( ExperimentType.arrayCGH ) || dataset.getExperimentType()
-                    .equals( ExperimentType.ChIPChip ) || dataset.getExperimentType()
-                    .equals( ExperimentType.geneExpressionSAGEbased ) || dataset.getExperimentType()
-                    .equals( ExperimentType.Other ) ) {
+                    .equals( ExperimentType.ChIPChip )
+                    || dataset.getExperimentType()
+                            .equals( ExperimentType.geneExpressionSAGEbased )
+                    || dataset.getExperimentType()
+                            .equals( ExperimentType.Other ) ) {
                 GeoConverterImpl.log
                         .warn( "Gemma does not know how to handle experiment type=" + dataset.getExperimentType() );
 
@@ -520,7 +522,7 @@ public class GeoConverterImpl implements GeoConverter {
                     // have to drill down.
                     if ( sample.getLibStrategy().equals( "RNA-Seq" ) || sample.getLibStrategy().equals( "ncRNA-Seq" )
                             || sample.getLibStrategy().equals( "miRNA-Seq" ) || sample.getLibStrategy()
-                            .equals( "ssRNA-seq" ) ) {
+                                    .equals( "ssRNA-seq" ) ) {
                         continue;
                     }
                 }
@@ -679,8 +681,9 @@ public class GeoConverterImpl implements GeoConverter {
             String characteristic = this.trimString( channel.getSourceName() );
 
             /*
-            We once considered this like "organism part" but Biosource in GEO often (usually?) has information besides organism part
-            or else can be cell type. Best to leave it blank.
+             * We once considered this like "organism part" but Biosource in GEO often (usually?) has information
+             * besides organism part
+             * or else can be cell type. Best to leave it blank.
              */
             sourceChar.setCategory( "BioSource" );
             // sourceChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000635"  );
@@ -724,7 +727,7 @@ public class GeoConverterImpl implements GeoConverter {
             // This is typically something like "biotin-labeled nucleotides", which we can convert later.
             Characteristic labelChar = Characteristic.Factory.newInstance();
             labelChar.setDescription( "GEO Sample label" );
-            labelChar.setCategory( "labelling" );  /* used to be LabelCompound */
+            labelChar.setCategory( "labelling" ); /* used to be LabelCompound */
             labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" );
             labelChar.setValue( characteristic );
             labelChar.setOriginalValue( characteristic );
@@ -931,9 +934,9 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param datasetSamples List of GeoSamples to be matched up with BioAssays.
-     * @param expExp         ExpresssionExperiment
-     * @return BioAssayDimension representing the samples.
+     * @param  datasetSamples List of GeoSamples to be matched up with BioAssays.
+     * @param  expExp         ExpresssionExperiment
+     * @return                BioAssayDimension representing the samples.
      */
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
         BioAssayDimension resultBioAssayDimension = BioAssayDimension.Factory.newInstance();
@@ -961,8 +964,8 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Given an organisms name from GEO, create or find the taxon in the DB.
      *
-     * @param taxonScientificName name as provided by GEO presumed to be a scientific name
-     * @return Taxon details
+     * @param  taxonScientificName name as provided by GEO presumed to be a scientific name
+     * @return                     Taxon details
      */
     private Taxon convertOrganismToTaxon( String taxonScientificName ) {
         assert taxonScientificName != null;
@@ -1072,21 +1075,21 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param identifier          identifier
-     * @param platform            GEO platform
-     * @param arrayDesign         array design
-     * @param externalReferences  external references
-     * @param probeOrganismColumn probe organism column
-     * @param externalDb          external db
-     * @param descriptions        descriptions
-     * @param sequences           sequences
-     * @param probeOrganism       probe organism
-     * @param primaryTaxon        primary taxon
-     * @return true if we expect this platform to be fully usable or whether some or all elements
-     * may have been omitted
-     * in our parse (so how freaked out later in processing should we be if an element in
-     * the data doesn't
-     * match)
+     * @param  identifier          identifier
+     * @param  platform            GEO platform
+     * @param  arrayDesign         array design
+     * @param  externalReferences  external references
+     * @param  probeOrganismColumn probe organism column
+     * @param  externalDb          external db
+     * @param  descriptions        descriptions
+     * @param  sequences           sequences
+     * @param  probeOrganism       probe organism
+     * @param  primaryTaxon        primary taxon
+     * @return                     true if we expect this platform to be fully usable or whether some or all elements
+     *                             may have been omitted
+     *                             in our parse (so how freaked out later in processing should we be if an element in
+     *                             the data doesn't
+     *                             match)
      */
     private boolean convertPlatformElements( String identifier, GeoPlatform platform, ArrayDesign arrayDesign,
             Collection<String> externalReferences, String probeOrganismColumn, ExternalDatabase externalDb,
@@ -1117,8 +1120,9 @@ public class GeoConverterImpl implements GeoConverter {
             externalRefs = platform.getColumnData( externalReferences );
         }
 
-        assert externalRefs == null || externalRefs.iterator().next().size() == identifiers.size() :
-                "Unequal numbers of identifiers and external references! " + externalRefs.iterator().next().size()
+        assert externalRefs == null
+                || externalRefs.iterator().next().size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
+                        + externalRefs.iterator().next().size()
                         + " != " + identifiers.size();
 
         if ( GeoConverterImpl.log.isDebugEnabled() ) {
@@ -1319,10 +1323,8 @@ public class GeoConverterImpl implements GeoConverter {
             bs.setType( SequenceType.DNA );
             bs.setName( id );
             bs.setDescription(
-                    "Sequence from platform " + platform.getGeoAccession() + " provided by manufacturer. " + (
-                            externalAccession != null ?
-                                    "Used in leiu of " + externalAccession :
-                                    "No external accession provided" ) );
+                    "Sequence from platform " + platform.getGeoAccession() + " provided by manufacturer. "
+                            + ( externalAccession != null ? "Used in leiu of " + externalAccession : "No external accession provided" ) );
         } else if ( externalAccession != null && !isRefseq && externalDb != null ) {
 
             /*
@@ -1340,9 +1342,9 @@ public class GeoConverterImpl implements GeoConverter {
      * recorded against an array only first taxon details are returned. Warning is given when no column is found to give
      * the taxa for the probes
      *
-     * @param platform             GEO platform details
-     * @param probeTaxonColumnName Column name of probe taxa
-     * @return List of taxa on platform
+     * @param  platform             GEO platform details
+     * @param  probeTaxonColumnName Column name of probe taxa
+     * @return                      List of taxa on platform
      */
     private Collection<Taxon> convertPlatformOrganisms( GeoPlatform platform, String probeTaxonColumnName ) {
         Collection<String> organisms = platform.getOrganisms();
@@ -1379,9 +1381,9 @@ public class GeoConverterImpl implements GeoConverter {
      * the map as they were set there by the convertPlatform method. If the common name is not found in the database
      * then stop processing as the organism name is likely to be an unknown taxon.
      *
-     * @param probeOrganism scientific name or common name of organism associated to a
-     *                      biosequence.
-     * @return Taxon of biosequence.
+     * @param  probeOrganism            scientific name or common name of organism associated to a
+     *                                  biosequence.
+     * @return                          Taxon of biosequence.
      * @throws IllegalArgumentException taxon supplied has not been processed before, it does not match the scientific
      *                                  names used in platform definition and does not match a known common name in the
      *                                  database.
@@ -1478,8 +1480,8 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param replication Convert a variable into a ExperimentalFactor
-     * @return exp factor
+     * @param  replication Convert a variable into a ExperimentalFactor
+     * @return             exp factor
      */
     private ExperimentalFactor convertReplicationToFactor( GeoReplication replication ) {
         GeoConverterImpl.log.debug( "Converting replication " + replication.getType() );
@@ -1510,10 +1512,10 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * A Sample corresponds to a BioAssay; the channels correspond to BioMaterials.
      *
-     * @param sample             sample
-     * @param bioMaterial        BA
-     * @param experimentalDesign experimental design
-     * @return BA
+     * @param  sample             sample
+     * @param  bioMaterial        BA
+     * @param  experimentalDesign experimental design
+     * @return                    BA
      */
     private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign experimentalDesign ) {
         if ( sample == null ) {
@@ -1603,8 +1605,8 @@ public class GeoConverterImpl implements GeoConverter {
      * the same biomaterial. The biomaterials are given names after the GSE and the bioAssays (GSMs) such as
      * GSE2939_biomaterial_1|GSM12393|GSN12394.
      *
-     * @param series series
-     * @return ees
+     * @param  series series
+     * @return        ees
      */
     private Collection<ExpressionExperiment> convertSeries( GeoSeries series ) {
 
@@ -1674,8 +1676,8 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Main method that converts a single (mono-species) GEO series to an ExpressionExperiment.
      *
-     * @param series
-     * @return ExpressionExperiment, or null if the series cannot be converted (wrong sample type, etc.)
+     * @param  series
+     * @return        ExpressionExperiment, or null if the series cannot be converted (wrong sample type, etc.)
      */
     private ExpressionExperiment convertSeriesSingle( GeoSeries series ) {
         if ( series == null )
@@ -1979,9 +1981,9 @@ public class GeoConverterImpl implements GeoConverter {
      * Creates a new factorValue, or identifies an existing one, matching the subset. If it is a new one it adds it to
      * the given experimentalFactor.
      *
-     * @param experimentalFactor ef
-     * @param geoSubSet          geo subset
-     * @return FV
+     * @param  experimentalFactor ef
+     * @param  geoSubSet          geo subset
+     * @return                    FV
      */
     private FactorValue convertSubsetDescriptionToFactorValue( GeoSubset geoSubSet,
             ExperimentalFactor experimentalFactor ) {
@@ -2028,8 +2030,8 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param variable Convert a variable into a ExperimentalFactor
-     * @return ef
+     * @param  variable Convert a variable into a ExperimentalFactor
+     * @return          ef
      */
     private ExperimentalFactor convertVariableToFactor( GeoVariable variable ) {
         GeoConverterImpl.log.debug( "Converting variable " + variable.getType() );
@@ -2046,8 +2048,8 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param variable variable
-     * @return Category will be filled in with a URI but value will just be plain text.
+     * @param  variable variable
+     * @return          Category will be filled in with a URI but value will just be plain text.
      */
     private FactorValue convertVariableToFactorValue( GeoVariable variable ) {
         GeoConverterImpl.log.info( "Converting variable " + variable );
@@ -2064,8 +2066,8 @@ public class GeoConverterImpl implements GeoConverter {
      * Convert a variable, category URI and category filled in. Will not be filled in (null) the case of "Other" or
      * "Organism"
      *
-     * @param c       to be modified
-     * @param varType var type
+     * @param  c                     to be modified
+     * @param  varType               var type
      * @throws IllegalStateException if it's a variable type we don't know how to handle.
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
@@ -2308,16 +2310,17 @@ public class GeoConverterImpl implements GeoConverter {
             arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         } else if ( technology == null ) {
             GeoConverterImpl.log
-                    .warn( "No technology type available for " + platform + ", provisionally setting to 'dual mode'" );
-            arrayDesign.setTechnologyType( TechnologyType.DUALMODE );
+                    .warn( "No technology type available for " + platform + ", provisionally setting to 'other'" );
+            arrayDesign.setTechnologyType( TechnologyType.OTHER );
         } else if ( technology.equals( PlatformType.MPSS ) ) {
-            // we don't support this directly
-            arrayDesign.setTechnologyType( TechnologyType.NONE );
+             arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
         } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
-                .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) || technology
+                .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
+            arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
+        } else if ( technology
                 .equals( PlatformType.other ) ) {
-            // we don't support this directly
-            arrayDesign.setTechnologyType( TechnologyType.NONE );
+            // We don't know....
+            arrayDesign.setTechnologyType( TechnologyType.OTHER );
         } else {
             throw new IllegalArgumentException( "Don't know how to interpret technology type " + technology );
         }
@@ -2428,8 +2431,8 @@ public class GeoConverterImpl implements GeoConverter {
      * Allow multiple taxa for a platform. Method retrieves from parsed GEO file the header column name which contains
      * the species/organism used to create probe.
      *
-     * @param platform Parsed GEO platform details.
-     * @return Column name in GEO used to identify column containing species/organism used to create probe
+     * @param  platform Parsed GEO platform details.
+     * @return          Column name in GEO used to identify column containing species/organism used to create probe
      */
     private String determinePlatformProbeOrganismColumn( GeoPlatform platform ) {
         Collection<String> columnNames = platform.getColumnNames();
@@ -2479,8 +2482,7 @@ public class GeoConverterImpl implements GeoConverter {
         Characteristic c = characteristics.iterator().next();
 
         FactorValue matchingFactorValue = null;
-        factors:
-        for ( ExperimentalFactor factor : experimentalFactors ) {
+        factors: for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
                     if ( m.getCategory().equals( c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
@@ -2562,8 +2564,8 @@ public class GeoConverterImpl implements GeoConverter {
             for ( GeoSample sample : series.getSamples() ) {
 
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
-                assert sample.getPlatforms().size() == 1 :
-                        sample + " has multiple platforms: " + StringUtils.join( sample.getPlatforms().toArray(), "," );
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
+                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
 
                 if ( !organisms.containsKey( organism ) ) {
@@ -2605,8 +2607,8 @@ public class GeoConverterImpl implements GeoConverter {
         if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
-                assert sample.getPlatforms().size() == 1 :
-                        sample + " has multiple platforms: " + StringUtils.join( sample.getPlatforms().toArray(), "," );
+                assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
+                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 GeoPlatform platform = sample.getPlatforms().iterator().next();
 
                 if ( platforms.get( platform ) == null ) {
@@ -2743,8 +2745,8 @@ public class GeoConverterImpl implements GeoConverter {
      * Note that series can have more than one type, if it has mixed samples; if at least on type matches one we can
      * use, we keep it.
      *
-     * @param series series
-     * @return is usable
+     * @param  series series
+     * @return        is usable
      */
     private boolean isUsable( GeoSeries series ) {
 
@@ -2756,10 +2758,10 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      *
-     * @param datasetSamples        The samples we want to get data for. These should all have been run on the same
-     *                              platform.
-     * @param quantitationTypeIndex - first index is 0
-     * @return A map of Strings (design element names) to Lists of Strings containing the data.
+     * @param  datasetSamples           The samples we want to get data for. These should all have been run on the same
+     *                                  platform.
+     * @param  quantitationTypeIndex    - first index is 0
+     * @return                          A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
     private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,

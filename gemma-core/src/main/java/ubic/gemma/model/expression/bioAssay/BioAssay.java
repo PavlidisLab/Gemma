@@ -43,7 +43,12 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     private Integer sequenceReadLength;
 
     private ArrayDesign arrayDesignUsed;
+    
+    /**
+     * If the sample data was switched to another platform, this is what it was originally.
+     */
     private ArrayDesign originalPlatform;
+    
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
     private String metadata;

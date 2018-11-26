@@ -123,7 +123,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         String nameExt = useNCBIIds ? ", indexed by NCBI IDs" : useEnsemblIds ? ", indexed by Ensembl IDs" : "";
         arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + nameExt );
         arrayDesign.setDescription( "Created by Gemma" );
-        arrayDesign.setTechnologyType( TechnologyType.NONE ); // this is key
+        arrayDesign.setTechnologyType( TechnologyType.GENELIST ); // this is key
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
             AbstractCLI.log.info( "Platform for " + taxon + " already exists, will update" );
@@ -138,7 +138,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         // temporary: making sure we set it, as it is new.
-        arrayDesign.setTechnologyType( TechnologyType.NONE );
+        arrayDesign.setTechnologyType( TechnologyType.GENELIST );
 
         /*
          * Load up the genes for the organism.

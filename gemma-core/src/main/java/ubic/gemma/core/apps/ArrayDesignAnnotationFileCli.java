@@ -306,8 +306,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
             ad = arrayDesignService.thawLite( ad );
 
-            if ( ad.getTechnologyType().equals( TechnologyType.NONE ) && !ad.getShortName().startsWith( "Generic" ) ) {
-                // We don't make files for platforms that don't have sequences. FIXME: method to detect generic platforms is less than optimal.
+            if ( ad.getTechnologyType().equals( TechnologyType.SEQUENCING )
+                    || ( ad.getTechnologyType().equals( TechnologyType.GENELIST ) ) ) {
+                // We don't make files for platforms that don't have sequences. 
                 continue;
             }
 

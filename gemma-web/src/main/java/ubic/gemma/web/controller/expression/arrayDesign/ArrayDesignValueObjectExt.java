@@ -178,8 +178,12 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
             colorString = "two-color";
         } else if ( this.getTechnologyType().equals( TechnologyType.DUALMODE.getValue() ) ) {
             colorString = "dual mode";
-        } else if ( this.getTechnologyType().equals( TechnologyType.NONE.getValue() ) ) {
-            colorString = "non-array-based";
+        } else if ( this.getTechnologyType().equals( TechnologyType.SEQUENCING.getValue() ) ) {
+            colorString = "sequencing-based";
+        } else if ( this.getTechnologyType().equals( TechnologyType.GENELIST.getValue() ) ) {
+            colorString = "gene list";
+        } else if ( this.getTechnologyType().equals( TechnologyType.OTHER.getValue() ) ) {
+            colorString = "other";
         }
     }
 
