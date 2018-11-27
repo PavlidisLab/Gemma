@@ -1454,6 +1454,7 @@ public class ExpressionExperimentDaoImpl
                 + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl " + "left join "
                 + ee + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
+        // TODO: include original platform
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }

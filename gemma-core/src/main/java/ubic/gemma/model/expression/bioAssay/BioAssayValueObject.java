@@ -32,10 +32,19 @@ import java.util.HashSet;
 public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
 
     private static final long serialVersionUID = 9164284536309673585L;
+    public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
+        Collection<BioAssayValueObject> result = new HashSet<>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            result.add( new BioAssayValueObject( bioAssay, false ) );
+        }
+        return result;
+    }
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";
+    private String metadata;
     private String name = "";
+    private ArrayDesignValueObject originalPlatform;
     // if it was removed as an outlier
     private Boolean outlier = false;
     // if our algorithm says it might be an outlier.
@@ -45,18 +54,14 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     private Boolean sequencePairedReads;
     private Integer sequenceReadCount;
     private Integer sequenceReadLength;
+
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
-    private String metadata;
 
     /**
      * Required when using the class as a spring bean.
      */
     public BioAssayValueObject() {
-    }
-
-    public BioAssayValueObject( Long id ) {
-        super( id );
     }
 
     public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
@@ -69,6 +74,13 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         this.arrayDesign = new ArrayDesignValueObject( ad.getId() );
         arrayDesign.setShortName( ad.getShortName() );
         arrayDesign.setName( ad.getName() );
+
+        ArrayDesign op = bioAssay.getOriginalPlatform();
+        if ( op != null ) {
+            this.originalPlatform = new ArrayDesignValueObject( op.getId() );
+            this.originalPlatform.setShortName( op.getShortName() );
+            this.originalPlatform.setName( op.getName() );
+        }
 
         this.processingDate = bioAssay.getProcessingDate();
         this.sequencePairedReads = bioAssay.getSequencePairedReads();
@@ -97,12 +109,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         this.predictedOutlier = predictedOutlier;
     }
 
-    public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
-        for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay, false ) );
-        }
-        return result;
+    public BioAssayValueObject( Long id ) {
+        super( id );
     }
 
     @Override
@@ -122,102 +130,60 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
         if ( name == null ) {
             return other.name == null;
-        } else
-            return name.equals( other.name );
-    }
-
-    @Override
-    public String toString() {
-        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
-                + ( description != null ? "description=" + description : "" ) + "]";
+        }
+        return name.equals( other.name );
     }
 
     public DatabaseEntryValueObject getAccession() {
         return accession;
     }
 
-    public void setAccession( DatabaseEntryValueObject accession ) {
-        this.accession = accession;
-    }
-
     public ArrayDesignValueObject getArrayDesign() {
         return arrayDesign;
-    }
-
-    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
-        this.arrayDesign = arrayDesign;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription( String description ) {
-        this.description = description;
+    public String getMetadata() {
+        return metadata;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName( String name ) {
-        this.name = name;
+    public ArrayDesignValueObject getOriginalPlatform() {
+        return originalPlatform;
     }
 
     public Boolean getPredictedOutlier() {
         return predictedOutlier;
     }
 
-    public void setPredictedOutlier( Boolean predictedOutlier ) {
-        this.predictedOutlier = predictedOutlier;
-    }
-
     public Date getProcessingDate() {
         return processingDate;
-    }
-
-    public void setProcessingDate( Date processingDate ) {
-        this.processingDate = processingDate;
     }
 
     public BioMaterialValueObject getSample() {
         return sample;
     }
 
-    public void setSample( BioMaterialValueObject sample ) {
-        this.sample = sample;
-    }
-
     public Boolean getSequencePairedReads() {
         return sequencePairedReads;
-    }
-
-    public void setSequencePairedReads( Boolean sequencePairedReads ) {
-        this.sequencePairedReads = sequencePairedReads;
     }
 
     public Integer getSequenceReadCount() {
         return sequenceReadCount;
     }
 
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
-        this.sequenceReadCount = sequenceReadCount;
-    }
-
     public Integer getSequenceReadLength() {
         return sequenceReadLength;
     }
 
-    public void setSequenceReadLength( Integer sequenceReadLength ) {
-        this.sequenceReadLength = sequenceReadLength;
-    }
-
     public Boolean getUserFlaggedOutlier() {
         return userFlaggedOutlier;
-    }
-
-    public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
-        this.userFlaggedOutlier = userFlaggedOutlier;
     }
 
     @Override
@@ -235,15 +201,65 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         return outlier;
     }
 
-    public void setOutlier( boolean outlier ) {
-        this.outlier = outlier;
+    public void setAccession( DatabaseEntryValueObject accession ) {
+        this.accession = accession;
     }
 
-    public String getMetadata() {
-        return metadata;
+    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
+        this.arrayDesign = arrayDesign;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
     }
 
     public void setMetadata( String metadata ) {
         this.metadata = metadata;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public void setOriginalPlatform( ArrayDesignValueObject originalPlatform ) {
+        this.originalPlatform = originalPlatform;
+    }
+
+    public void setOutlier( boolean outlier ) {
+        this.outlier = outlier;
+    }
+
+    public void setPredictedOutlier( Boolean predictedOutlier ) {
+        this.predictedOutlier = predictedOutlier;
+    }
+
+    public void setProcessingDate( Date processingDate ) {
+        this.processingDate = processingDate;
+    }
+
+    public void setSample( BioMaterialValueObject sample ) {
+        this.sample = sample;
+    }
+
+    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+        this.sequencePairedReads = sequencePairedReads;
+    }
+
+    public void setSequenceReadCount( Integer sequenceReadCount ) {
+        this.sequenceReadCount = sequenceReadCount;
+    }
+
+    public void setSequenceReadLength( Integer sequenceReadLength ) {
+        this.sequenceReadLength = sequenceReadLength;
+    }
+
+    public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
+        this.userFlaggedOutlier = userFlaggedOutlier;
+    }
+
+    @Override
+    public String toString() {
+        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
+                + ( description != null ? "description=" + description : "" ) + "]";
     }
 }
