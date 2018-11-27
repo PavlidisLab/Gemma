@@ -489,7 +489,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         oldAd = arrayDesignService.thaw( oldAd );
 
-        if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
+        if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
             /*
              * Bug 3451 - this is okay if it is a RNA-seq experiment etc. prior to data upload.
              */
