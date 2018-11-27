@@ -588,7 +588,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         OntologyTerm t = null;
         String lookup = category.replaceAll( "_", " " ).toLowerCase();
         for ( OntologyTerm to : terms ) {
-            if ( to.getTerm().equals( category ) || to.getTerm()
+            if ( to.getTerm().equals( category ) || to.getTerm().toLowerCase()
                     .equals( lookup ) ) {
                 t = to;
                 break;
