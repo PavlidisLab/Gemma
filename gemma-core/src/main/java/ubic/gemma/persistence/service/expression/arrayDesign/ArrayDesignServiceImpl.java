@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +38,7 @@ import java.util.Set;
 
 /**
  * @author klc
- * @see ArrayDesignService
+ * @see    ArrayDesignService
  */
 @Service
 public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign, ArrayDesignValueObject>
@@ -45,6 +46,8 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
 
     private final ArrayDesignDao arrayDesignDao;
     private final AuditEventDao auditEventDao;
+    @Autowired
+    private BlacklistedEntityDao blacklistedEntityDao;
 
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
@@ -366,7 +369,7 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
         AuditEvent lastSubsumerEvent = this.auditEventDao.getLastEvent( subsumedInto, eventclass );
         if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
                 && lastEventMap.get( arrayDesignId ) != null && lastEventMap.get( arrayDesignId ).getDate()
-                .before( lastSubsumerEvent.getDate() ) ) {
+                        .before( lastSubsumerEvent.getDate() ) ) {
             lastEventMap.put( arrayDesignId, lastSubsumerEvent );
         }
     }
@@ -401,5 +404,16 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
             }
 
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
+     */
+    @Override
+    public boolean isBlackListed( String geoAccession ) {
+        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+
     }
 }

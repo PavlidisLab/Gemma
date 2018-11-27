@@ -119,6 +119,8 @@ public class ExpressionExperimentServiceImpl
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    @Autowired
+    private BlacklistedEntityDao blacklistedEntityDao;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -1037,6 +1039,17 @@ public class ExpressionExperimentServiceImpl
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isBlackListed(java.lang.String)
+     */
+    @Override
+    public boolean isBlackListed( String geoAccession ) {
+        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
     }
 
 }

@@ -514,4 +514,6 @@ public interface ExpressionExperimentService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+    
+    boolean isBlackListed(String geoAccession);
 }
