@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 /**
- * TODO Document Me
  * 
  * @author paul
  */
@@ -42,6 +41,21 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
     @Autowired
     public BlacklistedEntityDaoImpl( SessionFactory sessionFactory ) {
         super( BlacklistedEntity.class, sessionFactory );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao#findByAccession(java.lang.String)
+     */
+    @Override
+    public BlacklistedEntity findByAccession( String accession ) {
+        List<?> resultList = this.getSessionFactory().getCurrentSession().createQuery(
+                "select b from BlacklistedEntity b join b.externalAccession e where e.accession = :accession" )
+                .setParameter( "accession", accession ).list();
+        if ( resultList.isEmpty() ) return null;
+        if ( resultList.size() > 1 ) throw new IllegalStateException( "More than one blacklist entry matches " + accession );
+        return ( BlacklistedEntity ) resultList.get( 0 );
     }
 
     /*

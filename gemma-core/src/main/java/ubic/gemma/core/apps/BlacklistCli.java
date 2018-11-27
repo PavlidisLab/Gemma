@@ -25,7 +25,8 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.core.util.AbstractSpringAwareCLI;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.BlacklistedEntity;
@@ -39,7 +40,33 @@ import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao
  * 
  * @author paul
  */
-public class BlacklistCli extends AbstractSpringAwareCLI {
+public class BlacklistCli extends AbstractCLIContextCLI {
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        BlacklistCli e = new BlacklistCli();
+        Exception ex = e.doWork( args );
+        if ( ex != null ) {
+            log.fatal( ex, ex );
+        }
+
+    }
+
+    String fileName = null;
+
+    private boolean remove = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
+     */
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.METADATA;
+    }
 
     /*
      * (non-Javadoc)
@@ -51,6 +78,11 @@ public class BlacklistCli extends AbstractSpringAwareCLI {
         return "blackList";
     }
 
+    @Override
+    public String getShortDesc() {
+        return "Add entities to the blacklist";
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -60,27 +92,11 @@ public class BlacklistCli extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
         super.addOption( "file", "file", true,
-                "Tab-delimitd file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
+                "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
                         + "additional columns: name, description of entity" );
+        super.addOption( "undo", "undo", false, "Remove items from blacklist instead of adding" );
 
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Add entities to the blacklist";
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( "file" ) ) {
-            this.fileName = this.getOptionValue( "file" );
-        } else {
-            throw new IllegalArgumentException( "Must provide an input file" );
-        }
-    }
-
-    String fileName = null;
 
     /*
      * (non-Javadoc)
@@ -119,12 +135,16 @@ public class BlacklistCli extends AbstractSpringAwareCLI {
 
                 String accession = split[0];
 
-                if ( blacklistedEntityDao.isBlacklisted( accession ) ) {
+                boolean alreadyBlacklisted = blacklistedEntityDao.isBlacklisted( accession );
+                if ( remove ) {
+                    blacklistedEntityDao.remove( blacklistedEntityDao.findByAccession( accession ) );
+                    log.info( "De-blacklisted " + accession );
+                    continue;
+                } else if ( alreadyBlacklisted ) {
                     log.warn( accession + " is already blacklisted, skipping" );
                     continue;
                 }
 
-                String reason = split[1];
                 if ( accession.startsWith( "GPL" ) ) {
                     blee = new BlacklistedPlatform();
                 } else if ( accession.startsWith( "GSE" ) ) {
@@ -132,8 +152,13 @@ public class BlacklistCli extends AbstractSpringAwareCLI {
                 } else {
                     throw new IllegalArgumentException(
                             "Unrecognized ID class: " + accession + "; was expecting something starting with GPL or GSE" );
-
                 }
+
+                String reason = split[1];
+                if ( StringUtils.isBlank( reason ) ) {
+                    throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
+                }
+
                 blee.setShortName( accession );
                 blee.setReason( reason );
 
@@ -159,16 +184,18 @@ public class BlacklistCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        BlacklistCli e = new BlacklistCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            log.fatal( ex, ex );
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( "file" ) ) {
+            this.fileName = this.getOptionValue( "file" );
+        } else {
+            throw new IllegalArgumentException( "Must provide an input file" );
         }
 
+        if ( this.hasOption( "undo" ) ) {
+            this.remove = true;
+        }
     }
 
 }

@@ -31,4 +31,10 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
 
     public boolean isBlacklisted( String accession );
 
+    /**
+     * @param accession
+     * @return 
+     */
+    public BlacklistedEntity findByAccession( String accession );
+
 }
