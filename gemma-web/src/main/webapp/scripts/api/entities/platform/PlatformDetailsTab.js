@@ -44,6 +44,13 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
     renderMerged: function (pd) {
         var text = '';
 
+        if ( pd.isAffymetrixAltCdf ) {
+           text = text + "This platform is an alternative to a 'standard' Affymetrix probe layout." +
+           		" Data sets using it will be switched to the " +
+           		"canonical one when raw data are available.";
+           text = text + "<br />";
+        }
+        
         if (pd.merger != null) {
             text = text + "Merged into: " + Gemma.arrayDesignLink(pd.merger);
             text = text + "<br />";

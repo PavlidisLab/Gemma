@@ -1046,8 +1046,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
-    private Query getCountVosQueryString(List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc){
+    private Query getCountVosQueryString( List<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
         // Restrict to non-troubled EEs for non-administrators
         filters = getObjectFilters( filters );
 
@@ -1133,6 +1133,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             } else {
                 vo.setExpressionExperimentCount( eeCounts.get( id ) );
             }
+
+            // This is compeltely hacky. We could at least reach through to the designProvider (which is also "Affymetrix"), 
+            // and directly model the concept of alternative.
+            vo.setIsAffymetrixAltCdf( vo.getName().toLowerCase().contains( "cdf" ) && vo.getName().toLowerCase().contains( "affymetrix" ) );
 
             vos.add( vo );
         }

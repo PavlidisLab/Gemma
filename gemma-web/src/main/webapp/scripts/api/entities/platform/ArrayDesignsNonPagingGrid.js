@@ -54,6 +54,8 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubled"
       }, {
+         name : "isAffymetrixAltCdf"
+      }, {
          name : "troubleDetails"
       }, {
          name : "needsAttention"
@@ -349,13 +351,18 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"'
                                           + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
                                     }
+                                    if (record.get('isAffymetrixAltCdf')) {
+                                        statusString += '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                                            + "This platform is an alternative to a 'standard' Affymetrix probe layout. " +
+                                            "Data sets using it will be switched to the canonical one when raw data are available." + '"></i>';
+                                    }
 
                                     return statusString;
                                  }
                               },
                               {
-                                 header : "Quality/Suitability",
-                                 tooltip : "Shows quality and suitability score, or the fact that the experiment is not fully curated yet.",
+                                 header : "Curation status",
+                                 tooltip : "",
                                  dataIndex : 'needsAttention',
                                  sortable : true,
                                  width : 0.05,
