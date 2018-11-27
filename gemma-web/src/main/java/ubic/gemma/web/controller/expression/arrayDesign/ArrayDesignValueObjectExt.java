@@ -39,6 +39,7 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
     private Set<String> additionalTaxa;
     private String allParentsAnnotationLink;
     private Collection<String> alternateNames;
+    private ArrayDesignValueObject alternative; // e.g. for Affymetrix CDF versions
     private String bioProcessAnnotationLink;
     private String colorString;
     private Collection<DatabaseEntryValueObject> externalReferences;
@@ -60,84 +61,44 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
         return allParentsAnnotationLink;
     }
 
-    public void setAllParentsAnnotationLink( String allParentsAnnotationLink ) {
-        this.allParentsAnnotationLink = allParentsAnnotationLink;
-    }
-
     public Collection<String> getAlternateNames() {
         return alternateNames;
     }
 
-    public void setAlternateNames( Collection<String> alternateNames ) {
-        this.alternateNames = alternateNames;
+    public ArrayDesignValueObject getAlternative() {
+        return alternative;
     }
 
     public String getBioProcessAnnotationLink() {
         return bioProcessAnnotationLink;
     }
 
-    public void setBioProcessAnnotationLink( String bioProcessAnnotationLink ) {
-        this.bioProcessAnnotationLink = bioProcessAnnotationLink;
-    }
-
     public String getColorString() {
         return colorString;
-    }
-
-    public void setColorString( String colorString ) {
-        this.colorString = colorString;
     }
 
     public Collection<DatabaseEntryValueObject> getExternalReferences() {
         return externalReferences;
     }
 
-    public void setExternalReferences( Collection<DatabaseEntryValueObject> externalReferences ) {
-        this.externalReferences = externalReferences;
-    }
-
     public Collection<ArrayDesignValueObject> getMergees() {
         return mergees;
-    }
-
-    public void setMergees( Collection<ArrayDesignValueObject> mergees ) {
-        this.mergees = mergees;
-        this.setIsMerged( !mergees.isEmpty() );
     }
 
     public ArrayDesignValueObject getMerger() {
         return merger;
     }
 
-    public void setMerger( ArrayDesignValueObject arrayDesignValueObject ) {
-        this.merger = arrayDesignValueObject;
-        this.setIsMergee( arrayDesignValueObject != null );
-    }
-
     public String getNoParentsAnnotationLink() {
         return noParentsAnnotationLink;
-    }
-
-    public void setNoParentsAnnotationLink( String noParentsAnnotationLink ) {
-        this.noParentsAnnotationLink = noParentsAnnotationLink;
     }
 
     public Collection<ArrayDesignValueObject> getSubsumees() {
         return subsumees;
     }
 
-    public void setSubsumees( Collection<ArrayDesignValueObject> subsumees ) {
-        this.subsumees = subsumees;
-        this.setIsSubsumer( !subsumees.isEmpty() );
-    }
-
     public ArrayDesignValueObject getSubsumer() {
         return subsumer;
-    }
-
-    public void setSubsumer( ArrayDesignValueObject arrayDesignValueObject ) {
-        this.subsumer = arrayDesignValueObject;
-        this.setIsSubsumed( arrayDesignValueObject != null );
     }
 
     /**
@@ -147,12 +108,60 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
      */
     public void setAdditionalTaxa( Collection<Taxon> t ) {
 
-        this.additionalTaxa = new TreeSet<String>();
+        this.additionalTaxa = new TreeSet<>();
 
         for ( Taxon taxon : t ) {
             this.additionalTaxa.add( taxon.getScientificName() );
         }
 
+    }
+
+    public void setAllParentsAnnotationLink( String allParentsAnnotationLink ) {
+        this.allParentsAnnotationLink = allParentsAnnotationLink;
+    }
+
+    public void setAlternateNames( Collection<String> alternateNames ) {
+        this.alternateNames = alternateNames;
+    }
+
+    public void setAlternative( ArrayDesignValueObject alternative ) {
+        this.alternative = alternative;
+    }
+
+    public void setBioProcessAnnotationLink( String bioProcessAnnotationLink ) {
+        this.bioProcessAnnotationLink = bioProcessAnnotationLink;
+    }
+
+    public void setColorString( String colorString ) {
+        this.colorString = colorString;
+    }
+
+    public void setExternalReferences( Collection<DatabaseEntryValueObject> externalReferences ) {
+        this.externalReferences = externalReferences;
+    }
+
+    public void setMergees( Collection<ArrayDesignValueObject> mergees ) {
+        this.mergees = mergees;
+        this.setIsMerged( !mergees.isEmpty() );
+    }
+
+    public void setMerger( ArrayDesignValueObject arrayDesignValueObject ) {
+        this.merger = arrayDesignValueObject;
+        this.setIsMergee( arrayDesignValueObject != null );
+    }
+
+    public void setNoParentsAnnotationLink( String noParentsAnnotationLink ) {
+        this.noParentsAnnotationLink = noParentsAnnotationLink;
+    }
+
+    public void setSubsumees( Collection<ArrayDesignValueObject> subsumees ) {
+        this.subsumees = subsumees;
+        this.setIsSubsumer( !subsumees.isEmpty() );
+    }
+
+    public void setSubsumer( ArrayDesignValueObject arrayDesignValueObject ) {
+        this.subsumer = arrayDesignValueObject;
+        this.setIsSubsumed( arrayDesignValueObject != null );
     }
 
     private void addAnnotationFileLinks() {

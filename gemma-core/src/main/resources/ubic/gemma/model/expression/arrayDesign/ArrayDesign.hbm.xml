@@ -55,6 +55,9 @@
       <many-to-one name="subsumingArrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="SUBSUMING_ARRAY_DESIGN_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
+       <many-to-one name="alternativeTo" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
+         <column name="ALTERNATIVE_TO_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
       <set name="subsumedArrayDesigns" lazy="true" fetch="select" inverse="true">
          <cache usage="read-write" />
          <key foreign-key="ARRAY_DESIGN_SUBSUMING_ARRAY_DESIGN_FKC">

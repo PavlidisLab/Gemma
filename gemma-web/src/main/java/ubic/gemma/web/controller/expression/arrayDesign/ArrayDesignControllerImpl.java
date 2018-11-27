@@ -240,7 +240,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -248,7 +248,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "No search criteria provided" );
 
         }
@@ -259,8 +259,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                    .addObject( "message",
-                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+                            .addObject( "message",
+                                    "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
@@ -271,7 +271,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list , true) )
+        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list, true ) )
                 .addObject( "message", searchResults.size() + " Platforms matched your search." );
 
     }
@@ -287,7 +287,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "taskId", taskId );
         }
 
@@ -295,7 +295,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
@@ -372,6 +372,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setSummaryInfo( result, id );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
+
+        result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
 
         log.info( "Finished loading details of " + arrayDesign );
         return result;
@@ -603,7 +605,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Platform with id=" + id + " not found" );
         }
         // seems inefficient? but need security filtering.
@@ -611,7 +613,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
         return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids , true) );
+                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids, true ) );
     }
 
     @Override

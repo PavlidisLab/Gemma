@@ -164,6 +164,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
         this.description = ( String ) row[4];
         this.isMergee = row[5] != null;
+        this.isAffymetrixAltCdf = row[14] != null;
 
         this.taxon = ( String ) row[10];
     }

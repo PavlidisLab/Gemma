@@ -201,7 +201,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
-                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adId" )
+                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.alternativeTo where a.id=:adId" )
                 .setParameter( "adId", arrayDesign.getId() ).list();
 
         if ( res.size() == 0 ) {
@@ -222,7 +222,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                        + " left join fetch a.mergedInto where a.id in (:adIds)" )
+                        + " left join fetch a.mergedInto left join fetch a.alternativeTo where a.id in (:adIds)" )
                 .setParameterList( "adIds", EntityUtils.getIds( arrayDesigns ) ).list();
     }
 
@@ -1078,11 +1078,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "t.commonName, " //10
                 + "eNote, " //11
                 + "eAttn, " //12
-                + "eTrbl " //13
+                + "eTrbl, " //13
+                + "alt " //14
                 + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS
                 + ".curationDetails s join " + ObjectFilter.DAO_AD_ALIAS + ".primaryTaxon t left join "
                 + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl "
+                + " left join " + ObjectFilter.DAO_AD_ALIAS + ".alternativeTo alt";
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1133,11 +1135,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             } else {
                 vo.setExpressionExperimentCount( eeCounts.get( id ) );
             }
-
-            // This is compeltely hacky. We could at least reach through to the designProvider (which is also "Affymetrix"), 
-            // and directly model the concept of alternative.
-            vo.setIsAffymetrixAltCdf( vo.getName().toLowerCase().contains( "cdf" ) && vo.getName().toLowerCase().contains( "affymetrix" ) );
-
             vos.add( vo );
         }
 

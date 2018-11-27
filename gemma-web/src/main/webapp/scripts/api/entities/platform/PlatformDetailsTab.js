@@ -45,8 +45,9 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
         var text = '';
 
         if ( pd.isAffymetrixAltCdf ) {
-           text = text + '<i class="orange fa fa-exclamation-triangle fa-lg" ></i>' + "This platform is an alternative to a 'standard' Affymetrix probe layout." +
-           		" Data sets using it will be switched to the " +
+           text = text + '<i class="orange fa fa-exclamation-triangle fa-lg" ></i>' + "This platform is an alternative to a 'standard' " +
+               "Affymetrix probe layout: " +  Gemma.arrayDesignLink(pd.alternative) +
+           		". Data sets using it will be switched to the " +
            		"canonical one when raw data are available.";
            text = text + "<br />";
         }
