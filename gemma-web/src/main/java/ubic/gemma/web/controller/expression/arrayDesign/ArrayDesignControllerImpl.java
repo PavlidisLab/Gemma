@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -259,8 +259,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                            .addObject( "message",
-                                    "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+                    .addObject( "message",
+                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
@@ -373,7 +373,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
-        result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
+        if ( result.getIsAffymetrixAltCdf() )
+            result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
 
         log.info( "Finished loading details of " + arrayDesign );
         return result;

@@ -353,7 +353,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                     }
                                     if (record.get('isAffymetrixAltCdf')) {
                                         statusString += '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                                            + "This platform is an alternative to a 'standard' Affymetrix probe layout. " +
+                                            + "This platform is an alternative to a 'standard' gene-level Affymetrix probe layout. " +
                                             "Data sets using it will be switched to the canonical one when raw data are available." + '"></i>';
                                     }
 
