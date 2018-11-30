@@ -74,6 +74,7 @@ public class OntologyServiceImpl implements OntologyService {
     private final DiseaseOntologyService diseaseOntologyService = new DiseaseOntologyService();
     private final ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
 
+    @Deprecated
     private final FMAOntologyService fmaOntologyService = new FMAOntologyService();
 
     private final GemmaOntologyService gemmaOntologyService = new GemmaOntologyService();
@@ -290,9 +291,27 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public Collection<OntologyTerm> findTerms( String search ) {
 
-        String query = OntologySearch.stripInvalidCharacters( search );
-
         Collection<OntologyTerm> results = new HashSet<>();
+
+        /*
+         * URI input: just retrieve the term.
+         */
+        if ( search.startsWith( "http://" ) ) {
+            for ( AbstractOntologyService ontology : ontologyServices ) {
+                if ( ontology.isOntologyLoaded() ) {
+                    OntologyTerm found = ontology.getTerm( search );
+                    if ( found != null ) {
+                        results.add( found );
+                    }
+                }
+            }
+            return results;
+        }
+
+        /*
+         * Other queries:
+         */
+        String query = OntologySearch.stripInvalidCharacters( search );
 
         if ( StringUtils.isBlank( query ) ) {
             return results;
@@ -418,6 +437,26 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
+    public CellTypeOntologyService getCellTypeOntologyService() {
+        return cellTypeOntologyService;
+    }
+
+    @Override
+    public GemmaOntologyService getGemmaOntologyService() {
+        return gemmaOntologyService;
+    }
+
+    @Override
+    public HumanDevelopmentOntologyService getHumanDevelopmentOntologyService() {
+        return humanDevelopmentOntologyService;
+    }
+
+    @Override
+    public MouseDevelopmentOntologyService getMouseDevelopmentOntologyService() {
+        return mouseDevelopmentOntologyService;
+    }
+
+    @Override
     public ChebiOntologyService getChebiOntologyService() {
         return chebiOntologyService;
     }
@@ -433,6 +472,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
+    @Deprecated
     public FMAOntologyService getFmaOntologyService() {
         return fmaOntologyService;
     }
@@ -649,10 +689,9 @@ public class OntologyServiceImpl implements OntologyService {
             if ( chars == null || chars.isEmpty() ) {
                 OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
                 continue;
-            } else {
-                OntologyServiceImpl.log.info(
-                        "Found " + chars.size() + " characteristics in the current ID range, checking for obsoletes." );
             }
+            OntologyServiceImpl.log.info(
+                    "Found " + chars.size() + " characteristics in the current ID range, checking for obsoletes." );
 
             // Detect obsoletes
             for ( Characteristic ch : chars ) {
@@ -777,7 +816,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
