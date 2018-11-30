@@ -12,7 +12,8 @@ http://www.ebi.ac.uk/efo/EFO_0000408	disease
 http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
 http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
-http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
+# no longer allowed:
+#http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
 http://www.ebi.ac.uk/efo/EFO_0000513	genotype
 http://www.ebi.ac.uk/efo/EFO_0000523	growth condition
 http://www.ebi.ac.uk/efo/EFO_0000635	organism part
