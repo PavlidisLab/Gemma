@@ -165,6 +165,7 @@ public class ExpressionDataWriterUtils {
     private static String constructRCompatibleBioAssayName( String colName ) {
         String colNameMod = colName;
         colNameMod = StringUtils.replaceChars( colNameMod, ':', '.' );
+        colNameMod = StringUtils.replaceChars( colNameMod, '\'', '.' );
         colNameMod = StringUtils.replaceChars( colNameMod, '|', '.' );
         colNameMod = StringUtils.replaceChars( colNameMod, '-', '.' );
         return colNameMod;

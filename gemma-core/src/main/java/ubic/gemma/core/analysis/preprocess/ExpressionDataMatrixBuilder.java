@@ -82,11 +82,23 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * Create a matrix using all the vectors, which are assumed to all be of the same quantitation type.
      * @param  representation PrimitiveType
      * @param  vectors        raw vectors
      * @return                matrix of appropriate type.
      */
-    public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
+    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.isEmpty() ) throw new IllegalArgumentException( "No vectors" );
+        PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
+        return getMatrix( representation, vectors );
+    }
+
+    /**
+     * @param  representation PrimitiveType
+     * @param  vectors        raw vectors
+     * @return                matrix of appropriate type.
+     */
+    private static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors ) {
         ExpressionDataMatrix<?> expressionDataMatrix;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
