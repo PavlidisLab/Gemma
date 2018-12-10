@@ -788,7 +788,14 @@ public class GeoConverterImpl implements GeoConverter {
                 gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
                 gemmaChar.setDescription( defaultDescription );
 
-                this.convertVariableType( gemmaChar, GeoVariable.convertStringToType( category ) );
+                VariableType vartype = GeoVariable.convertStringToType( category );
+                if ( vartype == null ) {
+                    log.debug( "Could not parse into VariableType: " + category + " (in: " + characteristic + ")" );
+                    this.doFallback( bioMaterial, value, defaultDescription );
+                    continue;
+                }
+
+                this.convertVariableType( gemmaChar, vartype );
 
                 CharacteristicBasicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
 
@@ -828,7 +835,7 @@ public class GeoConverterImpl implements GeoConverter {
             initializeTerm2OntologyMappings();
         }
 
-        if ( !term2OntologyMappings.containsKey( category ) ) {
+        if ( category == null || !term2OntologyMappings.containsKey( category ) ) {
             return null;
         }
 
@@ -2273,6 +2280,7 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000651";
             term = "phenotype";
         } else if ( varType.equals( VariableType.other ) ) {
+            // NO-OP
         } else if ( varType.equals( VariableType.protocol ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0000272";
             term = "protocol";
@@ -2280,7 +2288,7 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000470";
             term = "environmental stress";
         } else if ( varType.equals( VariableType.species ) ) {
-            // ?
+            // Shouldn't be using this
         } else if ( varType.equals( VariableType.specimen ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0100051";
             term = "specimen";
@@ -2302,8 +2310,11 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.treatment ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000727";
             term = "treatment";
+        } else if ( varType.equals( VariableType.environmentalHistory ) ) {
+            uri = "http://www.ebi.ac.uk/efo/EFO_0004444";
+            term = "environmental history";
         } else {
-            throw new IllegalStateException();
+            throw new IllegalStateException( "No action for " + varType );
         }
 
         if ( GeoConverterImpl.log.isDebugEnabled() )
