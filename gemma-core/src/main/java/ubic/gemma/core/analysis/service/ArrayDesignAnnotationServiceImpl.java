@@ -34,6 +34,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -457,6 +458,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         }
         writer.close();
+
         return compositeSequencesProcessed;
     }
 

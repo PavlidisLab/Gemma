@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -36,6 +37,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -204,6 +206,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         try {
             this.goService.init( true );
+
+            this.expressionDataFileService = this.getBean( ExpressionDataFileService.class );
 
             log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
@@ -528,10 +532,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
+    private ExpressionDataFileService expressionDataFileService;
+
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
         ArrayDesign ad = this.thaw( inputAd );
 
-        AbstractCLI.log.info( "================= Processing: " + ad );
+        AbstractCLI.log.info( "====== Processing: " + ad );
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
@@ -574,6 +580,18 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         if ( overWrite || !sf.exists() ) {
             this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
+
+            /*
+             * Delete the data files for experiments that used this platform, since they have the old annotations in
+             * them (or no annotations)
+             */
+            Collection<ExpressionExperiment> ees = this.arrayDesignService.getExpressionExperiments( ad );
+            if ( !ees.isEmpty() ) log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                    + ", that may have outdated annotations" );
+            for ( ExpressionExperiment ee : ees ) {
+                this.expressionDataFileService.deleteAllFiles( ee );
+            }
+
         } else {
             AbstractCLI.log.info( sf + " exists, will not overwrite" );
         }

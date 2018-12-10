@@ -75,7 +75,10 @@ import java.util.*;
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
+    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca";
+
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
+
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
@@ -198,7 +201,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( !f.canRead() ) {
             throw new RuntimeException( "The file could not be found for " + arrayDesign.getShortName()
-                    + ". Please contact pavlab-support@msl.ubc.ca for assistance" );
+                    + ". Please contact " + SUPPORT_EMAIL + " for assistance" );
         }
 
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {
@@ -259,8 +262,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                    .addObject( "message",
-                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+                            .addObject( "message",
+                                    "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
