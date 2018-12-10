@@ -44,10 +44,12 @@ public class GeoVariable {
     private Collection<GeoSample> samples;
 
     /**
-     * Convert a string e.g., "age" to the corresponding enumerated type.
+     * Convert a string found in the GEO sample descriptions e.g., "age" to the corresponding category, represented here
+     * by VariableType. TODO: this list has gotten unwieldy and should be replaced with a config file that is read in,
+     * and it should be more directly related the list in EFO.factor.categories.txt
      *
-     * @param string string
-     * @return variable type
+     * @param  string string
+     * @return        variable type
      */
     public static VariableType convertStringToType( String string ) {
         if ( string.toLowerCase().equals( "age" ) ) {
@@ -58,13 +60,15 @@ public class GeoVariable {
             return VariableType.cellLine;
         } else if ( string.toLowerCase().equals( "cell type" ) ) {
             return VariableType.cellType;
-        } else if ( string.toLowerCase().equals( "development stage" ) ) {
+        } else if ( string.toLowerCase().equals( "development stage" ) || string.toLowerCase().equals( "developmental stage" ) ) {
             return VariableType.developmentStage;
         } else if ( string.toLowerCase().equals( "disease state" ) ) {
             return VariableType.diseaseState;
         } else if ( string.toLowerCase().equals( "dose" ) ) {
             return VariableType.dose;
         } else if ( string.toLowerCase().equals( "gender" ) ) {
+            return VariableType.gender;
+        } else if ( string.toLowerCase().equals( "sex" ) || string.toLowerCase().equals( "sex (gender)" ) ) {
             return VariableType.gender;
         } else if ( string.toLowerCase().equals( "genotype/variation" ) ) {
             return VariableType.genotypeOrVariation;
@@ -80,6 +84,8 @@ public class GeoVariable {
             return VariableType.metabolism;
         } else if ( string.toLowerCase().equals( "other" ) ) {
             return VariableType.other;
+        } else if ( string.toLowerCase().equals( "phenotype" ) ) {
+            return VariableType.phenotype;
         } else if ( string.toLowerCase().equals( "protocol" ) ) {
             return VariableType.protocol;
         } else if ( string.toLowerCase().equals( "shock" ) ) {
@@ -90,14 +96,27 @@ public class GeoVariable {
             return VariableType.specimen;
         } else if ( string.toLowerCase().equals( "stress" ) ) {
             return VariableType.stress;
-        } else if ( string.toLowerCase().equals( "strain" ) ) {
+        } else if ( string.toLowerCase().equals( "strain" ) || string.toLowerCase().equals( "strain/background" )
+                || string.toLowerCase().equals( "genetic background" ) ) {
             return VariableType.strain;
         } else if ( string.toLowerCase().equals( "temperature" ) ) {
             return VariableType.temperature;
         } else if ( string.toLowerCase().equals( "time" ) ) {
             return VariableType.time;
-        } else if ( string.toLowerCase().equals( "tissue" ) ) {
-            return VariableType.tissue;
+        } else if ( string.toLowerCase().equals( "tissue" ) || string.toLowerCase().equals( "tissue source" )
+                || string.toLowerCase().equals( "tissue of origin" ) || string.toLowerCase().equals( "tissue type" )
+                || string.toLowerCase().equals( "organ" )
+                || string.toLowerCase().equals( "brain region" ) || string.toLowerCase().equals( "tumor location" ) ) {
+            return VariableType.organismPart;
+        } else if ( string.toLowerCase().equals( "genotype" ) ) {
+            return VariableType.genotypeOrVariation;
+        } else if ( string.toLowerCase().equals( "race" ) || string.toLowerCase().equals( "ancestry" ) ) {
+            return VariableType.population;
+        } else if ( string.toLowerCase().equals( "smoking status" ) ) {
+            return VariableType.environmentalHistory;
+        } else if ( string.toLowerCase().equals( "treatment" ) || string.toLowerCase().equals( "treatment arm" )
+                || string.toLowerCase().equals( "treated with" ) ) {
+            return VariableType.treatment;
         } else {
             throw new IllegalArgumentException( "Unknown variable type " + string );
         }
@@ -175,8 +194,8 @@ public class GeoVariable {
             return false;
         if ( type == null ) {
             return other.type == null;
-        } else
-            return type.equals( other.type );
+        }
+        return type.equals( other.type );
     }
 
     @Override
@@ -185,10 +204,11 @@ public class GeoVariable {
     }
 
     /**
-     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma. Also known as subset type.
+     * Permitted descriptions of terms. These will correspond to Characteristic categories in Gemma. Also known as
+     * subset type.
      */
     public enum VariableType {
-        age, agent, cellLine, cellType, developmentStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
+        age, agent, cellLine, cellType, developmentStage, treatment, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, organismPart, population, environmentalHistory, phenotype
     }
 
 }

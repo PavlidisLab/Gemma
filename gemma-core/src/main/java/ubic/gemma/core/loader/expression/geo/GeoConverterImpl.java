@@ -18,6 +18,23 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,19 +42,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
-import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
+import ubic.gemma.core.loader.expression.geo.model.GeoContact;
+import ubic.gemma.core.loader.expression.geo.model.GeoData;
+import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
+import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.core.loader.expression.geo.model.GeoReplication;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
+import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.core.loader.expression.geo.model.GeoValues;
+import ubic.gemma.core.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -48,18 +80,19 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
@@ -642,36 +675,7 @@ public class GeoConverterImpl implements GeoConverter {
 
             characteristic = this.trimString( characteristic );
 
-            /*
-             * Sometimes values are like Age:8 weeks, so we can try to convert them.
-             */
-            String[] fields = characteristic.split( ":" );
-            String defaultDescription = "GEO Sample characteristic";
-            if ( fields.length == 2 ) {
-
-                String category = fields[0].trim();
-                String value = fields[1].trim();
-
-                try {
-                    Characteristic gemmaChar = Characteristic.Factory.newInstance();
-                    this.convertVariableType( gemmaChar, GeoVariable.convertStringToType( category ) );
-                    if ( gemmaChar.getCategory() == null ) {
-                        continue;
-                    }
-                    gemmaChar.setDescription( defaultDescription );
-                    gemmaChar.setValue( value );
-                    gemmaChar.setOriginalValue( value );
-                    gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
-                    bioMaterial.getCharacteristics().add( gemmaChar );
-                } catch ( Exception e ) {
-                    // conversion didn't work, fall back.
-                    this.doFallback( bioMaterial, characteristic, defaultDescription );
-                }
-
-            } else {
-                // no colon, just use raw (same as fallback above)
-                this.doFallback( bioMaterial, characteristic, defaultDescription );
-            }
+            parseGEOSampleCharacteristicString( characteristic, bioMaterial );
 
         }
 
@@ -735,6 +739,156 @@ public class GeoConverterImpl implements GeoConverter {
             bioMaterial.getCharacteristics().add( labelChar );
         }
     }
+
+    /**
+     * GEO gives sample descriptors (provided by submitters) that we try to parse into Characteristics associated with
+     * the BioMaterial.
+     * 
+     * The format for these strings varies idiosyncratically. This parser is designed to handle things like:
+     * <ul>
+     * <li>Sex=M or Sex:M
+     * <li>Sex=M;Tissue=brain
+     * <li>Sex:M,Tissue:brain
+     * <li>and variants thereof.
+     * </ul>
+     * 
+     * <p>
+     * Terms are not mapped unless we recognized the category, acceptable choices being
+     * a hard-coded and limited list of terms (See GeoVariable).
+     * 
+     * <p>
+     * This method does not do anything too sophisticated (e.g., stemming),
+     * and the mappings are created manually, so many strings will not be matched.
+     * Because characteristics on biomaterials are not mission-critical, it's not worth too much effort.
+     * 
+     * @param characteristic string to be parsed
+     * @param bioMaterial    to which characteristics will be added
+     */
+    void parseGEOSampleCharacteristicString( String characteristic, BioMaterial bioMaterial ) {
+        /*
+         * Sometimes strings are like Age :8 weeks; Sex: M so we should first split on ";" - sometimes "," is used.
+         */
+        String[] topFields = characteristic.split( "[;,]" );
+
+        for ( String field : topFields ) {
+
+            /*
+             * Sometimes values are like Age:8 weeks, so we can try to convert them.
+             */
+            String[] fields = field.split( "[:=]" ); // sometimes it is '='
+            String defaultDescription = "GEO Sample characteristic";
+            if ( fields.length == 2 ) {
+
+                String category = fields[0].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
+                String value = fields[1].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
+                value = value.replaceFirst( "^(human|mouse|rat|murine|mus musculus|homo sapiens)\\s", "" );
+
+                Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                gemmaChar.setOriginalValue( value );
+                gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
+                gemmaChar.setDescription( defaultDescription );
+
+                this.convertVariableType( gemmaChar, GeoVariable.convertStringToType( category ) );
+
+                CharacteristicBasicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
+
+                try {
+                    if ( mappedValueTerm != null ) {
+                        gemmaChar.setValue( mappedValueTerm.getValue() );
+                        gemmaChar.setValueUri( mappedValueTerm.getValueUri() );
+                        gemmaChar.setCategory( mappedValueTerm.getCategory() );
+                        gemmaChar.setCategoryUri( mappedValueTerm.getCategoryUri() );
+                    } else {
+                        gemmaChar.setValue( value );
+                        // There may not be a category, but that's okay.
+                    }
+                    bioMaterial.getCharacteristics().add( gemmaChar );
+                } catch ( Exception e ) {
+                    // conversion didn't work, fall back.
+                    this.doFallback( bioMaterial, value, defaultDescription );
+                }
+
+            } else {
+                // no colon, just use raw (same as fallback above)
+                this.doFallback( bioMaterial, field, defaultDescription );
+            }
+        }
+    }
+
+    /**
+     * Attempt to identify a preset value (ontology term) for certain strings found in GEO data sets. The presets are
+     * stored in valueStringToOntologyTermMappings.txt.
+     * 
+     * @param  value
+     * @param  category
+     * @return
+     */
+    private CharacteristicBasicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
+        if ( term2OntologyMappings.isEmpty() ) {
+            initializeTerm2OntologyMappings();
+        }
+
+        if ( !term2OntologyMappings.containsKey( category ) ) {
+            return null;
+        }
+
+        return term2OntologyMappings.get( category ).get( value.toLowerCase() );
+    }
+
+    /**
+     * See also GeoChannel, in which we have canned values for some sample characteristics.
+     * See also convertVariableType where we map some to some categories.
+     */
+    private void initializeTerm2OntologyMappings() {
+        InputStream r = this.getClass()
+                .getResourceAsStream( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" );
+        try (BufferedReader in = new BufferedReader( new InputStreamReader( r ) )) {
+            while ( in.ready() ) {
+                String line = in.readLine().trim();
+                if ( line.startsWith( "#" ) ) {
+                    continue;
+                }
+                if ( line.isEmpty() )
+                    continue;
+
+                String[] split = StringUtils.split( line, "\t" );
+
+                if ( split.length < 5 ) {
+                    log.warn( "Did not get expected fields for line: " + line );
+                    continue;
+                }
+
+                String inputValue = split[0].toLowerCase();
+
+                String value = split[1];
+                String valueUri = split[2];
+                String category = split[3];
+                String categoryUri = split[4];
+
+                if ( StringUtils.isBlank( value ) || StringUtils.isBlank( valueUri ) || StringUtils.isBlank( category )
+                        || StringUtils.isBlank( categoryUri ) ) {
+                    throw new IllegalArgumentException( "Invalid line had blank field(s): " + line );
+                }
+
+                if ( !term2OntologyMappings.containsKey( category ) ) {
+                    term2OntologyMappings.put( category, new HashMap<String, CharacteristicBasicValueObject>() );
+                }
+
+                if ( term2OntologyMappings.get( category ).containsKey( inputValue ) ) {
+                    log.warn( "Duplicate value: " + inputValue + ", ignoring" );
+                    continue;
+                }
+
+                CharacteristicBasicValueObject c = new CharacteristicBasicValueObject( null, value, valueUri, category, categoryUri );
+                term2OntologyMappings.get( category ).put( inputValue, c );
+            }
+        } catch ( IOException e ) {
+            log.error( "Ontology terms mapped from strings failed to initialize from file" );
+        }
+
+    }
+
+    private static Map<String, Map<String, CharacteristicBasicValueObject>> term2OntologyMappings = new ConcurrentHashMap<>();
 
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
@@ -2083,10 +2237,10 @@ public class GeoConverterImpl implements GeoConverter {
             term = "molecular entity";
         } else if ( varType.equals( VariableType.cellLine ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000322";
-            term = "CellLine";
+            term = "cell line";
         } else if ( varType.equals( VariableType.cellType ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000324";
-            term = "CellType";
+            term = "cell type";
         } else if ( varType.equals( VariableType.developmentStage ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000399";
             term = "developmental stage";
@@ -2099,13 +2253,13 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.gender ) ) {
             // see bug 4317
             uri = "http://purl.obolibrary.org/obo/PATO_0000047";
-            term = "sex";
+            term = "biological sex";
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000513";
             term = "genotype";
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000523";
-            term = "grwoth condition";
+            term = "growth condition";
         } else if ( varType.equals( VariableType.individual ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000542";
             term = "individual";
@@ -2142,9 +2296,12 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.time ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000724";
             term = "timepoint";
-        } else if ( varType.equals( VariableType.tissue ) ) {
+        } else if ( varType.equals( VariableType.organismPart ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000635";
             term = "organism part";
+        } else if ( varType.equals( VariableType.treatment ) ) {
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000727";
+            term = "treatment";
         } else {
             throw new IllegalStateException();
         }
@@ -2313,7 +2470,7 @@ public class GeoConverterImpl implements GeoConverter {
                     .warn( "No technology type available for " + platform + ", provisionally setting to 'other'" );
             arrayDesign.setTechnologyType( TechnologyType.OTHER );
         } else if ( technology.equals( PlatformType.MPSS ) ) {
-             arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
+            arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
         } else if ( technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
                 .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) ) {
             arrayDesign.setTechnologyType( TechnologyType.SEQUENCING );
@@ -2464,10 +2621,10 @@ public class GeoConverterImpl implements GeoConverter {
         return null;
     }
 
-    private void doFallback( BioMaterial bioMaterial, String characteristic, String defaultDescription ) {
+    private void doFallback( BioMaterial bioMaterial, String value, String defaultDescription ) {
         Characteristic gemmaChar = Characteristic.Factory.newInstance();
-        gemmaChar.setValue( characteristic );
-        gemmaChar.setOriginalValue( characteristic );
+        gemmaChar.setValue( value );
+        gemmaChar.setOriginalValue( value );
         gemmaChar.setDescription( defaultDescription );
         gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
         bioMaterial.getCharacteristics().add( gemmaChar );
