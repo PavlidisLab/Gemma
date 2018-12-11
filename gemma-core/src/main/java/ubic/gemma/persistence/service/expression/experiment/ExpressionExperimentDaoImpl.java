@@ -1063,7 +1063,7 @@ public class ExpressionExperimentDaoImpl
         for ( Object[] row : list ) {
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( row );
 
-            // Add array designs
+            // Add array designs; watch out: this may be a performance drain for long lists.
             Collection<ArrayDesignValueObject> adVos = CommonQueries
                     .getArrayDesignsUsedVOs( vo.getId(), this.getSessionFactory().getCurrentSession() );
             vo.setArrayDesigns( adVos );
@@ -1072,9 +1072,11 @@ public class ExpressionExperimentDaoImpl
             // we can fill it in via a separate step. The
             // only place this would have been used is in the Dataset manager?
 
+            // watch out: this may be a performance drain for long lists.
+            vo.getOtherParts().addAll( this.getOtherParts( vo.getId() ) );
+
             vos.add( vo );
 
-            vo.getOtherParts().addAll( this.getOtherParts( vo.getId() ) );
         }
 
         this.populateAnalysisInformation( vos );
