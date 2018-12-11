@@ -66,11 +66,11 @@
 						sql-type="text character set latin1 collate latin1_swedish_ci" />
 				</property>
 				<property name="batchEffect" type="java.lang.String">
-					<column name="BATCH_EFFECT" not-null="false" unique="true"
+					<column name="BATCH_EFFECT" not-null="false" unique="false"
 						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 				</property>
 				<property name="batchConfound" type="java.lang.String">
-					<column name="BATCH_CONFOUND" not-null="false" unique="true"
+					<column name="BATCH_CONFOUND" not-null="false" unique="false"
 						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.Geeq" cascade="all" lazy="proxy"
