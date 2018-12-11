@@ -53,7 +53,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -165,7 +164,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique, so have to clone
             split.setOwner( toSplit.getOwner() );
             split.setSource( toSplit.getSource() );
-            // split.setRelatedTo ... FIXME ? keep track of this being related to other parts of the split (which might be more than 2 parts)
             // starting with a fresh audit trail.
 
             Map<FactorValue, FactorValue> old2cloneFV = new HashMap<>();
@@ -205,7 +203,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                         usedFactorValues.add( old2cloneFV.get( fv ) );
                     }
                 }
-
             }
 
             // remove unused factorvalues from the design
@@ -287,12 +284,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
         }
 
+        // Enforce relation to other parts of the split.
         for ( ExpressionExperiment split : result ) {
             for ( ExpressionExperiment split2 : result ) {
                 if ( split.equals( split2 ) ) continue;
                 split.getOtherParts().add( split2 );
             }
-
         }
 
         for ( ExpressionExperiment split : result ) {
@@ -313,12 +310,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         //   securityService.makePublic( g ); // at some point this would happen
 
         // FIXME
+        // remove useless data files
+        dataFileService.deleteAllFiles( toSplit );
         // Clean the source experiment? remove diff and coex analyses, PCA, correlation matrices, processed data vectors
-        // dataFileService.deleteAllFiles( toSplit );
         // delete it?
         // eeService.remove(toSplit);
         // OR perhaps only
-        // securityService.makePrivate( toSplit );
+        securityService.makePrivate( toSplit );
         // Or mark it as troubled?
 
         return result;

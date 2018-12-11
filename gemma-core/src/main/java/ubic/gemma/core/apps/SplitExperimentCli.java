@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 /**
- * 
+ * Split an experiment into parts based on an experimental factor
  * 
  * @author paul
  */

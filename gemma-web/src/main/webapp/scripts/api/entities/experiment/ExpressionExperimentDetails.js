@@ -156,7 +156,9 @@ Gemma.ExpressionExperimentDetails = Ext
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal)
                 }
 
-                return result ? result : "No flags";
+
+                return   result ? result : "No flags"; // returning a panel with help causes layout problems.
+
 
             },
 
@@ -279,6 +281,40 @@ Gemma.ExpressionExperimentDetails = Ext
                     eeSetLinks.push('Not currently a member of any experiment group');
                 }
                 return eeSetLinks;
+            },
+
+            /**
+             *
+             * @param otherParts IDs
+             */
+            renderOtherParts: function (e) {
+                var h = "";
+
+                if (e.otherParts && e.otherParts.length > 0) {
+                    for(var i = 0; i < e.otherParts.length; i++) {
+                        var s = e.otherParts[i];
+                        h = h + ' <a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
+                            + s.id + '">' + s.shortName +'</a>'
+                    }
+                } else {
+                    h = "None";
+                }
+
+                return new Ext.Panel({
+                    border: false,
+                    html: h,
+                    listeners: {
+                        'afterrender': function (c) {
+                            jQuery('#otherPartsHelp').qtip({
+                                content: "If this experiment was originally part of a larger study, other parts that are retained in the system are listed here.",
+                                style: {
+                                    name: 'cream'
+                                }
+                            });
+                        }
+                    }
+                });
+
             },
 
             initComponent: function () {
@@ -681,6 +717,11 @@ Gemma.ExpressionExperimentDetails = Ext
                             nameArea,
                             {
                                 layout: 'form',
+                                labelWidth: 140,
+                                labelAlign: 'right',
+                                labelSeparator: ':',
+                                labelStyle: 'font-weight:bold;',
+                                flex: 1,
                                 defaults: {
                                     border: false
                                 },
@@ -706,16 +747,16 @@ Gemma.ExpressionExperimentDetails = Ext
                                         fieldLabel: 'Profiles',
                                         // id: 'processedExpressionVectorCount-region',
                                         html: '<div id="downloads"> '
-                                            + this.renderProcessedExpressionVectorCount(e)
-                                            + '&nbsp;&nbsp;'
-                                            + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
-                                            + e.id
-                                            + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                            + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
-                                            + e.id
-                                            + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
-                                            + '<i class="qtp fa fa-question-circle fa-fw"></i>'
-                                            + '</div>',
+                                        + this.renderProcessedExpressionVectorCount(e)
+                                        + '&nbsp;&nbsp;'
+                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
+                                        + e.id
+                                        + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
+                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
+                                        + e.id
+                                        + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
+                                        + '<i class="qtp fa fa-question-circle fa-fw"></i>'
+                                        + '</div>',
                                         width: 400,
                                         listeners: {
                                             'afterrender': function (c) {
@@ -734,12 +775,12 @@ Gemma.ExpressionExperimentDetails = Ext
                                         html: this.renderArrayDesigns(e),
                                         width: 600
                                     }
-                                    /* hidden temporarily*/
-                                     , {
+                                    /* hidden temporarily
+                                    , {
                                         fieldLabel: 'Coexpr. Links',
                                         html: this.renderCoExpressionLinkCount(e),
                                         width: 80
-                                    }
+                                    }*/
                                     , {
                                         fieldLabel: 'Differential Expr. Analyses',
                                         items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
@@ -752,8 +793,10 @@ Gemma.ExpressionExperimentDetails = Ext
                                                 scope: this
                                             }
                                         })
-                                    }, {
-                                        fieldLabel: 'Status',
+                                    },
+
+                                    {
+                                        fieldLabel: 'Status' /*+ '&nbsp;<i id="statusHelp" class="qtp fa fa-question-circle fa-fw"></i>'*/,
                                         baseCls: 'status-bcls',
                                         html: this.renderStatus(e)
                                     }]
@@ -761,6 +804,11 @@ Gemma.ExpressionExperimentDetails = Ext
                             descriptionArea,
                             {
                                 layout: 'form',
+                                labelWidth: 140,
+                                labelAlign: 'right',
+                                labelSeparator: ':',
+                                labelStyle: 'font-weight:bold;',
+                                flex: 1,
                                 defaults: {
                                     border: false
                                 },
@@ -770,9 +818,14 @@ Gemma.ExpressionExperimentDetails = Ext
                                     {
                                         fieldLabel: 'Source',
                                         html: this.renderSourceDatabaseEntry(e)
+                                    },
+                                    {
+                                        fieldLabel: 'Other parts' + '&nbsp;<i id="otherPartsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
+                                        items: this.renderOtherParts(e)
                                     }
                                 ]
-                            }]
+                            },
+                        ]
                     });
 
                 this.add(basics);
