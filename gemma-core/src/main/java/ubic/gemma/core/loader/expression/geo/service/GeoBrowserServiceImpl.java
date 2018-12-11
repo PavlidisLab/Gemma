@@ -52,6 +52,7 @@ import java.util.*;
 @Component
 public class GeoBrowserServiceImpl implements GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
+    private static final int MAX_TRIES = 3;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
@@ -92,7 +93,19 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = EutilFetch.fetch( "gds", accession, 25 );
+        String details = null;
+        int numTries = 0;
+        while ( details == null && numTries < MAX_TRIES ) {
+            try {
+                details = EutilFetch.fetch( "gds", accession, 25 );
+                numTries++;
+            } catch ( IOException e ) {
+                log.warn( "Failed attempt (" + numTries + "/" + MAX_TRIES + ") " + e.getMessage() );
+            }
+        }
+        if ( details == null ) {
+            throw new IOException( "No results from GEO" );
+        }
 
         this.initLocalRecord( accession );
 
@@ -142,8 +155,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     /**
      * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
      *
-     * @param details XML from eSummary
-     * @return HTML-formatted
+     * @param  details XML from eSummary
+     * @return         HTML-formatted
      */
     String formatDetails( String details ) throws IOException {
 
@@ -193,8 +206,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec:
-        for ( GeoRecord record : records ) {
+        rec: for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
                 toRemove.add( record );
