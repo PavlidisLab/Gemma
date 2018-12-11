@@ -52,7 +52,6 @@ import java.util.*;
 @Component
 public class GeoBrowserServiceImpl implements GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
-    private static final int MAX_TRIES = 3;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
@@ -93,16 +92,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = null;
-        int numTries = 0;
-        while ( details == null && numTries < MAX_TRIES ) {
-            try {
-                details = EutilFetch.fetch( "gds", accession, 25 );
-                numTries++;
-            } catch ( IOException e ) {
-                log.warn( "Failed attempt (" + numTries + "/" + MAX_TRIES + ") " + e.getMessage() );
-            }
-        }
+        String details = EutilFetch.fetch( "gds", accession, 25 );
+
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
         }
@@ -291,6 +282,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
+    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {

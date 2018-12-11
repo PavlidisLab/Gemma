@@ -20,6 +20,8 @@ package ubic.gemma.core.loader.entrez;
 
 import org.apache.tools.ant.filters.StringInputStream;
 import org.openjena.atlas.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,74 +42,92 @@ import java.net.URLConnection;
 /**
  * @author paul
  */
-// Constants are better for readability
 public class EutilFetch {
+
+    private static Logger log = LoggerFactory.getLogger( EutilFetch.class );
 
     private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
-    // private static String EFETCH =
-    // "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
 
+    /**
+     * Attempts to fetch data via Eutils; failures will be re-attempted several times.
+     * @param db
+     * @param searchString
+     * @param limit
+     * @return
+     * @throws IOException
+     */
     public static String fetch( String db, String searchString, int limit ) throws IOException {
         return EutilFetch.fetch( db, searchString, Mode.TEXT, limit );
     }
 
+    private static final int MAX_TRIES = 3;
+
     /**
      * see <a href="http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html">ncbi help</a>
      *
-     * @param db           e.g., gds.
-     * @param searchString search string
-     * @param mode         HTML,TEXT or XML FIXME only provides XML.
-     * @param limit        - Maximum number of records to return.
-     * @return XML
-     * @throws IOException if there is a problem while manipulating the file
+     * @param  db           e.g., gds.
+     * @param  searchString search string
+     * @param  mode         HTML,TEXT or XML FIXME only provides XML.
+     * @param  limit        - Maximum number of records to return.
+     * @return              XML
+     * @throws IOException  if there is a problem while manipulating the file
      */
     @SuppressWarnings("SameParameterValue") // Only TEXT is used, also observe the parameter javadoc fix me note
     private static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
         URL searchUrl = new URL( EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString );
-        URLConnection conn;
+        URLConnection conn = null;
+        int numTries = 0;
 
-        try {
-
-            EutilFetch.factory.setIgnoringComments( true );
-            EutilFetch.factory.setValidating( false );
-
-            Document document = EutilFetch.parseSUrlInputStream( searchUrl );
-
-            NodeList countNode = document.getElementsByTagName( "Count" );
-            Node countEl = countNode.item( 0 );
-
-            int count;
+        while ( conn == null && numTries < MAX_TRIES ) {
             try {
-                count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-            } catch ( NumberFormatException e ) {
-                throw new IOException( "Could not parse count from: " + searchUrl );
+                numTries++;
+                EutilFetch.factory.setIgnoringComments( true );
+                EutilFetch.factory.setValidating( false );
+
+                Document document = EutilFetch.parseSUrlInputStream( searchUrl );
+
+                NodeList countNode = document.getElementsByTagName( "Count" );
+                Node countEl = countNode.item( 0 );
+
+                int count;
+                try {
+                    count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+                } catch ( NumberFormatException e ) {
+                    throw new IOException( "Could not parse count from: " + searchUrl );
+                }
+
+                if ( count == 0 )
+                    throw new IOException( "Got no records from: " + searchUrl );
+
+                NodeList qnode = document.getElementsByTagName( "QueryKey" );
+
+                Element queryIdEl = ( Element ) qnode.item( 0 );
+
+                NodeList cknode = document.getElementsByTagName( "WebEnv" );
+                Element cookieEl = ( Element ) cknode.item( 0 );
+
+                String queryId = XMLUtils.getTextValue( queryIdEl );
+                String cookie = XMLUtils.getTextValue( cookieEl );
+
+                URL fetchUrl = new URL(
+                        EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
+                                + "&WebEnv=" + cookie + "&retmax=" + limit );
+
+                conn = fetchUrl.openConnection();
+                conn.connect();
+            } catch ( ParserConfigurationException | SAXException e1 ) {
+
+                throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
+            } catch ( IOException e2 ) {
+                if ( numTries == MAX_TRIES ) throw e2;
+                log.warn( e2.getMessage() );
             }
-
-            if ( count == 0 )
-                throw new IOException( "Got no records from: " + searchUrl );
-
-            NodeList qnode = document.getElementsByTagName( "QueryKey" );
-
-            Element queryIdEl = ( Element ) qnode.item( 0 );
-
-            NodeList cknode = document.getElementsByTagName( "WebEnv" );
-            Element cookieEl = ( Element ) cknode.item( 0 );
-
-            String queryId = XMLUtils.getTextValue( queryIdEl );
-            String cookie = XMLUtils.getTextValue( cookieEl );
-
-            URL fetchUrl = new URL(
-                    EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
-                            + "&WebEnv=" + cookie + "&retmax=" + limit );
-
-            conn = fetchUrl.openConnection();
-            conn.connect();
-        } catch ( ParserConfigurationException | SAXException e1 ) {
-            throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
         }
+
+        if ( conn == null ) throw new IllegalStateException( "Connection was null" );
 
         try (InputStream is = conn.getInputStream()) {
 

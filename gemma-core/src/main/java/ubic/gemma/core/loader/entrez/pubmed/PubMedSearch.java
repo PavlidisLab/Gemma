@@ -41,6 +41,7 @@ import java.util.HashSet;
 public class PubMedSearch {
     private static final Log log = LogFactory.getLog( PubMedSearch.class );
     private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.
+    private static final int MAX_TRIES = 3;
     private final String uri;
 
     public PubMedSearch() {
@@ -55,8 +56,8 @@ public class PubMedSearch {
     /**
      * Search based on terms
      *
-     * @param searchTerms search terms
-     * @return BibliographicReference representing the publication
+     * @param  searchTerms                  search terms
+     * @return                              BibliographicReference representing the publication
      * @throws IOException                  IO problems
      * @throws SAXException                 sax exception
      * @throws ParserConfigurationException parser config exception
@@ -74,7 +75,17 @@ public class PubMedSearch {
         log.info( "Fetching " + toBeGotten );
 
         ESearchXMLParser parser = new ESearchXMLParser();
-        Collection<String> ids = parser.parse( toBeGotten.openStream() );
+        Collection<String> ids = null;
+        int numTries = 0;
+        while ( ids == null && numTries < MAX_TRIES ) {
+            try {
+                numTries++;
+                ids = parser.parse( toBeGotten.openStream() );
+            } catch ( IOException e ) {
+                if ( numTries == MAX_TRIES ) throw e;
+                log.warn( "Failed attempt (" + numTries + "/" + MAX_TRIES + ") " + e.getMessage() );
+            }
+        }
 
         Collection<BibliographicReference> results = fetchById( ids );
 
@@ -98,8 +109,8 @@ public class PubMedSearch {
     /**
      * Gets all the pubmed ID's that would be returned given a list of input terms, using two eUtil calls.
      *
-     * @param searchTerms search terms
-     * @return The PubMed ids (as strings) for the search results.
+     * @param  searchTerms                  search terms
+     * @return                              The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      * @throws SAXException                 SAX exception
      * @throws ParserConfigurationException config problems
@@ -118,8 +129,9 @@ public class PubMedSearch {
     /**
      * Gets all the pubmed ID's that would be returned from a pubmed search string, using two eUtil calls.
      *
-     * @param searchQuery - what would normally be typed into pubmed search box for example "Neural Pathways"[MeSH]
-     * @return The PubMed ids (as strings) for the search results.
+     * @param  searchQuery                  - what would normally be typed into pubmed search box for example "Neural
+     *                                      Pathways"[MeSH]
+     * @return                              The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      * @throws SAXException                 SAX exception
      * @throws ParserConfigurationException config problems
@@ -134,20 +146,28 @@ public class PubMedSearch {
         String URLString = uri + "&term=" + searchQuery;
         // builder.append("&retmax=" + 70000);
         URL toBeGotten = new URL( URLString );
-        log.info( "Fetching Count" + toBeGotten );
+        // log.info( "Fetching " + toBeGotten );
         // parse how many
         int count = parser.getCount( toBeGotten.openStream() );
 
         // now get them all
         URLString += "&retmax=" + count;
         toBeGotten = new URL( URLString );
-        log.info( "Fetching " + count + " ID's from:" + toBeGotten );
+        log.info( "Fetching " + count + " IDs from:" + toBeGotten );
 
         return parser.parse( toBeGotten.openStream() );
     }
 
+    /**
+     * 
+     * @param  ids
+     * @return
+     * @throws IOException
+     */
     private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
         Collection<BibliographicReference> results = new HashSet<>();
+
+        if ( ids == null || ids.isEmpty() ) return results;
 
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         Collection<Integer> ints = new HashSet<>();
