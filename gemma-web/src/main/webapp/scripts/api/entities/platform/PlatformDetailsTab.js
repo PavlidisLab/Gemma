@@ -48,7 +48,7 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
            text = text + '<i class="orange fa fa-exclamation-triangle fa-lg" ></i>' + "This platform is an alternative to a 'standard' " +
                "gene-level Affymetrix probe layout: " +  Gemma.arrayDesignLink(pd.alternative) +
            		". Data sets using it will be switched to the " +
-           		"canonical one when raw data are available.";
+           		"canonical one when raw data are available. We do not provide annotation files for this platform.";
            text = text + "<br />";
         }
         
@@ -501,7 +501,7 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
                                                    */
                                             }]);
 
-                                    if (!platformDetails.troubled) {
+                                    if (!platformDetails.troubled && !platformDetails.isAffymetrixAltCdf) {
                                         // add the last two items. could use display:none instead.
                                         Ext.getCmp(platformDetails.id + '_features').add({
                                             fieldLabel: 'Annotation files'

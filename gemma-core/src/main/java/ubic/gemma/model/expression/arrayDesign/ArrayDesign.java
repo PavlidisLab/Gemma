@@ -45,6 +45,7 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         }
 
     }
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -98,6 +99,10 @@ public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.S
         return this.alternateNames;
     }
 
+    /**
+     * 
+     * @return true if this is an Affymetrix platform that has a related "canonical" platform we use instead.
+     */
     public ArrayDesign getAlternativeTo() {
         return alternativeTo;
     }

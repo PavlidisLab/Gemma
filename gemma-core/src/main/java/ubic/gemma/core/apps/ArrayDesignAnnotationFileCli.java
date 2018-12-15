@@ -246,7 +246,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         ArrayDesign thawed = this.thaw( arrayDesign );
 
         if ( thawed.getCurationDetails().getTroubled() ) {
-            AbstractCLI.log.warn( "Troubled: " + arrayDesign );
+            AbstractCLI.log.warn( "Troubled, will not generate annotation file: " + arrayDesign );
+            return;
+        }
+
+        if ( thawed.getAlternativeTo() != null ) {
+            AbstractCLI.log.warn( "Alternative CDF, will not generate annotation file: " + arrayDesign );
             return;
         }
 
@@ -304,7 +309,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( candidates.size() + " candidate platforms for processing" );
 
-        int numTroubled = 0;
+        int numTroubledOrAlt = 0;
         int numSkippedUnneeded = 0;
         for ( ArrayDesign ad : candidates ) {
 
@@ -317,8 +322,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             }
 
             if ( ad.getCurationDetails().getTroubled() ) {
-                AbstractCLI.log.debug( "Troubled: " + ad + " (skipping)" );
-                numTroubled++;
+                AbstractCLI.log.debug( "Troubled, skipping: " + ad );
+                numTroubledOrAlt++;
+                continue;
+            }
+
+            if ( ad.getAlternativeTo() != null ) {
+                AbstractCLI.log.debug( "Alternative CDF, skipping: " + ad );
+                numTroubledOrAlt++;
                 continue;
             }
 
@@ -343,8 +354,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Checked for need to run: " + numChecked + " platforms" );
 
-        if ( numTroubled > 0 ) {
-            log.info( numTroubled + " platforms are troubled and will be skipped." );
+        if ( numTroubledOrAlt > 0 ) {
+            log.info( numTroubledOrAlt + " platforms are troubled or alternative CDFs and will be skipped." );
         }
         if ( numSkippedUnneeded > 0 ) {
             log.info( numSkippedUnneeded + " platforms don't need to be run." );
