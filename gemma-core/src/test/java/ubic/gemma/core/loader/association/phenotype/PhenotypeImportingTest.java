@@ -41,16 +41,16 @@ public class PhenotypeImportingTest extends BaseSpringContextTest {
 
     PhenotypeProcessingUtil ppUtil;
 
-    @Before
-    public void setup() throws Exception {
-        ppUtil = new PhenotypeProcessingUtil( this.geneService, this.ontologyService );
-
-        /// Will have to populate some genes to do a proper test.
-    }
-
-    @Test
-    public void testCtd() {
- 
-    }
+//    @Before
+//    public void setup() throws Exception {
+//        ppUtil = new PhenotypeProcessingUtil( this.geneService, this.ontologyService );
+//
+//        /// Will have to populate some genes to do a proper test.
+//    }
+//
+//    @Test
+//    public void testCtd() {
+// 
+//    }
 
 }
