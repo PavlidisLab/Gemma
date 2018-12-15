@@ -289,9 +289,8 @@ public class SearchServiceImpl implements SearchService {
                 eeIds.retainAll( EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) ) );
             }
         } else {
-            Collection<ExpressionExperiment> ees = ( taxon != null ) ?
-                    expressionExperimentService.findByTaxon( taxon ) :
-                    expressionExperimentService.loadAll();
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
+                    : expressionExperimentService.loadAll();
             for ( ExpressionExperiment ee : ees ) {
                 eeIds.add( ee.getId() );
             }
@@ -451,8 +450,8 @@ public class SearchServiceImpl implements SearchService {
      * Checks settings for all do-search flags, except for gene (see
      * {@link #accreteResultsGenes(List, SearchSettings, boolean)}), and does the search if needed.
      *
-     * @param results the results to which should any new results be accreted.
-     * @return same object as given, possibly extended by new items from search.
+     * @param  results the results to which should any new results be accreted.
+     * @return         same object as given, possibly extended by new items from search.
      */
     private List<SearchResult> accreteResultsOthers( List<SearchResult> results, SearchSettings settings,
             boolean webSpeedSearch ) {
@@ -587,7 +586,7 @@ public class SearchServiceImpl implements SearchService {
             Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
             if ( nameResult != null )
                 for ( ArrayDesign ad : nameResult ) {
-                    results.add( new SearchResult( ad, 1.0 ) );
+                results.add( new SearchResult( ad, 1.0 ) );
                 }
         }
 
@@ -854,11 +853,11 @@ public class SearchServiceImpl implements SearchService {
      * MAX_CHARACTERISTIC_SEARCH_RESULTS. It can handle AND in searches, so Parkinson's AND neuron finds items tagged
      * with both of those terms. The use of OR is handled by the caller.
      *
-     * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
-     *                ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
-     * @return SearchResults of CharacteristicObjects. Typically to be useful one needs to retrieve the
-     * 'parents'
-     * (entities which have been 'tagged' with the term) of those Characteristics
+     * @param  classes Classes of characteristic-bound entities. For example, to get matching characteristics of
+     *                 ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
+     * @return         SearchResults of CharacteristicObjects. Typically to be useful one needs to retrieve the
+     *                 'parents'
+     *                 (entities which have been 'tagged' with the term) of those Characteristics
      */
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes, String query ) {
         StopWatch timer = this.startTiming();
@@ -1136,12 +1135,12 @@ public class SearchServiceImpl implements SearchService {
      * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      *
-     * @param classes Class of objects to restrict the search to (typically ExpressionExperiment.class, for
-     *                example).
-     * @param terms   A list of ontology terms to search for
-     * @return Collection of search results for the objects owning the found characteristics, where the owner is
-     * of
-     * class clazz
+     * @param  classes Class of objects to restrict the search to (typically ExpressionExperiment.class, for
+     *                 example).
+     * @param  terms   A list of ontology terms to search for
+     * @return         Collection of search results for the objects owning the found characteristics, where the owner is
+     *                 of
+     *                 class clazz
      */
     private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
             Collection<OntologyTerm> terms ) {
@@ -1659,8 +1658,8 @@ public class SearchServiceImpl implements SearchService {
     /**
      * Only used for experiment searches.
      *
-     * @param classes
-     * @param characteristic2entity
+     * @param  classes
+     * @param  characteristic2entity
      * @return
      */
     private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class<?>> classes,
@@ -1676,9 +1675,8 @@ public class SearchServiceImpl implements SearchService {
                     String matchedText;
 
                     if ( c.getValueUri() != null ) {
-                        matchedText =
-                                "Tagged term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query=" + c
-                                        .getValueUri() + "\">" + c.getValue() + "</a>";
+                        matchedText = "Tagged term: <a href=\"" + Settings.getRootContext() + "/searcher.html?query=" + c
+                                .getValueUri() + "\">" + c.getValue() + "</a>";
                     } else {
                         matchedText = "Free text: " + c.getValue();
                     }
@@ -2003,8 +2001,10 @@ public class SearchServiceImpl implements SearchService {
 
         if ( timer.getTime() > 100 ) {
             SearchServiceImpl.log.info( results.size() + " hits retrieved (out of " + Math
-                    .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in " + timer
-                    .getTime() + "ms" );
+                    .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
+                    + timer
+                            .getTime()
+                    + "ms" );
         }
         if ( timer.getTime() > 5000 ) {
             SearchServiceImpl.log
@@ -2055,8 +2055,7 @@ public class SearchServiceImpl implements SearchService {
                     continue;
                 Map<Long, SearchResult> rMap = new HashMap<>();
                 for ( SearchResult searchResult : r ) {
-                    if ( !rMap.containsKey( searchResult.getId() ) || ( rMap.get( searchResult.getId() ).getScore()
-                            < searchResult.getScore() ) ) {
+                    if ( !rMap.containsKey( searchResult.getId() ) || ( rMap.get( searchResult.getId() ).getScore() < searchResult.getScore() ) ) {
                         rMap.put( searchResult.getId(), searchResult );
                     }
                 }
@@ -2292,6 +2291,7 @@ public class SearchServiceImpl implements SearchService {
                     for ( int i = 0; i < hits.getLength(); i++ ) {
                         try {
                             String frag = hits.highlighter( i ).fragment( name );
+                            if ( log.isDebugEnabled() ) log.debug( "Highlighted fragment: " + frag + " for " + hits.hit( i ) );
                         } catch ( Exception e ) {
                             break; // skip this property entirely for all hits ...
                         }

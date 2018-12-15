@@ -32,6 +32,7 @@ public class PhenotypeMappingType
     public static final PhenotypeMappingType CURATED = new PhenotypeMappingType( "Curated" );
     public static final PhenotypeMappingType INFERRED_XREF = new PhenotypeMappingType( "Inferred Cross Reference" );
     public static final PhenotypeMappingType INFERRED_CURATED = new PhenotypeMappingType( "Inferred Curated" );
+    public static final PhenotypeMappingType DIRECT = new PhenotypeMappingType("Direct"); // when we are given a useable term right without mapping needed
     private static final long serialVersionUID = -3336933794060950406L;
     private static final int[] SQL_TYPES = { Types.VARCHAR };
     private static final java.util.Map<String, PhenotypeMappingType> values = new java.util.LinkedHashMap<>();
@@ -42,6 +43,8 @@ public class PhenotypeMappingType
         PhenotypeMappingType.values.put( PhenotypeMappingType.INFERRED_XREF.value, PhenotypeMappingType.INFERRED_XREF );
         PhenotypeMappingType.values
                 .put( PhenotypeMappingType.INFERRED_CURATED.value, PhenotypeMappingType.INFERRED_CURATED );
+        PhenotypeMappingType.values
+        .put( PhenotypeMappingType.DIRECT.value, PhenotypeMappingType.DIRECT );
     }
 
     private String value;

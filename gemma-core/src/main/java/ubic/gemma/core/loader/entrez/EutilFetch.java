@@ -52,9 +52,10 @@ public class EutilFetch {
 
     /**
      * Attempts to fetch data via Eutils; failures will be re-attempted several times.
-     * @param db
-     * @param searchString
-     * @param limit
+     * 
+     * @param  db
+     * @param  searchString
+     * @param  limit
      * @return
      * @throws IOException
      */
@@ -177,8 +178,8 @@ public class EutilFetch {
     private static int tryAgainOrFail( int tries, IOException e ) throws IOException {
         if ( e.getMessage().contains( "429" ) ) {
             tries++;
-            if ( tries > 5 ) {
-                Log.fatal( EutilFetch.class, "Got HTTP 429 5 times" );
+            if ( tries > MAX_TRIES ) {
+                Log.fatal( EutilFetch.class, "Got HTTP 429 " + tries + " times" );
                 throw e;
             }
             Log.warn( EutilFetch.class, "got HTTP 429 " + tries + " time(s), letting the server rest for a second." );

@@ -45,7 +45,9 @@ public class PubMedXMLFetcher {
         String idtag = Settings.getString( "entrez.efetch.pubmed.idtag" );
         String retmode = Settings.getString( "entrez.efetch.pubmed.retmode" );
         String rettype = Settings.getString( "entrez.efetch.pubmed.rettype" );
-        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
+        String apikey = Settings.getString( "entrez.efetch.apikey" );
+        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + ( StringUtils.isNotBlank( apikey ) ? "&api_key=" + apikey : "" ) + "&" + idtag;
+
     }
 
     public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException {
@@ -61,8 +63,9 @@ public class PubMedXMLFetcher {
 
     public BibliographicReference retrieveByHTTP( int pubMedId ) {
         Collection<BibliographicReference> results = null;
-        try {
-            for ( int i = 0; i < MAX_TRIES; i++ ) {
+
+        for ( int i = 0; i < MAX_TRIES; i++ ) {
+            try {
                 URL toBeGotten = new URL( uri + pubMedId );
                 log.debug( "Fetching " + toBeGotten );
                 PubMedXMLParser pmxp = new PubMedXMLParser();
@@ -74,14 +77,24 @@ public class PubMedXMLFetcher {
                 } catch ( InterruptedException e ) {
                     // noop
                 }
+
+            } catch ( IOException e ) {
+                if ( e.getMessage().contains( "429" ) ) { // too many requests 
+                    try {
+                        Thread.sleep( 5000 );
+                    } catch ( InterruptedException e1 ) {
+                        // noop
+                    }
+                } else {
+                    throw new RuntimeException( e );
+                }
             }
-            if ( results == null || results.size() == 0 ) {
-                return null;
-            }
-            assert results.size() == 1;
-            return results.iterator().next();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
         }
+        if ( results == null || results.size() == 0 ) {
+            return null;
+        }
+        assert results.size() == 1;
+        return results.iterator().next();
+
     }
 }

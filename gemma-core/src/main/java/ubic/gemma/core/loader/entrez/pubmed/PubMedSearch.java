@@ -50,7 +50,8 @@ public class PubMedSearch {
         // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
         String retmode = ( String ) Settings.getProperty( "entrez.efetch.pubmed.retmode" );
         String rettype = ( String ) Settings.getProperty( "entrez.efetch.pubmed.rettype" );
-        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype;
+        String apikey = Settings.getString( "entrez.efetch.apikey" );
+        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + ( StringUtils.isNotBlank( apikey ) ? "&api_key=" + apikey : "" );
     }
 
     /**
@@ -84,6 +85,11 @@ public class PubMedSearch {
             } catch ( IOException e ) {
                 if ( numTries == MAX_TRIES ) throw e;
                 log.warn( "Failed attempt (" + numTries + "/" + MAX_TRIES + ") " + e.getMessage() );
+                try {
+                    // be nice
+                    Thread.sleep( 200 );
+                } catch ( InterruptedException e1 ) {
+                }
             }
         }
 
@@ -174,7 +180,7 @@ public class PubMedSearch {
         int count = 0;
 
         for ( String str : ids ) {
-            log.info( "Fetching pubmed " + str );
+            log.debug( "Fetching pubmed " + str );
 
             ints.add( Integer.parseInt( str ) );
 
@@ -186,6 +192,12 @@ public class PubMedSearch {
                 count = 0;
             }
 
+            // be nice
+            try {
+                Thread.sleep( 100 );
+            } catch ( InterruptedException e ) {
+
+            }
         }
 
         if ( count > 0 ) {

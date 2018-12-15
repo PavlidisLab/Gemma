@@ -15,7 +15,6 @@
 package ubic.gemma.core.loader.association.phenotype;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -63,14 +62,19 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
 
     @Override
     public String getCommandName() {
-        return null;
+        return "deletePhenotypes";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Use to remove all evidence from an external database, usually to reimport them after";
     }
 
     @Override
     protected void buildOptions() {
-        @SuppressWarnings("static-access") Option databaseOption = OptionBuilder
-                .withDescription( "External database name to be deleted" ).hasArg()
-                .withArgName( "name of external database" ).isRequired().create( "d" );
+        @SuppressWarnings("static-access")
+        Option databaseOption = Option.builder( "d" ).desc( "External database name (e.g. 'GWAS_Catalog', 'DGA' etc.)" ).hasArg()
+                .argName( "name" ).required().build();
         this.addOption( databaseOption );
 
     }
@@ -91,21 +95,24 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
 
         Integer limit = 1000;
 
-        AbstractCLI.log.info( "Loading " + limit + " evidence (this takes some time)" );
+        AbstractCLI.log.info( "Loading " + limit + " evidences to delete ..." );
 
         Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidenceToDelete = this.phenotypeAssociationService
                 .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit, 0 );
         int i = 0;
 
         while ( evidenceToDelete.size() > 0 ) {
-            for ( EvidenceValueObject e : evidenceToDelete ) {
+            for ( EvidenceValueObject<?> e : evidenceToDelete ) {
                 this.phenotypeAssociationService.remove( e.getId() );
-                AbstractCLI.log.info( i++ );
+             //   AbstractCLI.log.info( i++ );
+                i++;
             }
+            
+            // WTF?
             evidenceToDelete = this.phenotypeAssociationService
                     .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit, 0 );
         }
-        System.exit( -1 );
+      //  System.exit( -1 ); // ???
         return null;
     }
 

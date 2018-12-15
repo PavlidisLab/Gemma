@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * *
+ * this importer cannot automatically download files it expects the files to already be there
  *
  * @author nicolas
  */
-public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
+public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
     private static final String SFARI = "SFARI";
@@ -63,38 +63,47 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
     private File geneScore = null;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public SfariDatabaseImporter( String[] args ) throws Exception {
-        super( args );
-        Exception e = this.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-        /* this importer cannot automatically download files it expects the files to already be there */
+    public SfariDatabaseImporterCli() throws Exception {
+        super();
     }
 
     public static void main( String[] args ) throws Exception {
-        @SuppressWarnings("unused") SfariDatabaseImporter importEvidence = new SfariDatabaseImporter( args );
+        @SuppressWarnings("unused")
+        SfariDatabaseImporterCli importEvidence = new SfariDatabaseImporterCli();
+        Exception e = importEvidence.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
+        /*  */
+
     }
 
     @Override
     public String getCommandName() {
-        return "sfariImport";
+        return "sfariDownload";
     }
 
     @Override
     public CommandGroup getCommandGroup() {
-        return null;
+        return CommandGroup.PHENOTYPES;
     }
 
     @Override
     protected void buildOptions() {
-        super.buildOptions();
+        // No-op
+
     }
 
     @Override
     protected Exception doWork( String[] args ) {
+        Exception e1 = super.processCommandLine( args );
+        if ( e1 != null ) return e1;
+        e1 = super.init();
+        if ( e1 != null ) return e1;
 
         try {
+            writeFolder = ppUtil.createWriteFolderIfDoesntExist( SFARI );
+
             this.checkForSfariFiles();
             this.processSfariScoreFile();
             this.processSfariGeneFile();
@@ -107,7 +116,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     @Override
     public String getShortDesc() {
-        return "Creates a .tsv file of lines of evidence from SFARI, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+        return "Creates a .tsv file of lines of evidence from SFARI, to be used with evidenceImport to import into Phenocarta.";
     }
 
     @Override
@@ -142,31 +151,34 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     private void checkForSfariFiles() throws Exception {
 
-        writeFolder =
-                ExternalDatabaseEvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + SfariDatabaseImporter.SFARI;
+        writeFolder = PhenotypeProcessingUtil.WRITE_FOLDER + File.separator + SfariDatabaseImporterCli.SFARI;
 
         File folder = new File( writeFolder );
 
         if ( !folder.exists() ) {
-            throw new Exception( "cannot find the SFARI Folder" + folder.getAbsolutePath() );
+            throw new Exception( "cannot find the SFARI Folder: " + folder.getAbsolutePath() );
         }
 
-        // first file expected
-        autismGeneDataset = new File( writeFolder + File.separator + "autism-gene-dataset.csv" );
+        // PP found this file at http://autism.mindspec.org/autdb/submitsearch?selfld_0=GENE_CHR_NUM&selfldv_0=1&numOfFields=1&userAction=search&tableName=AUT_HG&submit=Submit+Query
+        autismGeneDataset = new File( writeFolder + File.separator + "gene-summary.csv" );
         if ( !autismGeneDataset.exists() ) {
             throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
         }
 
-        // second file expected
+        // PP has not been able to locate this.
         geneScore = new File( writeFolder + File.separator + "gene-score.csv" );
         if ( !geneScore.exists() ) {
             throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
         }
     }
 
+    /**
+     * Parse the 'gene-summary.csv' file
+     * @throws Exception
+     */
     private void processSfariGeneFile() throws Exception {
 
-        this.initFinalOutputFile( true, true );
+        ppUtil.initFinalOutputFile( writeFolder, true, true );
 
         try (BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) )) {
 
@@ -178,31 +190,41 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
             Collections.addAll( headersSet, headersTokens );
 
-            if ( !headersSet.contains( SfariDatabaseImporter.GENE_SYMBOL_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.ENTREZ_GENE_ID_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.SUPPORT_FOR_AUTISM_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.EVIDENCE_OF_SUPPORT_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.POSITIVE_REFERENCE_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.NEGATIVE_REFERENCE_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.PRIMARY_REFERENCE_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.MOST_CITED_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.MOST_RECENT_HEADER ) || !headersSet
-                    .contains( SfariDatabaseImporter.SUPPORTING_HEADER ) ) {
+            if ( !headersSet.contains( SfariDatabaseImporterCli.GENE_SYMBOL_HEADER ) || !headersSet
+                    .contains( SfariDatabaseImporterCli.ENTREZ_GENE_ID_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.SUPPORT_FOR_AUTISM_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.EVIDENCE_OF_SUPPORT_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.POSITIVE_REFERENCE_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.NEGATIVE_REFERENCE_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.PRIMARY_REFERENCE_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.MOST_CITED_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.MOST_RECENT_HEADER )
+                    || !headersSet
+                            .contains( SfariDatabaseImporterCli.SUPPORTING_HEADER ) ) {
                 throw new Exception( "Some headers not find in the autism gene dataset" );
             }
 
-            Integer geneSymbolIndex = headersSet.indexOf( SfariDatabaseImporter.GENE_SYMBOL_HEADER );
-            Integer entrezGeneIDIndex = headersSet.indexOf( SfariDatabaseImporter.ENTREZ_GENE_ID_HEADER );
-            Integer supportForAutismIndex = headersSet.indexOf( SfariDatabaseImporter.SUPPORT_FOR_AUTISM_HEADER );
-            Integer evidenceOfSupportIndex = headersSet.indexOf( SfariDatabaseImporter.EVIDENCE_OF_SUPPORT_HEADER );
-            Integer positiveReferenceIndex = headersSet.indexOf( SfariDatabaseImporter.POSITIVE_REFERENCE_HEADER );
-            Integer negativeReferenceIndex = headersSet.indexOf( SfariDatabaseImporter.NEGATIVE_REFERENCE_HEADER );
-            Integer primaryReferenceIndex = headersSet.indexOf( SfariDatabaseImporter.PRIMARY_REFERENCE_HEADER );
-            @SuppressWarnings("unused") Integer mostCitedIndex = headersSet
-                    .indexOf( SfariDatabaseImporter.MOST_CITED_HEADER );
-            @SuppressWarnings("unused") Integer mostRecentIndex = headersSet
-                    .indexOf( SfariDatabaseImporter.MOST_RECENT_HEADER );
-            Integer supportingIndex = headersSet.indexOf( SfariDatabaseImporter.SUPPORTING_HEADER );
+            Integer geneSymbolIndex = headersSet.indexOf( SfariDatabaseImporterCli.GENE_SYMBOL_HEADER );
+            Integer entrezGeneIDIndex = headersSet.indexOf( SfariDatabaseImporterCli.ENTREZ_GENE_ID_HEADER );
+            Integer supportForAutismIndex = headersSet.indexOf( SfariDatabaseImporterCli.SUPPORT_FOR_AUTISM_HEADER );
+            Integer evidenceOfSupportIndex = headersSet.indexOf( SfariDatabaseImporterCli.EVIDENCE_OF_SUPPORT_HEADER );
+            Integer positiveReferenceIndex = headersSet.indexOf( SfariDatabaseImporterCli.POSITIVE_REFERENCE_HEADER );
+            Integer negativeReferenceIndex = headersSet.indexOf( SfariDatabaseImporterCli.NEGATIVE_REFERENCE_HEADER );
+            Integer primaryReferenceIndex = headersSet.indexOf( SfariDatabaseImporterCli.PRIMARY_REFERENCE_HEADER );
+            @SuppressWarnings("unused")
+            Integer mostCitedIndex = headersSet
+                    .indexOf( SfariDatabaseImporterCli.MOST_CITED_HEADER );
+            @SuppressWarnings("unused")
+            Integer mostRecentIndex = headersSet
+                    .indexOf( SfariDatabaseImporterCli.MOST_RECENT_HEADER );
+            Integer supportingIndex = headersSet.indexOf( SfariDatabaseImporterCli.SUPPORTING_HEADER );
 
             String line;
 
@@ -249,13 +271,18 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
             }
 
             brAutismGeneDataset.close();
-            outFinalResults.close();
+            ppUtil.outFinalResults.close();
         }
     }
 
+    /**
+     * Parse the gene-score.csv file
+     * @throws Exception
+     */
     private void processSfariScoreFile() throws Exception {
 
-        @SuppressWarnings("resource") BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
+        @SuppressWarnings("resource")
+        BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
 
         // read headers
         String headersScore = StringUtil.cvs2tsv( brGeneScore.readLine() );
@@ -268,17 +295,19 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
             headersSet.add( token.trim() );
         }
 
-        if ( !headersSet.contains( SfariDatabaseImporter.GENE_SYMBOL_SCORE_HEADER ) || !headersSet
-                .contains( SfariDatabaseImporter.SCORE_HEADER ) || !headersSet
-                .contains( SfariDatabaseImporter.SCORE_DETAILS_HEADER ) || !headersSet
-                .contains( SfariDatabaseImporter.DESCRIPTION_SCORE_HEADER ) ) {
+        if ( !headersSet.contains( SfariDatabaseImporterCli.GENE_SYMBOL_SCORE_HEADER ) || !headersSet
+                .contains( SfariDatabaseImporterCli.SCORE_HEADER )
+                || !headersSet
+                        .contains( SfariDatabaseImporterCli.SCORE_DETAILS_HEADER )
+                || !headersSet
+                        .contains( SfariDatabaseImporterCli.DESCRIPTION_SCORE_HEADER ) ) {
             throw new Exception( "Some headers not find" );
         }
 
-        Integer geneSymbolIndex = headersSet.indexOf( SfariDatabaseImporter.GENE_SYMBOL_SCORE_HEADER );
-        Integer scoreIndex = headersSet.indexOf( SfariDatabaseImporter.SCORE_HEADER );
-        Integer scoreDetailsIndex = headersSet.indexOf( SfariDatabaseImporter.SCORE_DETAILS_HEADER );
-        Integer descriptionScoreIndex = headersSet.indexOf( SfariDatabaseImporter.DESCRIPTION_SCORE_HEADER );
+        Integer geneSymbolIndex = headersSet.indexOf( SfariDatabaseImporterCli.GENE_SYMBOL_SCORE_HEADER );
+        Integer scoreIndex = headersSet.indexOf( SfariDatabaseImporterCli.SCORE_HEADER );
+        Integer scoreDetailsIndex = headersSet.indexOf( SfariDatabaseImporterCli.SCORE_DETAILS_HEADER );
+        Integer descriptionScoreIndex = headersSet.indexOf( SfariDatabaseImporterCli.DESCRIPTION_SCORE_HEADER );
 
         String line;
         int lineNumer = 1;
@@ -330,6 +359,13 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         brGeneScore.close();
     }
 
+    /**
+     * FIXME get rid of this if possible
+     * 
+     * @param  geneSymbol
+     * @param  nbciID
+     * @return
+     */
     private String treatSpecialCases( String geneSymbol, String nbciID ) {
 
         if ( geneSymbol.equalsIgnoreCase( "ATP2B2" ) && nbciID.equalsIgnoreCase( "108733" ) ) {
@@ -359,26 +395,26 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
             allPubmeds.append( pudmed ).append( ";" );
         }
 
-        outFinalResults.write( geneSymbol + "\t" );
-        outFinalResults.write( nbciID + "\t" );
-        outFinalResults.write( allPubmeds + "\t" );
-        outFinalResults.write( "TAS" + "\t" );
-        outFinalResults.write( description + descriptionInScore + "\t" );
-        outFinalResults.write( "SFARI" + "\t" );
-        outFinalResults.write( geneSymbol + "\t" );
-        outFinalResults.write( "\t\t" );
-        outFinalResults.write( "autism spectrum disorder" + "\t" );
-        outFinalResults.write( negative + "\t" );
+        ppUtil.outFinalResults.write( geneSymbol + "\t" );
+        ppUtil.outFinalResults.write( nbciID + "\t" );
+        ppUtil.outFinalResults.write( allPubmeds + "\t" );
+        ppUtil.outFinalResults.write( "TAS" + "\t" );
+        ppUtil.outFinalResults.write( description + descriptionInScore + "\t" );
+        ppUtil.outFinalResults.write( "SFARI" + "\t" );
+        ppUtil.outFinalResults.write( geneSymbol + "\t" );
+        ppUtil.outFinalResults.write( "\t\t" );
+        ppUtil.outFinalResults.write( "autism spectrum disorder" + "\t" );
+        ppUtil.outFinalResults.write( negative + "\t" );
         this.writeScore( scoreVO );
-        outFinalResults.newLine();
+        ppUtil.outFinalResults.newLine();
     }
 
     private void writeScore( ScoreValueObject scoreVO ) throws IOException {
 
         if ( scoreVO != null ) {
-            outFinalResults.write( scoreVO.getScoreName() + "\t" );
-            outFinalResults.write( scoreVO.getScoreValue() + "\t" );
-            outFinalResults.write( scoreVO.getStrength() + "\t" );
+            ppUtil.outFinalResults.write( scoreVO.getScoreName() + "\t" );
+            ppUtil.outFinalResults.write( scoreVO.getScoreValue() + "\t" );
+            ppUtil.outFinalResults.write( scoreVO.getStrength() + "\t" );
         }
     }
 }

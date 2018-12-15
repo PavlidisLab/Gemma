@@ -70,7 +70,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     @Override
     public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
+        return CommandGroup.PHENOTYPES;
     }
 
     @Override

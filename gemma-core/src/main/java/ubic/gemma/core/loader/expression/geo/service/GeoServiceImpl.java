@@ -588,6 +588,13 @@ public class GeoServiceImpl extends AbstractGeoService {
                 continue;
             experiment.setPrimaryPublication( pubmed );
 
+            // don't spam NCBI. > 3 per second is a no-no without an API key
+            // see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+            try {
+                Thread.sleep( 350 );
+            } catch ( InterruptedException e ) {
+                //
+            }
         }
     }
 
