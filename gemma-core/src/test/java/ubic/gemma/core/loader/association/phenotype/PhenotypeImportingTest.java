@@ -48,9 +48,9 @@ public class PhenotypeImportingTest extends BaseSpringContextTest {
 //        /// Will have to populate some genes to do a proper test.
 //    }
 //
-//    @Test
-//    public void testCtd() {
-// 
-//    }
+    @Test
+    public void testCtd() {
+ 
+    }
 
 }
