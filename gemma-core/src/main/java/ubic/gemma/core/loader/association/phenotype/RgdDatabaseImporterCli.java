@@ -22,6 +22,7 @@ import ubic.gemma.model.genome.Taxon;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -154,8 +155,19 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
             if ( !evidenceCode.equalsIgnoreCase( "ISS" ) && !evidenceCode.equalsIgnoreCase( "NAS" ) && !evidenceCode
                     .equalsIgnoreCase( "IEA" ) && !doID.equals( "" ) && StringUtils.isBlank( pubmedReady ) ) {
 
-                //   Gene gene = ppUtil.findGeneUsingSymbolandTaxon( geneSymbol, taxon );
-                Gene gene = geneService.findByOfficialSymbol( geneSymbol, rat );
+                Gene gene = null;
+                try {
+                    gene = geneService.findByOfficialSymbol( geneSymbol, rat );
+                } catch ( org.hibernate.NonUniqueResultException e ) { // temporary
+                    Collection<Gene> nonuniques = geneService.findByOfficialSymbol( geneSymbol );
+                    log.info( "Multiple rat genes mateched " + geneSymbol );
+                    for ( Gene gene2 : nonuniques ) {
+                        if ( gene2.getTaxon().equals( rat ) ) {
+                            System.err.println( gene2 );
+                        }
+                    }
+                    continue;
+                }
 
                 if ( gene != null ) {
 

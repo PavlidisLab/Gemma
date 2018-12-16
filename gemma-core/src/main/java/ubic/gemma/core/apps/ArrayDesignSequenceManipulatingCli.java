@@ -45,9 +45,13 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
-    ArrayDesignReportService arrayDesignReportService;
-    ArrayDesignService arrayDesignService;
-    Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
+    private ArrayDesignReportService arrayDesignReportService;
+    private ArrayDesignService arrayDesignService;
+    private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
+
+    protected Collection<ArrayDesign> getArrayDesignsToProcess() {
+        return arrayDesignsToProcess;
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -122,11 +126,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     }
 
-    ArrayDesignReportService getArrayDesignReportService() {
+    protected ArrayDesignReportService getArrayDesignReportService() {
         return arrayDesignReportService;
     }
 
-    ArrayDesignService getArrayDesignService() {
+    protected ArrayDesignService getArrayDesignService() {
         return arrayDesignService;
     }
 
@@ -135,7 +139,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      *         design. In the case of subsumption, this only works if the array design has been either analyzed for
      *         subsuming status. (the analysis is not done as part of this call).
      */
-    boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
+    protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
             AbstractCLI.log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
             return true;
@@ -149,7 +153,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
-    boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design, Class<? extends ArrayDesignAnalysisEvent> cls ) {
+    protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design, Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
             AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
             // not really an error, but nice to get notification.

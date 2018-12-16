@@ -69,7 +69,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
         BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
 
-        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
             if ( this.hasOption( "delete" ) ) {
                 Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );

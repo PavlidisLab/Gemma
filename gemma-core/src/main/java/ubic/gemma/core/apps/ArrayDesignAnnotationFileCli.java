@@ -220,10 +220,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else if ( this.taxonName != null ) {
                 this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
             } else {
-                if ( this.arrayDesignsToProcess.isEmpty() ) {
+                if ( this.getArrayDesignsToProcess().isEmpty() ) {
                     throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
                 }
-                for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+                for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                     if ( doAllTypes ) {
                         // make all three
                         this.processOneAD( arrayDesign );
@@ -296,10 +296,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }
-            candidates = this.arrayDesignService.findByTaxon( taxon );
+            candidates = this.getArrayDesignService().findByTaxon( taxon );
 
         } else {
-            candidates = this.arrayDesignService.loadAll();
+            candidates = this.getArrayDesignService().loadAll();
         }
 
         if ( candidates.isEmpty() ) {
@@ -313,7 +313,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         int numSkippedUnneeded = 0;
         for ( ArrayDesign ad : candidates ) {
 
-            ad = arrayDesignService.thawLite( ad );
+            ad = getArrayDesignService().thawLite( ad );
 
             if ( ad.getTechnologyType().equals( TechnologyType.SEQUENCING )
                     || ( ad.getTechnologyType().equals( TechnologyType.GENELIST ) ) ) {
@@ -425,7 +425,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 // need to set these so processing ad works correctly
                 // TODO: make process type take all 3 parameter
-                ArrayDesign arrayDesign = this.locateArrayDesign( accession, arrayDesignService );
+                ArrayDesign arrayDesign = this.locateArrayDesign( accession, getArrayDesignService() );
 
                 try {
                     this.processAD( arrayDesign, annotationFileName, this.type );
@@ -596,7 +596,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
              * Delete the data files for experiments that used this platform, since they have the old annotations in
              * them (or no annotations)
              */
-            Collection<ExpressionExperiment> ees = this.arrayDesignService.getExpressionExperiments( ad );
+            Collection<ExpressionExperiment> ees = this.getArrayDesignService().getExpressionExperiments( ad );
             if ( !ees.isEmpty() ) log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
                     + ", that may have outdated annotations" );
             for ( ExpressionExperiment ee : ees ) {

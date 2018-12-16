@@ -91,12 +91,12 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
             throw new IllegalArgumentException( "filename cannot be null" );
         }
 
-        if ( this.arrayDesignsToProcess.size() > 1 ) {
+        if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
+        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         arrayDesign = this.thaw( arrayDesign );
 
         File file = new File( fileName );
@@ -144,11 +144,11 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
         }
 
-        arrayDesignService.update( arrayDesign );
+        getArrayDesignService().update( arrayDesign );
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignProbeRenamingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

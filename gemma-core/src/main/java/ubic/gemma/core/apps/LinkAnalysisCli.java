@@ -89,16 +89,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( initializeFromOldData ) {
-            AbstractCLI.log.info( "Initializing links from old data for " + this.taxon );
+            AbstractCLI.log.info( "Initializing links from old data for " + this.getTaxon() );
             LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
-            s.initializeLinksFromOldData( this.taxon );
+            s.initializeLinksFromOldData( this.getTaxon() );
             return null;
         } else if ( updateNodeDegree ) {
 
             // we waste some time here getting the experiments.
             this.loadTaxon();
 
-            this.getBean( CoexpressionService.class ).updateNodeDegrees( this.taxon );
+            this.getBean( CoexpressionService.class ).updateNodeDegrees( this.getTaxon() );
 
             return null;
         }
@@ -163,7 +163,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 return e;
             }
 
-            this.linkAnalysisService.processVectors( this.taxon, dataVectors, filterConfig, linkAnalysisConfig );
+            this.linkAnalysisService.processVectors( this.getTaxon(), dataVectors, filterConfig, linkAnalysisConfig );
         } else {
 
             /*
@@ -456,22 +456,26 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private void buildFilterConfigOptions() {
         Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
                 "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
+                .withLongOpt( "missingcut" ).create( 'm' );
         this.addOption( minPresentFraction );
 
         Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
                 "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
+                .withLongOpt( "lowcut" ).create( 'l' );
         this.addOption( lowExpressionCut );
 
         Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
                 "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT )
+                .withLongOpt( "lowvarcut" ).create( "lv" );
         this.addOption( lowVarianceCut );
 
         Option distinctValueCut = OptionBuilder.hasArg().withArgName( "Fraction distinct values threshold" )
                 .withDescription( "Fraction of values which must be distinct (NaN counts as one value), default="
-                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" ).create( "dv" );
+                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION )
+                .withLongOpt( "distinctValCut" ).create( "dv" );
         this.addOption( distinctValueCut );
 
     }
@@ -492,11 +496,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private void loadTaxon() {
-        this.taxon = taxonService.findByCommonName( analysisTaxon );
-        if ( this.taxon == null || !this.taxon.getIsGenesUsable() ) {
-            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
+        super.setTaxon( this.getTaxonService().findByCommonName( analysisTaxon ) );
+        if ( this.getTaxon() == null || !this.getTaxon().getIsGenesUsable() ) {
+            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + getTaxon() );
         }
-        AbstractCLI.log.debug( taxon + "is used" );
+        AbstractCLI.log.debug( getTaxon() + "is used" );
     }
 
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
@@ -508,7 +512,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( columnName.toString() );
-            bioMaterial.setSourceTaxon( taxon );
+            bioMaterial.setSourceTaxon( getTaxon() );
 
             BioAssay assay = BioAssay.Factory.newInstance();
             assay.setName( columnName.toString() );

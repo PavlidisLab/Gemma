@@ -49,7 +49,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
             return err;
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
-        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
             ArrayDesign thawed = this.thaw( arrayDesign );
 
