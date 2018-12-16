@@ -34,6 +34,10 @@ import org.apache.commons.lang.StringUtils;
  */
 public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
+    /**
+     * 
+     */
+    private static final String AUTISM_SPECTRUM_DISORDER_DOID = "http://purl.obolibrary.org/obo/DOID_0060041";
     // name of the external database
     private static final String SFARI = "SFARI";
     private static final String DESCRIPTION_SCORE_HEADER = "Evidence";
@@ -179,7 +183,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
             throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
         }
 
-        // Seems a version is available at http://autism.mindspec.org/autdb/GSGeneList.do?c Out of date?
+        // Seems a version is available at http://autism.mindspec.org/autdb/GSGeneList.do?c Out of date compared to SFARI data
         geneScore = new File( writeFolder + File.separator + "gene-score.csv" );
         if ( !geneScore.exists() ) {
             throw new Exception( "Cannot find file: " + autismGeneDataset.getAbsolutePath() );
@@ -193,7 +197,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
      */
     private void processSfariGeneFile() throws Exception {
 
-        ppUtil.initFinalOutputFile( writeFolder, true, true );
+        ppUtil.initFinalOutputFile( "SFARI", writeFolder, true, true );
 
         try (BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) )) {
 
@@ -250,7 +254,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
                 String geneSymbol = lineTokens[geneSymbolIndex];
                 String nbciID = lineTokens[entrezGeneIDIndex];
-                String description = lineTokens[supportForAutismIndex] + " ; " + lineTokens[evidenceOfSupportIndex];
+                String description = lineTokens[supportForAutismIndex] + ";" + lineTokens[evidenceOfSupportIndex]; // is this formatting important?
                 Set<String> literaturePubMed = new HashSet<>();
                 Set<String> literaturePubMedNegative = new HashSet<>();
 
@@ -275,8 +279,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
                 if ( descriptionInScore == null ) {
                     descriptionInScore = "";
-                } else {
-                    descriptionInScore = " " + descriptionInScore;
                 }
 
                 if ( !literaturePubMed.isEmpty() ) {
@@ -402,31 +404,41 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
             String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
 
         String negative = "";
-
         if ( isNegative ) {
             negative = "1";
         }
 
-        StringBuilder allPubmeds = new StringBuilder();
-
-        for ( String pudmed : literaturePubMed ) {
-            allPubmeds.append( pudmed ).append( ";" );
-        }
-
+        /*
+         * there were special instructions about editing this file afterwards
+         * "Also, change the columns in the generated finalResults.tsv file to ensure that "autism spectrum disorder"
+         * is in the "OrginalPhenotype" [sp] column, and the phenotype URI is in the "Phenotypes" column."
+         * 
+         * This code does not fill that in, but why not?
+         */
         ppUtil.outFinalResults.write( geneSymbol + "\t" );
         ppUtil.outFinalResults.write( nbciID + "\t" );
-        ppUtil.outFinalResults.write( allPubmeds + "\t" );
+        ppUtil.outFinalResults.write( StringUtils.join( literaturePubMed, ";" ) + "\t" );
         ppUtil.outFinalResults.write( "TAS" + "\t" );
-        ppUtil.outFinalResults.write( description + descriptionInScore + "\t" );
-        ppUtil.outFinalResults.write( "SFARI" + "\t" );
-        ppUtil.outFinalResults.write( geneSymbol + "\t" );
-        ppUtil.outFinalResults.write( "\t\t" );
-        ppUtil.outFinalResults.write( "autism spectrum disorder" + "\t" );
-        ppUtil.outFinalResults.write( negative + "\t" );
-        this.writeScore( scoreVO );
+        ppUtil.outFinalResults.write( description + "; " + descriptionInScore + "\t" ); // comments;
+        ppUtil.outFinalResults.write( "SFARI" + "\t" ); // ExternalDatabase
+        ppUtil.outFinalResults.write( geneSymbol + "\t" ); // database link is just the gene symbol
+        ppUtil.outFinalResults.write( "Curated\tautism spectrum disorder\t" ); // phenotypemapping, original phenotype
+        ppUtil.outFinalResults.write( AUTISM_SPECTRUM_DISORDER_DOID + "\t" ); // phenotypes
+        ppUtil.outFinalResults.write( negative + "\t" ); //isnegative
+        this.writeScore( scoreVO ); // score type, score, strength
         ppUtil.outFinalResults.newLine();
+
+        // GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypeMapping\tOrginalPhenotype\tPhenotypes\tIsNegative\tScoreType\tScore\tStrength"
+
     }
 
+    /**
+     * Format score information as required for downstream processing. Expected fields are ScoreType\tScore\tStrength
+     * (see {@link PhenotypeProcessingUtil} initFinalOutputFile.
+     * 
+     * @param  scoreVO
+     * @throws IOException
+     */
     private void writeScore( ScoreValueObject scoreVO ) throws IOException {
 
         if ( scoreVO != null ) {

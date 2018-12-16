@@ -4133,3 +4133,82 @@ MESH:C564683	http://purl.obolibrary.org/obo/DOID_0050544	hypermethioninemia	hype
 MESH:C566194	http://purl.obolibrary.org/obo/DOID_0050581	brachydactyly	brachydactyly   (Brachydactyly, Type E)	null	A) Found Exact With Disease Annotator modified search 	CTD
 MESH:D012770	http://purl.obolibrary.org/obo/HP_0030149	Cardiogenic shock	cardiogenic shock   (Shock, Cardiogenic)	null	C) Found Exact With HP Annotator modified search 	CTD
 MESH:D015831	http://purl.obolibrary.org/obo/HP_0030431	Osteochondroma	osteochondroma	null	C) Found Exact With HP Annotator	CTD
+MESH:C535808	http://purl.obolibrary.org/obo/DOID_0050757	deafness-dystonia-optic neuronopathy syndrome	mohr-tranebjaerg syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C535847	http://purl.obolibrary.org/obo/DOID_0090119	ankyloblepharon-ectodermal defects-cleft lip/palate syndrome	hay-wells syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C535863	http://purl.obolibrary.org/obo/DOID_0060764	autosomal recessive Robinow syndrome	autosomal recessive robinow syndrome   (Robinow syndrome, autosomal recessive)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:C536106	http://purl.obolibrary.org/obo/DOID_0111072	myostatin-related muscle hypertrophy	myostatin-related muscle hypertrophy	null	A) Found Exact With Disease Annotator	CTD
+MESH:C536209	http://purl.obolibrary.org/obo/DOID_0060731	congenital central hypoventilation syndrome	congenital central hypoventilation syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:C536273	http://purl.obolibrary.org/obo/DOID_0060720	autosomal recessive congenital ichthyosis 11	autosomal recessive ichthyosis with hypotrichosis   (Ichthyosis with hypotrichosis, autosomal recessive)	null	B) Found Synonym With Disease Annotator Synonym modified search 	CTD
+MESH:C536309	http://purl.obolibrary.org/obo/DOID_0060863	patterned macular dystrophy	patterned dystrophy of retinal pigment epithelium	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C536447	http://purl.obolibrary.org/obo/DOID_0090139	cortisone reductase deficiency	cortisone reductase deficiency	null	A) Found Exact With Disease Annotator	CTD
+MESH:C536761	http://purl.obolibrary.org/obo/DOID_0060063	sideroblastic anemia 1	x-linked sideroblastic anemia	null	A) Found Exact With Disease Annotator	CTD
+MESH:C537145	http://purl.obolibrary.org/obo/DOID_0060699	familial hypocalciuric hypercalcemia	familial hypocalciuric hypercalcemia   (Hypocalciuric hypercalcemia, familial, type 1)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:C537147	http://purl.obolibrary.org/obo/DOID_0060699	familial hypocalciuric hypercalcemia	familial benign hypercalcemia   (Familial benign hypercalcemia, type 3)	null	B) Found Synonym With Disease Annotator Synonym modified search 	CTD
+MESH:C537377	http://purl.obolibrary.org/obo/DOID_0080110	multiple pterygium syndrome	multiple pterygium syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:C537560	http://purl.obolibrary.org/obo/DOID_0090127	camptodactyly-arthropathy-coxa vara-pericarditis syndrome	jacobs syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C537617	http://purl.obolibrary.org/obo/DOID_0080201	Peters plus syndrome	krause-kivlin syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C537775	http://purl.obolibrary.org/obo/DOID_0060605	anterior segment mesenchymal dysgenesis	anterior segment mesenchymal dysgenesis	null	A) Found Exact With Disease Annotator	CTD
+MESH:C537907	http://purl.obolibrary.org/obo/DOID_0060878	hypoparathyroidism-deafness-renal disease syndrome	barakat syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C537944	http://purl.obolibrary.org/obo/DOID_0070028	APP-related cerebral amyloid angiopathy	amyloidosis, cerebroarterial, app-related	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C538003	http://purl.obolibrary.org/obo/HP_0001304	Torsion dystonia	torsion dystonia   (Dystonia 6, torsion)	null	C) Found Exact With HP Annotator modified search 	CTD
+MESH:C538104	http://purl.obolibrary.org/obo/DOID_0060372	autosomal recessive early-onset Parkinson's disease 15	pallidopyramidal syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C538157	http://purl.obolibrary.org/obo/DOID_0050678	Blau syndrome	blau syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:C538445	http://purl.obolibrary.org/obo/DOID_4467	clear cell renal cell carcinoma	clear-cell metastatic renal cell carcinoma	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C548069	http://purl.obolibrary.org/obo/DOID_0060264	pontocerebellar hypoplasia	pontocerebellar hypoplasia   (Pontocerebellar Hypoplasia Type 1)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:C562378	http://purl.obolibrary.org/obo/HP_0002612	Congenital hepatic fibrosis	congenital hepatic fibrosis   (Hepatic Fibrosis, Congenital)	null	C) Found Exact With HP Annotator modified search 	CTD
+MESH:C563466	http://purl.obolibrary.org/obo/DOID_0060240	UV-sensitive syndrome	uv-sensitive syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:C563855	http://purl.obolibrary.org/obo/DOID_0060786	hypomyelinating leukodystrophy	hypomyelinating leukodystrophy   (Leukodystrophy, Hypomyelinating, 2)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:C564710	http://purl.obolibrary.org/obo/DOID_0060858	hypotonia-cystinuria syndrome	hypotonia-cystinuria syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:C566044	http://purl.obolibrary.org/obo/DOID_0110315	hypertrophic cardiomyopathy 9	cardiomyopathy, familial hypertrophic, 9	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:C566044	http://purl.obolibrary.org/obo/DOID_11984	hypertrophic cardiomyopathy	familial hypertrophic cardiomyopathy   (Cardiomyopathy, Familial Hypertrophic, 9)	null	B) Found Synonym With Disease Annotator Synonym modified search 	CTD
+MESH:C580316	http://purl.obolibrary.org/obo/HP_0003715	Myofibrillar myopathy	myofibrillar myopathy	null	C) Found Exact With HP Annotator	CTD
+MESH:C580334	http://purl.obolibrary.org/obo/DOID_0050563	nonsyndromic deafness	nonsyndromic deafness	null	A) Found Exact With Disease Annotator	CTD
+MESH:D000067877	http://purl.obolibrary.org/obo/DOID_0060041	autism spectrum disorder	autism spectrum disorder	null	A) Found Exact With Disease Annotator	CTD
+MESH:D000075262	http://purl.obolibrary.org/obo/DOID_13774	Addison's disease	hypoadrenocorticism, familial	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:D000077192	http://purl.obolibrary.org/obo/DOID_3910	lung adenocarcinoma	adenocarcinoma of lung	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:D000077274	http://purl.obolibrary.org/obo/DOID_9261	nasopharynx carcinoma	nasopharyngeal carcinoma	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:D000707	http://purl.obolibrary.org/obo/HP_0100845	Anaphylactic shock	anaphylaxis	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D001247	http://purl.obolibrary.org/obo/HP_0025406	Asthenia	asthenia	null	C) Found Exact With HP Annotator	CTD
+MESH:D001768	http://purl.obolibrary.org/obo/HP_0200037	Skin vesicle	blister	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D002769	http://purl.obolibrary.org/obo/DOID_10211	cholelithiasis	cholelithiasis	null	A) Found Exact With Disease Annotator	CTD
+MESH:D003704	http://purl.obolibrary.org/obo/DOID_1307	dementia	dementia	null	A) Found Exact With Disease Annotator	CTD
+MESH:D005316	http://purl.obolibrary.org/obo/HP_0025116	Fetal distress	fetal distress	null	C) Found Exact With HP Annotator	CTD
+MESH:D005483	http://purl.obolibrary.org/obo/HP_0031284	Flushing	flushing	null	C) Found Exact With HP Annotator	CTD
+MESH:D006209	http://purl.obolibrary.org/obo/HP_0100812	Halitosis	halitosis	null	C) Found Exact With HP Annotator	CTD
+MESH:D006356	http://purl.obolibrary.org/obo/HP_0002020	Gastroesophageal reflux	heartburn	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D006528	http://purl.obolibrary.org/obo/DOID_684	hepatocellular carcinoma	hepatocellular carcinoma   (Carcinoma, Hepatocellular)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:D006930	http://purl.obolibrary.org/obo/HP_0031005	Hyperalgesia	hyperalgesia	null	C) Found Exact With HP Annotator	CTD
+MESH:D006941	http://purl.obolibrary.org/obo/HP_0100963	Hyperesthesia	hyperesthesia	null	C) Found Exact With HP Annotator	CTD
+MESH:D006994	http://purl.obolibrary.org/obo/HP_0004319	Decreased circulating aldosterone level	hypoaldosteronism	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D007593	http://purl.obolibrary.org/obo/HP_0001388	Joint laxity	joint instability	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D008580	http://purl.obolibrary.org/obo/HP_0031179	Nuchal rigidity	meningism	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D008607	http://purl.obolibrary.org/obo/DOID_1059	intellectual disability	intellectual disability	null	A) Found Exact With Disease Annotator	CTD
+MESH:D010018	http://purl.obolibrary.org/obo/DOID_10573	osteomalacia	osteomalacia	null	A) Found Exact With Disease Annotator	CTD
+MESH:D011030	http://purl.obolibrary.org/obo/DOID_1673	pneumothorax	pneumothorax	null	A) Found Exact With Disease Annotator	CTD
+MESH:D011656	http://purl.obolibrary.org/obo/DOID_9675	pulmonary emphysema	pulmonary emphysema	null	A) Found Exact With Disease Annotator	CTD
+MESH:D012021	http://purl.obolibrary.org/obo/HP_0031826	Abnormal reflex	abnormal reflex   (Reflex, Abnormal)	null	C) Found Exact With HP Annotator modified search 	CTD
+MESH:D012769	http://purl.obolibrary.org/obo/HP_0031273	Shock	shock	null	C) Found Exact With HP Annotator	CTD
+MESH:D013479	http://purl.obolibrary.org/obo/HP_0031041	Obstruction of the superior vena cava	superior vena cava syndrome	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D013617	http://purl.obolibrary.org/obo/HP_0004755	Supraventricular tachycardia	supraventricular tachycardia   (Tachycardia, Supraventricular)	null	C) Found Exact With HP Annotator modified search 	CTD
+MESH:D013927	http://purl.obolibrary.org/obo/DOID_0060903	thrombosis	thrombosis	null	A) Found Exact With Disease Annotator	CTD
+MESH:D014071	http://purl.obolibrary.org/obo/HP_0000164	Abnormality of the dentition	tooth abnormalities	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D014581	http://purl.obolibrary.org/obo/DOID_1555	urticaria	urticaria	null	A) Found Exact With Disease Annotator	CTD
+MESH:D015419	http://purl.obolibrary.org/obo/DOID_2476	hereditary spastic paraplegia	hereditary spastic paraplegia   (Spastic Paraplegia, Hereditary)	null	A) Found Exact With Disease Annotator modified search 	CTD
+MESH:D015861	http://purl.obolibrary.org/obo/HP_0030666	Retinal neovascularization	retinal neovascularization	null	C) Found Exact With HP Annotator	CTD
+MESH:D016301	http://purl.obolibrary.org/obo/HP_0006308	Atrophy of alveolar ridges	alveolar bone loss	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D016470	http://purl.obolibrary.org/obo/HP_0031864	Bacteremia	bacteremia	null	C) Found Exact With HP Annotator	CTD
+MESH:D018192	http://purl.obolibrary.org/obo/DOID_3319	lymphangioleiomyomatosis	lymphangioleiomyomatosis	null	A) Found Exact With Disease Annotator	CTD
+MESH:D018798	http://purl.obolibrary.org/obo/HP_0001891	Iron deficiency anemia	iron-deficiency anemia   (Anemia, Iron-Deficiency)	null	D) Found Synonym With HP Annotator Synonym modified search 	CTD
+MESH:D020234	http://purl.obolibrary.org/obo/HP_0002066	Gait ataxia	gait ataxia	null	C) Found Exact With HP Annotator	CTD
+MESH:D020256	http://purl.obolibrary.org/obo/HP_0011506	Choroidal neovascularization	choroidal neovascularization	null	C) Found Exact With HP Annotator	CTD
+MESH:D023341	http://purl.obolibrary.org/obo/HP_0025143	Chills	chills	null	C) Found Exact With HP Annotator	CTD
+MESH:D050177	http://purl.obolibrary.org/obo/HP_0025502	Overweight	overweight	null	C) Found Exact With HP Annotator	CTD
+MESH:D053040	http://purl.obolibrary.org/obo/DOID_585	nephrolithiasis	nephrolithiasis	null	A) Found Exact With Disease Annotator	CTD
+MESH:D058165	http://purl.obolibrary.org/obo/DOID_12583	velocardiofacial syndrome	22q11 deletion syndrome	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:D058447	http://purl.obolibrary.org/obo/HP_0200026	Ocular pain	eye pain	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D058496	http://purl.obolibrary.org/obo/DOID_0060768	Smith-Magenis syndrome	smith-magenis syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:D058497	http://purl.obolibrary.org/obo/DOID_0090001	Fraser syndrome	fraser syndrome	null	A) Found Exact With Disease Annotator	CTD
+MESH:D058566	http://purl.obolibrary.org/obo/HP_0012317	Sacroiliac arthritis	sacroiliitis	null	D) Found Synonym With HP Annotator Synonym	CTD
+MESH:D065626	http://purl.obolibrary.org/obo/DOID_0080208	nonalcoholic fatty liver disease	non-alcoholic fatty liver disease	null	B) Found Synonym With Disease Annotator Synonym	CTD
+MESH:D065631	http://purl.obolibrary.org/obo/DOID_4481	allergic rhinitis	allergic rhinitis   (Rhinitis, Allergic)	null	A) Found Exact With Disease Annotator modified search 	CTD
+OMIM:226990	http://purl.obolibrary.org/obo/HP_0002721	Immunodeficiency	immunodeficiency   (IMMUNODEFICIENCY 32B)	null	C) Found Exact With HP Annotator modified search 	CTD

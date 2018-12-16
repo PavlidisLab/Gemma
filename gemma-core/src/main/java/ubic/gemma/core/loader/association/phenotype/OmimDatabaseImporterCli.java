@@ -90,7 +90,6 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
         e1 = super.init();
         if ( e1 != null ) return e1;
 
-
         // creates the folder to place the downloaded files and final output files
         try {
             this.writeFolder = ppUtil.createWriteFolderIfDoesntExist( OmimDatabaseImporterCli.OMIM );
@@ -103,7 +102,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
                     .downloadFileFromWeb( OmimDatabaseImporterCli.OMIM_URL_PATH, OmimDatabaseImporterCli.OMIM_FILE_MIM, writeFolder,
                             OMIM_FILE_MORBID + ".tsv" );
             // find the OMIM and Mesh terms by download a version of the disease ontology
-            ppUtil.findOmimAndMeshMappingUsingOntologyFile( this.writeFolder );
+            ppUtil.loadMESHOMIM2DOMappings();
             // return common publications between a OMIM gene and OMIM phenotype
             Map<Long, Collection<Long>> omimIdToPubmeds = this.findCommonPubmed( morbidmap );
             // process the omim files to create the final output

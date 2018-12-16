@@ -41,6 +41,7 @@ import java.util.TreeSet;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,16 +69,16 @@ public class PhenotypeProcessingUtil {
     private static Logger log = LoggerFactory.getLogger( PhenotypeProcessingUtil.class );
 
     // this are where the static resources are kept, like manual mapping files and others
-    private static final String RESOURCE_PATH = File.separator + "phenocarta" + File.separator + "externalDatabaseImporter" + File.separator;
+    private static final String RESOURCE_CLASSPATH = "/phenocarta/externalDatabaseImporter/";
 
     // populated using the disease ontology OBO
     private static final Map<String, Set<String>> omimAndmesh2DO = new HashMap<>();
 
     // this is where the results and files downloaded are put
-    static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" );
+    static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";
 
     // description we want to ignore, when we find those description, we know we are not interested in them
-    private static final String DESCRIPTION_TO_IGNORE = RESOURCE_PATH + "DescriptionToIgnore.tsv";
+    private static final String DESCRIPTION_TO_IGNORE = RESOURCE_CLASSPATH + "DescriptionToIgnore.tsv";
 
     /*
      * the disease ontology OBO file, we are interested in the MESH and OMIM Ids in it.
@@ -93,10 +94,10 @@ public class PhenotypeProcessingUtil {
     private static MedicOntologyService medicOntologyService = null;
 
     // manual description file, MeshID, OmimID or txt description to a valueUri
-    private static final String MANUAL_MAPPING = RESOURCE_PATH + "ManualDescriptionMapping.tsv";
+    private static final String MANUAL_MAPPING = RESOURCE_CLASSPATH + "ManualDescriptionMapping.tsv";
 
     // results we exclude, we know those results are not good
-    private static final String RESULTS_TO_IGNORE = RESOURCE_PATH + "ResultsToIgnore.tsv";
+    private static final String RESULTS_TO_IGNORE = RESOURCE_CLASSPATH + "ResultsToIgnore.tsv";
 
     // to avoid repeatedly checking....
     private Set<String> unmappableIds = new HashSet<>();
@@ -230,8 +231,15 @@ public class PhenotypeProcessingUtil {
         init();
     }
 
-    // creates the folder where the output files will be put, use this one if file is too big
-    String createWriteFolderIfDoesntExist( String externalDatabaseUse ) throws Exception {
+    /**
+     * creates the folder where the output files will be put, use this one if file is too big
+     * and initializes files
+     * 
+     * @param  externalDatabaseUse
+     * @return
+     * @throws Exception
+     */
+    protected String createWriteFolderIfDoesntExist( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
         String writeFolder = WRITE_FOLDER + File.separator + externalDatabaseUse;
@@ -242,7 +250,7 @@ public class PhenotypeProcessingUtil {
             throw new Exception( "having trouble to create a folder" );
         }
 
-        this.initOutputfiles( writeFolder );
+        this.initOutputfiles( externalDatabaseUse, writeFolder );
 
         return writeFolder;
     }
@@ -253,7 +261,7 @@ public class PhenotypeProcessingUtil {
      * @param  externalDatabaseUse
      * @throws Exception
      */
-    String createWriteFolderWithDate( String externalDatabaseUse ) throws Exception {
+    protected String createWriteFolderWithDate( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
         String writeFolder = PhenotypeProcessingUtil.WRITE_FOLDER + File.separator + externalDatabaseUse + "_"
@@ -265,7 +273,7 @@ public class PhenotypeProcessingUtil {
             throw new Exception( "having trouble to create a folder" );
         }
 
-        initOutputfiles( writeFolder );
+        initOutputfiles( externalDatabaseUse, writeFolder );
 
         return writeFolder;
     }
@@ -357,12 +365,22 @@ public class PhenotypeProcessingUtil {
     /**
      * parse the disease ontology file to create the structure needed (omimIdToPhenotypeMapping and
      * meshIdToPhenotypeMapping). We download the DO OBO file since it is easy to parse for MESH and OMIM terms.
-     **/
-    void findOmimAndMeshMappingUsingOntologyFile( String writePath ) throws IOException {
+     * 
+     * This isn't a default part of startup because not all importers need it.
+     */
+    void loadMESHOMIM2DOMappings() throws IOException {
 
-        // download the disease Ontology File
-        String diseaseOntologyFile = downloadFileFromWeb( DISEASE_ONT_PATH,
-                DISEASE_ONT_OBO_FILE, writePath, "doid.obo" );
+        // download the disease Ontology File, or use an existing one
+        File doobo = new File( WRITE_FOLDER + File.separator + "doid.obo" );
+        String diseaseOntologyFile = null;
+        if ( doobo.exists() && doobo.canRead() ) {
+            log.info( "Using existing doid.obo file for getting MESH and OMIM mappings to DOID" );
+            diseaseOntologyFile = doobo.getAbsolutePath();
+        } else {
+            log.info( "Downloading doid.obo file for getting MESH and OMIM mappings to DOID" );
+            downloadFileFromWeb( DISEASE_ONT_PATH,
+                    DISEASE_ONT_OBO_FILE, WRITE_FOLDER, "doid.obo" );
+        }
 
         Set<String> omimIds = new HashSet<>();
         Set<String> meshIds = new HashSet<>();
@@ -472,7 +490,16 @@ public class PhenotypeProcessingUtil {
         return null;
     }
 
-    protected void initFinalOutputFile( String writeFolder, boolean useScore, boolean useNegative ) throws IOException {
+    /**
+     * Produces a file like gwas.finalResults.tsv. The header is written with columns to be created.
+     * 
+     * @param  prefix      e.g. gwas, sfar, omim for the data source
+     * @param  writeFolder where the file will go
+     * @param  useScore    score information will be present
+     * @param  useNegative information on negative evidence will be present
+     * @throws IOException
+     */
+    protected void initFinalOutputFile( String prefix, String writeFolder, boolean useScore, boolean useNegative ) throws IOException {
 
         String score = "";
         String negative = "";
@@ -484,9 +511,7 @@ public class PhenotypeProcessingUtil {
             negative = "\tIsNegative";
         }
 
-        // 1- sure results to be imported into Neurocarta
-        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + "/finalResults.tsv" ) );
-        // headers of the final file
+        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + File.separator + prefix + ".finalResults.tsv" ) );
         outFinalResults
                 .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypeMapping\tOrginalPhenotype\tPhenotypes"
                         + negative + score + "\n" );
@@ -565,7 +590,7 @@ public class PhenotypeProcessingUtil {
                         keyToDescription.put( termId, valueStaticFile );
 
                     } else {
-                        writeError( "Manual ValueURI and Value don't match in file: line " + line
+                        writeError( "Manual ValueURI and Value don't match in file: " + valueStaticFile
                                 + "; Expected: " + ontologyTerm.getLabel() );
                     }
                 } else {
@@ -1124,27 +1149,38 @@ public class PhenotypeProcessingUtil {
         return false;
     }
 
+    /**
+     * For inclusion in path names
+     * 
+     * @return
+     */
     private String getTodayDate() {
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH:mm" );
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH.mm" );
         Calendar cal = Calendar.getInstance();
         return dateFormat.format( cal.getTime() );
     }
 
-    // all imported can have up to 3 outputFiles, that are the results
-    private void initOutputfiles( String writeFolder ) throws IOException {
+    /**
+     * Initialize additional files for output. all imported can have up to 3 outputFiles, that are the results
+     * 
+     * @param  prefix
+     * @param  writeFolder
+     * @throws IOException
+     */
+    private void initOutputfiles( String prefix, String writeFolder ) throws IOException {
 
         // 1- the final results
-        this.initFinalOutputFile( writeFolder, false, false );
+        this.initFinalOutputFile( prefix, writeFolder, false, false );
 
         // 2- results found with the annotator need to be verify and if ok moved to a manual annotation file
-        String outputFilePath = writeFolder + "/mappingsFound.tsv";
-        log.info( "Output will be written to " + outputFilePath );
+        String outputFilePath = writeFolder + File.separator + "mappingsFound.tsv";
+        log.info( "New mappings will be written to " + outputFilePath + "; add them to ManualDescriptionMapping.tsv" );
         outMappingFound = new BufferedWriter( new FileWriter( outputFilePath ) );
         outMappingFound
                 .write( "Identifier (KEY)\tPhenotype valueUri (THE KEY MAP TO THIS)\tPhenotype value\tSearch Term used in annotator\tChild Term\tHow we found the mapping\tSource\n" );
 
         // 3- this a log of request sent to annotator
-        logRequestAnnotator = new BufferedWriter( new FileWriter( writeFolder + "/logRequestAnnotatorNotFound.tsv" ) );
+        logRequestAnnotator = new BufferedWriter( new FileWriter( writeFolder + File.separator + "logRequestAnnotatorNotFound.tsv" ) );
     }
 
     /**

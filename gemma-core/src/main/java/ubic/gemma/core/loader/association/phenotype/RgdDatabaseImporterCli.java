@@ -86,10 +86,11 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
                     .downloadFileFromWeb( RgdDatabaseImporterCli.RGD_URL_PATH, RgdDatabaseImporterCli.RGD_FILE_MOUSE, writeFolder,
                             RGD_FILE_MOUSE + ".tsv" );
             String rgdRat = ppUtil
-                    .downloadFileFromWeb( RgdDatabaseImporterCli.RGD_URL_PATH, RgdDatabaseImporterCli.RGD_FILE_RAT, writeFolder, RGD_FILE_RAT + ".tsv" );
+                    .downloadFileFromWeb( RgdDatabaseImporterCli.RGD_URL_PATH, RgdDatabaseImporterCli.RGD_FILE_RAT, writeFolder,
+                            RGD_FILE_RAT + ".tsv" );
 
             // find the OMIM and Mesh terms from the disease ontology file
-            ppUtil.findOmimAndMeshMappingUsingOntologyFile( writeFolder );
+            ppUtil.loadMESHOMIM2DOMappings();
 
             // process the rgd files
             this.processRGDFiles( rgdHuman, rgdMouse, rgdRat );

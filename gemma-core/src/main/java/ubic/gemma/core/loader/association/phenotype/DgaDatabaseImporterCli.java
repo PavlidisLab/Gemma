@@ -10,11 +10,15 @@ import java.io.FileReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * this importer cannot automatically download files it expects the files to already be there
  * 
  * WARNING: the DGA web site is gone, and no replacement has been identified.
+ * 
+ * @author Nicolas
  */
 public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
@@ -24,8 +28,8 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
     // name of the external database
     private static final String DGA = "DGA";
-    private final HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<>();
-    private final HashSet<String> linesToExclude = new HashSet<>();
+    private final Map<String, Set<OntologyTerm>> commonLines = new HashMap<>();
+    private final Set<String> linesToExclude = new HashSet<>();
     private File dgaFile = null;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
@@ -154,7 +158,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
                     if ( o != null ) {
 
                         String key = geneId + pubMedID + geneRIF;
-                        HashSet<OntologyTerm> valuesUri = new HashSet<>();
+                        Set<OntologyTerm> valuesUri = new HashSet<>();
 
                         if ( commonLines.get( key ) != null ) {
                             valuesUri = commonLines.get( key );
@@ -172,9 +176,9 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
             AbstractCLI.log.info( "Checking for lines that are ontology duplicated: " + key );
 
-            HashSet<OntologyTerm> ontologyTerms = commonLines.get( key );
+            Set<OntologyTerm> ontologyTerms = commonLines.get( key );
 
-            HashSet<String> allUri = new HashSet<>();
+            Set<String> allUri = new HashSet<>();
 
             for ( OntologyTerm o : ontologyTerms ) {
                 allUri.add( o.getUri() );
@@ -203,7 +207,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
     private void processDGAFile() throws Exception {
 
-        ppUtil.initFinalOutputFile( this.writeFolder, false, true );
+        ppUtil.initFinalOutputFile( "DGA", this.writeFolder, false, true );
 
         try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) )) {
             String line;

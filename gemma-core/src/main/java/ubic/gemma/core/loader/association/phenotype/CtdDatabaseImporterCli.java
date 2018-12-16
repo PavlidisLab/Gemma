@@ -80,12 +80,12 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
         e1 = super.init();
         if ( e1 != null ) return e1;
 
-         try {
+        try {
             writeFolder = ppUtil.createWriteFolderIfDoesntExist( CtdDatabaseImporterCli.CTD );
             this.downloadCTDFileIfDoesntExist();
 
             // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
-            ppUtil.findOmimAndMeshMappingUsingOntologyFile( writeFolder );
+            ppUtil.loadMESHOMIM2DOMappings();
             this.processCTDFile();
         } catch ( Exception e ) {
             e.printStackTrace();
