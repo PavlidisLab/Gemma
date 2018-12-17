@@ -123,7 +123,7 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
                     + platformDetails.numProbeSequences
                     + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with sequences)</span>',
                     style: platformDetails.numProbeSequences == null
-                    || platformDetails.technologyType == "NONE" ? 'display:none' : ''
+                    || platformDetails.technologyType == "SEQUENCING" ? 'display:none' : ''
                 },
                 {
                     tag: 'li',
@@ -131,7 +131,7 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
                     + platformDetails.numProbeAlignments
                     + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with at least one genome alignment)</span>',
                     style: platformDetails.numProbeAlignments == null
-                    || platformDetails.technologyType == "NONE" ? 'display:none' : ''
+                    || platformDetails.technologyType == "SEQUENCING" ? 'display:none' : ''
                 },
                 {
                     tag: 'li',
@@ -401,8 +401,8 @@ Gemma.PlatformDetails = Ext.extend(Ext.Panel, {
                     'afterrender': Gemma
                         .helpTip(
                             "#typeHelp",
-                            "Array platforms are one-color, two-color or dual mode if they can be used either way;"
-                            + " generic platforms used for sequence-based methods (RNAseq) are listed as 'non-array-based'")
+                            "Array platforms are one-color, two-color, or dual mode if they can be used either way."
+                            + " 'Gene list' indicates a generic platform based on the taxon's genome annotations.")
                 }
             });
     },
