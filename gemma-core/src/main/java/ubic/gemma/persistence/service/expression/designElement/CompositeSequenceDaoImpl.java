@@ -208,7 +208,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
     @Override
     public CompositeSequence findByName( ArrayDesign arrayDesign, final String name ) {
-        List results = this.getSessionFactory().getCurrentSession().createQuery(
+        List<?> results = this.getSessionFactory().getCurrentSession().createQuery(
                 "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
                 .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name ).list();
 
@@ -530,42 +530,55 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
-        if ( compositeSequence == null )
-            return null;
-        //noinspection unchecked
-        Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
-        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
-            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon() );
-            if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
-                Hibernate
-                        .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
-            }
-            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
-            if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
-                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
-                        .getExternalDatabase() );
-            }
-            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getBioSequence2GeneProduct() );
-            for ( BioSequence2GeneProduct bsgp : compositeSequence.getBiologicalCharacteristic()
-                    .getBioSequence2GeneProduct() ) {
-                if ( bsgp != null ) {
-                    Hibernate.initialize( bsgp );
-                    if ( bsgp.getGeneProduct() != null ) {
-                        Hibernate.initialize( bsgp.getGeneProduct() );
-                        Hibernate.initialize( bsgp.getGeneProduct().getGene() );
-                        if ( bsgp.getGeneProduct().getGene() != null ) {
-                            Hibernate.initialize( bsgp.getGeneProduct().getGene().getAliases() );
-                            Hibernate.initialize( bsgp.getGeneProduct().getGene().getAccessions() );
-                        }
-                    }
-                }
-            }
-        }
-        Hibernate.initialize( compositeSequence.getArrayDesign() );
-
+    public CompositeSequence thaw( final CompositeSequence compositeSequence ) {
+        this.thaw( Collections.singleton( compositeSequence ) );
         return compositeSequence;
     }
+
+    //    @Override
+    //    public CompositeSequence thaw( final CompositeSequence compositeSequence ) {
+    //        if ( compositeSequence == null )
+    //            return null;
+    //        //noinspection unchecked
+    //        HibernateTemplate templ = this.getHibernateTemplate();
+    //        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+    //            @Override
+    //            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+    //                Hibernate.initialize( compositeSequence );
+    //                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
+    //                if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon() );
+    //                    if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
+    //                        Hibernate
+    //                                .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
+    //                    }
+    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
+    //                    if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+    //                        Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
+    //                                .getExternalDatabase() );
+    //                    }
+    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getBioSequence2GeneProduct() );
+    //                    for ( BioSequence2GeneProduct bsgp : compositeSequence.getBiologicalCharacteristic()
+    //                            .getBioSequence2GeneProduct() ) {
+    //                        if ( bsgp != null ) {
+    //                            Hibernate.initialize( bsgp );
+    //                            if ( bsgp.getGeneProduct() != null ) {
+    //                                Hibernate.initialize( bsgp.getGeneProduct() );
+    //                                Hibernate.initialize( bsgp.getGeneProduct().getGene() );
+    //                                if ( bsgp.getGeneProduct().getGene() != null ) {
+    //                                    Hibernate.initialize( bsgp.getGeneProduct().getGene().getAliases() );
+    //                                    Hibernate.initialize( bsgp.getGeneProduct().getGene().getAccessions() );
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //                Hibernate.initialize( compositeSequence.getArrayDesign() );
+    //                return compositeSequence;
+    //            }
+    //        } );
+    //
+    //    }
 
     @Override
     public Collection<CompositeSequence> load( Collection<Long> ids ) {
