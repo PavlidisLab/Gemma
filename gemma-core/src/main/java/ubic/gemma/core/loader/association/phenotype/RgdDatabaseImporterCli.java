@@ -112,9 +112,9 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
         super.processOptions();
     }
 
-    private void processRGDFile( String taxon, String fileName ) throws Exception {
+    private void processRGDFile( String taxonName, String fileName ) throws Exception {
 
-        Taxon rat = taxonService.findByCommonName( "rat" );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
 
         BufferedReader br = new BufferedReader(
                 new InputStreamReader( FileTools.getInputStreamFromPlainOrCompressedFile( fileName ) ) );
@@ -157,12 +157,13 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
                 Gene gene = null;
                 try {
-                    gene = geneService.findByOfficialSymbol( geneSymbol, rat );
+                    gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
                 } catch ( org.hibernate.NonUniqueResultException e ) { // temporary
                     Collection<Gene> nonuniques = geneService.findByOfficialSymbol( geneSymbol );
-                    log.info( "Multiple rat genes mateched " + geneSymbol );
+                    log.info( "Multiple " + taxonName + " genes matched " + geneSymbol );
+
                     for ( Gene gene2 : nonuniques ) {
-                        if ( gene2.getTaxon().equals( rat ) ) {
+                        if ( gene2.getTaxon().equals( taxon ) ) {
                             System.err.println( gene2 );
                         }
                     }
