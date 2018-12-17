@@ -39,8 +39,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all
      * the members.
      *
-     * @param id gene set id
-     * @return integer count of genes in set
+     * @param  id gene set id
+     * @return    integer count of genes in set
      */
     int getGeneCount( Long id );
 
@@ -120,8 +120,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<GeneSet> findByGene( Gene gene );
 
     /**
-     * @param name uses the given name to do a name* search in the db
-     * @return a collection of geneSets that match the given search term.
+     * @param  name uses the given name to do a name* search in the db
+     * @return      a collection of geneSets that match the given search term.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByName( String name );
@@ -131,5 +131,10 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> loadAll( Taxon tax );
+
+    /**
+     * @param geneSet
+     */
+    void thaw( GeneSet geneSet );
 
 }
