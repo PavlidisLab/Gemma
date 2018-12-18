@@ -123,6 +123,8 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
             if ( line.indexOf( '#' ) != -1 ) {
                 continue;
             }
+            
+            // fields: GeneSymbol    GeneID  DiseaseName     DiseaseID       DirectEvidence  InferenceChemicalName   InferenceScore  OmimIDs PubMedIDs
 
             String[] tokens = line.split( "\t" );
 

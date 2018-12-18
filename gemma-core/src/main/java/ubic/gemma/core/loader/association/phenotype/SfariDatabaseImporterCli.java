@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.association.phenotype;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 
 import java.io.BufferedReader;

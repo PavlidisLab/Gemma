@@ -254,7 +254,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     /**
-     * once we imported some evidence in Neurocarta, we want to copy a copy of what was imported and when, those files
+     * once we imported some evidence in Phenocarta, we want to copy a copy of what was imported and when, those files
      * are committed in Gemma, so its possible to see over time all that was imported
      */
     @SuppressWarnings("unused")
