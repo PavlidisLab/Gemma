@@ -40,6 +40,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
  */
 public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
+    /**
+     * 
+     */
+    private static final String FACTOR_OPTION = "factor";
+
     public static void main( String[] args ) {
         SplitExperimentCli c = new SplitExperimentCli();
         AbstractCLIContextCLI.tryDoWork( c, args );
@@ -72,7 +77,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions() {
         super.buildOptions();
 
-        super.addOption( Option.builder( "factor" ).hasArg().desc(
+        super.addOption( Option.builder( FACTOR_OPTION ).hasArg().desc(
                 "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" ).build() );
 
     }
@@ -112,11 +117,11 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( !this.hasOption( "factors" ) ) {
+        if ( !this.hasOption( FACTOR_OPTION ) ) {
             throw new IllegalArgumentException( "Please specify the factor" );
         }
 
-        String rawFactor = this.getOptionValue( "factor" );
+        String rawFactor = this.getOptionValue( FACTOR_OPTION );
 
         try {
             this.factorId = Long.parseLong( rawFactor );
