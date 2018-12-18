@@ -25,6 +25,8 @@ import org.apache.commons.cli.Option;
 
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -38,8 +40,18 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
  */
 public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
+    public static void main( String[] args ) {
+        SplitExperimentCli c = new SplitExperimentCli();
+        AbstractCLIContextCLI.tryDoWork( c, args );
+    }
     private Long factorId;
+
     private String factorName;
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
 
     /*
      * (non-Javadoc)
@@ -63,6 +75,38 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
         super.addOption( Option.builder( "factor" ).hasArg().desc(
                 "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" ).build() );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
+     */
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = this.processCommandLine( args );
+        if ( err != null ) {
+            return err;
+        }
+
+        if ( expressionExperiments.size() > 1 ) {
+            throw new IllegalArgumentException( "Can only split one experiment at a time" );
+        }
+
+        BioAssaySet v = expressionExperiments.iterator().next();
+
+        if ( !( v instanceof ExpressionExperiment ) ) {
+            throw new IllegalArgumentException( "Cannot split a " + v.getClass().getSimpleName() );
+        }
+
+        ExpressionExperiment ee = ( ExpressionExperiment ) v;
+        SplitExperimentService serv = this.getBean( SplitExperimentService.class );
+
+        ExperimentalFactor splitOn = this.guessFactor( ee );
+
+        serv.split( ee, splitOn );
+
+        return null;
     }
 
     @Override
@@ -131,38 +175,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
         return factor;
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
-
-        if ( expressionExperiments.size() > 1 ) {
-            throw new IllegalArgumentException( "Can only split one experiment at a time" );
-        }
-
-        BioAssaySet v = expressionExperiments.iterator().next();
-
-        if ( !( v instanceof ExpressionExperiment ) ) {
-            throw new IllegalArgumentException( "Cannot split a " + v.getClass().getSimpleName() );
-        }
-
-        ExpressionExperiment ee = ( ExpressionExperiment ) v;
-        SplitExperimentService serv = this.getBean( SplitExperimentService.class );
-
-        ExperimentalFactor splitOn = this.guessFactor( ee );
-
-        serv.split( ee, splitOn );
-
-        return null;
     }
 
 }
