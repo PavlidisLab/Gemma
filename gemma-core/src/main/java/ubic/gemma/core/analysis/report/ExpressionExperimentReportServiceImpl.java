@@ -352,6 +352,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
             try {
+                List<AuditEvent> events = auditEventService.getEvents( ee );
+                // Don't update if the only recent event was another BatchProblemsUpdateEvent
+                if ( events != null && !events.isEmpty() && BatchProblemsUpdateEvent.class
+                        .isAssignableFrom( events.get( events.size() - 1 ).getEventType().getClass() ) ) {
+                    continue;
+                }
                 recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
                 log.error( "Batch effect recalculation failed for experiment id " + ee.getId() );
