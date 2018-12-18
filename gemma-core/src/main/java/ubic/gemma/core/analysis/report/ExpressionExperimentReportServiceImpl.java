@@ -299,7 +299,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
-               // eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() ); // not used
+                // eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() ); // not used
                 eeVo.setHasCoexpressionAnalysis( cacheVo.getHasCoexpressionAnalysis() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
@@ -344,7 +344,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
-        HashMap<Long, Exception> failed = new HashMap<>();
+        Map<Long, Exception> failed = new HashMap<>();
 
         Calendar calendar = Calendar.getInstance();
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
@@ -353,6 +353,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
             try {
+                List<AuditEvent> events = auditEventService.getEvents( ee );
+                // Don't update if the only recent event was another BatchProblemsUpdateEvent
+                if ( !events.isEmpty() && BatchProblemsUpdateEvent.class.isAssignableFrom( events.get( events.size() - 1 ).getClass() ) ) {
+                    continue;
+                }
+
                 recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
                 log.error( "Batch effect recalculation failed for experiment id " + ee.getId() );
