@@ -360,7 +360,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         ArrayDesign arrayDesign = this.getADSafely( id );
         log.info( "Loading details of " + arrayDesign );
 
-        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesignService.load( id ) );
+        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
             throw new IllegalArgumentException( "You do not have appropriate rights to see this platform. This is likely due "
                     + "to the platform being marked as unusable." );
