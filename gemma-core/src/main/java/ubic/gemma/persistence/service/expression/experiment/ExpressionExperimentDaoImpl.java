@@ -1274,6 +1274,8 @@ public class ExpressionExperimentDaoImpl
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
 
+            ee.getOtherParts().clear();
+
             AbstractDao.log.info( "Last bits ..." );
 
             // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
