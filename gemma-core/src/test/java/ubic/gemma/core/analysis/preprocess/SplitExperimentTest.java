@@ -132,7 +132,10 @@ public class SplitExperimentTest extends BaseSpringContextTest {
             RawExpressionDataVector rv = rvs.iterator().next();
             assertTrue( rv.getQuantitationType().getIsPreferred() );
             assertEquals( 2, e.getOtherParts().size() );
+
         }
+
+        eeService.remove( results );
     }
 
 }

@@ -1253,6 +1253,13 @@ public class ExpressionExperimentDaoImpl
             //            }
 
             //  session.clear();
+
+            for ( ExpressionExperiment e : ee.getOtherParts() ) {
+                e.getOtherParts().remove( ee );
+                session.update( e );
+            }
+            ee.getOtherParts().clear();
+
             session.update( ee );
             session.flush();
 
@@ -1273,8 +1280,6 @@ public class ExpressionExperimentDaoImpl
             Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
-
-            ee.getOtherParts().clear();
 
             AbstractDao.log.info( "Last bits ..." );
 
