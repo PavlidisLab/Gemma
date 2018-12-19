@@ -49,6 +49,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
         SplitExperimentCli c = new SplitExperimentCli();
         AbstractCLIContextCLI.tryDoWork( c, args );
     }
+
     private Long factorId;
 
     private String factorName;
@@ -106,6 +107,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
         ExpressionExperiment ee = ( ExpressionExperiment ) v;
         SplitExperimentService serv = this.getBean( SplitExperimentService.class );
+
+        ee = this.eeService.thawLite( ee );
 
         ExperimentalFactor splitOn = this.guessFactor( ee );
 
