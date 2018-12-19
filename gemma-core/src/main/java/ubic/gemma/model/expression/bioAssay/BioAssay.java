@@ -20,11 +20,13 @@ package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.persistence.Transient;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -47,6 +49,7 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
     private String metadata;
+    private Collection<Characteristic> fastqHeaders;
 
     @Override
     public int hashCode() {
@@ -190,6 +193,14 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     public void setOriginalPlatform( ArrayDesign originalPlatform ) {
         this.originalPlatform = originalPlatform;
+    }
+
+    public Collection<Characteristic> getFastqHeaders() {
+        return fastqHeaders;
+    }
+
+    public void setFastqHeaders( Collection<Characteristic> fastqHeaders ) {
+        this.fastqHeaders = fastqHeaders;
     }
 
     public static final class Factory {

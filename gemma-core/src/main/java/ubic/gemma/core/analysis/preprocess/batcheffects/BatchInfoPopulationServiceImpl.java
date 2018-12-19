@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -29,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformation
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -36,10 +38,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -50,11 +58,12 @@ import java.util.*;
 @Component
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
+    public static final String FASTQ_HEADERS_ROOT = "/cosmos/data/pipeline-output/backfill/";
+    private static final String CHAR_CATEGORY = "RNASeq header";
     /**
      * Delete unpacked raw data files when done? The zipped/tarred archived will be left alone anyway.
      */
     private static final boolean CLEAN_UP = true;
-
     private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
     @Autowired
     private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
@@ -66,22 +75,28 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private AuditTrailService auditTrailService;
     @Autowired
     private AuditEventService auditEventService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    private boolean force = false;
 
     /**
-     * @param  ef ef
-     * @return    true if the factor seems to be a 'batch' factor.
+     * @param ef ef
+     * @return true if the factor seems to be a 'batch' factor.
      */
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
         Characteristic c = ef.getCategory();
 
-        if (c == null) return false;
+        if ( c == null )
+            return false;
 
         boolean isBatchFactor = false;
 
         boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
 
-        if ( c.getCategory() != null && c.getCategory()
-                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
+        if ( c.getCategory() != null && c.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
             isBatchFactor = true;
         } else if ( looksLikeBatch ) {
             isBatchFactor = true;
@@ -92,8 +107,14 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
+        return this.fillBatchInformation( ee, force, false );
+    }
 
-        boolean needed = force || this.needToRun( ee );
+    @Override
+    public boolean fillBatchInformation( ExpressionExperiment ee, boolean force, boolean rnaSeq ) {
+        this.force = force;
+
+        boolean needed = force || this.needToRun( ee, rnaSeq );
 
         if ( !needed ) {
             BatchInfoPopulationServiceImpl.log
@@ -103,13 +124,17 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         Collection<LocalFile> files = null;
         try {
-            files = this.fetchRawDataFiles( ee );
-            if ( files == null || files.isEmpty() ) {
-                this.auditTrailService
-                        .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
-                return false;
+            if ( rnaSeq ) {
+                return this.getBatchDataFromHeaderFiles( ee );
+            } else {
+                files = this.fetchRawDataFiles( ee );
+                if ( files == null || files.isEmpty() ) {
+                    this.auditTrailService
+                            .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
+                    return false;
+                }
+                return this.getBatchDataFromRawFiles( ee, files );
             }
-            return this.getBatchDataFromRawFiles( ee, files );
         } catch ( Exception e ) {
             BatchInfoPopulationServiceImpl.log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
@@ -125,11 +150,43 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
     }
 
+    @Override
+    public Map<String, File> getFoldersForFolder( final File folder ) {
+        if ( folder == null || !folder.canRead() ) {
+            throw new IllegalArgumentException( "Folder does not exist or can not be read from: " + folder );
+        }
+        Map<String, File> subdirs = new HashMap<>();
+        for ( final File fileEntry : Objects.requireNonNull( folder.listFiles() ) ) {
+            if ( fileEntry.isDirectory() ) {
+                subdirs.put( fileEntry.getName(), fileEntry );
+            } else {
+                log.info( "Skipping file: " + fileEntry + " since it is not a directory." );
+            }
+        }
+        return subdirs;
+    }
+
+    private boolean getBatchDataFromHeaderFiles( ExpressionExperiment ee ) {
+        Map<BioAssay, Collection<File>> baFiles = new HashMap<>();
+
+        // Get data for all BAs.
+        if ( !getBAData( ee, baFiles ) ) {
+            return false;
+        }
+
+        // Read and store header data.
+        Map<BioMaterial, String> headers = updateBAs( baFiles );
+
+        // Create batch factor.
+        ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
+        return bf != null;
+    }
+
     /**
      * Currently only supports GEO
      *
-     * @param  ee ee
-     * @return    local file
+     * @param ee ee
+     * @return local file
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
@@ -142,9 +199,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
-     * @param  ee    ee
-     * @return       boolean
+     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
+     * @param ee    ee
+     * @return boolean
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
@@ -163,7 +220,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         if ( !dates.isEmpty() ) {
-            int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
+            int numberOfBatches =
+                    factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
 
             List<Date> allDates = new ArrayList<>( dates.values() );
             Collections.sort( allDates );
@@ -174,8 +232,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                             + " batches." );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
                     batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                            + " batches.",
-                    "Dates of sample runs: " + datesString );
+                            + " batches.", "Dates of sample runs: " + datesString );
             return true;
         }
 
@@ -183,14 +240,19 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param  ee ee
-     * @return    true if it needs processing
+     * @param ee ee
+     * @return true if it needs processing and data is available
      */
-    private boolean needToRun( ExpressionExperiment ee ) {
+    private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
 
         ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
 
         assert eevo != null;
+
+        if ( rnaSeq ) {
+            File file = new File( FASTQ_HEADERS_ROOT + ee.getAccession().getAccession() );
+            return file.canRead() && !expressionExperimentService.checkHasBatchInfo( ee );
+        }
 
         if ( StringUtils.isBlank( eevo.getAccession() ) ) {
             BatchInfoPopulationServiceImpl.log.info( ee
@@ -251,6 +313,83 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         experimentalFactorService.delete( toRemove );
         ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
         this.expressionExperimentService.update( ee );
+    }
+
+    private Map<BioMaterial, String> updateBAs( Map<BioAssay, Collection<File>> baFiles ) {
+        Map<BioMaterial, String> headers = new HashMap<>();
+        for ( BioAssay ba : baFiles.keySet() ) {
+
+            // Delete old header characteristics.
+            // We can do this because this code is only reached if there is no existing batch info, or user used -force.
+            Collection<Characteristic> oldChars = ba.getFastqHeaders();
+            if ( oldChars != null && !oldChars.isEmpty() ) {
+                ba.setFastqHeaders( null );
+                bioAssayService.update( ba );
+                characteristicService.remove( oldChars );
+            }
+
+            // Create new header characteristics
+            Collection<Characteristic> chars = new HashSet<>();
+            for ( File f : baFiles.get( ba ) ) {
+                try {
+                    String header = IOUtils.toString( new FileInputStream( f ) );
+                    headers.put( ba.getSampleUsed(), header );
+                    Characteristic ch = Characteristic.Factory.newInstance();
+                    ch.setCategory( CHAR_CATEGORY );
+                    ch.setValue( header );
+                    ch = characteristicService.create( ch );
+                    chars.add( ch );
+                } catch ( IOException e ) {
+                    e.printStackTrace();
+                }
+            }
+
+            ba.setFastqHeaders( chars );
+            bioAssayService.update( ba );
+        }
+        return headers;
+    }
+
+    private boolean getBAData( ExpressionExperiment ee, Map<BioAssay, Collection<File>> baFiles ) {
+        Map<String, File> baFolders = this.getFoldersForFolder(
+                new File( BatchInfoPopulationServiceImpl.FASTQ_HEADERS_ROOT + ee.getAccession().getAccession() ) );
+        String eeName = ee.getShortName();
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            String gsm = ba.getAccession().getAccession();
+            if ( !baFolders.keySet().contains( gsm ) ) {
+                log.error( "No folder for BioAssay " + gsm + " in ee " + eeName + "! Skipping the experiment!" );
+                return false;
+            }
+
+            // List all fastq header files.
+            Collection<File> headers = Arrays
+                    .asList( Objects.requireNonNull( baFolders.get( gsm ).listFiles( new FilenameFilter() {
+                        @Override
+                        public boolean accept( File file, String s ) {
+                            return s.endsWith( ".fastq.header" );
+                        }
+                    } ) ) );
+            if ( headers.isEmpty() ) {
+                log.error( "No data for BioAssay " + gsm + " in experiment " + eeName + "! Skipping the experiment!" );
+                return false;
+            } else {
+                baFiles.put( ba, headers );
+            }
+
+            // Check if BA already has header files attached.
+            if ( ba.getFastqHeaders() != null && !ba.getFastqHeaders().isEmpty() ) {
+                log.warn( "BioAssay " + ba.getName() + "/" + gsm + " already has rnaSeq headers attached!" );
+                if ( force ) {
+                    log.warn( "-force, overriding existing data." );
+                } else {
+                    log.error( "Skipping experiment " + eeName
+                            + ". If you want to override existing data, use the -force." ); // Luke
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }

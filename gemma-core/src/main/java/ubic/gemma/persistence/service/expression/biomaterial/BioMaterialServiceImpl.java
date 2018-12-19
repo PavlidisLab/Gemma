@@ -112,27 +112,31 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
-    public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
+    public <T> void associateBatchFactor( final Map<BioMaterial, T> descriptors, final Map<T, FactorValue> d2fv ) {
 
-        for ( final BioMaterial bm : dates.keySet() ) {
+        for ( final BioMaterial bm : descriptors.keySet() ) {
 
             final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
 
             if ( !d2fv.isEmpty() ) {
-                toUpdate.getFactorValues().add( d2fv.get( dates.get( toUpdate ) ) );
+                toUpdate.getFactorValues().add( d2fv.get( descriptors.get( toUpdate ) ) );
             }
 
-            for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
+            // Only if we are getting dates as descriptors
+            if ( !descriptors.values().isEmpty() && Date.class
+                    .isAssignableFrom( descriptors.values().iterator().next().getClass() ) ) {
+                for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
 
-                if ( ba.getProcessingDate() != null ) {
-                    if ( !ba.getProcessingDate().equals( dates.get( toUpdate ) ) ) {
-                        ba.setProcessingDate( dates.get( toUpdate ) );
+                    if ( ba.getProcessingDate() != null ) {
+                        if ( !ba.getProcessingDate().equals( descriptors.get( toUpdate ) ) ) {
+                            ba.setProcessingDate( ( Date ) descriptors.get( toUpdate ) );
+                            bioAssayDao.update( ba );
+                        }
+
+                    } else {
+                        ba.setProcessingDate( ( Date ) descriptors.get( toUpdate ) );
                         bioAssayDao.update( ba );
                     }
-
-                } else {
-                    ba.setProcessingDate( dates.get( toUpdate ) );
-                    bioAssayDao.update( ba );
                 }
             }
             bioMaterialDao.update( toUpdate );

@@ -47,5 +47,12 @@
       <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="select">
          <column name="SAMPLE_USED_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
+      <set name="fastqHeaders" lazy="true" fetch="select" cascade="all">
+         <!-- <cache usage="read-write" /> -->
+         <key foreign-key="CHARACTERISTIC_BIOASSAY_FKC">
+            <column name="BIOASSAY_FK" sql-type="BIGINT"/>
+         </key>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+      </set>
    </class>
 </hibernate-mapping>

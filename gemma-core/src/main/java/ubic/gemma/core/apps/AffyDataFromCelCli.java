@@ -217,7 +217,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         if ( this.hasOption( "celchip" ) ) {
             this.celchip = this.getOptionValue( "celchip" );
         }
-
     }
 
 }

@@ -62,53 +62,31 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     @Override
     @Transactional
+    public ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers ) {
+        /*
+         * Go through the headers and convert to factor values.
+         */
+        Map<String, Collection<String>> headersToBatch = this
+                .convertHeadersToBatches( new HashSet<>( headers.values() ) );
+
+        Map<String, FactorValue> h2fv = new HashMap<>();
+        ExperimentalFactor ef = createExperimentalFactor( ee, headersToBatch, h2fv );
+        bioMaterialService.associateBatchFactor( headers, h2fv );
+
+        return ef;
+    }
+
+    @Override
+    @Transactional
     public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
 
         /*
          * Go through the dates and convert to factor values.
          */
-        Collection<Date> allDates = new HashSet<>( dates.values() );
-
-        Map<String, Collection<Date>> datesToBatch = this.convertDatesToBatches( allDates );
+        Map<String, Collection<Date>> datesToBatch = this.convertDatesToBatches( new HashSet<>( dates.values() ) );
 
         Map<Date, FactorValue> d2fv = new HashMap<>();
-        ExperimentalFactor ef = null;
-        if ( datesToBatch == null || datesToBatch.size() < 2 ) {
-            if ( datesToBatch != null ) {
-                BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch'" );
-            }
-            // we still put the processing dates in, below.
-        } else {
-            log.info( "Persisting information on " + datesToBatch.size() + " batches" );
-
-            ef = this.makeFactorForBatch( ee );
-
-            for ( String batchId : datesToBatch.keySet() ) {
-                FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
-                fv.setValue( batchId );
-                Collection<Characteristic> chars = new HashSet<>();
-                Characteristic c = Characteristic.Factory.newInstance();
-                c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
-                c.setValue( batchId );
-                c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
-                c.setEvidenceCode( GOEvidenceCode.IIA );
-
-                chars.add( c );
-                fv.setCharacteristics( chars );
-                fv.setExperimentalFactor( ef );
-
-                /*
-                 * persist
-                 */
-                fv.setCharacteristics( chars );
-                experimentService.addFactorValue( ee, fv );
-                for ( Date d : datesToBatch.get( batchId ) ) {
-                    d2fv.put( d, fv );
-                }
-            }
-        }
-
+        ExperimentalFactor ef = createExperimentalFactor( ee, datesToBatch, d2fv );
         bioMaterialService.associateBatchFactor( dates, d2fv );
 
         return ef;
@@ -119,8 +97,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
      * batches) are to be treated as the same batch (see implementation for details).
      *
-     * @param  allDates all dates
-     * @return          map
+     * @param allDates all dates
+     * @return map
      */
     Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<>( allDates );
@@ -185,8 +163,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                             .warn( "Singleton at the end of the series, combining with the last batch: gap is " + String
                                     .format( "%.2f",
                                             ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60
-                                                    * 24 ) )
-                                    + " hours." );
+                                                    * 24 ) ) + " hours." );
                     mergedAnySingletons = true;
                 } else if ( this.gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -202,8 +179,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by waiting for the next batch: gap is " + String
                                         .format( "%.2f",
                                                 ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) )
-                                        + " hours." );
+                                                        * 60 * 24 ) ) + " hours." );
                         batchNum++;
                         batchDateString = this.formatBatchName( batchNum, df, currentDate );
                         result.put( batchDateString, new HashSet<Date>() );
@@ -213,8 +189,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by adding to the last batch: gap is " + String
                                         .format( "%.2f",
                                                 ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) )
-                                        + " hours." );
+                                                        * 60 * 24 ) ) + " hours." );
                         // don't start a new batch, fall through.
                     }
 
@@ -248,6 +223,90 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     }
 
+    /**
+     * Apply some heuristics to condense the fastq headers to batches.
+     *
+     * @param allHeaders all fastq headers
+     * @return map
+     */
+    private Map<String, Collection<String>> convertHeadersToBatches( Collection<String> allHeaders ) {
+        Map<String, Collection<String>> result = new LinkedHashMap<>();
+
+        String lastBatch = null;
+
+        for ( String header : allHeaders ) {
+            try {
+                // We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100
+                // Only interested in the first 3 sectors of the middle section (D8ZGT8Q1:199:C5GKYACXX of the example);
+                String[] arr = header.split( "\\s" )[1].split( ":" );
+                String currentBatch = arr[0] + ":" + arr[1] + ":" + arr[2];
+
+                // Start first batch
+                if(lastBatch == null){
+                    result.put( currentBatch, new HashSet<String>() );
+                    result.get( currentBatch ).add( header );
+                    lastBatch = currentBatch;
+                    continue;
+                }
+
+                // Check if batch already exists and add the current header, if not, create new one.
+                if( currentBatch.equals( lastBatch ) ){
+                    result.get( currentBatch ).add( header );
+                }else{
+                    result.put( currentBatch, new HashSet<String>() );
+                    result.get( currentBatch ).add( header );
+                }
+
+                lastBatch = currentBatch;
+
+            } catch ( ArrayIndexOutOfBoundsException e ) {
+                log.error( "Header format problem. Can not retrieve batch info from string: " + header );
+            }
+        }
+        return result;
+    }
+
+    private <T> ExperimentalFactor createExperimentalFactor( ExpressionExperiment ee,
+            Map<String, Collection<T>> descriptorsToBatch, Map<T, FactorValue> d2fv ) {
+        ExperimentalFactor ef = null;
+        if ( descriptorsToBatch == null || descriptorsToBatch.size() < 2 ) {
+            if ( descriptorsToBatch != null ) {
+                BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch'" );
+            }
+            // we still put the processing descriptors in, below.
+        } else {
+            log.info( "Persisting information on " + descriptorsToBatch.size() + " batches" );
+
+            ef = this.makeFactorForBatch( ee );
+
+            for ( String batchId : descriptorsToBatch.keySet() ) {
+                FactorValue fv = FactorValue.Factory.newInstance();
+                fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
+                fv.setValue( batchId );
+                Collection<Characteristic> chars = new HashSet<>();
+                Characteristic c = Characteristic.Factory.newInstance();
+                c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+                c.setValue( batchId );
+                c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
+                c.setEvidenceCode( GOEvidenceCode.IIA );
+
+                chars.add( c );
+                fv.setCharacteristics( chars );
+                fv.setExperimentalFactor( ef );
+
+                /*
+                 * persist
+                 */
+                fv.setCharacteristics( chars );
+                experimentService.addFactorValue( ee, fv );
+                for ( T d : descriptorsToBatch.get( batchId ) ) {
+                    d2fv.put( d, fv );
+                }
+            }
+        }
+        return ef;
+    }
+
     private ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -276,18 +335,17 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
         batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
-                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
-                + df
-                        .format( DateUtils.truncate( d, Calendar.HOUR ) );
+                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df
+                .format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
     /**
-     * @param  earlierDate earlier date
-     * @param  date        data
-     * @return             false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
-     *                     treat it as a
-     *                     separate batch.
+     * @param earlierDate earlier date
+     * @param date        data
+     * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
+     * treat it as a
+     * separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
         return !DateUtils.isSameDay( date, earlierDate ) && DateUtils

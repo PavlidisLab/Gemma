@@ -97,10 +97,10 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
 
     /**
-     * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
+     * Associate descriptors with bioassays and any new factors with the biomaterials. Note we can have missing values.
      */
     @Secured({ "GROUP_ADMIN" })
-    void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
+    <T> void associateBatchFactor( Map<BioMaterial, T> descriptors, Map<T, FactorValue> d2fv );
 
     String getBioMaterialIdList( Collection<BioMaterial> bioMaterials );
 
