@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,9 +152,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setShortName( sourceShortName + "." + splitNumber );
 
             // copy everything but samples over
+            String factorValueString = splitValue.getValue();
+            if ( StringUtils.isBlank( factorValueString ) ) {
+                factorValueString = splitValue.getDescriptiveString();
+            }
             split.setName( "Split part " + splitNumber + " of: " + toSplit.getName() + " ["
                     + splitValue.getExperimentalFactor().getCategory().getValue() + " = "
-                    + splitValue.getValue() + "]" );
+                    + factorValueString + "]" );
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
