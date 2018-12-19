@@ -1,3 +1,21 @@
+/*
+ * The gemma-core project
+ * 
+ * Copyright (c) 2018 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
@@ -9,6 +27,12 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import static ubic.gemma.persistence.service.expression.experiment.GeeqService.*;
 
+/**
+ * 
+ * Generate or update GEEQ scores
+ * 
+ * @author tesar
+ */
 public class GeeqCli extends AbstractCLIContextCLI {
     private ExpressionExperimentService eeService;
     private GeeqService geeqService;
@@ -71,7 +95,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //
                         + "\n " + OPT_MODE_ALL + " - runs all scoring" //
-                        + "\n " + OPT_MODE_BATCH + "- recalcualtes batch related scores - info, confound and batch effect" //
+                        + "\n " + OPT_MODE_BATCH + "- recalculates batch related scores - info, confound and batch effect" //
                         + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
                         + "\n " + OPT_MODE_PUB + " - recalculates score for publication" ).hasArg().build();
         this.addOption( modeOption );
