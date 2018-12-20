@@ -252,6 +252,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
+     *
+     * @return count
      */
     long numAllCompositeSequenceWithBioSequences();
 
@@ -259,11 +261,14 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
      *
      * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
 
     /**
      * Function to return all composite sequences with blat results
+     *
+     * @return count
      */
     long numAllCompositeSequenceWithBlatResults();
 
@@ -271,11 +276,14 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
      *
      * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
 
     /**
      * Function to return a count of all composite sequences with associated genes.
+     *
+     * @return count
      */
     long numAllCompositeSequenceWithGenes();
 
@@ -283,11 +291,14 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
      *
      * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithGenes( Collection<Long> ids );
 
     /**
      * Returns a count of the number of genes associated with all arrayDesigns
+     *
+     * @return count
      */
     long numAllGenes();
 
@@ -295,6 +306,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
      *
      * @param ids ids
+     * @return count
      */
     long numAllGenes( Collection<Long> ids );
 
@@ -302,6 +314,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * returns the number of bioSequences associated with this ArrayDesign id
      *
      * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numBioSequences( ArrayDesign arrayDesign );
@@ -310,6 +323,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
      *
      * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numBlatResults( ArrayDesign arrayDesign );
@@ -333,6 +347,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Returns the number of unique Genes associated with this ArrayDesign id
      *
      * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numGenes( ArrayDesign arrayDesign );
@@ -356,6 +371,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Perform a less intensive thaw of an array design: not the composite sequences.
      *
      * @param arrayDesign AD
+     * @return AD
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );

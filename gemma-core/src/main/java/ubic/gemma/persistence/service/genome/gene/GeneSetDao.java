@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,29 +39,18 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all
      * the members.
      *
-     * @param  id gene set id
-     * @return    integer count of genes in set
+     * @param id gene set id
+     * @return integer count of genes in set
      */
     int getGeneCount( Long id );
 
     /**
      * Returns the taxon of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
      *
+     * @param id id
      * @return taxon of a random member of the set or null
      */
     Taxon getTaxon( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    GeneSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll();
 
     /**
      * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the current user has
@@ -69,6 +58,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * gene sets if security is not enabled.
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
      * processConfigAttribute.
+     *
+     * @return gene sets
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     Collection<GeneSet> loadMyGeneSets();
@@ -87,6 +78,26 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    Collection<GeneSet> create( final Collection<GeneSet> entities );
+
+    @Secured({ "GROUP_USER" })
+    @Override
+    GeneSet create( GeneSet geneset );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<GeneSet> load( Collection<Long> ids );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    GeneSet load( Long id );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<GeneSet> loadAll();
+
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     void remove( Collection<GeneSet> entities );
 
@@ -102,26 +113,12 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( GeneSet entity );
 
-    /**
-     * Creates all the the given GeneSets in the given collection
-     */
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( final Collection<GeneSet> entities );
-
-    /**
-     * Creates the given geneset in the DB
-     */
-    @Secured({ "GROUP_USER" })
-    @Override
-    GeneSet create( GeneSet geneset );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByGene( Gene gene );
 
     /**
-     * @param  name uses the given name to do a name* search in the db
-     * @return      a collection of geneSets that match the given search term.
+     * @param name uses the given name to do a name* search in the db
+     * @return a collection of geneSets that match the given search term.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> findByName( String name );
@@ -133,7 +130,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<GeneSet> loadAll( Taxon tax );
 
     /**
-     * @param geneSet
+     * @param geneSet gene set
      */
     void thaw( GeneSet geneSet );
 

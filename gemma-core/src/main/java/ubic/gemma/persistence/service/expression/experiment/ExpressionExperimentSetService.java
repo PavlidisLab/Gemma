@@ -138,6 +138,7 @@ public interface ExpressionExperimentSetService
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
+     * @return colelction of EE set VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds );
@@ -145,6 +146,7 @@ public interface ExpressionExperimentSetService
     /**
      * Get a value object for the id param.
      *
+     * @param id        ID
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.

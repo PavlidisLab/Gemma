@@ -29,8 +29,5 @@ import java.util.Collection;
  */
 public interface ChromosomeDao extends BaseDao<Chromosome> {
 
-    /**
-     * Find a chromosome by name and taxon
-     */
     Collection<Chromosome> find( String name, Taxon taxon );
 }

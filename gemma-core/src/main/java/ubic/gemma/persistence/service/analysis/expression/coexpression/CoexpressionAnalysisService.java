@@ -38,6 +38,28 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     @Secured({ "GROUP_USER" })
     CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( CoexpressionAnalysis o );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+
+    /**
+     * For backfilling of the coexpression distributions from flat files - remove when no longer needed.
+     *
+     * @param coexpd               coexpd
+     * @param expressionExperiment ee
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
+            CoexpCorrelationDistribution coexpd );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+
+    @Override
+    void removeForExperiment( ExpressionExperiment ee );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
@@ -54,27 +76,9 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     /**
      * Not secured: for internal use only
      *
+     * @param taxon taxon
      * @return ids of bioassaysets from the given taxon that have a coexpression analysis
      */
     @Override
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( CoexpressionAnalysis o );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
-
-    /**
-     * For backfilling of the coexpression distributions from flat files - remove when no longer needed.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
-            CoexpCorrelationDistribution coexpd );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
-
-    @Override
-    void removeForExperiment( ExpressionExperiment ee );
 }

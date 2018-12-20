@@ -31,6 +31,10 @@ public interface ChromosomeService extends BaseService<Chromosome> {
 
     /**
      * Locate by name e.g. 'X'.
+     *
+     * @param taxon taxon to look at
+     * @param name  the name to look for, e.g. 'X'
+     * @return all matching chromosomes
      */
     Collection<Chromosome> find( String name, Taxon taxon );
 
