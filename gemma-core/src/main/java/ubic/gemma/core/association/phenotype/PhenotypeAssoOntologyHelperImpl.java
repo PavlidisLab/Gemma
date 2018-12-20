@@ -182,7 +182,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
             Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
 
             for ( OntologyTerm ontologyTerm : hits ) {
-                if ( uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
+                if ( ontologyTerm.getLabel() != null && uniqueValueTerm.get( ontologyTerm.getLabel().toLowerCase() ) == null ) {
                     uniqueValueTerm.put( ontologyTerm.getLabel().toLowerCase(), ontologyTerm );
                 }
             }

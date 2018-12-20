@@ -141,6 +141,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
                 public void execute( Connection connection ) {
                     BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
                     Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+                    Hibernate.initialize( bioAssay.getOriginalPlatform() );
                     BioMaterial bm = bioAssay.getSampleUsed();
                     BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
                     Hibernate.initialize( bm );

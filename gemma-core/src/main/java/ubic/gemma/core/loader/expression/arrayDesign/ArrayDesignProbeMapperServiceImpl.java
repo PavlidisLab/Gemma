@@ -130,7 +130,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         assert config != null;
 
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.GENELIST ) || arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING )
+                || arrayDesign.getTechnologyType().equals( TechnologyType.OTHER ) ) {
             throw new IllegalArgumentException(
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
@@ -219,7 +220,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             throw new IllegalArgumentException( "You must provide a taxon unless passing ncbiIds = true" );
         }
 
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.GENELIST ) || arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING )
+                || arrayDesign.getTechnologyType().equals( TechnologyType.OTHER ) ) {
             throw new IllegalArgumentException(
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }

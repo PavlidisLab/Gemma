@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -36,6 +37,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -205,6 +207,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         try {
             this.goService.init( true );
 
+            this.expressionDataFileService = this.getBean( ExpressionDataFileService.class );
+
             log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
             if ( StringUtils.isNotBlank( geneFileName ) ) {
@@ -216,10 +220,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else if ( this.taxonName != null ) {
                 this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
             } else {
-                if ( this.arrayDesignsToProcess.isEmpty() ) {
+                if ( this.getArrayDesignsToProcess().isEmpty() ) {
                     throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
                 }
-                for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+                for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                     if ( doAllTypes ) {
                         // make all three
                         this.processOneAD( arrayDesign );
@@ -242,7 +246,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         ArrayDesign thawed = this.thaw( arrayDesign );
 
         if ( thawed.getCurationDetails().getTroubled() ) {
-            AbstractCLI.log.warn( "Troubled: " + arrayDesign );
+            AbstractCLI.log.warn( "Troubled, will not generate annotation file: " + arrayDesign );
+            return;
+        }
+
+        if ( thawed.getAlternativeTo() != null ) {
+            AbstractCLI.log.warn( "Alternative CDF, will not generate annotation file: " + arrayDesign );
             return;
         }
 
@@ -287,10 +296,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }
-            candidates = this.arrayDesignService.findByTaxon( taxon );
+            candidates = this.getArrayDesignService().findByTaxon( taxon );
 
         } else {
-            candidates = this.arrayDesignService.loadAll();
+            candidates = this.getArrayDesignService().loadAll();
         }
 
         if ( candidates.isEmpty() ) {
@@ -300,20 +309,27 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( candidates.size() + " candidate platforms for processing" );
 
-        int numTroubled = 0;
+        int numTroubledOrAlt = 0;
         int numSkippedUnneeded = 0;
         for ( ArrayDesign ad : candidates ) {
 
-            ad = arrayDesignService.thawLite( ad );
+            ad = getArrayDesignService().thawLite( ad );
 
-            if ( ad.getTechnologyType().equals( TechnologyType.NONE ) && !ad.getShortName().startsWith( "Generic" ) ) {
-                // We don't make files for platforms that don't have sequences. FIXME: method to detect generic platforms is less than optimal.
+            if ( ad.getTechnologyType().equals( TechnologyType.SEQUENCING )
+                    || ( ad.getTechnologyType().equals( TechnologyType.GENELIST ) ) ) {
+                // We don't make files for platforms that don't have sequences. 
                 continue;
             }
 
             if ( ad.getCurationDetails().getTroubled() ) {
-                AbstractCLI.log.debug( "Troubled: " + ad + " (skipping)" );
-                numTroubled++;
+                AbstractCLI.log.debug( "Troubled, skipping: " + ad );
+                numTroubledOrAlt++;
+                continue;
+            }
+
+            if ( ad.getAlternativeTo() != null ) {
+                AbstractCLI.log.debug( "Alternative CDF, skipping: " + ad );
+                numTroubledOrAlt++;
                 continue;
             }
 
@@ -338,8 +354,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Checked for need to run: " + numChecked + " platforms" );
 
-        if ( numTroubled > 0 ) {
-            log.info( numTroubled + " platforms are troubled and will be skipped." );
+        if ( numTroubledOrAlt > 0 ) {
+            log.info( numTroubledOrAlt + " platforms are troubled or alternative CDFs and will be skipped." );
         }
         if ( numSkippedUnneeded > 0 ) {
             log.info( numSkippedUnneeded + " platforms don't need to be run." );
@@ -409,7 +425,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 // need to set these so processing ad works correctly
                 // TODO: make process type take all 3 parameter
-                ArrayDesign arrayDesign = this.locateArrayDesign( accession, arrayDesignService );
+                ArrayDesign arrayDesign = this.locateArrayDesign( accession, getArrayDesignService() );
 
                 try {
                     this.processAD( arrayDesign, annotationFileName, this.type );
@@ -527,10 +543,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
+    private ExpressionDataFileService expressionDataFileService;
+
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
         ArrayDesign ad = this.thaw( inputAd );
 
-        AbstractCLI.log.info( "================= Processing: " + ad );
+        AbstractCLI.log.info( "====== Processing: " + ad );
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
@@ -573,6 +591,18 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         if ( overWrite || !sf.exists() ) {
             this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
+
+            /*
+             * Delete the data files for experiments that used this platform, since they have the old annotations in
+             * them (or no annotations)
+             */
+            Collection<ExpressionExperiment> ees = this.getArrayDesignService().getExpressionExperiments( ad );
+            if ( !ees.isEmpty() ) log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                    + ", that may have outdated annotations" );
+            for ( ExpressionExperiment ee : ees ) {
+                this.expressionDataFileService.deleteAllFiles( ee );
+            }
+
         } else {
             AbstractCLI.log.info( sf + " exists, will not overwrite" );
         }

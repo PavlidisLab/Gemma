@@ -8,7 +8,7 @@
 	doSearch = function( ){
 				var query = $('searchfield').value;
 				if (valid(query)) {
-						location.href='${pageContext.request.contextPath}/searcher.html?query=' + query + '&scope=SEGAP'
+						location.href='${pageContext.request.contextPath}/searcher.html?query=' + query + '&scope=SEGAP';
 				}							
 			};
 	

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -75,7 +75,10 @@ import java.util.*;
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
+    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca";
+
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
+
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
@@ -198,7 +201,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( !f.canRead() ) {
             throw new RuntimeException( "The file could not be found for " + arrayDesign.getShortName()
-                    + ". Please contact pavlab-support@msl.ubc.ca for assistance" );
+                    + ". Please contact " + SUPPORT_EMAIL + " for assistance" );
         }
 
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {
@@ -240,7 +243,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -248,7 +251,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "No search criteria provided" );
 
         }
@@ -259,8 +262,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                    .addObject( "message",
-                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+                            .addObject( "message",
+                                    "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
@@ -271,7 +274,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list , true) )
+        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list, true ) )
                 .addObject( "message", searchResults.size() + " Platforms matched your search." );
 
     }
@@ -287,7 +290,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "taskId", taskId );
         }
 
@@ -295,7 +298,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId, true ) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
@@ -357,7 +360,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         ArrayDesign arrayDesign = this.getADSafely( id );
         log.info( "Loading details of " + arrayDesign );
 
-        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesignService.load( id ) );
+        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
             throw new IllegalArgumentException( "You do not have appropriate rights to see this platform. This is likely due "
                     + "to the platform being marked as unusable." );
@@ -372,6 +375,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setSummaryInfo( result, id );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
+
+        if ( result.getIsAffymetrixAltCdf() )
+            result.setAlternative( new ArrayDesignValueObject( arrayDesign.getAlternativeTo() ) );
 
         log.info( "Finished loading details of " + arrayDesign );
         return result;
@@ -603,7 +609,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Platform with id=" + id + " not found" );
         }
         // seems inefficient? but need security filtering.
@@ -611,7 +617,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
         return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids , true) );
+                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids, true ) );
     }
 
     @Override

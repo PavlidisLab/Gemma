@@ -22,7 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 
-public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
+public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
     private static final String CTD = "CTD";
@@ -34,16 +34,13 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     private String ctdFile = "";
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public CtdDatabaseImporter( String[] args ) throws Exception {
-        super( args );
-        Exception e = this.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+    public CtdDatabaseImporterCli() throws Exception {
+        super();
     }
 
     public static void main( String[] args ) throws Exception {
-        CtdDatabaseImporter importEvidence = new CtdDatabaseImporter( args );
+        CtdDatabaseImporterCli importEvidence = new CtdDatabaseImporterCli();
+
         Exception e = importEvidence.doWork( args );
         if ( e != null ) {
             e.printStackTrace();
@@ -52,12 +49,12 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     @Override
     public String getCommandName() {
-        return "ctdImport";
+        return "ctdDownload";
     }
 
     @Override
     public String getShortDesc() {
-        return "Creates a .tsv file of lines of evidence from CTD, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+        return "Creates a .tsv file of lines of evidence from CTD, to be used with evidenceImport to import into Phenocarta.";
     }
 
     @Override
@@ -67,23 +64,28 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     @Override
     public CommandGroup getCommandGroup() {
-        return null;
+        return CommandGroup.PHENOTYPES;
     }
 
     @Override
     protected void buildOptions() {
-        super.buildOptions();
+        // No-op
+
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        // create a folder named CTD
+        Exception e1 = super.processCommandLine( args );
+        if ( e1 != null ) return e1;
+        e1 = super.init();
+        if ( e1 != null ) return e1;
+
         try {
-            writeFolder = this.createWriteFolderIfDoesntExist( CtdDatabaseImporter.CTD );
-            // download the CTD file if we dont already have it
+            writeFolder = ppUtil.createWriteFolderIfDoesntExist( CtdDatabaseImporterCli.CTD );
             this.downloadCTDFileIfDoesntExist();
+
             // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
-            this.findOmimAndMeshMappingUsingOntologyFile();
+            ppUtil.loadMESHOMIM2DOMappings();
             this.processCTDFile();
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -96,14 +98,14 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     private void downloadCTDFileIfDoesntExist() {
 
         // checks for the ctd file
-        ctdFile = writeFolder + "/" + CtdDatabaseImporter.CTD_FILE;
+        ctdFile = writeFolder + "/" + CtdDatabaseImporterCli.CTD_FILE;
 
         File fileCTD = new File( ctdFile );
 
         // super big file 700MB, only download if we dont already have
         if ( !fileCTD.exists() ) {
             // download the CTD file
-            this.downloadFileFromWeb( CtdDatabaseImporter.CTD_URL_PATH, CtdDatabaseImporter.CTD_FILE );
+            ppUtil.downloadFileFromWeb( CtdDatabaseImporterCli.CTD_URL_PATH, CtdDatabaseImporterCli.CTD_FILE, writeFolder, CTD_FILE );
         }
     }
 
@@ -121,6 +123,8 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             if ( line.indexOf( '#' ) != -1 ) {
                 continue;
             }
+            
+            // fields: GeneSymbol    GeneID  DiseaseName     DiseaseID       DirectEvidence  InferenceChemicalName   InferenceScore  OmimIDs PubMedIDs
 
             String[] tokens = line.split( "\t" );
 
@@ -147,18 +151,19 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                         //noinspection ResultOfMethodCallIgnored // Checking for exceptions
                         Integer.parseInt( pubmed );
 
-                        Gene gene = this.geneService.findByNCBIId( new Integer( geneId ) );
+                        Gene gene = ppUtil.geneService.findByNCBIId( new Integer( geneId ) );
 
                         if ( gene != null ) {
 
                             if ( !gene.getOfficialSymbol().equalsIgnoreCase( geneSymbol ) ) {
-                                logMessages.add( "!gene.getOfficialSymbol().equalsIgnoreCase( geneSymbol )???? :"
+                                ppUtil.logMessages.add( "!gene.getOfficialSymbol().equalsIgnoreCase( geneSymbol )???? :"
                                         + "Gemma: " + gene.getOfficialSymbol() + " File: " + geneSymbol );
                             }
 
-                            this.findMapping( diseaseId, gene, pubmed, "TAS",
+                            ppUtil.findMapping( diseaseId, gene, pubmed, "TAS",
                                     "DiseaseName: " + diseaseName + " (" + diseaseId + "); DirectEvidence: "
-                                            + directEvidence, diseaseName, CtdDatabaseImporter.CTD,
+                                            + directEvidence,
+                                    diseaseName, CtdDatabaseImporterCli.CTD,
                                     "/detail.go?type=relationship&geneAcc=" + geneId + "&diseaseAcc=" + diseaseId
                                             + "&view=reference" );
                         }
@@ -167,6 +172,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             }
         }
 
-        this.writeBuffersAndCloseFiles();
+        ppUtil.writeBuffersAndCloseFiles();
     }
 }

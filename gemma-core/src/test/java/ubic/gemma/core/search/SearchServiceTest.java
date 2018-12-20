@@ -50,7 +50,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
     private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
     private static final String BRAIN_CAVITY = "http://purl.obolibrary.org/obo/FMA_242395";
-    // private static final String PREFRONTAL_CORTEX_URI = "http://purl.org/obo/owl/FMA#FMA_224850";
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -82,11 +81,16 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private String geneNcbiId;
 
+    /**
+     * FIXME replace with another ontology example.
+     * 
+     * @throws Exception
+     */
     public void setup() throws Exception {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
             assert is != null;
 
-            ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
+            ontologyService.getFmaOntologyService().loadTermsInNameSpace( is, false );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 

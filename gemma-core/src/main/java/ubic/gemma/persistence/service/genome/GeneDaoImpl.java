@@ -448,7 +448,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
             throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
         }
         // remove associations
-        List associations = this.getHibernateTemplate().findByNamedParam(
+        List<?> associations = this.getHibernateTemplate().findByNamedParam(
                 "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
                 gene );
         if ( !associations.isEmpty() )

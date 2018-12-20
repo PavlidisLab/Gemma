@@ -150,6 +150,7 @@
                 <value>
                     classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpCorrelationDistribution.hbm.xml
                 </value>
+                <value>classpath:ubic/gemma/model/analysis/BlacklistedEntity.hbm.xml</value>
             </list>
         </property>
         <property name="hibernateProperties">

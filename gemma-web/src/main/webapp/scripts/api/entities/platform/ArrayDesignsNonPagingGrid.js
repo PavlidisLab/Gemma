@@ -54,6 +54,8 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubled"
       }, {
+         name : "isAffymetrixAltCdf"
+      }, {
          name : "troubleDetails"
       }, {
          name : "needsAttention"
@@ -62,7 +64,7 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "statusArray",
          convert : function( v, record ) {
-            return [ record.troubled, record.isMerged, record.isMergee, record.isSubsumed, record.isSubsumer ];
+            return [ record.troubled, record.isMerged, record.isMergee, record.isSubsumed, record.isSubsumer, record.isAffymetrixAltCdf ];
          },
          sortDir : 'DESC',
          sortType : function( value ) {
@@ -349,13 +351,18 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"'
                                           + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
                                     }
+                                    if (record.get('isAffymetrixAltCdf')) {
+                                        statusString += '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                                            + "This platform is an alternative to a 'standard' gene-level Affymetrix probe layout. " +
+                                            "Data sets using it will be switched to the canonical one when raw data are available." + '"></i>';
+                                    }
 
                                     return statusString;
                                  }
                               },
                               {
-                                 header : "Quality/Suitability",
-                                 tooltip : "Shows quality and suitability score, or the fact that the experiment is not fully curated yet.",
+                                 header : "Curation status",
+                                 tooltip : "",
                                  dataIndex : 'needsAttention',
                                  sortable : true,
                                  width : 0.05,
@@ -444,6 +451,14 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                }
 
             } );
+             this.getStore().addMultiFilter( {
+                 name : 'affyAltFilter',
+                 active : false,
+                 fn : function( record ) {
+                     return !record.get( 'isAffymetrixAltCdf' );
+                 }
+
+             } );
 
             var textFilterFun = function( query ) {
                var value = new RegExp( Ext.escapeRe( query ), 'i' );
@@ -559,6 +574,29 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
 
                      },
                      scope : this
+                  }, '-', {
+                      ref : 'affyAltToggle',
+                      boxLabel : 'Hide Affy. Alts',
+                      checked : !this.showOrphans,
+                      xtype : 'checkbox',
+                      style : 'margin-top:0px',
+                      tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideAffyAltTT,
+                      handler : function( checkbox, isChecked ) {
+                          if ( !isChecked ) {
+
+                              this.showOrphans = true;
+                              this.getStore().deactivateMultiFilter( 'affyAltFilter' );
+                              this.getStore().applyMultiFilters();
+
+                          } else {
+
+                              this.showOrphans = false;
+                              this.getStore().activateMultiFilter( 'affyAltFilter' );
+                              this.getStore().applyMultiFilters();
+                          }
+
+                      },
+                      scope : this
                   }, '-', {
                      ref : 'ArrayDesignsSummaryWindowBtn',
                      text : 'Platforms Summary',

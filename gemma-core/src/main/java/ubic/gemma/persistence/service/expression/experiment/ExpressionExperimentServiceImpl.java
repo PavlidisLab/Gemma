@@ -72,7 +72,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see ExpressionExperimentService
+ * @see    ExpressionExperimentService
  */
 @Service
 @Transactional
@@ -119,6 +119,8 @@ public class ExpressionExperimentServiceImpl
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    @Autowired
+    private BlacklistedEntityDao blacklistedEntityDao;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -460,9 +462,9 @@ public class ExpressionExperimentServiceImpl
             seenTerms.add( annotationValue.getTermName() );
         }
 
-
         /*
-         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from biomaterials? (non-redundant with tags)
+         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
+         * biomaterials? (non-redundant with tags)
          */
         for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
             if ( !seenTerms.contains( v.getTermName() ) ) {
@@ -472,7 +474,8 @@ public class ExpressionExperimentServiceImpl
         }
 
         /*
-         * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline, non-batch, non-redundant with tags). This is tricky because they are so specific...
+         * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
+         * non-batch, non-redundant with tags). This is tricky because they are so specific...
          */
         for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
             if ( !seenTerms.contains( v.getTermName() ) ) {
@@ -577,6 +580,8 @@ public class ExpressionExperimentServiceImpl
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
                 result = "This data set may have a batch artifact" + pc + ", p=" + String
                         .format( "%.5g", beDetails.getPvalue() );
+            } else {
+                result = "No batch effect was detected";
             }
         }
         return Strings.emptyToNull( result );
@@ -722,16 +727,18 @@ public class ExpressionExperimentServiceImpl
     @Override
     public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
+        // FIXME Because we switch platforms, the actual platform type for RNA-seq will be GENELIST once the data are processed. But we could look at the bioAssay.originalPlatform
+        return ads.size() <= 1 && ( ads.iterator().next().getTechnologyType().equals( TechnologyType.SEQUENCING )
+                || ads.iterator().next().getTechnologyType().equals( TechnologyType.GENELIST ) );
     }
 
     /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *           checking
-     *           the curation details of the object directly, as this method also checks all the array designs the
-     *           given
-     *           experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @param  ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *            checking
+     *            the curation details of the object directly, as this method also checks all the array designs the
+     *            given
+     *            experiment belongs to.
+     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -989,7 +996,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
@@ -1017,10 +1024,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @param ees  experiments
-     * @param type event type
-     * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @param  ees  experiments
+     * @param  type event type
+     * @return      a map of the expression experiment ids to the last audit event for the given audit event type the
+     *              map
+     *              can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
@@ -1031,6 +1039,17 @@ public class ExpressionExperimentServiceImpl
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isBlackListed(java.lang.String)
+     */
+    @Override
+    public boolean isBlackListed( String geoAccession ) {
+        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
     }
 
 }

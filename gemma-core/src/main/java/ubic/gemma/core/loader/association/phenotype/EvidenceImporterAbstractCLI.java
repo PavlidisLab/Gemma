@@ -15,7 +15,6 @@
 package ubic.gemma.core.loader.association.phenotype;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -37,37 +36,48 @@ import java.util.*;
 
 public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
-    static final String WRITE_FOLDER =
-            Settings.getString( "gemma.appdata.home" ) + File.separator + "EvidenceImporterNeurocarta";
+    static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "EvidenceImporterNeurocarta";
 
-    final String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
-    final String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
-    final String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
-    final String EXPERIMENT = "Experiment";
-    final String EXPERIMENT_DESIGN = "ExperimentDesign";
-    final String EXPERIMENT_DESIGN_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ExperimentDesign";
-    final String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
+    /* replacement for MGED Biosource, which is defined as "the original source material before any treatment events" */
+    final String BIOSOURCE = "material entity";
+    final String BIOSOURCE_ONTOLOGY = "http://purl.obolibrary.org/obo/BFO_0000040";
+
+    final String DEVELOPMENTAL_STAGE = "developmental stage";
+    final String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://www.ebi.ac.uk/efo/EFO_0000399";
+
+    final String EXPERIMENT = "experimental process";
+    final String EXPERIMENT_ONTOLOGY = "http://www.ebi.ac.uk/efo/EFO_0002694";
+
+    final String EXPERIMENT_DESIGN = "study design";
+    final String EXPERIMENT_DESIGN_ONTOLOGY = "http://www.ebi.ac.uk/efo/EFO_0001426";
+
     final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
     final String LITERATURE_EVIDENCE = "LITERATURE";
-    final String ORGANISM_PART = "OrganismPart";
-    final String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
-    final String TREATMENT = "Treatment";
-    final String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
+
+    final String ORGANISM_PART = "organism part";
+    final String ORGANISM_PART_ONTOLOGY = "http://www.ebi.ac.uk/efo/EFO_0000635";
+
+    final String TREATMENT = "treatment";
+    final String TREATMENT_ONTOLOGY = "http://www.ebi.ac.uk/efo/EFO_0000727";
+
+    /*
+     * Note: we don't have development ontologies configured here.
+     */
+
     final Set<String> errorMessage = new TreeSet<>();
-    final HashMap<String, Integer> mapColumns = new HashMap<>();
+    final Map<String, Integer> mapColumns = new HashMap<>();
     BufferedReader br = null;
     boolean createInDatabase = false;
     DiseaseOntologyService diseaseOntologyService = null;
-    FMAOntologyService fmaOntologyService = null;
     GeneService geneService = null;
     HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    UberonOntologyService uberonOntologyService = null;
     // input file path
     String inputFile = "";
     BufferedWriter logFileWriter = null;
     MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
-    NIFSTDOntologyService nifstdOntologyService = null;
     ObiService obiService = null;
-    PhenotypeAssociationManagerService phenotypeAssociationService = null;
+    PhenotypeAssociationManagerService phenotypeAssociationManagerService = null;
     TaxonService taxonService = null;
     String warningMessage = "";
 
@@ -78,12 +88,11 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     @Override
     protected void buildOptions() {
-        @SuppressWarnings("static-access") Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg()
-                .withArgName( "file path" ).isRequired().create( "f" );
+        @SuppressWarnings("static-access")
+        Option fileOption = Option.builder( "f" ).desc( "The file" ).hasArg()
+                .argName( "file path" ).required().build();
         this.addOption( fileOption );
-        @SuppressWarnings("static-access") Option createOption = OptionBuilder
-                .withDescription( "Create in Database (false or true)" ).hasArg().withArgName( "create in Database" )
-                .isRequired().create( "c" );
+        Option createOption = Option.builder( "c" ).desc( "Create in database; default is false (prints to stdout)" ).build();
         this.addOption( createOption );
     }
 
@@ -91,7 +100,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     protected void processOptions() {
         super.processOptions();
         this.inputFile = this.getOptionValue( 'f' );
-        this.createInDatabase = Boolean.valueOf( this.getOptionValue( 'c' ) );
+        this.createInDatabase = this.hasOption( 'c' );
     }
 
     /**
@@ -100,35 +109,52 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     void checkEvidenceCodeExits( String evidenceCode ) {
 
         if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" ) || evidenceCode
-                .equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" ) || evidenceCode
-                .equalsIgnoreCase( "IGI" ) || evidenceCode.equalsIgnoreCase( "IMP" ) || evidenceCode
-                .equalsIgnoreCase( "IPI" ) || evidenceCode.equalsIgnoreCase( "ISS" ) || evidenceCode
-                .equalsIgnoreCase( "NAS" ) || evidenceCode.equalsIgnoreCase( "ND" ) || evidenceCode
-                .equalsIgnoreCase( "RCA" ) || evidenceCode.equalsIgnoreCase( "TAS" ) || evidenceCode
-                .equalsIgnoreCase( "NR" ) || evidenceCode.equalsIgnoreCase( "EXP" ) || evidenceCode
-                .equalsIgnoreCase( "ISA" ) || evidenceCode.equalsIgnoreCase( "ISM" ) || evidenceCode
-                .equalsIgnoreCase( "IGC" ) || evidenceCode.equalsIgnoreCase( "ISO" ) || evidenceCode
-                .equalsIgnoreCase( "IIA" ) || evidenceCode.equalsIgnoreCase( "IBA" ) || evidenceCode
-                .equalsIgnoreCase( "IBD" ) || evidenceCode.equalsIgnoreCase( "IKR" ) || evidenceCode
-                .equalsIgnoreCase( "IRD" ) || evidenceCode.equalsIgnoreCase( "IMR" ) || evidenceCode
-                .equalsIgnoreCase( "IED" ) || evidenceCode.equalsIgnoreCase( "IAGP" ) || evidenceCode
-                .equalsIgnoreCase( "IPM" ) || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
-            this.writeError( "evidenceCode not in gemma: " + evidenceCode );
+                .equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" )
+                || evidenceCode
+                        .equalsIgnoreCase( "IGI" )
+                || evidenceCode.equalsIgnoreCase( "IMP" ) || evidenceCode
+                        .equalsIgnoreCase( "IPI" )
+                || evidenceCode.equalsIgnoreCase( "ISS" ) || evidenceCode
+                        .equalsIgnoreCase( "NAS" )
+                || evidenceCode.equalsIgnoreCase( "ND" ) || evidenceCode
+                        .equalsIgnoreCase( "RCA" )
+                || evidenceCode.equalsIgnoreCase( "TAS" ) || evidenceCode
+                        .equalsIgnoreCase( "NR" )
+                || evidenceCode.equalsIgnoreCase( "EXP" ) || evidenceCode
+                        .equalsIgnoreCase( "ISA" )
+                || evidenceCode.equalsIgnoreCase( "ISM" ) || evidenceCode
+                        .equalsIgnoreCase( "IGC" )
+                || evidenceCode.equalsIgnoreCase( "ISO" ) || evidenceCode
+                        .equalsIgnoreCase( "IIA" )
+                || evidenceCode.equalsIgnoreCase( "IBA" ) || evidenceCode
+                        .equalsIgnoreCase( "IBD" )
+                || evidenceCode.equalsIgnoreCase( "IKR" ) || evidenceCode
+                        .equalsIgnoreCase( "IRD" )
+                || evidenceCode.equalsIgnoreCase( "IMR" ) || evidenceCode
+                        .equalsIgnoreCase( "IED" )
+                || evidenceCode.equalsIgnoreCase( "IAGP" ) || evidenceCode
+                        .equalsIgnoreCase( "IPM" )
+                || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
+            this.writeError( "evidenceCode not known: " + evidenceCode );
         }
     }
 
-    void createWriteFolder() throws Exception {
+    /**
+     * 
+     * @throws Exception
+     */
+    protected void createWriteFolder() throws Exception {
 
         File folder = new File( EvidenceImporterAbstractCLI.WRITE_FOLDER );
         if ( !folder.mkdir() && !folder.exists() ) {
-            throw new Exception( "having trouble to create a folder" );
+            throw new Exception( "Could not create directory " + folder );
         }
     }
 
     /**
      * Look at all Headers and identify them to determine the type of evidence
      */
-    String findTypeOfEvidence() throws Exception {
+    protected String findTypeOfEvidence() throws Exception {
 
         // lets check what type of evidence when have on the sheet, each header can have any position but must use
         // strict syntax
@@ -168,15 +194,15 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
             } else if ( header.equalsIgnoreCase( "Strength" ) ) {
                 this.mapColumns.put( "Strength", index );
             } else if ( header.equalsIgnoreCase( "DevelopmentalStage" ) ) {
-                this.mapColumns.put( "DevelopmentalStage", index );
+                this.mapColumns.put( DEVELOPMENTAL_STAGE, index );
             } else if ( header.equalsIgnoreCase( "BioSource" ) ) {
-                this.mapColumns.put( "BioSource", index );
+                this.mapColumns.put( BIOSOURCE, index );
             } else if ( header.equalsIgnoreCase( "OrganismPart" ) ) {
-                this.mapColumns.put( "OrganismPart", index );
+                this.mapColumns.put( ORGANISM_PART, index );
             } else if ( header.equalsIgnoreCase( "ExperimentDesign" ) ) {
                 this.mapColumns.put( "ExperimentDesign", index );
             } else if ( header.equalsIgnoreCase( "Treatment" ) ) {
-                this.mapColumns.put( "Treatment", index );
+                this.mapColumns.put( TREATMENT, index );
             } else if ( header.equalsIgnoreCase( "Experiment" ) ) {
                 this.mapColumns.put( "Experiment", index );
             } else if ( header.equalsIgnoreCase( "Strength" ) ) {
@@ -221,9 +247,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         }
 
         // rules to be an experimentalEvidence
-        if ( this.mapColumns.containsKey( "Experiment" ) && this.mapColumns.containsKey( "Treatment" )
-                && this.mapColumns.containsKey( "ExperimentDesign" ) && this.mapColumns.containsKey( "OrganismPart" )
-                && this.mapColumns.containsKey( "BioSource" ) && this.mapColumns.containsKey( "DevelopmentalStage" )
+        if ( this.mapColumns.containsKey( EXPERIMENT ) && this.mapColumns.containsKey( TREATMENT )
+                && this.mapColumns.containsKey( EXPERIMENT_DESIGN ) && this.mapColumns.containsKey( ORGANISM_PART )
+                && this.mapColumns.containsKey( BIOSOURCE ) && this.mapColumns.containsKey( DEVELOPMENTAL_STAGE )
                 && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMeds" ) ) {
 
             AbstractCLI.log.info( "The type of Evidence found is: " + this.EXPERIMENTAL_EVIDENCE );
@@ -292,9 +318,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     /**
      * find the exact term of a search term in a Collection of Ontology terms
      *
-     * @param ontologyTerms Collection of ontologyTerms
-     * @param search        The value we are interested in finding
-     * @return OntologyTerm the exact match value found
+     * @param  ontologyTerms Collection of ontologyTerms
+     * @param  search        The value we are interested in finding
+     * @return               OntologyTerm the exact match value found
      */
     OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
 
@@ -312,12 +338,18 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         }
 
         // if we have more than 1 result, hardcode the one to choose
+        /*
+         * See valueStringToOntologyTermMappings.txt (and GeoConverter) for ways to automate this.
+         */
         if ( ontologyKept.size() > 1 ) {
 
             if ( search.equalsIgnoreCase( "juvenile" ) ) {
 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
-                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/PATO#PATO_0001190" ) ) {
+                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.obolibrary.org/obo/UBERON_0034919" ) ) { /*
+                                                                                                                        * juvenile
+                                                                                                                        * stage
+                                                                                                                        */
                         return ontologyTerm;
                     }
                 }
@@ -326,7 +358,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
 
                     if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_681" ) ) {
+                            "http://www.ebi.ac.uk/efo/EFO_0001272" ) ) {
                         return ontologyTerm;
                     }
                 }
@@ -335,7 +367,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
 
                     if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_699" ) ) {
+                            "http://www.ebi.ac.uk/efo/EFO_0001372" ) ) { /* neonate */
                         return ontologyTerm;
                     }
                 }
@@ -344,7 +376,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
 
                     if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_7014" ) ) {
+                            "http://www.ebi.ac.uk/efo/EFO_0007725" ) ) { /* embryo stage */
                         return ontologyTerm;
                     }
                 }
@@ -353,7 +385,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
 
                     if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_695" ) ) {
+                            "http://www.ebi.ac.uk/efo/EFO_0001355" ) ) {
                         return ontologyTerm;
                     }
                 }
@@ -362,7 +394,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
 
                     if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_691" ) ) {
+                            "http://purl.obolibrary.org/obo/UBERON_0007222" ) ) { /* late adult stage */
                         return ontologyTerm;
                     }
                 }
@@ -371,6 +403,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
         if ( ontologyKept.size() > 1 ) {
 
+            /* why is this a special case? */
             if ( search.equalsIgnoreCase( "apraxia" ) ) {
 
                 for ( OntologyTerm o : ontologyKept ) {
@@ -398,7 +431,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
      */
     private synchronized void loadServices( boolean experimentalEvidenceServicesNeeded ) throws Exception {
 
-        this.phenotypeAssociationService = this.getBean( PhenotypeAssociationManagerService.class );
+        this.phenotypeAssociationManagerService = this.getBean( PhenotypeAssociationManagerService.class );
 
         this.geneService = this.getBean( GeneService.class );
         this.taxonService = this.getBean( TaxonService.class );
@@ -406,25 +439,32 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         OntologyService ontologyService = this.getBean( OntologyService.class );
 
         this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
         this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
 
+        // ensure load, but only reindex if needed
+        this.diseaseOntologyService.startInitializationThread( true, false );
+        this.humanPhenotypeOntologyService.startInitializationThread( true, false );
+
         while ( !this.diseaseOntologyService.isOntologyLoaded() ) {
-            this.wait( 3000 );
-            AbstractCLI.log.info( "waiting for the Disease Ontology to load" );
+            this.wait( 5000 );
+            AbstractCLI.log.info( "waiting for the Disease Ontology to load ..." );
         }
 
         while ( !this.humanPhenotypeOntologyService.isOntologyLoaded() ) {
-            this.wait( 3000 );
-            AbstractCLI.log.info( "waiting for the HP Ontology to load" );
+            this.wait( 5000 );
+            AbstractCLI.log.info( "waiting for the HP Ontology to load ..." );
         }
 
         // only need those services for experimental evidences
         if ( experimentalEvidenceServicesNeeded ) {
 
-            this.nifstdOntologyService = ontologyService.getNifstfOntologyService();
             this.obiService = ontologyService.getObiService();
-            this.fmaOntologyService = ontologyService.getFmaOntologyService();
+            this.uberonOntologyService = ontologyService.getUberonService();
+            this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
+
+            this.uberonOntologyService.startInitializationThread( true, false );
+            this.mammalianPhenotypeOntologyService.startInitializationThread( true, false );
+            this.obiService.startInitializationThread( true, false );
 
             while ( !this.mammalianPhenotypeOntologyService.isOntologyLoaded() ) {
                 this.wait( 3000 );
@@ -436,14 +476,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 AbstractCLI.log.info( "waiting for the OBI Ontology to load" );
             }
 
-            while ( !this.nifstdOntologyService.isOntologyLoaded() ) {
+            while ( !this.uberonOntologyService.isOntologyLoaded() ) {
                 this.wait( 3000 );
-                AbstractCLI.log.info( "waiting for the NIF Ontology to load" );
-            }
-
-            while ( !this.fmaOntologyService.isOntologyLoaded() ) {
-                this.wait( 3000 );
-                AbstractCLI.log.info( "waiting for the FMA Ontology to load" );
+                AbstractCLI.log.info( "waiting for the Uberon Ontology to load" );
             }
         }
     }

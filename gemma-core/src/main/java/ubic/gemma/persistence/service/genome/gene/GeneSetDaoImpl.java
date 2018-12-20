@@ -20,14 +20,18 @@ package ubic.gemma.persistence.service.genome.gene;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -38,7 +42,7 @@ import java.util.*;
  * <code>ubic.gemma.model.genome.gene.GeneSet</code>.
  *
  * @author kelsey
- * @see GeneSet
+ * @see    GeneSet
  */
 @Repository
 public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
@@ -136,11 +140,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 log.warn( "No taxon found for " + dvo );
                 continue;
             }
-            dvo.setTaxonId( t.getId() ); 
+            dvo.setTaxonId( t.getId() );
             dvo.setTaxonName( t.getCommonName() );
             result.add( dvo );
         }
-            return result;
+        return result;
     }
 
     @Override
@@ -159,6 +163,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 .setParameter( "name", name + "%" ).list();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         StopWatch timer = new StopWatch();
@@ -195,7 +200,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     /**
      * Retrieve taxa for genesets
      * 
-     * @param ids
+     * @param  ids
      * @return
      */
     private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
@@ -218,5 +223,29 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         }
 
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.genome.gene.GeneSetDao#thaw(ubic.gemma.model.genome.gene.GeneSet)
+     */
+    @Override
+    public void thaw( final GeneSet geneSet ) {
+        if ( geneSet == null || geneSet.getId() == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.buildLockRequest( LockOptions.NONE ).lock( geneSet );
+                Hibernate.initialize( geneSet );
+                Hibernate.initialize( geneSet.getMembers() );
+                for(GeneSetMember gsm : geneSet.getMembers() ) {
+                    Hibernate.initialize( gsm.getGene() );
+                }
+                return null;
+            }
+        } );
+
     }
 }

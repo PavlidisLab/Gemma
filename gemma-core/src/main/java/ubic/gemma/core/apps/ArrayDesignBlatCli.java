@@ -147,14 +147,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( !this.arrayDesignsToProcess.isEmpty() ) {
+        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
 
-            if ( this.blatResultFile != null && this.arrayDesignsToProcess.size() > 1 ) {
+            if ( this.blatResultFile != null && this.getArrayDesignsToProcess().size() > 1 ) {
                 throw new IllegalArgumentException(
                         "Cannot provide a blat result file when multiple arrays are being analyzed" );
             }
 
-            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
                     return null;
@@ -192,7 +192,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         } else if ( taxon != null ) {
 
-            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
+            Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().findByTaxon( taxon );
             AbstractCLI.log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
                     + allArrayDesigns.size() + " items]" );
 
@@ -214,7 +214,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, x, ArrayDesignSequenceAnalysisEvent.class ) ) {
                         return;
                     }
-                    x = arrayDesignService.thaw( x );
+                    x = getArrayDesignService().thaw( x );
 
                     ArrayDesignBlatCli.this.processArrayDesign( x );
 
@@ -252,7 +252,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
@@ -310,7 +310,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         for ( ArrayDesign ad : toUpdate ) {
             AbstractCLI.log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)" );
-            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+            getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
         }
     }
 }

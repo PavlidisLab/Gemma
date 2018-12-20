@@ -30,7 +30,12 @@ import java.util.Map;
  * Parse the NCBI "gene_history" file. File format : tax_id, GeneID,Discontinued_GeneID, Discontinued_Symbol,
  * Discontinue_Date; (tab is used as a separator, pound sign - start of a comment) File is obtained from
  * ftp.ncbi.nih.gov.gene/DATA
- *
+ * 
+ * see {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README}
+ * There are two kinds of lines. Lines with a "-" for the GeneID (the majority) seems to be used when the
+ * record was withdrawn (Field is defined as "the current unique identified for a gene"). Lines with a symbol means it
+ * was replaced, so far as I can tell.
+ * 
  * @author paul
  */
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
@@ -39,6 +44,9 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
 
     private final Map<String, NcbiGeneHistory> id2history = new HashMap<>();
 
+    /*
+     * Taxon -> Symbol -> NCBI ID
+     */
     private final Map<Integer, Map<String, String>> discontinuedGenes = new HashMap<>();
 
     @Override
@@ -75,23 +83,30 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
                     + line );
         }
 
+        // #tax_id  GeneID  Discontinued_GeneID Discontinued_Symbol Discontinue_Date
+
         String geneId = fields[1];
         String discontinuedGeneId = fields[2];
 
+        // Case of discontinued gene. Since we don't have a symbol for it, we can't provide history
+        //  if ( StringUtils.isBlank( geneId ) || geneId.equals( "-" ) ) {
+        String taxonId = fields[0];
+        String discontinuedSymbol = fields[3];
+
+        Integer taxonInt = Integer.parseInt( taxonId );
+
+        if ( !( discontinuedGenes.containsKey( taxonInt ) ) ) {
+            discontinuedGenes.put( taxonInt, new HashMap<String, String>() );
+        }
+
+        log.info( discontinuedSymbol + ": discontinued is " + discontinuedGeneId );
+        discontinuedGenes.get( taxonInt ).put( discontinuedSymbol, discontinuedGeneId );
+
         if ( StringUtils.isBlank( geneId ) || geneId.equals( "-" ) ) {
-            String taxonId = fields[0];
-            String discontinuedSymbol = fields[3];
-
-            Integer taxonInt = Integer.parseInt( taxonId );
-
-            if ( !( discontinuedGenes.containsKey( taxonInt ) ) ) {
-                discontinuedGenes.put( taxonInt, new HashMap<String, String>() );
-            }
-
-            discontinuedGenes.get( taxonInt ).put( discontinuedSymbol, discontinuedGeneId );
             return null;
         }
 
+        // case of replaced gene
         NcbiGeneHistory his;
         if ( id2history.containsKey( discontinuedGeneId ) ) {
             his = id2history.get( discontinuedGeneId );
@@ -116,9 +131,9 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
     }
 
     /**
-     * @param geneSymbol gene symbol
-     * @param taxonId    taxon id
-     * @return null, or the NCBI ID of the gene that was discontinued.
+     * @param  geneSymbol gene symbol
+     * @param  taxonId    taxon id
+     * @return            null, or the NCBI ID of the gene that was discontinued.
      */
     public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
         if ( !discontinuedGenes.containsKey( taxonId ) )

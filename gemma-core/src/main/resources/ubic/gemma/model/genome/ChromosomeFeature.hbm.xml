@@ -35,6 +35,7 @@
                 <column name="NCBI_GI" not-null="false" unique="false"
                         sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
             </property>
+            <!--  having cascade-all here is a problem since the same entry can be associated with a biosequence as well -->
             <set name="accessions" lazy="true" fetch="select" cascade="all">
                 <cache usage="read-write"/>
                 <key foreign-key="DATABASE_ENTRY_GENE_PRODUCT_FKC">

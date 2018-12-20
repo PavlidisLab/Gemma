@@ -18,14 +18,18 @@
  */
 package ubic.gemma.core.loader.entrez;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.openjena.atlas.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,74 +44,121 @@ import java.net.URLConnection;
 /**
  * @author paul
  */
-// Constants are better for readability
 public class EutilFetch {
 
-    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
-    // private static String EFETCH =
-    // "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
-    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
+    @SuppressWarnings("unused")
+    // EutilFetch.fetch(java.lang.String, java.lang.String, ubic.gemma.core.loader.entrez.EutilFetch.Mode, int) fix me note
+    public enum Mode {
+        HTML, TEXT, XML
+    }
 
+    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
+    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
+    private static final String APIKEY = Settings.getString( "entrez.efetch.apikey" );
+
+    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    private static Logger log = LoggerFactory.getLogger( EutilFetch.class );
+
+    private static final int MAX_TRIES = 3;
+
+    /**
+     * Attempts to fetch data via Eutils; failures will be re-attempted several times.
+     * 
+     * @param  db
+     * @param  searchString
+     * @param  limit
+     * @return
+     * @throws IOException
+     */
     public static String fetch( String db, String searchString, int limit ) throws IOException {
         return EutilFetch.fetch( db, searchString, Mode.TEXT, limit );
+    }
+
+    public static Document parseStringInputStream( String details )
+            throws SAXException, IOException, ParserConfigurationException {
+        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
+        int tries = 0;
+
+        while ( true ) {
+            try (InputStream is = new StringInputStream( details )) {
+                return builder.parse( is );
+            } catch ( IOException e ) {
+                // FIXME this can't happen, can it?
+                tries = EutilFetch.tryAgainOrFail( tries, e );
+            }
+        }
     }
 
     /**
      * see <a href="http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html">ncbi help</a>
      *
-     * @param db           e.g., gds.
-     * @param searchString search string
-     * @param mode         HTML,TEXT or XML FIXME only provides XML.
-     * @param limit        - Maximum number of records to return.
-     * @return XML
-     * @throws IOException if there is a problem while manipulating the file
+     * @param  db           e.g., gds.
+     * @param  searchString search string
+     * @param  mode         HTML,TEXT or XML FIXME only provides XML.
+     * @param  limit        - Maximum number of records to return.
+     * @return              XML
+     * @throws IOException  if there is a problem while manipulating the file
      */
     @SuppressWarnings("SameParameterValue") // Only TEXT is used, also observe the parameter javadoc fix me note
     private static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
-        URL searchUrl = new URL( EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString );
-        URLConnection conn;
+        URL searchUrl = new URL(
+                EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString + ( StringUtils.isNotBlank( APIKEY ) ? "&api_key=" + APIKEY : "" ) );
+        URLConnection conn = null;
+        int numTries = 0;
 
-        try {
-
-            EutilFetch.factory.setIgnoringComments( true );
-            EutilFetch.factory.setValidating( false );
-
-            Document document = EutilFetch.parseSUrlInputStream( searchUrl );
-
-            NodeList countNode = document.getElementsByTagName( "Count" );
-            Node countEl = countNode.item( 0 );
-
-            int count;
+        while ( conn == null && numTries < MAX_TRIES ) {
             try {
-                count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-            } catch ( NumberFormatException e ) {
-                throw new IOException( "Could not parse count from: " + searchUrl );
+                numTries++;
+                EutilFetch.factory.setIgnoringComments( true );
+                EutilFetch.factory.setValidating( false );
+
+                Document document = EutilFetch.parseSUrlInputStream( searchUrl );
+
+                NodeList countNode = document.getElementsByTagName( "Count" );
+                Node countEl = countNode.item( 0 );
+
+                int count;
+                try {
+                    count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+                } catch ( NumberFormatException e ) {
+                    throw new IOException( "Could not parse count from: " + searchUrl );
+                }
+
+                if ( count == 0 )
+                    throw new IOException( "Got no records from: " + searchUrl );
+
+                NodeList qnode = document.getElementsByTagName( "QueryKey" );
+
+                Element queryIdEl = ( Element ) qnode.item( 0 );
+
+                NodeList cknode = document.getElementsByTagName( "WebEnv" );
+                Element cookieEl = ( Element ) cknode.item( 0 );
+
+                String queryId = XMLUtils.getTextValue( queryIdEl );
+                String cookie = XMLUtils.getTextValue( cookieEl );
+
+                URL fetchUrl = new URL(
+                        EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
+                                + "&WebEnv=" + cookie + "&retmax=" + limit + ( StringUtils.isNotBlank( APIKEY ) ? "&api_key=" + APIKEY : "" ) );
+
+                conn = fetchUrl.openConnection();
+                conn.connect();
+            } catch ( ParserConfigurationException | SAXException e1 ) {
+
+                throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
+            } catch ( IOException e2 ) {
+                if ( numTries == MAX_TRIES ) throw e2;
+                log.warn( e2.getMessage() );
+                try {
+                    Thread.sleep( 500 );
+                } catch ( InterruptedException e ) {
+                }
             }
-
-            if ( count == 0 )
-                throw new IOException( "Got no records from: " + searchUrl );
-
-            NodeList qnode = document.getElementsByTagName( "QueryKey" );
-
-            Element queryIdEl = ( Element ) qnode.item( 0 );
-
-            NodeList cknode = document.getElementsByTagName( "WebEnv" );
-            Element cookieEl = ( Element ) cknode.item( 0 );
-
-            String queryId = XMLUtils.getTextValue( queryIdEl );
-            String cookie = XMLUtils.getTextValue( cookieEl );
-
-            URL fetchUrl = new URL(
-                    EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
-                            + "&WebEnv=" + cookie + "&retmax=" + limit );
-
-            conn = fetchUrl.openConnection();
-            conn.connect();
-        } catch ( ParserConfigurationException | SAXException e1 ) {
-            throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
         }
+
+        if ( conn == null ) throw new IllegalStateException( "Connection was null" );
 
         try (InputStream is = conn.getInputStream()) {
 
@@ -122,20 +173,6 @@ public class EutilFetch {
             }
         }
 
-    }
-
-    public static Document parseStringInputStream( String details )
-            throws SAXException, IOException, ParserConfigurationException {
-        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
-        int tries = 0;
-
-        while ( true ) {
-            try (InputStream is = new StringInputStream( details )) {
-                return builder.parse( is );
-            } catch ( IOException e ) {
-                tries = EutilFetch.tryAgainOrFail( tries, e );
-            }
-        }
     }
 
     private static Document parseSUrlInputStream( URL url )
@@ -154,14 +191,22 @@ public class EutilFetch {
         }
     }
 
+    /**
+     * Does this ever get called?
+     * 
+     * @param  tries
+     * @param  e
+     * @return
+     * @throws IOException
+     */
     private static int tryAgainOrFail( int tries, IOException e ) throws IOException {
         if ( e.getMessage().contains( "429" ) ) {
             tries++;
-            if ( tries > 5 ) {
-                Log.fatal( EutilFetch.class, "Got HTTP 429 5 times" );
+            if ( tries > MAX_TRIES ) {
+                Log.fatal( EutilFetch.class, "Got HTTP 429 " + tries + " times" );
                 throw e;
             }
-            Log.warn( EutilFetch.class, "got HTTP 429 " + tries + " time(s), letting the server rest for a second." );
+            Log.warn( EutilFetch.class, "got HTTP 429 " + tries + " time(s), letting the server rest." );
             EutilFetch.trySleep( 500 * tries );
         } else {
             throw e;
@@ -175,12 +220,6 @@ public class EutilFetch {
         } catch ( InterruptedException e1 ) {
             e1.printStackTrace(); // Log and try to continue
         }
-    }
-
-    @SuppressWarnings("unused")
-    // EutilFetch.fetch(java.lang.String, java.lang.String, ubic.gemma.core.loader.entrez.EutilFetch.Mode, int) fix me note
-    public enum Mode {
-        HTML, TEXT, XML
     }
 
 }

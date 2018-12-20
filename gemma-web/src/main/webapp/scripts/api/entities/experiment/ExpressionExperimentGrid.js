@@ -59,6 +59,9 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
     }, {
         name: 'taxonId',
         type: 'int'
+    }, {
+        name : "troubled",
+        type: "boolean"
     }]),
 
     /**

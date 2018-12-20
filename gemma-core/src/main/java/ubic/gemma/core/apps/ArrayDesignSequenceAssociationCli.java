@@ -78,7 +78,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 return null;
             }
 
-            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
                 arrayDesign = this.thaw( arrayDesign );
 
@@ -240,7 +240,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceUpdateEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

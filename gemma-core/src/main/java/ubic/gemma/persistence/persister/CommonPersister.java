@@ -192,6 +192,10 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( !this.isTransient( qType ) )
             return qType;
 
+        /*
+         * this cache is dangerous if run for multiple experiment loadings. For this reason we clear the cache
+         * before persisting each experiment.
+         */
         int key;
         if ( qType.getName() == null )
             throw new IllegalArgumentException( "QuantitationType must have a name" );

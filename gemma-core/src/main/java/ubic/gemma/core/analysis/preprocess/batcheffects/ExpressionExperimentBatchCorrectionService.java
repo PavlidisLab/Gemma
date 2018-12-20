@@ -15,6 +15,7 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -26,20 +27,28 @@ public interface ExpressionExperimentBatchCorrectionService {
      * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
      * least two samples per batch?
      *
-     * @param ee    the experiment
-     * @param force whether the correctability should ignore detected batch confound
-     * @return whether it is correctable
+     * @param  ee    the experiment
+     * @param  force whether the correctability should ignore detected batch confound
+     * @return       whether it is correctable
      */
     boolean checkCorrectability( ExpressionExperiment ee, boolean force );
 
     /**
      * Run ComBat using default settings (parametric)
      *
-     * @param mat the matrix
-     * @return batch corrected matrix
+     * @param  mat the matrix
+     * @return     batch corrected matrix
      */
     ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
 
     ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
+
+    /**
+     * For convenience of some testing classes
+     * 
+     * @param  ee
+     * @return
+     */
+    ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 
 }

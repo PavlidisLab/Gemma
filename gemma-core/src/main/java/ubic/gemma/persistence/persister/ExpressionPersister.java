@@ -434,6 +434,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         AbstractPersister.log.debug( "Persisting bioAssayDimension" );
         List<BioAssay> persistedBioAssays = new ArrayList<>();
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
+            assert bioAssay != null;
             bioAssay.setId( null ); // in case of retry.
             persistedBioAssays.add( this.persistBioAssay( bioAssay, c ) );
             if ( persistedBioAssays.size() % 10 == 0 ) {

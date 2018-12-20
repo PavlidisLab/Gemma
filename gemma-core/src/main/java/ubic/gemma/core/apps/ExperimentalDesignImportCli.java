@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -33,7 +32,7 @@ import java.io.*;
 
 /**
  * @author Paul
- * @see ExperimentalDesignImporter
+ * @see    ExperimentalDesignImporter
  */
 public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
@@ -63,16 +62,16 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
 
-        Option expOption = OptionBuilder.isRequired().hasArg().withArgName( "Expression experiment name" )
-                .withDescription(
+        Option expOption = Option.builder( "e" ).required().hasArg().argName( "Expression experiment name" )
+                .desc(
                         "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                                 + "and if this option is omitted, the tool will be applied to all expression experiments." )
-                .withLongOpt( "experiment" ).create( 'e' );
+                .longOpt( "experiment" ).build();
 
         this.addOption( expOption );
 
-        Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" )
-                .withDescription( "Experimental design description file" ).withLongOpt( "designFile" ).create( 'f' );
+        Option designFileOption = Option.builder( "f" ).required().hasArg().argName( "Design file" )
+                .desc( "Experimental design description file" ).longOpt( "designFile" ).build();
         this.addOption( designFileOption );
     }
 
@@ -84,7 +83,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
         ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class )
                 .getExperimentalFactorOntologyService();
-        mos.startInitializationThread( true );
+        mos.startInitializationThread( true, false ); // note will *not* re-index
         while ( !mos.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 5000 );
@@ -135,8 +134,9 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     /**
-     * @param shortName short name of the experiment to find.
-     * @return experiment with the given short name, if it exists. Bails otherwise with {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
+     * @param  shortName short name of the experiment to find.
+     * @return           experiment with the given short name, if it exists. Bails otherwise with
+     *                   {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {

@@ -255,7 +255,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                     .getBioMaterialFromExpressionExperiment( experimentBioMaterials, factorValueFields[0], externalId );
 
             if ( currentBioMaterial == null ) {
-                throw new IllegalStateException( "No biomaterial for " + factorValueFields[0] );
+                // this could just be due to extras.
+                throw new IllegalStateException( "No biomaterial for " + factorValueFields[0] + ", " + factorValueFields[1] );
             }
 
             if ( seenBioMaterials.contains( currentBioMaterial ) ) {
@@ -588,7 +589,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         OntologyTerm t = null;
         String lookup = category.replaceAll( "_", " " ).toLowerCase();
         for ( OntologyTerm to : terms ) {
-            if ( to.getTerm().equals( category ) || to.getTerm()
+            if ( to.getTerm().equals( category ) || to.getTerm().toLowerCase()
                     .equals( lookup ) ) {
                 t = to;
                 break;
@@ -628,10 +629,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             BioMaterial bioMaterialInFile = this
                     .getBioMaterialFromExpressionExperiment( bioMaterials, vals[0], vals[1] );
             if ( bioMaterialInFile == null ) {
+                // these might just be "extras" but we're being strict
                 throw new IllegalArgumentException(
-                        "The uploaded file has a biomaterial name that does not match the study: " + StringUtils
-                                .splitPreserveAllTokens( factorValueLine, "\t" )[0]
-                                + " (formatted based on on input: " );
+                        "The uploaded file has a biomaterial name/ID that does not match the study: " + vals[0] + ", " + vals[1] );
             }
         }
     }

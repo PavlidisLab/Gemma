@@ -1206,7 +1206,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param  expressionExperiment ee
-     * @return                      true if any platform used by the ee is two-channel
+     * @return                      true if any platform used by the ee is two-channel (including dual-mode)
      */
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
 
@@ -1221,7 +1221,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         "Array designs must have a technology type assigned before processed vector computation" );
             }
 
-            if ( !technologyType.equals( TechnologyType.ONECOLOR ) && !technologyType.equals( TechnologyType.NONE ) ) {
+            if ( technologyType.equals( TechnologyType.TWOCOLOR ) || technologyType.equals( TechnologyType.DUALMODE ) ) {
                 isTwoChannel = true;
             }
         }

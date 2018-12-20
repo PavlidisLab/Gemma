@@ -25,6 +25,11 @@ import java.io.Serializable;
 
 public class GeneSetMember implements Identifiable, Serializable {
 
+    @Override
+    public String toString() {
+        return "GeneSetMember [id=" + id + ", gene=" + gene + ", score=" + score + "]";
+    }
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */

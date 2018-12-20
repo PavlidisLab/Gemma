@@ -88,7 +88,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         // loader is done.
         // check if it loaded elements to the database
         log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
-        assertEquals( 51, loader.getLoadedGeneCount() );
+        // Used to be 51; genes with no products are now skipped
+        assertEquals( 4, loader.getLoadedGeneCount() );
 
         // grab one gene and check its information
         // (depends on information in gene_info and gene2accession file

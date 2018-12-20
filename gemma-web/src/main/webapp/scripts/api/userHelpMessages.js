@@ -296,7 +296,7 @@ Gemma.HelpText.WidgetDefaults = {
       isMergeeTT : "mergee: this design was merged with others to create a new design",
       isSubsumedTT : "subsumed: all the sequences in this design are covered by another",
       isSubsumerTT : "subsumer: this design \'covers\' one or more others in that it contains all their sequences",
-      hideOrhpansTT : "Click to show/hide platforms that aren't used by any experiments in Gemma",
+      hideOrhpansTT : "Click to show/hide platforms that aren't used by any experiments in Gemma", hideAffyAltTT : "Click to show/hide platforms that are alternative Affymetrix layouts (generally not used in Gemma)",
       hideTroubledTT : "Click to show/hide platforms that are troubled"
    },
    CoexpressionGrid : {
@@ -440,7 +440,7 @@ Gemma.HelpText.WidgetDefaults = {
          + 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements',
        dataReprocessed : "Reprocessed from raw data by Gemma.",
        dataExternal : "Data are from external source.",
-       noBatchInfo : "There is no batch factor and some of the bio assays do not have a processing date."
+       noBatchInfo : "There is no batch factor."
    },
    ExpressionExperimentGrid : {
    // only column TTs, skipped

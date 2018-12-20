@@ -85,8 +85,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
         Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( !this.arrayDesignsToProcess.isEmpty() ) {
-            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
+            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
@@ -100,7 +100,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         } else if ( skipIfLastRunLaterThan != null ) {
             AbstractCLI.log.warn( "*** Running Repeatmasker for all Array designs *** " );
 
-            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
@@ -121,7 +121,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    design = arrayDesignService.thaw( design );
+                    design = getArrayDesignService().thaw( design );
                     this.processArrayDesign( design );
                     successObjects.add( design.getName() );
                     this.audit( design, "" );

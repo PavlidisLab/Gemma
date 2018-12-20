@@ -165,7 +165,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     }
 
-    private ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
+    public ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
 
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {

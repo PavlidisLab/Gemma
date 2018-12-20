@@ -140,6 +140,10 @@ public class GeoServiceImpl extends AbstractGeoService {
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 
+        if ( expressionExperimentService.isBlackListed( geoAccession ) ) {
+            throw new IllegalArgumentException( "Entity with accession " + geoAccession + " is blacklisted" );
+        }
+
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
@@ -165,6 +169,13 @@ public class GeoServiceImpl extends AbstractGeoService {
                 return null;
             }
             geoConverter.setForceConvertElements( true );
+
+            for ( GeoData d : platforms ) {
+                if ( expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                    throw new IllegalArgumentException( "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
+                }
+            }
+
             Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
@@ -332,7 +343,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                    .join( toSkip, "," ) );
+                            .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -352,8 +363,8 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     /**
-     * @param datasets all of which must use the same platform.
-     * @return one data set, which contains all the samples and subsets.
+     * @param  datasets all of which must use the same platform.
+     * @return          one data set, which contains all the samples and subsets.
      */
     private GeoDataset combineDatasets( Collection<GeoDataset> datasets ) {
         if ( datasets.size() == 1 )
@@ -577,6 +588,13 @@ public class GeoServiceImpl extends AbstractGeoService {
                 continue;
             experiment.setPrimaryPublication( pubmed );
 
+            // don't spam NCBI. > 3 per second is a no-no without an API key
+            // see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
+            try {
+                Thread.sleep( 350 );
+            } catch ( InterruptedException e ) {
+                //
+            }
         }
     }
 

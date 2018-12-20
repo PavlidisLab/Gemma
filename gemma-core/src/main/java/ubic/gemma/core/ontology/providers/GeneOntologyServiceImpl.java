@@ -532,7 +532,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
         GOAspect nameSpace = this.getTermAspect( term );
         if ( nameSpace == null ) {
-            GeneOntologyServiceImpl.log.warn( "No namespace for " + term + ", assuming not Biological Process" );
+            GeneOntologyServiceImpl.log.debug( "No namespace for " + term + ", assuming not Biological Process" );
             return false;
         }
 

@@ -191,6 +191,18 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
+    
+//    @Override
+//    @Transactional
+//    public void addGene(GeneSet geneset, Gene gene) {
+//        this.geneSetDao.addGeneToSet(geneset, gene);
+//    }
+//    
+//    @Override
+//    @Transactional
+//    public void removeGene(GeneSet geneset, Gene gene) {
+//        this.geneSetDao.removeGeneFromSet(geneset, gene);
+//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -556,6 +568,16 @@ public class GeneSetServiceImpl implements GeneSetService {
                 updatedGenelist.add( gsm );
             }
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
+     */
+    @Override
+    public void thaw( GeneSet geneSet ) {
+        this.geneSetDao.thaw( geneSet );
     }
 
 }

@@ -90,37 +90,38 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt option
-     * @return see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
+     * @param  opt option
+     * @return     see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
      */
     public final Options addOption( Option opt ) {
         return this.options.addOption( opt );
     }
 
     /**
-     * @param opt         option
-     * @param description description
-     * @param hasArg      has arg
-     * @return see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
+     * @param  opt         option
+     * @param  hasArg      has arg
+     * @param  description description
+     * @return             see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
      */
     public final Options addOption( String opt, boolean hasArg, String description ) {
         return this.options.addOption( opt, hasArg, description );
     }
 
     /**
-     * @param opt         option
-     * @param description description
-     * @param hasArg      has arg
-     * @param longOpt     long option
-     * @return see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
+     * @param  opt         option
+     * @param  longOpt     long option
+     * @param  hasArg      has arg
+     * @param  description description
+     * @return             see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean,
+     *                     java.lang.String)
      */
     public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
         return this.options.addOption( opt, longOpt, hasArg, description );
     }
 
     /**
-     * @param group the option group
-     * @return see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
+     * @param  group the option group
+     * @return       see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
     public final Options addOptionGroup( OptionGroup group ) {
         return this.options.addOptionGroup( group );
@@ -142,16 +143,16 @@ public abstract class AbstractCLI {
     public abstract String getCommandName();
 
     /**
-     * @param opt the option identifier
-     * @return see org.apache.commons.cli.Options#getOption(java.lang.String)
+     * @param  opt the option identifier
+     * @return     see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
     public final Option getOption( String opt ) {
         return this.options.getOption( opt );
     }
 
     /**
-     * @param opt option
-     * @return see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
+     * @param  opt option
+     * @return     see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
      */
     public final OptionGroup getOptionGroup( Option opt ) {
         return this.options.getOptionGroup( opt );
@@ -418,8 +419,8 @@ public abstract class AbstractCLI {
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
      * Check the error code to decide whether execution of your program should proceed.
      *
-     * @param args args
-     * @return Exception; null if nothing went wrong.
+     * @param  args args
+     * @return      Exception; null if nothing went wrong.
      */
     protected final Exception processCommandLine( String[] args ) {
         /* COMMAND LINE PARSER STAGE */
