@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,34 +19,10 @@
 
 package ubic.gemma.core.loader.association.phenotype;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.ncbo.AnnotatorClient;
 import ubic.basecode.ontology.ncbo.AnnotatorResponse;
@@ -60,60 +36,72 @@ import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /**
  * Moved code here so we can test it
- * 
+ *
  * @author paul (code originally from Nicolas)
  */
-public class PhenotypeProcessingUtil {
-    private static Logger log = LoggerFactory.getLogger( PhenotypeProcessingUtil.class );
-
+class PhenotypeProcessingUtil {
+    // this is where the results and files downloaded are put
+    static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";
     // this are where the static resources are kept, like manual mapping files and others
     private static final String RESOURCE_CLASSPATH = "/phenocarta/externalDatabaseImporter/";
 
     // populated using the disease ontology OBO
     private static final Map<String, Set<String>> omimAndmesh2DO = new HashMap<>();
-
-    // this is where the results and files downloaded are put
-    static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator + "Phenocarta";
-
     // description we want to ignore, when we find those description, we know we are not interested in them
     private static final String DESCRIPTION_TO_IGNORE = RESOURCE_CLASSPATH + "DescriptionToIgnore.tsv";
-
     /*
      * the disease ontology OBO file, we are interested in the MESH and OMIM Ids in it.
      * 598 refers to the file version as of 12/2018, which will change...
      */
-    private static final String DISEASE_ONT_OBO_FILE = "598/download?apikey=" + Configuration.getString( "ncbo.api.key" );
+    private static final String DISEASE_ONT_OBO_FILE =
+            "598/download?apikey=" + Configuration.getString( "ncbo.api.key" );
     private static final String DISEASE_ONT_PATH = "http://data.bioontology.org/ontologies/DOID/submissions";
-
-    private final Map<Integer, String> geneToSymbol = new HashMap<>();
-
-    private DiseaseOntologyService diseaseOntologyService = null;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
-    private static MedicOntologyService medicOntologyService = null;
-
     // manual description file, MeshID, OmimID or txt description to a valueUri
     private static final String MANUAL_MAPPING = RESOURCE_CLASSPATH + "ManualDescriptionMapping.tsv";
-
     // results we exclude, we know those results are not good
     private static final String RESULTS_TO_IGNORE = RESOURCE_CLASSPATH + "ResultsToIgnore.tsv";
-
+    private static Logger log = LoggerFactory.getLogger( PhenotypeProcessingUtil.class );
+    private static MedicOntologyService medicOntologyService = null;
+    // keep a log file of the process and error
+    final TreeSet<String> logMessages = new TreeSet<>();
+    private final Map<Integer, String> geneToSymbol = new HashMap<>();
+    // for a search term we always get the answer, no reason to call the annotator again if it gave us the answer for
+    // that request before
+    private final Map<String, Collection<AnnotatorResponse>> cacheAnswerFromAnnotator = new HashMap<>();
+    private final Set<String> descriptionToIgnore = new HashSet<>();
+    // keep description in manual file
+    private final Map<String, String> keyToDescription = new HashMap<>();
+    private final Map<String, Set<String>> manualDescriptionToValuesUriMapping = new HashMap<>();
+    // cache from omimIDToLabel
+    private final Map<String, String> omimIDToLabel = new HashMap<>();
+    private final Set<String> outMappingFoundBuffer = new TreeSet<>();
+    private final Set<String> resultsToIgnore = new HashSet<>();
+    GeneService geneService;
+    // the 3 possible out files
+    BufferedWriter outFinalResults = null;
+    private OntologyService ontologyService;
+    private DiseaseOntologyService diseaseOntologyService = null;
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     // to avoid repeatedly checking....
     private Set<String> unmappableIds = new HashSet<>();
+    private BufferedWriter logRequestAnnotator = null;
+    private BufferedWriter outMappingFound = null;
 
-    /**
-     * is the valueUri existing or obsolete ?
-     * 
-     * @param  valueUri
-     * @return
-     */
-    private boolean existsAndNotObsolete( String valueUri ) {
-        OntologyTerm o = diseaseOntologyService.getTerm( valueUri );
-        if ( o == null ) {
-            o = humanPhenotypeOntologyService.getTerm( valueUri );
-        }
-        return o != null && !o.isTermObsolete();
+    PhenotypeProcessingUtil( GeneService g, OntologyService o ) throws Exception {
+        this.geneService = g;
+        this.ontologyService = o;
+        assert g != null;
+        assert o != null;
+        init();
     }
 
     // special rule used to format the search term
@@ -196,50 +184,15 @@ public class PhenotypeProcessingUtil {
         return newTxt.toString().replaceAll( ",", " " );
     }
 
-    GeneService geneService;
-    // keep a log file of the process and error
-    final TreeSet<String> logMessages = new TreeSet<>();
-    OntologyService ontologyService;
-    // the 3 possible out files
-    BufferedWriter outFinalResults = null;
-    // for a search term we always get the answer, no reason to call the annotator again if it gave us the answer for
-    // that request before
-    private final Map<String, Collection<AnnotatorResponse>> cacheAnswerFromAnnotator = new HashMap<>();
-    private final Set<String> descriptionToIgnore = new HashSet<>();
-
-    // keep description in manual file
-    private final Map<String, String> keyToDescription = new HashMap<>();
-
-    private BufferedWriter logRequestAnnotator = null;
-
-    private final Map<String, Set<String>> manualDescriptionToValuesUriMapping = new HashMap<>();
-
-    // cache from omimIDToLabel
-    private final Map<String, String> omimIDToLabel = new HashMap<>();
-
-    private BufferedWriter outMappingFound = null;
-
-    private final Set<String> outMappingFoundBuffer = new TreeSet<>();
-
-    private final Set<String> resultsToIgnore = new HashSet<>();
-
-    public PhenotypeProcessingUtil( GeneService g, OntologyService o ) throws Exception {
-        this.geneService = g;
-        this.ontologyService = o;
-        assert g != null;
-        assert o != null;
-        init();
-    }
-
     /**
      * creates the folder where the output files will be put, use this one if file is too big
      * and initializes files
-     * 
-     * @param  externalDatabaseUse
-     * @return
-     * @throws Exception
+     *
+     * @param externalDatabaseUse external database use
+     * @return the folder
+     * @throws Exception when the folder can't be created
      */
-    protected String createWriteFolderIfDoesntExist( String externalDatabaseUse ) throws Exception {
+    String createWriteFolderIfDoesntExist( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
         String writeFolder = WRITE_FOLDER + File.separator + externalDatabaseUse;
@@ -257,15 +210,15 @@ public class PhenotypeProcessingUtil {
 
     /**
      * creates the folder where the output files will be put, with today's date
-     * 
-     * @param  externalDatabaseUse
-     * @throws Exception
+     *
+     * @param externalDatabaseUse external database use
+     * @throws Exception when the folder can't be created
      */
-    protected String createWriteFolderWithDate( String externalDatabaseUse ) throws Exception {
+    String createWriteFolderWithDate( String externalDatabaseUse ) throws Exception {
 
         // where to put the final results
-        String writeFolder = PhenotypeProcessingUtil.WRITE_FOLDER + File.separator + externalDatabaseUse + "_"
-                + getTodayDate();
+        String writeFolder =
+                PhenotypeProcessingUtil.WRITE_FOLDER + File.separator + externalDatabaseUse + "_" + getTodayDate();
 
         File folder = new File( writeFolder );
 
@@ -279,67 +232,28 @@ public class PhenotypeProcessingUtil {
     }
 
     /**
-     * Goes on the specified urlPath and download the file to place it into the writeFolder
-     */
-    String downloadFileFromWeb( String pathName, String fileUrlName, String outputPath, String outputFileName ) {
-
-        String fullPathToDownload = pathName + "/" + fileUrlName;
-
-        String outputFileFullPath = outputPath + ( outputPath.endsWith( File.separator ) ? "" : File.separator ) + outputFileName;
-        log.info( "Trying to download : " + fullPathToDownload + " to " + outputFileFullPath );
-
-        URL url;
-        try {
-            url = new URL( fullPathToDownload );
-            url.openConnection();
-        } catch ( IOException e1 ) {
-            throw new RuntimeException( e1 );
-        }
-
-        try (InputStream reader = url.openStream(); FileOutputStream writer = new FileOutputStream( outputFileFullPath )) {
-
-            byte[] buffer = new byte[153600];
-            int bytesRead;
-
-            while ( ( bytesRead = reader.read( buffer ) ) > 0 ) {
-                writer.write( buffer, 0, bytesRead );
-                buffer = new byte[153600];
-            }
-
-            writer.close();
-            reader.close();
-            log.info( "Download Completed" );
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-        return outputFileFullPath;
-    }
-
-    /**
      * Key entry point to map IDs or terms to DO identifiers.
-     * 
-     * @param  proposedID       Either a MESH, OMIM or DO ID. If the latter, we look for it directly in DO. If MESH or
-     *                          OMIM we try to map it.
-     * @param  gene
-     * @param  pubmed
-     * @param  evidenceCode
-     * @param  description
-     * @param  annotatorKeyword will be used to find terms as a fallback.
-     * @param  externalDatabase
-     * @param  databaseLink
-     * @return                  true if mapping was found
-     * @throws Exception
+     *
+     * @param proposedID       Either a MESH, OMIM or DO ID. If the latter, we look for it directly in DO. If MESH or
+     *                         OMIM we try to map it.
+     * @param gene             gene
+     * @param pubmed           pubmed
+     * @param evidenceCode     evidence code
+     * @param description      description
+     * @param annotatorKeyword will be used to find terms as a fallback.
+     * @param externalDatabase external database
+     * @param databaseLink     database link
+     * @return true if mapping was found
+     * @throws Exception IO problems
      */
-    protected boolean findMapping( String proposedID, Gene gene, String pubmed, String evidenceCode, String description,
+    boolean findMapping( String proposedID, Gene gene, String pubmed, String evidenceCode, String description,
             String annotatorKeyword, String externalDatabase, String databaseLink ) throws Exception {
 
         if ( gene == null ) {
             throw new IllegalArgumentException( "Called with a gene being null on line pubmed; " + pubmed );
         }
 
-        boolean mappingFound = false;
+        boolean mappingFound;
 
         // do without parents
         mappingFound = this
@@ -363,9 +277,124 @@ public class PhenotypeProcessingUtil {
     }
 
     /**
+     * is the valueUri existing or obsolete ? Warning only works with DO And HPO
+     *
+     * @param valueUri value uri
+     * @return ontology term
+     */
+    OntologyTerm findOntologyTermExistAndNotObsolete( String valueUri ) {
+
+        OntologyTerm o = diseaseOntologyService.getTerm( valueUri );
+        if ( o == null ) {
+            o = humanPhenotypeOntologyService.getTerm( valueUri );
+        }
+
+        if ( o == null || o.isTermObsolete() ) {
+            return null;
+        }
+
+        return o;
+    }
+
+    String geneToSymbol( Integer geneId ) {
+        // little cache from previous results just to speed up things
+        if ( geneToSymbol.get( geneId ) != null ) {
+            return geneToSymbol.get( geneId );
+        }
+
+        Gene g = geneService.findByNCBIId( geneId );
+
+        if ( g != null ) {
+            geneToSymbol.put( geneId, g.getOfficialSymbol() );
+            return g.getOfficialSymbol();
+        }
+
+        return null;
+    }
+
+    /**
+     * Produces a file like gwas.finalResults.tsv. The header is written with columns to be created.
+     *
+     * @param prefix      e.g. gwas, sfar, omim for the data source
+     * @param writeFolder where the file will go
+     * @param useScore    score information will be present
+     * @param useNegative information on negative evidence will be present
+     * @throws IOException IO problems
+     */
+    void initFinalOutputFile( String prefix, String writeFolder, boolean useScore, boolean useNegative )
+            throws IOException {
+
+        String score = "";
+        String negative = "";
+
+        if ( useScore ) {
+            score = "\tScoreType\tScore\tStrength";
+        }
+        if ( useNegative ) {
+            negative = "\tIsNegative";
+        }
+
+        outFinalResults = new BufferedWriter(
+                new FileWriter( writeFolder + File.separator + prefix + ".finalResults.tsv" ) );
+        outFinalResults
+                .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypeMapping\tOrginalPhenotype\tPhenotypes"
+                        + negative + score + "\n" );
+    }
+
+    boolean notInteger( String input ) {
+        try {
+            //noinspection ResultOfMethodCallIgnored // Invoked to check if it would throw an exception
+            Integer.parseInt( input );
+            return false;
+        } catch ( Exception e ) {
+            return true;
+        }
+    }
+
+    /**
+     * Goes on the specified urlPath and download the file to place it into the writeFolder
+     */
+    String downloadFileFromWeb( String pathName, String fileUrlName, String outputPath, String outputFileName ) {
+
+        String fullPathToDownload = pathName + "/" + fileUrlName;
+
+        String outputFileFullPath =
+                outputPath + ( outputPath.endsWith( File.separator ) ? "" : File.separator ) + outputFileName;
+        log.info( "Trying to download : " + fullPathToDownload + " to " + outputFileFullPath );
+
+        URL url;
+        try {
+            url = new URL( fullPathToDownload );
+            url.openConnection();
+        } catch ( IOException e1 ) {
+            throw new RuntimeException( e1 );
+        }
+
+        try (InputStream reader = url.openStream();
+                FileOutputStream writer = new FileOutputStream( outputFileFullPath )) {
+
+            byte[] buffer = new byte[153600];
+            int bytesRead;
+
+            while ( ( bytesRead = reader.read( buffer ) ) > 0 ) {
+                writer.write( buffer, 0, bytesRead );
+                buffer = new byte[153600];
+            }
+
+            writer.close();
+            reader.close();
+            log.info( "Download Completed" );
+
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return outputFileFullPath;
+    }
+
+    /**
      * parse the disease ontology file to create the structure needed (omimIdToPhenotypeMapping and
      * meshIdToPhenotypeMapping). We download the DO OBO file since it is easy to parse for MESH and OMIM terms.
-     * 
      * This isn't a default part of startup because not all importers need it.
      */
     void loadMESHOMIM2DOMappings() throws IOException {
@@ -378,8 +407,7 @@ public class PhenotypeProcessingUtil {
             diseaseOntologyFile = doobo.getAbsolutePath();
         } else {
             log.info( "Downloading doid.obo file for getting MESH and OMIM mappings to DOID" );
-            downloadFileFromWeb( DISEASE_ONT_PATH,
-                    DISEASE_ONT_OBO_FILE, WRITE_FOLDER, "doid.obo" );
+            downloadFileFromWeb( DISEASE_ONT_PATH, DISEASE_ONT_OBO_FILE, WRITE_FOLDER, "doid.obo" );
         }
 
         Set<String> omimIds = new HashSet<>();
@@ -454,88 +482,57 @@ public class PhenotypeProcessingUtil {
         }
     }
 
-    /**
-     * is the valueUri existing or obsolete ? Warning only works with DO And HPO
-     * 
-     * @param  valueUri
-     * @return
+    /***
+     * write all found in set to files and close files. the reason this is done that way is to not have duplicates for 2
+     * files
+     *
+     * @throws IOException  IO problems
      */
-    protected OntologyTerm findOntologyTermExistAndNotObsolete( String valueUri ) {
+    void writeBuffersAndCloseFiles() throws IOException {
 
+        // write all possible mapping found
+        log.info( "Writing to output..." );
+        for ( String lineMappinpFound : outMappingFoundBuffer ) {
+            outMappingFound.write( lineMappinpFound );
+        }
+
+        outMappingFound.close();
+        outFinalResults.close();
+        logRequestAnnotator.close();
+
+        if ( !logMessages.isEmpty() ) {
+
+            log.info( "here are the error messages :\n" );
+
+            for ( String err : logMessages ) {
+                log.error( err );
+            }
+        }
+    }
+
+    /**
+     * is the valueUri existing or obsolete ?
+     *
+     * @param valueUri the value uri of term to check
+     * @return term exists and is not obsolete
+     */
+    private boolean existsAndNotObsolete( String valueUri ) {
         OntologyTerm o = diseaseOntologyService.getTerm( valueUri );
         if ( o == null ) {
             o = humanPhenotypeOntologyService.getTerm( valueUri );
         }
-
-        if ( o == null || o.isTermObsolete() ) {
-            return null;
-        }
-
-        return o;
-    }
-
-    protected String geneToSymbol( Integer geneId ) {
-        // little cache from previous results just to speed up things
-        if ( geneToSymbol.get( geneId ) != null ) {
-            return geneToSymbol.get( geneId );
-        }
-
-        Gene g = geneService.findByNCBIId( geneId );
-
-        if ( g != null ) {
-            geneToSymbol.put( geneId, g.getOfficialSymbol() );
-            return g.getOfficialSymbol();
-        }
-
-        return null;
-    }
-
-    /**
-     * Produces a file like gwas.finalResults.tsv. The header is written with columns to be created.
-     * 
-     * @param  prefix      e.g. gwas, sfar, omim for the data source
-     * @param  writeFolder where the file will go
-     * @param  useScore    score information will be present
-     * @param  useNegative information on negative evidence will be present
-     * @throws IOException
-     */
-    protected void initFinalOutputFile( String prefix, String writeFolder, boolean useScore, boolean useNegative ) throws IOException {
-
-        String score = "";
-        String negative = "";
-
-        if ( useScore ) {
-            score = "\tScoreType\tScore\tStrength";
-        }
-        if ( useNegative ) {
-            negative = "\tIsNegative";
-        }
-
-        outFinalResults = new BufferedWriter( new FileWriter( writeFolder + File.separator + prefix + ".finalResults.tsv" ) );
-        outFinalResults
-                .write( "GeneSymbol\tGeneId\tPrimaryPubMeds\tEvidenceCode\tComments\tExternalDatabase\tDatabaseLink\tPhenotypeMapping\tOrginalPhenotype\tPhenotypes"
-                        + negative + score + "\n" );
-    }
-
-    protected boolean notInteger( String input ) {
-        try {
-            //noinspection ResultOfMethodCallIgnored // Invoked to check if it would throw an exception
-            Integer.parseInt( input );
-            return false;
-        } catch ( Exception e ) {
-            return true;
-        }
+        return o != null && !o.isTermObsolete();
     }
 
     /**
      * Initialization
-     * 
-     * @throws IOException
+     *
+     * @throws IOException IO problems
      */
     private void parseDescriptionToIgnore() throws IOException {
 
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( PhenotypeProcessingUtil.class
-                .getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) )) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader( PhenotypeProcessingUtil.class.getResourceAsStream( DESCRIPTION_TO_IGNORE ) ) )) {
 
             String line;
 
@@ -550,13 +547,13 @@ public class PhenotypeProcessingUtil {
 
     /**
      * Initialization
-     * 
-     * @throws IOException
+     *
+     * @throws IOException IO problems
      */
     private void parseManualMappingFile() throws IOException {
 
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( PhenotypeProcessingUtil.class
-                .getResourceAsStream( MANUAL_MAPPING ) ) )) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader( PhenotypeProcessingUtil.class.getResourceAsStream( MANUAL_MAPPING ) ) )) {
 
             String line;
             // skip first line, the headers
@@ -590,13 +587,12 @@ public class PhenotypeProcessingUtil {
                         keyToDescription.put( termId, valueStaticFile );
 
                     } else {
-                        writeError( "Manual ValueURI and Value don't match in file: " + valueStaticFile
-                                + "; Expected: " + ontologyTerm.getLabel() );
+                        writeError( "Manual ValueURI and Value don't match in file: " + valueStaticFile + "; Expected: "
+                                + ontologyTerm.getLabel() );
                     }
                 } else {
-                    writeError(
-                            "Manual mapping file term obsolete or missing: '" + valueUriStaticFile + "' " + " ("
-                                    + valueStaticFile + ")" );
+                    writeError( "Manual mapping file term obsolete or missing: '" + valueUriStaticFile + "' " + " ("
+                            + valueStaticFile + ")" );
                 }
             }
         }
@@ -604,13 +600,12 @@ public class PhenotypeProcessingUtil {
 
     /**
      * Initialization parse file and returns a collection of terms found
-     * 
-     * @throws IOException
+     *
+     * @throws IOException IO problems
      */
     private void parseResultsToIgnore() throws IOException {
 
-        InputStream resultsToIgnoreStream = PhenotypeProcessingUtil.class
-                .getResourceAsStream( RESULTS_TO_IGNORE );
+        InputStream resultsToIgnoreStream = PhenotypeProcessingUtil.class.getResourceAsStream( RESULTS_TO_IGNORE );
         assert resultsToIgnoreStream != null;
 
         try (BufferedReader br = new BufferedReader( new InputStreamReader( resultsToIgnoreStream ) )) {
@@ -624,34 +619,6 @@ public class PhenotypeProcessingUtil {
 
     }
 
-    /***
-     * write all found in set to files and close files. the reason this is done that way is to not have duplicates for 2
-     * files
-     * 
-     * @throws IOException
-     */
-    void writeBuffersAndCloseFiles() throws IOException {
-
-        // write all possible mapping found
-        log.info( "Writing to output..." );
-        for ( String lineMappinpFound : outMappingFoundBuffer ) {
-            outMappingFound.write( lineMappinpFound );
-        }
-
-        outMappingFound.close();
-        outFinalResults.close();
-        logRequestAnnotator.close();
-
-        if ( !logMessages.isEmpty() ) {
-
-            log.info( "here are the error messages :\n" );
-
-            for ( String err : logMessages ) {
-                log.error( err );
-            }
-        }
-    }
-
     private String changeMedicToUri( String medicTerm ) {
 
         String randomUri = medicOntologyService.getAllURIs().iterator().next();
@@ -659,22 +626,18 @@ public class PhenotypeProcessingUtil {
         return randomUri.substring( 0, randomUri.lastIndexOf( "/" ) + 1 ) + medicTerm.replace( ':', '_' );
     }
 
-    /**
-     * ????
-     * 
-     * @param  valueUri
-     * @return
+    /*
+     * TODO ????
      */
     private String changeToId( String valueUri ) {
-        return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1, valueUri.length() ).replace( '_', ':' );
+        return valueUri.substring( valueUri.lastIndexOf( "/" ) + 1 ).replace( '_', ':' );
     }
 
     /**
-     * 
-     * @param  valueUri
-     * @param  h        will be modified, but then also returned
-     * @param  key
-     * @return          h
+     * @param valueUri value uri
+     * @param h        will be modified, but then also returned
+     * @param key      key
+     * @return h
      */
     private Set<String> checkAndAddValue( String valueUri, Set<String> h, String key ) {
         if ( PhenotypeProcessingUtil.omimAndmesh2DO.get( key ) == null ) {
@@ -692,14 +655,14 @@ public class PhenotypeProcessingUtil {
 
     /**
      * Find a description (label) based on an OMIM or MESH id
-     * 
-     * @param  meshOrOmimId
-     * @return              result or null if nothing was found.
-     * @throws Exception
+     *
+     * @param meshOrOmimId mesh or omim id
+     * @return result or null if nothing was found.
      */
-    private String findDescriptionUsingTerm( String meshOrOmimId ) throws Exception {
+    private String findDescriptionUsingTerm( String meshOrOmimId ) {
 
-        if ( unmappableIds.contains( meshOrOmimId ) ) return null;
+        if ( unmappableIds.contains( meshOrOmimId ) )
+            return null;
 
         OntologyTerm ontologyTerm = medicOntologyService.getTerm( this.changeMedicToUri( meshOrOmimId ) );
 
@@ -707,7 +670,7 @@ public class PhenotypeProcessingUtil {
             return ontologyTerm.getLabel();
         }
 
-        String conceptId = meshOrOmimId.substring( meshOrOmimId.indexOf( ":" ) + 1, meshOrOmimId.length() );
+        String conceptId = meshOrOmimId.substring( meshOrOmimId.indexOf( ":" ) + 1 );
 
         // root term in medic
         if ( conceptId.equalsIgnoreCase( "C" ) ) {
@@ -719,7 +682,7 @@ public class PhenotypeProcessingUtil {
             return omimIDToLabel.get( conceptId );
         }
 
-        String label = null;
+        String label;
 
         if ( meshOrOmimId.contains( "OMIM:" ) ) {
             label = AnnotatorClient.findLabelForIdentifier( "OMIM", conceptId );
@@ -741,14 +704,7 @@ public class PhenotypeProcessingUtil {
         return label;
     }
 
-    /**
-     * ????
-     * 
-     * @param  keyword
-     * @return
-     * @throws Exception
-     */
-    private String findExtraInfoMeshDescription( String keyword ) throws Exception {
+    private String findExtraInfoMeshDescription( String keyword ) {
 
         // use the given description
         if ( this.findDescriptionUsingTerm( keyword ) != null ) {
@@ -763,28 +719,25 @@ public class PhenotypeProcessingUtil {
     }
 
     /**
-     * ????? the search key will only work if lower case, the key is always lower case, this method take care of it
-     * 
-     * @param  termId
-     * @return
+     * @param termId the search key will only work if lower case, the key is always lower case, this method take care of it
+     * @return collection of mappings
      */
     private Collection<String> findManualMappingTermValueUri( String termId ) {
         return manualDescriptionToValuesUriMapping.get( termId.toLowerCase() );
     }
 
     /**
-     * 
-     * @param  proposedID       Either MESH, OMIM or DO (we are trying to map to DO)
-     * @param  gene
-     * @param  pubmed
-     * @param  evidenceCode
-     * @param  description
-     * @param  annotatorKeyword
-     * @param  externalDatabase
-     * @param  databaseLink
-     * @param  onParents
-     * @return
-     * @throws Exception
+     * @param proposedID       Either MESH, OMIM or DO (we are trying to map to DO)
+     * @param gene             gene
+     * @param pubmed           pubmed
+     * @param evidenceCode     evidence code
+     * @param description      description
+     * @param annotatorKeyword annotator keyword
+     * @param externalDatabase external database
+     * @param databaseLink     database link
+     * @param onParents        on parents
+     * @return false if not found
+     * @throws Exception IO problems
      */
     private boolean findMapping( String proposedID, Gene gene, String pubmed, String evidenceCode, String description,
             String annotatorKeyword, String externalDatabase, String databaseLink, Collection<OntologyTerm> onParents )
@@ -802,11 +755,10 @@ public class PhenotypeProcessingUtil {
 
                 if ( term != null ) {
 
-                    outFinalResults
-                            .write( gene.getOfficialSymbol() + "\t" + gene.getNcbiGeneId() + "\t" + pubmed + "\t" + evidenceCode
-                                    + "\t" + description + "\t" + externalDatabase + "\t" + databaseLink + "\t"
-                                    + PhenotypeMappingType.DIRECT.getValue()
-                                    + "\t" + proposedID + "\t" + term.getUri() + "\n" );
+                    outFinalResults.write( gene.getOfficialSymbol() + "\t" + gene.getNcbiGeneId() + "\t" + pubmed + "\t"
+                            + evidenceCode + "\t" + description + "\t" + externalDatabase + "\t" + databaseLink + "\t"
+                            + PhenotypeMappingType.DIRECT.getValue() + "\t" + proposedID + "\t" + term.getUri()
+                            + "\n" );
                     return true;
                 }
                 return false;
@@ -821,8 +773,9 @@ public class PhenotypeProcessingUtil {
 
         // step 2, the manual mapping file, by OMIM id, MESH or by description if no mesh was given
         if ( !mappingFound ) {
-            mappingFound = this.findUsingManualMappingFile( proposedID, annotatorKeyword, gene, pubmed, evidenceCode,
-                    description, externalDatabase, databaseLink, onParents );
+            mappingFound = this
+                    .findUsingManualMappingFile( proposedID, annotatorKeyword, gene, pubmed, evidenceCode, description,
+                            externalDatabase, databaseLink, onParents );
         }
 
         // search with the given keyword, usually the description
@@ -874,17 +827,6 @@ public class PhenotypeProcessingUtil {
 
     /**
      * step 1 using an OMIM or MESH to link to a DO id
-     * 
-     * @param  meshOrOmimId
-     * @param  gene
-     * @param  pubmed
-     * @param  evidenceCode
-     * @param  description
-     * @param  externalDatabase
-     * @param  databaseLink
-     * @param  onParents
-     * @return
-     * @throws Exception
      */
     private boolean findOmimMeshInDiseaseOntology( String meshOrOmimId, Gene gene, String pubmed, String evidenceCode,
             String description, String externalDatabase, String databaseLink, Collection<OntologyTerm> onParents )
@@ -948,9 +890,8 @@ public class PhenotypeProcessingUtil {
     }
 
     /**
-     * 
-     * @param  diseaseId MESH or OMIM id
-     * @return
+     * @param diseaseId MESH or OMIM id
+     * @return collection of ontology terms
      */
     private Collection<OntologyTerm> findOntologyTermsUriWithDiseaseId( String diseaseId ) {
 
@@ -1029,19 +970,18 @@ public class PhenotypeProcessingUtil {
 
     /**
      * step 3 - find using "free text" search via annotator.
-     * 
-     * @param  meshOrOmimId
-     * @param  keywordQuery
-     * @param  externalDatabase
-     * @param  modifySearch
-     * @param  onParents                    will be checked if nothing found directly
-     * @param  child                        FIXME not actually used, should be removed.
-     * @return
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     * @throws IllegalStateException
-     * @throws Exception
+     *
+     * @param meshOrOmimId     mesh or omim id
+     * @param keywordQuery     keyword query
+     * @param externalDatabase external database
+     * @param modifySearch     modify search
+     * @param onParents        will be checked if nothing found directly
+     * @param child            FIXME not actually used, should be removed.
+     * @return false when not found
+     * @throws IOException                  IO problems
+     * @throws SAXException                 sax parsing problems
+     * @throws ParserConfigurationException configuration problems
+     * @throws IllegalStateException        TODO
      */
     private boolean findWithAnnotator( String meshOrOmimId, String keywordQuery, String externalDatabase,
             boolean modifySearch, Collection<OntologyTerm> onParents, String child )
@@ -1121,8 +1061,9 @@ public class PhenotypeProcessingUtil {
                         }
 
                         // FIXME usedChild is always either blank or null?
-                        String lineToWrite = key + "\t" + on.getUri() + "\t" + on.getLabel() + "\t" + searchTerm + "\t" + usedChild
-                                + "\t" + condition + "\t" + externalDatabase + "\n";
+                        String lineToWrite =
+                                key + "\t" + on.getUri() + "\t" + on.getLabel() + "\t" + searchTerm + "\t" + usedChild
+                                        + "\t" + condition + "\t" + externalDatabase + "\n";
 
                         outMappingFoundBuffer.add( lineToWrite );
 
@@ -1151,8 +1092,8 @@ public class PhenotypeProcessingUtil {
 
     /**
      * For inclusion in path names
-     * 
-     * @return
+     *
+     * @return todays date
      */
     private String getTodayDate() {
         DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH.mm" );
@@ -1162,10 +1103,10 @@ public class PhenotypeProcessingUtil {
 
     /**
      * Initialize additional files for output. all imported can have up to 3 outputFiles, that are the results
-     * 
-     * @param  prefix
-     * @param  writeFolder
-     * @throws IOException
+     *
+     * @param prefix      prefix
+     * @param writeFolder write folder
+     * @throws IOException IO problems
      */
     private void initOutputfiles( String prefix, String writeFolder ) throws IOException {
 
@@ -1180,13 +1121,14 @@ public class PhenotypeProcessingUtil {
                 .write( "Identifier (KEY)\tPhenotype valueUri (THE KEY MAP TO THIS)\tPhenotype value\tSearch Term used in annotator\tChild Term\tHow we found the mapping\tSource\n" );
 
         // 3- this a log of request sent to annotator
-        logRequestAnnotator = new BufferedWriter( new FileWriter( writeFolder + File.separator + "logRequestAnnotatorNotFound.tsv" ) );
+        logRequestAnnotator = new BufferedWriter(
+                new FileWriter( writeFolder + File.separator + "logRequestAnnotatorNotFound.tsv" ) );
     }
 
     /**
      * load all needed ontologies
-     * 
-     * @throws Exception
+     *
+     * @throws Exception problems
      */
     private synchronized void init() throws Exception {
 
@@ -1251,8 +1193,8 @@ public class PhenotypeProcessingUtil {
 
     /**
      * I don't know what is specifically MESH about this - it seems to not care.
-     * 
-     * @param  meshTerms.
+     *
+     * @param meshTerms mesh terms
      * @return map of meshIds to DO or HPO terms
      */
     private Map<String, Collection<OntologyTerm>> meshToDiseaseTerms( Collection<OntologyTerm> meshTerms ) {
@@ -1276,9 +1218,6 @@ public class PhenotypeProcessingUtil {
 
     /**
      * if a excel file was used values sometime save as "value", always take out the quotation marks
-     * 
-     * @param  txt
-     * @return
      */
     private String removeQuotes( String txt ) {
 
@@ -1288,9 +1227,6 @@ public class PhenotypeProcessingUtil {
 
     /**
      * checks if a value uri usually found with the annotator exists or obsolete, filters the results
-     * 
-     * @param  annotatorResponses
-     * @return
      */
     private Collection<AnnotatorResponse> removeNotExistAndObsolete(
             Collection<AnnotatorResponse> annotatorResponses ) {
@@ -1309,9 +1245,6 @@ public class PhenotypeProcessingUtil {
 
     /**
      * special rules used to format the search term, when using a modified search in the annotator
-     * 
-     * @param  txt
-     * @return
      */
     private String removeSmallNumberAndTxt( String txt ) {
 
@@ -1340,10 +1273,6 @@ public class PhenotypeProcessingUtil {
         return txtWithoutSimpLetters.toString().trim();
     }
 
-    /**
-     * 
-     * @param errorMessage
-     */
     private void writeError( String errorMessage ) {
         log.error( errorMessage );
         // this gives the summary of errors at the end

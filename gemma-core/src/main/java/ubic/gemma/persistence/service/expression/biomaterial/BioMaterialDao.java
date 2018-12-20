@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,8 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
     Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
     /**
-     * Return the experiment the biomaterial appears in
+     * @param bioMaterialId biomaterial id
+     * @return the experiment the biomaterial appears in
      */
     ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
 

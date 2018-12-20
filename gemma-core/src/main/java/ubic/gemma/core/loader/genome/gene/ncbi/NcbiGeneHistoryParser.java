@@ -30,12 +30,11 @@ import java.util.Map;
  * Parse the NCBI "gene_history" file. File format : tax_id, GeneID,Discontinued_GeneID, Discontinued_Symbol,
  * Discontinue_Date; (tab is used as a separator, pound sign - start of a comment) File is obtained from
  * ftp.ncbi.nih.gov.gene/DATA
- * 
- * see {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README}
+ * See <a href='ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README'>ncbi readme</a>
  * There are two kinds of lines. Lines with a "-" for the GeneID (the majority) seems to be used when the
  * record was withdrawn (Field is defined as "the current unique identified for a gene"). Lines with a symbol means it
  * was replaced, so far as I can tell.
- * 
+ *
  * @author paul
  */
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
@@ -131,9 +130,9 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
     }
 
     /**
-     * @param  geneSymbol gene symbol
-     * @param  taxonId    taxon id
-     * @return            null, or the NCBI ID of the gene that was discontinued.
+     * @param geneSymbol gene symbol
+     * @param taxonId    taxon id
+     * @return null, or the NCBI ID of the gene that was discontinued.
      */
     public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
         if ( !discontinuedGenes.containsKey( taxonId ) )

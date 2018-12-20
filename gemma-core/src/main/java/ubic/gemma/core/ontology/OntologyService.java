@@ -70,7 +70,7 @@ public interface OntologyService extends InitializingBean {
     Collection<Characteristic> findTermAsCharacteristic( String search );
 
     /**
-     * Given a search string will look through the loaded ontologies for terms that match the search term. If the query looks like a URI, it just retrieves the term. 
+     * Given a search string will look through the loaded ontologies for terms that match the search term. If the query looks like a URI, it just retrieves the term.
      * For other queries, this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
      * @param search search
@@ -102,9 +102,6 @@ public interface OntologyService extends InitializingBean {
      */
     CellLineOntologyService getCellLineOntologyService();
 
-    /**
-     * @return
-     */
     CellTypeOntologyService getCellTypeOntologyService();
 
     /**
@@ -128,14 +125,8 @@ public interface OntologyService extends InitializingBean {
      */
     FMAOntologyService getFmaOntologyService();
 
-    /**
-     * @return
-     */
     GemmaOntologyService getGemmaOntologyService();
 
-    /**
-     * @return
-     */
     HumanDevelopmentOntologyService getHumanDevelopmentOntologyService();
 
     /**
@@ -148,14 +139,11 @@ public interface OntologyService extends InitializingBean {
      */
     MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
 
-    /**
-     * @return
-     */
     MouseDevelopmentOntologyService getMouseDevelopmentOntologyService();
 
     /**
      * @return the NIFSTDOntologyService
-     *  @deprecated
+     * @deprecated
      */
     NIFSTDOntologyService getNifstfOntologyService();
 

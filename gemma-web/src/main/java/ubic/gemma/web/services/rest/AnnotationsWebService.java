@@ -169,7 +169,7 @@ public class AnnotationsWebService extends
     }
 
     /**
-     * Same as {@link this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}, but
+     * Same as {@link this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)} but
      * also filters by taxon.
      *
      * @see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).

@@ -139,10 +139,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         }
     }
 
-    /**
-     * 
-     * @throws Exception
-     */
     protected void createWriteFolder() throws Exception {
 
         File folder = new File( EvidenceImporterAbstractCLI.WRITE_FOLDER );

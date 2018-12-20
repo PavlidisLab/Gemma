@@ -35,13 +35,17 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     // the init is in the constructor, we always need those
     public ExternalDatabaseEvidenceImporterAbstractCLI() throws Exception {
         super();
+    }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
     }
 
     /**
      * load all needed services and initialize data structures
-     * 
-     * @param args
+     *
+     * @return an exception, if there were any problems, or null otherwise.
      */
     protected Exception init() {
 
@@ -55,11 +59,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
         return null;
 
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PHENOTYPES;
     }
 
 }

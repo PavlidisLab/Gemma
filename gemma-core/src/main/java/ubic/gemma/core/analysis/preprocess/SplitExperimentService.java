@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,16 +19,15 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * TODO Document Me
- * 
+ *
  * @author paul
  */
 public interface SplitExperimentService {
@@ -36,10 +35,10 @@ public interface SplitExperimentService {
     /**
      * Split an experiment into multiple experiments based on a factor. The new experiments will automatically be given
      * short names to suit and the names will be appended with an indicator of the split.
-     * 
-     * @param  expressionExperiment
-     * @param  splitOn
-     * @return                      results of the split
+     *
+     * @param expressionExperiment the experiment to split
+     * @param splitOn              the factor to split the experiment on
+     * @return results of the split
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     Collection<ExpressionExperiment> split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn );
