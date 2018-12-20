@@ -583,19 +583,17 @@
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>
-                scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
-            </url>
+			<url>/space/gemmaData/gemma-devsite</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>
