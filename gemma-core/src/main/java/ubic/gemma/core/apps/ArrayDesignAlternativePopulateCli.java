@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,28 +19,24 @@
 
 package ubic.gemma.core.apps;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 /**
  * This only needs to be re-run when the mappings change. Existing mappings are not changed.
- * 
+ *
  * @author paul
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
         ArrayDesignAlternativePopulateCli c = new ArrayDesignAlternativePopulateCli();
         c.doWork( args );
@@ -52,19 +48,9 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
         return CommandGroup.METADATA;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "affyAltsUpdate";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Populate the 'alternative' information for Affymetrix platforms";
     }
 
     @Override
@@ -72,20 +58,15 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
         super.addUserNameAndPasswordOptions( true );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception ex = super.processCommandLine( args );
-        if ( ex != null ) return ex;
+        if ( ex != null )
+            return ex;
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
         // Read in the mapping file, which is in the classpath. This is also used by GeoPlatform (and in the DataUpdater)
-        InputStream r = this.getClass()
-                .getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" );
+        InputStream r = this.getClass().getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" );
         try (BufferedReader in = new BufferedReader( new InputStreamReader( r ) )) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
@@ -103,15 +84,16 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
                 ArrayDesign toAD = arrayDesignService.findByShortName( to );
 
                 if ( fromAD == null ) {
-                    log.info( "No loaded platform matches " + from + ", skipping");
+                    log.info( "No loaded platform matches " + from + ", skipping" );
                     continue;
                 }
                 if ( toAD == null ) {
-                    log.info( "No loaded platform matches alternative " + to + ", skipping");
+                    log.info( "No loaded platform matches alternative " + to + ", skipping" );
                     continue;
                 }
 
-                if ( fromAD.equals( toAD ) ) continue; // no need to self-map?
+                if ( fromAD.equals( toAD ) )
+                    continue; // no need to self-map?
 
                 arrayDesignService.thawLite( fromAD );
                 if ( fromAD.getAlternativeTo() != null ) {
@@ -127,6 +109,11 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
             return e;
         }
         return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Populate the 'alternative' information for Affymetrix platforms";
     }
 
 }

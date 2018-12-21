@@ -41,10 +41,9 @@ public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     /**
-     * 
-     * @param ee
+     * @param ee      ee
      * @param vectors non-persistent, all of the same quantitationtype
-     * @return
+     * @return ee
      */
     @Secured({ "GROUP_USER" })
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
@@ -73,8 +72,10 @@ public interface ProcessedExpressionDataVectorService
             Collection<Long> genes );
 
     /**
-     * @param ees   expressionExperiments
-     * @param genes genes
+     * @param ees                 expressionExperiments
+     * @param genes               genes
+     * @param consolidateMode     how to consolidate the vectors when there is more than one
+     * @param keepGeneNonSpecific whether to keep vectors that are not specific to the gene
      * @return value objects containing structured information about the expression levels of given genes
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
@@ -82,9 +83,11 @@ public interface ProcessedExpressionDataVectorService
             Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode );
 
     /**
-     * @param ees       expressionExperiments
-     * @param component the principal component
-     * @param threshold threshold
+     * @param ees                 expressionExperiments
+     * @param component           the principal component
+     * @param threshold           threshold
+     * @param consolidateMode     how to consolidate the vectors when there is more than one
+     * @param keepGeneNonSpecific whether to keep vectors that are not specific to the gene
      * @return value objects containing structured information about the expression levels of genes highly loaded in
      * the given principal component.
      */
@@ -94,8 +97,12 @@ public interface ProcessedExpressionDataVectorService
             int threshold, int component, boolean keepGeneNonSpecific, String consolidateMode );
 
     /**
-     * @param diffExResultSetId the differential expression result set to access
-     * @param threshold         threshold
+     * @param diffExResultSetId   the differential expression result set to access
+     * @param threshold           threshold
+     * @param consolidateMode     how to consolidate the vectors when there is more than one
+     * @param keepGeneNonSpecific whether to keep vectors that are not specific to the gene
+     * @param ees                 ees
+     * @param max                 max level
      * @return value objects containing structured information about the expression levels of genes highly loaded in
      * the given principal component.
      */
@@ -173,6 +180,7 @@ public interface ProcessedExpressionDataVectorService
      * refreshing.
      *
      * @param ee the experiment
+     * @return processed data vectors
      * @see PreprocessorService
      */
     @Secured({ "GROUP_ADMIN" })

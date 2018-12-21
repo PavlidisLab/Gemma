@@ -42,6 +42,11 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
+     *
+     * @param experimentsAnalyzed ees
+     * @param threshold           threshold
+     * @param limit               limit
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
@@ -50,6 +55,9 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
      * {@link ExpressionExperiment}.
+     *
+     * @param gene gene
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
@@ -57,6 +65,10 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
      * {@link ExpressionExperiment}.
+     *
+     * @param experimentsAnalyzed ees
+     * @param gene                gene
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
@@ -65,6 +77,12 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
      * corrected pvalue field)
+     *
+     * @param experimentsAnalyzed ees
+     * @param threshold           threshold
+     * @param limit               limit
+     * @param gene                gene
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
@@ -72,6 +90,11 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
+     *
+     * @param gene      gene
+     * @param threshold threshold
+     * @param limit     limit
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
@@ -81,6 +104,8 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      * Retrieve differential expression results in bulk. This is an important method for the differential expression
      * interfaces.
      *
+     * @param geneIds    gene ids
+     * @param resultSets result sets
      * @return map of resultset IDs to map of gene id to differential expression results.
      */
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
@@ -94,6 +119,10 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
+     *
+     * @param threshold threshold
+     * @param limit     limit
+     * @return map to diff ex VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
@@ -101,6 +130,9 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     /**
      * Fetch the analysis associated with a result set.
+     *
+     * @param rs result set
+     * @return diff ex.
      */
     DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
 
@@ -114,6 +146,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId );
 
     /**
+     * @param ids ids
      * @return map of result to contrasts value object.
      */
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
@@ -128,11 +161,16 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     /**
      * Thaws the ExpressionAnalysisResultSet without including contrasts.
+     *
+     * @param resultSet result set
+     * @return exp analysis set
      */
     ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Does not thaw the collection of probes (just the factor information)
+     *
+     * @param resultSet result set
      */
     void thawLite( ExpressionAnalysisResultSet resultSet );
 

@@ -37,6 +37,9 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     /**
      * Copies a bioMaterial.
+     *
+     * @param bioMaterial ba to copy
+     * @return the copy
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
@@ -71,9 +74,6 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioMaterial bioMaterial );
 
-    /**
-     * Updates the given biomaterial to the database.
-     */
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioMaterial bioMaterial );
@@ -91,6 +91,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
      * Update the biomaterials that are described by the given valueObjects. This is used to update experimental designs
      * in particular.
      *
+     * @param valueObjects VOs
      * @return the biomaterials that were modified.
      */
     @Secured({ "GROUP_USER" })
@@ -98,6 +99,9 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     /**
      * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
+     *
+     * @param d2fv  map of dates to factor values
+     * @param dates dates
      */
     @Secured({ "GROUP_ADMIN" })
     void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );

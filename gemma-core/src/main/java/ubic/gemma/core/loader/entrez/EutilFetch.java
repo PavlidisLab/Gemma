@@ -46,30 +46,21 @@ import java.net.URLConnection;
  */
 public class EutilFetch {
 
-    @SuppressWarnings("unused")
-    // EutilFetch.fetch(java.lang.String, java.lang.String, ubic.gemma.core.loader.entrez.EutilFetch.Mode, int) fix me note
-    public enum Mode {
-        HTML, TEXT, XML
-    }
-
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
     private static final String APIKEY = Settings.getString( "entrez.efetch.apikey" );
-
     private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-    private static Logger log = LoggerFactory.getLogger( EutilFetch.class );
-
     private static final int MAX_TRIES = 3;
+    private static Logger log = LoggerFactory.getLogger( EutilFetch.class );
 
     /**
      * Attempts to fetch data via Eutils; failures will be re-attempted several times.
-     * 
-     * @param  db
-     * @param  searchString
-     * @param  limit
-     * @return
-     * @throws IOException
+     *
+     * @param db           db
+     * @param searchString search string
+     * @param limit        limit
+     * @return data
+     * @throws IOException when there are IO problems
      */
     public static String fetch( String db, String searchString, int limit ) throws IOException {
         return EutilFetch.fetch( db, searchString, Mode.TEXT, limit );
@@ -93,18 +84,20 @@ public class EutilFetch {
     /**
      * see <a href="http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html">ncbi help</a>
      *
-     * @param  db           e.g., gds.
-     * @param  searchString search string
-     * @param  mode         HTML,TEXT or XML FIXME only provides XML.
-     * @param  limit        - Maximum number of records to return.
-     * @return              XML
-     * @throws IOException  if there is a problem while manipulating the file
+     * @param db           e.g., gds.
+     * @param searchString search string
+     * @param mode         HTML,TEXT or XML FIXME only provides XML.
+     * @param limit        - Maximum number of records to return.
+     * @return XML
+     * @throws IOException if there is a problem while manipulating the file
      */
     @SuppressWarnings("SameParameterValue") // Only TEXT is used, also observe the parameter javadoc fix me note
     private static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
         URL searchUrl = new URL(
-                EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString + ( StringUtils.isNotBlank( APIKEY ) ? "&api_key=" + APIKEY : "" ) );
+                EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString + ( StringUtils.isNotBlank( APIKEY ) ?
+                        "&api_key=" + APIKEY :
+                        "" ) );
         URLConnection conn = null;
         int numTries = 0;
 
@@ -141,7 +134,9 @@ public class EutilFetch {
 
                 URL fetchUrl = new URL(
                         EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
-                                + "&WebEnv=" + cookie + "&retmax=" + limit + ( StringUtils.isNotBlank( APIKEY ) ? "&api_key=" + APIKEY : "" ) );
+                                + "&WebEnv=" + cookie + "&retmax=" + limit + ( StringUtils.isNotBlank( APIKEY ) ?
+                                "&api_key=" + APIKEY :
+                                "" ) );
 
                 conn = fetchUrl.openConnection();
                 conn.connect();
@@ -149,7 +144,8 @@ public class EutilFetch {
 
                 throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
             } catch ( IOException e2 ) {
-                if ( numTries == MAX_TRIES ) throw e2;
+                if ( numTries == MAX_TRIES )
+                    throw e2;
                 log.warn( e2.getMessage() );
                 try {
                     Thread.sleep( 500 );
@@ -158,7 +154,8 @@ public class EutilFetch {
             }
         }
 
-        if ( conn == null ) throw new IllegalStateException( "Connection was null" );
+        if ( conn == null )
+            throw new IllegalStateException( "Connection was null" );
 
         try (InputStream is = conn.getInputStream()) {
 
@@ -193,11 +190,11 @@ public class EutilFetch {
 
     /**
      * Does this ever get called?
-     * 
-     * @param  tries
-     * @param  e
-     * @return
-     * @throws IOException
+     *
+     * @param tries amount of tries
+     * @param e     error to be thrown on failure
+     * @return the amount of tries it took already after this run
+     * @throws IOException the given exception
      */
     private static int tryAgainOrFail( int tries, IOException e ) throws IOException {
         if ( e.getMessage().contains( "429" ) ) {
@@ -220,6 +217,12 @@ public class EutilFetch {
         } catch ( InterruptedException e1 ) {
             e1.printStackTrace(); // Log and try to continue
         }
+    }
+
+    @SuppressWarnings("unused")
+    // EutilFetch.fetch(java.lang.String, java.lang.String, ubic.gemma.core.loader.entrez.EutilFetch.Mode, int) fix me note
+    public enum Mode {
+        HTML, TEXT, XML
     }
 
 }

@@ -394,9 +394,8 @@ public interface ExpressionExperimentService
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
     /**
-     * 
-     * @param expressionExperiment
-     * @return true if this experiment was run on a sequencing-based platform. 
+     * @param expressionExperiment ee
+     * @return true if this experiment was run on a sequencing-based platform.
      */
     boolean isRNASeq( ExpressionExperiment expressionExperiment );
 
@@ -514,11 +513,6 @@ public interface ExpressionExperimentService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
-    
-    /**
-     * 
-     * @param geoAccession for a GEO series or platform
-     * @return
-     */
-    boolean isBlackListed(String geoAccession);
+
+    boolean isBlackListed( String geoAccession );
 }

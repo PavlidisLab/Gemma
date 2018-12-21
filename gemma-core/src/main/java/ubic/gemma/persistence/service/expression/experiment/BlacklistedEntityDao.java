@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,12 +24,11 @@ import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
- * 
  * @author paul
  */
 public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity, BlacklistedValueObject> {
 
-    public boolean isBlacklisted( String accession );
+    boolean isBlacklisted( String accession );
 
     /**
      * @param accession
