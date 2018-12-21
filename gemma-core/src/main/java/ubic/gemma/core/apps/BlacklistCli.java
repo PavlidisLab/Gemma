@@ -170,11 +170,6 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    public String getShortDesc() {
-        return "Add entities to the blacklist";
-    }
-
-    @Override
     protected void processOptions() {
         super.processOptions();
         if ( this.hasOption( "file" ) ) {
