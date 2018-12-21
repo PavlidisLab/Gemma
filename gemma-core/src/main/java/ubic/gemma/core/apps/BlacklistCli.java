@@ -141,6 +141,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                     throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
                 }
 
+                if ( blacklistedEntityDao.findByAccession( accession ) != null ) {
+                    log.warn(accession + " is already on the blacklist, skipping");
+                    continue;
+                }
+
                 blee.setShortName( accession );
                 blee.setReason( reason );
 
