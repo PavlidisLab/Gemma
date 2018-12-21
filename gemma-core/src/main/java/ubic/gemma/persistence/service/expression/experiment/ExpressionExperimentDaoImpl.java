@@ -1228,7 +1228,19 @@ public class ExpressionExperimentDaoImpl
             // in this transaction.
             session.flush();
             session.clear();
+            
+            // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but 
+            // this may be okay now with updated config - see CurationDetails.hbm.xml)
+            ee.getCurationDetails().setLastNeedsAttentionEvent( null );
+            ee.getCurationDetails().setLastNoteUpdateEvent( null );
+            ee.getCurationDetails().setLastTroubledEvent( null );
+            session.update( ee.getCurationDetails() );
 
+            session.update( ee );
+
+            /*
+             * This will fail because of multiple cascade=all on audit events.
+             */
             session.buildLockRequest( LockOptions.NONE ).lock( ee );
 
             Hibernate.initialize( ee.getAuditTrail() );
