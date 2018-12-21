@@ -1084,8 +1084,6 @@ public class ExpressionExperimentDaoImpl
         return vos;
     }
 
-
-
     @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         //noinspection unchecked
@@ -1237,24 +1235,10 @@ public class ExpressionExperimentDaoImpl
 
             Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
             Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
-            //   Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
-            //  Hibernate.initialize( designElementDataVectors );
+
             ee.getRawExpressionDataVectors().clear();
-            //
-            //            int count = 0;
-            //            if ( designElementDataVectors != null ) {
-            //                count = this.removeDataVectors( session, dims, qts, designElementDataVectors, count );
-            //            }
 
-            //    Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
             ee.getProcessedExpressionDataVectors().clear();
-            //            Hibernate.initialize( processedVectors );
-            //            if ( processedVectors != null && processedVectors.size() > 0 ) {
-            //                ee.setProcessedExpressionDataVectors( null );
-            //                this.removeProcessedVectors( session, dims, qts, count, processedVectors );
-            //            }
-
-            //  session.clear();
 
             for ( ExpressionExperiment e : ee.getOtherParts() ) {
                 e.getOtherParts().remove( ee );
@@ -1262,10 +1246,16 @@ public class ExpressionExperimentDaoImpl
             }
             ee.getOtherParts().clear();
 
+            // these are tied to the audit trail
+            ee.getCurationDetails().setLastNeedsAttentionEvent( null );
+            ee.getCurationDetails().setLastNoteUpdateEvent( null );
+            ee.getCurationDetails().setLastTroubledEvent( null );
+            session.update( ee.getCurationDetails() );
+
             session.update( ee );
             session.flush();
 
-            AbstractDao.log.info( "Removing " + dims.size() + " BioAssayDimensions ..." );
+            AbstractDao.log.debug( "Removing " + dims.size() + " BioAssayDimensions ..." );
             for ( BioAssayDimension dim : dims ) {
                 dim.getBioAssays().clear();
                 session.update( dim );
@@ -1296,15 +1286,6 @@ public class ExpressionExperimentDaoImpl
 
             session.flush();
             session.delete( ee );
-
-            /*
-             * Put transient instances back. This is possibly useful for clearing ACLS.
-             */
-            //            ee.setProcessedExpressionDataVectors( processedVectors );
-            //            ee.setRawExpressionDataVectors( designElementDataVectors );
-            //            for ( BioAssay ba : ee.getBioAssays() ) {
-            //                ba.setSampleUsed( copyOfRelations.get( ba ) );
-            //            }
 
             AbstractDao.log.info( "Deleted " + ee );
         } catch ( Exception e ) {

@@ -13,15 +13,15 @@
             </generator>
         </id>
         <many-to-one name="lastTroubledEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
-                     cascade="all" lazy="false">
+                     cascade="none" lazy="false">
             <column name="TROUBLE_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <many-to-one name="lastNeedsAttentionEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
-                     cascade="all" lazy="false">
+                     cascade="none" lazy="false">
             <column name="ATTENTION_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <many-to-one name="lastNoteUpdateEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
-                     cascade="all" lazy="false">
+                     cascade="none" lazy="false">
             <column name="NOTE_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <property name="lastUpdated" type="java.util.Date">
