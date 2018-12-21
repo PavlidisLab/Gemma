@@ -80,7 +80,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Add entities to the blacklist";
+        return "Add GEO entities (series or platforms) to the blacklist";
     }
 
     /*
@@ -112,7 +112,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
         ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
 
-        ExternalDatabase geo = externalDatabaseDao.findByName( "geo" );
+        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
 
         if ( geo == null ) throw new IllegalStateException( "GEO not found as an external database in the system" );
 
@@ -165,6 +165,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
                 blee.setExternalAccession( d );
 
+                /*
+                 * Remember that the entity will not be in the system, so having the name and description here might be useful.
+                 */
                 if ( split.length > 2 ) {
                     blee.setName( split[2] );
                 }

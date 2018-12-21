@@ -322,6 +322,10 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
+    /**
+     * @param  geoAccession for a GEO series or platform
+     * @return
+     */
     boolean isBlackListed( String geoAccession );
 
 }

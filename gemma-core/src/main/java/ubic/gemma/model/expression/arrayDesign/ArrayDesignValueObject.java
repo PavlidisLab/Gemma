@@ -47,7 +47,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return r;
     }
 
-    private String color;
+    private String color; // FIXME redundant with technologyType
     private String dateCached;
     private String description;
     private Integer designElementCount;
@@ -72,6 +72,15 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String shortName;
     private String taxon;
     private String technologyType;
+    private Boolean blackListed = false;
+
+    public Boolean getBlackListed() {
+        return blackListed;
+    }
+
+    public void setBlackListed( Boolean blackListed ) {
+        this.blackListed = blackListed;
+    }
 
     /**
      * Required when using the class as a spring bean.
@@ -106,7 +115,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
                 otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
                 otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
                 otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.technologyType, otherBean.isAffymetrixAltCdf );
+                otherBean.shortName, otherBean.taxon, otherBean.technologyType, otherBean.isAffymetrixAltCdf, otherBean.blackListed );
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
@@ -116,7 +125,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id, Boolean isMerged, Boolean isMergee,
             Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping, Date lastRepeatMask,
             Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes, String numProbeAlignments,
-            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, String technologyType, Boolean isAffymetrixAltCdf ) {
+            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, String technologyType, Boolean isAffymetrixAltCdf,
+            Boolean blacklisted ) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
         this.dateCached = dateCached;
@@ -143,6 +153,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.taxon = taxon;
         this.technologyType = technologyType;
         this.isAffymetrixAltCdf = isAffymetrixAltCdf;
+        this.blackListed = blacklisted;
     }
 
     public ArrayDesignValueObject( Long id ) {
@@ -156,10 +167,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.name = ( String ) row[1];
         this.shortName = ( String ) row[2];
 
-        TechnologyType color = ( TechnologyType ) row[3];
-        if ( color != null ) {
-            this.technologyType = color.toString();
-            this.color = color.getValue();
+        TechnologyType c = ( TechnologyType ) row[3];
+        if ( c != null ) {
+            this.technologyType = c.toString();
+            this.color = c.getValue();
         }
 
         this.description = ( String ) row[4];

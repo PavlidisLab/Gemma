@@ -44,6 +44,11 @@ Gemma.ExpressionExperimentDetails = Ext
                         result = result + ' <i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
                             + arrayDesigns[i].troubleDetails + '"></i>';
                     }
+
+                    if (arrayDesigns[i].blackListed) {
+                        result = result + ' <i class="black fa fa-exclamation-triangle fa-lg" ext:qtip="Blacklisted platform"></i>';
+                    }
+
                     if (i < arrayDesigns.length - 1) {
                         result = result + "<br/>";
                     }

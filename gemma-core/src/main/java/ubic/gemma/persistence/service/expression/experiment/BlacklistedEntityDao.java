@@ -33,7 +33,7 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
 
     /**
      * @param accession
-     * @return 
+     * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
      */
     public BlacklistedEntity findByAccession( String accession );
 
