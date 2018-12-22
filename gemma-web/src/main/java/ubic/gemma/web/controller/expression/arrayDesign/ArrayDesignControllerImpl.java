@@ -75,7 +75,7 @@ import java.util.*;
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
-    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca";
+    private static final String SUPPORT_EMAIL = "pavlab-support@msl.ubc.ca"; // FIXME factor out as config
 
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
 
@@ -96,8 +96,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private SearchService searchService;
+
     @Autowired
     private TaskRunningService taskRunningService;
+
+    @Autowired
+    private ArrayDesignAnnotationService annotationFileService;
 
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
@@ -199,9 +203,21 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
 
-        if ( !f.canRead() ) {
-            throw new RuntimeException( "The file could not be found for " + arrayDesign.getShortName()
-                    + ". Please contact " + SUPPORT_EMAIL + " for assistance" );
+        if ( !f.exists() || !f.canRead() ) {
+            try {
+                // Experimental. Ideally make a background process. But usually these files should be available anyway...
+                log.info( "Annotation file not found, creating for " + arrayDesign );
+                annotationFileService.create( arrayDesign, true );
+                f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+                if ( !f.exists() || !f.canRead() ) {
+                    throw new IOException( "Created but could not read?" );
+                }
+            } catch ( Exception e ) {
+                log.error( e, e );
+                throw new RuntimeException(
+                        "The file could not be found and could not be created for " + arrayDesign.getShortName() + " ("
+                                + e.getMessage() + "). " + "Please contact " + SUPPORT_EMAIL + " for assistance" );
+            }
         }
 
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {
@@ -262,8 +278,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                            .addObject( "message",
-                                    "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+                    .addObject( "message",
+                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
@@ -362,8 +378,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesign );
         if ( vo == null ) {
-            throw new IllegalArgumentException( "You do not have appropriate rights to see this platform. This is likely due "
-                    + "to the platform being marked as unusable." );
+            throw new IllegalArgumentException(
+                    "You do not have appropriate rights to see this platform. This is likely due "
+                            + "to the platform being marked as unusable." );
         }
         arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );

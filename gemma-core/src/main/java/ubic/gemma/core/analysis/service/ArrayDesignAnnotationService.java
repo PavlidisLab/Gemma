@@ -14,18 +14,14 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
-import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.Settings;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
-import java.util.Map;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Methods to generate annotations for array designs, based on information already in the database. This can be used to
@@ -48,6 +44,9 @@ import java.util.Map;
  * @author paul
  */
 public interface ArrayDesignAnnotationService {
+    public enum OutputType {
+        BIOPROCESS, LONG, SHORT
+    }
 
     String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
     String BIO_PROCESS_FILE_SUFFIX = "_bioProcess";
@@ -56,23 +55,14 @@ public interface ArrayDesignAnnotationService {
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
     String STANDARD_FILE_SUFFIX = "";
-    String ANNOT_DATA_DIR =
-            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "microAnnots" + File.separatorChar;
+    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "microAnnots" + File.separatorChar;
 
     void deleteExistingFiles( ArrayDesign arrayDesign );
 
     /**
-     * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
-     * available.
-     *
-     * @param writer the writer
-     * @param genes  genes
-     * @param type   the type
-     * @return code
-     */
-    int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
-
-    /**
+     * Create (or update) all the annotation files for the given platform. Side effect: any expression experiment data
+     * files that use this platform will be deleted.
+     * 
      * Format details:
      * There is a one-line header. The columns are:
      * <ol>
@@ -84,27 +74,21 @@ public interface ArrayDesignAnnotationService {
      * <li>Gemma's gene ids, delimited by '|'
      * <li>NCBI gene ids, delimited by '|'
      * </ol>
-     *
-     * @param genesWithSpecificity map of cs -&gt;* physical location -&gt;* ( blat association -&gt;* gene product -&gt; gene)
-     * @param ty                   whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
-     *                             'standard' output (OutputType.SHORT).
-     * @param writer               the writer
-     * @return number processed.
-     * @throws IOException when there is an IO error
+     * 
+     * @param  inputAd     platform to process
+     * @param  overWrite   if true existing files will be clobbered
+     * @throws IOException
      */
-    int generateAnnotationFile( Writer writer,
-            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
-            throws IOException;
+    void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException;
 
     /**
-     * Opens a file for writing and adds the header.
+     * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
+     * available. Will generate the 'short' version.
      *
-     * @param fileBaseName if Null, output will be written to standard output.
-     * @param overWrite    clobber existing file. Otherwise returns null.
-     * @param arrayDesign  array design
-     * @return writer to use
-     * @throws IOException when there is an IO error
+     * @param  writer the writer
+     * @param  genes  genes
+     * @return        code
      */
-    Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException;
+    int generateAnnotationFile( Writer writer, Collection<Gene> genes );
 
 }

@@ -18,6 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+/**
+ * deprecated. This event type isn't really workable, since it is related to creating files outside of the database (so
+ * those files might not exist, get moved, etc.)
+ * 
+ * @deprecated
+ * @author     paul
+ */
+@Deprecated
 public class ArrayDesignAnnotationFileEvent
         extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
