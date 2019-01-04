@@ -18,7 +18,7 @@
 	 	p.startProgress(); });
 		</script>
 
-<input type='hidden' name='taskId' id='taskId' value='${taskid}' />
+<input type='hidden' name='taskId' id='taskId' value='<c:out value="${taskid}"/>' />
 <div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="progress-area" style="padding: 5px;"></div>
 
