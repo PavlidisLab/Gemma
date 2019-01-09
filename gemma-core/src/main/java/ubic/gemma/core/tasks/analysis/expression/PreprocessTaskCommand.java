@@ -29,30 +29,30 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand {
+public class PreprocessTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean correlationMatrixOnly = false;
+    private boolean diagnosticsOnly = false;
 
     private ExpressionExperiment expressionExperiment = null;
 
-    private boolean restoreMissingSamples = true;
+    //   private boolean restoreMissingSamples = true;
 
-    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment ee ) {
+    public PreprocessTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
     }
 
-    /**
-     * @param expressionExperiment EE
-     * @param restoreMissing       if any missing values should be restored (default = TRUE)
-     */
-    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
-            boolean restoreMissing ) {
-        this( expressionExperiment );
-        this.restoreMissingSamples = restoreMissing;
-    }
+    //    /**
+    //     * @param expressionExperiment EE
+    //     * @param restoreMissing       if any missing values should be restored (default = TRUE)
+    //     */
+    //    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
+    //            boolean restoreMissing ) {
+    //        this( expressionExperiment );
+    //        this.restoreMissingSamples = restoreMissing;
+    //    }
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
@@ -64,27 +64,27 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
 
     @Override
     public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
-        return ProcessedExpressionDataVectorCreateTask.class;
+        return PreprocessExperimentTask.class;
     }
 
-    public boolean isCorrelationMatrixOnly() {
-        return correlationMatrixOnly;
+    public boolean diagnosticsOnly() {
+        return diagnosticsOnly;
     }
 
     /**
-     * If true, we'll try to just update the correlation matrix, without creating vectors unless they don't exist yet.
+     * If true, we'll try to just update the diagnostics (M-V, PCA and sample correlation)
      *
-     * @param correlationMatrixOnly correlation matrix only
+     * @param diagnosticsOnly whether to only update the diagnostics
      */
-    public void setCorrelationMatrixOnly( boolean correlationMatrixOnly ) {
-        this.correlationMatrixOnly = correlationMatrixOnly;
+    public void setDiagnosticsOnly( boolean diagnosticsOnly ) {
+        this.diagnosticsOnly = diagnosticsOnly;
     }
 
-    public boolean isRestoreMissingSamples() {
-        return restoreMissingSamples;
-    }
-
-    public void setRestoreMissingSamples( boolean restoreMissingSamples ) {
-        this.restoreMissingSamples = restoreMissingSamples;
-    }
+    //    public boolean isRestoreMissingSamples() {
+    //        return restoreMissingSamples;
+    //    }
+    //
+    //    public void setRestoreMissingSamples( boolean restoreMissingSamples ) {
+    //        this.restoreMissingSamples = restoreMissingSamples;
+    //    }
 }

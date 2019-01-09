@@ -237,7 +237,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     + id
                     + '-eemanager\').doProcessedVectors('
                     + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
+                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="preprocess" title="preprocess"/></span>';
 
                 if (ee.dateProcessedDataVectorComputation) {
                     var type = ee.processedDataVectorComputationEventType;
@@ -245,10 +245,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
                     var suggestRun = true;
                     var qtip = 'ext:qtip="OK"';
-                    if (type == 'FailedProcessedVectorComputationEvent') { // note:
-                        // no
-                        // such
-                        // thing.
+                    if (type == 'FailedProcessedVectorComputationEvent') {
                         color = 'red';
                         qtip = 'ext:qtip="Failed"';
                     }
@@ -260,6 +257,32 @@ Gemma.ExpressionExperimentDetails = Ext
                     return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
                 }
             },
+            diagnosticsRenderer: function (ee) {
+               var id = ee.id;
+               var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                   + id
+                   + '-eemanager\').doDiagnostics('
+                   + id
+                   + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="diagnostics" title="diagnostics"/></span>';
+// we don't have an appropriate date/event for this.
+//               if (ee.dateProcessedDataVectorComputation) {
+//                   var type = ee.processedDataVectorComputationEventType;
+//                   var color = "#000";
+//
+//                   var suggestRun = true;
+//                   var qtip = 'ext:qtip="OK"';
+//                   if (type == 'FailedProcessedVectorComputationEvent') {
+//                       color = 'red';
+//                       qtip = 'ext:qtip="Failed"';
+//                   }
+//
+//                   return '<span style="color:' + color + ';" ' + qtip + '>'
+//                       + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
+//                       + (suggestRun ? runurl : '');
+//               } else {
+                   return '<span style="color:#3A3;">Create/Update</span>&nbsp;' + runurl;
+             //  }
+           },
             renderProcessedExpressionVectorCount: function (e) {
                 return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
             },

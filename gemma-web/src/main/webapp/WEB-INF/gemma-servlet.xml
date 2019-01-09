@@ -541,10 +541,11 @@
         </dwr:remote>
     </bean>
 
-    <bean id="processedExpressionDataVectorCreateController"
-          class="ubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController">
-        <dwr:remote javascript="ProcessedExpressionDataVectorCreateController">
+    <bean id="preprocessController"
+          class="ubic.gemma.web.controller.analysis.preprocess.PreprocessController">
+        <dwr:remote javascript="PreprocessController">
             <dwr:include method="run"/>
+            <dwr:include method="diagnostics"/>
         </dwr:remote>
     </bean>
 
