@@ -581,7 +581,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return results;
 
         for ( Characteristic vc : ontologyTerms ) {
-            results.add( GeneOntologyServiceImpl.getTermForId( vc.getValue() ) );
+            results.add( goService.getTermForId( vc.getValue() ) );
         }
 
         if ( ty.equals( OutputType.SHORT ) )

@@ -79,6 +79,13 @@ public interface GeneOntologyService extends InitializingBean {
     Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf );
 
     /**
+     * 
+     * @param  uri of the term
+     * @return     term if found or null otherwise.
+     */
+    OntologyTerm getTerm( String uri );
+
+    /**
      * @return a collection of all existing GO term ids (GO_XXXXXXX) -- including the roots of the ontologies
      *         ('biological process' etc.)
      */
@@ -168,6 +175,11 @@ public interface GeneOntologyService extends InitializingBean {
      */
     Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf );
 
+    /**
+     * 
+     * @param  goId GO ID e.g. GO:0038128 (not URI)
+     * @return      aspect if found, null otherwise
+     */
     GOAspect getTermAspect( String goId );
 
     GOAspect getTermAspect( Characteristic goId );
@@ -217,10 +229,13 @@ public interface GeneOntologyService extends InitializingBean {
     boolean isBiologicalProcess( OntologyTerm term );
 
     /**
-     * @return Used for determining if the Gene Ontology has finished loading into memory yet Although calls like
-     *         getParents,
-     *         getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
+     * @return     Used for determining if the Gene Ontology has finished loading into memory yet Although calls like
+     *             getParents,
+     *             getChildren will still work (its much faster once the gene ontologies have been preloaded into
+     *             memory.
+     * @deprecated not clear this is needed
      */
+    @Deprecated
     boolean isGeneOntologyLoaded();
 
     boolean isReady();
@@ -264,5 +279,11 @@ public interface GeneOntologyService extends InitializingBean {
      * Primarily here for testing, to recover memory.
      */
     void shutDown();
+
+    /**
+     * @param  ID e.g. GO:0038128
+     * @return    term or null if not found
+     */
+    OntologyTerm getTermForId( String value );
 
 }

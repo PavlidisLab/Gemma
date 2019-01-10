@@ -53,7 +53,7 @@ public class GeneOntologyServiceTest2 {
     public final void testParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 
-        OntologyTerm termForId = GeneOntologyServiceImpl.getTermForId( id );
+        OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getParents( termForId );
         assertEquals( 1, terms.size() );
@@ -66,7 +66,7 @@ public class GeneOntologyServiceTest2 {
     public final void testAllParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 
-        OntologyTerm termForId = GeneOntologyServiceImpl.getTermForId( id );
+        OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getAllParents( termForId );
 
