@@ -79,13 +79,6 @@ public interface GeneOntologyService extends InitializingBean {
     Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf );
 
     /**
-     * 
-     * @param  uri of the term
-     * @return     term if found or null otherwise.
-     */
-    OntologyTerm getTerm( String uri );
-
-    /**
      * @return a collection of all existing GO term ids (GO_XXXXXXX) -- including the roots of the ontologies
      *         ('biological process' etc.)
      */
@@ -177,12 +170,19 @@ public interface GeneOntologyService extends InitializingBean {
 
     /**
      * 
+     * @param  uri of the term
+     * @return     term if found or null otherwise.
+     */
+    OntologyTerm getTerm( String uri );
+
+    GOAspect getTermAspect( Characteristic goId );
+
+    /**
+     * 
      * @param  goId GO ID e.g. GO:0038128 (not URI)
      * @return      aspect if found, null otherwise
      */
     GOAspect getTermAspect( String goId );
-
-    GOAspect getTermAspect( Characteristic goId );
 
     /**
      * Return a definition for a GO Id.
@@ -193,12 +193,42 @@ public interface GeneOntologyService extends InitializingBean {
     String getTermDefinition( String goId );
 
     /**
+     * @param  ID e.g. GO:0038128
+     * @return    term or null if not found
+     */
+    OntologyTerm getTermForId( String value );
+
+    /**
      * Return human-readable term ("protein kinase") for a GO Id.
      *
      * @param  goId go id
      * @return      term name
      */
     String getTermName( String goId );
+
+    /**
+     * Converts the given Ontology Term to a Gene Ontology Value Object.
+     *
+     * @param  term the term to be converted.
+     * @return      value object representing the given term.
+     */
+    GeneOntologyTermValueObject getValueObject( OntologyTerm term );
+
+    /**
+     * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
+     *
+     * @param  terms the terms to be converted.
+     * @return       collection of value objects representing the given terms.
+     */
+    Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
+
+    /**
+     * Returns GO Terms VOs for the given Gene.
+     *
+     * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
+     * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
+     */
+    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
 
     void init( boolean force );
 
@@ -245,30 +275,6 @@ public interface GeneOntologyService extends InitializingBean {
     Collection<OntologyTerm> listTerms();
 
     /**
-     * Returns GO Terms VOs for the given Gene.
-     *
-     * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
-     * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
-     */
-    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
-
-    /**
-     * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
-     *
-     * @param  terms the terms to be converted.
-     * @return       collection of value objects representing the given terms.
-     */
-    Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
-
-    /**
-     * Converts the given Ontology Term to a Gene Ontology Value Object.
-     *
-     * @param  term the term to be converted.
-     * @return      value object representing the given term.
-     */
-    GeneOntologyTermValueObject getValueObject( OntologyTerm term );
-
-    /**
      * Primarily here for testing.
      *
      * @param is is
@@ -279,11 +285,5 @@ public interface GeneOntologyService extends InitializingBean {
      * Primarily here for testing, to recover memory.
      */
     void shutDown();
-
-    /**
-     * @param  ID e.g. GO:0038128
-     * @return    term or null if not found
-     */
-    OntologyTerm getTermForId( String value );
 
 }

@@ -44,18 +44,21 @@
 			<email>paul@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
-		<developer>
-			<name>Matthew Jacobson</name>
-			<id>jacobsonmt</id>
-			<organization>University of British Columbia</organization>
-		</developer>
-		<developer>
-			<name>Stepan Tesar</name>
-			<id>tesarst</id>
-			<organization>University of British Columbia</organization>
-		</developer>
+	  <developer>
+	    <name>Manuel Belmadani</name>
+	    			<organization>University of British Columbia</organization>
+	       </developer>
 	</developers>
 	<contributors>
+          <contributor>
+	    <name>Nathaniel Lim</name>
+	  </contributor>
+	       <contributor>
+	             <name>Stepan Tesar</name>
+	       </contributor>
+	       	<contributor>
+			<name>Matthew Jacobson</name>
+		</contributor>
 		<contributor>
 			<name>Patrick Tan</name>
 		</contributor>
