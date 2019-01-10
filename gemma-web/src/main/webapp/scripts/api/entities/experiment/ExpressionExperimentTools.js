@@ -1076,29 +1076,31 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         if (ee.dateLinkAnalysis) {
             var type = ee.linkAnalysisEventType;
             var color = "#000";
-            var suggestRun = false; // do not allow through GUI
+            var suggestRun = true;
             var qtip = 'ext:qtip="Analysis was OK"';
             if (type == 'FailedLinkAnalysisEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Analysis failed"';
             } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
                 color = '#CCC';
-                qtip = 'ext:qtip="Analysis was too small"';
+                qtip = 'ext:qtip="Dataset is too small"';
                 suggestRun = false;
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
                 + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis)
             });
-            if (suggestRun) {
-                panel.add(runBtn);
-            }
+            // disable through gui
+//            if (suggestRun) {
+//                panel.add(runBtn);
+//            }
             return panel;
         } else {
             panel.add({
-                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+                html: '<span style="color:#3A3;">May be eligible; perform via CLI</span>&nbsp;'
             });
-            panel.add(runBtn);
+            // disable through gui
+           // panel.add(runBtn);
             return panel;
         }
 
