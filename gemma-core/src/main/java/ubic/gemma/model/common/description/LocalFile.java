@@ -43,7 +43,7 @@ public class LocalFile implements Identifiable, Serializable {
      * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
      *
      * @return instance of File
-     * @see ubic.gemma.model.common.description.LocalFile#asFile()
+     * @see    ubic.gemma.model.common.description.LocalFile#asFile()
      */
     public java.io.File asFile() {
 
@@ -145,8 +145,8 @@ public class LocalFile implements Identifiable, Serializable {
 
         if ( localURL == null ) {
             return other.localURL == null;
-        } else
-            return localURL.equals( other.localURL );
+        }
+        return localURL.equals( other.localURL );
     }
 
     @Override
