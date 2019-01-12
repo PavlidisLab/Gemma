@@ -64,7 +64,7 @@ public class AclAdvice extends BaseAclAdvice {
 
         /*
          * If this is an expression experiment, don't go down the data vectors - it has no securable associations and
-         * would be expensive to traverse.F
+         * would be expensive to traverse.
          */
         if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
                 .equals( "processedExpressionDataVectors" ) ) ) {
@@ -76,8 +76,7 @@ public class AclAdvice extends BaseAclAdvice {
         /*
          * Array design has some non (directly) securable associations that would be expensive to load
          */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "compositeSequences" )
-                || propertyName.equals( "reporters" ) ) ) {
+        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && propertyName.equals( "compositeSequences" ) ) {
             if ( AclAdvice.log.isTraceEnabled() )
                 AclAdvice.log.trace( "Skipping checking acl on probes on " + object );
             return true;
@@ -137,30 +136,6 @@ public class AclAdvice extends BaseAclAdvice {
         return BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "sampleUsed" ) || property
                 .equals( "arrayDesignUsed" ) );
     }
-
-    // Localfiles are no longer persistent entites
-    //    @Override
-    //    protected boolean specialCaseToAllowRemovingAcesFromChild( Securable object, Acl parentAcl ) {
-    //
-    //        Class<?> parentClassType;
-    //        try {
-    //            parentClassType = Class.forName( parentAcl.getObjectIdentity().getType() );
-    //
-    //            /*
-    //             * Localfiles are not SecuredChild - but they can be children of an experiment, so we have to let them be
-    //             * deleted. Otherwise we end up with cruft.
-    //             */
-    //            if ( LocalFile.class.isAssignableFrom( object.getClass() ) && Investigation.class
-    //                    .isAssignableFrom( parentClassType ) ) {
-    //                return true;
-    //            }
-    //        } catch ( ClassNotFoundException e ) {
-    //            throw new IllegalStateException(
-    //                    "Tried to identify class from name: " + parentAcl.getObjectIdentity().getType(), e );
-    //        }
-    //
-    //        return false;
-    //    }
 
     @Override
     protected boolean specialCaseToKeepPrivateOnCreation( Class<? extends Securable> clazz ) {
