@@ -1241,7 +1241,7 @@ public class ExpressionExperimentDaoImpl
             /*
              * This will fail because of multiple cascade=all on audit events.
              */
-            session.buildLockRequest( LockOptions.NONE ).lock( ee );
+        //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
 
             Hibernate.initialize( ee.getAuditTrail() );
 
