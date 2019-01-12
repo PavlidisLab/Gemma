@@ -21,6 +21,7 @@ package ubic.gemma.web.controller;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.compass.core.lucene.LuceneEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
@@ -42,6 +43,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
+import ubic.gemma.model.expression.BlacklistedEntity;
+import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -337,6 +340,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 fvo.add( new FactorValueValueObject( ( FactorValue ) sr.getResultObject() ) );
             }
             vos = fvo;
+        } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
+            Collection<BlacklistedValueObject> bvos = new ArrayList<>();
+            for ( SearchResult sr : results ) {
+                bvos.add( BlacklistedValueObject.fromEntity( ( BlacklistedEntity ) sr.getResultObject() ) );
+            }
+            vos = bvos;
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }
