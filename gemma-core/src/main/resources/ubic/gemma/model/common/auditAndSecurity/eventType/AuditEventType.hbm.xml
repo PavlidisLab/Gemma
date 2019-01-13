@@ -29,9 +29,7 @@
             <subclass abstract="false" discriminator-value="ArrayDesignSequenceUpdateEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent"
             />
-            <subclass abstract="false" discriminator-value="ArrayDesignAnnotationFileEvent"
-                      name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent"
-            />
+           
             <subclass abstract="false" discriminator-value="ArrayDesignProbeRenamingEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent"
             />
