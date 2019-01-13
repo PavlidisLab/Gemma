@@ -341,10 +341,10 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         // update the description, so we keep some kind of record.
         if ( toSkip.size() > 0 ) {
-            series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
+            series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                    .join( toSkip, "," ) );
+                            .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -364,8 +364,8 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     /**
-     * @param datasets all of which must use the same platform.
-     * @return one data set, which contains all the samples and subsets.
+     * @param  datasets all of which must use the same platform.
+     * @return          one data set, which contains all the samples and subsets.
      */
     private GeoDataset combineDatasets( Collection<GeoDataset> datasets ) {
         if ( datasets.size() == 1 )
@@ -628,8 +628,9 @@ public class GeoServiceImpl extends AbstractGeoService {
             superSeries.getContributers().addAll( subSeries.getContributers() );
             superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
             String seriesSummary = superSeries.getSummaries();
-            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": " + subSeries
-                    .getSummaries();
+            seriesSummary = seriesSummary + ( StringUtils.isBlank( seriesSummary ) ? "" : "\n" ) + "Summary from subseries "
+                    + subSeries.getGeoAccession() + ": " + subSeries
+                            .getSummaries();
             superSeries.setSummaries( seriesSummary );
         }
     }

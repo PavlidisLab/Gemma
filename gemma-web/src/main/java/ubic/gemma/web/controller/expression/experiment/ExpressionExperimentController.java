@@ -1064,7 +1064,7 @@ public class ExpressionExperimentController {
             details += ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
                     + ")";
             changed = true;
-            ee.setDescription( command.getDescription() );
+            ee.setDescription( StringUtils.strip( command.getDescription() ) );
         }
         if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() ) ) {
             if ( ee.getPrimaryPublication() != null ) {

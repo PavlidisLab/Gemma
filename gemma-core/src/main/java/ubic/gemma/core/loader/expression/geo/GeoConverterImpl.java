@@ -905,11 +905,12 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
         if ( series.getContributers().size() > 0 ) {
-            expExp.setDescription( expExp.getDescription() + "\nContributers: " );
+            expExp.setDescription( expExp.getDescription() + "\nContributors: " );
+            List<String> names = new ArrayList<>();
             for ( GeoContact contributer : series.getContributers() ) {
-                expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
+                names.add( contributer.getName() );
             }
-            expExp.setDescription( expExp.getDescription() + "\n" );
+            expExp.setDescription( expExp.getDescription() + StringUtils.join( "; ", names ) );
         }
     }
 
@@ -1000,9 +1001,9 @@ public class GeoConverterImpl implements GeoConverter {
             expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
         }
 
-        expExp.setDescription( expExp.getDescription() + "\nIncludes " + geoDataset.getGeoAccession() + ".\n" );
+        expExp.setDescription( expExp.getDescription() + "\nIncludes " + geoDataset.getGeoAccession() );
         if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
-            expExp.setDescription( expExp.getDescription() + " Update date: " + geoDataset.getUpdateDate() + ".\n" );
+            expExp.setDescription( expExp.getDescription() + " (Last updated by provider at import time: " + geoDataset.getUpdateDate() + ")\n" );
         }
 
         if ( StringUtils.isEmpty( expExp.getName() ) ) {
@@ -1010,7 +1011,7 @@ public class GeoConverterImpl implements GeoConverter {
         } else {
             expExp.setDescription(
                     expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession() + ": " + geoDataset
-                            .getTitle() + ".\n" );
+                            .getTitle() + "\n" );
         }
     }
 
@@ -1878,7 +1879,7 @@ public class GeoConverterImpl implements GeoConverter {
         expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
         if ( series.getLastUpdateDate() != null ) {
             expExp.setDescription(
-                    expExp.getDescription() + "Last Updated (by provider): " + series.getLastUpdateDate() + "\n" );
+                    expExp.getDescription() + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() + "\n" );
         }
 
         expExp.setName( series.getTitle() );
