@@ -305,7 +305,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.26-SNAPSHOT</version>
+			<version>1.0.25</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -405,7 +405,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-                http://www.chibi.ubc.ca/maven2
+               https://maven2.pavlab.msl.ubc.ca/
             </url>
 			<layout>default</layout>
 			<snapshots>
@@ -493,7 +493,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-                http://www.chibi.ubc.ca/maven2
+                https://maven2.pavlab.msl.ubc.ca/s
             </url>
 			<layout>default</layout>
 			<snapshots>
