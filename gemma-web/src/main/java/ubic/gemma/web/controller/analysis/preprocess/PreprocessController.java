@@ -22,17 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.core.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.PreprocessTaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * A controller to pre-process expression data vectors.
+ * A controller to pre-process expression data (including updating diagnostics)
  *
  * @author keshav
  */
 @Controller
-public class ProcessedExpressionDataVectorCreateController {
+public class PreprocessController {
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -43,6 +43,12 @@ public class ProcessedExpressionDataVectorCreateController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    /**
+     * Update the processed data vectors as well as diagnostics
+     * 
+     * @param  id of the experiment
+     * @return    status
+     */
     public String run( Long id ) {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
@@ -53,7 +59,29 @@ public class ProcessedExpressionDataVectorCreateController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
+        PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
+        experimentReportService.evictFromCache( id );
+        return taskRunningService.submitRemoteTask( cmd );
+    }
+
+    /**
+     * Only update the daignostics
+     * 
+     * @param  id of experiment
+     * @return    status
+     */
+    public String diagnostics( Long id ) {
+        if ( id == null )
+            throw new IllegalArgumentException( "ID cannot be null" );
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null )
+            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
+        cmd.setDiagnosticsOnly( true );
         experimentReportService.evictFromCache( id );
         return taskRunningService.submitRemoteTask( cmd );
     }

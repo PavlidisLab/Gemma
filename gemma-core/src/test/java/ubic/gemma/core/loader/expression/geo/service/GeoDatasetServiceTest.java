@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.io.File;
 import java.util.Collection;
@@ -79,6 +80,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
+    @Autowired
+    private GeeqService geeqService;
 
     /*
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
@@ -114,6 +117,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
                 log.info( "Failed to remove EE after test" );
             }
         }
+
 
     }
 
@@ -173,6 +177,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             assertEquals( 9, bm.getCharacteristics().size() );
 
         }
+
 
     }
 
@@ -285,6 +290,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
+        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL);
 
     }
 

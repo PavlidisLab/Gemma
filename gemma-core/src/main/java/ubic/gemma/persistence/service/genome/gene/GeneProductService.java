@@ -61,12 +61,14 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
     void update( GeneProduct entity );
 
     /**
-     * Returns all the genes that share the given gene product name
+     * @param search name
+     * @return all the genes that share the given gene product name
      */
     Collection<Gene> getGenesByName( String search );
 
     /**
-     * Returns all the genes that share the given gene product ncbi id
+     * @param search ncbiID
+     * @return all the genes that share the given gene product ncbi id
      */
     Collection<Gene> getGenesByNcbiId( String search );
 

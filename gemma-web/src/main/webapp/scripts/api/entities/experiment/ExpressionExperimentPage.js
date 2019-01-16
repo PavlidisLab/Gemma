@@ -337,21 +337,22 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         };
     },
 
-    makeDiagnosticsTab: function (experimentDetails, isAdmin) {
 
-        var refreshDiagnosticsLink = '';
-        if (this.editable || isAdmin) {
-            refreshDiagnosticsLink = '<a href="refreshCorrMatrix.html?id=' + experimentDetails.id + '"><img '
-                + 'src="' + ctxBasePath + '/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
-        }
-        this.refreshDiagnosticsBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
-            text: 'Refresh',
-            handler: function () {
-                window.location = "refreshCorrMatrix.html?id=" + experimentDetails.id;
-            },
-            hidden: (this.editable || isAdmin)
-        });
+    makeDiagnosticsTab: function (experimentDetails, isAdmin) {
+// removed; update diagnostics from the admin tab instead
+//        var refreshDiagnosticsLink = '';
+//        if (this.editable || isAdmin) {
+//            refreshDiagnosticsLink = '<a href="refreshDiagnostics.html?id=' + experimentDetails.id + '"><img '
+//                + 'src="' + ctxBasePath + '/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
+//        }
+//        this.refreshDiagnosticsBtn = new Ext.Button({
+//            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
+//            text: 'Refresh diagnostics',
+//            handler: function () {
+//                window.location = "refreshDiagnostics.html?id=" + experimentDetails.id;
+//            },
+//            hidden: (this.editable || isAdmin)
+//        });
 
         var metaRow = new Ext.Panel(
             {
@@ -367,7 +368,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             title: 'Diagnostics',
             itemId: 'diagnostics',
             items: [
-                this.refreshDiagnosticsBtn,
+             //   this.refreshDiagnosticsBtn,
                 {
                     baseCls: 'x-plain-panel',
                     bodyStyle: 'padding:10px',
@@ -428,8 +429,6 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     },
 
     adjustForIsAdmin: function (isAdmin, isEditable) {
-        // hide/show 'refresh' link to diagnostics tab
-        this.refreshDiagnosticsBtn.setVisible(isAdmin || isEditable);
 
         // QUANTITATION TYPES TAB
         if ((isAdmin || isEditable) && !this.qtTab) {

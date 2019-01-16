@@ -27,17 +27,17 @@ public interface ExpressionExperimentBatchCorrectionService {
      * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
      * least two samples per batch?
      *
-     * @param  ee    the experiment
-     * @param  force whether the correctability should ignore detected batch confound
-     * @return       whether it is correctable
+     * @param ee    the experiment
+     * @param force whether the correctability should ignore detected batch confound
+     * @return whether it is correctable
      */
     boolean checkCorrectability( ExpressionExperiment ee, boolean force );
 
     /**
      * Run ComBat using default settings (parametric)
      *
-     * @param  mat the matrix
-     * @return     batch corrected matrix
+     * @param mat the matrix
+     * @return batch corrected matrix
      */
     ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
 
@@ -45,9 +45,9 @@ public interface ExpressionExperimentBatchCorrectionService {
 
     /**
      * For convenience of some testing classes
-     * 
-     * @param  ee
-     * @return
+     *
+     * @param ee the experiment to get the batch factor for
+     * @return the batch factor of the experiment, or null, if experiment has no batch factor
      */
     ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 

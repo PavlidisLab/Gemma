@@ -132,9 +132,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                 // we dont do processForMissingValues missing values 
                 this.removeInvalidatedData( ee );
                 processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-                this.processForSampleCorrelation( ee );
-                this.processForMeanVarianceRelation( ee );
-                this.processForPca( ee );
+                processDiagnostics( ee );
                 expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
                 throw new PreprocessingException( e );
@@ -255,13 +253,21 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             }
         }
 
-        this.processForSampleCorrelation( ee );
-        this.processForMeanVarianceRelation( ee );
-        this.processForPca( ee );
+        processDiagnostics( ee );
 
         expressionExperimentService.update( ee );
         assert ee.getNumberOfDataVectors() != null;
         return ee;
+    }
+
+    /**
+     * @param ee
+     */
+    @Override
+    public void processDiagnostics( ExpressionExperiment ee ) {
+        this.processForSampleCorrelation( ee );
+        this.processForMeanVarianceRelation( ee );
+        this.processForPca( ee );
     }
 
     /**

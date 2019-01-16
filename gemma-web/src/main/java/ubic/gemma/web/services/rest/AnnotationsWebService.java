@@ -169,10 +169,9 @@ public class AnnotationsWebService extends
     }
 
     /**
-     * Same as {@link this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}, but
+     * Same as this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse) but
      * also filters by taxon.
-     *
-     * @see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
+     * see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
      */
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/search/{query}/datasets")

@@ -172,7 +172,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
             for ( GeoData d : platforms ) {
                 if ( expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
-                    throw new IllegalArgumentException( "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
+                    throw new IllegalArgumentException(
+                            "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
                 }
             }
 
@@ -340,7 +341,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         // update the description, so we keep some kind of record.
         if ( toSkip.size() > 0 ) {
-            series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
+            series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
                             .join( toSkip, "," ) );
@@ -627,8 +628,9 @@ public class GeoServiceImpl extends AbstractGeoService {
             superSeries.getContributers().addAll( subSeries.getContributers() );
             superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
             String seriesSummary = superSeries.getSummaries();
-            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": " + subSeries
-                    .getSummaries();
+            seriesSummary = seriesSummary + ( StringUtils.isBlank( seriesSummary ) ? "" : "\n" ) + "Summary from subseries "
+                    + subSeries.getGeoAccession() + ": " + subSeries
+                            .getSummaries();
             superSeries.setSummaries( seriesSummary );
         }
     }
@@ -686,6 +688,7 @@ public class GeoServiceImpl extends AbstractGeoService {
      * If platforms used exist in Gemma already, make sure the probe names match the ones in our system, and if not, try
      * to figure out the correct mapping. This is necessary because we sometimes rename probes to match other data
      * sources. Often GEO platforms just have integer ids.
+     * In addition, we test if platforms are blacklisted.
      */
     private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series,
             ArrayDesignsForExperimentCache c ) {
@@ -697,8 +700,15 @@ public class GeoServiceImpl extends AbstractGeoService {
             /*
              * We suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
              */
-            if ( !pl.useDataFromGeo() )
+            if ( !pl.useDataFromGeo() ) {
                 continue;
+            }
+
+            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
+                throw new IllegalArgumentException(
+                        "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
+            }
+
             this.matchToExistingPlatform( geoConverter, pl, c );
         }
     }

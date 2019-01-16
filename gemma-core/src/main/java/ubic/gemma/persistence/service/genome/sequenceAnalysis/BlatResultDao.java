@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,9 @@ public interface BlatResultDao extends BaseVoEnabledDao<BlatResult, BlatResultVa
 
     /**
      * Find BLAT results for the given sequence
+     *
+     * @param bioSequence BA
+     * @return matching blat results
      */
     Collection<BlatResult> findByBioSequence( BioSequence bioSequence );
 

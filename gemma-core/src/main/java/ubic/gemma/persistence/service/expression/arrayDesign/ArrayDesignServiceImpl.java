@@ -158,18 +158,6 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
     }
 
     @Override
-    public Map<Long, AuditEvent> getLastAnnotationFile( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        // remove all AuditEvents that are not AnnotationFile events
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
-        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
     public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();

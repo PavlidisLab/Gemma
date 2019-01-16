@@ -415,19 +415,18 @@ Gemma.EEReportGridColumnRenderers = {
         }
     },
 
-    pcaDateRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+    diagnosticsRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
         var runurl = "";
 
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDiagnostics('
                 + id + ', ' + false + ')">' +
-                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Update diagnostics"></i></span>';
         }
 
         /*
-         * FIXME logic can be more complex here, but it should probably be done on the server. Only offer the factor
-         * analysis if there is batch information or ExperimentalFactors.
+         * FIXME this date is just for PCA, so it might be misleading since the button is about all the diagnostics.
          */
         if (record.get('datePcaAnalysis')) {
             var type = record.get('pcaAnalysisEventType');
@@ -439,7 +438,7 @@ Gemma.EEReportGridColumnRenderers = {
                 qtip = 'ext:qtip="Failed"';
             }
             // pass in parameter indicating we already have the pca.
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDiagnostics('
                 + id + ', ' + true + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
 
@@ -529,12 +528,13 @@ Gemma.EEReportGridColumnRenderers = {
         }
     },
 
+    /* this also updates diagnostics (PCA etc.) */
     processedVectorCreateRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
         var runurl = "";
         if (record.get("userCanWrite")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' + id + ')">' +
-                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run processed vector generation"></i></span>';
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run preprocessing"></i></span>';
         }
 
         if (record.get('dateProcessedDataVectorComputation')) {
@@ -735,11 +735,12 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         renderer: Gemma.EEReportGridColumnRenderers.linkAnalysisRenderer,
         width: 50
     }, {
-        header: 'PCA',
+       // combined diagnostics, not just PCA
+        header: 'Diags',
         sortable: true,
         dataIndex: 'datePcaAnalysis',
-        tooltip: 'Status of PCA analysis.',
-        renderer: Gemma.EEReportGridColumnRenderers.pcaDateRenderer,
+        tooltip: 'Status of Diagnostics (currently based on PCA date).',
+        renderer: Gemma.EEReportGridColumnRenderers.diagnosticsRenderer,
         width: 50
     }, {
         header: 'Admin',

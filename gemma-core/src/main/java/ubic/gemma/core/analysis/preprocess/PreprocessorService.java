@@ -26,9 +26,10 @@ public interface PreprocessorService {
     ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
-     * @param ee    the experiment
-     * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
-     *              differential expression; batch correction.
+     * @param  ee                     the experiment
+     * @param  light                  if true, just do the bare minimum. The following are skipped: two-channel missing
+     *                                values; redoing
+     *                                differential expression; batch correction.
      * @throws PreprocessingException if there was a problem during the processing
      */
     void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
@@ -38,12 +39,22 @@ public interface PreprocessorService {
      * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
      * course) the processed data are already available.
      *
-     * @param ee            to be processed
-     * @param allowOutliers whether the computationally predicted outliers should stand in the way of batch correction.
-     *                      Set to true to ignore outlier checks. If you have already removed/evaluated outliers then setting this to
-     *                      true is safe.
+     * @param  ee                     to be processed
+     * @param  allowOutliers          whether the computationally predicted outliers should stand in the way of batch
+     *                                correction.
+     *                                Set to true to ignore outlier checks. If you have already removed/evaluated
+     *                                outliers then setting this to
+     *                                true is safe.
      * @throws PreprocessingException if there was a problem during the batch correction
      */
     void batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException;
+
+    /**
+     * Create or update the sample correlation, PCA and M-V data. This is also done as part of process so should only be
+     * called if only a refresh is needed.
+     * 
+     * @param ee to be processed
+     */
+    void processDiagnostics( ExpressionExperiment ee );
 
 }

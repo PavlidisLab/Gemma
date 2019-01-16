@@ -48,6 +48,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -101,12 +102,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final OutlierDetectionService outlierDetectionService;
     private final AuditTrailService auditTrailService;
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    private final TaxonService taxonService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
-            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
+            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService, TaxonService taxonService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
@@ -114,6 +116,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
         this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
+        this.taxonService = taxonService;
     }
 
     @Override
@@ -429,6 +432,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( ArrayDesign ad : ads ) {
 
             Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+           taxonService.thaw(taxon );
             long cnt = arrayDesignService.numGenes( ad );
 
             /*

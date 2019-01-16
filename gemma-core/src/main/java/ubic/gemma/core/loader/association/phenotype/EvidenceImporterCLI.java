@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.util.StringUtil;
@@ -89,16 +88,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     @Override
     public String getCommandName() {
         return "evidenceImport";
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PHENOTYPES;
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Import gene-phenotype information from any of the supported sources (via files created with the appropriate source-specific CLI)";
     }
 
     @Override
@@ -180,6 +169,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         return null;
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Import gene-phenotype information from any of the supported sources (via files created with the appropriate source-specific CLI)";
+    }
+
     /**
      * convert for LiteratureEvidenceValueObject
      */
@@ -236,13 +235,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         //        experimentTags.addAll( this.experimentTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
         //                this.DEVELOPMENTAL_STAGE_ONTOLOGY, this.nifstdOntologyService ) );
 
-        experimentTags.addAll(
-                this.experimentTags2Ontology( bioSource, this.BIOSOURCE, this.BIOSOURCE_ONTOLOGY, null ) );
+        experimentTags
+                .addAll( this.experimentTags2Ontology( bioSource, this.BIOSOURCE, this.BIOSOURCE_ONTOLOGY, null ) );
         experimentTags.addAll(
                 this.experimentTags2Ontology( organismPart, this.ORGANISM_PART, this.ORGANISM_PART_ONTOLOGY,
                         this.uberonOntologyService ) );
-        experimentTags.addAll( this.experimentTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN,
-                this.EXPERIMENT_DESIGN_ONTOLOGY, this.obiService ) );
+        experimentTags.addAll(
+                this.experimentTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN, this.EXPERIMENT_DESIGN_ONTOLOGY,
+                        this.obiService ) );
         experimentTags
                 .addAll( this.experimentTags2Ontology( treatment, this.TREATMENT, this.TREATMENT_ONTOLOGY, null ) );
         experimentTags.addAll( this.experimentTags2Ontology( experimentOBI, this.EXPERIMENT, this.EXPERIMENT_ONTOLOGY,
@@ -277,14 +277,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 new File( EvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + keepCopyOfImportedFile ) );
     }
 
-    /**
-     * 
-     * @param  values
-     * @param  category
-     * @param  categoryUri
-     * @param  ontologyUsed
-     * @return
-     */
     private Set<CharacteristicValueObject> experimentTags2Ontology( Set<String> values, String category,
             String categoryUri, AbstractOntologyService ontologyUsed ) {
 
@@ -594,7 +586,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * check that all gene exists in Gemma
-     * 
      */
     private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
 
@@ -613,7 +604,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             if ( !g.getTaxon().getCommonName().equals( "human" ) && !g.getTaxon().getCommonName().equals( "mouse" )
                     && !g.getTaxon().getCommonName().equals( "rat" ) && !g.getTaxon().getCommonName().equals( "fly" )
                     && !g.getTaxon().getCommonName().equals( "worm" ) && !g.getTaxon().getCommonName()
-                            .equals( "zebrafish" ) ) {
+                    .equals( "zebrafish" ) ) {
 
                 String speciesFound = g.getTaxon().getCommonName();
 
@@ -648,8 +639,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
                 || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) || phenotypeMapping
-                        .equalsIgnoreCase( "Inferred Curated" )
-                || phenotypeMapping.isEmpty() ) ) {
+                .equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
             this.writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
         }
 

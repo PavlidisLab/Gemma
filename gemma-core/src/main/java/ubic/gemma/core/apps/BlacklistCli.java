@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,12 +19,7 @@
 
 package ubic.gemma.core.apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -35,16 +30,20 @@ import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 /**
  * Add entries to the blacklist
- * 
+ *
  * @author paul
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
+    String fileName = null;
+    private boolean remove = false;
+
     public static void main( String[] args ) {
         BlacklistCli e = new BlacklistCli();
         Exception ex = e.doWork( args );
@@ -54,25 +53,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     }
 
-    String fileName = null;
-
-    private boolean remove = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
-     */
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "blackList";
@@ -80,12 +65,12 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Add entities to the blacklist";
+        return "Add GEO entities (series or platforms) to the blacklist";
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -98,23 +83,20 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
 
         Exception ex = super.processCommandLine( args );
-        if ( ex != null ) return ex;
+        if ( ex != null )
+            return ex;
 
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
         ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
 
-        ExternalDatabase geo = externalDatabaseDao.findByName( "geo" );
+        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
 
-        if ( geo == null ) throw new IllegalStateException( "GEO not found as an external database in the system" );
+        if ( geo == null )
+            throw new IllegalStateException( "GEO not found as an external database in the system" );
 
         try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
             while ( in.ready() ) {
@@ -150,13 +132,18 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 } else if ( accession.startsWith( "GSE" ) ) {
                     blee = new BlacklistedExperiment();
                 } else {
-                    throw new IllegalArgumentException(
-                            "Unrecognized ID class: " + accession + "; was expecting something starting with GPL or GSE" );
+                    throw new IllegalArgumentException( "Unrecognized ID class: " + accession
+                            + "; was expecting something starting with GPL or GSE" );
                 }
 
                 String reason = split[1];
                 if ( StringUtils.isBlank( reason ) ) {
                     throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
+                }
+
+                if ( blacklistedEntityDao.findByAccession( accession ) != null ) {
+                    log.warn(accession + " is already on the blacklist, skipping");
+                    continue;
                 }
 
                 blee.setShortName( accession );
@@ -165,6 +152,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
                 blee.setExternalAccession( d );
 
+                /*
+                 * Remember that the entity will not be in the system, so having the name and description here might be useful.
+                 */
                 if ( split.length > 2 ) {
                     blee.setName( split[2] );
                 }

@@ -104,8 +104,7 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
                 }
 
                 // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent
-                // possibly delete all ArrayDesignAnnotationFileEvent
-
+ 
                 // keep only last AlignmentBasedGeneMappingEvent, ArrayDesignRepeatAnalysisEvent, ArrayDesignGeneMappingEvent, ArrayDesignSequenceAnalysisEvent 
             }
 

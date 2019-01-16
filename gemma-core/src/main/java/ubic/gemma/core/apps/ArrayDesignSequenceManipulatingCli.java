@@ -49,26 +49,25 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     private ArrayDesignService arrayDesignService;
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
-    protected Collection<ArrayDesign> getArrayDesignsToProcess() {
-        return arrayDesignsToProcess;
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
+    }
+
+    protected Collection<ArrayDesign> getArrayDesignsToProcess() {
+        return arrayDesignsToProcess;
     }
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
-                .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" )
-                .build();
+                .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
 
         this.addOption( arrayDesignOption );
 
-        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "Array Design list file" ).desc(
-                "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
+        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "Array Design list file" )
+                .desc( "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
                 .longOpt( "adListFile" ).build();
         this.addOption( eeFileListOption );
 
@@ -76,19 +75,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
         this.addAutoOption();
 
-    }
-
-    /**
-     * Mergees or subsumees of the platform.
-     *
-     * @param  design a platform
-     * @return        related platforms
-     */
-    Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
-        Collection<ArrayDesign> toUpdate = new HashSet<>();
-        toUpdate.addAll( design.getMergees() );
-        toUpdate.addAll( design.getSubsumedArrayDesigns() );
-        return toUpdate;
     }
 
     @Override
@@ -135,9 +121,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
+     * @param  arrayDesign the array design to check
+     * @return             true if the sequences on the given array design would be equivalently treated by analyzing
+     *                     another array
+     *                     design. In the case of subsumption, this only works if the array design has been either
+     *                     analyzed for
+     *                     subsuming status. (the analysis is not done as part of this call).
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -153,7 +142,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
-    protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design, Class<? extends ArrayDesignAnalysisEvent> cls ) {
+    protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
+            Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
             AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
             // not really an error, but nice to get notification.
@@ -161,10 +151,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             return false;
         }
 
-        if ( this.hasOption( "force" ) ) return true;
+        if ( this.hasOption( "force" ) )
+            return true;
 
         if ( this.isSubsumedOrMerged( design ) ) {
-            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
+            AbstractCLI.log.warn( design
+                    + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
 
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
@@ -185,12 +177,26 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
+     * Mergees or subsumees of the platform.
+     *
+     * @param  design a platform
+     * @return        related platforms
+     */
+    Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+        Collection<ArrayDesign> toUpdate = new HashSet<>();
+        toUpdate.addAll( design.getMergees() );
+        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        return toUpdate;
+    }
+
+    /**
      * @param  eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return            true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if
      *                    the last
      *                    analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    // Better semantics
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
@@ -213,6 +219,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     ArrayDesign thaw( ArrayDesign arrayDesign ) {
         return arrayDesignService.thaw( arrayDesign );
+    }
+
+    ArrayDesign thawLite( ArrayDesign arrayDesign ) {
+        return arrayDesignService.thawLite( arrayDesign );
     }
 
     private void arraysFromCliList() {

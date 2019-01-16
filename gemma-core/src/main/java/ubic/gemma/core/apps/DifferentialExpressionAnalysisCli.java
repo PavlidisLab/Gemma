@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -142,36 +141,38 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption();
 
-        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true )
-                .withDescription( "The top (most significant) results to display." ).create();
-        super.addOption( topOpt );
+        //
+        //        Option topOpt = Option.builder( "top" ).hasArg().argName( "number" ).desc( "The top (most significant) results to display." )
+        //                .build();
+        //        super.addOption( topOpt );
 
         super.addAutoOption();
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption();
 
-        Option factors = OptionBuilder.hasArg().withDescription(
+        Option factors = Option.builder( "factors" ).desc(
                 "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
-                .create( "factors" );
+                .build();
 
         super.addOption( factors );
 
-        Option subsetFactor = OptionBuilder.hasArg().withDescription(
+        Option subsetFactor = Option.builder( "subset" ).desc(
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
-                .create( "subset" );
+                .build();
         super.addOption( subsetFactor );
 
-        Option analysisType = OptionBuilder.hasArg().withDescription(
+        Option analysisType = Option.builder( "type" ).hasArg().desc(
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
                         + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions); default: auto-detect" ).create( "type" );
+                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
+                .build();
 
         super.addOption( analysisType );
 
-        Option ignoreBatchOption = OptionBuilder.withDescription(
+        Option ignoreBatchOption = Option.builder( "usebatch" ).desc(
                 "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
-                .create( "usebatch" );
+                .build();
 
         super.addOption( ignoreBatchOption );
 

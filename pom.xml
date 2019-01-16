@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.25.6</version>
+	<version>1.25.7-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>
         The Gemma Project for meta-analysis of genomics data
@@ -44,18 +44,21 @@
 			<email>paul@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
-		<developer>
-			<name>Matthew Jacobson</name>
-			<id>jacobsonmt</id>
-			<organization>University of British Columbia</organization>
-		</developer>
-		<developer>
-			<name>Stepan Tesar</name>
-			<id>tesarst</id>
-			<organization>University of British Columbia</organization>
-		</developer>
+	  <developer>
+	    <name>Manuel Belmadani</name>
+	    			<organization>University of British Columbia</organization>
+	       </developer>
 	</developers>
 	<contributors>
+          <contributor>
+	    <name>Nathaniel Lim</name>
+	  </contributor>
+	       <contributor>
+	             <name>Stepan Tesar</name>
+	       </contributor>
+	       	<contributor>
+			<name>Matthew Jacobson</name>
+		</contributor>
 		<contributor>
 			<name>Patrick Tan</name>
 		</contributor>
@@ -302,7 +305,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.25</version>
+			<version>1.0.26</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -402,7 +405,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-                http://www.chibi.ubc.ca/maven2
+               https://maven2.pavlab.msl.ubc.ca/
             </url>
 			<layout>default</layout>
 			<snapshots>
@@ -490,7 +493,7 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-                http://www.chibi.ubc.ca/maven2
+                https://maven2.pavlab.msl.ubc.ca/s
             </url>
 			<layout>default</layout>
 			<snapshots>
@@ -583,19 +586,17 @@
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>
-                scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
-            </url>
+			<url>/space/gemmaData/gemma-devsite</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>

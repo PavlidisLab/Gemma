@@ -270,10 +270,6 @@
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent"
-           maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-           overflowToDisk="false"/>
-
     <cache name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate"
            maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false"/>
