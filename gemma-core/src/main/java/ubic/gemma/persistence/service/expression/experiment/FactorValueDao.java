@@ -31,6 +31,9 @@ public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValu
 
     /**
      * Locate based on string value of the value.
+     *
+     * @param valuePrefix value prefix
+     * @return collection of factor values
      */
     Collection<FactorValue> findByValue( String valuePrefix );
 

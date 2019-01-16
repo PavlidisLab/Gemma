@@ -23,7 +23,9 @@ import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * @see Person
+ * @deprecated as Person is deprecated
  */
+@Deprecated
 public interface PersonDao extends BaseDao<Person> {
 
 }

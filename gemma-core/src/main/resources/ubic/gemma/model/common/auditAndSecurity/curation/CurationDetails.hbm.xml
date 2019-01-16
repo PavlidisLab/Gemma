@@ -12,6 +12,7 @@
             <generator class="native">
             </generator>
         </id>
+        <!--  cascade="all" on these events causes problems with EE deletion; however, making them 'none' exposed other issues -->
         <many-to-one name="lastTroubledEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
                      cascade="all" lazy="false">
             <column name="TROUBLE_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>

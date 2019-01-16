@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,9 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
      * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
      * sequences are not included in the result.
      * </p>
+     *
+     * @param genes genes
+     * @return map to biosequences
      */
     Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes );
 
@@ -48,6 +51,9 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
 
     /**
      * For a biosequence name, get the genes
+     *
+     * @param search name
+     * @return genes
      */
     Collection<Gene> getGenesByName( String search );
 

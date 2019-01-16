@@ -29,8 +29,10 @@ import ubic.gemma.persistence.util.BusinessKey;
  * </p>
  *
  * @see ubic.gemma.model.common.auditAndSecurity.Person
+ * @deprecated as Person is deprecated
  */
 @Repository
+@Deprecated
 public class PersonDaoImpl extends AbstractDao<Person> implements PersonDao {
 
     @Autowired

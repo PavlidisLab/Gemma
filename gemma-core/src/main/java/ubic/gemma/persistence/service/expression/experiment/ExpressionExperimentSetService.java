@@ -20,7 +20,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
@@ -63,6 +66,8 @@ public interface ExpressionExperimentSetService
 
     /**
      * Security is handled within method, when the set is loaded
+     *
+     * @param eesvo ee value object
      */
     void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo );
 
@@ -71,16 +76,25 @@ public interface ExpressionExperimentSetService
 
     /**
      * security at DAO level
+     *
+     * @param name name
+     * @return collection of ee sets
      */
     Collection<ExpressionExperimentSet> findByName( java.lang.String name );
 
     /**
      * security at DAO level
+     *
+     * @param bioAssaySet BA set
+     * @return collection of IDs
      */
     Collection<Long> findIds( BioAssaySet bioAssaySet );
 
     /**
      * Get the (security-filtered) list of experiments in a set.
+     *
+     * @param id id
+     * @return collection of ees
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsInSet( Long id );
@@ -88,6 +102,7 @@ public interface ExpressionExperimentSetService
     /**
      * Get the member experiment value objects for the set id; security filtered.
      *
+     * @param id id
      * @return value objects or an empty set
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -123,6 +138,7 @@ public interface ExpressionExperimentSetService
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
+     * @return colelction of EE set VOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds );
@@ -130,6 +146,7 @@ public interface ExpressionExperimentSetService
     /**
      * Get a value object for the id param.
      *
+     * @param id        ID
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
@@ -140,12 +157,17 @@ public interface ExpressionExperimentSetService
 
     /**
      * Update corresponding entity based on value object
+     *
+     * @param eesvo ee value object
      */
     void updateDatabaseEntity( ExpressionExperimentSetValueObject eesvo );
 
     /**
      * Updates the database record for the param experiment set value object (permission permitting) with the members
      * specified of the set, not the name or description etc.
+     *
+     * @param eeIds   ee ids
+     * @param groupId group id
      */
     void updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds );
 
@@ -156,6 +178,8 @@ public interface ExpressionExperimentSetService
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
+     * @param eeSetVO   ee set value object
+     * @return ee vo
      */
     ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
             boolean loadEEIds );

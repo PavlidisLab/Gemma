@@ -139,10 +139,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         }
     }
 
-    /**
-     * 
-     * @throws Exception
-     */
     protected void createWriteFolder() throws Exception {
 
         File folder = new File( EvidenceImporterAbstractCLI.WRITE_FOLDER );
@@ -153,6 +149,8 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     /**
      * Look at all Headers and identify them to determine the type of evidence
+     * @return type
+     * @throws Exception IO problems
      */
     protected String findTypeOfEvidence() throws Exception {
 

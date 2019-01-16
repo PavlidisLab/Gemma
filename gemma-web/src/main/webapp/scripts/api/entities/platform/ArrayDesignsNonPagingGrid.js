@@ -58,13 +58,16 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubleDetails"
       }, {
+         name : "blackListed",
+         type: "boolean"
+      }, {
          name : "needsAttention"
       }, {
          name : "curationNote"
       }, {
          name : "statusArray",
          convert : function( v, record ) {
-            return [ record.troubled, record.isMerged, record.isMergee, record.isSubsumed, record.isSubsumer, record.isAffymetrixAltCdf ];
+            return [ record.troubled, record.blackListed, record.isMerged, record.isMergee, record.isSubsumed, record.isSubsumer, record.isAffymetrixAltCdf ];
          },
          sortDir : 'DESC',
          sortType : function( value ) {
@@ -328,7 +331,11 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
 
                                     if ( record.get( 'troubled' ) ) {
                                        statusString += '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                                          + record.get( 'troubleDetails' ) + '"></i>';
+                                          + record.get( 'troubleDetails' ) + '"></i>&nbsp;';
+                                    }
+
+                                    if ( record.get( 'blackListed' ) ) {
+                                        statusString += '<i class="black fa fa-exclamation-triangle fa-lg" ext:qtip="Blacklisted"></i>&nbsp;';
                                     }
 
                                     if ( record.get( 'isMerged' ) ) {

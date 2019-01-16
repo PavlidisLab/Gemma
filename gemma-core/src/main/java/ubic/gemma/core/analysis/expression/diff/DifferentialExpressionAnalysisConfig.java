@@ -201,7 +201,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( "# AnalysisType: " ).append( this.analysisType ).append( "\n" );
+        buf.append( "# AnalysisType: " ).append( this.analysisType == null ? "Unknown" : this.analysisType ).append( "\n" );
 
         buf.append( "# Factors: " ).append( StringUtils.join( this.factorsToInclude, " " ) );
 
@@ -210,7 +210,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         if ( this.subsetFactor != null ) {
             buf.append( "# SubsetFactor: " ).append( this.subsetFactor ).append( "\n" );
         } else if ( this.subsetFactorValue != null ) {
-            buf.append( "# Subset analysis for " ).append( this.subsetFactorValue );
+            buf.append( "# Subset analysis for " ).append( this.subsetFactorValue ).append( "\n" );
         }
         if ( !interactionsToInclude.isEmpty() ) {
             buf.append( "# Interactions:  " ).append( StringUtils.join( interactionsToInclude, ":" ) ).append( "\n" );

@@ -20,6 +20,14 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import javax.persistence.Transient;
 
+/**
+ * 
+ * Not a persistent class, not used, can be removed
+ * 
+ * @author     paul
+ * @deprecated not needed
+ */
+@Deprecated
 public class Person extends Contact implements gemma.gsec.model.Person {
 
     private static final long serialVersionUID = -7873047856249494633L;
@@ -39,14 +47,6 @@ public class Person extends Contact implements gemma.gsec.model.Person {
     @Override
     public void setLastName( String lastName ) {
         this.lastName = lastName;
-    }
-
-    public static final class Factory {
-
-        public static Person newInstance() {
-            return new Person();
-        }
-
     }
 
 }

@@ -28,7 +28,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -234,7 +233,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                 termsForGene.add( t.getValue() );
 
                 Collection<OntologyTerm> parents = goService
-                        .getAllParents( GeneOntologyServiceImpl.getTermForURI( t.getValueUri() ) );
+                        .getAllParents( goService.getTerm( t.getValueUri() ) );
 
                 for ( OntologyTerm p : parents ) {
                     if ( p == null ) continue;

@@ -73,9 +73,14 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         leftPanel.add({cls: 'nobreak', html: '<h4>Preprocessing:</h4>'});
         leftPanel.add(refreshButton);
-        leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
+       
+        /* This does all preprocessing */
         leftPanel.add(this.processedVectorCreatePanelRenderer(this.experimentDetails, manager));
-        leftPanel.add(this.pcaPanelRenderer(this.experimentDetails, manager));
+        
+        /* This is no longer needed as a separate step */
+       // leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
+        
+        leftPanel.add(this.diagnosticsPanelRenderer(this.experimentDetails, manager));
         leftPanel.add(this.batchPanelRenderer(this.experimentDetails, manager));
 
         var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
@@ -90,6 +95,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         leftPanel.add({html: "<br/><h4>Analyses:</h4>"});
         leftPanel.add(this.differentialAnalysisPanelRenderer(this.experimentDetails, manager));
+         
         leftPanel.add(this.linkAnalysisPanelRenderer(this.experimentDetails, manager));
 
         eeRow.add(leftPanel);
@@ -1077,22 +1083,24 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 qtip = 'ext:qtip="Analysis failed"';
             } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
                 color = '#CCC';
-                qtip = 'ext:qtip="Analysis was too small"';
+                qtip = 'ext:qtip="Dataset is too small"';
                 suggestRun = false;
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
                 + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis)
             });
-            if (suggestRun) {
-                panel.add(runBtn);
-            }
+            // disable through gui
+//            if (suggestRun) {
+//                panel.add(runBtn);
+//            }
             return panel;
         } else {
             panel.add({
-                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+                html: '<span style="color:#3A3;">May be eligible; perform via CLI</span>&nbsp;'
             });
-            panel.add(runBtn);
+            // disable through gui
+           // panel.add(runBtn);
             return panel;
         }
 
@@ -1120,7 +1128,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         /*
          * Offer missing value analysis if it's possible (this might need tweaking).
          */
-        if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity) {
+        if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'SEQUENCING' && ee.technologyType != 'GENELIST' && ee.hasEitherIntensity) {
 
             if (ee.dateMissingValueAnalysis) {
                 var type = ee.missingValueAnalysisEventType;
@@ -1144,7 +1152,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 panel.add({
                     html: '<span style="color:#3A3;">Needed</span>&nbsp;'
                 });
-                panel.add(runBtn);
+          //      panel.add(runBtn);
                 return panel;
             }
 
@@ -1166,13 +1174,13 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 padding: 2
             },
             items: [{
-                html: 'Processed Vector Computation: '
+                html: 'Preprocessing: '
             }]
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
             text: '<i class="fa fa-refresh fa-fw"/>',
-            tooltip: 'Processed vector computation (popup, refreshes page)',
+            tooltip: 'Preprocess including PCA, correlation matrix and M-V (popup, refreshes page)',
             handler: manager.doProcessedVectors.createDelegate(this, [id]),
             scope: this,
             cls: 'btn-refresh'
@@ -1183,10 +1191,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type == 'FailedProcessedVectorComputationEvent') { // note:
-                // no
-                // such
-                // thing.
+            if (type == 'FailedProcessedVectorComputationEvent') { 
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }
@@ -1268,56 +1273,105 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
     renderProcessedExpressionVectorCount: function (e) {
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     },
-
+    
     /*
-     * Get the last date PCA was run, add a button to run PCA
+     * This really replaces the PCA panel - allows for refresh of the diagnostics (PCA, sample correlation and MV)
      */
-    pcaPanelRenderer: function (ee, manager) {
-        var panel = new Ext.Panel({
-            layout: 'hbox',
-            defaults: {
-                border: false,
-                padding: 2
-            },
-            items: [{
-                html: 'Principal Component Analysis: '
-            }]
-        });
-        var id = ee.id;
-        var runBtn = new Ext.Button({
-            text: '<i class="fa fa-refresh fa-fw"/>',
-            tooltip: 'Principal component analysis (popup, refreshes page)',
-            // See EEManger.js doPca(id, hasPca)
-            handler: manager.doPca.createDelegate(this, [id, true]),
-            scope: this,
-            cls: 'btn-refresh'
-        });
+    diagnosticsPanelRenderer: function (ee, manager) {
+       var panel = new Ext.Panel({
+          layout: 'hbox',
+          defaults: {
+              border: false,
+              padding: 2
+          },
+          items: [{
+              html: 'Diagnostics (PCA, MV, Sample Corr): '
+          }]
+      });
+      var id = ee.id;
+      var runBtn = new Ext.Button({
+          text: '<i class="fa fa-refresh fa-fw"/>',
+          tooltip: 'Update diagnostics (popup, refreshes page)',
+          handler: manager.doDiagnostics.createDelegate(this, [id, true]),
+          scope: this,
+          cls: 'btn-refresh'
+      });
 
-        // Get date and info
-        if (ee.datePcaAnalysis) {
-            var type = ee.pcaAnalysisEventType;
+      // Get date and info. Note that we don't have a date for the diagnostics all together, so this can be improved.
+      if (ee.datePcaAnalysis) {
+          var type = ee.pcaAnalysisEventType;
 
-            var color = "#000";
-            var qtip = 'ext:qtip="OK"';
-            var suggestRun = true;
+          var color = "#000";
+          var qtip = 'ext:qtip="OK"';
+          var suggestRun = true;
 
-            if (type == 'FailedPCAAnalysisEvent') {
-                color = 'red';
-                qtip = 'ext:qtip="Failed"';
-            }
-            panel.add({
-                html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
-            });
-        } else
-            panel.add({
-                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
-            });
+          if (type == 'FailedPCAAnalysisEvent') {
+              color = 'red';
+              qtip = 'ext:qtip="Failed"';
+          }
+          panel.add({
+              html: '<span style="color:' + color + ';" ' + qtip + '>'
+              + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
+          });
+      } else
+          panel.add({
+              html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+          });
 
-        panel.add(runBtn);
-        return panel;
-
+      panel.add(runBtn);
+      return panel;
     },
+
+    // removed in place of general diagnostics one.
+//    /*
+//     * Get the last date PCA was run, add a button to run PCA
+//     */
+//    pcaPanelRenderer: function (ee, manager) {
+//        var panel = new Ext.Panel({
+//            layout: 'hbox',
+//            defaults: {
+//                border: false,
+//                padding: 2
+//            },
+//            items: [{
+//                html: 'Principal Component Analysis: '
+//            }]
+//        });
+//        var id = ee.id;
+//        var runBtn = new Ext.Button({
+//            text: '<i class="fa fa-refresh fa-fw"/>',
+//            tooltip: 'Principal component analysis (popup, refreshes page)',
+//            // See EEManger.js doPca(id, hasPca)
+//            handler: manager.doPca.createDelegate(this, [id, true]),
+//            scope: this,
+//            cls: 'btn-refresh'
+//        });
+//
+//        // Get date and info
+//        if (ee.datePcaAnalysis) {
+//            var type = ee.pcaAnalysisEventType;
+//
+//            var color = "#000";
+//            var qtip = 'ext:qtip="OK"';
+//            var suggestRun = true;
+//
+//            if (type == 'FailedPCAAnalysisEvent') {
+//                color = 'red';
+//                qtip = 'ext:qtip="Failed"';
+//            }
+//            panel.add({
+//                html: '<span style="color:' + color + ';" ' + qtip + '>'
+//                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
+//            });
+//        } else
+//            panel.add({
+//                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+//            });
+//
+//        panel.add(runBtn);
+//        return panel;
+//
+//    },
 
     /*
      * Get the last date batch info was downloaded, add a button to download

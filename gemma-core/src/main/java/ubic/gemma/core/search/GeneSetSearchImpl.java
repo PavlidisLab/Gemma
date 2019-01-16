@@ -32,7 +32,6 @@ import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -108,7 +107,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
     @Override
     public GeneSet findByGoId( String goId, Taxon taxon ) {
-        OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( goId ) );
+        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
             return null;
@@ -273,7 +272,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     private Collection<GeneSet> findByGoId( String query ) {
-        OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( query ) );
+        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( query ) );
 
         if ( goTerm == null ) {
             return new HashSet<>();
