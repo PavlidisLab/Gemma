@@ -354,7 +354,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return f;
             }
 
-            ExpressionDataFileServiceImpl.log.info( "Creating new Co-Expression data file: " + f.getName() );
             this.writeCoexpressionData( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -503,7 +502,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( annotationStrings.length > 4 ) {
                 // ncbi id, if we have it.
                 rowBuffer.append( annotationStrings[4] );
-            }  
+            }
         } else {
             rowBuffer.append( "\t\t\t" );
         }
@@ -1022,6 +1021,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         assert tax != null;
 
         Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
+
+        if ( geneLinks.isEmpty() ) {
+            log.warn( "No coexpression links for this experiment, file will not be created: " + ee );
+            return;
+        }
+
+        ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + file.getAbsolutePath() );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuilder buf = new StringBuilder();
