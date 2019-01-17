@@ -301,7 +301,7 @@ public class GoMetric {
     public Integer getChildrenOccurrence( Map<String, Integer> termCountMap, String term ) {
 
         int termCount = termCountMap.get( term );
-        OntologyTerm ont = GeneOntologyServiceImpl.getTermForURI( term );
+        OntologyTerm ont = geneOntologyService.getTerm( term );
 
         Collection<OntologyTerm> children = geneOntologyService.getAllChildren( ont, partOf );
 
@@ -671,7 +671,7 @@ public class GoMetric {
         HashSet<OntologyTerm> termsGO = new HashSet<>();
 
         for ( Characteristic characteristic : termsVoc ) {
-            OntologyTerm term = GeneOntologyServiceImpl.getTermForId( characteristic.getValue() );
+            OntologyTerm term = geneOntologyService.getTermForId( characteristic.getValue() );
             if ( ( term != null ) )
                 termsGO.add( term );
         }

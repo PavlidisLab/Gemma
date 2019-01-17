@@ -61,16 +61,16 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             return err;
         }
 
-        if ( this.arrayDesignsToProcess.size() > 1 ) {
+        if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
+        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         arrayDesign = this.thaw( arrayDesign );
 
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
-            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, arrayDesignService );
+            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, getArrayDesignService() );
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
@@ -83,11 +83,11 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
             otherArrayDesign = this.thaw( otherArrayDesign );
 
-            Boolean aSubsumes = this.arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
+            Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
 
             if ( !aSubsumes ) {
                 // test other way around, but only if first way failed (to avoid cycles)
-                this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
+                this.getArrayDesignService().updateSubsumingStatus( otherArrayDesign, arrayDesign );
             }
             this.audit( otherArrayDesign, "Tested to see if it is subsumed by " + arrayDesign );
         }

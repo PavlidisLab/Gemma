@@ -19,6 +19,7 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
+import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -34,6 +35,17 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface OntologyService extends InitializingBean {
+
+    /**
+     * Will add the give vocab characteristic to the expression experiment.
+     * Does NOT handle persisting of the experiment afterwards.
+     *
+     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param ee ee
+     */
+    void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
+
+    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -58,8 +70,8 @@ public interface OntologyService extends InitializingBean {
     Collection<Characteristic> findTermAsCharacteristic( String search );
 
     /**
-     * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
-     * backed search, is inexact and for general terms can return a lot of results.
+     * Given a search string will look through the loaded ontologies for terms that match the search term. If the query looks like a URI, it just retrieves the term.
+     * For other queries, this a lucene backed search, is inexact and for general terms can return a lot of results.
      *
      * @param search search
      * @return returns a collection of ontologyTerm's
@@ -90,6 +102,8 @@ public interface OntologyService extends InitializingBean {
      */
     CellLineOntologyService getCellLineOntologyService();
 
+    CellTypeOntologyService getCellTypeOntologyService();
+
     /**
      * @return the chebiOntologyService
      */
@@ -107,8 +121,13 @@ public interface OntologyService extends InitializingBean {
 
     /**
      * @return the fmaOntologyService
+     * @deprecated
      */
     FMAOntologyService getFmaOntologyService();
+
+    GemmaOntologyService getGemmaOntologyService();
+
+    HumanDevelopmentOntologyService getHumanDevelopmentOntologyService();
 
     /**
      * @return the HumanPhenotypeOntologyService
@@ -120,8 +139,11 @@ public interface OntologyService extends InitializingBean {
      */
     MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService();
 
+    MouseDevelopmentOntologyService getMouseDevelopmentOntologyService();
+
     /**
      * @return the NIFSTDOntologyService
+     * @deprecated
      */
     NIFSTDOntologyService getNifstfOntologyService();
 
@@ -129,11 +151,6 @@ public interface OntologyService extends InitializingBean {
      * @return the ObiService
      */
     ObiService getObiService();
-
-    /**
-     * @return UberonService
-     */
-    UberonOntologyService getUberonService();
 
     /**
      * @param uri uri
@@ -148,6 +165,11 @@ public interface OntologyService extends InitializingBean {
      * @return the OntologyTerm for the specified URI.
      */
     OntologyTerm getTerm( String uri );
+
+    /**
+     * @return UberonService
+     */
+    UberonOntologyService getUberonService();
 
     boolean isObsolete( String uri );
 
@@ -172,18 +194,7 @@ public interface OntologyService extends InitializingBean {
      */
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
-    /**
-     * Will add the give vocab characteristic to the expression experiment.
-     * Does NOT handle persisting of the experiment afterwards.
-     *
-     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param ee ee
-     */
-    void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
     void sort( List<CharacteristicValueObject> characteristics );
 
     Collection<Characteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
-
-    Map<String, CharacteristicValueObject> countObsoleteOccurrences( int start, int stop, int step );
 }

@@ -168,9 +168,21 @@ public interface GeneOntologyService extends InitializingBean {
      */
     Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf );
 
-    GOAspect getTermAspect( String goId );
+    /**
+     * 
+     * @param  uri of the term
+     * @return     term if found or null otherwise.
+     */
+    OntologyTerm getTerm( String uri );
 
     GOAspect getTermAspect( Characteristic goId );
+
+    /**
+     * 
+     * @param  goId GO ID e.g. GO:0038128 (not URI)
+     * @return      aspect if found, null otherwise
+     */
+    GOAspect getTermAspect( String goId );
 
     /**
      * Return a definition for a GO Id.
@@ -181,12 +193,42 @@ public interface GeneOntologyService extends InitializingBean {
     String getTermDefinition( String goId );
 
     /**
+     * @param  value e.g. GO:0038128
+     * @return    term or null if not found
+     */
+    OntologyTerm getTermForId( String value );
+
+    /**
      * Return human-readable term ("protein kinase") for a GO Id.
      *
      * @param  goId go id
      * @return      term name
      */
     String getTermName( String goId );
+
+    /**
+     * Converts the given Ontology Term to a Gene Ontology Value Object.
+     *
+     * @param  term the term to be converted.
+     * @return      value object representing the given term.
+     */
+    GeneOntologyTermValueObject getValueObject( OntologyTerm term );
+
+    /**
+     * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
+     *
+     * @param  terms the terms to be converted.
+     * @return       collection of value objects representing the given terms.
+     */
+    Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
+
+    /**
+     * Returns GO Terms VOs for the given Gene.
+     *
+     * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
+     * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
+     */
+    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
 
     void init( boolean force );
 
@@ -217,10 +259,13 @@ public interface GeneOntologyService extends InitializingBean {
     boolean isBiologicalProcess( OntologyTerm term );
 
     /**
-     * @return Used for determining if the Gene Ontology has finished loading into memory yet Although calls like
-     *         getParents,
-     *         getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
+     * @return     Used for determining if the Gene Ontology has finished loading into memory yet Although calls like
+     *             getParents,
+     *             getChildren will still work (its much faster once the gene ontologies have been preloaded into
+     *             memory.
+     * @deprecated not clear this is needed
      */
+    @Deprecated
     boolean isGeneOntologyLoaded();
 
     boolean isReady();
@@ -228,30 +273,6 @@ public interface GeneOntologyService extends InitializingBean {
     boolean isRunning();
 
     Collection<OntologyTerm> listTerms();
-
-    /**
-     * Returns GO Terms VOs for the given Gene.
-     *
-     * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
-     * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
-     */
-    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
-
-    /**
-     * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
-     *
-     * @param  terms the terms to be converted.
-     * @return       collection of value objects representing the given terms.
-     */
-    Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
-
-    /**
-     * Converts the given Ontology Term to a Gene Ontology Value Object.
-     *
-     * @param  term the term to be converted.
-     * @return      value object representing the given term.
-     */
-    GeneOntologyTermValueObject getValueObject( OntologyTerm term );
 
     /**
      * Primarily here for testing.

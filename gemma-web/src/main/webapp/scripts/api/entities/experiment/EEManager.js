@@ -1073,20 +1073,19 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
     },
 
-    /**
-     * Run the vector processing. Note that this is normally done when the data are first imported, so this is rarely
-     * needed unless something fundamental changes about the data set.
+    /*
+     * Run the vector processing and downstream effects.
      */
     doProcessedVectors: function (id) {
         var eeManager = this;
         Ext.Msg.show({
-            title: 'Processed vector analysis',
-            msg: 'Please confirm. Any existing processed vectors will be deleted.',
+            title: 'Preprocess',
+            msg: 'Please confirm. Any existing processed vectors, PCA and other down-stream outputs will be deleted and updated.',
             buttons: Ext.Msg.YESNO,
             fn: function (btn, text) {
                 if (btn === 'yes') {
                     Ext.getBody().mask();
-                    ProcessedExpressionDataVectorCreateController.run(id, {
+                    PreprocessController.run(id, {
                         callback: function (taskId) {
                             Ext.getBody().unmask();
                             var task = new Gemma.ObservableSubmittedTask({
@@ -1108,6 +1107,41 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
             icon: Ext.MessageBox.WARNING
         });
     },
+    
+    /*
+     * Just update diagnostics (PCA, sample correlation and MV)
+     */
+    doDiagnostics :  function (id) {
+       var eeManager = this;
+       Ext.Msg.show({
+           title: 'Update diagnostics',
+           msg: 'Please confirm. PCA, sample correlation and M-V will be created or updated.',
+           buttons: Ext.Msg.YESNO,
+           fn: function (btn, text) {
+               if (btn === 'yes') {
+                   Ext.getBody().mask();
+                   PreprocessController.diagnostics(id, {
+                       callback: function (taskId) {
+                           Ext.getBody().unmask();
+                           var task = new Gemma.ObservableSubmittedTask({
+                               'taskId': taskId
+                           });
+                           task.on('task-completed', function (payload) {
+                               eeManager.fireEvent('diagnostics', payload);
+                           });
+                           task.showTaskProgressWindow({
+                               'showLogButton': true,
+                               'showBackgroundButton': true
+                           });
+                       },
+                       errorHandler: eeManager.onTaskSubmissionError
+                   });
+               }
+           },
+           animEl: 'elId',
+           icon: Ext.MessageBox.WARNING
+       });
+   },
 
     initComponent: function () {
         Gemma.EEManager.superclass.initComponent.call(this);

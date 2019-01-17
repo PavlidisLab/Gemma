@@ -43,7 +43,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts.
+ * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts. Genes without products are
+ * ignored.
  *
  * @author pavlidis
  * @author jrsantos
@@ -249,6 +250,11 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                             continue;
                         }
                         Gene converted = NcbiGeneConverter.this.convert( data );
+
+                        if ( converted.getProducts().isEmpty() ) {
+                            log.info( "Gene with no products skipped: " + converted );
+                            continue;
+                        }
 
                         geneQueue.put( converted );
 

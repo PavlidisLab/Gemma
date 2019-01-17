@@ -38,6 +38,12 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
      * corrected pvalue field)
+     *
+     * @param  gene                gene
+     * @param  experimentsAnalyzed ees
+     * @param  threshold           threshold
+     * @param  limit               limit
+     * @return                     map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
@@ -45,23 +51,34 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
+     *
+     * @param  experimentsAnalyzed ees
+     * @param  threshold           threshold
+     * @param  limit               limit
+     * @return                     map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
-     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
+     * @param  gene gene
+     * @return      a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
 
     /**
-     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
+     * @param  gene                gene
+     * @param  experimentsAnalyzed ees
+     * @return                     a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
+     *                             {@link BioAssaySet}.
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed );
 
     /**
-     * @return map of resultSetId to map of gene to DiffExprGeneSearchResult
+     * @param  geneIds    gene ids
+     * @param  resultSets result sets
+     * @return            map of resultSetId to map of gene to DiffExprGeneSearchResult
      */
     Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
@@ -74,6 +91,11 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
+     *
+     * @param  resultsAnalyzed resultsAnalyzed
+     * @param  threshold       threshold
+     * @param  limit           limit
+     * @return                 map to diff exp VOs
      */
     Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
@@ -94,6 +116,11 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
+     *
+     * @param  gene      gene
+     * @param  threshold threshold
+     * @param  limit     limit
+     * @return           map to diff exp VOs
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
             Integer limit );

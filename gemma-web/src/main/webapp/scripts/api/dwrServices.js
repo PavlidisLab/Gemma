@@ -1114,13 +1114,17 @@ LinkAnalysisController.run = function (p0, callback) {
 };
 
 // ====================================================================================
-if (typeof ProcessedExpressionDataVectorCreateController === 'undefined') {
-    var ProcessedExpressionDataVectorCreateController = {};
+if (typeof PreprocessController === 'undefined') {
+    var PreprocessController = {};
 }
-ProcessedExpressionDataVectorCreateController._path = ctxBasePath + '/dwr';
-ProcessedExpressionDataVectorCreateController.run = function (p0, callback) {
-    dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
-        'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
+PreprocessController._path = ctxBasePath + '/dwr';
+PreprocessController.run = function (p0, callback) {
+    dwr.engine._execute(PreprocessController._path,
+        'PreprocessController', 'run', p0, callback);
+};
+PreprocessController.diagnostics = function (p0, callback) {
+    dwr.engine._execute(PreprocessController._path,
+        'PreprocessController', 'diagnostics', p0, callback);
 };
 // ====================================================================================
 if (typeof ProgressStatusService === 'undefined') {

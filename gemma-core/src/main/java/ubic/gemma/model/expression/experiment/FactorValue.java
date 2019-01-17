@@ -58,10 +58,16 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         if ( this.getId() != null )
             return this.getId().hashCode();
 
-        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
-                .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
+                
+                if (c == null) {
+                    continue;
+                }
+                
+                assert c != null;
+                
                 builder.append( c.hashCode() );
             }
         }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,9 +37,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -61,17 +58,11 @@ public class CompositeSequenceController extends BaseController {
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private BlatResultService blatResultService;
-    @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private SearchService searchService;
     @Autowired
-    private BioSequenceService bioSequenceService;
-    @Autowired
     private GeneService geneService;
-    @Autowired
-    private GeneProductService geneProductService;
 
     @RequestMapping("/filter")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
@@ -148,7 +139,8 @@ public class CompositeSequenceController extends BaseController {
         compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
-        return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(), compositeSequenceService.loadValueObject( cs ) );
+        return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(),
+                compositeSequenceService.loadValueObject( cs ) );
     }
 
     @InitBinder

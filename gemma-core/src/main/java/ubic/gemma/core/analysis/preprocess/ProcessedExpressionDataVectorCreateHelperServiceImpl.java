@@ -42,8 +42,8 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService; 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
@@ -291,8 +291,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
         ExpressionDataDoubleMatrix intensities;
 
-        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) && !arrayDesign.getTechnologyType()
-                .equals( TechnologyType.NONE ) ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR )
+                || arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE ) ) {
 
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log
                     .info( "Computing intensities for two-color data from underlying data" );

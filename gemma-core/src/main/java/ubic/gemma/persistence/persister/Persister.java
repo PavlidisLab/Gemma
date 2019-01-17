@@ -42,7 +42,8 @@ public interface Persister {
      * reference is detached, or converted into a reference to a persistent object identified by the objects business
      * key. Matching instances are not changed.
      *
-     * @return The persistent versions of the objects.
+     * @param  col the collection of objects
+     * @return     The persistent versions of the objects.
      */
     @Secured({ "GROUP_USER" })
     Collection<?> persist( Collection<?> col );
@@ -51,14 +52,19 @@ public interface Persister {
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
      * or converted into a reference to a persistent object identified by the objects business key. If a matching object
      * already exists, it will not be changed.
-     *
-     * @return the persistent version of the object.
+     * 
+     * @param  obj the object
+     * @return     the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
     Object persist( Object obj );
 
     /**
      * Special case for experiments.
+     * 
+     * @param  ee experiment
+     * @param  c  array design cache (see caller)
+     * @return    persisted experiment
      */
     @Secured({ "GROUP_USER" })
     ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
@@ -71,8 +77,9 @@ public interface Persister {
      * method has limited usefulness: when the provided object has new data but the associated objects are either new or
      * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
      * to persistOrUpdate on them).
-     *
-     * @return the persistent version of the object.
+     * 
+     * @param  obj the object
+     * @return     the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
     Object persistOrUpdate( Object obj );
@@ -80,7 +87,8 @@ public interface Persister {
     /**
      * Determine if a entity is transient (not persistent).
      *
-     * @return true if the object is not (as far as we can tell) already persisted.
+     * @param  entity the entity to test
+     * @return        true if the object is not (as far as we can tell) already persisted.
      */
     boolean isTransient( Object entity );
 

@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -80,9 +79,9 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
-                .withDescription( "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" )
-                .create( 'f' );
+        Option pathOption = Option.builder( "f" ).hasArg().argName( "Input File Path" )
+                .desc( "Optional path to the gene_info and gene2accession files" ).longOpt( "file" )
+                .build();
 
         this.addOption( pathOption );
 

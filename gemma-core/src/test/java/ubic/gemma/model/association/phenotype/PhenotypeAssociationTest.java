@@ -75,7 +75,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         if ( !PhenotypeAssociationTest.dosLoaded ) {
             // fails if you have DO loaded
             os.getDiseaseOntologyService().loadTermsInNameSpace(
-                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ), false );
 
             PhenotypeAssociationTest.dosLoaded = true;
         }

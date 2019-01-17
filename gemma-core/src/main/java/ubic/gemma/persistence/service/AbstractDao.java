@@ -112,11 +112,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( Long id ) {
+        if ( id == null ) throw new IllegalArgumentException( "Id cannot be null" );
         this.remove( this.load( id ) );
     }
 
     @Override
     public void remove( T entity ) {
+        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().delete( entity );
     }
 
@@ -131,18 +133,21 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     @Transactional
     public void update( T entity ) {
+        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().update( entity );
     }
 
     @Override
     @Transactional(readOnly = true)
     public T find( T entity ) {
+        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         return this.load( entity.getId() );
     }
 
     @Override
     @Transactional
     public T findOrCreate( T entity ) {
+        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
     }
@@ -150,9 +155,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Does a like-match case insensitive search on given property and its value.
      *
-     * @param propertyName the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return an entity whose property first like-matched the given value.
+     * @param  propertyName  the name of property to be matched.
+     * @param  propertyValue the value to look for.
+     * @return               an entity whose property first like-matched the given value.
      */
     @SuppressWarnings("unchecked")
     protected T findOneByStringProperty( String propertyName, String propertyValue ) {
@@ -166,9 +171,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Does a like-match case insensitive search on given property and its value.
      *
-     * @param propertyName the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return a list of entities whose properties like-matched the given value.
+     * @param  propertyName  the name of property to be matched.
+     * @param  propertyValue the value to look for.
+     * @return               a list of entities whose properties like-matched the given value.
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
     protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
@@ -181,9 +186,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Lists all entities whose given property matches the given value.
      *
-     * @param propertyName the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return a list of entities whose properties matched the given value.
+     * @param  propertyName  the name of property to be matched.
+     * @param  propertyValue the value to look for.
+     * @return               a list of entities whose properties matched the given value.
      */
     @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
@@ -208,9 +213,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Does a search on given property and its value.
      *
-     * @param propertyName the name of property to be matched.
-     * @param propertyValue the value to look for.
-     * @return an entity whose property first matched the given value.
+     * @param  propertyName  the name of property to be matched.
+     * @param  propertyValue the value to look for.
+     * @return               an entity whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );

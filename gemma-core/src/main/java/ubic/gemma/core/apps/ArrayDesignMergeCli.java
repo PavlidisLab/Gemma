@@ -114,7 +114,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesigns = new HashSet<>();
             for ( String string : names ) {
-                ArrayDesign o = this.locateArrayDesign( string, arrayDesignService );
+                ArrayDesign o = this.locateArrayDesign( string, getArrayDesignService() );
                 if ( o == null ) {
                     throw new IllegalArgumentException( "Array design " + string + " not found" );
                 }
@@ -123,12 +123,12 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             }
         }
 
-        if ( this.arrayDesignsToProcess.size() > 1 ) {
+        if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        arrayDesign = this.arrayDesignsToProcess.iterator().next();
+        arrayDesign = this.getArrayDesignsToProcess().iterator().next();
 
         arrayDesign = this.thaw( arrayDesign );
 

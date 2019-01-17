@@ -37,7 +37,7 @@ import java.util.TreeSet;
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
 public class EvidenceValueObject<E extends PhenotypeAssociation> extends IdentifiableValueObject<E>
-        implements Comparable<EvidenceValueObject>, Serializable {
+        implements Comparable<EvidenceValueObject<E>>, Serializable {
 
     private static final long serialVersionUID = -2483508971580975L;
 
@@ -146,7 +146,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     }
 
     @Override
-    public int compareTo( EvidenceValueObject evidenceValueObject ) {
+    public int compareTo( EvidenceValueObject<E> evidenceValueObject ) {
         int comparison = this.comparePropertiesTo( evidenceValueObject );
 
         if ( comparison == 0 ) {
@@ -165,7 +165,8 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
             return false;
         if ( this.getClass() != obj.getClass() )
             return false;
-        EvidenceValueObject other = ( EvidenceValueObject ) obj;
+        @SuppressWarnings("unchecked")
+        EvidenceValueObject<E> other = ( EvidenceValueObject<E> ) obj;
 
         if ( this.phenotypes.size() != other.phenotypes.size() ) {
             return false;
@@ -420,12 +421,13 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
             return PhenotypeMappingType.INFERRED_XREF;
         } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
             return PhenotypeMappingType.INFERRED_CURATED;
+        } else if (  phenotypeMapping.equalsIgnoreCase( "Direct" ) ) {
+            return PhenotypeMappingType.DIRECT;
         }
-
         return null;
     }
 
-    private int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
+    private int comparePropertiesTo( EvidenceValueObject<E> evidenceValueObject ) {
         if ( this == evidenceValueObject )
             return 0;
 
@@ -531,7 +533,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         return 0;
     }
 
-    private int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
+    private int compareEvidenceSource( EvidenceValueObject<E> evidenceValueObject ) {
 
         if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() != null ) {
 

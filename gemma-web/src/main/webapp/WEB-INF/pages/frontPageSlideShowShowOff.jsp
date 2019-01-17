@@ -20,7 +20,7 @@
 						<img style="position: absolute; top: 60px; left: 200px"	src="${pageContext.request.contextPath}/images/slideShow/mouseOutline65_simplified.png" />
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
-					<td class="slideTextTD">Over <b>6000</b> curated expression studies	</td>
+					<td class="slideTextTD">Over <b>8500</b> curated expression studies	</td>
 				</tr>
 			</table>
 		</div>

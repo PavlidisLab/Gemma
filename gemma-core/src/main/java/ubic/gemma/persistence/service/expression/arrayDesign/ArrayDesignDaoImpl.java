@@ -28,8 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,7 +51,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @see    ubic.gemma.model.expression.arrayDesign.ArrayDesign
+ * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
@@ -201,7 +203,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
-                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adId" )
+                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.alternativeTo where a.id=:adId" )
                 .setParameter( "adId", arrayDesign.getId() ).list();
 
         if ( res.size() == 0 ) {
@@ -222,7 +224,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                        + " left join fetch a.mergedInto where a.id in (:adIds)" )
+                        + " left join fetch a.mergedInto left join fetch a.alternativeTo where a.id in (:adIds)" )
                 .setParameterList( "adIds", EntityUtils.getIds( arrayDesigns ) ).list();
     }
 
@@ -498,7 +500,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        if ( ids == null ) {
+        if ( ids == null || ids.isEmpty() ) {
             return new ArrayList<>();
         }
 
@@ -506,7 +508,26 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS );
         Query queryObject = this.getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
 
-        return this.processADValueObjectQueryResults( eeCounts, queryObject, 0 );
+        Collection<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( eeCounts, queryObject, 0 );
+
+        populateBlacklisted( results );
+        return results;
+    }
+
+      private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
+
+        Map<String, ArrayDesignValueObject> shortNames = new HashMap<>();
+        for ( ArrayDesignValueObject vs : vos ) {
+            shortNames.put( vs.getShortName(), vs );
+        }
+
+        List<BlacklistedPlatform> r = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select b from BlacklistedPlatform b where b.shortName in :n" )
+                .setParameterList( "n", shortNames.keySet() ).list();
+        for ( BlacklistedPlatform b : r ) {
+            shortNames.get( b.getShortName() ).setBlackListed( true );
+        }
+
     }
 
     @Override
@@ -627,8 +648,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString =
+                "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -901,8 +923,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Loads a single value objects for the given array design.
      *
-     * @param  e the array design to be converted to a value object
-     * @return   a value object with properties of the given array design.
+     * @param e the array design to be converted to a value object
+     * @return a value object with properties of the given array design.
      */
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign e ) {
@@ -925,18 +947,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Collection<ArrayDesignValueObject> loadAllValueObjects() {
         Query queryObject = this.getLoadValueObjectsQueryString( null, null, false );
-        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject, 0 );
+        Collection<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject, 0 );
+        this.populateBlacklisted( results );
+        return results;
     }
 
     /**
      * Queries the database to retrieve all array designs, based on the given parameters, and then
      * converts them to value objects.
      *
-     * @param  offset  amount of ADs to skip.
-     * @param  limit   maximum amount of ADs to retrieve.
-     * @param  orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param  asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @return         list of value objects representing the ADs that matched the criteria.
+     * @param offset  amount of ADs to skip.
+     * @param limit   maximum amount of ADs to retrieve.
+     * @param orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
+     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @return list of value objects representing the ADs that matched the criteria.
      */
     @Override
     public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
@@ -959,8 +983,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Creates and orderBy parameter.
      *
-     * @param  orderBy the property to order by, if null, default ordering is used.
-     * @return         and order by parameter. Default ordering is id.
+     * @param orderBy the property to order by, if null, default ordering is used.
+     * @return and order by parameter. Default ordering is id.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1046,8 +1070,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
-    private Query getCountVosQueryString(List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc){
+    private Query getCountVosQueryString( List<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
         // Restrict to non-troubled EEs for non-administrators
         filters = getObjectFilters( filters );
 
@@ -1078,11 +1102,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "t.commonName, " //10
                 + "eNote, " //11
                 + "eAttn, " //12
-                + "eTrbl " //13
+                + "eTrbl, " //13
+                + "alt " //14
                 + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS
                 + ".curationDetails s join " + ObjectFilter.DAO_AD_ALIAS + ".primaryTaxon t left join "
                 + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl "
+                + " left join " + ObjectFilter.DAO_AD_ALIAS + ".alternativeTo alt";
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1133,7 +1159,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             } else {
                 vo.setExpressionExperimentCount( eeCounts.get( id ) );
             }
-
             vos.add( vo );
         }
 

@@ -58,9 +58,12 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
+import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -74,6 +77,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -168,6 +172,10 @@ public class SearchServiceImpl implements SearchService {
     private BioSequenceService bioSequenceService;
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private BlacklistedEntityDao blackListDao;
+
     @Autowired
     private CharacteristicService characteristicService;
     private Cache childTermCache;
@@ -583,12 +591,21 @@ public class SearchServiceImpl implements SearchService {
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
             results.add( new SearchResult( shortNameResult, 1.0 ) );
+            return results;
         } else {
             Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
-            if ( nameResult != null )
+            if ( nameResult != null && !nameResult.isEmpty() ) {
                 for ( ArrayDesign ad : nameResult ) {
                     results.add( new SearchResult( ad, 1.0 ) );
                 }
+                return results;
+            }
+        }
+
+        BlacklistedEntity b = blackListDao.findByAccession( searchString );
+        if ( b != null ) {
+            results.add( new SearchResult( b, 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
+            return results;
         }
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
@@ -1483,6 +1500,12 @@ public class SearchServiceImpl implements SearchService {
                 return results;
             }
 
+            BlacklistedEntity b = blackListDao.findByAccession( settings.getQuery() );
+            if ( b != null ) {
+                results.add( new SearchResult( b, 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
+                return results;
+            }
+
             watch.reset();
             watch.start();
         }
@@ -2032,6 +2055,8 @@ public class SearchServiceImpl implements SearchService {
         results.put( ExpressionExperimentSet.class, new ArrayList<SearchResult>() );
         results.put( Characteristic.class, new ArrayList<SearchResult>() );
         results.put( CharacteristicValueObject.class, new ArrayList<SearchResult>() );
+        results.put( BlacklistedExperiment.class, new ArrayList<SearchResult>() );
+        results.put( BlacklistedPlatform.class, new ArrayList<SearchResult>() );
 
         /*
          * Get the top N results for each class.
@@ -2292,6 +2317,8 @@ public class SearchServiceImpl implements SearchService {
                     for ( int i = 0; i < hits.getLength(); i++ ) {
                         try {
                             String frag = hits.highlighter( i ).fragment( name );
+                            if ( log.isDebugEnabled() )
+                                log.debug( "Highlighted fragment: " + frag + " for " + hits.hit( i ) );
                         } catch ( Exception e ) {
                             break; // skip this property entirely for all hits ...
                         }
@@ -2339,6 +2366,8 @@ public class SearchServiceImpl implements SearchService {
             return chars;
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             return experimentSetService.load( ids );
+        } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
+            return blackListDao.load( ids );
         } else {
             throw new UnsupportedOperationException( "Don't know how to retrieve objects for class=" + entityClass );
         }

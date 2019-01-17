@@ -34,8 +34,11 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
@@ -48,24 +51,11 @@ import java.util.zip.GZIPOutputStream;
  * @author Paul
  * @see    ArrayDesignAnnotationService
  */
-@SuppressWarnings("unused") // Possible external use
 @Component
 public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationService {
 
     private static final String COMMENT_CHARACTER = "#";
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
-
-    private final Transformer goTermExtractor = new Transformer() {
-        @Override
-        public Object transform( Object input ) {
-            return GeneOntologyServiceImpl.asRegularGoId( ( ( OntologyTerm ) input ) );
-        }
-    };
-
-    @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
-    @Autowired
-    private GeneOntologyService goService;
 
     public static File getFileName( String fileBaseName ) {
         String mungedFileName = ArrayDesignAnnotationServiceImpl.mungeFileName( fileBaseName );
@@ -210,30 +200,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         }
     }
 
-    /**
-     * @param  arrayDesign to fetch annotations for.
-     * @param  is          with the annotations
-     * @return             Map of composite sequence ids and transient (incomplete) genes. The genes only have the
-     *                     symbol filled in.
-     */
-    public static Map<Long, Collection<Gene>> readAnnotations( ArrayDesign arrayDesign, InputStream is ) {
-        Map<Long, Collection<Gene>> results = new HashMap<>();
-        Map<String, Long> probeNameToId = new HashMap<>();
-        ArrayDesignAnnotationServiceImpl.populateProbeNameToIdMap( arrayDesign, results, probeNameToId );
-        return ArrayDesignAnnotationServiceImpl.parseAnnotationFile( results, is, probeNameToId );
-    }
-
-    private static void populateProbeNameToIdMap( ArrayDesign arrayDesign, Map<Long, Collection<Gene>> results,
-            Map<String, Long> probeNameToId ) {
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            results.put( cs.getId(), new HashSet<Gene>() );
-            if ( probeNameToId.containsKey( cs.getName() ) ) {
-                ArrayDesignAnnotationServiceImpl.log.warn( "Duplicate probe name: " + cs.getName() );
-            }
-            probeNameToId.put( cs.getName(), cs.getId() );
-        }
-    }
-
     private static Map<Long, Collection<Gene>> parseAnnotationFile( Map<Long, Collection<Gene>> results, InputStream is,
             Map<String, Long> probeNameToId ) {
         try {
@@ -324,6 +290,125 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         }
     }
 
+    private static void populateProbeNameToIdMap( ArrayDesign arrayDesign, Map<Long, Collection<Gene>> results,
+            Map<String, Long> probeNameToId ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            results.put( cs.getId(), new HashSet<Gene>() );
+            if ( probeNameToId.containsKey( cs.getName() ) ) {
+                ArrayDesignAnnotationServiceImpl.log.warn( "Duplicate probe name: " + cs.getName() );
+            }
+            probeNameToId.put( cs.getName(), cs.getId() );
+        }
+    }
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
+    private Gene2GOAssociationService gene2GOAssociationService;
+
+    @Autowired
+    private GeneOntologyService goService;
+
+    private final Transformer goTermExtractor = new Transformer() {
+        @Override
+        public Object transform( Object input ) {
+            return GeneOntologyServiceImpl.asRegularGoId( ( ( OntologyTerm ) input ) );
+        }
+    };
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.core.analysis.service.ArrayDesignAnnotationService#create(ubic.gemma.model.expression.arrayDesign.
+     * ArrayDesign, java.lang.Boolean)
+     */
+    @Override
+    public void create( ArrayDesign inputAd, Boolean overWrite ) throws IOException {
+
+        if ( !goService.isReady() ) {
+            throw new IllegalStateException( "GO was not loaded" );
+        }
+
+        ArrayDesign ad = arrayDesignService.thaw( inputAd );
+
+        log.info( "== Creating annotation files for: " + ad );
+
+        String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
+        File sf = ArrayDesignAnnotationServiceImpl.getFileName( shortFileBaseName );
+        String bioFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
+        File bf = ArrayDesignAnnotationServiceImpl.getFileName( bioFileBaseName );
+        String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
+        File af = ArrayDesignAnnotationServiceImpl.getFileName( allParFileBaseName );
+
+        if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
+            log.info( "Files exist already, will not overwrite (use overWrite option to override)" );
+            return;
+        }
+
+        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+        log.info( "Starting getting probe specificity" );
+
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        log.info( "Done getting probe specificity" );
+
+        boolean hasAtLeastOneGene = false;
+        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
+            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+                continue;
+            }
+            hasAtLeastOneGene = true;
+            break;
+        }
+
+        if ( !hasAtLeastOneGene ) {
+            log.warn( "No genes: " + ad + ", skipping" );
+            return;
+        }
+
+        if ( overWrite || !sf.exists() ) {
+            this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity, overWrite );
+
+            /*
+             * Delete the data files for experiments that used this platform, since they have the old annotations in
+             * them (or no annotations)
+             */
+            Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( ad );
+            if ( !ees.isEmpty() ) log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
+                    + ", that may have outdated annotations" );
+            for ( ExpressionExperiment ee : ees ) {
+                this.expressionDataFileService.deleteAllFiles( ee );
+            }
+
+        } else {
+            log.info( sf + " exists, will not overwrite" );
+        }
+
+        if ( overWrite || !bf.exists() ) {
+            this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity, overWrite );
+        } else {
+            log.info( bf + " exists, will not overwrite" );
+        }
+
+        if ( overWrite || !af.exists() ) {
+            this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity, overWrite );
+        } else {
+            log.info( af + " exists, will not overwrite" );
+        }
+    }
+
     @Override
     public void deleteExistingFiles( ArrayDesign ad ) {
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
@@ -352,13 +437,19 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationService#generateAnnotationFile(java.io.Writer,
+     * java.util.Collection)
+     */
     @Override
-    public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
+    public int generateAnnotationFile( Writer writer, Collection<Gene> genes ) {
 
         Map<Gene, Collection<Characteristic>> goMappings = gene2GOAssociationService.findByGenes( genes );
 
         for ( Gene gene : genes ) {
-            Collection<OntologyTerm> ontologyTerms = this.getGoTerms( goMappings.get( gene ), type );
+            Collection<OntologyTerm> ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT );
 
             Integer ncbiId = gene.getNcbiGeneId();
             String ncbiIds = ncbiId == null ? "" : ncbiId.toString();
@@ -375,8 +466,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return genes.size();
     }
 
-    @Override
-    public int generateAnnotationFile( Writer writer,
+    private int generateAnnotationFile( Writer writer,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
             throws IOException {
 
@@ -457,11 +547,69 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         }
         writer.close();
+
         return compositeSequencesProcessed;
     }
 
-    @Override
-    public Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException {
+    private Map<Gene, Collection<Characteristic>> getGOMappings(
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) {
+        ArrayDesignAnnotationServiceImpl.log.info( "Fetching GO mappings" );
+        Collection<Gene> allGenes = new HashSet<>();
+        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
+
+            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+            for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
+
+                Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
+                allGenes.add( g );
+            }
+        }
+        Map<Gene, Collection<Characteristic>> goMappings = gene2GOAssociationService.findByGenes( allGenes );
+        ArrayDesignAnnotationServiceImpl.log.info( "Got GO mappings for " + goMappings.size() + " genes" );
+        return goMappings;
+    }
+
+    /**
+     * @param  ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
+     *            only.
+     * @return    the goTerms for a given gene, as configured
+     */
+    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
+
+        Collection<OntologyTerm> results = new HashSet<>();
+        if ( ontologyTerms == null || ontologyTerms.size() == 0 )
+            return results;
+
+        for ( Characteristic vc : ontologyTerms ) {
+            results.add( goService.getTermForId( vc.getValue() ) );
+        }
+
+        if ( ty.equals( OutputType.SHORT ) )
+            return results;
+
+        if ( ty.equals( OutputType.LONG ) ) {
+            Collection<OntologyTerm> oes = goService.getAllParents( results );
+            results.addAll( oes );
+        } else if ( ty.equals( OutputType.BIOPROCESS ) ) {
+            Collection<OntologyTerm> toRemove = new HashSet<>();
+
+            for ( OntologyTerm ont : results ) {
+                if ( ( ont == null ) ) {
+                    continue; // / shouldn't happen!
+                }
+                if ( !goService.isBiologicalProcess( ont ) ) {
+                    toRemove.add( ont );
+                }
+            }
+
+            for ( OntologyTerm toRemoveOnto : toRemove ) {
+                results.remove( toRemoveOnto );
+            }
+        }
+        return results;
+    }
+
+    private Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException {
 
         Writer writer;
         if ( StringUtils.isBlank( fileBaseName ) ) {
@@ -501,62 +649,38 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return writer;
     }
 
-    private Map<Gene, Collection<Characteristic>> getGOMappings(
-            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) {
-        ArrayDesignAnnotationServiceImpl.log.info( "Fetching GO mappings" );
-        Collection<Gene> allGenes = new HashSet<>();
-        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
-
-            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
-            for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
-
-                Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
-                allGenes.add( g );
-            }
-        }
-        Map<Gene, Collection<Characteristic>> goMappings = gene2GOAssociationService.findByGenes( allGenes );
-        ArrayDesignAnnotationServiceImpl.log.info( "Got GO mappings for " + goMappings.size() + " genes" );
-        return goMappings;
-    }
-
     /**
-     * @param  ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
-     *            only.
-     * @return    the goTerms for a given gene, as configured
+     * 
+     * @param  arrayDesign
+     * @param  fileBaseName
+     * @param  outputType
+     * @param  genesWithSpecificity
+     * @param  overWrite
+     * @throws IOException
      */
-    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
+    private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, Boolean overWrite ) throws IOException {
 
-        Collection<OntologyTerm> results = new HashSet<>();
-        if ( ontologyTerms == null || ontologyTerms.size() == 0 )
-            return results;
-
-        for ( Characteristic vc : ontologyTerms ) {
-            results.add( GeneOntologyServiceImpl.getTermForId( vc.getValue() ) );
+        if ( genesWithSpecificity.size() == 0 ) {
+            log.info( "No sequence information for " + arrayDesign + ", skipping" );
+            return;
         }
 
-        if ( ty.equals( OutputType.SHORT ) )
-            return results;
+        try (Writer writer = initOutputFile( arrayDesign, fileBaseName, overWrite )) {
 
-        if ( ty.equals( OutputType.LONG ) ) {
-            Collection<OntologyTerm> oes = goService.getAllParents( results );
-            results.addAll( oes );
-        } else if ( ty.equals( OutputType.BIOPROCESS ) ) {
-            Collection<OntologyTerm> toRemove = new HashSet<>();
-
-            for ( OntologyTerm ont : results ) {
-                if ( ( ont == null ) ) {
-                    continue; // / shouldn't happen!
-                }
-                if ( !goService.isBiologicalProcess( ont ) ) {
-                    toRemove.add( ont );
-                }
+            // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
+            if ( writer == null ) {
+                log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
+                return;
             }
 
-            for ( OntologyTerm toRemoveOnto : toRemove ) {
-                results.remove( toRemoveOnto );
-            }
+            log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
+
+            generateAnnotationFile( writer, genesWithSpecificity, outputType );
+
+            log.info( "Finished processing platform: " + arrayDesign.getName() );
+
         }
-        return results;
     }
 
     /**
@@ -588,10 +712,6 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         writer.write( "\t" + geneIds + "\t" + ncbiIds + "\n" );
 
-    }
-
-    public enum OutputType {
-        BIOPROCESS, LONG, SHORT
     }
 
 }

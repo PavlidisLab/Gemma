@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 /**
  * 
  * work in progress
+ * 
  * @author paul
  */
 public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipulatingCli {
@@ -63,12 +64,10 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         Exception e = super.processCommandLine( args );
         if ( e != null )
             return e;
-        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+            arrayDesign = getArrayDesignService().thawLite( arrayDesign );
 
             List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
-
-            Collection<AuditEvent> toRemove = new HashSet<>();
 
             Map<Object, List<AuditEvent>> eventsByType = new HashMap<>();
 
@@ -103,10 +102,9 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
                 for ( AuditEvent ae : evs ) {
                     System.err.println( ae.getDate() + " " + ae.getNote() );
                 }
-                
+
                 // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent
-                // possibly delete all ArrayDesignAnnotationFileEvent
-                
+ 
                 // keep only last AlignmentBasedGeneMappingEvent, ArrayDesignRepeatAnalysisEvent, ArrayDesignGeneMappingEvent, ArrayDesignSequenceAnalysisEvent 
             }
 

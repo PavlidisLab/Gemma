@@ -45,7 +45,8 @@
         <set name="members" lazy="true" fetch="select" cascade="all">
             <cache usage="read-write"/>
             <key foreign-key="GENE_SET_MEMBER_GENE_SET_FKC">
-                <column name="GENE_SET_FK" sql-type="BIGINT"/>
+            <!--  this should be non-nullable, leaving as is in case -->
+                <column name="GENE_SET_FK" sql-type="BIGINT" />
             </key>
             <one-to-many class="ubic.gemma.model.genome.gene.GeneSetMember"/>
         </set>

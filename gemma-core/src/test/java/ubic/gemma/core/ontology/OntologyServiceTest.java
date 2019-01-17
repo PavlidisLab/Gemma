@@ -30,9 +30,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
- * one.
- *
  * @author paul
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
@@ -44,7 +41,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     public void test() {
 
         os.getDiseaseOntologyService()
-                .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+                .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ), false );
 
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
 

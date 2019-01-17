@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
@@ -70,9 +69,34 @@ import java.util.Set;
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
     ExpressionExperimentService eeService;
     Set<BioAssaySet> expressionExperiments = new HashSet<>();
+
+    public Set<BioAssaySet> getExpressionExperiments() {
+        return expressionExperiments;
+    }
+
+    protected ExpressionExperimentService getEeService() {
+        return eeService;
+    }
+
+    protected Taxon getTaxon() {
+        return taxon;
+    }
+
+    protected void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
+    }
+
+    protected TaxonService getTaxonService() {
+        return taxonService;
+    }
+
+    protected GeneService getGeneService() {
+        return geneService;
+    }
+
     boolean force = false;
-    Taxon taxon = null;
-    TaxonService taxonService;
+    private Taxon taxon = null;
+    private TaxonService taxonService;
     private GeneService geneService;
     private SearchService searchService;
 
@@ -84,36 +108,36 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     @SuppressWarnings("AccessStaticViaInstance") // Cleaner like this
     @Override
     protected void buildOptions() {
-        Option expOption = OptionBuilder.hasArg().withArgName( "shortname" ).withDescription(
+        Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
                 "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                         + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
-                .withLongOpt( "experiment" ).create( 'e' );
+                .longOpt( "experiment" ).build();
 
         this.addOption( expOption );
 
-        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "file" ).withDescription(
+        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
                 "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
-                .withLongOpt( "eeListfile" ).create( 'f' );
+                .longOpt( "eeListfile" ).build();
         this.addOption( eeFileListOption );
 
-        Option eeSetOption = OptionBuilder.hasArg().withArgName( "eeSetName" )
-                .withDescription( "Name of expression experiment set to use" ).create( "eeset" );
+        Option eeSetOption = Option.builder( "eeset" ).hasArg().argName( "eeSetName" )
+                .desc( "Name of expression experiment set to use" ).build();
 
         this.addOption( eeSetOption );
 
-        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
-                .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" )
-                .create( 't' );
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon name" )
+                .desc( "Taxon of the expression experiments and genes" ).longOpt( "taxon" )
+                .build();
         this.addOption( taxonOption );
 
-        Option excludeEeOption = OptionBuilder.hasArg().withArgName( "file" )
-                .withDescription( "File containing list of expression experiments to exclude" )
-                .withLongOpt( "excludeEEFile" ).create( 'x' );
+        Option excludeEeOption = Option.builder( "x" ).hasArg().argName( "file" )
+                .desc( "File containing list of expression experiments to exclude" )
+                .longOpt( "excludeEEFile" ).build();
         this.addOption( excludeEeOption );
 
-        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuery" )
-                .withDescription( "Use a query string for defining which expression experiments to use" )
-                .withLongOpt( "expressionQuery" ).create( 'q' );
+        Option eeSearchOption = Option.builder( "q" ).hasArg().argName( "expressionQuery" )
+                .desc( "Use a query string for defining which expression experiments to use" )
+                .longOpt( "expressionQuery" ).build();
         this.addOption( eeSearchOption );
 
     }
@@ -208,8 +232,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     void addForceOption() {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         @SuppressWarnings("static-access")
-        Option forceOption = OptionBuilder.withArgName( "Force processing" )
-                .withLongOpt( "force" ).withDescription( defaultExplanation ).create( "force" );
+        Option forceOption = Option.builder( "force" ).argName( "Force processing" )
+                .longOpt( "force" ).desc( defaultExplanation ).build();
         this.addOption( forceOption );
     }
 

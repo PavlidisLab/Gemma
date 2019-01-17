@@ -803,7 +803,9 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
       } else if ( clazz === "BibliographicReferenceValueObject" ) {
          return "Annotated Paper";
       } else if ( clazz === "CharacteristicValueObject" ) {
-         return "Phenotype";
+          return "Phenotype";
+      } else if ( clazz === "BlacklistedValueObject") {
+         return "Blacklisted accession";
       } else {
          return clazz;
       }
@@ -860,8 +862,10 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
          return "<a href=\"" + Gemma.LinkRoots.geneSetPage + data.id + "\">" + data.name
             + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.size + ")";
       } else if ( clazz === "CharacteristicValueObject" ) {
-         return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
-            + "</a><span style='color:grey'> " + data.valueUri + '</span>';
+          return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
+              + "</a><span style='color:grey'> " + data.valueUri + '</span>';
+      } else if ( clazz === 'BlacklistedValueObject') {
+         return data.shortName  + '&nbsp;Blacklisted:&nbsp;' + data.name + '<br/>Reason: ' + data.reason;
       } else {
          return data[0];
       }

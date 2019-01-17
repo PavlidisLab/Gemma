@@ -79,7 +79,7 @@ print STDERR "Keeping $opt_n probes\n";
 my $inPlatform = 0;
 my $printed    = 0;
 while (<IN>) {
-	if ( ++$i > 0 && $i % 100000 == 0 ) {
+	if ( ++$i > 0 && $i % 200000 == 0 ) {
 		print STDERR "$i lines processed\n";
 	}
 	if ( $_ =~ /^!Platform_sample_id/ ) {
@@ -106,7 +106,7 @@ while (<IN>) {
 		if ($inPlatform) {
 			if ( $n < $opt_n && !$keepers{$probe} ) {
 				$keepers{$probe}++;
-				print STDERR "Keeping $probe, number $n, on line $i, printed $printed lines so far\n";
+			#	print STDERR "Keeping $probe, number $n, on line $i, printed $printed lines so far\n";
 				$n++;
 			} elsif ( $keepers{$probe} ) {
 				print STDERR "Seen $probe already \n";

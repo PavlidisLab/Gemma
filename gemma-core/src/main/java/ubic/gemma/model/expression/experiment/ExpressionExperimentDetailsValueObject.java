@@ -35,27 +35,12 @@ import java.util.HashSet;
 @SuppressWarnings("unused") // ValueObject accessed from JS
 public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
+    private static final long serialVersionUID = -1219449523930648392L;
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
     private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
-    private static final long serialVersionUID = -1219449523930648392L;
 
-    private boolean reprocessedFromRawData;
-    private boolean hasBatchInformation;
-    private String secondaryAccession;
-    private String secondaryExternalDatabase;
-    private String secondaryExternalUri;
-    private String QChtml;
-    private String lastArrayDesignUpdateDate;
-    private Boolean hasMultiplePreferredQuantitationTypes = false;
-    private Boolean hasMultipleTechnologyTypes = false;
-    private Boolean hasCoexpressionAnalysis = false;
-    private Boolean hasDifferentialExpressionAnalysis = false;
-    private Boolean hasBothIntensities = false;
-    private Boolean hasEitherIntensity = false;
-    private CitationValueObject primaryCitation;
     private Collection<ArrayDesignValueObject> arrayDesigns;
-    private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
-
+    private String batchFetchEventType;
     // Pulled from base EEVO
     private Date dateArrayDesignLastUpdated;
     private Date dateBatchFetch;
@@ -65,27 +50,41 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Date dateMissingValueAnalysis;
     private Date datePcaAnalysis;
     private Date dateProcessedDataVectorComputation;
-    private Double minPvalue;
+    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
+    private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
+    private boolean hasBatchInformation;
+    private Boolean hasBothIntensities = false;
+    private Boolean hasCoexpressionAnalysis = false;
+    private Boolean hasDifferentialExpressionAnalysis = false;
+
+    private Boolean hasEitherIntensity = false;
+    private Boolean hasMultiplePreferredQuantitationTypes = false;
+    private Boolean hasMultipleTechnologyTypes = false;
+    private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
+    private Double minPvalue;
     private String missingValueAnalysisEventType;
-    private String pcaAnalysisEventType;
-    private String batchFetchEventType;
-    private String processedDataVectorComputationEventType;
-    private Integer pubmedId;
     private Integer numAnnotations;
     private Integer numPopulatedFactors;
-    private Integer coexpressionLinkCount = null;
+    // if it was split.
+    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    private String pcaAnalysisEventType;
+    private CitationValueObject primaryCitation;
+    private String processedDataVectorComputationEventType;
+    private Integer pubmedId;
+    private String QChtml;
+    private boolean reprocessedFromRawData;
+    //   private Integer coexpressionLinkCount = null;
     private Collection<AuditEventValueObject> sampleRemovedFlags;
-    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
+    private String secondaryAccession;
+    private String secondaryExternalDatabase;
+
+    private String secondaryExternalUri;
 
     /**
      * Required when using the class as a spring bean.
      */
     public ExpressionExperimentDetailsValueObject() {
-    }
-
-    public ExpressionExperimentDetailsValueObject( Object[] row ) {
-        super( row, null );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
@@ -95,12 +94,16 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
         super( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
                 vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
-                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), 
+                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(),
                 vo.getExperimentalDesign(), vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(),
                 vo.getBioMaterialCount(), vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(),
                 vo.getIsPublic(), vo.getIsShared(), vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(),
                 vo.getNeedsAttention(), vo.getLastNeedsAttentionEvent(), vo.getCurationNote(),
                 vo.getLastNoteUpdateEvent(), vo.getGeeq() );
+    }
+
+    public ExpressionExperimentDetailsValueObject( Object[] row ) {
+        super( row, null );
     }
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
@@ -113,21 +116,29 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         this.sampleRemovedFlags = converted;
     }
 
+    /**
+     * @return true if this EE is troubled, disregards any platform trouble that might be present.
+     */
+    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
+    public Boolean getActuallyTroubled() {
+        return super.getTroubled();
+    }
+
+    public Collection<ArrayDesignValueObject> getArrayDesigns() {
+        return arrayDesigns;
+    }
+
     public String getBatchFetchEventType() {
         return batchFetchEventType;
     }
 
-    public void setBatchFetchEventType( String batchFetchEventType ) {
-        this.batchFetchEventType = batchFetchEventType;
-    }
-
-    public Integer getCoexpressionLinkCount() {
-        return this.coexpressionLinkCount;
-    }
-
-    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-        this.coexpressionLinkCount = coexpressionLinkCount;
-    }
+    //    public Integer getCoexpressionLinkCount() {
+    //        return this.coexpressionLinkCount;
+    //    }
+    //
+    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+    //        this.coexpressionLinkCount = coexpressionLinkCount;
+    //    }
 
     /**
      * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
@@ -140,16 +151,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.dateArrayDesignLastUpdated;
     }
 
-    public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
-        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
-    }
-
     public Date getDateBatchFetch() {
         return dateBatchFetch;
-    }
-
-    public void setDateBatchFetch( Date dateBatchFetch ) {
-        this.dateBatchFetch = dateBatchFetch;
     }
 
     /**
@@ -159,81 +162,83 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.dateCached;
     }
 
-    public void setDateCached( Date dateCached ) {
-        this.dateCached = dateCached;
-    }
-
     public Date getDateDifferentialAnalysis() {
         return this.dateDifferentialAnalysis;
-    }
-
-    public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
-        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
     }
 
     public Date getDateLinkAnalysis() {
         return this.dateLinkAnalysis;
     }
 
-    public void setDateLinkAnalysis( Date dateLinkAnalysis ) {
-        this.dateLinkAnalysis = dateLinkAnalysis;
-    }
-
     public Date getDateMissingValueAnalysis() {
         return this.dateMissingValueAnalysis;
-    }
-
-    public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
-        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
     }
 
     public Date getDatePcaAnalysis() {
         return datePcaAnalysis;
     }
 
-    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
-        this.datePcaAnalysis = datePcaAnalysis;
-    }
-
     public Date getDateProcessedDataVectorComputation() {
         return this.dateProcessedDataVectorComputation;
     }
 
-    public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {
-        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
+    @Override
+    public String getDescription() {
+        return this.description;
     }
 
     public Collection<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
         return differentialExpressionAnalyses;
     }
 
-    public void setDifferentialExpressionAnalyses(
-            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
-        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
+    /**
+     * @return the expressionExperimentSets
+     */
+    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
+        return expressionExperimentSets;
+    }
+
+    public Boolean getHasBothIntensities() {
+        return hasBothIntensities;
+    }
+
+    public Boolean getHasCoexpressionAnalysis() {
+        return hasCoexpressionAnalysis;
+    }
+
+    public Boolean getHasDifferentialExpressionAnalysis() {
+        return hasDifferentialExpressionAnalysis;
+    }
+
+    /**
+     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
+     */
+    public Boolean getHasEitherIntensity() {
+        return hasEitherIntensity;
+    }
+
+    public Boolean getHasMultiplePreferredQuantitationTypes() {
+        return hasMultiplePreferredQuantitationTypes;
+    }
+
+    public Boolean getHasMultipleTechnologyTypes() {
+        return hasMultipleTechnologyTypes;
+    }
+
+    public String getLastArrayDesignUpdateDate() {
+        return lastArrayDesignUpdateDate;
     }
 
     public String getLinkAnalysisEventType() {
         return this.linkAnalysisEventType;
     }
 
-    public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
-        this.linkAnalysisEventType = linkAnalysisEventType;
-    }
-
     public Double getMinPvalue() {
         return this.minPvalue;
     }
 
-    public void setMinPvalue( Double minPvalue ) {
-        this.minPvalue = minPvalue;
-    }
-
     public String getMissingValueAnalysisEventType() {
         return this.missingValueAnalysisEventType;
-    }
-
-    public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {
-        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
     }
 
     /**
@@ -241,10 +246,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     public Integer getNumAnnotations() {
         return this.numAnnotations;
-    }
-
-    public void setNumAnnotations( Integer numAnnotations ) {
-        this.numAnnotations = numAnnotations;
     }
 
     /**
@@ -255,32 +256,52 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.numPopulatedFactors;
     }
 
-    public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
-        this.numPopulatedFactors = numPopulatedFactors;
+    /**
+     * @return IDs of experiments that are related to this one via the splitting of a source experiment.
+     */
+    public Collection<ExpressionExperimentValueObject> getOtherParts() {
+        return otherParts;
     }
 
     public String getPcaAnalysisEventType() {
         return pcaAnalysisEventType;
     }
 
-    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
-        this.pcaAnalysisEventType = pcaAnalysisEventType;
+    /**
+     * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
+     *         troubled.
+     */
+    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
+    public Boolean getPlatformTroubled() {
+        if ( this.arrayDesigns == null ) {
+            return null; // Just because dwr accesses this even when arrayDesigns is not set.
+        }
+        for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+            if ( ad.getTroubled() ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public CitationValueObject getPrimaryCitation() {
+        return primaryCitation;
     }
 
     public String getProcessedDataVectorComputationEventType() {
         return this.processedDataVectorComputationEventType;
     }
 
-    public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
-        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
-    }
-
     public Integer getPubmedId() {
         return this.pubmedId;
     }
 
-    public void setPubmedId( Integer pubmedId ) {
-        this.pubmedId = pubmedId;
+    public String getQChtml() {
+        return QChtml;
+    }
+
+    public boolean getReprocessedFromRawData() {
+        return reprocessedFromRawData;
     }
 
     /**
@@ -292,96 +313,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.sampleRemovedFlags;
     }
 
-    public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
-
-        this.sampleRemovedFlags = sampleRemovedFlags;
-    }
-
-    public Boolean getHasBothIntensities() {
-        return hasBothIntensities;
-    }
-
-    public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
-    }
-
-    /**
-     * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
-     */
-    public Boolean getHasEitherIntensity() {
-        return hasEitherIntensity;
-    }
-
-    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
-        this.hasEitherIntensity = hasEitherIntensity;
-    }
-
-    public Boolean getHasCoexpressionAnalysis() {
-        return hasCoexpressionAnalysis;
-    }
-
-    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
-        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
-    }
-
-    public Boolean getHasDifferentialExpressionAnalysis() {
-        return hasDifferentialExpressionAnalysis;
-    }
-
-    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
-        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
-    }
-
-    public boolean getReprocessedFromRawData() {
-        return reprocessedFromRawData;
-    }
-
-    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
-        this.reprocessedFromRawData = reprocessedFromRawData;
-    }
-
-    public Boolean getHasMultipleTechnologyTypes() {
-        return hasMultipleTechnologyTypes;
-    }
-
-    public void setHasMultipleTechnologyTypes( Boolean hasMultipleTechnologyTypes ) {
-        this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
-    }
-
-    public Boolean getHasMultiplePreferredQuantitationTypes() {
-        return hasMultiplePreferredQuantitationTypes;
-    }
-
-    public void setHasMultiplePreferredQuantitationTypes( Boolean hasMultiplePreferredQuantitationTypes ) {
-        this.hasMultiplePreferredQuantitationTypes = hasMultiplePreferredQuantitationTypes;
-    }
-
-    public Collection<ArrayDesignValueObject> getArrayDesigns() {
-        return arrayDesigns;
-    }
-
-    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
-        this.arrayDesigns = arrayDesigns;
-    }
-
-    @Override
-    public String getDescription() {
-        return this.description;
-    }
-
-    @Override
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public CitationValueObject getPrimaryCitation() {
-        return primaryCitation;
-    }
-
-    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
-        this.primaryCitation = primaryCitation;
-    }
-
     /**
      * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
      *         this might
@@ -391,62 +322,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.secondaryAccession;
     }
 
-    public void setSecondaryAccession( String secondaryAccession ) {
-        this.secondaryAccession = secondaryAccession;
-    }
-
     public String getSecondaryExternalDatabase() {
         return this.secondaryExternalDatabase;
     }
 
-    public void setSecondaryExternalDatabase( String secondaryExternalDatabase ) {
-        this.secondaryExternalDatabase = secondaryExternalDatabase;
-    }
-
     public String getSecondaryExternalUri() {
         return this.secondaryExternalUri;
-    }
-
-    public void setSecondaryExternalUri( String secondaryExternalUri ) {
-        this.secondaryExternalUri = secondaryExternalUri;
-    }
-
-    public String getQChtml() {
-        return QChtml;
-    }
-
-    public void setQChtml( String qChtml ) {
-        QChtml = qChtml;
-    }
-
-    public boolean isHasBatchInformation() {
-        return hasBatchInformation;
-    }
-
-    public void setHasBatchInformation( boolean hasBatchInformation ) {
-        this.hasBatchInformation = hasBatchInformation;
-    }
-
-    public String getLastArrayDesignUpdateDate() {
-        return lastArrayDesignUpdateDate;
-    }
-
-    public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
-        this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
-    }
-
-    /**
-     * @return the expressionExperimentSets
-     */
-    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
-        return expressionExperimentSets;
-    }
-
-    /**
-     * @param expressionExperimentSets the expressionExperimentSets to set
-     */
-    public void setExpressionExperimentSets( Collection<ExpressionExperimentSetValueObject> expressionExperimentSets ) {
-        this.expressionExperimentSets = expressionExperimentSets;
     }
 
     /**
@@ -514,28 +395,157 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return htmlEscape ? StringEscapeUtils.escapeHtml4( finalTroubleDetails ) : finalTroubleDetails;
     }
 
-    /**
-     * @return true if this EE is troubled, disregards any platform trouble that might be present.
-     */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
-    public Boolean getActuallyTroubled() {
-        return super.getTroubled();
+    public boolean isHasBatchInformation() {
+        return hasBatchInformation;
+    }
+
+    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
+        this.arrayDesigns = arrayDesigns;
+    }
+
+    public void setBatchFetchEventType( String batchFetchEventType ) {
+        this.batchFetchEventType = batchFetchEventType;
+    }
+
+    public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
+        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
+    }
+
+    public void setDateBatchFetch( Date dateBatchFetch ) {
+        this.dateBatchFetch = dateBatchFetch;
+    }
+
+    public void setDateCached( Date dateCached ) {
+        this.dateCached = dateCached;
+    }
+
+    public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
+        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
+    }
+
+    public void setDateLinkAnalysis( Date dateLinkAnalysis ) {
+        this.dateLinkAnalysis = dateLinkAnalysis;
+    }
+
+    public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
+        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
+    }
+
+    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
+        this.datePcaAnalysis = datePcaAnalysis;
+    }
+
+    public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {
+        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
+    }
+
+    @Override
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setDifferentialExpressionAnalyses(
+            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
+        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
     }
 
     /**
-     * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
-     *         troubled.
+     * @param expressionExperimentSets the expressionExperimentSets to set
      */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
-    public Boolean getPlatformTroubled() {
-        if ( this.arrayDesigns == null ) {
-            return null; // Just because dwr accesses this even when arrayDesigns is not set.
-        }
-        for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
-            if ( ad.getTroubled() ) {
-                return true;
-            }
-        }
-        return false;
+    public void setExpressionExperimentSets( Collection<ExpressionExperimentSetValueObject> expressionExperimentSets ) {
+        this.expressionExperimentSets = expressionExperimentSets;
+    }
+
+    public void setHasBatchInformation( boolean hasBatchInformation ) {
+        this.hasBatchInformation = hasBatchInformation;
+    }
+
+    public void setHasBothIntensities( boolean hasBothIntensities ) {
+        this.hasBothIntensities = hasBothIntensities;
+    }
+
+    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
+        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
+    }
+
+    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
+        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
+    }
+
+    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
+        this.hasEitherIntensity = hasEitherIntensity;
+    }
+
+    public void setHasMultiplePreferredQuantitationTypes( Boolean hasMultiplePreferredQuantitationTypes ) {
+        this.hasMultiplePreferredQuantitationTypes = hasMultiplePreferredQuantitationTypes;
+    }
+
+    public void setHasMultipleTechnologyTypes( Boolean hasMultipleTechnologyTypes ) {
+        this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
+    }
+
+    public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
+        this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
+    }
+
+    public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
+        this.linkAnalysisEventType = linkAnalysisEventType;
+    }
+
+    public void setMinPvalue( Double minPvalue ) {
+        this.minPvalue = minPvalue;
+    }
+
+    public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {
+        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
+    }
+
+    public void setNumAnnotations( Integer numAnnotations ) {
+        this.numAnnotations = numAnnotations;
+    }
+
+    public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
+        this.numPopulatedFactors = numPopulatedFactors;
+    }
+
+    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+    }
+
+    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
+        this.primaryCitation = primaryCitation;
+    }
+
+    public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
+        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
+    }
+
+    public void setPubmedId( Integer pubmedId ) {
+        this.pubmedId = pubmedId;
+    }
+
+    public void setQChtml( String qChtml ) {
+        QChtml = qChtml;
+    }
+
+    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
+        this.reprocessedFromRawData = reprocessedFromRawData;
+    }
+
+    public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
+
+        this.sampleRemovedFlags = sampleRemovedFlags;
+    }
+
+    public void setSecondaryAccession( String secondaryAccession ) {
+        this.secondaryAccession = secondaryAccession;
+    }
+
+    public void setSecondaryExternalDatabase( String secondaryExternalDatabase ) {
+        this.secondaryExternalDatabase = secondaryExternalDatabase;
+    }
+
+    public void setSecondaryExternalUri( String secondaryExternalUri ) {
+        this.secondaryExternalUri = secondaryExternalUri;
     }
 }

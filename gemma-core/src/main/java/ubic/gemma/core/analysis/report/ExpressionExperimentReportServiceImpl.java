@@ -299,7 +299,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
-                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+                // eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() ); // not used
+                eeVo.setHasCoexpressionAnalysis( cacheVo.getHasCoexpressionAnalysis() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
                 eeVo.setLastUpdated( cacheVo.getLastUpdated() );
@@ -343,7 +344,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
-        HashMap<Long, Exception> failed = new HashMap<>();
+        Map<Long, Exception> failed = new HashMap<>();
 
         Calendar calendar = Calendar.getInstance();
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day

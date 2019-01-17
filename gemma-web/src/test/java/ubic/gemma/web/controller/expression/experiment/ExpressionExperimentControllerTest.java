@@ -19,18 +19,18 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.web.util.BaseSpringWebTest;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 /**
  * @author ptan
@@ -40,17 +40,9 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
     @Autowired
     private ExpressionExperimentController eeController;
 
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
     public void testLoadStatusSummariesLimit() {
-        ArrayList<Long> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         int limit;
 
         // Default ordering is by date last updated

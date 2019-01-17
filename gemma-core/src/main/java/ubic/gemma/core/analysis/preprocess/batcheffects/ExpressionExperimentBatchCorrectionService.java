@@ -15,6 +15,7 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -41,5 +42,13 @@ public interface ExpressionExperimentBatchCorrectionService {
     ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
 
     ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
+
+    /**
+     * For convenience of some testing classes
+     *
+     * @param ee the experiment to get the batch factor for
+     * @return the batch factor of the experiment, or null, if experiment has no batch factor
+     */
+    ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 
 }

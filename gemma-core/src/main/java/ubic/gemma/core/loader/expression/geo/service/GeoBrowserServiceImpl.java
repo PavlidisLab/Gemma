@@ -94,6 +94,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          */
         String details = EutilFetch.fetch( "gds", accession, 25 );
 
+        if ( details == null ) {
+            throw new IOException( "No results from GEO" );
+        }
+
         this.initLocalRecord( accession );
 
         /*
@@ -142,8 +146,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     /**
      * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
      *
-     * @param details XML from eSummary
-     * @return HTML-formatted
+     * @param  details XML from eSummary
+     * @return         HTML-formatted
      */
     String formatDetails( String details ) throws IOException {
 
@@ -193,8 +197,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec:
-        for ( GeoRecord record : records ) {
+        rec: for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
                 toRemove.add( record );
@@ -279,6 +282,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
+    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {

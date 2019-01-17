@@ -38,7 +38,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -70,25 +69,12 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class ExpressionDataFileServiceImpl implements ExpressionDataFileService {
 
-    private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
     private static final String DECIMAL_FORMAT = "%.4g";
-    private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
-    private static final String MSG_FILE_OUTDATED = "File (%s) outdated, regenerating";
+    private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
+    private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
     private static final String MSG_FILE_NOT_EXISTS = "File (%s) does not exist or can not be accessed ";
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private CoexpressionService gene2geneCoexpressionService = null;
+    private static final String MSG_FILE_OUTDATED = "File (%s) outdated, regenerating";
 
     private static ExpressionExperiment experimentForBioAssaySet( BioAssaySet bas ) {
         ExpressionExperiment ee;
@@ -99,6 +85,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
         return ee;
     }
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private CoexpressionService gene2geneCoexpressionService = null;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -223,37 +223,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) {
+        String filename = this.getDiffExArchiveFileName( analysis );
+        this.deleteAndLog( this.getOutputFile( filename ) );
+    }
+
+    @Override
     public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) {
         DifferentialExpressionAnalysis analysis = this.differentialExpressionAnalysisService.load( analysisId );
-
-        String filename = this.getDiffExArchiveFileName( analysis );
-        File f = this.getOutputFile( filename );
-
-        // Force create if file is older than one year
-        if ( !forceCreate && f.canRead() ) {
-            Date d = new Date( f.lastModified() );
-            Calendar calendar = Calendar.getInstance();
-            calendar.add( Calendar.YEAR, -1 );
-            forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
-        }
-
-        // If not force create and the file exists (can be read from), return the existing file.
-        if ( !forceCreate && f.canRead() ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
-        }
-
-        // (Re-)create the file
-        analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
-        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
-
-        try {
-            this.writeDiffExArchiveFile( experimentAnalyzed, analysis, null );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-        return f;
+        return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
     }
 
     @Override
@@ -319,6 +297,52 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis,
+            DifferentialExpressionAnalysisConfig config ) throws IOException {
+        Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
+                .getArrayDesignsUsed( experimentAnalyzed );
+        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
+        String filename = this.getDiffExArchiveFileName( analysis );
+        File f = this.getOutputFile( filename );
+
+        ExpressionDataFileServiceImpl.log
+                .info( "Creating differential expression analysis archive file: " + f.getName() );
+        try (ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) )) {
+
+            // top-level analysis results - ANOVA-style
+            zipOut.putNextEntry( new ZipEntry( "analysis.results.txt" ) );
+            String analysisData = this.convertDiffExpressionAnalysisData( analysis, geneAnnotations, config );
+            zipOut.write( analysisData.getBytes() );
+            zipOut.closeEntry();
+
+            if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
+                differentialExpressionAnalysisService.thaw( analysis );
+
+            // Add a file for each result set with contrasts information.
+            int i = 0;
+            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+                if ( resultSet.getExperimentalFactors().size() > 1 ) {
+                    // Skip interactions.
+                    ExpressionDataFileServiceImpl.log.info( "Result file for interaction is omitted" ); // Why?
+                    continue;
+                }
+
+                String resultSetData = this.convertDiffExpressionResultSetData( resultSet, geneAnnotations, config );
+
+                if ( resultSet.getId() == null ) { // -nodb option on analysis
+                    zipOut.putNextEntry( new ZipEntry( "resultset_" + ++i + "of" + analysis.getResultSets().size()
+                            + ".data.txt" ) ); // to make it clearer this is not an ID
+                } else {
+                    zipOut.putNextEntry( new ZipEntry( "resultset_ID" + resultSet.getId() + ".data.txt" ) );
+                }
+
+                zipOut.write( resultSetData.getBytes() );
+                zipOut.closeEntry();
+            }
+        }
+    }
+
+    @Override
     public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -330,7 +354,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return f;
             }
 
-            ExpressionDataFileServiceImpl.log.info( "Creating new Co-Expression data file: " + f.getName() );
             this.writeCoexpressionData( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -378,7 +401,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return null;
             }
 
-            this.writeVectors( f, type.getRepresentation(), vectors, geneAnnotations );
+            this.writeVectors( f, vectors, geneAnnotations );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -413,8 +436,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         Collection<File> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            assert analysis.getId() != null;
-            result.add( this.getDiffExpressionAnalysisArchiveFile( analysis.getId(), forceWrite ) );
+            result.add( this.getDiffExpressionAnalysisArchiveFile( analysis, forceWrite ) );
         }
 
         return result;
@@ -460,62 +482,29 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return null;
             }
 
-            this.writeJson( f, type.getRepresentation(), vectors );
+            this.writeJson( f, vectors );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    @Override
-    public void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) {
-        String filename = this.getDiffExArchiveFileName( analysis );
-        this.deleteAndLog( this.getOutputFile( filename ) );
-    }
+    private void addGeneAnnotationsToLine( StringBuilder rowBuffer, DifferentialExpressionAnalysisResult dear,
+            Map<Long, String[]> geneAnnotations ) {
+        CompositeSequence cs = dear.getProbe();
+        Long csid = cs.getId();
+        rowBuffer.append( cs.getName() );
+        if ( geneAnnotations.containsKey( csid ) ) {
+            String[] annotationStrings = geneAnnotations.get( csid );
+            rowBuffer.append( "\t" ).append( annotationStrings[1] ).append( "\t" ).append( annotationStrings[2] ).append( "\t" );
 
-    @Override
-    public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis,
-            DifferentialExpressionAnalysisConfig config ) throws IOException {
-        Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
-                .getArrayDesignsUsed( experimentAnalyzed );
-        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
-        String filename = this.getDiffExArchiveFileName( analysis );
-        File f = this.getOutputFile( filename );
-
-        ExpressionDataFileServiceImpl.log
-                .info( "Creating differential expression analysis archive file: " + f.getName() );
-        try (ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) )) {
-
-            // top-level analysis results - ANOVA-style
-            zipOut.putNextEntry( new ZipEntry( "analysis.results.txt" ) );
-            String analysisData = this.convertDiffExpressionAnalysisData( analysis, geneAnnotations, config );
-            zipOut.write( analysisData.getBytes() );
-            zipOut.closeEntry();
-
-            if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
-                differentialExpressionAnalysisService.thaw( analysis );
-
-            // Add a file for each result set with contrasts information.
-            int i = 0;
-            for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-                if ( resultSet.getExperimentalFactors().size() > 1 ) {
-                    // Skip interactions.
-                    ExpressionDataFileServiceImpl.log.info( "Result file for interaction is omitted" ); // Why?
-                    continue;
-                }
-
-                String resultSetData = this.convertDiffExpressionResultSetData( resultSet, geneAnnotations, config );
-
-                if ( resultSet.getId() == null ) { // -nodb option on analysis
-                    zipOut.putNextEntry( new ZipEntry( "resultset_" + ++i + "of" + analysis.getResultSets().size()
-                            + ".data.txt" ) ); // to make it clearer this is not an ID
-                } else {
-                    zipOut.putNextEntry( new ZipEntry( "resultset_ID" + resultSet.getId() + ".data.txt" ) );
-                }
-
-                zipOut.write( resultSetData.getBytes() );
-                zipOut.closeEntry();
+            // leaving out Gemma ID, which is annotationStrings[3]
+            if ( annotationStrings.length > 4 ) {
+                // ncbi id, if we have it.
+                rowBuffer.append( annotationStrings[4] );
             }
+        } else {
+            rowBuffer.append( "\t\t\t" );
         }
     }
 
@@ -524,9 +513,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         StringBuilder buf = new StringBuilder();
 
         ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
-
-        // This is a bit risky, we're only looking at the first one. But this is how we do it for the header.
-        boolean hasNCBIIDs = !geneAnnotations.isEmpty() && geneAnnotations.values().iterator().next().length > 4;
 
         if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
@@ -539,7 +525,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 if ( geneAnnotations.isEmpty() ) {
                     rowBuffer.append( dear.getProbe().getName() );
                 } else {
-                    this.addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
+                    this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
                 }
 
                 assert dear.getContrasts().size() == 1;
@@ -561,8 +547,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             Long baselineId = resultSet.getBaselineGroup().getId();
             List<Long> factorValueIdOrder = new ArrayList<>();
+
+            /*
+             * First find out what factor values are relevant in case this is a subsetted analysis. With this we
+             * probably not worry about the baselineId since it won't be here.
+             */
+            Collection<Long> usedFactorValueIds = new HashSet<>();
+            for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
+                for ( ContrastResult contrast : dear.getContrasts() ) {
+                    usedFactorValueIds.add( contrast.getFactorValue().getId() );
+                }
+                break; // only have to look at one.
+            }
+
             for ( FactorValue factorValue : ef.getFactorValues() ) {
-                if ( Objects.equals( factorValue.getId(), baselineId ) ) {
+
+                /*
+                 * deal correctly with subset situations - only use factor values relevant to the subset
+                 */
+                if ( Objects.equals( factorValue.getId(), baselineId ) || !usedFactorValueIds.contains( factorValue.getId() ) ) {
                     continue;
                 }
                 factorValueIdOrder.add( factorValue.getId() );
@@ -578,7 +581,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
                 StringBuilder rowBuffer = new StringBuilder();
 
-                this.addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
+                this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
 
                 Map<Long, String> factorValueIdToData = new HashMap<>();
                 // I don't think we can expect them in the same order.
@@ -641,39 +644,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     /**
-     * @param hasNCBIIDs Whether the annotations have the NCBI gene ids. This is based on just peeking at one, so it
-     *                   might be wrong! But the format will be okay.
-     */
-    private void addGeneAnnotationsToLine( StringBuilder rowBuffer, DifferentialExpressionAnalysisResult dear,
-            boolean hasNCBIIDs, Map<Long, String[]> geneAnnotations ) {
-        CompositeSequence cs = dear.getProbe();
-        Long csid = cs.getId();
-        rowBuffer.append( cs.getName() );
-        if ( geneAnnotations.containsKey( csid ) ) {
-            String[] annotationStrings = geneAnnotations.get( csid );
-            rowBuffer.append( "\t" ).append( annotationStrings[1] ).append( "\t" ).append( annotationStrings[2] );
-
-            // leaving out Gemma ID, which is annotationStrings[3]
-            if ( hasNCBIIDs ) {
-                // ncbi id.
-                rowBuffer.append( "\t" ).append( annotationStrings[4] );
-            }
-        } else {
-            rowBuffer.append( "\t\t" );
-            if ( hasNCBIIDs ) {
-                rowBuffer.append( "\t" );
-            }
-        }
-    }
-
-    /**
      * Given diff exp analysis and gene annotation generate header and tab delimited data. The output is qValue....
-     * 
-     * @param analaysis (might not be persistent)
+     *
+     * @param analysis (might not be persistent)
      */
     private String convertDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis,
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
-        if ( analysis.getId() != null ) analysis = differentialExpressionAnalysisService.thawFully( analysis );
+        if ( analysis.getId() != null )
+            analysis = differentialExpressionAnalysisService.thawFully( analysis );
         Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
         if ( results == null || results.isEmpty() ) {
             ExpressionDataFileServiceImpl.log.warn( "No differential expression results found for " + analysis );
@@ -762,6 +740,37 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis"
                 + ( diff.getId() != null ? "_" + diff.getId() : "" )
                 + ExpressionDataFileService.DATA_ARCHIVE_FILE_SUFFIX;
+    }
+
+    private File getDiffExpressionAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) {
+        String filename = this.getDiffExArchiveFileName( analysis );
+        File f = this.getOutputFile( filename );
+
+        // Force create if file is older than one year
+        if ( !forceCreate && f.canRead() ) {
+            Date d = new Date( f.lastModified() );
+            Calendar calendar = Calendar.getInstance();
+            calendar.add( Calendar.YEAR, -1 );
+            forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
+        }
+
+        // If not force create and the file exists (can be read from), return the existing file.
+        if ( !forceCreate && f.canRead() ) {
+            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+            return f;
+        }
+
+        // (Re-)create the file
+        analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
+        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+
+        try {
+            this.writeDiffExArchiveFile( experimentAnalyzed, analysis, null );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return f;
     }
 
     private String getFactorValueString( FactorValue fv ) {
@@ -982,19 +991,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
         }
 
-        buf.append( "#\n# Generated by Gemma " ).append( timestamp ).append( " \n" );
-        buf.append( ExpressionDataFileService.DISCLAIMER + "#\n#\n" );
-
         String batchConf = expressionExperimentService.getBatchConfound( ee );
 
         if ( batchConf != null ) {
-            buf.append( "# !!! Batch confound" );
+            buf.append( "# !!! Warning, this dataset has a batch confound with the factors analysed\n" );
         }
+
+        buf.append( "#\n# Generated by Gemma " ).append( timestamp ).append( " \n" );
+        buf.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
 
         if ( geneAnnotations.isEmpty() ) {
             // log.debug( "Annotation file is missing for this experiment, unable to include gene annotation information" );
             buf.append(
-                    "# The annotation file is missing for this Experiment, gene annotation information is omitted\n#\n" );
+                    "# The platform annotation file is missing for this Experiment, gene annotation information is omitted\n#\n" );
             // but leave the blank columns there to make parsing easier.
         }
         buf.append( "Element_Name\tGene_Symbol\tGene_Name\tNCBI_ID" );// column information
@@ -1012,6 +1021,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         assert tax != null;
 
         Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
+
+        if ( geneLinks.isEmpty() ) {
+            log.warn( "No coexpression links for this experiment, file will not be created: " + ee );
+            return;
+        }
+
+        ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + file.getAbsolutePath() );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuilder buf = new StringBuilder();
@@ -1072,17 +1088,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return file;
     }
 
-    private void writeJson( File file, ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
+    private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
+        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
     }
 
-    private void writeJson( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors )
-            throws IOException {
-        this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+    private void writeJson( File file, ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
@@ -1112,11 +1127,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     }
 
-    private void writeVectors( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors,
+    private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
 
-        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }

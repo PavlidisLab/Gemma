@@ -72,7 +72,7 @@ public class ExperimentQCTag extends TagSupport {
                 + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>Gene correlation</strong</th>"
+               // + "<th valign=\"top\" align=\"center\"><strong>Gene correlation</strong</th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Mean-Variance</strong</th>" + "</tr>" );
 
         buf.append( "<tr>" );
@@ -166,13 +166,13 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( placeHolder );
         }
 
-        if ( hasCorrDist ) {
+      /*  if ( hasCorrDist ) {
             buf.append(
                     " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"" + Settings.getRootContext() + "/expressionExperiment/visualizeProbeCorrDist.html?id=" )
                     .append( this.eeid ).append( "\" /></td>" );
         } else {
             buf.append( placeHolder );
-        }
+        }*/
 
         if ( hasMeanVariance ) {
             /*

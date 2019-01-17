@@ -21,8 +21,9 @@ package ubic.gemma.model.expression.experiment;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import ubic.gemma.core.testing.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -43,7 +44,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     private Collection<ExpressionExperiment> c;
     private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
-    private Person nobody = null;
+    private User nobody = null;
 
     private ExpressionExperimentService svc;
     private ExpressionExperimentDao eeDao;
@@ -65,8 +66,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
         eeDao = createMock( ExpressionExperimentDaoImpl.class );
         svc = new ExpressionExperimentServiceImpl( eeDao );
 
-        nobody = Person.Factory.newInstance();
-        Person admin = Person.Factory.newInstance();
+        nobody = User.Factory.newInstance();
 
         ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );

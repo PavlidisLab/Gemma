@@ -96,12 +96,12 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
             this.bail( ErrorCode.INVALID_OPTION );
         }
 
-        if ( this.arrayDesignsToProcess.size() > 1 ) {
+        if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one platform given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
+        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         try (InputStream is = new FileInputStream( f );
                 BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 

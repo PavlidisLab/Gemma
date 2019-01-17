@@ -295,7 +295,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
         ad.setShortName( "Generic_" + taxon.getCommonName() + "_" + RandomStringUtils.randomAlphabetic( 10 ) );
         ad.setName( "Generic test platform for " + taxon.getCommonName() );
-        ad.setTechnologyType( TechnologyType.NONE );
+        ad.setTechnologyType( TechnologyType.GENELIST );
         ad.setPrimaryTaxon( taxon );
 
         for ( String probeName : probeNames ) {

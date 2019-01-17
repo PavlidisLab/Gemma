@@ -6,29 +6,37 @@ import java.util.*;
 public class TechnologyType implements java.io.Serializable, Comparable<TechnologyType> {
     /**
      * <p>
-     * Indicates this array design uses two channels and expression measurements are ratios.
+     * Indicates this platform uses two channels and expression measurements are ratios.
      * </p>
      */
     public static final TechnologyType TWOCOLOR = new TechnologyType( "TWOCOLOR" );
     /**
      * <p>
-     * Indicates this array design can be used in either a one- or two- channel mode.
+     * Indicates this platform can be used in either a one- or two- channel mode.
      * </p>
      */
     public static final TechnologyType DUALMODE = new TechnologyType( "DUALMODE" );
     /**
      * <p>
-     * Indicates this array design uses one channel and measurements are non-ratiometric.
+     * Indicates this platform uses one channel and measurements are non-ratiometric (e.g. Affymetrix oligo arrays)
      * </p>
      */
     public static final TechnologyType ONECOLOR = new TechnologyType( "ONECOLOR" );
+
     /**
-     * <p>
-     * Indicates that this "array design" is not really an array, such as a map directly to genes, as we use for RNA-seq
-     * based data.
-     * </p>
+     * Indicate the platform is based on sequencing (e.g. Illumina short reads, SAGE, OxfordNanopore). However, once we
+     * process RNA-seq data it ends up on a GENELIST platform.
      */
-    public static final TechnologyType NONE = new TechnologyType( "NONE" );
+    public static final TechnologyType SEQUENCING = new TechnologyType( "SEQUENCING" );
+
+    /**
+     * Indicates that this "platform" is just a list of genes (we use this for RNA-seq)
+     */
+    public static final TechnologyType GENELIST = new TechnologyType( "GENELIST" );
+
+    /** We don't know */
+    public static final TechnologyType OTHER = new TechnologyType( "OTHER" );
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -51,10 +59,20 @@ public class TechnologyType implements java.io.Serializable, Comparable<Technolo
         TechnologyType.valueList.add( TechnologyType.ONECOLOR );
         TechnologyType.literals.add( TechnologyType.ONECOLOR.value );
         TechnologyType.names.add( "ONECOLOR" );
-        TechnologyType.values.put( TechnologyType.NONE.value, TechnologyType.NONE );
-        TechnologyType.valueList.add( TechnologyType.NONE );
-        TechnologyType.literals.add( TechnologyType.NONE.value );
-        TechnologyType.names.add( "NONE" );
+        TechnologyType.values.put( TechnologyType.GENELIST.value, TechnologyType.GENELIST );
+        TechnologyType.valueList.add( TechnologyType.GENELIST );
+        TechnologyType.literals.add( TechnologyType.GENELIST.value );
+        TechnologyType.names.add( "GENELIST" );
+        TechnologyType.values.put( TechnologyType.SEQUENCING.value, TechnologyType.SEQUENCING );
+        TechnologyType.valueList.add( TechnologyType.SEQUENCING );
+        TechnologyType.literals.add( TechnologyType.SEQUENCING.value );
+        TechnologyType.names.add( "SEQUENCING" );
+
+        TechnologyType.values.put( TechnologyType.OTHER.value, TechnologyType.OTHER );
+        TechnologyType.valueList.add( TechnologyType.OTHER );
+        TechnologyType.literals.add( TechnologyType.OTHER.value );
+        TechnologyType.names.add( "OTHER" );
+
         TechnologyType.valueList = Collections.unmodifiableList( TechnologyType.valueList );
         TechnologyType.literals = Collections.unmodifiableList( TechnologyType.literals );
         TechnologyType.names = Collections.unmodifiableList( TechnologyType.names );
@@ -75,8 +93,8 @@ public class TechnologyType implements java.io.Serializable, Comparable<Technolo
     /**
      * Creates an instance of TechnologyType from <code>value</code>.
      *
-     * @param value the value to create the TechnologyType from.
-     * @return technology type
+     * @param  value the value to create the TechnologyType from.
+     * @return       technology type
      */
     public static TechnologyType fromString( String value ) {
         final TechnologyType typeValue = TechnologyType.values.get( value );
@@ -104,7 +122,7 @@ public class TechnologyType implements java.io.Serializable, Comparable<Technolo
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
      *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     * modified.
+     *         modified.
      */
     public static List<String> names() {
         return TechnologyType.names;

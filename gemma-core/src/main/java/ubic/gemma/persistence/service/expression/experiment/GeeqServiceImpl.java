@@ -20,6 +20,10 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Stopwatch;
+
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
 import org.openjena.atlas.logging.Log;
@@ -39,10 +43,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -50,15 +56,32 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
-    private static final int MAX_EFS_REPLICATE_CHECK = 2;
+
+    /**
+     * If there are fewer than this number of replicates per condition, but more than GEEQ_WORST_REPLICATION_THRESHOLD,
+     * a medium score is given for replicates.
+     */
+    private static final int GEEQ_MEDIUM_REPLICATION_THRESHOLD = 5;
+
+    /**
+     * If there are fewer than this number of replicates per condition, the worst score is given for replicates.
+     */
+    private static final int GEEQ_WORST_REPLICATION_THRESHOLD = 2;
+
+    /**
+     * How many factors to look at to determine conditions that have very few replicates. Since we routinely only do
+     * differential expression analysis for up to 3 factors, that value makes sense. (batch and continuous factors not
+     * included)
+     */
+    private static final int MAX_EFS_REPLICATE_CHECK = 3;
+
     private static final String LOG_PREFIX = "|G|E|E|Q| ";
     private static final String ERR_MSG_MISSING_VALS = "Can not calculate missing values: ";
     private static final String ERR_MSG_CORMAT = "Can not create cormat: ";
     private static final String ERR_MSG_CORMAT_MISSING_VALS = "Cormat retrieval failed because of missing missing values for ee id ";
     private static final String ERR_W_MEAN_BAD_ARGS = "Can not calculate weighted arithmetic mean from null or unequal length arrays.";
-    private static final String ERR_B_EFFECT_BAD_STATE =
-            "Batch effect scoring in odd state - null batch effect, but batch info should be present."
-                    + "The same problem will be present for batch confound as well.";
+    private static final String ERR_B_EFFECT_BAD_STATE = "Batch effect scoring in odd state - null batch effect, but batch info should be present."
+            + "The same problem will be present for batch confound as well.";
 
     private static final double P_00 = 0.0;
     public static final double BATCH_EFF_WEAK = GeeqServiceImpl.P_00;
@@ -79,12 +102,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private final OutlierDetectionService outlierDetectionService;
     private final AuditTrailService auditTrailService;
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    private final TaxonService taxonService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
-            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
+            SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService, TaxonService taxonService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
@@ -92,6 +116,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
         this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
+        this.taxonService = taxonService;
     }
 
     @Override
@@ -244,7 +269,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         this.update( gq );
         Log.info( this.getClass(),
-                GeeqServiceImpl.LOG_PREFIX + " took " + ( ( float ) stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60f )
+                GeeqServiceImpl.LOG_PREFIX + " took " + ( stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60.0 )
                         + " minutes to process ee id " + eeId );
 
     }
@@ -382,48 +407,86 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         double score;
         double scores[] = new double[ads.size()];
 
+        // FIXME factor out magic numbers. Rationale: rarely used platforms are less favored
         int i = 0;
         for ( ArrayDesign ad : ads ) {
             int cnt = arrayDesignService.numExperiments( ad );
-            scores[i++] = cnt < 10 ?
-                    GeeqServiceImpl.N_10 :
-                    cnt < 20 ?
-                            GeeqServiceImpl.N_05 :
-                            cnt < 50 ? GeeqServiceImpl.P_00 : cnt < 100 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+            scores[i++] = cnt < 10 ? GeeqServiceImpl.N_10
+                    : cnt < 20 ? GeeqServiceImpl.N_05 : cnt < 50 ? GeeqServiceImpl.P_00 : cnt < 100 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
         }
 
         score = this.getMean( scores );
         gq.setsScoreAvgPlatformPopularity( score );
     }
 
+    /**
+     * 
+     * @param ads
+     * @param gq
+     */
     private void scoreAvgPlatformSize( Collection<ArrayDesign> ads, Geeq gq ) {
         double score;
         double scores[] = new double[ads.size()];
 
         int i = 0;
         for ( ArrayDesign ad : ads ) {
+
+            Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+           taxonService.thaw(taxon );
             long cnt = arrayDesignService.numGenes( ad );
-            scores[i++] = cnt < 5000 ?
-                    GeeqServiceImpl.N_10 :
-                    cnt < 10000 ?
-                            GeeqServiceImpl.N_05 :
-                            cnt < 15000 ?
-                                    GeeqServiceImpl.P_00 :
-                                    cnt < 18000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+
+            /*
+             * FIXME we don't deal with miRNA platforms correctly
+             */
+
+            // human, rat, mouse, zebrafish and worm all have on the order 20k protein-coding genes.
+            if ( taxon.getCommonName().equals( "human" ) || taxon.getCommonName().equals( "rat" ) || taxon.getCommonName().equals( "mouse" )
+                    || taxon.getCommonName().equals( "zebrafish" ) || taxon.getCommonName().equals( "worm" ) ) {
+                scores[i++] = cnt < 5000 ? GeeqServiceImpl.N_10
+                        : cnt < 10000 ? GeeqServiceImpl.N_05
+                                : cnt < 15000 ? GeeqServiceImpl.P_00 : cnt < 18000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+            } else if ( taxon.getCommonName().equals( "yeast" ) ) {
+                // Yeast has about 6k protein-coding genes
+                scores[i++] = cnt < 1000 ? GeeqServiceImpl.N_10
+                        : cnt < 2500 ? GeeqServiceImpl.N_05
+                                : cnt < 4000 ? GeeqServiceImpl.P_00 : cnt < 5000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+            } else if ( taxon.getCommonName().equals( "fly" ) ) {
+                // Fly has about 14k protein coding genes
+                scores[i++] = cnt < 2000 ? GeeqServiceImpl.N_10
+                        : cnt < 5000 ? GeeqServiceImpl.N_05
+                                : cnt < 8000 ? GeeqServiceImpl.P_00 : cnt < 10000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+            }
+
         }
 
         score = this.getMean( scores );
         gq.setsScoreAvgPlatformSize( score );
     }
 
+    /**
+     * 
+     * @param ee
+     * @param gq
+     */
     private void scoreSampleSize( ExpressionExperiment ee, Geeq gq ) {
         double score;
 
         int cnt = ee.getBioAssays().size();
 
-        score = cnt < 10 ?
-                GeeqServiceImpl.N_10 :
-                cnt < 20 ? GeeqServiceImpl.N_03 : cnt < 50 ? GeeqServiceImpl.P_03 : GeeqServiceImpl.P_10;
+        // FIXME factor out these magic numbers. Rationale: >500 is "too big"; 5 is "very small" and 20-500 is just fine.
+        if ( cnt > 500 ) {
+            score = GeeqServiceImpl.N_10;
+        } else {
+            if ( cnt < 6 ) {
+                score = GeeqServiceImpl.N_10;
+            } else if ( cnt < 10 ) {
+                score = GeeqServiceImpl.N_03;
+            } else if ( cnt < 20 ) {
+                score = GeeqServiceImpl.P_00;
+            } else {
+                score = GeeqServiceImpl.P_10;
+            }
+        }
         gq.setsScoreSampleSize( score );
     }
 
@@ -462,9 +525,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             }
         }
 
-        score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ?
-                GeeqServiceImpl.P_10 :
-                GeeqServiceImpl.N_10;
+        score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
         gq.setNoVectors( !hasProcessedVectors );
         gq.addOtherIssues( problems );
         gq.setsScoreMissingValues( score );
@@ -497,15 +558,15 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     private void scoreSampleMeanCorrelation( Geeq gq, double[] cormatLTri ) {
-        this.cormatOps( gq, cormatLTri, cormatOpsType.mean );
+        this.cormatOps( gq, cormatLTri, CormatOpsType.mean );
     }
 
     private void scoreSampleMedianCorrelation( Geeq gq, double[] cormatLTri ) {
-        this.cormatOps( gq, cormatLTri, cormatOpsType.median );
+        this.cormatOps( gq, cormatLTri, CormatOpsType.median );
     }
 
     private void scoreSampleCorrelationVariance( Geeq gq, double[] cormatLTri ) {
-        this.cormatOps( gq, cormatLTri, cormatOpsType.variance );
+        this.cormatOps( gq, cormatLTri, CormatOpsType.variance );
     }
 
     private void scorePlatformsTech( Collection<ArrayDesign> ads, Geeq gq ) {
@@ -525,22 +586,31 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private void scoreReplicates( ExpressionExperiment ee, Geeq gq ) {
         double score;
-        boolean hasDesign = false;
-        double replicates = 0;
-
-        if ( ee.getExperimentalDesign() != null ) {
-            hasDesign = true;
+        int replicates = -1;
+        if ( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             replicates = this.leastReplicates( ee );
+
+            if ( replicates < GEEQ_WORST_REPLICATION_THRESHOLD ) {
+                score = GeeqServiceImpl.N_10;
+            } else if ( replicates < GEEQ_MEDIUM_REPLICATION_THRESHOLD ) {
+                score = GeeqServiceImpl.P_00;
+            } else {
+                score = GeeqServiceImpl.P_10;
+            }
+        } else { // no information, so we give no penalty or bonus
+            score = GeeqServiceImpl.P_00;
+            gq.setReplicatesIssues( ( byte ) 1 ); // no factors
         }
 
-        score = !hasDesign || replicates < 4 ? GeeqServiceImpl.N_10 : //
-                replicates < 10 ? GeeqServiceImpl.P_00 : GeeqServiceImpl.P_10;
+        // extra details
+        if ( replicates == -1 ) {
+            gq.setReplicatesIssues( ( byte ) 2 ); // somewhat redundant with no factors
+        } else if ( replicates == -2 ) {
+            gq.setReplicatesIssues( ( byte ) 3 ); // ALL values have only one sample (no replication at all)
+        } else if ( replicates == 0 ) { // shouldn't happen
+            gq.setReplicatesIssues( ( byte ) 4 );
+        }
 
-        gq.setReplicatesIssues( ( byte ) ( //
-                !hasDesign ? 1 : //
-                        replicates == -1 ? 2 : //
-                                replicates == 1 ? 3 : //
-                                        replicates == 0 ? 4 : 0 ) );
         gq.setqScoreReplicates( score );
     }
 
@@ -578,11 +648,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             }
         }
 
-        score =  !infoDetected || !hasInfo || confound ?
-                GeeqServiceImpl.P_00 :
-                hasStrong ?
-                        GeeqServiceImpl.BATCH_EFF_STRONG :
-                        hasNone ? GeeqServiceImpl.BATCH_EFF_NONE : GeeqServiceImpl.BATCH_EFF_WEAK;
+        score = !infoDetected || !hasInfo || confound ? GeeqServiceImpl.P_00
+                : hasStrong ? GeeqServiceImpl.BATCH_EFF_STRONG : hasNone ? GeeqServiceImpl.BATCH_EFF_NONE : GeeqServiceImpl.BATCH_EFF_WEAK;
         gq.setBatchCorrected( corrected );
         gq.setqScoreBatchEffect( score );
     }
@@ -604,9 +671,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             }
         }
 
-        score = !infoDetected ?
-                GeeqServiceImpl.P_00 :
-                hasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
+        score = !infoDetected ? GeeqServiceImpl.P_00 : hasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
         gq.setqScoreBatchConfound( score );
 
         return hasConfound;
@@ -627,12 +692,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     /**
      * Checks for all combinations of factor values in the experiments bio assays, and counts the amount of
      * their occurrences, then checks what the lowest amount is. The method only combines factor values from
-     * first two experimental factors it encounters, and always disregards values from batch factors.
+     * first (up to) MAX_EFS_REPLICATE_CHECK categorical experimental factors it encounters, and always disregards
+     * values from batch factors.
      *
-     * @param ee an expression experiment to get the count for.
-     * @return the lowest number of replicates (ignoring factor value combinations with only one replicate),
-     * or 1, if all factor value combinations were present only once, or -1, if there were no factor values to
-     * begin with.
+     * @param  ee an expression experiment to get the count for.
+     * @return    the lowest number of replicates (ignoring factor value combinations with only one replicate),
+     *            or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable factors
+     *            to begin with.
      */
     private int leastReplicates( ExpressionExperiment ee ) {
         HashMap<String, Integer> factors = new HashMap<>();
@@ -642,16 +708,16 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( BioAssay ba : bas ) {
             Collection<FactorValue> fvs = ba.getSampleUsed().getFactorValues();
 
-            //only keep two factors, remove batch factor
+            //only keep up to MAX_EFS_REPLICATE_CHECK categorical factors, ignoring batch factor and DE_EXCLUDE
             Collection<FactorValue> removeFvs = new LinkedList<>();
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 if ( ExperimentalDesignUtils.isBatch( ef ) || DE_EXCLUDE
-                        .equalsIgnoreCase( fv.getDescriptiveString() ) ) {
+                        .equalsIgnoreCase( fv.getDescriptiveString() ) || ef.getType().equals( FactorType.CONTINUOUS ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {
                     if ( !keepEfs.contains( ef ) && keepEfs.size() <= GeeqServiceImpl.MAX_EFS_REPLICATE_CHECK ) {
-                        keepEfs.add( ef ); // keep first two encountered factors
+                        keepEfs.add( ef ); // keep first MAX_EFS_REPLICATE_CHECK encountered factors
                     } else if ( !keepEfs.contains( ef ) ) {
                         removeFvs.add( fv ); // if from different factor, remove the value
                     }
@@ -670,18 +736,17 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             factors.put( key, cnt == null ? 1 : ++cnt );
         }
 
-        // Hash-maps value collection can be almost anything
-        List<Integer> counts = factors.values() instanceof List ?
-                ( List<Integer> ) factors.values() :
-                new ArrayList<>( factors.values() );
-
-        int totalSize = counts.size();
-        // ignore size-1
-        // noinspection StatementWithEmptyBody // because java standard libraries suck
-        while ( counts.remove( ( Integer ) 1 ) ) {}
+        List<Integer> counts = new ArrayList<>( factors.values() );
         Collections.sort( counts );
 
-        return ( totalSize < 1 ? -1 : counts.size() > 0 ? counts.get( 0 ) : 1 );
+        if ( counts.isEmpty() ) {
+            return -1;
+        } else if ( counts.get( counts.size() - 1 ) == 1 ) {
+            return -2; // all conditions have only one replicate
+        } else {
+            return counts.get( 0 );
+        }
+
     }
 
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
@@ -710,12 +775,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         Double[] doubleArray = ArrayUtils.toObject( corTri );
         List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
         //noinspection StatementWithEmptyBody // because java standard libraries suck, we have to iterate like this to remove all NaNs, not just the first one.
-        while ( list.remove( Double.NaN ) ) {}
+        while ( list.remove( Double.NaN ) ) {
+        }
 
         return ArrayUtils.toPrimitive( list.toArray( new Double[0] ) );
     }
 
-    private void cormatOps( Geeq gq, double[] cormatLTri, cormatOpsType type ) {
+    private void cormatOps( Geeq gq, double[] cormatLTri, CormatOpsType type ) {
         double score;
         double value = 0;
         boolean hasCorrMat = true;
@@ -733,6 +799,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                 case variance:
                     value = this.getVariance( cormatLTri );
                     break;
+                default:
+                    throw new IllegalStateException();
             }
         }
 
@@ -747,6 +815,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             case variance:
                 gq.setqScoreSampleCorrelationVariance( score );
                 break;
+            default:
+                throw new IllegalStateException();
         }
     }
 
@@ -769,11 +839,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     private double getMedian( double[] arr ) {
-        Arrays.sort( arr );
-        if ( arr.length % 2 == 0 ) {
-            return ( arr[arr.length / 2] + arr[arr.length / 2 - 1] ) / 2;
-        }
-        return arr[arr.length / 2];
+        return Descriptive.median( new DoubleArrayList( arr ) );
     }
 
     private double getVariance( double[] arr ) {
@@ -797,7 +863,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         return tri;
     }
 
-    private enum cormatOpsType {
+    private enum CormatOpsType {
         mean, median, variance
     }
 

@@ -92,14 +92,20 @@ class SearchSettingsStringUtils {
     private static SearchSettings processSearchString( SearchSettings settings ) {
         String searchString = QueryParser.escape( settings.getQuery().toLowerCase() );
 
-        for ( String s : SearchSettingsStringUtils.STRINGS_TO_REMOVE ) {
-            searchString = searchString.replace( s, "" );
-        }
-
         StringBuilder newString = new StringBuilder();
         String[] searchTerms = searchString.split( "\\s+" );
 
         for ( String term : searchTerms ) {
+            boolean skip = false;
+            // this is probably a relic of some weird way we passed some canned queries, but they are reasonable stop words.
+            for ( String s : SearchSettingsStringUtils.STRINGS_TO_REMOVE ) {
+                if ( s.equals( term ) ) {
+                    skip = true;
+                }
+            }
+            if ( skip )
+                continue;
+
             newString.append( term.replaceAll( "['\"]", "" ) ).append( " " );
         }
 

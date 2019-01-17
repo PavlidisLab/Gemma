@@ -541,10 +541,11 @@
         </dwr:remote>
     </bean>
 
-    <bean id="processedExpressionDataVectorCreateController"
-          class="ubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController">
-        <dwr:remote javascript="ProcessedExpressionDataVectorCreateController">
+    <bean id="preprocessController"
+          class="ubic.gemma.web.controller.analysis.preprocess.PreprocessController">
+        <dwr:remote javascript="PreprocessController">
             <dwr:include method="run"/>
+            <dwr:include method="diagnostics"/>
         </dwr:remote>
     </bean>
 
@@ -777,6 +778,8 @@
                      javascript="ExpressionExperimentSetValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
+        
+        <dwr:convert type="bean" class="ubic.gemma.model.expression.BlacklistedValueObject" javascript="BlacklistedValueObject" />
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
                      javascript="ExpressionExperimentValueObject"/>

@@ -82,11 +82,24 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * Create a matrix using all the vectors, which are assumed to all be of the same quantitation type.
+     *
+     * @param vectors raw vectors
+     * @return matrix of appropriate type.
+     */
+    public static ExpressionDataMatrix<?> getMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.isEmpty() )
+            throw new IllegalArgumentException( "No vectors" );
+        PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
+        return getMatrix( representation, vectors );
+    }
+
+    /**
      * @param representation PrimitiveType
      * @param vectors        raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
+    private static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors ) {
         ExpressionDataMatrix<?> expressionDataMatrix;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
@@ -159,7 +172,8 @@ public class ExpressionDataMatrixBuilder {
 
     /**
      * @param eeQtTypes the QTs
-     * @return just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
+     * @return just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals
+     * and background
      * from both channels (if present).
      */
     public static Collection<QuantitationType> getUsefulQuantitationTypes( Collection<QuantitationType> eeQtTypes ) {
@@ -202,7 +216,8 @@ public class ExpressionDataMatrixBuilder {
 
     /**
      * @param expressionExperiment the EE to get the QTs for
-     * @return just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
+     * @return just the quantitation types that are likely to be 'useful': Preferred,
+     * present/absent, signals and background
      * from both channels (if present).
      */
     public static Collection<QuantitationType> getUsefulQuantitationTypes( ExpressionExperiment expressionExperiment ) {
@@ -312,9 +327,11 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @return Compute an intensity matrix. For two-channel arrays, this is the geometric mean of the background-subtracted
+     * @return Compute an intensity matrix. For two-channel arrays, this is the geometric mean of the
+     * background-subtracted
      * signals on the two channels. For two-color arrays, if one channel is missing (as happens sometimes) the
-     * intensities returned are just from the one channel. For one-color arrays, this is the same as the preferred data
+     * intensities returned are just from the one channel. For one-color arrays, this is the same as the
+     * preferred data
      * matrix.
      */
     public ExpressionDataDoubleMatrix getIntensity() {
@@ -612,7 +629,8 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @return If there are multiple valid choices, we choose the first one seen, unless a later one has fewer missing value.
+     * @return If there are multiple valid choices, we choose the first one seen, unless a later one has fewer missing
+     * value.
      */
     private QuantitationTypeData getQuantitationTypesNeeded() {
 
@@ -750,7 +768,8 @@ public class ExpressionDataMatrixBuilder {
             CompositeSequence d = v.getDesignElement();
             TechnologyType technologyType = d.getArrayDesign().getTechnologyType();
 
-            if ( technologyType.equals( TechnologyType.ONECOLOR ) || technologyType.equals( TechnologyType.NONE ) ) {
+            if ( !technologyType.equals( TechnologyType.TWOCOLOR ) && !technologyType
+                    .equals( TechnologyType.DUALMODE ) ) {
                 continue;
             }
 

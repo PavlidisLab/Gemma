@@ -28,6 +28,6 @@ import ubic.gemma.core.tasks.Task;
  *
  */
 
-public interface ProcessedExpressionDataVectorCreateTask extends
-        Task<TaskResult, ProcessedExpressionDataVectorCreateTaskCommand> {
+public interface PreprocessExperimentTask extends
+        Task<TaskResult, PreprocessTaskCommand> {
 }

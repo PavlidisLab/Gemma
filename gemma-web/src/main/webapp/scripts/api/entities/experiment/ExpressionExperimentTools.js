@@ -73,9 +73,14 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         leftPanel.add({cls: 'nobreak', html: '<h4>Preprocessing:</h4>'});
         leftPanel.add(refreshButton);
-        leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
+       
+        /* This does all preprocessing */
         leftPanel.add(this.processedVectorCreatePanelRenderer(this.experimentDetails, manager));
-        leftPanel.add(this.pcaPanelRenderer(this.experimentDetails, manager));
+        
+        /* This is no longer needed as a separate step */
+       // leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
+        
+        leftPanel.add(this.diagnosticsPanelRenderer(this.experimentDetails, manager));
         leftPanel.add(this.batchPanelRenderer(this.experimentDetails, manager));
 
         var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
@@ -90,6 +95,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         leftPanel.add({html: "<br/><h4>Analyses:</h4>"});
         leftPanel.add(this.differentialAnalysisPanelRenderer(this.experimentDetails, manager));
+         
         leftPanel.add(this.linkAnalysisPanelRenderer(this.experimentDetails, manager));
 
         eeRow.add(leftPanel);
@@ -230,18 +236,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                             "Platform(s) used (on average) by at least 100 experiments.";
 
         var sPlatfSizeDesc =
-            Number(ee.geeq.sScoreAvgPlatformSize) === -1 ? "Platform has (or all platforms have on average) less than 5k elements." :
-                Number(ee.geeq.sScoreAvgPlatformSize) === -0.5 ? "Platform has (or all platforms have on average) less than 10k elements." :
-                    Number(ee.geeq.sScoreAvgPlatformSize) === 0.0 ? "Platform has (or all platforms have on average) less than 15k elements." :
-                        Number(ee.geeq.sScoreAvgPlatformSize) === 0.5 ? "Platform has (or all platforms have on average) less than 18k elements." :
-                            "Platform has (or all paltforms have on average) at least 18k elements.";
+            Number(ee.geeq.sScoreAvgPlatformSize) === -1 ? "Platform has (or all platforms have on average) very low gene covrage." :
+                Number(ee.geeq.sScoreAvgPlatformSize) === -0.5 ? "Platform has (or all platforms have on average) low gene coverage." :
+                    Number(ee.geeq.sScoreAvgPlatformSize) === 0.0 ? "Platform has (or all platforms have on average) moderate gene coverage." :
+                        Number(ee.geeq.sScoreAvgPlatformSize) === 0.5 ? "Platform has (or all platforms have on average) good gene coverage." :
+                            "Platform has (or all paltforms have on average) excellent gene coverage.";
 
         var sSizeDesc =
-            Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 20 samples. Experiments this size are no longer accepted in Gemma." :
-                Number(ee.geeq.sScoreSampleSize) === -0.3 ? "The experiment has less than 50 samples." :
-                    Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 100 samples." :
-                        Number(ee.geeq.sScoreSampleSize) === 0.3 ? "The experiment has less than 200 samples." :
-                            "The experiment has at least 200 samples.";
+            Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 6 samples or more than 500 samples" :
+                Number(ee.geeq.sScoreSampleSize) === -0.3 ? "The experiment has less than 10 samples." :
+                    Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 20 samples." : "The experiment has at least 20 samples.";
 
         var sRawDesc =
             Number(ee.geeq.sScoreRawData) === -1 ? "Experiment has no raw data available (data are from external source). Try obtaining the raw data."
@@ -349,16 +353,17 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 "The experiment is NOT on a two-color platform.";
 
         var qReplErr =
-            Number(ee.geeq.replicatesIssues) === 1 ? "There is no experimental design for this experiment!" :
-                Number(ee.geeq.replicatesIssues) === 2 ? "There are no factor values!" :
-                    Number(ee.geeq.replicatesIssues) === 3 ? "All factor-value combinations have only 1 replicate." :
-                        Number(ee.geeq.replicatesIssues) === 4 ? "The lowest replicate amount was 0 - this should be technically impossible, please report immediately!" :
+            Number(ee.geeq.replicatesIssues) === 1 ? "There is no experimental design for this experiment" :
+                Number(ee.geeq.replicatesIssues) === 2 ? "There are no factor values" :
+                    Number(ee.geeq.replicatesIssues) === 3 ? "All factor-value combinations have no replicates." :
+                        Number(ee.geeq.replicatesIssues) === 4 ? "The lowest replicate amount was 0 - this should be impossible, please report" :
                             "";
 
+        // These thresholds are defined 
         var qReplDesc =
-            Number(ee.geeq.qScoreReplicates) === -1 ? "There is a factor-value combination that has less than 4 replicates." :
-                Number(ee.geeq.qScoreReplicates) === 0.0 ? "There is a factor-value combination that has less than 10 replicates. " :
-                    "All factor-value combinations have at least 10 replicates";
+            Number(ee.geeq.qScoreReplicates) === -1 ? "There is a factor-value combination that has very few or no replicates." :
+                Number(ee.geeq.qScoreReplicates) === 0.0 ? "There is a factor-value combination that has moderately few replicates. " :
+                    "All factor-value combinations have a good number of replicates";
 
         var qBatchInfoDesc =
             Number(ee.geeq.qScoreBatchInfo) === -1 ? "The experiment has no batch info. Try filling it in." : "" +
@@ -1078,22 +1083,24 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 qtip = 'ext:qtip="Analysis failed"';
             } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
                 color = '#CCC';
-                qtip = 'ext:qtip="Analysis was too small"';
+                qtip = 'ext:qtip="Dataset is too small"';
                 suggestRun = false;
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
                 + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis)
             });
-            if (suggestRun) {
-                panel.add(runBtn);
-            }
+            // disable through gui
+//            if (suggestRun) {
+//                panel.add(runBtn);
+//            }
             return panel;
         } else {
             panel.add({
-                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+                html: '<span style="color:#3A3;">May be eligible; perform via CLI</span>&nbsp;'
             });
-            panel.add(runBtn);
+            // disable through gui
+           // panel.add(runBtn);
             return panel;
         }
 
@@ -1121,7 +1128,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         /*
          * Offer missing value analysis if it's possible (this might need tweaking).
          */
-        if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity) {
+        if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'SEQUENCING' && ee.technologyType != 'GENELIST' && ee.hasEitherIntensity) {
 
             if (ee.dateMissingValueAnalysis) {
                 var type = ee.missingValueAnalysisEventType;
@@ -1145,7 +1152,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 panel.add({
                     html: '<span style="color:#3A3;">Needed</span>&nbsp;'
                 });
-                panel.add(runBtn);
+          //      panel.add(runBtn);
                 return panel;
             }
 
@@ -1167,13 +1174,13 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 padding: 2
             },
             items: [{
-                html: 'Processed Vector Computation: '
+                html: 'Preprocessing: '
             }]
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
             text: '<i class="fa fa-refresh fa-fw"/>',
-            tooltip: 'Processed vector computation (popup, refreshes page)',
+            tooltip: 'Preprocess including PCA, correlation matrix and M-V (popup, refreshes page)',
             handler: manager.doProcessedVectors.createDelegate(this, [id]),
             scope: this,
             cls: 'btn-refresh'
@@ -1184,10 +1191,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type == 'FailedProcessedVectorComputationEvent') { // note:
-                // no
-                // such
-                // thing.
+            if (type == 'FailedProcessedVectorComputationEvent') { 
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }
@@ -1269,56 +1273,105 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
     renderProcessedExpressionVectorCount: function (e) {
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     },
-
+    
     /*
-     * Get the last date PCA was run, add a button to run PCA
+     * This really replaces the PCA panel - allows for refresh of the diagnostics (PCA, sample correlation and MV)
      */
-    pcaPanelRenderer: function (ee, manager) {
-        var panel = new Ext.Panel({
-            layout: 'hbox',
-            defaults: {
-                border: false,
-                padding: 2
-            },
-            items: [{
-                html: 'Principal Component Analysis: '
-            }]
-        });
-        var id = ee.id;
-        var runBtn = new Ext.Button({
-            text: '<i class="fa fa-refresh fa-fw"/>',
-            tooltip: 'Principal component analysis (popup, refreshes page)',
-            // See EEManger.js doPca(id, hasPca)
-            handler: manager.doPca.createDelegate(this, [id, true]),
-            scope: this,
-            cls: 'btn-refresh'
-        });
+    diagnosticsPanelRenderer: function (ee, manager) {
+       var panel = new Ext.Panel({
+          layout: 'hbox',
+          defaults: {
+              border: false,
+              padding: 2
+          },
+          items: [{
+              html: 'Diagnostics (PCA, MV, Sample Corr): '
+          }]
+      });
+      var id = ee.id;
+      var runBtn = new Ext.Button({
+          text: '<i class="fa fa-refresh fa-fw"/>',
+          tooltip: 'Update diagnostics (popup, refreshes page)',
+          handler: manager.doDiagnostics.createDelegate(this, [id, true]),
+          scope: this,
+          cls: 'btn-refresh'
+      });
 
-        // Get date and info
-        if (ee.datePcaAnalysis) {
-            var type = ee.pcaAnalysisEventType;
+      // Get date and info. Note that we don't have a date for the diagnostics all together, so this can be improved.
+      if (ee.datePcaAnalysis) {
+          var type = ee.pcaAnalysisEventType;
 
-            var color = "#000";
-            var qtip = 'ext:qtip="OK"';
-            var suggestRun = true;
+          var color = "#000";
+          var qtip = 'ext:qtip="OK"';
+          var suggestRun = true;
 
-            if (type == 'FailedPCAAnalysisEvent') {
-                color = 'red';
-                qtip = 'ext:qtip="Failed"';
-            }
-            panel.add({
-                html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
-            });
-        } else
-            panel.add({
-                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
-            });
+          if (type == 'FailedPCAAnalysisEvent') {
+              color = 'red';
+              qtip = 'ext:qtip="Failed"';
+          }
+          panel.add({
+              html: '<span style="color:' + color + ';" ' + qtip + '>'
+              + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
+          });
+      } else
+          panel.add({
+              html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+          });
 
-        panel.add(runBtn);
-        return panel;
-
+      panel.add(runBtn);
+      return panel;
     },
+
+    // removed in place of general diagnostics one.
+//    /*
+//     * Get the last date PCA was run, add a button to run PCA
+//     */
+//    pcaPanelRenderer: function (ee, manager) {
+//        var panel = new Ext.Panel({
+//            layout: 'hbox',
+//            defaults: {
+//                border: false,
+//                padding: 2
+//            },
+//            items: [{
+//                html: 'Principal Component Analysis: '
+//            }]
+//        });
+//        var id = ee.id;
+//        var runBtn = new Ext.Button({
+//            text: '<i class="fa fa-refresh fa-fw"/>',
+//            tooltip: 'Principal component analysis (popup, refreshes page)',
+//            // See EEManger.js doPca(id, hasPca)
+//            handler: manager.doPca.createDelegate(this, [id, true]),
+//            scope: this,
+//            cls: 'btn-refresh'
+//        });
+//
+//        // Get date and info
+//        if (ee.datePcaAnalysis) {
+//            var type = ee.pcaAnalysisEventType;
+//
+//            var color = "#000";
+//            var qtip = 'ext:qtip="OK"';
+//            var suggestRun = true;
+//
+//            if (type == 'FailedPCAAnalysisEvent') {
+//                color = 'red';
+//                qtip = 'ext:qtip="Failed"';
+//            }
+//            panel.add({
+//                html: '<span style="color:' + color + ';" ' + qtip + '>'
+//                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
+//            });
+//        } else
+//            panel.add({
+//                html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+//            });
+//
+//        panel.add(runBtn);
+//        return panel;
+//
+//    },
 
     /*
      * Get the last date batch info was downloaded, add a button to download
