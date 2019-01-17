@@ -31,8 +31,8 @@ public interface BlacklistedEntityDao extends BaseVoEnabledDao<BlacklistedEntity
     boolean isBlacklisted( String accession );
 
     /**
-     * @param accession
-     * @return null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
+     * @param  accession accession to search for (typically either a GPL or GSE)
+     * @return           null if not blacklisted, or a BlackListedPlatform or BlackListedExperiment.
      */
     public BlacklistedEntity findByAccession( String accession );
 

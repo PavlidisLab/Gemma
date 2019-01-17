@@ -41,6 +41,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     /**
      * @param par       result set
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
+     * @return number of downregulated elements
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
