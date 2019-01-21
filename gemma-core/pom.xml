@@ -61,6 +61,7 @@
                     <include>**/*.nsi</include>
                     <include>**/*.nsq</include>
                     <include>**/*.sample</include>
+                    <include>**/*.header</include>
                 </includes>
             </testResource>
         </testResources>

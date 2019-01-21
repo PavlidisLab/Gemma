@@ -41,7 +41,7 @@ import java.util.Map;
 /**
  * @author pavlidis
  * @author keshav
- * @see BioMaterialService
+ * @see    BioMaterialService
  */
 @Service
 public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial, BioMaterialValueObject>
@@ -118,25 +118,38 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
             final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
 
-            if ( !d2fv.isEmpty() ) {
-                toUpdate.getFactorValues().add( d2fv.get( descriptors.get( toUpdate ) ) );
+            if ( !descriptors.containsKey( bm ) ) {
+                throw new IllegalStateException( "Descriptor not provided for " + bm );
             }
 
-            // Only if we are getting dates as descriptors
-            if ( !descriptors.values().isEmpty() && Date.class
-                    .isAssignableFrom( descriptors.values().iterator().next().getClass() ) ) {
-                for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
+            T descriptor = descriptors.get( toUpdate );
+            // For RNA-seq, the descriptor is a fastq header string (possibly multi-line) associated with a specific sample. For microarrays, it is a date.
+            if ( !d2fv.isEmpty() ) {
+                FactorValue factorValue = d2fv.get( descriptor );
+                if ( factorValue == null ) throw new IllegalStateException( "No factor for " + descriptor );
+                toUpdate.getFactorValues().add( factorValue );
+            }
 
-                    if ( ba.getProcessingDate() != null ) {
-                        if ( !ba.getProcessingDate().equals( descriptors.get( toUpdate ) ) ) {
-                            ba.setProcessingDate( ( Date ) descriptors.get( toUpdate ) );
+            if ( !descriptors.values().isEmpty() ) {
+
+                // Only if we are getting dates as descriptors, otherwise the FASTQ header field should be filled in.
+                if ( Date.class
+                        .isAssignableFrom( descriptors.values().iterator().next().getClass() ) ) {
+                    for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
+
+                        if ( ba.getProcessingDate() != null ) {
+                            if ( !ba.getProcessingDate().equals( descriptor ) ) {
+                                ba.setProcessingDate( ( Date ) descriptor );
+                                bioAssayDao.update( ba );
+                            }
+
+                        } else {
+                            ba.setProcessingDate( ( Date ) descriptor );
                             bioAssayDao.update( ba );
                         }
-
-                    } else {
-                        ba.setProcessingDate( ( Date ) descriptors.get( toUpdate ) );
-                        bioAssayDao.update( ba );
                     }
+                } else {
+                    // in this case, we should already have populated the header field?
                 }
             }
             bioMaterialDao.update( toUpdate );

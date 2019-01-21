@@ -66,12 +66,12 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         /*
          * Go through the headers and convert to factor values.
          */
-        Map<String, Collection<String>> headersToBatch = this
-                .convertHeadersToBatches( new HashSet<>( headers.values() ) );
+        Map<String, Collection<String>> batchIdToHeaders = this
+                .convertHeadersToBatches( headers.values() );
 
-        Map<String, FactorValue> h2fv = new HashMap<>();
-        ExperimentalFactor ef = createExperimentalFactor( ee, headersToBatch, h2fv );
-        bioMaterialService.associateBatchFactor( headers, h2fv );
+        Map<String, FactorValue> headerToFv = new HashMap<>();
+        ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
+        bioMaterialService.associateBatchFactor( headers, headerToFv );
 
         return ef;
     }
@@ -97,8 +97,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
      * batches) are to be treated as the same batch (see implementation for details).
      *
-     * @param allDates all dates
-     * @return map
+     * @param  allDates all dates
+     * @return          map of batch identifiers to dates
      */
     Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<>( allDates );
@@ -163,7 +163,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                             .warn( "Singleton at the end of the series, combining with the last batch: gap is " + String
                                     .format( "%.2f",
                                             ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60
-                                                    * 24 ) ) + " hours." );
+                                                    * 24 ) )
+                                    + " hours." );
                     mergedAnySingletons = true;
                 } else if ( this.gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -179,7 +180,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by waiting for the next batch: gap is " + String
                                         .format( "%.2f",
                                                 ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) ) + " hours." );
+                                                        * 60 * 24 ) )
+                                        + " hours." );
                         batchNum++;
                         batchDateString = this.formatBatchName( batchNum, df, currentDate );
                         result.put( batchDateString, new HashSet<Date>() );
@@ -189,7 +191,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                                 .warn( "Singleton resolved by adding to the last batch: gap is " + String
                                         .format( "%.2f",
                                                 ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60
-                                                        * 60 * 24 ) ) + " hours." );
+                                                        * 60 * 24 ) )
+                                        + " hours." );
                         // don't start a new batch, fall through.
                     }
 
@@ -226,46 +229,122 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     /**
      * Apply some heuristics to condense the fastq headers to batches.
      *
-     * @param allHeaders all fastq headers
-     * @return map
+     * @param  allHeaders all fastq headers for all samples. It is assumed these are uniquely mappable to the
+     *                    BioMaterials in the next step.
+     * @return            map of batch names to the headers (sample-specific) for that batch.
      */
-    private Map<String, Collection<String>> convertHeadersToBatches( Collection<String> allHeaders ) {
+    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> allHeaders ) {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
-
-        String lastBatch = null;
 
         for ( String header : allHeaders ) {
             try {
-                // We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100
-                // Only interested in the first 3 sectors of the middle section (D8ZGT8Q1:199:C5GKYACXX of the example);
-                String[] arr = header.split( "\\s" )[1].split( ":" );
-                String currentBatch = arr[0] + ":" + arr[1] + ":" + arr[2];
 
-                // Start first batch
-                if(lastBatch == null){
-                    result.put( currentBatch, new HashSet<String>() );
-                    result.get( currentBatch ).add( header );
-                    lastBatch = currentBatch;
-                    continue;
+                String currentBatch = parseFASTQHeaderForBatch( header );
+
+                if ( currentBatch == null ) {
+                    throw new IllegalStateException( "Failed to extract batch information from " + header );
                 }
 
                 // Check if batch already exists and add the current header, if not, create new one.
-                if( currentBatch.equals( lastBatch ) ){
-                    result.get( currentBatch ).add( header );
-                }else{
+                if ( !result.containsKey( currentBatch ) ) {
                     result.put( currentBatch, new HashSet<String>() );
-                    result.get( currentBatch ).add( header );
                 }
 
-                lastBatch = currentBatch;
+                result.get( currentBatch ).add( header );
 
             } catch ( ArrayIndexOutOfBoundsException e ) {
-                log.error( "Header format problem. Can not retrieve batch info from string: " + header );
+                throw new RuntimeException( "Header format problem. Can not retrieve batch info from string: " + header );
             }
         }
+
+        log.info( result.size() + " batches detected" );
+
         return result;
+
     }
 
+    /**
+     * We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100
+     * Only interested middle section (D8ZGT8Q1:199:C5GKYACXX:5 of the example);
+     * 
+     * Format 1: @<machine_id>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control
+     * number>:<index sequence>; we can use the first four fields
+     * 
+     * Format 2: @<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>; we can use the first two fields.
+     * 
+     * @param  header FASTQ header (can be multi-line for cases where there is more than on FASTQ file)
+     * @return        representation of the batch info, which is going to be a portion of the header string
+     */
+    String parseFASTQHeaderForBatch( String header ) {
+
+        // There can be more than one header for a sample; this results in a multi-line header. 
+        // Typically they are from the same run  (e.g. paired reads) so they are effetively the same, so it does not affect this.
+        // Otherwise, we could glom them together as a special batch indicator.
+
+        /*
+         * FIXME: we may need to do something more complicated here, to choose a reasonable number of batches to show.
+         * 
+         * For example, if there is device information, split on that
+         * 
+         * Then if there is run information, split on that unless we end up with too many batches
+         * 
+         * Then if there is lane information, split on that unless we end up with too many batches
+         * 
+         * Where "too many" is certainly < N_samples but > N_samples/2 ... have to decide what makes sense.
+         * 
+         * This will require a different data structure than below.
+         * 
+         */
+
+        if ( !header.contains( ":" ) ) {
+            throw new UnsupportedOperationException( "Header does not appear to be in the expected format: " + header );
+        }
+
+        String[] lines = header.split( BatchInfoPopulationServiceImpl.MULTIFASTQHEADER_DELIMITER );
+        String currentBatch = null;
+        for ( String line : lines ) {
+
+            if ( StringUtils.isBlank( line ) ) continue;
+
+            String[] fields = line.split( "\\s" );
+
+            if ( fields.length != 3 ) {
+                throw new UnsupportedOperationException( "Header does not have the expected number of space-delimited fields: " + header );
+            }
+
+            String[] arr = fields[1].split( ":" );
+            String runInfo = null;
+            if ( arr.length == 7 ) {
+                // gather device, run, flowcell and lane.
+                runInfo = "Dev=" + arr[0] + ":Run=" + arr[1] + ":Cell=" + arr[2] + ":Lane=" + arr[3]; // remaining fields are read-specific
+            } else if ( arr.length == 5 ) {
+                // device and lane
+                runInfo = "Dev=" + arr[0] + ":Lane=" + arr[1]; // remaining fields are read-specific
+            } else {
+                throw new UnsupportedOperationException( "Header does not have the expected number of colon-delimited fields: " + header );
+            }
+
+            if ( currentBatch == null ) {
+                currentBatch = runInfo;
+            } else {
+                if ( currentBatch.equals( runInfo ) ) {
+                    continue;
+                }
+
+                // from a different run
+                currentBatch = currentBatch + "::" + runInfo;
+
+            }
+        }
+        return currentBatch;
+    }
+
+    /*
+     * 
+     * For RNA-seq, descriptorsToBatch is a map of batchids to headers
+     * for microarrays, it a map of batchids to dates
+     * d2fv is populated by this call to be a map of headers or dates to factor values
+     */
     private <T> ExperimentalFactor createExperimentalFactor( ExpressionExperiment ee,
             Map<String, Collection<T>> descriptorsToBatch, Map<T, FactorValue> d2fv ) {
         ExperimentalFactor ef = null;
@@ -273,7 +352,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             if ( descriptorsToBatch != null ) {
                 BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch'" );
             }
-            // we still put the processing descriptors in, below.
         } else {
             log.info( "Persisting information on " + descriptorsToBatch.size() + " batches" );
 
@@ -299,6 +377,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                  */
                 fv.setCharacteristics( chars );
                 experimentService.addFactorValue( ee, fv );
+
                 for ( T d : descriptorsToBatch.get( batchId ) ) {
                     d2fv.put( d, fv );
                 }
@@ -335,17 +414,18 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
         batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
-                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df
-                .format( DateUtils.truncate( d, Calendar.HOUR ) );
+                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
+                + df
+                        .format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
     /**
-     * @param earlierDate earlier date
-     * @param date        data
-     * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
-     * treat it as a
-     * separate batch.
+     * @param  earlierDate earlier date
+     * @param  date        data
+     * @return             false if 'date' is considered to be in the same batch as 'earlierDate', true if we should
+     *                     treat it as a
+     *                     separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
         return !DateUtils.isSameDay( date, earlierDate ) && DateUtils

@@ -20,13 +20,11 @@ package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.persistence.Transient;
-import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -45,16 +43,21 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     private Integer sequenceReadLength;
 
     private ArrayDesign arrayDesignUsed;
-    
+
     /**
      * If the sample data was switched to another platform, this is what it was originally.
      */
     private ArrayDesign originalPlatform;
-    
+
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
     private String metadata;
-    private Collection<Characteristic> fastqHeaders;
+
+    /**
+     * For RNA-seq representation of representative headers from the FASTQ file(s). If there is more than on FASTQ file,
+     * this string will contain multiple newline-delimited headers.
+     */
+    private String fastqHeaders;
 
     @Override
     public int hashCode() {
@@ -107,8 +110,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the
-     * entity tracks
-     * when this was done.
+     *         entity tracks
+     *         when this was done.
      */
     public Boolean getIsOutlier() {
         return this.isOutlier;
@@ -120,7 +123,7 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return Indicates the date that the assay was processed in the original study. This would correspond to "batch"
-     * information and will often be a "scan date" or similar information extracted from the raw data files.
+     *         information and will often be a "scan date" or similar information extracted from the raw data files.
      */
     public Date getProcessingDate() {
         return this.processingDate;
@@ -146,8 +149,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false
-     * otherwise.
-     * It should be left as null if it isn't known.
+     *         otherwise.
+     *         It should be left as null if it isn't known.
      */
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
@@ -159,8 +162,8 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the
-     * total of the
-     * values for the elements assayed.
+     *         total of the
+     *         values for the elements assayed.
      */
     public Integer getSequenceReadCount() {
         return this.sequenceReadCount;
@@ -172,9 +175,9 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
 
     /**
      * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the
-     * length
-     * for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
-     * representing the mean read length.
+     *         length
+     *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
+     *         representing the mean read length.
      */
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;
@@ -200,11 +203,11 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
         this.originalPlatform = originalPlatform;
     }
 
-    public Collection<Characteristic> getFastqHeaders() {
+    public String getFastqHeaders() {
         return fastqHeaders;
     }
 
-    public void setFastqHeaders( Collection<Characteristic> fastqHeaders ) {
+    public void setFastqHeaders( String fastqHeaders ) {
         this.fastqHeaders = fastqHeaders;
     }
 

@@ -15,22 +15,21 @@
 package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import java.io.File;
-import java.util.Map;
+import ubic.gemma.persistence.util.Settings;
 
 /**
- * Delete one or more experiments from the system.
+ * Add batch information for RNA-seq experiments.
  *
- * @author paul
+ * @author     tesar
+ * @deprecated this should not be necessary and the regular batch population tool can be used instead.
  */
 public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("FieldCanBeLocal")
     private BatchInfoPopulationService batchService;
-    private String path = BatchInfoPopulationServiceImpl.FASTQ_HEADERS_ROOT;
+    private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
 
     public static void main( String[] args ) {
         RNASeqBatchInfoCli d = new RNASeqBatchInfoCli();
@@ -49,17 +48,12 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions() {
         super.buildOptions();
         super.addForceOption();
-        addOption( "path", true, "Path to the root directory where the fastq header files are located."
-                + " The expected structure in this root directory is then: ./GSExxx/GSMxxx/SRRxxx.fastq.header \n"
-                + " If not provided, defaults to " + path );
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( this.hasOption( "path" ) ) {
-            this.path = this.getOptionValue( "path" );
-        }
+
     }
 
     @Override
@@ -75,23 +69,19 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
         batchService = this.getBean( BatchInfoPopulationService.class );
 
-        log.info( "Checking folders for existing experiments in " + path );
-        Map<String, File> eeFolders = batchService.getFoldersForFolder( new File( BatchInfoPopulationServiceImpl.FASTQ_HEADERS_ROOT ) );
-        for ( String eeName : eeFolders.keySet() ) {
-            ExpressionExperiment ee = eeService.findByShortName( eeName );
-            if ( ee == null ) {
-                log.error( "Could not find experiment with short name " + eeName + ", skipping!" );
-                continue;
+        log.info( "Checking folders for existing experiments in " + fastqRootDir );
+
+        for ( BioAssaySet ee : this.expressionExperiments ) {
+            if ( !( ee instanceof ExpressionExperiment ) ) {
+                errorObjects.add( ee + " is not an expressionexperiment " );
             }
-            if ( this.expressionExperiments.contains( ee ) ) {
-                log.info( "Found folder for "+eeName+", starting data processing..." );
-                if ( batchService.fillBatchInformation( ee, this.force, true ) ) {
-                    successObjects.add( ee );
-                } else {
-                    errorObjects.add( ee );
-                }
+
+            if ( batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force ) ) {
+                log.info( "Added batch information for " + ee );
+                successObjects.add( ee );
             } else {
-                log.info( "The list of experiments to be processed does not contain " + eeName + ", skipping." );
+                log.info( "Failed to add batch information for " + ee );
+                errorObjects.add( ee );
             }
         }
 
@@ -102,7 +92,7 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     public String getShortDesc() {
-        return "Load RNASeq batch information";
+        return "Load RNASeq batch information; header files expected to be in structure like ${gemma.fastq.headers.dir}/GSExxx/GSMxxx/SRRxxx.fastq.header";
     }
 
 }

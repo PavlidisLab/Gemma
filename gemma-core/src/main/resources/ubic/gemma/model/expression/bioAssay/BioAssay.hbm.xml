@@ -35,6 +35,9 @@
       <property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="METADATA" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
+      <property name="fastqHeaders" type="org.springframework.orm.hibernate3.support.ClobStringType">
+      	<column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+      </property>
       <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
@@ -47,12 +50,5 @@
       <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="select">
          <column name="SAMPLE_USED_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="fastqHeaders" lazy="true" fetch="select" cascade="all">
-         <!-- <cache usage="read-write" /> -->
-         <key foreign-key="CHARACTERISTIC_BIOASSAY_FKC">
-            <column name="BIOASSAY_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
-      </set>
    </class>
 </hibernate-mapping>
