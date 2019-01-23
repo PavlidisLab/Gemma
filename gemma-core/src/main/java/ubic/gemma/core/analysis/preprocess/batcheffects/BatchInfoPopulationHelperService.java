@@ -26,6 +26,13 @@ import java.util.Map;
  */
 public interface BatchInfoPopulationHelperService {
 
+    /**
+     * For RNA-seq, we based the batching on the available device/run/flowcell/lane information
+     * 
+     * @param  ee      experiment
+     * @param  headers map of biomaterial to a string. If there was no usable FASTQ header, we just use the GPL ID
+     * @return         factor
+     */
     ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers );
 
     ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );

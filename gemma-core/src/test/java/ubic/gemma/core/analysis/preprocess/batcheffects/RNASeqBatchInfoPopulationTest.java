@@ -57,17 +57,17 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
 
         // 5-field version
-        String s1 = s.parseFASTQHeaderForBatch( "@SRR2016978.1.2 EAS042_0001:2:1:1044:11321 length=76" );
-        assertEquals( "Dev=EAS042_0001:Lane=2", s1 );
+        String s1 = s.parseFASTQHeaderForBatch( "@SRR2016978.1.2 EAS042_0001:2:1:1044:11321 length=76" ).toString();
+        assertEquals( "Device=EAS042_0001:Lane=2", s1 );
 
         // multiple header case
         String s2 = s.parseFASTQHeaderForBatch(
-                "@SRR2016978.1.1 EAS042_0001:2:1:1044:11321 length=76\n@SRR2016978.1.2 EAS042_0001:2:1:1044:11321 length=76" );
-        assertEquals( "Dev=EAS042_0001:Lane=2", s2 );
+                "@SRR2016978.1.1 EAS042_0001:2:1:1044:11321 length=76\n@SRR2016978.1.2 EAS042_0001:2:1:1044:11321 length=76" ).toString();
+        assertEquals( "Device=EAS042_0001:Lane=2", s2 );
 
         // 7-field version
-        String s3 = s.parseFASTQHeaderForBatch( "@SRR5647782.1.1 D7ZQJ5M1:747:HL5TJADXX:1:1116:18513:98450 length=101" );
-        assertEquals( "Dev=D7ZQJ5M1:Run=747:Cell=HL5TJADXX:Lane=1", s3 );
+        String s3 = s.parseFASTQHeaderForBatch( "@SRR5647782.1.1 D7ZQJ5M1:747:HL5TJADXX:1:1116:18513:98450 length=101" ).toString();
+        assertEquals( "Device=D7ZQJ5M1:Run=747:Flowcell=HL5TJADXX:Lane=1", s3 );
 
         // bad ones.
         try {

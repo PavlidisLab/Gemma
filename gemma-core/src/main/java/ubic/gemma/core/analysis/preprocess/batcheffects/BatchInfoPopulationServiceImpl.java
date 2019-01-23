@@ -360,6 +360,11 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         return headers;
     }
 
+    /*
+     * FIXME we'll replace this folder layout with a single file. We will only use the headers if they look valid for
+     * extracting
+     * device/run/flowcell, and fallback on the GPL id for the platform.
+     */
     private boolean getBAData( ExpressionExperiment ee, Map<BioAssay, Collection<File>> baFiles ) {
         Collection<File> baFolders = FileTools.listSubDirectories(
                 new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
@@ -393,7 +398,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             }
             baFiles.put( ba, headers );
 
-            // Check if BA already has header files attached.
             if ( ba.getFastqHeaders() != null && !ba.getFastqHeaders().isEmpty() ) {
                 log.warn( "BioAssay " + ba.getName() + "/" + gsm + " already has rnaSeq headers attached!" );
                 if ( force ) {

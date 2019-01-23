@@ -40,12 +40,17 @@ import java.util.*;
 public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulationHelperService {
 
     /**
-     * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
-     * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
-     * run together, but the scanning took a while to complete. Of course we are still always recording the actual
-     * dates, this is only used for the creation of ExperimentalFactors. Making this value too small causes the data to
-     * be broken into many batches. I experimented with a value of 2, but this seemed too low. Anything greater than 24
-     * doesn't make much sense.
+     * For RNA-seq, the minimum number of samples per batch, if possible
+     */
+    private static final double MINIMUM_SAMPLES_PER_RNASEQ_BATCH = 2.0;
+
+    /**
+     * For microarrays (that come with scan timestamps): How many hours do we allow to pass between samples, before we
+     * consider them to be a separate batch (if they are not run on the same day). This 'slack' is necessary to allow
+     * for the possibility that all the hybridizations were run together, but the scanning took a while to complete. Of
+     * course we are still always recording the actual dates, this is only used for the creation of ExperimentalFactors.
+     * Making this value too small causes the data to be broken into many batches. I experimented with a value of 2, but
+     * this seemed too low. Anything greater than 24 doesn't make much sense.
      */
     private static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 8;
 
@@ -67,7 +72,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          * Go through the headers and convert to factor values.
          */
         Map<String, Collection<String>> batchIdToHeaders = this
-                .convertHeadersToBatches( headers.values() );
+                .convertHeadersToBatches( headers );
 
         Map<String, FactorValue> headerToFv = new HashMap<>();
         ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
@@ -229,35 +234,84 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     /**
      * Apply some heuristics to condense the fastq headers to batches.
      *
-     * @param  allHeaders all fastq headers for all samples. It is assumed these are uniquely mappable to the
-     *                    BioMaterials in the next step.
-     * @return            map of batch names to the headers (sample-specific) for that batch.
+     * @param  headers map of biomaterials to fastq headers for all samples.
+     * @return         map of batch names to the headers (sample-specific) for that batch.
      */
-    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> allHeaders ) {
+    Map<String, Collection<String>> convertHeadersToBatches( Map<BioMaterial, String> headers ) {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
-        for ( String header : allHeaders ) {
-            try {
+        Map<FastqHeaderData, Collection<BioMaterial>> batchInfos = new HashMap<>();
 
-                String currentBatch = parseFASTQHeaderForBatch( header );
+        for ( BioMaterial bm : headers.keySet() ) {
+            String header = headers.get( bm );
 
-                if ( currentBatch == null ) {
-                    throw new IllegalStateException( "Failed to extract batch information from " + header );
-                }
+            FastqHeaderData batchInfoForSample = parseFASTQHeaderForBatch( header );
+            if ( !batchInfos.containsKey( batchInfoForSample ) ) {
+                batchInfos.put( batchInfoForSample, new HashSet<BioMaterial>() );
+            }
 
-                // Check if batch already exists and add the current header, if not, create new one.
-                if ( !result.containsKey( currentBatch ) ) {
-                    result.put( currentBatch, new HashSet<String>() );
-                }
+            batchInfos.get( batchInfoForSample ).add( bm );
+        }
 
-                result.get( currentBatch ).add( header );
+        batch( batchInfos, headers.size() );
 
-            } catch ( ArrayIndexOutOfBoundsException e ) {
-                throw new RuntimeException( "Header format problem. Can not retrieve batch info from string: " + header );
+        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
+            String batchIdentifier = fhd.toString();
+            if ( !result.containsKey( batchIdentifier ) ) {
+                result.put( batchIdentifier, new HashSet<String>() );
+            }
+            for ( BioMaterial bm : batchInfos.get( fhd ) ) {
+                result.get( batchIdentifier ).add( headers.get( bm ) );
             }
         }
 
         log.info( result.size() + " batches detected" );
+
+        return result;
+
+    }
+
+    /*
+     * 
+     * RNA-seq: See how many batches we have for each level of granularity; pick the best number. This is pretty crude,
+     * and involves recreating the map multiple times
+     */
+    private void batch( Map<FastqHeaderData, Collection<BioMaterial>> batchInfos, int numSamples ) {
+
+        int numBatches = batchInfos.size();
+
+        /*
+         * There's two problems. First, it could be there are no batches at all. Second, there could be too many
+         * batches.
+         */
+        if ( numBatches == 1 ) {
+            // no batches - this will get sorted out later, proceed
+            return;
+        } else if ( numBatches == numSamples || numBatches / ( double ) numSamples < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+            // too few samples per batch. Try to reduce resolution and recount.
+            batchInfos = dropResolution( batchInfos );
+            batch( batchInfos, numSamples ); // recurse
+        } else {
+            // reasonable number of samples per batch -- proceed. 
+            return;
+        }
+
+    }
+
+    /*
+     * RNAseq: Update the batch info with a lower resolution
+     */
+    private Map<FastqHeaderData, Collection<BioMaterial>> dropResolution( Map<FastqHeaderData, Collection<BioMaterial>> batchInfos ) {
+
+        Map<FastqHeaderData, Collection<BioMaterial>> result = new HashMap<>();
+        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
+
+            FastqHeaderData updated = fhd.dropResolution();
+            if ( !result.containsKey( updated ) ) {
+                result.put( updated, new HashSet<BioMaterial>() );
+            }
+            result.get( updated ).addAll( batchInfos.get( fhd ) );
+        }
 
         return result;
 
@@ -272,36 +326,22 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * 
      * Format 2: @<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>; we can use the first two fields.
      * 
-     * @param  header FASTQ header (can be multi-line for cases where there is more than on FASTQ file)
-     * @return        representation of the batch info, which is going to be a portion of the header string
+     * @param  platform e.g. GPL124 (in case samples were run on more than one platform, AND we lack a usable header.
+     * @param  header   FASTQ header (can be multi-line for cases where there is more than on FASTQ file)
+     * @return          representation of the batch info, which is going to be a portion of the header string
      */
-    String parseFASTQHeaderForBatch( String header ) {
+    FastqHeaderData parseFASTQHeaderForBatch( String header ) {
 
         // There can be more than one header for a sample; this results in a multi-line header. 
         // Typically they are from the same run  (e.g. paired reads) so they are effetively the same, so it does not affect this.
         // Otherwise, we could glom them together as a special batch indicator.
-
-        /*
-         * FIXME: we may need to do something more complicated here, to choose a reasonable number of batches to show.
-         * 
-         * For example, if there is device information, split on that
-         * 
-         * Then if there is run information, split on that unless we end up with too many batches
-         * 
-         * Then if there is lane information, split on that unless we end up with too many batches
-         * 
-         * Where "too many" is certainly < N_samples but > N_samples/2 ... have to decide what makes sense.
-         * 
-         * This will require a different data structure than below.
-         * 
-         */
 
         if ( !header.contains( ":" ) ) {
             throw new UnsupportedOperationException( "Header does not appear to be in the expected format: " + header );
         }
 
         String[] lines = header.split( BatchInfoPopulationServiceImpl.MULTIFASTQHEADER_DELIMITER );
-        String currentBatch = null;
+        FastqHeaderData currentBatch = null;
         for ( String line : lines ) {
 
             if ( StringUtils.isBlank( line ) ) continue;
@@ -313,30 +353,199 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
 
             String[] arr = fields[1].split( ":" );
-            String runInfo = null;
+            //  String runInfo = null;
+            FastqHeaderData fqd = null;
             if ( arr.length == 7 ) {
+                fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
                 // gather device, run, flowcell and lane.
-                runInfo = "Dev=" + arr[0] + ":Run=" + arr[1] + ":Cell=" + arr[2] + ":Lane=" + arr[3]; // remaining fields are read-specific
+                //    runInfo = "Dev=" + arr[0] + ":Run=" + arr[1] + ":Cell=" + arr[2] + ":Lane=" + arr[3]; // remaining fields are read-specific
             } else if ( arr.length == 5 ) {
                 // device and lane
-                runInfo = "Dev=" + arr[0] + ":Lane=" + arr[1]; // remaining fields are read-specific
+                fqd = new FastqHeaderData( arr[0], arr[1] );
+                //    runInfo = "Dev=" + arr[0] + ":Lane=" + arr[1]; // remaining fields are read-specific
             } else {
-                throw new UnsupportedOperationException( "Header does not have the expected number of colon-delimited fields: " + header );
+                fqd = new FastqHeaderData( header ); // presumably this is just the platform like GPLXXX
+                //  throw new UnsupportedOperationException( "Header does not have the expected number of colon-delimited fields: " + header );
             }
 
             if ( currentBatch == null ) {
-                currentBatch = runInfo;
+                currentBatch = fqd;
             } else {
-                if ( currentBatch.equals( runInfo ) ) {
+                if ( currentBatch.equals( fqd ) ) {
                     continue;
                 }
 
                 // from a different run
-                currentBatch = currentBatch + "::" + runInfo;
+                currentBatch.add( fqd );
 
             }
         }
         return currentBatch;
+    }
+
+    class FastqHeaderData {
+
+        @Override
+        public String toString() {
+            String s = null;
+
+            if ( this.device != null ) {
+                s = "Device=" + device;
+            }
+            if ( this.run != null ) {
+                s = s + ":Run=" + run;
+            }
+            if ( this.flowCell != null ) {
+                s = s + ":Flowcell=" + flowCell;
+            }
+            if ( this.lane != null ) {
+                s = s + ":Lane=" + lane;
+            }
+            return s;
+        }
+
+        /**
+         * @return
+         */
+        public FastqHeaderData dropResolution() {
+            if ( this.lane != null ) {
+                return new FastqHeaderData( this.device, this.run, this.flowCell, null );
+            } else if ( this.flowCell != null ) {
+                return new FastqHeaderData( this.device, this.run, null, null );
+            } else if ( this.run != null ) {
+                return new FastqHeaderData( this.device, null, null, null );
+            }
+            return this; // might want to return null if we need to signal a stopping condition.
+        }
+
+        private String device = null;
+
+        protected String getDevice() {
+            return device;
+        }
+
+        // assumption here: the header we are adding has the same fields as the original.
+        public void add( FastqHeaderData fqd ) {
+
+            if ( this.equals( fqd ) ) return;
+
+            if ( this.device != null && !this.device.equals( fqd.getDevice() ) ) {
+                this.device = this.device + "/" + fqd.getDevice();
+            }
+
+            if ( this.run != null && !this.run.equals( fqd.getRun() ) ) {
+                this.run = this.run + "/" + fqd.getRun();
+            }
+
+            if ( this.flowCell != null && !this.flowCell.equals( fqd.getFlowCell() ) ) {
+                this.flowCell = this.flowCell + "/" + fqd.getFlowCell();
+            }
+
+            if ( this.lane != null && !this.lane.equals( fqd.getLane() ) ) {
+                this.lane = this.lane + "/" + fqd.getLane();
+            }
+
+        }
+
+        protected String getLane() {
+            return lane;
+        }
+
+        protected String getFlowCell() {
+            return flowCell;
+        }
+
+        protected String getRun() {
+            return run;
+        }
+
+        private String lane = null;
+        private String flowCell = null;
+        private String run = null;
+
+        FastqHeaderData( String device, String lane ) {
+            this.device = device;
+            this.lane = lane;
+        }
+
+        /**
+         * Only for use when we don't have a useable device:run etc.
+         * 
+         * @param device e.g. GPLXXXX
+         */
+        FastqHeaderData( String device ) {
+            this.device = device;
+        }
+
+        FastqHeaderData( String device, String run, String flowCell, String lane ) {
+            this( device, lane );
+            this.flowCell = flowCell;
+            this.run = run;
+        }
+
+        private BatchInfoPopulationHelperServiceImpl getOuterType() {
+            return BatchInfoPopulationHelperServiceImpl.this;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ( ( device == null ) ? 0 : device.hashCode() );
+            result = prime * result + ( ( flowCell == null ) ? 0 : flowCell.hashCode() );
+            result = prime * result + ( ( lane == null ) ? 0 : lane.hashCode() );
+            result = prime * result + ( ( run == null ) ? 0 : run.hashCode() );
+            return result;
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
+                return true;
+            }
+            if ( obj == null ) {
+                return false;
+            }
+            if ( getClass() != obj.getClass() ) {
+                return false;
+            }
+            FastqHeaderData other = ( FastqHeaderData ) obj;
+            if ( !getOuterType().equals( other.getOuterType() ) ) {
+                return false;
+            }
+
+            if ( device == null ) {
+                if ( other.device != null ) {
+                    return false;
+                }
+            } else if ( !device.equals( other.device ) ) {
+                return false;
+            }
+            if ( flowCell == null ) {
+                if ( other.flowCell != null ) {
+                    return false;
+                }
+            } else if ( !flowCell.equals( other.flowCell ) ) {
+                return false;
+            }
+            if ( lane == null ) {
+                if ( other.lane != null ) {
+                    return false;
+                }
+            } else if ( !lane.equals( other.lane ) ) {
+                return false;
+            }
+            if ( run == null ) {
+                if ( other.run != null ) {
+                    return false;
+                }
+            } else if ( !run.equals( other.run ) ) {
+                return false;
+            }
+            return true;
+        }
+
     }
 
     /*
@@ -350,8 +559,23 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ExperimentalFactor ef = null;
         if ( descriptorsToBatch == null || descriptorsToBatch.size() < 2 ) {
             if ( descriptorsToBatch != null ) {
-                BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch'" );
+
+                /*
+                 * Corner case. It's possible we are not sure there are actually batches or not
+                 * because of the lack of information. The example would be when we don't have usable FASTQ headers, and
+                 * all the GPL ids are the same.
+                 */
+                String batchIdentifier = descriptorsToBatch.keySet().iterator().next();
+                if ( batchIdentifier.startsWith( "GPL" ) ) {
+                    throw new RuntimeException(
+                            "No reliable batch information was available: no usable FASTQ headers and only one GPL ID associated with the experiment." );
+                }
+
+                // Otherwise, we trust that either the FASTQ headers or dates are a reasonable representation.
+                BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch', no factor will be created" );
+
             }
+
         } else {
             log.info( "Persisting information on " + descriptorsToBatch.size() + " batches" );
 
