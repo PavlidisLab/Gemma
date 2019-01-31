@@ -118,7 +118,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             }
         }
 
-
     }
 
     @Test
@@ -178,17 +177,16 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         }
 
-
     }
 
     @After
     public void tearDown() {
         if ( ee != null )
             try {
-                eeService.remove( ee );
+            eeService.remove( ee );
             } catch ( Exception e ) {
-                log.info( "Failed to remove EE after test: " + e.getMessage() );
-                throw e;
+            log.info( "Failed to remove EE after test: " + e.getMessage() );
+            throw e;
             }
     }
 
@@ -230,6 +228,12 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
                 .computeProcessedExpressionData( ee );
 
         assertEquals( 10, dataVectors.size() );
+
+        processedExpressionDataVectorService.thaw( dataVectors );
+        for ( ProcessedExpressionDataVector v : dataVectors ) {
+            assertTrue( v.getRankByMax() != null );
+            assertTrue( v.getRankByMean() != null );
+        }
 
         ee = eeService.load( ee.getId() );
         ee = this.eeService.thawLite( ee );
@@ -290,7 +294,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
-        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL);
+        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL );
 
     }
 
@@ -392,7 +396,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @SuppressWarnings("unused")
-        // !! Please leave this here, we use it to load data sets for chopping.
+    // !! Please leave this here, we use it to load data sets for chopping.
     void fetchASeries( String accession ) {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.fetchAndLoad( accession, false, false, false );

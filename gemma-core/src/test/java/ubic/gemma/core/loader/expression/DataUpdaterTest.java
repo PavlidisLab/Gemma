@@ -37,6 +37,7 @@ import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -285,6 +286,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertEquals( 3 * 199, ee.getRawExpressionDataVectors().size() );
 
         assertEquals( 199, ee.getProcessedExpressionDataVectors().size() );
+
+        for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            assertNotNull( "Vector rank was not populated (max)", v.getRankByMax() );
+            assertNotNull( "Vector rank was not populated (mean)", v.getRankByMean() );
+        }
 
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( ee );
         assertEquals( 199, processedDataArrays.size() );

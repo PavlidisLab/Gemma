@@ -14,7 +14,20 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.apache.commons.io.IOUtils;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -22,7 +35,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -46,13 +58,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
  *
@@ -62,11 +67,15 @@ import java.util.*;
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**
+     * we have files named like GSE1234.fastq-headers-table.txt; specified in our RNA-seq pipelineF
+     */
+    private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
+    /**
      * String to use to delimit FASTQ headers when there is more than one per sample.
      */
-    static final String MULTIFASTQHEADER_DELIMITER = "\n";
+    static final String MULTIFASTQHEADER_DELIMITER = ";;;";
     /**
-     * Delete unpacked raw data files when done? The zipped/tarred archived will be left alone anyway.
+     * Delete unpacked raw microarray data files when done? The zipped/tarred archived will be left alone anyway.
      */
     private static final boolean CLEAN_UP = true;
     private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
@@ -152,22 +161,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     private boolean getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) {
-        Map<BioAssay, Collection<File>> baFiles = new HashMap<>();
-
-        // Get data for all BAs.
-        if ( !getBAData( ee, baFiles ) ) {
-            return false;
-        }
-
-        /*
-         * FIXME: can we get original platform information?
-         */
 
         // Read and store header data.
 
         Map<BioMaterial, String> headers;
         try {
-            headers = getFastqHeaders( baFiles );
+            headers = getFastqHeaders( ee );
         } catch ( IOException e ) {
             log.error( "Error while processing FASTQ headers for " + ee + " " + e.getMessage() );
             return false;
@@ -315,101 +314,111 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Extracts header from the files and updates the information in the bioassay in the persistent store
+     * Finds FASTQ headers
      * 
-     * @param  baFiles     map of bioassays to header files (can be more than one per bioassay)
+     * @param  ee          experiment
      * @return             map of Biomaterial to header
      * @throws IOException if any files could not be read
      */
-    private Map<BioMaterial, String> getFastqHeaders( Map<BioAssay, Collection<File>> baFiles ) throws IOException {
+    private Map<BioMaterial, String> getFastqHeaders( ExpressionExperiment ee ) throws IOException {
         Map<BioMaterial, String> headers = new HashMap<>();
-        for ( BioAssay ba : baFiles.keySet() ) {
 
-            // Create new header characteristics
-            String header = null;
-            for ( File f : baFiles.get( ba ) ) {
+        // map of sample ID to raw headers
+        Map<String, String> rawHeaders = readFastqHeaders( ee );
 
-                try (InputStream is = new FileInputStream( f )) {
-                    String h = StringUtils.strip( IOUtils.toString( is ) );
+        if ( rawHeaders == null || rawHeaders.isEmpty() ) return null;
 
-                    if ( StringUtils.isBlank( h ) ) {
-                        continue;
-                    }
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            String gsm = ba.getAccession().getAccession();
 
-                    if ( StringUtils.isNotBlank( header ) ) {
-                        // multiple headers, delimit 
-                        header = header + MULTIFASTQHEADER_DELIMITER + h;
-                    } else {
-                        header = h;
-                    }
-                }
-            }
-
-            if ( StringUtils.isBlank( header ) ) {
+            if ( !rawHeaders.containsKey( gsm ) ) {
                 throw new IllegalStateException( "There was no header information for " + ba );
             }
 
-            headers.put( ba.getSampleUsed(), header );
+            String h = rawHeaders.get( gsm );
 
-            ba.setFastqHeaders( header );
+            if ( StringUtils.isBlank( h ) ) {
+                throw new IllegalStateException( "There was no header information for " + ba );
+            }
+
+            headers.put( ba.getSampleUsed(), h );
+
+            ba.setFastqHeaders( h );
 
             // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.  
             // The difference for RNAseq is that we want to store the entire header, which includes parts that are not needed for the batch information.
             bioAssayService.update( ba );
+
         }
+
         return headers;
     }
 
-    /*
-     * FIXME we'll replace this folder layout with a single file. We will only use the headers if they look valid for
-     * extracting
-     * device/run/flowcell, and fallback on the GPL id for the platform.
+    /**
+     * Expects to find a file with the following 5 tab-delimited fields (and no header):
+     * 
+     * <ol>
+     * <li>GEO Sample ID
+     * <li>SRA sample ID
+     * <li>GEO platform ID
+     * <li>SRA URL
+     * <li>Header(s) delimited by MULTIFASTQHEADER_DELIMITER
+     * </ol>
+     * 
+     * Example
+     * 
+     * <pre>
+     * GSM2083854 SRR3212828 GPL17021 https://www.ncbi.nlm.nih.gov/sra?term=SRX1620346 @SRR3212828.1.1 1 length=101
+     * </pre>
+     * 
+     * @param  ee experiment
+     * @return    map of GEO id to headers, including the platform ID
      */
-    private boolean getBAData( ExpressionExperiment ee, Map<BioAssay, Collection<File>> baFiles ) {
-        Collection<File> baFolders = FileTools.listSubDirectories(
-                new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
-                        + ee.getAccession().getAccession() ) );
+    private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
+        String accession = ee.getAccession().getAccession();
+        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
+                + accession + FASTQHEADERSFILE_SUFFIX );
 
-        Map<String, File> fm = new HashMap<>();
-        for ( File f : baFolders ) {
-            fm.put( f.getName(), f );
+        if ( !headerFile.canRead() ) {
+            throw new IOException( "No header file for " + ee );
         }
 
-        String eeName = ee.getShortName();
+        return readFastqHeaders( accession );
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            String gsm = ba.getAccession().getAccession();
-            if ( !fm.keySet().contains( gsm ) ) {
-                log.error( "No folder for BioAssay " + gsm + " in ee " + eeName + "! Skipping the experiment!" );
-                return false;
-            }
+    }
 
-            // List all fastq header files.
-            Collection<File> headers = Arrays
-                    .asList( Objects.requireNonNull( fm.get( gsm ).listFiles( new FilenameFilter() {
-                        @Override
-                        public boolean accept( File file, String s ) {
-                            return s.endsWith( ".fastq.header" );
-                        }
-                    } ) ) );
-            if ( headers.isEmpty() ) {
-                log.error( "No data for BioAssay " + gsm + " in experiment " + eeName + "! Skipping the experiment!" );
-                return false;
-            }
-            baFiles.put( ba, headers );
+    /**
+     * Exposed for testing
+     * 
+     * @param  accession             GEO accession
+     * @return                       map of GEO id to headers, including the platform ID
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
+        Map<String, String> result = new HashMap<>();
+        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
+                + accession + FASTQHEADERSFILE_SUFFIX );
+        try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
 
-            if ( ba.getFastqHeaders() != null && !ba.getFastqHeaders().isEmpty() ) {
-                log.warn( "BioAssay " + ba.getName() + "/" + gsm + " already has rnaSeq headers attached!" );
-                if ( force ) {
-                    log.warn( "-force, overriding existing data." );
-                } else {
-                    log.error( "Skipping experiment " + eeName
-                            + ". If you want to override existing data, use the -force." ); // Luke
-                    return false;
+                String[] fields = StringUtils.split( line, "\t" );
+
+                if ( fields.length < 5 ) {
+                    continue;
                 }
+
+                String geoID = fields[0];
+                String geoPlatformID = fields[2]; // we may use this if the headers are not usable.
+                String headers = fields[4]; // this may be FAILURE (possibly more than once)
+
+                result.put( geoID, geoPlatformID + MULTIFASTQHEADER_DELIMITER + headers );
             }
+
         }
-        return true;
+
+        return result;
     }
 
 }

@@ -132,6 +132,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         // make sure to do a thawRawAndProcessed() to get the addCountData() updates
         ee = eeService.thaw( ee );
+        
+        
+        
 
         // verify rows and columns
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService

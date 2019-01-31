@@ -1,0 +1,11 @@
+GSM530210	SRR039864	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019179	@SRR039864.1.1 VAB_KCl_hr0_total_RNA_b1_t11_48_981 length=35;;;@SRR039865.1.1 VAB_KCl_hr0_total_RNA_b1_t21_30_17 length=35
+GSM530211	SRR039866	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019180	@SRR039866.1.1 VAB_KCl_hr1_total_RNA_b1_t11_48_23 length=35;;;@SRR039867.1.1 VAB_KCl_hr1_total_RNA_b1_t21_47_60 length=35
+GSM530212	SRR039868	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019181	@SRR039868.1.1 VAB_KCl_hr6_total_RNA_b1_t11_48_333 length=35;;;@SRR039869.1.1 VAB_KCl_hr6_total_RNA_b1_t21_40_11 length=35
+GSM530213	SRR039870	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019182	@SRR039870.1.1 VAB_RNA_hr6_total_RNA_b31_18_25 length=50
+GSM530214	SRR039871	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019183	@SRR039871.1.1 VAB_KCl_hr0_total_RNA_b21_26_83 length=35
+GSM530215	SRR039872	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019184	@SRR039872.1.1 VAB_KCl_hr1_total_RNA_b21_26_41 length=35
+GSM530216	SRR039873	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019185	@SRR039873.1.1 VAB_KCl_hr6_total_RNA_b21_26_201 length=35
+GSM530217	SRR039874	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019186	@SRR039874.1.1 VAB_KCl_hr0_polyA_b11_30_158 length=35
+GSM530218	SRR039875	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019187	@SRR039875.1.1 VAB_KCl_hr1_polyA_b11_30_65 length=35
+GSM530219	SRR039876	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019188	@SRR039876.1.1 VAB_KCl_hr6_polyA_b11_30_18 length=35
+GSM530220	SRR039877	GPL9318	https://www.ncbi.nlm.nih.gov/sra?term=SRX019189	@SRR039877.1.1 VAB_KCl_hr6_polyA_b22_20_71 length=50
