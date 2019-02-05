@@ -123,8 +123,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     public String getShortDesc() {
-        return "Performs preprocessing and can do batch correction (ComBat) and other steps. If specific steps are not specified, "
-                + "all preprocessing is done (which includes the other steps)";
+        return "Performs preprocessing. Optionally can do only selected processing steps including batch correction, rank computation and diagnostic computation";
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
