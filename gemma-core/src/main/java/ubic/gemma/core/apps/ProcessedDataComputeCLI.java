@@ -19,9 +19,9 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -31,16 +31,19 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * Prepare the "processed" expression data vectors, and can also do batch correction.F
+ * Prepare the "processed" expression data vectors, and can also do batch correction.
  *
  * @author xwan, paul
- * @see ProcessedExpressionDataVectorServiceImpl
+ * @see    ProcessedExpressionDataVectorServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
     private boolean batchCorrect = false;
     private PreprocessorService preprocessorService;
+    private ProcessedExpressionDataVectorCreateHelperService proccessedVectorService;
     private ExpressionExperimentService expressionExperimentService;
+    private boolean updateRanks = false;
+    private boolean updateDiagnostics = false;
 
     public static void main( String[] args ) {
         ProcessedDataComputeCLI p = new ProcessedDataComputeCLI();
@@ -61,8 +64,13 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         super.addForceOption();
         this.addDateOption();
 
-        Option outputFileOption = OptionBuilder.withDescription( "Attempt to batch-correct the data" )
-                .withLongOpt( "batchcorr" ).create( 'b' );
+        Option outputFileOption = Option.builder( "b" )
+                .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
+                .build();
+        this.addOption( "diagupdate", false,
+                "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation; may be combined with other options)" );
+        this.addOption( "rankupdate", false, "Only update the expression intensity rank information (may be combined with other options)" );
+
         this.addOption( outputFileOption );
     }
 
@@ -71,8 +79,18 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         super.processOptions();
         preprocessorService = this.getBean( PreprocessorService.class );
         expressionExperimentService = this.getBean( ExpressionExperimentService.class );
+        proccessedVectorService = this.getBean( ProcessedExpressionDataVectorCreateHelperService.class );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
+
+        if ( this.hasOption( "diagupdate" ) ) {
+            this.updateDiagnostics = true;
+        }
+
+        if ( this.hasOption( "rankupdate" ) ) {
+
+            this.updateRanks = true;
+        }
 
         if ( this.hasOption( 'b' ) ) {
             this.batchCorrect = true;
@@ -105,7 +123,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     public String getShortDesc() {
-        return "Performs preprocessing and can do batch correction (ComBat)";
+        return "Performs preprocessing and can do batch correction (ComBat) and other steps. If specific steps are not specified, "
+                + "all preprocessing is done (which includes the other steps)";
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
@@ -116,12 +135,29 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         try {
             ee = this.eeService.thawLite( ee );
 
-            if ( this.batchCorrect ) {
-                log.info( "Only batch correcting " + ee );
-                this.preprocessorService.batchCorrect( ee, this.force );
+            if ( this.batchCorrect || this.updateDiagnostics || this.updateRanks ) {
+                log.info( "Skipping processed data vector creation; only doing selected postprocessing steps" );
+
+                // this ordering is kind of important
+                if ( this.batchCorrect ) {
+                    log.info( "Batch correcting " + ee );
+                    this.preprocessorService.batchCorrect( ee, this.force );
+                }
+
+                if ( this.updateRanks ) {
+                    log.info( "Updating ranks: " + ee );
+                    this.proccessedVectorService.updateRanks( ee );
+                }
+
+                if ( this.updateDiagnostics ) {
+                    log.info( "Updating diagnostics: " + ee );
+                    this.preprocessorService.processDiagnostics( ee );
+                }
             } else {
+                // this does all of the steps.
                 this.preprocessorService.process( ee );
             }
+
             // Note the auditing is done by the service.
             successObjects.add( ee );
             AbstractCLI.log.info( "Successfully processed: " + ee );

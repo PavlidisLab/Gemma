@@ -344,6 +344,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             headers.put( ba.getSampleUsed(), h );
 
             ba.setFastqHeaders( h );
+            
+            /*
+             * TODO we could use this as an opportunity to update the "original platform" if it is not populated
+             */
+            if (ba.getOriginalPlatform() == null) {
+                
+            }
 
             // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.  
             // The difference for RNAseq is that we want to store the entire header, which includes parts that are not needed for the batch information.
