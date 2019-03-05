@@ -104,7 +104,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
      * @param dates dates
      */
     @Secured({ "GROUP_ADMIN" })
-    void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
+    <T> void associateBatchFactor( Map<BioMaterial, T> descriptors, Map<T, FactorValue> d2fv );
 
     String getBioMaterialIdList( Collection<BioMaterial> bioMaterials );
 

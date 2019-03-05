@@ -1228,7 +1228,7 @@ public class ExpressionExperimentDaoImpl
             // in this transaction.
             session.flush();
             session.clear();
-            
+
             // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but 
             // this may be okay now with updated config - see CurationDetails.hbm.xml)
             ee.getCurationDetails().setLastNeedsAttentionEvent( null );
@@ -1241,7 +1241,7 @@ public class ExpressionExperimentDaoImpl
             /*
              * This will fail because of multiple cascade=all on audit events.
              */
-        //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
+            //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
 
             Hibernate.initialize( ee.getAuditTrail() );
 
@@ -1350,6 +1350,7 @@ public class ExpressionExperimentDaoImpl
         return this.thawLiter( expressionExperiment );
     }
 
+    // "thawLite"
     @Override
     public ExpressionExperiment thawWithoutVectors( final ExpressionExperiment expressionExperiment ) {
         return this.thaw( expressionExperiment, false );
@@ -1739,6 +1740,8 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+            Hibernate.initialize( ba.getOriginalPlatform() );
+
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
             if ( bm != null ) {

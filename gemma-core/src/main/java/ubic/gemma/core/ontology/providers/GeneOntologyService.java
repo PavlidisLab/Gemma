@@ -193,7 +193,7 @@ public interface GeneOntologyService extends InitializingBean {
     String getTermDefinition( String goId );
 
     /**
-     * @param  ID e.g. GO:0038128
+     * @param  value e.g. GO:0038128
      * @return    term or null if not found
      */
     OntologyTerm getTermForId( String value );

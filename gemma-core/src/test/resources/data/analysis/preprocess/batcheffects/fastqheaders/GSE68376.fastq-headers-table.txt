@@ -1,0 +1,8 @@
+GSM1669529	SRR2001431	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013021	@SRR2001431.1.1 1 length=51
+GSM1669530	SRR2001432	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013022	@SRR2001432.1.1 1 length=51
+GSM1669531	SRR2001433	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013023	@SRR2001433.1.1 1 length=51
+GSM1669532	SRR2001434	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013024	@SRR2001434.1.1 1 length=51
+GSM1669533	SRR2001435	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013025	@SRR2001435.1.1 1 length=51
+GSM1669534	SRR2001436	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013026	@SRR2001436.1.1 1 length=51
+GSM1669535	SRR2001437	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013027	@SRR2001437.1.1 1 length=51
+GSM1669536	SRR2001438	GPL16417	https://www.ncbi.nlm.nih.gov/sra?term=SRX1013028	@SRR2001438.1.1 1 length=51
