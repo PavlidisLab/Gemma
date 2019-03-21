@@ -152,11 +152,11 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
 
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
                     if ( ba != null ) {
-                        //FIXME for EE 6236 hibernate returns a list with a lot of nulls in it, so this is a workaround as I do not currently have time to properly investigate root cause
                         session.buildLockRequest( LockOptions.NONE ).lock( ba );
                         Hibernate.initialize( ba );
                         Hibernate.initialize( ba.getSampleUsed() );
                         Hibernate.initialize( ba.getArrayDesignUsed() );
+                        Hibernate.initialize( ba.getOriginalPlatform() );
                         BioMaterial bm = ba.getSampleUsed();
                         session.buildLockRequest( LockOptions.NONE ).lock( bm );
                         Hibernate.initialize( bm );
