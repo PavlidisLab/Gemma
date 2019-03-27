@@ -1340,6 +1340,7 @@ public class ExpressionExperimentDaoImpl
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
+            Hibernate.initialize( ba.getOriginalPlatform() );
         }
 
         return result;
