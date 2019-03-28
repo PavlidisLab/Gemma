@@ -41,7 +41,7 @@ import java.util.Map;
 
 /**
  * @author pavlidis
- * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
+ * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
 public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
@@ -198,6 +198,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             ba = ( BioAssay ) session.get( BioAssay.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
+            Hibernate.initialize( ba.getOriginalPlatform() );
         }
     }
 
@@ -232,9 +233,9 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     /**
-     * @param ee ee
-     * @param cs2gene Map of probes to genes.
-     * @return map of vectors to gene ids.
+     * @param  ee      ee
+     * @param  cs2gene Map of probes to genes.
+     * @return         map of vectors to gene ids.
      */
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene ) {
 
