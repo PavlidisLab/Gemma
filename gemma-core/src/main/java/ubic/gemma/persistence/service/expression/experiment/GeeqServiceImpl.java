@@ -269,7 +269,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         this.update( gq );
         Log.info( this.getClass(),
-                GeeqServiceImpl.LOG_PREFIX + " took " + ( stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60.0 )
+                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60.0 )
                         + " minutes to process ee id " + eeId );
 
     }
@@ -432,7 +432,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( ArrayDesign ad : ads ) {
 
             Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-           taxonService.thaw(taxon );
+            taxonService.thaw( taxon );
             long cnt = arrayDesignService.numGenes( ad );
 
             /*
@@ -697,7 +697,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
      *
      * @param  ee an expression experiment to get the count for.
      * @return    the lowest number of replicates (ignoring factor value combinations with only one replicate),
-     *            or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable factors
+     *            or -2 if <em>all</em> factor value combinations were present only once, or -1, if there were no usable
+     *            factors
      *            to begin with.
      */
     private int leastReplicates( ExpressionExperiment ee ) {
