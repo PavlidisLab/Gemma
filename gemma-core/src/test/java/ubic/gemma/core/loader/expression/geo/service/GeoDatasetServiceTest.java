@@ -183,10 +183,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     public void tearDown() {
         if ( ee != null )
             try {
-            eeService.remove( ee );
+                eeService.remove( ee );
             } catch ( Exception e ) {
-            log.info( "Failed to remove EE after test: " + e.getMessage() );
-            throw e;
+                log.info( "Failed to remove EE after test: " + e.getMessage() );
+                throw e;
             }
     }
 
@@ -397,9 +397,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unused")
     // !! Please leave this here, we use it to load data sets for chopping.
-    void fetchASeries( String accession ) {
+    ExpressionExperiment fetchASeries( String accession ) {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.fetchAndLoad( accession, false, false, false );
+        return ( ExpressionExperiment ) geoService.fetchAndLoad( accession, false, false, false ).iterator().next();
     }
 
     @SuppressWarnings("unused")
@@ -450,9 +450,18 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    // @Test
-    // public void test() {
-    // fetchASeries( "GSE45405" );
-    // }
+    // leave this here for adding temporary tests
+    //    @Test
+    //    public void test() {
+    //        ExpressionExperiment newee = fetchASeries( "GSE16035" );
+    //        Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
+    //
+    //        rawExpressionDataVectorService.thaw( vectors );
+    //
+    //        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
+    //
+    //        ExpressionDataMatrix<Double> matrix = builder.getPreferredData();
+    //        System.err.println( matrix );
+    //    }
 
 }
