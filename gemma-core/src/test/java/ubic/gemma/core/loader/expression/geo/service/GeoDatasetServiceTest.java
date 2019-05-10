@@ -23,6 +23,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
@@ -31,7 +33,6 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -62,15 +63,14 @@ import static org.junit.Assert.*;
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
-    TwoChannelMissingValues twoChannelMissingValues;
+    private TwoChannelMissingValues twoChannelMissingValues;
+
     @Autowired
-    ExpressionExperimentLoadTask expressionExperimentLoadTask;
+    private ExpressionDataFileService dataFileService;
     @Autowired
-    ExpressionDataFileService dataFileService;
-    @Autowired
-    AclTestUtils aclTestUtils;
+    private AclTestUtils aclTestUtils;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
@@ -81,7 +81,11 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
+    private ProcessedExpressionDataVectorService dataVectorService;
+    @Autowired
     private GeeqService geeqService;
+    @Autowired
+    private PreprocessorService preprocessorService;
 
     /*
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
@@ -129,6 +133,30 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             aclTestUtils.checkEEAcls( ee );
         } catch ( AlreadyExistsInSystemException e ) {
             log.warn( "Test skipped because GSE1133 was not removed from the system prior to test" );
+        }
+    }
+
+    @Test
+    public void testFetchAndLoadGSE16035() throws Exception, PreprocessingException {
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE16035", false, true, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+            ee = preprocessorService.process( ee );
+
+            ee = eeService.thaw( ee );
+            Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
+            dataVectorService.thaw( vecs );
+
+            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
+
+            ExpressionDataMatrix<Double> matrix = builder.getProcessedData();
+            double a = matrix.get( 0, 0 );
+            double b = matrix.get( 0, 1 );
+            assertTrue( a - b != 0.0 );
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE16035 was not removed from the system prior to test" );
         }
     }
 

@@ -41,11 +41,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         ExperimentalDesignImportCli e = new ExperimentalDesignImportCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            AbstractCLI.log.fatal( ex, ex );
-        }
-        System.exit( 0 );
+        executeCommand( e, args );
     }
 
     @Override
@@ -150,7 +146,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
         if ( experiment == null ) {
             AbstractCLI.log.error( "No experiment " + shortName + " found" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError();
         }
         return experiment;
     }

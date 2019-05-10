@@ -18,7 +18,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
-        tryDoWork( p, args );
+        executeCommand( p, args );
     }
 
     @Override

@@ -34,7 +34,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
 
     public static void main( String[] args ) {
         ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override

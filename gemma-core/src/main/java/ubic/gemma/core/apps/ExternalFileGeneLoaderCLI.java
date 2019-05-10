@@ -45,7 +45,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     public static void main( String[] args ) {
         // super constructor calls build options
         ExternalFileGeneLoaderCLI p = new ExternalFileGeneLoaderCLI();
-        AbstractCLIContextCLI.tryDoWork( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override

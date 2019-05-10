@@ -55,7 +55,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         NcbiGeneLoaderCLI p = new NcbiGeneLoaderCLI();
-        AbstractCLIContextCLI.tryDoWork( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -85,12 +85,12 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
         this.addOption( pathOption );
 
-        this.addOption( "taxon", true, "Specific taxon for which to update genes" );
+        this.addOption( "taxon", null, "Specific taxon for which to update genes", "taxon" );
 
-        this.addOption( "nodownload", false, "Set to suppress NCBI file download" );
+        this.addOption( "nodownload", "Set to suppress NCBI file download" );
 
-        this.addOption( "restart", true, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
-                + "and assumes you have the right -taxon option, if any)" );
+        this.addOption( "restart", null, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
+                + "and assumes you have the right -taxon option, if any)", "ncbi id" );
 
         this.requireLogin();
     }

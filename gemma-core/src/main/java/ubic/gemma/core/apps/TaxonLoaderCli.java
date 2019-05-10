@@ -34,7 +34,7 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         TaxonLoaderCli p = new TaxonLoaderCli();
-        tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
     }
 
     @Override

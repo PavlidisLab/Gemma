@@ -114,7 +114,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
                     AbstractCLI.log.error( "Unknown array design" );
-                    this.bail( ErrorCode.INVALID_OPTION );
+                    this.exitwithError( );
                 }
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );

@@ -18,17 +18,40 @@
  */
 package ubic.gemma.core.util;
 
-import org.apache.commons.cli.*;
+import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.cli.AlreadySelectedException;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingArgumentException;
+import org.apache.commons.cli.MissingOptionException;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Option.Builder;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.*;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
-
-import java.io.File;
-import java.util.*;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
@@ -50,18 +73,18 @@ public abstract class AbstractCLI {
     private static final String LOGGER_OPTION = "logger";
     private static final int DEFAULT_PORT = 3306;
     private static final String HEADER = "Options:";
-    private static final char HOST_OPTION = 'H';
-    private static final char PASSWORD_CONSTANT = 'p';
-    private static final char PORT_OPTION = 'P';
-    private static final char USERNAME_OPTION = 'u';
-    private static final char VERBOSITY_OPTION = 'v';
+    private static final String HOST_OPTION = "H";
+    private static final String PASSWORD_CONSTANT = "p";
+    private static final String PORT_OPTION = "P";
+    private static final String USERNAME_OPTION = "u";
+    private static final String VERBOSITY_OPTION = "v";
     // needs to be concurrently modifiable.
     protected final Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<>() );
     protected final Options options = new Options();
     protected final Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<>() );
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
-    private final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
+    private static final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
@@ -90,33 +113,39 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * 
      * @param  opt option
-     * @return     see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
+     * @return     Options
      */
     public final Options addOption( Option opt ) {
         return this.options.addOption( opt );
     }
 
     /**
-     * @param  opt         option
-     * @param  hasArg      has arg
-     * @param  description description
-     * @return             see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
+     * @param  opt         option, required
+     * @param  description description, required
+     * @return             Options
      */
-    public final Options addOption( String opt, boolean hasArg, String description ) {
-        return this.options.addOption( opt, hasArg, description );
+    public final Options addOption( String opt, String description ) {
+        Builder b = Option.builder( opt ).desc( description );
+
+        return this.options.addOption( b.build() );
     }
 
     /**
-     * @param  opt         option
-     * @param  longOpt     long option
-     * @param  hasArg      has arg
-     * @param  description description
-     * @return             see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean,
-     *                     java.lang.String)
+     * @param  opt         option, required
+     * @param  description description, required
+     * @param  longOpt     long option (if null, ignored)
+     * @param  argName     name of the argument of the option (if blank or null, implies there is no argument)
+     * @return             Options
      */
-    public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
-        return this.options.addOption( opt, longOpt, hasArg, description );
+    public final Options addOption( String opt, String longOpt, String description, String argName ) {
+
+        Builder b = Option.builder( opt ).desc( description );
+        if ( StringUtils.isNotBlank( longOpt ) ) b = b.longOpt( longOpt );
+        if ( StringUtils.isNotBlank( argName ) ) b = b.argName( argName ).hasArg();
+        return this.options.addOption( b.build() );
+
     }
 
     /**
@@ -215,20 +244,20 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
-        Option autoSeekOption = OptionBuilder.withArgName( AbstractCLI.AUTO_OPTION_NAME )
-                .withDescription( "Attempt to process entities that need processing based on workflow criteria." )
-                .create( AbstractCLI.AUTO_OPTION_NAME );
+        Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
+                .desc( "Attempt to process entities that need processing based on workflow criteria." )
+                .build();
 
         this.addOption( autoSeekOption );
     }
 
     @SuppressWarnings("static-access")
     protected void addDateOption() {
-        Option dateOption = OptionBuilder.hasArg().withArgName( "mdate" ).withDescription(
+        Option dateOption = Option.builder( "mdate" ).desc(
                 "Constrain to run only on entities with analyses older than the given date. "
                         + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                         + "If there is no record of when the analysis was last run, it will be run." )
-                .create( "mdate" );
+                .build();
 
         this.addOption( dateOption );
     }
@@ -241,15 +270,15 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
-        Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg()
-                .withDescription( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
-                .create( AbstractCLI.HOST_OPTION );
+        Option hostOpt = Option.builder( HOST_OPTION ).argName( "host name" ).longOpt( "host" ).hasArg()
+                .desc( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
+                .build();
 
         hostOpt.setRequired( hostRequired );
 
-        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg()
-                .withDescription( "Port to use on host (Default = " + AbstractCLI.DEFAULT_PORT + ")" )
-                .create( AbstractCLI.PORT_OPTION );
+        Option portOpt = Option.builder( PORT_OPTION ).argName( "port" ).longOpt( "port" ).hasArg()
+                .desc( "Port to use on host (Default = " + AbstractCLI.DEFAULT_PORT + ")" )
+                .build();
 
         portOpt.setRequired( portRequired );
 
@@ -262,9 +291,9 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addThreadsOption() {
-        Option threadsOpt = OptionBuilder.withArgName( "numThreads" ).hasArg()
-                .withDescription( "Number of threads to use for batch processing." )
-                .create( AbstractCLI.THREADS_OPTION );
+        Option threadsOpt = Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
+                .desc( "Number of threads to use for batch processing." )
+                .build();
         options.addOption( threadsOpt );
     }
 
@@ -286,15 +315,15 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions( boolean required ) {
-        this.usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg()
-                .withDescription( "User name for accessing the system (optional for some tools)" )
-                .create( AbstractCLI.USERNAME_OPTION );
+        this.usernameOpt = Option.builder( AbstractCLI.USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
+                .desc( "User name for accessing the system (optional for some tools)" )
+                .build();
 
         usernameOpt.setRequired( required );
 
-        this.passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg()
-                .withDescription( "Password for accessing the system (optional for some tools)" )
-                .create( AbstractCLI.PASSWORD_CONSTANT );
+        this.passwordOpt = Option.builder( PASSWORD_CONSTANT ).argName( "passwd" ).longOpt( "password" ).hasArg()
+                .desc( "Password for accessing the system (optional for some tools)" )
+                .build();
         passwordOpt.setRequired( required );
 
         options.addOption( usernameOpt );
@@ -302,15 +331,10 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Stop executing the CLI.
-     *
-     * @param errorCode error code
+     * Stop executing the CLI. We always fail with System exit code 1.
      */
-    protected void bail( ErrorCode errorCode ) {
-        // do something, but not System.exit.
-        AbstractCLI.log.debug( "Bailing with error code " + errorCode );
-        this.resetLogging();
-        throw new IllegalStateException( errorCode.toString() );
+    protected static void exitwithError() {
+        System.exit( 1 );
     }
 
     /**
@@ -325,10 +349,9 @@ public abstract class AbstractCLI {
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
                 "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
-        Option otherLogOpt = OptionBuilder.hasArg().withArgName( "logger" ).withDescription(
-                "Configure a specific logger verbosity"
-                        + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
-                .create( "logger" );
+        Option otherLogOpt = Option.builder().longOpt( "logger" ).hasArg().argName( "logger" ).desc( "Configure a specific logger verbosity"
+                + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+                .build();
 
         options.addOption( otherLogOpt );
         options.addOption( logOpt );
@@ -344,7 +367,7 @@ public abstract class AbstractCLI {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( this.invalidOptionString( "" + option ) + ", not a valid double" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return 0.0;
     }
@@ -354,7 +377,7 @@ public abstract class AbstractCLI {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( this.invalidOptionString( option ) + ", not a valid double" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return 0.0;
     }
@@ -364,7 +387,7 @@ public abstract class AbstractCLI {
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return fileName;
     }
@@ -374,7 +397,7 @@ public abstract class AbstractCLI {
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return fileName;
     }
@@ -384,7 +407,7 @@ public abstract class AbstractCLI {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( this.invalidOptionString( "" + option ) + ", not a valid integer" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return 0;
     }
@@ -394,7 +417,7 @@ public abstract class AbstractCLI {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( this.invalidOptionString( option ) + ", not a valid integer" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return 0;
     }
@@ -424,7 +447,7 @@ public abstract class AbstractCLI {
      */
     protected final Exception processCommandLine( String[] args ) {
         /* COMMAND LINE PARSER STAGE */
-        BasicParser parser = new BasicParser();
+        DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();
         if ( appVersion == null )
             appVersion = "?";
@@ -492,9 +515,9 @@ public abstract class AbstractCLI {
     /**
      * This is needed for CLIs that run in tests, so the logging settings get reset.
      */
-    protected void resetLogging() {
-        for ( Logger log4jLogger : this.originalLoggingLevels.keySet() ) {
-            log4jLogger.setLevel( this.originalLoggingLevels.get( log4jLogger ) );
+    protected static void resetLogging() {
+        for ( Logger log4jLogger : originalLoggingLevels.keySet() ) {
+            log4jLogger.setLevel( originalLoggingLevels.get( log4jLogger ) );
         }
     }
 
@@ -578,7 +601,7 @@ public abstract class AbstractCLI {
 
         // if logger name is nonsense this will not do anything.
         AbstractCLI.log.info( "Setting logging for " + loggerName + " to " + v );
-        this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
+        originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
 
         this.setLoggerLevel( v, log4jLogger );
 
@@ -670,10 +693,6 @@ public abstract class AbstractCLI {
                 throw new RuntimeException( "Verbosity must be from 0 to 5" );
 
         }
-    }
-
-    public enum ErrorCode {
-        AUTHENTICATION_ERROR, FATAL_ERROR, INVALID_OPTION, MISSING_ARGUMENT, MISSING_OPTION, NORMAL
     }
 
 }

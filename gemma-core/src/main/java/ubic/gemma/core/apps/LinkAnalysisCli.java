@@ -32,7 +32,6 @@ import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisServic
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -54,7 +53,7 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * Commandline tool to conduct link analysis.
+ * Commandline tool to conduct link (coexpression) analysis.
  *
  * @author xiangwan
  * @author paul (refactoring)
@@ -73,7 +72,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         LinkAnalysisCli p = new LinkAnalysisCli();
-        AbstractCLIContextCLI.tryDoWorkLogTime( p, args );
+        executeCommand( p, args );
     }
 
     @Override
@@ -219,14 +218,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         super.addDateOption();
 
-        Option nodeDegreeUpdate = OptionBuilder
-                .withDescription( "Update the node degree for taxon given by -t option. All other options ignored." )
-                .create( 'n' );
+        Option nodeDegreeUpdate = Option.builder( "n" ).desc( "Update the node degree for taxon given by -t option. All other options ignored." )
+                .build();
         this.addOption( nodeDegreeUpdate );
 
-        this.addOption( OptionBuilder.withDescription(
-                "Initialize links for taxon given by -t option, based on old data. All other options ignored." )
-                .create( "init" ) );
+        super.addOption( "init",     "Initialize links for taxon given by -t option, based on old data. All other options ignored." );
 
         Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Threshold" )
                 .withDescription( "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" )
@@ -336,7 +332,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
                 AbstractCLI.log.error( "Must provide 'taxon' option when initializing from old data" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError();
             }
             // all other options ignored.
             return;
@@ -346,7 +342,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
                 AbstractCLI.log.error( "Must provide 'taxon' option when updating node degree" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError();
             }
             // all other options ignored.
             return;
@@ -355,14 +351,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( this.hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
                 AbstractCLI.log.error( "The 'dataFile' option is incompatible with other data set selection options" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError();
             }
 
             if ( this.hasOption( "array" ) ) {
                 this.linkAnalysisConfig.setArrayName( this.getOptionValue( "array" ) );
             } else {
                 AbstractCLI.log.error( "Must provide 'array' option if you  use 'dataFile" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError();
             }
 
             if ( this.hasOption( 't' ) ) {
@@ -370,7 +366,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             } else {
                 AbstractCLI.log
                         .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError();
             }
 
             this.dataFileName = this.getOptionValue( "dataFile" );

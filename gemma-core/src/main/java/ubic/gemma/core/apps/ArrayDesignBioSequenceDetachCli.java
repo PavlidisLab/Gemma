@@ -43,7 +43,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     public static void main( String[] args ) {
         ArrayDesignBioSequenceDetachCli p = new ArrayDesignBioSequenceDetachCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override

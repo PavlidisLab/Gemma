@@ -57,7 +57,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
         Exception err = this.processCommandLine( args );
         if ( err != null ) {
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError( );
             return err;
         }
 
@@ -78,7 +78,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
             if ( otherArrayDesign == null ) {
                 AbstractCLI.log.error( "No arrayDesign " + otherArrayDesignName + " found" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError( );
             }
 
             otherArrayDesign = this.thaw( otherArrayDesign );

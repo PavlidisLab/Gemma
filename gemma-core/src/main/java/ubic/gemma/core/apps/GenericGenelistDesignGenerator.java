@@ -72,10 +72,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        Exception e = b.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( b, args );
     }
 
     @Override
@@ -91,9 +88,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        super.addOption( "t", "taxon", true, "Taxon of the genes" );
-        super.addOption( "ncbiids", false, "use NCBI numeric IDs as the identifiers instead of gene symbols" );
-        super.addOption( "ensembl", false, "use Ensembl identifiers instead of gene symbols" );
+        super.addOption( "t", "taxon", "Taxon of the genes", "taxon" );
+        super.addOption( "ncbiids", "use NCBI numeric IDs as the identifiers instead of gene symbols" );
+        super.addOption( "ensembl", "use Ensembl identifiers instead of gene symbols" );
     }
 
     @Override

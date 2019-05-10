@@ -43,10 +43,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         ReplaceDataCli c = new ReplaceDataCli();
-        Exception e = c.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( c, args );
     }
 
     @Override
@@ -57,8 +54,8 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        super.addOption( "file", true,
-                "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" );
+        super.addOption( "file", null,
+                "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)", "file path" );
         super.addForceOption();
     }
 
@@ -101,7 +98,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         Collection<QuantitationType> qts = eeService.getPreferredQuantitationType( ee );
 
-        if( qts == null || qts.size() < 1 || qts.iterator().next() == null ){
+        if ( qts == null || qts.size() < 1 || qts.iterator().next() == null ) {
             throw new IllegalArgumentException(
                     "Experiment must have a preferred quantitation type to replace data for" );
         }

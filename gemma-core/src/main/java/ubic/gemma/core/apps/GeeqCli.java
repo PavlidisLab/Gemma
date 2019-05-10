@@ -47,7 +47,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         GeeqCli p = new GeeqCli();
-        AbstractCLIContextCLI.tryDoWork( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override

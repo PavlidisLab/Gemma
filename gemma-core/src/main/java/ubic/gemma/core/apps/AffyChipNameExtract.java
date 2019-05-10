@@ -41,10 +41,7 @@ import java.io.InputStream;
 public class AffyChipNameExtract extends ArrayDesignSequenceManipulatingCli {
     public static void main( String[] args ) {
         AffyChipNameExtract d = new AffyChipNameExtract();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( d, args );
     }
 
     @Override

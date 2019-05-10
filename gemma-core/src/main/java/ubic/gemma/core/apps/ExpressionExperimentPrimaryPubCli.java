@@ -49,7 +49,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     public static void main( String[] args ) {
         ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
-        tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
     }
 
     @Override

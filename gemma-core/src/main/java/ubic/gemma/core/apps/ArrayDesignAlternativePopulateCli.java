@@ -39,8 +39,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         ArrayDesignAlternativePopulateCli c = new ArrayDesignAlternativePopulateCli();
-        c.doWork( args );
-
+        executeCommand( c, args );
     }
 
     @Override

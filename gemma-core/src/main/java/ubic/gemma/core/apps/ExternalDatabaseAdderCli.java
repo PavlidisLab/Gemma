@@ -32,7 +32,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         ExternalDatabaseAdderCli p = new ExternalDatabaseAdderCli();
-        tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
 
     }
 

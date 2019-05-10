@@ -47,7 +47,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     public static void main( String[] args ) {
         ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -93,7 +93,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         File f = new File( file );
         if ( !f.canRead() ) {
             AbstractCLI.log.fatal( "Cannot read from " + file );
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError( );
         }
 
         if ( this.getArrayDesignsToProcess().size() > 1 ) {

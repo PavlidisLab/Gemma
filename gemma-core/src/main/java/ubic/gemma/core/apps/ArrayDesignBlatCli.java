@@ -58,7 +58,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     public static void main( String[] args ) {
         ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
     }
 
     @Override
@@ -240,7 +240,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.summarizeProcessing();
 
         } else {
-            this.bail( ErrorCode.MISSING_ARGUMENT );
+            exitwithError();
         }
 
         return null;
@@ -265,7 +265,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
             AbstractCLI.log.error( "Cannot read from " + blatResultFile );
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError();
         }
         // check being running for just one taxon
         arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );

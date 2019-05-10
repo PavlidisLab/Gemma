@@ -69,7 +69,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     public static void main( String[] args ) {
         ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -149,7 +149,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         this.addOption( directAnnotation );
 
-        this.addOption( "ncbi", false,
+        this.addOption( "ncbi",
                 "If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)" );
 
         Option databaseOption = OptionBuilder

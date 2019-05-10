@@ -232,7 +232,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     void addForceOption() {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         @SuppressWarnings("static-access")
-        Option forceOption = Option.builder( "force" ).argName( "Force processing" )
+        Option forceOption = Option.builder( "force" ).argName( "Force processing" ).hasArg()
                 .longOpt( "force" ).desc( defaultExplanation ).build();
         this.addOption( forceOption );
     }
@@ -271,7 +271,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         }
         if ( expressionExperiments.size() == 0 ) {
             AbstractCLI.log.error( "There were no valid experimnents specified" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError( );
         }
     }
 
@@ -340,7 +340,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         if ( experiment == null ) {
             AbstractCLI.log.error( "No experiment " + name + " found" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError( );
         }
         return experiment;
     }

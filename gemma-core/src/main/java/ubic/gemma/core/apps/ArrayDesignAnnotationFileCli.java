@@ -76,7 +76,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     public static void main( String[] args ) {
         ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
-        AbstractCLIContextCLI.tryDoWork( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -433,7 +433,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } catch ( InterruptedException e ) {
                 e.printStackTrace();
                 log.error( "Failure while waiting for GO to load" );
-                super.bail( ErrorCode.FATAL_ERROR );
+                super.exitwithError( );
             }
         }
         if ( !this.notifiedAboutGOState ) {

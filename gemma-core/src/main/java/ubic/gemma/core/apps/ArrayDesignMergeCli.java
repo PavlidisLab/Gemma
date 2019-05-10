@@ -65,7 +65,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         Exception err = this.processCommandLine( args );
         if ( err != null ) {
-            this.bail( ErrorCode.INVALID_OPTION );
+            this.exitwithError( );
             return err;
         }
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );

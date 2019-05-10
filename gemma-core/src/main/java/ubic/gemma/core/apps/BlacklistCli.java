@@ -46,11 +46,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         BlacklistCli e = new BlacklistCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            log.fatal( ex, ex );
-        }
-
+        executeCommand( e, args );
     }
 
     @Override
@@ -76,10 +72,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
-        super.addOption( "file", "file", true,
+        super.addOption( "file", null,
                 "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
-                        + "additional columns: name, description of entity" );
-        super.addOption( "undo", "undo", false, "Remove items from blacklist instead of adding" );
+                        + "additional columns: name, description of entity",
+                "file name" );
+        super.addOption( "undo", "Remove items from blacklist instead of adding" );
 
     }
 
@@ -142,7 +139,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 }
 
                 if ( blacklistedEntityDao.findByAccession( accession ) != null ) {
-                    log.warn(accession + " is already on the blacklist, skipping");
+                    log.warn( accession + " is already on the blacklist, skipping" );
                     continue;
                 }
 
@@ -153,7 +150,8 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 blee.setExternalAccession( d );
 
                 /*
-                 * Remember that the entity will not be in the system, so having the name and description here might be useful.
+                 * Remember that the entity will not be in the system, so having the name and description here might be
+                 * useful.
                  */
                 if ( split.length > 2 ) {
                     blee.setName( split[2] );

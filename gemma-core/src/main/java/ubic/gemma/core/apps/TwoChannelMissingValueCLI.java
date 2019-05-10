@@ -118,7 +118,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 }
             } catch ( NumberFormatException e ) {
                 AbstractCLI.log.error( "Arguments to mvind must be numbers" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                this.exitwithError( );
             }
         }
         tcmv = this.getBean( TwoChannelMissingValues.class );

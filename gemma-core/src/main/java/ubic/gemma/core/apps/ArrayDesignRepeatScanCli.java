@@ -45,7 +45,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     public static void main( String[] args ) {
         ArrayDesignRepeatScanCli p = new ArrayDesignRepeatScanCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -135,7 +135,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             }
             this.summarizeProcessing();
         } else {
-            this.bail( ErrorCode.MISSING_ARGUMENT );
+            this.exitwithError();
         }
 
         return null;
