@@ -88,8 +88,8 @@ public class AuditableObject implements Serializable {
             return false;
         if ( type == null ) {
             return other.type == null;
-        } else
-            return type.equals( other.type );
+        }
+        return type.equals( other.type );
     }
 
 }

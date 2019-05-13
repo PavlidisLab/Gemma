@@ -165,6 +165,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     }
 
+    @Override
     public ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
 
         ExperimentalFactor batch = null;

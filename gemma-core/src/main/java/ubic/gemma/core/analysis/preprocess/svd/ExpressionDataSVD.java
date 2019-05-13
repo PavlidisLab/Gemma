@@ -179,16 +179,16 @@ public class ExpressionDataSVD {
     }
 
     /**
-     * @param i which eigengene
-     * @return the ith eigengene (column of V)
+     * @param  i which eigengene
+     * @return   the ith eigengene (column of V)
      */
     public Double[] getEigenGene( int i ) {
         return this.getV().getColObj( i );
     }
 
     /**
-     * @param i which eigensample
-     * @return the ith eigensample (column of U)
+     * @param  i which eigensample
+     * @return   the ith eigensample (column of U)
      */
     public Double[] getEigenSample( int i ) {
         return this.getU().getColObj( i );
@@ -216,7 +216,7 @@ public class ExpressionDataSVD {
 
     /**
      * @return the matrix of singular values, indexed by the eigenarray (row) and eigengene (column) numbers (starting
-     * from 0).
+     *         from 0).
      */
     public DoubleMatrix<Integer, Integer> getS() {
         return svd.getS();
@@ -235,7 +235,7 @@ public class ExpressionDataSVD {
 
     /**
      * @return the right singular vectors. The column indices are of the eigengenes (starting from 0). The row indices
-     * are of the original samples in the given ExpressionDataDoubleMatrix.
+     *         are of the original samples in the given ExpressionDataDoubleMatrix.
      */
     public DoubleMatrix<Integer, BioMaterial> getV() {
         return svd.getV();
@@ -269,8 +269,8 @@ public class ExpressionDataSVD {
      * (Lancet 359, 2002) and Alter et al. (PNAS 2000). Correction by ANOVA would yield similar results if the nuisance
      * variable is known.
      *
-     * @param numComponentsToRemove The number of components to remove, starting from the largest eigenvalue.
-     * @return the reconstructed matrix; values that were missing before are re-masked.
+     * @param  numComponentsToRemove The number of components to remove, starting from the largest eigenvalue.
+     * @return                       the reconstructed matrix; values that were missing before are re-masked.
      */
     public ExpressionDataDoubleMatrix removeHighestComponents( int numComponentsToRemove ) {
         DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
@@ -308,11 +308,13 @@ public class ExpressionDataSVD {
 
     /**
      * @return Implements the method described in the SPELL paper. Note that this alters the U matrix of this.
-     * <p>
-     * We make two assumptions about the method that are not described in the paper: 1) The data are rescaled and
-     * centered; 2) the absolute value of the U matrix is used. Note that unlike the original data, the transformed data
-     * will have no missing values.
-     * </p>
+     *         <p>
+     *         We make two assumptions about the method that are not described in the paper: 1) The data are rescaled
+     *         and
+     *         centered; 2) the absolute value of the U matrix is used. Note that unlike the original data, the
+     *         transformed data
+     *         will have no missing values.
+     *         </p>
      */
     public ExpressionDataDoubleMatrix uMatrixAsExpressionData() {
 
@@ -344,8 +346,8 @@ public class ExpressionDataSVD {
      * Implements method described in Skillicorn et al., "Strategies for winnowing microarray data" (also section 3.5.5
      * of his book)
      *
-     * @param thresholdQuantile Enter 0.5 for median. Value must be &gt; 0 and &lt; 1.
-     * @return a filtered matrix
+     * @param  thresholdQuantile Enter 0.5 for median. Value must be &gt; 0 and &lt; 1.
+     * @return                   a filtered matrix
      */
     public ExpressionDataDoubleMatrix winnow( double thresholdQuantile ) {
 
@@ -391,8 +393,8 @@ public class ExpressionDataSVD {
                 NormCmp other = ( NormCmp ) obj;
                 if ( norm == null ) {
                     return other.norm == null;
-                } else
-                    return norm.equals( other.norm );
+                }
+                return norm.equals( other.norm );
             }
 
         }

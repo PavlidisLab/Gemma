@@ -259,8 +259,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         }
         if ( resultValueObject == null ) {
             return other.resultValueObject == null;
-        } else
-            return resultValueObject.equals( other.resultValueObject );
+        }
+        return resultValueObject.equals( other.resultValueObject );
     }
 
     /**
