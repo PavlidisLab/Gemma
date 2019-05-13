@@ -16,6 +16,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicVal
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement).
@@ -45,9 +48,9 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         super( id );
     }
 
-    public FactorValueBasicValueObject( FactorValue fv ) { // Used to have an extra argument: Characteristic c;
+    public FactorValueBasicValueObject( FactorValue fv ) {
         super( fv.getId() );
-        this.fvSummary = FactorValueValueObject.getSummaryString( fv );
+        this.fvSummary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
         this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
 
@@ -99,6 +102,10 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         return measurement;
     }
 
+    public Boolean isMeasurement() {
+        return this.measurement != null;
+    }
+
     public String getFvValue() {
         return fvValue;
     }
@@ -113,5 +120,24 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     public CharacteristicBasicValueObject getExperimentalFactorCategory() {
         return experimentalFactorCategory;
+    }
+
+    static String getSummaryString( FactorValue fv ) {
+        StringBuilder buf = new StringBuilder();
+        if ( fv.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = iter.next();
+                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
+                if ( iter.hasNext() )
+                    buf.append( ", " );
+            }
+        } else if ( fv.getMeasurement() != null ) {
+            buf.append( fv.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+            buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
     }
 }

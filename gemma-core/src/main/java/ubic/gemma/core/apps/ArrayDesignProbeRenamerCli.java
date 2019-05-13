@@ -38,7 +38,9 @@ import static ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceP
  * matching them to sequences.
  *
  * @author pavlidis
+ * @deprecated renaming probes is not a good idea in general
  */
+@Deprecated
 public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingCli {
 
     private String fileName;

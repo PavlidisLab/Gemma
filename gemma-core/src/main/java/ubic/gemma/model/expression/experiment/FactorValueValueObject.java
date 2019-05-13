@@ -82,25 +82,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.init( value, c );
     }
 
-    static String getSummaryString( FactorValue fv ) {
-        StringBuilder buf = new StringBuilder();
-        if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() )
-                    buf.append( ", " );
-            }
-        } else if ( fv.getMeasurement() != null ) {
-            buf.append( fv.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-            buf.append( fv.getValue() );
-        } else {
-            buf.append( "?" );
-        }
-        return buf.toString();
-    }
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
@@ -242,7 +223,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     private void init( FactorValue val, Characteristic c ) {
-        this.setFactorValue( FactorValueValueObject.getSummaryString( val ) );
+        this.setFactorValue( FactorValueBasicValueObject.getSummaryString( val ) );
         this.setFactorId( val.getExperimentalFactor().getId() );
         this.isBaseline = val.getIsBaseline() != null ? val.getIsBaseline() : this.isBaseline;
 

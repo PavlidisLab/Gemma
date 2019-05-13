@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
@@ -82,16 +81,17 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     protected void buildOptions() {
         super.buildOptions();
 
-        Option signal2noiseOption = OptionBuilder.hasArg().withArgName( "Signal-to-noise" ).withDescription(
+        Option signal2noiseOption = Option.builder( "s" ).hasArg().argName( "Signal-to-noise" ).desc(
                 "Signal to noise ratio, below which values are considered missing; default="
-                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" )
-                .create( 's' );
+                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
+                .longOpt( "signal2noise" )
+                .build();
 
         this.addOption( signal2noiseOption );
 
-        Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" )
-                .withDescription( "Additional numeric values (comma delimited) to be considered missing values." )
-                .create( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION );
+        Option extraMissingIndicators = Option.builder( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION ).hasArg().argName( "mv indicators" )
+                .desc( "Additional numeric values (comma delimited) to be considered missing values." )
+                .build();
 
         this.addOption( extraMissingIndicators );
 
@@ -118,7 +118,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 }
             } catch ( NumberFormatException e ) {
                 AbstractCLI.log.error( "Arguments to mvind must be numbers" );
-                this.exitwithError( );
+                exitwithError();
             }
         }
         tcmv = this.getBean( TwoChannelMissingValues.class );

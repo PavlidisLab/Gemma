@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -53,8 +52,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     private final static int NAME_I = 0;
     private final static int SHORT_NAME_I = LoadSimpleExpressionDataCli.NAME_I + 1;
     private final static int DESCRIPTION_I = LoadSimpleExpressionDataCli.SHORT_NAME_I + 1;
-    private final static int AD_SHORT_NAME_I =
-            LoadSimpleExpressionDataCli.DESCRIPTION_I + 1; // The short name of the arrayDesign
+    private final static int AD_SHORT_NAME_I = LoadSimpleExpressionDataCli.DESCRIPTION_I + 1; // The short name of the arrayDesign
     private final static int DATA_FILE_I = LoadSimpleExpressionDataCli.AD_SHORT_NAME_I + 1;
     private final static int SPECIES_I = LoadSimpleExpressionDataCli.DATA_FILE_I + 1;
     private final static int Q_NAME_I = LoadSimpleExpressionDataCli.SPECIES_I + 1;
@@ -120,12 +118,12 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "File Name" )
-                .withDescription( "the list of experiments in flat file" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = Option.builder( "f" ).required().hasArg().argName( "File Name" )
+                .desc( "the list of experiments in flat file" ).longOpt( "file" ).build();
         this.addOption( fileOption );
 
-        Option dirOption = OptionBuilder.hasArg().withArgName( "File Folder" )
-                .withDescription( "The folder for containing the experiment files" ).withLongOpt( "dir" ).create( 'd' );
+        Option dirOption = Option.builder( "d" ).hasArg().argName( "File Folder" )
+                .desc( "The folder for containing the experiment files" ).longOpt( "dir" ).build();
         this.addOption( dirOption );
 
     }

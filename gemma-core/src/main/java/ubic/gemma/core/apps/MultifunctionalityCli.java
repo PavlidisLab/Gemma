@@ -15,7 +15,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -46,9 +45,9 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
-        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
-                .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" )
-                .create( 't' );
+        Option taxonOption = Option.builder( "t" ).hasArg()
+                .desc( "Taxon to process" ).longOpt( "taxon" )
+                .build();
         this.addOption( taxonOption );
     }
 

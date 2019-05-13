@@ -1,6 +1,5 @@
 package ubic.gemma.core.apps;
 
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
@@ -14,7 +13,6 @@ import java.util.*;
  * @author paul
  */
 public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
-
 
     public static void main( String[] args ) {
         ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
@@ -33,7 +31,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Dump a view of experimental design(s)F";
+        return "Dump a view of experimental design(s)";
     }
 
     @Override
@@ -61,7 +59,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
         Map<Long, Long> factor2Design = new HashMap<>();
 
-        Map<String, Map<String, Collection<FactorValueValueObject>>> categoryMap = new TreeMap<>();
+        Map<String, Map<String, Collection<FactorValueBasicValueObject>>> categoryMap = new TreeMap<>();
 
         for ( ExperimentalDesign experimentalDesign : designs ) {
 
@@ -78,7 +76,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                     category = " ** NO CATEGORY ** ";
 
                 if ( !categoryMap.containsKey( category ) ) {
-                    categoryMap.put( category, new TreeMap<String, Collection<FactorValueValueObject>>() );
+                    categoryMap.put( category, new TreeMap<String, Collection<FactorValueBasicValueObject>>() );
                 }
 
                 for ( FactorValue f : factor.getFactorValues() ) {
@@ -93,17 +91,17 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                                 if ( value == null ) continue;
 
                                 if ( !categoryMap.get( category ).containsKey( value ) ) {
-                                    categoryMap.get( category ).put( value, new HashSet<FactorValueValueObject>() );
+                                    categoryMap.get( category ).put( value, new HashSet<FactorValueBasicValueObject>() );
                                 }
 
-                                categoryMap.get( category ).get( value ).add( new FactorValueValueObject( f, c ) );
+                                categoryMap.get( category ).get( value ).add( new FactorValueBasicValueObject( f ) );
                             }
                         }
                     } else if ( f.getValue() != null ) {
                         if ( !categoryMap.get( category ).containsKey( f.getValue() ) ) {
-                            categoryMap.get( category ).put( f.getValue(), new HashSet<FactorValueValueObject>() );
+                            categoryMap.get( category ).put( f.getValue(), new HashSet<FactorValueBasicValueObject>() );
                         }
-                        categoryMap.get( category ).get( f.getValue() ).add( new FactorValueValueObject( f ) );
+                        categoryMap.get( category ).get( f.getValue() ).add( new FactorValueBasicValueObject( f ) );
                     }
 
                 }
@@ -123,10 +121,10 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
                 log.info( "     Value: " + value );
 
-                for ( FactorValueValueObject fv : categoryMap.get( category ).get( value ) ) {
+                for ( FactorValueBasicValueObject fv : categoryMap.get( category ).get( value ) ) {
                     if ( fv.isMeasurement() ) continue; // don't list individual values.
 
-                    Long factor = fv.getFactorId();
+                    Long factor = fv.getId();
                     ExpressionExperimentValueObject expressionExperimentValueObject = ed2ee.get( factor2Design
                             .get( factor ) );
 
@@ -135,10 +133,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
-                    String ee = expressionExperimentValueObject.getShortName();
-
-                    String uri = StringUtils.isBlank( fv.getValueUri() ) ? "" : " [" + fv.getValueUri() + "]";
-                    log.info( "           " + fv.getValue() + uri + " EE=" + ee );
+                    log.info( "           " + fv.getFvSummary() );
 
                 }
             }

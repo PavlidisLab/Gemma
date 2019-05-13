@@ -26,7 +26,9 @@ import java.io.File;
 
 /**
  * @author paul
+ * @deprecated
  */
+@Deprecated
 public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     private File file = null;

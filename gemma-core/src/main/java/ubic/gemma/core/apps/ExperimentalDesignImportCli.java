@@ -146,7 +146,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
         if ( experiment == null ) {
             AbstractCLI.log.error( "No experiment " + shortName + " found" );
-            this.exitwithError();
+            exitwithError();
         }
         return experiment;
     }

@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

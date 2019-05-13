@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -59,9 +58,9 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "file" )
-                .withDescription( "File (tabbed) with element ids in the first column" ).withLongOpt( "file" )
-                .create( 'f' );
+        Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
+                .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
+                .build();
 
         this.addOption( fileOption );
 
@@ -93,7 +92,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         File f = new File( file );
         if ( !f.canRead() ) {
             AbstractCLI.log.fatal( "Cannot read from " + file );
-            this.exitwithError( );
+            exitwithError();
         }
 
         if ( this.getArrayDesignsToProcess().size() > 1 ) {

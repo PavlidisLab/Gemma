@@ -271,7 +271,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         }
         if ( expressionExperiments.size() == 0 ) {
             AbstractCLI.log.error( "There were no valid experimnents specified" );
-            this.exitwithError( );
+            exitwithError();
         }
     }
 
@@ -340,7 +340,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         if ( experiment == null ) {
             AbstractCLI.log.error( "No experiment " + name + " found" );
-            this.exitwithError( );
+            exitwithError();
         }
         return experiment;
     }

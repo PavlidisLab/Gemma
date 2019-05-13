@@ -433,7 +433,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } catch ( InterruptedException e ) {
                 e.printStackTrace();
                 log.error( "Failure while waiting for GO to load" );
-                super.exitwithError( );
+                exitwithError();
             }
         }
         if ( !this.notifiedAboutGOState ) {

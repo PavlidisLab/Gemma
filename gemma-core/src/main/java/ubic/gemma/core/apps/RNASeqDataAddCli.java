@@ -234,7 +234,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         if ( arrayDesign == null ) {
             AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            this.exitwithError();
+            exitwithError();
         }
         return arrayDesign;
     }

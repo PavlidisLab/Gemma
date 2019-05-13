@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
@@ -82,13 +81,13 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option directGene = OptionBuilder
-                .withDescription( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
-                .hasArg().withArgName( "file" ).create( "f" );
+        Option directGene = Option.builder( "f" )
+                .desc( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
+                .hasArg().argName( "file" ).build();
         this.addOption( directGene );
 
-        Option taxonNameOption = OptionBuilder.hasArg()
-                .withDescription( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).create( "t" );
+        Option taxonNameOption = Option.builder( "t" ).hasArg()
+                .desc( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).build();
         this.addOption( taxonNameOption );
 
         this.requireLogin();

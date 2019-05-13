@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
@@ -95,48 +94,48 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" )
-                .withDescription( "Optional path to file with list of experiment accessions to load" )
-                .withLongOpt( "file" ).create( 'f' );
+        Option fileOption = Option.builder( "f" ).hasArg().argName( "Input file" )
+                .desc( "Optional path to file with list of experiment accessions to load" )
+                .longOpt( "file" ).build();
 
         this.addOption( fileOption );
 
-        Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" )
-                .withDescription( "Optional comma-delimited list of accessions (GSE or GDS or GPL) to load" )
-                .withLongOpt( "acc" ).create( 'e' );
+        Option accessionOption = Option.builder( "e" ).hasArg().argName( "Accession(s)" )
+                .desc( "Optional comma-delimited list of accessions (GSE or GDS or GPL) to load" )
+                .longOpt( "acc" ).build();
         this.addOption( accessionOption );
 
-        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" ).withDescription(
+        Option platformOnlyOption = Option.builder( "y" ).argName( "Platforms only" ).desc(
                 "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
-                .withLongOpt( "platforms" ).create( 'y' );
+                .longOpt( "platforms" ).build();
         this.addOption( platformOnlyOption );
 
-        Option noBioAssayMatching = OptionBuilder.withDescription( "Do not try to match samples across platforms" )
-                .withLongOpt( "nomatch" ).create( 'n' );
+        Option noBioAssayMatching = Option.builder( "n" ).desc( "Do not try to match samples across platforms" )
+                .longOpt( "nomatch" ).build();
 
         this.addOption( noBioAssayMatching );
 
-        Option splitByPlatformOption = OptionBuilder
-                .withDescription( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
-                .create( "splitByPlatform" );
+        Option splitByPlatformOption = Option.builder( "splitByPlatform" )
+                .desc( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
+                .build();
         this.addOption( splitByPlatformOption );
 
-        Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
-                .withLongOpt( "force" ).create( "force" );
+        Option forceOption = Option.builder( "force" ).desc( "Reload data set if it already exists in system" )
+                .longOpt( "force" ).build();
         this.addOption( forceOption );
 
-        // Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
-        // .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
-        // .withLongOpt( "array" ).create( 'a' );
+        // Option arrayDesign = Option.builder().hasArg().argName( "array design name" )
+        // .desc( "Specify the name or short name of the platform the experiment uses (AE only)" )
+        // .longOpt( "array" ).build( 'a' );
 
         // addOption( arrayDesign );
 
-        this.addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
+        this.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
 
         /*
          * add 'allowsub/super' series option;
          */
-        this.addOption( OptionBuilder.withDescription( "Allow sub/super series to be loaded" ).create( "allowsuper" ) );
+        this.addOption( Option.builder( "allowsuper" ).desc( "Allow sub/super series to be loaded" ).build() );
     }
 
     @Override
@@ -259,7 +258,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 this.removeIfExists( accession );
             }
 
-            @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
+            @SuppressWarnings("unchecked")
+            Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( accession, false, doMatching, this.splitByPlatform, this.allowSuperSeriesLoad,
                             this.allowSubSeriesLoad );
 

@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
@@ -63,8 +62,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
-                .withDescription( "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
+        Option pathOption = Option.builder( "f" ).hasArg().argName( "Input File Path" )
+                .desc( "Optional location of the gene2go.gz file" ).longOpt( "file" ).build();
 
         this.addOption( pathOption );
     }
