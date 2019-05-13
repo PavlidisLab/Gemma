@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -222,96 +221,96 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .build();
         this.addOption( nodeDegreeUpdate );
 
-        super.addOption( "init",     "Initialize links for taxon given by -t option, based on old data. All other options ignored." );
+        super.addOption( "init", "Initialize links for taxon given by -t option, based on old data. All other options ignored." );
 
-        Option cdfCut = OptionBuilder.hasArg().withArgName( "Tolerance Threshold" )
-                .withDescription( "The tolerance threshold for coefficient value" ).withLongOpt( "cdfcut" )
-                .create( 'c' );
+        Option cdfCut = Option.builder( "c" ).hasArg().argName( "Tolerance Threshold" )
+                .desc( "The tolerance threshold for coefficient value" ).longOpt( "cdfcut" )
+                .build();
         this.addOption( cdfCut );
 
-        Option tooSmallToKeep = OptionBuilder.hasArg().withArgName( "Cache Threshold" )
-                .withDescription( "The threshold for coefficient cache" ).withLongOpt( "cachecut" ).create( 'k' );
+        Option tooSmallToKeep = Option.builder( "k" ).hasArg().argName( "Cache Threshold" )
+                .desc( "The threshold for coefficient cache" ).longOpt( "cachecut" ).build();
         this.addOption( tooSmallToKeep );
 
-        Option fwe = OptionBuilder.hasArg().withArgName( "Family Wise Error Rate" )
-                .withDescription( "The setting for family wise error control" ).withLongOpt( "fwe" ).create( 'w' );
+        Option fwe = Option.builder( "w" ).hasArg().argName( "Family Wise Error Rate" )
+                .desc( "The setting for family wise error control" ).longOpt( "fwe" ).build();
         this.addOption( fwe );
 
         this.buildFilterConfigOptions();
 
-        Option absoluteValue = OptionBuilder
-                .withDescription( "Use the absolute value of the correlation (rarely used)" ).withLongOpt( "abs" )
-                .create( 'a' );
+        Option absoluteValue = Option.builder( "a" )
+                .desc( "Use the absolute value of the correlation (rarely used)" ).longOpt( "abs" )
+                .build();
         this.addOption( absoluteValue );
 
-        Option noNegCorr = OptionBuilder.withDescription( "Omit negative correlated probes in link selection" )
-                .create( "nonegcorr" );
+        Option noNegCorr = Option.builder( "nonegcorr" ).desc( "Omit negative correlated probes in link selection" )
+                .build();
         this.addOption( noNegCorr );
 
-        Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
-                .withLongOpt( "nodb" ).create( 'd' );
+        Option useDB = Option.builder( "d" ).desc( "Don't save the results in the database (i.e., testing)" )
+                .longOpt( "nodb" ).build();
         this.addOption( useDB );
 
-        Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
+        Option fileOpt = Option.builder( "dataFile" ).hasArg().argName( "Expression data file" ).desc(
                 "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
-                .create( "dataFile" );
+                .build();
         this.addOption( fileOpt );
 
         // supply taxon on command line
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription( "Taxon species name e.g. 'mouse'" )
-                .create( "t" );
+        Option taxonNameOption = Option.builder( "t" ).hasArg().desc( "Taxon species name e.g. 'mouse'" )
+                .build();
         this.addOption( taxonNameOption );
 
-        Option arrayOpt = OptionBuilder.hasArg().withArgName( "Array Design" ).withDescription(
+        Option arrayOpt = Option.builder( "array" ).hasArg().argName( "Array Design" ).desc(
                 "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
-                .create( "array" );
+                .build();
         this.addOption( arrayOpt );
 
-        Option textOutOpt = OptionBuilder.withDescription(
+        Option textOutOpt = Option.builder( "text" ).desc(
                 "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
                         + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
-                .create( "text" );
+                .build();
         this.addOption( textOutOpt );
 
-        Option metricOption = OptionBuilder.hasArg().withArgName( "metric" )
-                .withDescription( "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
+        Option metricOption = Option.builder( "metric" ).hasArg().argName( "metric" )
+                .desc( "Similarity metric {pearson|spearman}, default is pearson" ).build();
         this.addOption( metricOption );
 
-        Option imagesOption = OptionBuilder.withDescription( "Suppress the generation of correlation matrix images" )
-                .create( "noimages" );
+        Option imagesOption = Option.builder( "noimages" ).desc( "Suppress the generation of correlation matrix images" )
+                .build();
         this.addOption( imagesOption );
 
-        Option normalizationOption = OptionBuilder.hasArg().withArgName( "method" ).withDescription(
+        Option normalizationOption = Option.builder( "normalizemethod" ).hasArg().argName( "method" ).desc(
                 "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
-                .create( "normalizemethod" );
+                .build();
         this.addOption( normalizationOption );
 
-        Option logTransformOption = OptionBuilder
-                .withDescription( "Log-transform the data prior to analysis, if it is not already transformed." )
-                .create( "logtransform" );
+        Option logTransformOption = Option.builder( "logtransform" )
+                .desc( "Log-transform the data prior to analysis, if it is not already transformed." )
+                .build();
         this.addOption( logTransformOption );
 
-        Option subsetOption = OptionBuilder.hasArg().withArgName( "Number of coexpression links to print out" )
-                .withDescription(
+        Option subsetOption = Option.builder( "subset" ).hasArg().argName( "Number of coexpression links to print out" )
+                .desc(
                         "Only a random subset of total coexpression links will be written to output with approximate "
                                 + "size given as the argument; recommended if thresholds are loose to avoid memory problems or gigantic files." )
-                .create( "subset" );
+                .build();
         this.addOption( subsetOption );
 
-        Option chooseCutOption = OptionBuilder.hasArg().withArgName( "Singular correlation threshold" ).withDescription(
+        Option chooseCutOption = Option.builder( "choosecut" ).hasArg().argName( "Singular correlation threshold" ).desc(
                 "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
-                .create( "choosecut" );
+                .build();
         this.addOption( chooseCutOption );
 
         // finer-grained control is possible, of course.
-        Option skipQC = OptionBuilder
-                .withDescription( "Skip strict QC for outliers, batch effects and correlation distribution" )
-                .create( "noqc" );
+        Option skipQC = Option.builder( "noqc" )
+                .desc( "Skip strict QC for outliers, batch effects and correlation distribution" )
+                .build();
         this.addOption( skipQC );
 
-        Option deleteOption = OptionBuilder.withDescription(
+        Option deleteOption = Option.builder( "delete" ).desc(
                 "Delete analyses for selected experiments, instead of doing analysis; supersedes all other options" )
-                .create( "delete" );
+                .build();
         this.addOption( deleteOption );
 
         this.addForceOption();
@@ -332,7 +331,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
                 AbstractCLI.log.error( "Must provide 'taxon' option when initializing from old data" );
-                this.exitwithError();
+                exitwithError();
             }
             // all other options ignored.
             return;
@@ -342,7 +341,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
                 AbstractCLI.log.error( "Must provide 'taxon' option when updating node degree" );
-                this.exitwithError();
+                exitwithError();
             }
             // all other options ignored.
             return;
@@ -351,14 +350,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( this.hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
                 AbstractCLI.log.error( "The 'dataFile' option is incompatible with other data set selection options" );
-                this.exitwithError();
+                exitwithError();
             }
 
             if ( this.hasOption( "array" ) ) {
                 this.linkAnalysisConfig.setArrayName( this.getOptionValue( "array" ) );
             } else {
                 AbstractCLI.log.error( "Must provide 'array' option if you  use 'dataFile" );
-                this.exitwithError();
+                exitwithError();
             }
 
             if ( this.hasOption( 't' ) ) {
@@ -366,7 +365,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             } else {
                 AbstractCLI.log
                         .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
-                this.exitwithError();
+                exitwithError();
             }
 
             this.dataFileName = this.getOptionValue( "dataFile" );
@@ -450,28 +449,28 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     private void buildFilterConfigOptions() {
-        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
+        Option minPresentFraction = Option.builder( "m" ).hasArg().argName( "Missing Value Threshold" ).desc(
                 "Fraction of data points that must be present in a profile to be retained , default="
                         + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
-                .withLongOpt( "missingcut" ).create( 'm' );
+                .longOpt( "missingcut" ).build();
         this.addOption( minPresentFraction );
 
-        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
+        Option lowExpressionCut = Option.builder( "l" ).hasArg().argName( "Expression Threshold" ).desc(
                 "Fraction of expression vectors to reject based on low values, default="
                         + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
-                .withLongOpt( "lowcut" ).create( 'l' );
+                .longOpt( "lowcut" ).build();
         this.addOption( lowExpressionCut );
 
-        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
+        Option lowVarianceCut = Option.builder( "lv" ).hasArg().argName( "Variance Threshold" ).desc(
                 "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
                         + FilterConfig.DEFAULT_LOWVARIANCECUT )
-                .withLongOpt( "lowvarcut" ).create( "lv" );
+                .longOpt( "lowvarcut" ).build();
         this.addOption( lowVarianceCut );
 
-        Option distinctValueCut = OptionBuilder.hasArg().withArgName( "Fraction distinct values threshold" )
-                .withDescription( "Fraction of values which must be distinct (NaN counts as one value), default="
+        Option distinctValueCut = Option.builder( "dv" ).hasArg().argName( "Fraction distinct values threshold" )
+                .desc( "Fraction of values which must be distinct (NaN counts as one value), default="
                         + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION )
-                .withLongOpt( "distinctValCut" ).create( "dv" );
+                .longOpt( "distinctValCut" ).build();
         this.addOption( distinctValueCut );
 
     }

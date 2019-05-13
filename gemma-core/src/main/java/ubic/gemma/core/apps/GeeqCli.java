@@ -27,7 +27,6 @@ import org.apache.commons.cli.Option;
 
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -97,7 +96,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     protected Exception doWork( String[] args ) {
         Exception err = super.processCommandLine( args );
         if ( err != null )
-            return err; 
+            return err;
 
         for ( BioAssaySet bioassay : expressionExperiments ) {
             if ( !( bioassay instanceof ExpressionExperiment ) ) {
@@ -110,7 +109,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
                 AbstractCLI.log.debug( "Can't or don't need to run " + ee );
                 continue;
             }
-            
+
             try {
                 geeqService.calculateScore( ee.getId(), mode );
                 this.successObjects.add( ee );

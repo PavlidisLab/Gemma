@@ -57,7 +57,8 @@ public class GemmaCLI {
 
             for ( BeanDefinition bean : classes ) {
                 try {
-                    @SuppressWarnings("unchecked") Class<? extends AbstractCLI> aClazz = ( Class<? extends AbstractCLI> ) Class
+                    @SuppressWarnings("unchecked")
+                    Class<? extends AbstractCLI> aClazz = ( Class<? extends AbstractCLI> ) Class
                             .forName( bean.getBeanClassName() );
 
                     Object cliInstance = aClazz.newInstance();
@@ -118,16 +119,28 @@ public class GemmaCLI {
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
+                    System.exit( 0 );
                 }
             }
         }
     }
 
+    /**
+     * Mask password for logging
+     * 
+     * @param  argsToPass
+     * @return
+     */
     public static String getOptStringForLogging( Object[] argsToPass ) {
         return java.util.regex.Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" )
                 .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX" );
     }
 
+    /**
+     * Print help and exit
+     * 
+     * @param commands
+     */
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
         System.err.println( "============ Gemma command line tools ============" );
 
@@ -154,6 +167,7 @@ public class GemmaCLI {
         }
         System.err.println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <commandName> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
+        System.exit( 0 );
     }
 
     // order here is significant.
