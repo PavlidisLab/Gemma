@@ -82,6 +82,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private String geneNcbiId;
 
     /**
+     * This is not configured as a regular test fixture on purpose, it is called explicitly by tests.
      * 
      * @throws Exception
      */
@@ -89,8 +90,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
             assert is != null;
 
-            // this abuses the disease ontology as our example is a legacy FMA test.
-            ontologyService.getUberonService().loadTermsInNameSpace( is, false );
+            // this abuses the disease ontology as our example is a legacy FMA test, but it doesn't matter since we're loading from a file anyway.
+            ontologyService.getUberonService().loadTermsInNameSpace( is, true );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 
