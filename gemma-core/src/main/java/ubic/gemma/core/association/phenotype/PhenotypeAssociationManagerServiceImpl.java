@@ -954,7 +954,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        EvidenceValueObject evidenceValueObjectInDatabase = this.evidenceAlreadyInDatabase( evidence );
+        EvidenceValueObject<?> evidenceValueObjectInDatabase = this.evidenceAlreadyInDatabase( evidence );
 
         if ( evidenceValueObjectInDatabase != null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -1457,7 +1457,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param  evidence the evidence
      * @return          Checks to see if the evidence is already in the database
      */
-    private EvidenceValueObject evidenceAlreadyInDatabase(
+    private EvidenceValueObject<?> evidenceAlreadyInDatabase(
             EvidenceValueObject<? extends PhenotypeAssociation> evidence ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
@@ -1467,7 +1467,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .convert2ValueObjects( phenotypeAssociations );
 
         // verify that the evidence is not a duplicate
-        for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
+        for ( EvidenceValueObject<?> evidenceFound : evidenceValueObjects ) {
             if ( evidenceFound.equals( evidence ) ) {
 
                 // if doing an update dont take into account the current evidence
@@ -1779,7 +1779,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return parentPheno;
     }
 
-    private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
+    private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject<?> evidenceValueObject ) {
 
         Boolean currentUserHasWritePermission = false;
         String owner = null;

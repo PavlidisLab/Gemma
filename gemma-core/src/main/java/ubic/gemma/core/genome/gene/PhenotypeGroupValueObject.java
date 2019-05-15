@@ -120,8 +120,8 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         }
         if ( phenotypeName == null ) {
             return other.phenotypeName == null;
-        } else
-            return phenotypeName.equals( other.phenotypeName );
+        }
+        return phenotypeName.equals( other.phenotypeName );
     }
 
     public String getPhenotypeCategory() {

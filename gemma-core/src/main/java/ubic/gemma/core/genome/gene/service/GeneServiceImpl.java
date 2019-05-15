@@ -58,7 +58,7 @@ import java.util.Map.Entry;
 /**
  * @author pavlidis
  * @author keshav
- * @see GeneService
+ * @see    GeneService
  */
 @Service
 public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObject> implements GeneService {
@@ -480,8 +480,8 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
     /**
      * Search for genes (by name or symbol)
      *
-     * @param taxonId, can be null to not constrain by taxon
-     * @return Collection of Gene entity objects
+     * @param  taxonId, can be null to not constrain by taxon
+     * @return          Collection of Gene entity objects
      */
     @Override
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
@@ -495,20 +495,19 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
-            GeneServiceImpl.log.info( "No Genes for search: " + query + " taxon=" + taxonId );
+            log.info( "No Genes for search: " + query + " taxon=" + taxonId );
             return new HashSet<>();
         }
-        GeneServiceImpl.log
-                .info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
+        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
         for ( SearchResult sr : geneSearchResults ) {
             Gene g = ( Gene ) sr.getResultObject();
             g = this.thaw( g );
             genes.add( g );
-            GeneServiceImpl.log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            log.debug( "Gene search result: " + g.getOfficialSymbol() );
         }
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
-        GeneServiceImpl.log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
+        log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
     }
 

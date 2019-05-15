@@ -423,7 +423,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         return bibRef;
     }
 
-    private void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+    private void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject<?> evidenceValueObject ) {
         DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getEvidenceSource();
 
         // find the correct database
@@ -538,7 +538,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phe.getPhenotypes().addAll( myPhenotypes );
     }
 
-    private void setScoreInformation( EvidenceValueObject evidenceValueObject,
+    private void setScoreInformation( EvidenceValueObject<?> evidenceValueObject,
             PhenotypeAssociation phenotypeAssociation ) {
         if ( evidenceValueObject.getScoreValueObject() != null ) {
 
