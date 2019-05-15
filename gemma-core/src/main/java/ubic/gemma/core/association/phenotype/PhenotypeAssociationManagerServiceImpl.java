@@ -34,7 +34,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
@@ -658,16 +657,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         phenotypeAssociation = this.phenoAssocService.create( phenotypeAssociation );
 
-        /*
-         * NOTE : me and Anton used this solution, if not would cause problems in other services calls,would return the
-         * cached unchanged version of it, we found documentation on this, might be a better way to do it
-         */
         Gene gene = phenotypeAssociation.getGene();
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         if ( sw.getTime() > 100 )
-            PhenotypeAssociationManagerServiceImpl.log
-                    .info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
+            log.info( "The create method took : " + sw + "  " + evidence.getGeneNCBI() );
 
         return null;
     }
@@ -1522,7 +1516,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
-    private Collection<? extends PhenotypeAssociation> filterPhenotypeAssociationsMyAnnotation(
+    private Collection<PhenotypeAssociation> filterPhenotypeAssociationsMyAnnotation(
             Collection<? extends PhenotypeAssociation> phenotypeAssociations ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociationsFiltered = new HashSet<>();
@@ -1547,11 +1541,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology
      *
-     * @param                 isAdmin, can see everything
-     * @param                 noElectronicAnnotation, if true don't include evidence code IEA
-     * @param  evidenceFilter evidence filter
-     * @return                Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as
-     *                        trees
+     * @param  isAdmin,                can see everything
+     * @param  noElectronicAnnotation, if true don't include evidence code IEA
+     * @param  evidenceFilter          evidence filter
+     * @return                         Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma
+     *                                 represented as
+     *                                 trees
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( EvidenceFilter evidenceFilter,
             boolean isAdmin, boolean noElectronicAnnotation ) {
@@ -1759,9 +1754,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     throw new RuntimeException(
                             PhenotypeAssociationManagerServiceImpl.ERROR_MSG_ONTOLOGIES_NOT_LOADED + " ( " + e
                                     .getMessage() + " )" );
-                } else {
-                    throw e;
                 }
+                throw e;
             }
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 
@@ -1830,14 +1824,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( evidenceFilter != null && evidenceFilter.isShowOnlyEditable() ) {
             //noinspection unchecked
-            homologuePhenotypeAssociations = ( Collection<PhenotypeAssociation> ) this
+            homologuePhenotypeAssociations = this
                     .filterPhenotypeAssociationsMyAnnotation( homologuePhenotypeAssociations );
         }
 
         Collection<EvidenceValueObject<? extends PhenotypeAssociation>> homologueEvidenceValueObjects = this
                 .convert2ValueObjects( homologuePhenotypeAssociations );
 
-        for ( EvidenceValueObject evidenceValueObject : homologueEvidenceValueObjects ) {
+        for ( EvidenceValueObject<?> evidenceValueObject : homologueEvidenceValueObjects ) {
             evidenceValueObject.setHomologueEvidence( true );
         }
 
