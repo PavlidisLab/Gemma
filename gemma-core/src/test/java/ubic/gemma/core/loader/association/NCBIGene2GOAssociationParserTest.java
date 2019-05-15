@@ -21,7 +21,8 @@ package ubic.gemma.core.loader.association;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.io.InputStream;

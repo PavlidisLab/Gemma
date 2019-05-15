@@ -29,8 +29,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

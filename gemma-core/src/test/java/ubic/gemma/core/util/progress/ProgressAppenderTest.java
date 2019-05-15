@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ubic.gemma.core.job.executor.common.LogBasedProgressAppender;
 import ubic.gemma.core.job.executor.common.ProgressUpdateCallback;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Deque;
 import java.util.concurrent.LinkedBlockingDeque;

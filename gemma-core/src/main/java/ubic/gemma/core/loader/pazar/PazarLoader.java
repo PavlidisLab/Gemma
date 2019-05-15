@@ -21,6 +21,7 @@ import java.io.InputStream;
 /**
  * @author paul
  */
+@Deprecated
 public interface PazarLoader {
 
     @SuppressWarnings("unused")

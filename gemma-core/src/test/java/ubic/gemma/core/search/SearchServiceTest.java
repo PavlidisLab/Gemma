@@ -27,7 +27,7 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -82,7 +82,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private String geneNcbiId;
 
     /**
-     * FIXME replace with another ontology example.
      * 
      * @throws Exception
      */
@@ -90,7 +89,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
             assert is != null;
 
-            ontologyService.getFmaOntologyService().loadTermsInNameSpace( is, false );
+            // this abuses the disease ontology as our example is a legacy FMA test.
+            ontologyService.getUberonService().loadTermsInNameSpace( is, false );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 

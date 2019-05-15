@@ -20,7 +20,8 @@ package ubic.gemma.web.util;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 /**
  * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing

@@ -472,12 +472,6 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    @Deprecated
-    public FMAOntologyService getFmaOntologyService() {
-        return fmaOntologyService;
-    }
-
-    @Override
     public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
         return humanPhenotypeOntologyService;
     }
@@ -485,12 +479,6 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService() {
         return mammalianPhenotypeOntologyService;
-    }
-
-    @Override
-    @Deprecated
-    public NIFSTDOntologyService getNifstfOntologyService() {
-        return nifstdOntologyService;
     }
 
     @Override

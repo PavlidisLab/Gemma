@@ -24,7 +24,8 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
+
+import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.*;

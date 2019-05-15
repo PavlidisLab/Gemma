@@ -77,9 +77,9 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param support  value
-     * @param positive positive
-     * @return how many links have this much support (specifically).
+     * @param  support  value
+     * @param  positive positive
+     * @return          how many links have this much support (specifically).
      */
     public Integer getLinksWithExactSupport( Integer support, boolean positive ) {
         if ( positive ) {
@@ -90,18 +90,18 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param i support
-     * @return total number of links (this is just the total of positive and negative; if some of those are with the
-     * same genes it's a double count, sorry)
+     * @param  i support
+     * @return   total number of links (this is just the total of positive and negative; if some of those are with the
+     *           same genes it's a double count, sorry)
      */
     public Integer getLinksWithMinimumSupport( int i ) {
         return this.getLinksWithMinimumSupport( i, true ) + this.getLinksWithMinimumSupport( i, false );
     }
 
     /**
-     * @param support  threshold
-     * @param positive positive
-     * @return how many links have at least this much support (cumulative)
+     * @param  support  threshold
+     * @param  positive positive
+     * @return          how many links have at least this much support (cumulative)
      */
     public Integer getLinksWithMinimumSupport( Integer support, boolean positive ) {
         assert support >= 0;
@@ -163,8 +163,8 @@ public class GeneCoexpressionNodeDegreeValueObject {
         GeneCoexpressionNodeDegreeValueObject other = ( GeneCoexpressionNodeDegreeValueObject ) obj;
         if ( geneId == null ) {
             return other.geneId == null;
-        } else
-            return geneId.equals( other.geneId );
+        }
+        return geneId.equals( other.geneId );
     }
 
     @Override
@@ -194,7 +194,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
      * Equivalent to getLinksWithMinimumSupport( 0 )
      *
      * @return how many links this gene has in total, across all levels of support (positive and negative correlations
-     * combined)
+     *         combined)
      */
     public int total() {
         return this.getLinksWithMinimumSupport( 0, true ) + this.getLinksWithMinimumSupport( 0, false );
@@ -289,15 +289,15 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return this.toPrimitive( list );
     }
 
-    private int[] asIntArray( TreeMap<Integer, Integer> nodeDegreesNeg ) {
+    private int[] asIntArray( TreeMap<Integer, Integer> nodedeg ) {
         IntArrayList list = new IntArrayList();
-        if ( nodeDegreesNeg.isEmpty() )
+        if ( nodedeg.isEmpty() )
             return this.toPrimitive( list );
-        Integer maxSupport = nodeDegreesNeg.lastKey();
+        Integer maxSupport = nodedeg.lastKey();
         list.setSize( maxSupport + 1 );
         for ( Integer s = 0; s <= maxSupport; s++ ) {
-            if ( nodeDegreesNeg.containsKey( s ) ) {
-                list.set( s, nodeDegreesNeg.get( s ) );
+            if ( nodedeg.containsKey( s ) ) {
+                list.set( s, nodedeg.get( s ) );
             } else {
                 list.set( s, 0 );
             }

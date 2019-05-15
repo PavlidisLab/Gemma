@@ -27,7 +27,7 @@ import ubic.gemma.core.job.executor.common.ExecutingTask;
 import ubic.gemma.core.job.executor.common.ProgressUpdateAppender;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.Task;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Date;
 import java.util.concurrent.ExecutionException;

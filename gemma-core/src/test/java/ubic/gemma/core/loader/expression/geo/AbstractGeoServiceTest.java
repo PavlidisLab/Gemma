@@ -19,7 +19,7 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.net.URISyntaxException;
 

@@ -21,7 +21,8 @@ package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.io.InputStream;
 import java.util.Collection;

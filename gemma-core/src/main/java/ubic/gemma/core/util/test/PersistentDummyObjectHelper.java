@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.testing;
+package ubic.gemma.core.util.test;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
@@ -513,6 +513,7 @@ public class PersistentDummyObjectHelper {
      * @param  bioSequence bio sequence
      * @return             bio sequence to gene products
      */
+    @SuppressWarnings("unchecked")
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();

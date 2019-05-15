@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * A TF - target association from Pazar (www.pazar.info)
+ * @deprecated
  */
 @SuppressWarnings("unused") // Possible external use
 public abstract class PazarAssociation extends TfGeneAssociation {

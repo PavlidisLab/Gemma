@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author ldonnison
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
+@Deprecated
 public class StringProteinProteinInteractionConverter implements Converter<Object, Object> {
 
     private static final Log log = LogFactory.getLog( StringProteinProteinInteractionConverter.class );

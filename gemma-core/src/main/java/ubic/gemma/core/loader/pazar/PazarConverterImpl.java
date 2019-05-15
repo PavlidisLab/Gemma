@@ -30,6 +30,7 @@ import java.util.HashSet;
  * @author paul
  */
 @Component
+@Deprecated
 public class PazarConverterImpl implements PazarConverter {
 
     private static final Log log = LogFactory.getLog( PazarConverterImpl.class.getName() );

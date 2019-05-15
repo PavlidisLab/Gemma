@@ -21,7 +21,8 @@ package ubic.gemma.model.expression.biomaterial;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;

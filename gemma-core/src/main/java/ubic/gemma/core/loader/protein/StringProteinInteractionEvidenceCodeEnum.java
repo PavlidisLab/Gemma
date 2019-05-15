@@ -25,6 +25,7 @@ package ubic.gemma.core.loader.protein;
  *
  * @author ldonnison
  */
+@Deprecated
 public enum StringProteinInteractionEvidenceCodeEnum {
     NEIGHBORHOOD( 0, "Neighbourhood" ), GENEFUSION( 1, "GeneFusion" ), COOCCURENCE( 2, "Coocurrence" ), COEXPRESSION( 3,
             "Coexpression" ), EXPERIMENTAL( 4, "Experimental" ), DATABASE( 5, "Database" ), TEXTMINING( 6,

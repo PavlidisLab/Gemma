@@ -306,17 +306,18 @@ public class SearchServiceImpl implements SearchService {
         return eeIds;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public List<?> search( SearchSettings settings, Class<?> resultClass ) {
+    public <T> List<T> search( SearchSettings settings, Class<T> resultClass ) {
         Map<Class<?>, List<SearchResult>> searchResults = this.search( settings );
-        List<Object> resultObjects = new ArrayList<>();
+        List<T> resultObjects = new ArrayList<>();
 
         List<SearchResult> searchResultObjects = searchResults.get( resultClass );
         if ( searchResultObjects == null )
             return resultObjects;
 
         for ( SearchResult sr : searchResultObjects ) {
-            resultObjects.add( sr.getResultObject() );
+            resultObjects.add( ( T ) sr.getResultObject() );
         }
 
         return resultObjects;
@@ -592,7 +593,7 @@ public class SearchServiceImpl implements SearchService {
             results.add( new SearchResult( shortNameResult, 1.0 ) );
             return results;
         }
-        
+
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {

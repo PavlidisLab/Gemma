@@ -41,6 +41,7 @@ import java.util.Map;
  * @author ldonnison
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
+@Deprecated
 public class StringProteinProteinInteractionObjectGenerator {
 
     private static final Log log = LogFactory.getLog( StringProteinProteinInteractionObjectGenerator.class );

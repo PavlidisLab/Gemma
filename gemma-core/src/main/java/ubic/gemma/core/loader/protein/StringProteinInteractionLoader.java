@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author ldonnison
  */
+@Deprecated
 public class StringProteinInteractionLoader {
 
     private static final int QUEUE_SIZE = 1000;

@@ -28,7 +28,6 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.measurement.Unit;
@@ -284,26 +283,6 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry() );
-    }
-
-    public static void addRestrictions( Criteria queryObject, Person contact ) {
-
-        if ( contact instanceof User ) {
-            queryObject.add( Restrictions.eq( "userName", ( ( User ) contact ).getUserName() ) );
-            return;
-        }
-
-        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
-            // email is NOT unique.
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
-        }
-
-        if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "name", contact.getName() ) );
-
-        if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "lastName", contact.getLastName() ) );
-
     }
 
     public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {

@@ -40,8 +40,8 @@ public interface SearchService {
      * <li>BibliographicReferences (articles)
      * </ul>
      *
-     * @param settings settings
-     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @param  settings settings
+     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     @SuppressWarnings("unused")
     //Used in JS through DWR
@@ -60,18 +60,19 @@ public interface SearchService {
      * <li>BibliographicReferences (articles)
      * </ul>
      *
-     * @param settings settings
-     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @param  settings settings
+     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
 
     /**
-     * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting it in
+     * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting
+     * it in
      * because we probably want to use something like this on the general search page
      *
-     * @param settings settings
-     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
-     * @see #search(SearchSettings)
+     * @param  settings settings
+     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @see             #search(SearchSettings)
      */
     Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings );
 
@@ -81,34 +82,41 @@ public interface SearchService {
      * ). If so then searches for objects that have been tagged with that term or any of that terms children. If not a
      * URI then proceeds with the generalSearch.
      *
-     * @param fillObjects    If false, the entities will not be filled in inside the SearchSettings; instead, they will be
-     *                       nullified (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
-     *                       entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
-     *                       false can be an optimization if all you need is the id.
-     * @param webSpeedSearch If true, the search will be faster but the results may not be as broad as when this is false.
-     *                       Set to true for frontend combo boxes like the gene combo
-     * @param settings       settings
-     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @param  fillObjects    If false, the entities will not be filled in inside the SearchSettings; instead, they will
+     *                        be
+     *                        nullified (for security purposes). You can then use the id and Class stored in the
+     *                        SearchSettings to load the
+     *                        entities at your leisure. If true, the entities are loaded in the usual secure fashion.
+     *                        Setting this to
+     *                        false can be an optimization if all you need is the id.
+     * @param  webSpeedSearch If true, the search will be faster but the results may not be as broad as when this is
+     *                        false.
+     *                        Set to true for frontend combo boxes like the gene combo
+     * @param  settings       settings
+     * @return                Map of Class to SearchResults. The results are already filtered for security
+     *                        considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
 
     /**
      * A search of experiments only
      *
-     * @param query   if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
-     * @param taxonId required.
-     * @return Collection of ids.
+     * @param  query   if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
+     * @param  taxonId required.
+     * @return         Collection of ids.
      */
     Collection<Long> searchExpressionExperiments( String query, Long taxonId );
 
     /**
      * convenience method to return only search results from one class
+     * 
+     * @param  <T>
      *
-     * @param settings    settings
-     * @param resultClass class
-     * @return only search results from one class
+     * @param  settings    settings
+     * @param  resultClass class
+     * @return             only search results from one class
      */
-    List<?> search( SearchSettings settings, Class<?> resultClass );
+    <T> List<T> search( SearchSettings settings, Class<T> resultClass );
 
     Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery uq );
 

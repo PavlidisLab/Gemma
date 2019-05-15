@@ -24,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+
+import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
@@ -145,6 +147,8 @@ public class PubMedXMLParser {
                             al.append( XMLUtils.getTextValue( f ) );
                             al.append( "; " );
                             break;
+                        default:
+                            log.warn( "Unrecognized node name " + nodeName );
                     }
                 }
             }
@@ -261,6 +265,8 @@ public class PubMedXMLParser {
                 case "MedlineDate":
                     medLineText = t;
                     break;
+                default:
+                    log.warn( "Unrecognized node name " + c.getNodeName() );
             }
         }
 
@@ -439,6 +445,8 @@ public class PubMedXMLParser {
                 case "PublicationTypeList":
                     bibRef.setRetracted( this.isRetracted( item ) );
                     break;
+                default:
+                    log.warn( "Unrecognized node name " + name );
             }
         }
         return journal;
@@ -526,6 +534,8 @@ public class PubMedXMLParser {
                      */
                     this.extractBookPublicationYear( bibRef, item );
                     break;
+                default:
+                    log.warn( "Unrecognized node name " + name );
             }
         }
 
@@ -557,6 +567,8 @@ public class PubMedXMLParser {
                         case "PubDate":
                             bibRef.setPublicationDate( this.extractPublicationDate( jitem ) );
                             break;
+                        default:
+                            log.warn( "Unrecognized node name " + jname );
                     }
                 }
             }
@@ -641,8 +653,7 @@ public class PubMedXMLParser {
                 case "PMID":
                     this.processAccession( bibRef, item );
                     break;
-                case "CommentsCorrectionsList": {
-
+                case "CommentsCorrectionsList":
                     NodeList jNodes = item.getChildNodes();
                     for ( int q = 0; q < jNodes.getLength(); q++ ) {
                         Node jitem = jNodes.item( q );
@@ -682,7 +693,8 @@ public class PubMedXMLParser {
                     }
 
                     break;
-                }
+                default:
+                    log.warn( "Unrecognized node name " + name );
             }
         }
         return article;

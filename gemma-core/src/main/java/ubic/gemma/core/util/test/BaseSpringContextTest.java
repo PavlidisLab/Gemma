@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.testing;
+package ubic.gemma.core.util.test;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserManager;

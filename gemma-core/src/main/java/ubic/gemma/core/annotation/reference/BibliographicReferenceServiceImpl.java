@@ -42,7 +42,7 @@ import java.util.*;
  * Note: This is only in Core because it uses SearchService, but it could be refactored.
  *
  * @author keshav
- * @see BibliographicReferenceService
+ * @see    BibliographicReferenceService
  */
 @Service
 public class BibliographicReferenceServiceImpl
@@ -154,7 +154,8 @@ public class BibliographicReferenceServiceImpl
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -231,7 +232,7 @@ public class BibliographicReferenceServiceImpl
         SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
 
         //noinspection unchecked
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+        List<BibliographicReference> resultEntities = searchService
                 .search( ss, BibliographicReference.class );
 
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
@@ -267,7 +268,7 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
         //noinspection unchecked
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+        List<BibliographicReference> resultEntities = searchService
                 .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
         for ( BibliographicReference entity : resultEntities ) {

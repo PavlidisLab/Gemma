@@ -20,7 +20,8 @@ package ubic.gemma.persistence;
 
 import org.junit.Test;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import static org.junit.Assert.assertNotNull;

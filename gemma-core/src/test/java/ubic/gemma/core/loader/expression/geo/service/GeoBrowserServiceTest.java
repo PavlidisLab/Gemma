@@ -21,7 +21,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.net.UnknownHostException;
 import java.util.List;

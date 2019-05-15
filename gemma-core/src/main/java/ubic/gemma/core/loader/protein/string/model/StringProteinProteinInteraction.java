@@ -31,6 +31,7 @@ import java.util.Map;
  *
  * @author ldonnison
  */
+@Deprecated
 public class StringProteinProteinInteraction implements Serializable {
     private static final long serialVersionUID = -859220901359582113L;
 
@@ -97,7 +98,7 @@ public class StringProteinProteinInteraction implements Serializable {
      * Updates the evidenceVector with the particular evidence
      *
      * @return byte representing the 7 different types of evidence as a 0 or 1 depending on whether they give evidence
-     * for this interaction
+     *         for this interaction
      */
     public byte[] getEvidenceVector() {
         // Go throught the map of enums that hold the different types of evidences and get the score

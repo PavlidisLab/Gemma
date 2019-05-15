@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.Reporter;
-import ubic.gemma.core.testing.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
