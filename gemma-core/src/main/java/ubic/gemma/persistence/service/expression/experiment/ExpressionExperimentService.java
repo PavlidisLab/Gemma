@@ -427,12 +427,12 @@ public interface ExpressionExperimentService
     /**
      * Special method for front-end access
      *
-     * @param orderField the field to order the results by.
+     * @param orderField the field to order the results by e.g. curationDetails.lastUpdated
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @param limit      limit
-     * @param start      offset
+     * @param ids        only list specific ids given (default = null)
+     * @param taxon      only list experiments within specific taxon (default = null)
+     * @param limit      limit of how many results to give; default no limit.
+     * @param start      offset how many results to skip (for paging); default 0.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })

@@ -139,8 +139,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
         BioAssayDimension newBioAd = this.getNewBioAssayDimension( sortedOldDims );
         int totalBioAssays = newBioAd.getBioAssays().size();
-        assert totalBioAssays == ee.getBioAssays().size() : "experiment has " + ee.getBioAssays().size() + " but new bioAssayDimension has "
-                + totalBioAssays;
+        assert totalBioAssays == ee.getBioAssays().size() :
+                "experiment has " + ee.getBioAssays().size() + " but new bioAssayDimension has " + totalBioAssays;
 
         Map<QuantitationType, Collection<RawExpressionDataVector>> qt2Vec = this
                 .getVectors( ee, qts, allOldBioAssayDims );
@@ -229,9 +229,10 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
+        ee.setNumberOfSamples( ee.getBioAssays().size() );
+
         // TRANSACTION
         log.info( ee.getRawExpressionDataVectors().size() );
-
         vectorMergingHelperService.persist( ee, newVectors );
 
         ee = expressionExperimentService.load( ee.getId() );
@@ -349,9 +350,9 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * @param de de
-     * @param data data
-     * @param oldDim old dim
+     * @param de             de
+     * @param data           data
+     * @param oldDim         old dim
      * @param representation representation
      * @return The number of missing values which were added.
      */
@@ -409,7 +410,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * 
      * @param sortedOldDims
      * @return persistent bioassaydimension (either re-used or a new one)
      */
@@ -420,8 +420,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Get the current set of vectors that need to be updated.
      *
-     * @param expExp ee
-     * @param qts - only used to check for problems.
+     * @param expExp             ee
+     * @param qts                - only used to check for problems.
      * @param allOldBioAssayDims old BA dims
      * @return map
      */
@@ -470,10 +470,10 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Make a (non-persistent) vector that has the right bioAssayDimension, designelement and quantitationtype.
      *
-     * @param expExp ee
+     * @param expExp   ee
      * @param newBioAd new BA dim
-     * @param type type
-     * @param de de
+     * @param type     type
+     * @param de       de
      * @return raw data vector
      */
     private RawExpressionDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
@@ -488,11 +488,11 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /**
      * @param sortedOldDims sorted old dims
-     * @param newBioAd new BA dims
-     * @param type type
-     * @param de de
-     * @param dedvs dedvs
-     * @param mergedData starts out empty, is initalized to the new data.
+     * @param newBioAd      new BA dims
+     * @param type          type
+     * @param de            de
+     * @param dedvs         dedvs
+     * @param mergedData    starts out empty, is initalized to the new data.
      * @return number of values missing
      */
     private int makeMergedData( List<BioAssayDimension> sortedOldDims, BioAssayDimension newBioAd,

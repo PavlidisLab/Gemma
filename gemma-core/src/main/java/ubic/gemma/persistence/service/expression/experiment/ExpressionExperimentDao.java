@@ -124,6 +124,18 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon );
 
+    /**
+     * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
+     * in more information, returns ExpressionExperimentDetailsValueObject
+     *
+     * @param  orderBy    the field to order the results by.
+     * @param  descending whether the ordering by the orderField should be descending.
+     * @param  ids        only list specific ids.
+     * @param  taxon      only list experiments within specific taxon.
+     * @param  limit      max to return
+     * @param  start      offset
+     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     */
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
@@ -139,14 +151,14 @@ public interface ExpressionExperimentDao
             Collection<Long> ids );
 
     /**
-     * @param offset  offset
-     * @param limit   limit
-     * @param asc     order ascending
-     * @param filter  filters
-     * @param orderBy order by property
-     * @return collection of value objects
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
-     * description (no but seriously do look it might not work as you would expect).
+     * @param  offset  offset
+     * @param  limit   limit
+     * @param  asc     order ascending
+     * @param  filter  filters
+     * @param  orderBy order by property
+     * @return         collection of value objects
+     * @see            ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
+     *                 description (no but seriously do look it might not work as you would expect).
      */
     @Override
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,

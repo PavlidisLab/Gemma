@@ -25,7 +25,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     }
 
     /**
-     * Adds all parameters contained in the filters argument to the Query.
+     * Adds all parameters contained in the filters argument to the Query by calling query.setParameter as needed.
      *
      * @param query   the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
@@ -72,6 +72,12 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
         return "order by " + orderByProperty + ( orderDesc ? " desc " : " " );
     }
 
+    /**
+     * Create a hql join clause from ACL OI -> ACL entries and ACL OI -> ACL SID.
+     * @param alias placeholder for the identifier e.g. "ee.id"
+     * @param aoiType placeholder for the type e.g. "ubic.gemma.model.expression.experiment.ExpressionExperiment"
+     * @return clause to add to the query
+     */
     protected static String formAclSelectClause( String alias, String aoiType ) {
         if ( Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType ) )
             throw new IllegalArgumentException( "Alias and aoiType can not be empty." );

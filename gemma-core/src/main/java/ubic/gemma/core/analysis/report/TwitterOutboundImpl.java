@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Component
+@Deprecated
 public class TwitterOutboundImpl implements TwitterOutbound {
 
     private static final String EXPERIMENT_URI = "expressionExperiment/showExpressionExperiment.html?id=";

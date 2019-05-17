@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author paul
@@ -35,11 +36,9 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
     public static final class Factory {
-
         public static ExpressionExperiment newInstance() {
             return new ExpressionExperiment();
         }
-
     }
 
     private static final long serialVersionUID = -1342753625018841735L;
@@ -51,7 +50,23 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;
     private String metadata;
-    private Integer numberOfDataVectors;
+    private Integer numberOfDataVectors = 0;
+    private Integer numberOfSamples = 0;
+    private Taxon taxon;
+
+    /**
+     * @return the number of samples (bioassays). If there are multiple platforms used,
+     * this number may not be the same as the actual number of biological samples.
+     * This is a denormalization to speed up queries; the definitive count is always from this.getBioAssays().size()
+     */
+    public Integer getNumberOfSamples() {
+        return numberOfSamples;
+    }
+
+    public void setNumberOfSamples( Integer numberofSamples ) {
+        this.numberOfSamples = numberofSamples;
+    }
+
     /**
      * If this experiment was split off of a larger experiment, link to its relatives.
      */
@@ -60,7 +75,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Collection<QuantitationType> quantitationTypes = new HashSet<>();
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
-    
+
     private String source;
 
     @Override
@@ -151,15 +166,16 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     /**
      * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past
-     *         we often
-     *         used names like "alizadeh-lymphoma".
+     * we often
+     * used names like "alizadeh-lymphoma".
      */
     public String getShortName() {
         return this.shortName;
     }
 
     /**
-     * @return Represents the site where the data was downloaded from.
+     * @return string describing how the data was obtained (e.g. direct upload)
+     * if it was not from a Accesssion in an ExternalDatabase (e.g. GEO)
      */
     public String getSource() {
         return this.source;
@@ -191,6 +207,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Override
     public void setBioAssays( Collection<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
+        if ( bioAssays != null )
+            this.numberOfSamples = bioAssays.size();
     }
 
     @Override
@@ -242,6 +260,19 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setSource( String source ) {
         this.source = source;
+    }
+
+    /**
+     * This is a denormalization to speed up queries. For the definitive taxon, look at the bioAssays -> sampleUsed -> sourceTaxon
+     *
+     * @return the associated taxon
+     */
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
     @Override

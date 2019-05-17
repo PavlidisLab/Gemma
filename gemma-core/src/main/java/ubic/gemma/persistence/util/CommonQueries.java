@@ -214,7 +214,7 @@ public class CommonQueries {
 
     private static Query createGetADsUsedQueryObject( Long eeId, Session session ) {
         final String eeAdQuery = "select distinct ad from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id = :eeId";
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.primaryTaxon fetch all properties where ee.id = :eeId";
 
         Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );

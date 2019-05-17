@@ -71,6 +71,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String numProbesToGenes;
     private String shortName;
     private String taxon;
+
+
+
+    private Long taxonID;
     private String technologyType;
     private Boolean blackListed = false;
 
@@ -80,6 +84,14 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public void setBlackListed( Boolean blackListed ) {
         this.blackListed = blackListed;
+    }
+
+    public Long getTaxonID() {
+        return taxonID;
+    }
+
+    public void setTaxonID( Long taxonID ) {
+        this.taxonID = taxonID;
     }
 
     /**
@@ -98,6 +110,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
+        this.taxon = ad.getPrimaryTaxon().getCommonName();
+        this.taxonID = ad.getPrimaryTaxon().getId();
     }
 
     /**
@@ -115,7 +129,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
                 otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
                 otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
                 otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.technologyType, otherBean.isAffymetrixAltCdf, otherBean.blackListed );
+                otherBean.shortName, otherBean.taxon, otherBean.taxonID, otherBean.technologyType, otherBean.isAffymetrixAltCdf, otherBean.blackListed );
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
@@ -125,7 +139,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id, Boolean isMerged, Boolean isMergee,
             Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping, Date lastRepeatMask,
             Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes, String numProbeAlignments,
-            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, String technologyType, Boolean isAffymetrixAltCdf,
+            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, Long taxonID, String technologyType, Boolean isAffymetrixAltCdf,
             Boolean blacklisted ) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
@@ -151,6 +165,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.numProbesToGenes = numProbesToGenes;
         this.shortName = shortName;
         this.taxon = taxon;
+        this.taxonID = taxonID;
         this.technologyType = technologyType;
         this.isAffymetrixAltCdf = isAffymetrixAltCdf;
         this.blackListed = blacklisted;

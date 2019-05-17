@@ -83,6 +83,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         experiment.setName( metaData.getName() );
         experiment.setShortName( metaData.getShortName() );
         experiment.setDescription( metaData.getDescription() );
+        experiment.setTaxon( taxon );
 
         experiment.setSource( "Import via matrix flat file." + ( StringUtils.isBlank( metaData.getSourceUrl() ) ?
                 "" :
@@ -135,6 +136,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         experiment.setRawExpressionDataVectors( allVectors );
         experiment.setBioAssays( allBioAssays );
+        experiment.setNumberOfSamples( allBioAssays.size() );
 
         return experiment;
     }
