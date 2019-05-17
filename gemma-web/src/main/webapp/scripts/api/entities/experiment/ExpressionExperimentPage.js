@@ -56,10 +56,9 @@ function getGeeqIcon(score) {
 function getGeeqIconColored(score) { // PP removed  ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) +
     return '' +
         '<span class="fa fa-stack">' +
-         '   <i class="fa fa-lg fa-stack-1x fa-circle" style="color: ' + scoreToColorNormalized(Number(score)) + '"></i>' +
-        '   <i class="fa fa-lg fa-stack-1x ' + getSmileyCls(score) + '"></i></span>'
-       +
-         '</span>'
+         '   <i class="fa fa-lg fa-stack-1x fa-circle" style="color:' + scoreToColorNormalized(Number(score)) + '"></i>' +
+        '   <i class="fa fa-lg fa-stack-1x ' + getSmileyCls(score) +  '"></i></span>'
+      + '</span> '
 }
 
 /**
