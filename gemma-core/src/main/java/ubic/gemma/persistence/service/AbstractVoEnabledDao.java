@@ -5,6 +5,8 @@ import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.springframework.security.acls.domain.BasePermission;
+
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -46,7 +48,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
                     continue;
                 if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
                     query.setParameterList( AbstractVoEnabledDao.formParamName( filter ),
-                            ( Collection ) filter.getRequiredValue() );
+                            ( Collection<?> ) filter.getRequiredValue() );
                 } else {
                     query.setParameter( AbstractVoEnabledDao.formParamName( filter ), filter.getRequiredValue() );
                 }
@@ -57,9 +59,9 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Forms an order by clause for a hibernate query based on given arguments.
      *
-     * @param orderByProperty the property the query should be ordered by.
-     * @param orderDesc       whether the ordering should be descending or ascending.
-     * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
+     * @param  orderByProperty the property the query should be ordered by.
+     * @param  orderDesc       whether the ordering should be descending or ascending.
+     * @return                 an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
     protected static String formOrderByProperty( String orderByProperty, boolean orderDesc ) {
         if ( Strings.isNullOrEmpty( orderByProperty ) )
@@ -74,22 +76,26 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
 
     /**
      * Create a hql join clause from ACL OI -> ACL entries and ACL OI -> ACL SID.
-     * @param alias placeholder for the identifier e.g. "ee.id"
-     * @param aoiType placeholder for the type e.g. "ubic.gemma.model.expression.experiment.ExpressionExperiment"
-     * @return clause to add to the query
+     * 
+     * @param  alias   placeholder for the identifier e.g. "ee.id"
+     * @param  aoiType placeholder for the type e.g. "ubic.gemma.model.expression.experiment.ExpressionExperiment"
+     * @return         clause to add to the query
      */
     protected static String formAclSelectClause( String alias, String aoiType ) {
         if ( Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType ) )
             throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
-        return ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                + "where aoi.identifier = " + alias + ".id and aoi.type = '" + aoiType + "' ";
+       if ( SecurityUtil.isUserAdmin() ) {
+           return ", AclObjectIdentity as aoi inner join aoi.ownerSid sid " + "where aoi.identifier = " + alias + ".id and aoi.type = '" + aoiType + "'";
+       } else {
+           return ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid " + "where aoi.identifier = " + alias + ".id and aoi.type = '" + aoiType + "'";
+       }
     }
 
     /**
      * Adds a restriction clause based on the given filters, and includes ACL restrictions as well.
      *
-     * @param filters see formRestrictionClause( List, boolean );
-     * @return a string containing the clause, without the leading "WHERE" keyword.
+     * @param  filters see formRestrictionClause( List, boolean );
+     * @return         a string containing the clause, without the leading "WHERE" keyword.
      */
     protected static String formRestrictionClause( List<ObjectFilter[]> filters ) {
         return AbstractVoEnabledDao.formRestrictionClause( filters, true );
@@ -98,13 +104,13 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Creates a CNF restriction clause from the given Filters list.
      *
-     * @param filters A list of filtering properties arrays.
-     *                Elements in each array will be in a disjunction (OR) with each other.
-     *                Arrays will then be in a conjunction (AND) with each other.
-     *                I.e. The filter will be in a conjunctive normal form.
-     *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
-     * @param addAcl  whether the acl restriction clause should also be added.
-     * @return a string containing the clause, without the leading "WHERE" keyword.
+     * @param  filters A list of filtering properties arrays.
+     *                 Elements in each array will be in a disjunction (OR) with each other.
+     *                 Arrays will then be in a conjunction (AND) with each other.
+     *                 I.e. The filter will be in a conjunctive normal form.
+     *                 <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
+     * @param  addAcl  whether the acl restriction clause should also be added.
+     * @return         a string containing the clause, without the leading "WHERE" keyword.
      */
     protected static String formRestrictionClause( List<ObjectFilter[]> filters, boolean addAcl ) {
         String queryString = addAcl ? AbstractVoEnabledDao.formAclRestrictionClause() : " ";
@@ -149,31 +155,38 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * to create a Query object.
      *
      * @return a string that can be appended to a query string that was created using
-     * {@link this#formAclSelectClause(String, String)}.
+     *         {@link this#formAclSelectClause(String, String)}.
      */
     private static String formAclRestrictionClause() {
         String queryString = "";
 
         // add ACL restrictions
         if ( !SecurityUtil.isUserAnonymous() ) {
-            // For administrators no filtering is necessary
             if ( !SecurityUtil.isUserAdmin() ) {
-                // For non-admins, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
+                // For non-admin users, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
                 queryString += "and ( (sid.principal = :userName or (ace.sid.id in "
                         // Subselect
                         + "( select sid.id from UserGroup as ug join ug.authorities as ga "
                         + ", AclGrantedAuthoritySid sid where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
                         + "and ug.name in ( "
+                        //  for specific permissions for this user
                         // Sub-subselect
                         + "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName ) "
                         // Sub-subselect end
-                        + ") and (ace.mask = 1 or ace.mask = 2) )) "
+                        + ") and (ace.mask = " + BasePermission.READ.getMask() + " or ace.mask = " + BasePermission.WRITE.getMask() + ") )) " // not sure why WRITE is checked here.
+                       // or if publicly available (4= anonymous)
                         // Subselect end
-                        + " or (ace.sid.id = 4 and ace.mask = 1)) ";
+                        + " or (ace.sid.id = 4 and ace.mask = " + BasePermission.READ.getMask() + ")) ";
+            } else {
+                // For administrators, no filtering is needed, so the ACE is completely skipped from the query.
+                // For administrators no filtering is necessary, but we include the ace.mask clause to be sure we only get one result.
+                // PP added this 5/19 because if we don't, we get mutiple aces, and thus need a group-by clause, which is confusing. 
+                // Another way would be to make the join on ace conditional in the query, but that seems harder than this.
+             //   queryString += " and (ace.mask = " + BasePermission.READ.getMask()   + " and ace.sid.id = 3)"; // sid 3 = AGENT
             }
         } else {
             // For anonymous users, only pick publicly readable data
-            queryString += "and ace.mask = 1 and ace.sid.id = 4 ";
+            queryString += " and ace.mask = " + BasePermission.READ.getMask() + " and ace.sid.id = 4 "; // sid 4 = IS_AUTHENTICATED_ANONYMOUSLY
         }
         return queryString;
     }
@@ -181,9 +194,9 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Forms a parameter name out of the filter object.
      *
-     * @param filter the filter to create the parameter name out of.
-     * @return a name unique to the provided filter that can be used in a hql query. returned string does not
-     * contain the leading ":" character that denotes a parameter keyword in the hql query.
+     * @param  filter the filter to create the parameter name out of.
+     * @return        a name unique to the provided filter that can be used in a hql query. returned string does not
+     *                contain the leading ":" character that denotes a parameter keyword in the hql query.
      */
     private static String formParamName( ObjectFilter filter ) {
         return filter.getObjectAlias() + filter.getPropertyName().replace( ".", "" );
@@ -208,14 +221,15 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     /**
      * Should be overridden for any entity that is expected to have pre-filtered VOs available
      *
-     * @param filter  see this#formRestrictionClause(ArrayList)
-     * @param limit   limit
-     * @param asc     ordering asc? false for desc
-     * @param offset  offset
-     * @param orderBy order by property
-     * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters without the
-     * need to
-     * further be checked by ACLs.
+     * @param  filter  see this#formRestrictionClause(ArrayList)
+     * @param  limit   limit
+     * @param  asc     ordering asc? false for desc
+     * @param  offset  offset
+     * @param  orderBy order by property
+     * @return         a collection of VOs that are guaranteed to be filtered and ordered by the input parameters
+     *                 without the
+     *                 need to
+     *                 further be checked by ACLs.
      */
     @Override
     public Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,

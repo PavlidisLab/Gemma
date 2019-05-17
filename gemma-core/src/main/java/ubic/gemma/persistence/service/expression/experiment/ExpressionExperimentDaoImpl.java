@@ -18,15 +18,34 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.util.SecurityUtil;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -42,7 +61,14 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -52,8 +78,6 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
-
-import java.util.*;
 
 /**
  * @author pavlidis
@@ -1054,7 +1078,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryStringFast( new ArrayList<ObjectFilter[]>() {
+        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {
             {
                 this.add( filters );
             }
@@ -1076,7 +1100,7 @@ public class ExpressionExperimentDaoImpl
         for ( Object[] row : list ) {
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( row );
 
-            // Add array designs; watch out: this may be a performance drain for long lists  (if so, could batch)
+            // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
             Collection<ArrayDesignValueObject> adVos = CommonQueries
                     .getArrayDesignsUsedVOs( vo.getId(), this.getSessionFactory().getCurrentSession() );
             vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
@@ -1403,7 +1427,70 @@ public class ExpressionExperimentDaoImpl
         return voMap;
     }
 
+    //    /**
+    //     * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
+    //     *                        description.
+    //     * @param orderByProperty the property to order by.
+    //     * @param orderDesc       whether the ordering is ascending or descending.
+    //     * @return a hibernate Query object ready to be used for EEVO retrieval.
+    //     */
+    //    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
+    //            boolean orderDesc ) {
+    //
+    //        // Restrict to non-troubled EEs for non-administrators
+    //        filters = getObjectFilters( filters );
+    //
+    //        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
+    //        String ee = ObjectFilter.DAO_EE_ALIAS;
+    //        String ad = ObjectFilter.DAO_AD_ALIAS;
+    //        String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
+    //        String queryString = "select " + ee + ".id as id, " // 0
+    //                + ee + ".name, " // 1
+    //                + ee + ".source, " // 2
+    //                + ee + ".shortName, " // 3
+    //                + ee + ".metadata, " // 4
+    //                + ee + ".numberOfDataVectors, " // 5
+    //                + "acc.accession, " // 6
+    //                + "ED.name, " // 7 external database
+    //                + "ED.webUri, " // 8
+    //                + ee + ".description, " // 9
+    //                + ad + ".technologyType, "// 10
+    //                + "taxon.commonName, " // 11
+    //                + "taxon.id, " // 12
+    //                + "s.lastUpdated, " // 13
+    //                + "s.troubled, " // 14
+    //                + "s.needsAttention, " // 15
+    //                + "s.curationNote, " // 16
+    //                + "count(distinct " + ba + "), " // 17
+    //                + "count(distinct " + ad + "), "
+    //                // 18 not needed since we pull ADs separately. but need join to check trouble?
+    //                + "count(distinct SU), " // 19
+    //                + "EDES.id,  " // 20
+    //                + "aoi, " // 21 ACL OI
+    //                + "sid, " // 22 ACL SID
+    //                + ee + ".batchEffect, " // 23
+    //                + ee + ".batchConfound, " // 24
+    //                + "eNote, " // 25
+    //                + "eAttn, " // 26
+    //                + "eTrbl, " // 27
+    //                + ObjectFilter.DAO_GEEQ_ALIAS //28
+    //                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ba + " join " + ba
+    //                + ".sampleUsed as SU join " + ba + ".arrayDesignUsed as " + ad
+    //                + " join SU.sourceTaxon as taxon left join " + ee + ".accession acc "
+    //                + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
+    //                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
+    //                + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
+    //                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
+    //
+    //        // not used
+    //        //                + "left join " + ee
+    //        //                + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
+    //
+    //        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
+    //    }
+
     /**
+     *
      * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
      *                        description.
      * @param orderByProperty the property to order by.
@@ -1418,8 +1505,8 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String ee = ObjectFilter.DAO_EE_ALIAS;
-        String ad = ObjectFilter.DAO_AD_ALIAS;
-        String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
+ //       String ad = ObjectFilter.DAO_AD_ALIAS;
+   //     String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
         String queryString = "select " + ee + ".id as id, " // 0
                 + ee + ".name, " // 1
                 + ee + ".source, " // 2
@@ -1430,73 +1517,8 @@ public class ExpressionExperimentDaoImpl
                 + "ED.name, " // 7 external database
                 + "ED.webUri, " // 8
                 + ee + ".description, " // 9
-                + ad + ".technologyType, "// 10
-                + "taxon.commonName, " // 11
-                + "taxon.id, " // 12
-                + "s.lastUpdated, " // 13
-                + "s.troubled, " // 14
-                + "s.needsAttention, " // 15
-                + "s.curationNote, " // 16
-                + "count(distinct " + ba + "), " // 17
-                + "count(distinct " + ad + "), "
-                // 18 not needed since we pull ADs separately. but need join to check trouble?
-                + "count(distinct SU), " // 19
-                + "EDES.id,  " // 20
-                + "aoi, " // 21 ACL OI
-                + "sid, " // 22 ACL SID
-                + ee + ".batchEffect, " // 23
-                + ee + ".batchConfound, " // 24
-                + "eNote, " // 25
-                + "eAttn, " // 26
-                + "eTrbl, " // 27
-                + ObjectFilter.DAO_GEEQ_ALIAS //28 
-                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ba + " join " + ba
-                + ".sampleUsed as SU join " + ba + ".arrayDesignUsed as " + ad
-                + " join SU.sourceTaxon as taxon left join " + ee + ".accession acc "
-                + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
-                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
-                + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
-                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
-
-        // not used
-        //                + "left join " + ee
-        //                + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
-
-        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
-    }
-
-    /**
-     * Faster version that doesn't fill in as much information. Instead the value objects retrieved have to be processed
-     * separately to populate other slots.
-     *
-     * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
-     *                        description.
-     * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
-     * @return a hibernate Query object ready to be used for EEVO retrieval.
-     */
-    private Query getLoadValueObjectsQueryStringFast( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
-
-        // Restrict to non-troubled EEs for non-administrators
-        filters = getObjectFilters( filters );
-
-        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
-        String ee = ObjectFilter.DAO_EE_ALIAS;
-        String ad = ObjectFilter.DAO_AD_ALIAS;
-        String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
-        String queryString = "select " + ee + ".id as id, " // 0
-                + ee + ".name, " // 1
-                + ee + ".source, " // 2
-                + ee + ".shortName, " // 3
-                + ee + ".metadata, " // 4
-                + ee + ".numberOfDataVectors, " // 5
-                + "acc.accession, " // 6
-                + "ED.name, " // 7 external database
-                + "ED.webUri, " // 8
-                + ee + ".description, " // 9
-                + "ee.taxon.commonName, " // 10
-                + "ee.taxon.id, " // 11
+                + ee + ".taxon.commonName, " // 10
+                + ee + ".taxon.id, " // 11
                 + "s.lastUpdated, " // 12: date
                 + "s.troubled, " // 13
                 + "s.needsAttention, " // 14
@@ -1518,11 +1540,11 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_GEEQ_ALIAS + " left join s.lastNoteUpdateEvent as eNote "
                 + " left join s.lastTroubledEvent as eTrbl ";
 
-        // FIXME parts of this query (above) are only needed for administrators: the notes.
+        // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
 
         Query q = postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
 
-        log.info( q.getQueryString() );
+         log.info( q.getQueryString() );
 
         return q;
     }
@@ -1689,12 +1711,12 @@ public class ExpressionExperimentDaoImpl
     private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
             String queryString ) {
         String aclClause = AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
-                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+                "ubic.gemma.model.expression.experiment.ExpressionExperiment"  );
 
         queryString = queryString + aclClause;
 
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
-        //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id "; // FIXME why is this necessary? (and it is)
+        //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
         queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
