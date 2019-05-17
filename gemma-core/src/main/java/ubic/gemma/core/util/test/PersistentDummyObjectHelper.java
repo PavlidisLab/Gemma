@@ -305,6 +305,7 @@ public class PersistentDummyObjectHelper {
         bioAssays.addAll( bioAssaysA );
         bioAssays.addAll( bioAssaysB );
         ee.setBioAssays( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         log.debug( "expression experiment => design element data vectors" );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
