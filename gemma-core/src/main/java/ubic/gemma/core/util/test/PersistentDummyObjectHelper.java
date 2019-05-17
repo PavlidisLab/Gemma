@@ -447,12 +447,12 @@ public class PersistentDummyObjectHelper {
             bioAssays.addAll( bioAssaysB );
         }
         ee.getBioAssays().addAll( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
 
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
-
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
@@ -642,21 +642,6 @@ public class PersistentDummyObjectHelper {
 
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
-     * objects. This implementation does NOT fill in associations of the created object.
-     *
-     * @param  bioAssays bio assays
-     * @return           EE
-     */
-    public ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
-        ee.setBioAssays( bioAssays );
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
-        return ee;
-    }
-
-    /**
-     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object except for the creation of
      * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
      *
@@ -694,7 +679,7 @@ public class PersistentDummyObjectHelper {
         assert quantitationTypes.size() > 0;
 
         ee.setQuantitationTypes( quantitationTypes );
-
+        ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
         ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );

@@ -98,6 +98,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             ee.setPrimaryPublication( ( BibliographicReference ) this.persist( ee.getPrimaryPublication() ) );
             ee.setOwner( ( Contact ) this.persist( ee.getOwner() ) );
+            ee.setTaxon( this.persistTaxon( ee.getTaxon() ) );
 
             this.persistCollectionElements( ee.getQuantitationTypes() );
             this.persistCollectionElements( ee.getOtherRelevantPublications() );
