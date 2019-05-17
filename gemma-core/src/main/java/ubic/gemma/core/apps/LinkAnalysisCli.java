@@ -324,6 +324,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( this.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
+            this.force = true;
             return;
         } else if ( this.hasOption( "init" ) ) {
             initializeFromOldData = true;
