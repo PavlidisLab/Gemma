@@ -104,7 +104,7 @@
 					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" />
 				</set>
 				<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
-					<column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
+					<column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<many-to-one name="meanVarianceRelation"
 					class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation" cascade="all" lazy="proxy" fetch="select">

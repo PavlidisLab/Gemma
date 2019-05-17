@@ -18,9 +18,17 @@
  */
 package ubic.gemma.core.security.audit;
 
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -30,26 +38,13 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.*;
 
 /**
  * Test of adding audit events when objects are created, updated or deleted.
@@ -60,12 +55,6 @@ import static org.junit.Assert.*;
 public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Autowired
-    private UserManager userManager;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
     private AuditEventService auditEventService;
 
     @Autowired
@@ -73,9 +62,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -163,6 +149,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+        ee.setTaxon( taxonService.load( 1L ) );
         ee = expressionExperimentService.findOrCreate( ee );
 
         assertNotNull( ee.getAuditTrail() );
@@ -200,6 +187,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                             ee.setDescription( "From test" );
                             ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+                            ee.setTaxon( taxonService.load( 1L ) );
                             ee = expressionExperimentService.findOrCreate( ee );
 
                             assertNotNull( ee.getAuditTrail() );

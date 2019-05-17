@@ -260,6 +260,7 @@ public class PersistentDummyObjectHelper {
         }
 
         ee.setBioAssays( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         assert quantitationTypes.size() > 0;
 
