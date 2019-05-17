@@ -636,6 +636,7 @@ public class PersistentDummyObjectHelper {
     public ExpressionExperiment getTestPersistentExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
+        ee.setTaxon( this.getTestPersistentTaxon() );
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
         return ee;
     }

@@ -1240,6 +1240,15 @@ public class ExpressionExperimentDaoImpl
 
         for ( Object[] row : list ) {
             ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row, totalCnt );
+
+            // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
+            Collection<ArrayDesignValueObject> adVos = CommonQueries
+                    .getArrayDesignsUsedVOs( vo.getId(), this.getSessionFactory().getCurrentSession() );
+
+            ArrayDesignValueObject ad = adVos.iterator().next();
+            vo.setTechnologyType( ad.getTechnologyType() );
+            vo.setArrayDesignCount( adVos.size() );
+
             vos.add( vo );
         }
 
@@ -1490,7 +1499,6 @@ public class ExpressionExperimentDaoImpl
     //    }
 
     /**
-     *
      * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
      *                        description.
      * @param orderByProperty the property to order by.
@@ -1505,8 +1513,8 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String ee = ObjectFilter.DAO_EE_ALIAS;
- //       String ad = ObjectFilter.DAO_AD_ALIAS;
-   //     String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
+        //       String ad = ObjectFilter.DAO_AD_ALIAS;
+        //     String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
         String queryString = "select " + ee + ".id as id, " // 0
                 + ee + ".name, " // 1
                 + ee + ".source, " // 2
@@ -1544,7 +1552,7 @@ public class ExpressionExperimentDaoImpl
 
         Query q = postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
 
-         log.info( q.getQueryString() );
+        log.info( q.getQueryString() );
 
         return q;
     }
@@ -1711,7 +1719,7 @@ public class ExpressionExperimentDaoImpl
     private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
             String queryString ) {
         String aclClause = AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
-                "ubic.gemma.model.expression.experiment.ExpressionExperiment"  );
+                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
 
         queryString = queryString + aclClause;
 
