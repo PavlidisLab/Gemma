@@ -35,9 +35,11 @@ import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.SearchIndex;
+import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -62,6 +64,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
     }
+
     private static final String ALL_ROOT = GeneOntologyService.BASE_GO_URI + "ALL";
     private static boolean enabled = true;
     private final static String GO_URL = "http://purl.obolibrary.org/obo/go.owl";
@@ -75,6 +78,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private static final Map<String, GOAspect> term2Aspect = new HashMap<>();
     // cache
     private static Map<String, OntologyTerm> uri2Term = new HashMap<>();
+
     /**
      * @param  term the term
      * @return      Usual formatted GO id, e.g., GO:0039392
@@ -83,6 +87,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         String uri = term.getValue();
         return GeneOntologyServiceImpl.asRegularGoId( uri );
     }
+
     /**
      * @param  term ontology term
      * @return      Usual formatted GO id, e.g., GO:0039392
@@ -93,12 +98,15 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         String uri = term.getUri();
         return GeneOntologyServiceImpl.asRegularGoId( uri );
     }
+
     public static String asRegularGoId( String uri ) {
         return uri.replaceAll( ".*?/", "" ).replace( "_", ":" );
     }
+
     public static boolean isEnabled() {
         return GeneOntologyServiceImpl.enabled;
     }
+
     /**
      * @return Turn an id like GO:0038128 into a URI.
      */
@@ -106,6 +114,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         String uriTerm = goId.replace( ":", "_" );
         return GeneOntologyService.BASE_GO_URI + uriTerm;
     }
+
     /**
      * Cache of go term -> child terms
      */
@@ -133,7 +142,15 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     @Override
     public void afterPropertiesSet() {
-        this.init( false );
+
+        /*
+         * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
+         */
+        String doLoad = Configuration.getString( "load.ontologies" );
+        if ( StringUtils.isNotBlank( doLoad ) && Configuration.getBoolean( "load.ontologies" ) ) {
+            this.init( false );
+        }
+
     }
 
     @Override
