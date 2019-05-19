@@ -36,36 +36,31 @@ import java.util.Collection;
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
-
     public static void main( String[] args ) {
         BibRefUpdaterCli e = new BibRefUpdaterCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            log.fatal( ex, ex );
-        }
-
+        executeCommand( e, args );
     }
 
     @Override
     public String getCommandName() {
         return "updatePubMeds";
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
     }
+
     @Override
     public String getShortDesc() {
         return ( "Refresh stored information on publications" );
     }
 
-
     @Override
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
-        super.addOption( "pmids", "pmids", true, "Pubmed ids, comma-delimited; default is to do all in DB" );
+        super.addOption( "pmids", null, "Pubmed ids, comma-delimited; default is to do all in DB", "ids" );
     }
-
 
     @Override
     protected Exception doWork( String[] args ) {

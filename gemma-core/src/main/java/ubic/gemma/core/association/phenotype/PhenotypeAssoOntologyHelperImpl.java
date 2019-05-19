@@ -25,7 +25,6 @@ import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;

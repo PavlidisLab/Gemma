@@ -29,7 +29,6 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServi
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -77,9 +76,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean persist = true;
 
     public static void main( String[] args ) {
-        DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( analysisCli, args );
-        System.exit( 0 );
+        DifferentialExpressionAnalysisCli p = new DifferentialExpressionAnalysisCli();
+        executeCommand( p, args );
+
     }
 
     @Override
@@ -176,15 +175,15 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( ignoreBatchOption );
 
-        super.addOption( "nodb", false, "Output files only to your gemma.appdata.home instead of database" );
+        super.addOption( "nodb", "Output files only to your gemma.appdata.home instead of database" );
 
-        super.addOption( "redo", false, "If using automatic analysis "
+        super.addOption( "redo", "If using automatic analysis "
                 + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
 
-        super.addOption( "delete", false,
+        super.addOption( "delete",
                 "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        super.addOption( "ebayes", false, "Use empirical-Bayes moderated statistics. Default: "
+        super.addOption( "ebayes", "Use empirical-Bayes moderated statistics. Default: "
                 + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
 
     }

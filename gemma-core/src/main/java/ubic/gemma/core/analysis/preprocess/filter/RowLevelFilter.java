@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
 import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.math.Constants;
@@ -269,10 +268,10 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             for ( int j = 0; j < numCols; j++ ) {
                 Double item = row[j];
                 if ( Double.isNaN( item ) )
-                    rowAsList.set( j, Double.NaN );  // previously: we set to zero! Just leave it and use "stats with missing" classes.
+                    rowAsList.set( j, Double.NaN ); // previously: we set to zero! Just leave it and use "stats with missing" classes.
                 else
                     rowAsList.set( j, item );
-                
+
                 if ( item < 0.0 || Double.isNaN( item ) ) {
                     numNeg++;
                 }

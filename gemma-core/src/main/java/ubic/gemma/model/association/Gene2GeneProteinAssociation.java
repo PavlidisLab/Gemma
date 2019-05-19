@@ -23,6 +23,11 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 
+/**  
+ * 
+ * @author paul
+ * @deprecated
+ */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
     /**

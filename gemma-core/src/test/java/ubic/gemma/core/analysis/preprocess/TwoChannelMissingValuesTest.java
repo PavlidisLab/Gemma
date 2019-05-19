@@ -24,7 +24,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

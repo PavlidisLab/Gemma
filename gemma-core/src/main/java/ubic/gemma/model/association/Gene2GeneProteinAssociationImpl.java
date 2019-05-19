@@ -21,6 +21,7 @@ package ubic.gemma.model.association;
 
 /**
  * @see ubic.gemma.model.association.Gene2GeneProteinAssociation
+ * @deprecated
  */
 public class Gene2GeneProteinAssociationImpl extends ubic.gemma.model.association.Gene2GeneProteinAssociation {
     /**

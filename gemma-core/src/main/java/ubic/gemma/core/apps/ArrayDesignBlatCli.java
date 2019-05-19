@@ -19,14 +19,12 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -58,7 +56,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     public static void main( String[] args ) {
         ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
     }
 
     @Override
@@ -71,28 +69,25 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     protected void buildOptions() {
         super.buildOptions();
 
-        OptionBuilder.hasArg();
-        OptionBuilder.withArgName( "PSL file" );
-        OptionBuilder.withDescription(
-                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate multiple platforms to run); -t option overrides" );
-        OptionBuilder.withLongOpt( "blatfile" );
-        Option blatResultOption = OptionBuilder.create( 'b' );
+        Option blatResultOption = Option.builder( "b" ).hasArg().argName( "PSL file" ).desc(
+                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
+                        + "multiple platforms to run); -t option overrides" )
+                .longOpt( "blatfile" )
+                .build();
 
-        OptionBuilder.hasArg();
-        OptionBuilder.withArgName( "Blat score threshold" );
-        OptionBuilder.withDescription(
-                "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" );
-        OptionBuilder.withLongOpt( "scoreThresh" );
-        Option blatScoreThresholdOption = OptionBuilder.create( 's' );
+        Option blatScoreThresholdOption = Option.builder( "s" ).hasArg().argName( "Blat score threshold" )
+                .desc(
+                        "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
+                .longOpt( "scoreThresh" )
+                .build();
 
-        OptionBuilder.withDescription( "Run on more sensitive server, if available" );
-        this.addOption( OptionBuilder.create( "sensitive" ) );
+        this.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
 
-        OptionBuilder.hasArg();
-        OptionBuilder.withArgName( "taxon" );
-        OptionBuilder.withDescription(
-                "Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" );
-        Option taxonOption = OptionBuilder.create( 't' );
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
+                "Taxon common name (e.g., human); if platform name not given (analysis will be "
+                        + "restricted to sequences on that platform for taxon given), blat "
+                        + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
+                .build();
 
         this.addOption( taxonOption );
         this.addThreadsOption();
@@ -240,7 +235,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.summarizeProcessing();
 
         } else {
-            this.bail( ErrorCode.MISSING_ARGUMENT );
+            exitwithError();
         }
 
         return null;
@@ -265,7 +260,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
             AbstractCLI.log.error( "Cannot read from " + blatResultFile );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         // check being running for just one taxon
         arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );

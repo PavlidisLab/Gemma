@@ -21,7 +21,6 @@ package ubic.gemma.core.association.phenotype;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.analysis.Investigation;
@@ -423,7 +422,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         return bibRef;
     }
 
-    private void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+    private void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject<?> evidenceValueObject ) {
         DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getEvidenceSource();
 
         // find the correct database
@@ -538,7 +537,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phe.getPhenotypes().addAll( myPhenotypes );
     }
 
-    private void setScoreInformation( EvidenceValueObject evidenceValueObject,
+    private void setScoreInformation( EvidenceValueObject<?> evidenceValueObject,
             PhenotypeAssociation phenotypeAssociation ) {
         if ( evidenceValueObject.getScoreValueObject() != null ) {
 

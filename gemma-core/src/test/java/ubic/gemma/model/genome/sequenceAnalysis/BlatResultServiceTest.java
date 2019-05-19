@@ -21,7 +21,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 

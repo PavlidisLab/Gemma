@@ -16,7 +16,8 @@ package ubic.gemma.model.analysis;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 

@@ -229,8 +229,8 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
         CompositeSequenceMapValueObject other = ( CompositeSequenceMapValueObject ) obj;
         if ( compositeSequenceName == null ) {
             return other.compositeSequenceName == null;
-        } else
-            return compositeSequenceName.equals( other.compositeSequenceName );
+        }
+        return compositeSequenceName.equals( other.compositeSequenceName );
     }
 
 }

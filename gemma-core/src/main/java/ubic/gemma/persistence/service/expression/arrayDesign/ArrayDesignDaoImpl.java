@@ -1118,7 +1118,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
-        queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id ";
+     //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
         queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );

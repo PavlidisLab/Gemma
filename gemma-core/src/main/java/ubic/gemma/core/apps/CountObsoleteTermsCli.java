@@ -17,7 +17,7 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         CountObsoleteTermsCli p = new CountObsoleteTermsCli();
-        AbstractCLIContextCLI.tryDoWork( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override

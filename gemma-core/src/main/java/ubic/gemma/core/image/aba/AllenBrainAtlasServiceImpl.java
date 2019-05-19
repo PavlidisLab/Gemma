@@ -24,7 +24,8 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
+
+import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.*;
@@ -50,8 +51,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     /**
      * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
      *
-     * @param gene the gene to look for in ABA.
-     * @return ABA gene
+     * @param  gene                     the gene to look for in ABA.
+     * @return                          ABA gene
      * @throws IllegalArgumentException when the given gene does not have an NCBI ID.
      */
     @Override
@@ -122,16 +123,16 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     /**
      * Scans the given series and returns new series only containing the image of the middle section.
+     * 
      * @param imageSeries the series to strip.
      */
-    private Collection<ImageSeries> stripImageSeries(Collection<ImageSeries> imageSeries){
+    private Collection<ImageSeries> stripImageSeries( Collection<ImageSeries> imageSeries ) {
         Collection<ImageSeries> strippedSeries = new LinkedList<>();
 
-        int i = 1;
-        for(ImageSeries is : imageSeries){
+        for ( ImageSeries is : imageSeries ) {
             List<Image> images = is.getImages();
 
-            if(!images.isEmpty()) {
+            if ( !images.isEmpty() ) {
 
                 // Sort by image section number
                 Collections.sort( images, new Comparator<Image>() {
@@ -151,7 +152,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return strippedSeries;
     }
 
-    private Collection<ImageSeries> extractSeries(Document imageSeriesDoc){
+    private Collection<ImageSeries> extractSeries( Document imageSeriesDoc ) {
         NodeList sectionDataSets = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes().item( 0 ).getChildNodes();
         Collection<ImageSeries> series = new LinkedList<>();
 
@@ -193,7 +194,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             try {
                 int id = Integer.parseInt( XMLUtils.extractOneChildText( imageNode, "id" ) );
                 Image img = new Image( //
-                        "Allen brain map image id "+id, id, //
+                        "Allen brain map image id " + id, id, //
                         Integer.parseInt( XMLUtils.extractOneChildText( imageNode, "height" ) ), //
                         Integer.parseInt( XMLUtils.extractOneChildText( imageNode, "width" ) ), //
                         XMLUtils.extractOneChildText( imageNode, "path" ), //

@@ -40,7 +40,7 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
     final private Gene firstGene = null;
     final private Gene secondGene = null;
 
-    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
+    @SuppressWarnings("ConstantConditions") // Hibernate populates fields via reflection.
     @Override
     public int hashCode() {
         if ( this.id != null )
@@ -53,7 +53,7 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
         return result;
     }
 
-    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
+    @SuppressWarnings("ConstantConditions") // Hibernate populates fields via reflection.
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
@@ -76,8 +76,8 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
 
         if ( secondGene == null ) {
             return other.secondGene == null;
-        } else
-            return secondGene.equals( other.secondGene );
+        }
+        return secondGene.equals( other.secondGene );
     }
 
     @Override

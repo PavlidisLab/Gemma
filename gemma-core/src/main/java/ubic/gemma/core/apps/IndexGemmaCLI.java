@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -73,31 +72,31 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" ).create( 'g' );
+        Option geneOption = Option.builder( "g" ).desc( "Index genes" ).longOpt( "genes" ).build();
         this.addOption( geneOption );
 
-        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" )
-                .withLongOpt( "ExpressionExperiments" ).create( 'e' );
+        Option eeOption = Option.builder( "g" ).desc( "Index Expression Experiments" )
+                .longOpt( "ExpressionExperiments" ).build();
         this.addOption( eeOption );
 
-        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt( "ArrayDesigns" )
-                .create( 'a' );
+        Option adOption = Option.builder( "a" ).desc( "Index Array Designs" ).longOpt( "ArrayDesigns" )
+                .build();
         this.addOption( adOption );
 
-        Option bibliographicOption = OptionBuilder.withDescription( "Index Bibliographic References" )
-                .withLongOpt( "Bibliographic" ).create( 'b' );
+        Option bibliographicOption = Option.builder( "b" ).desc( "Index Bibliographic References" )
+                .longOpt( "Bibliographic" ).build();
         this.addOption( bibliographicOption );
 
-        Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt( "probes" ).create( 's' );
+        Option probeOption = Option.builder( "s" ).desc( "Index probes" ).longOpt( "probes" ).build();
         this.addOption( probeOption );
 
-        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" )
-                .create( 'q' );
+        Option sequenceOption = Option.builder( "q" ).desc( "Index sequences" ).longOpt( "sequences" )
+                .build();
         this.addOption( sequenceOption );
 
-        this.addOption( OptionBuilder.withDescription( "Index EE sets" ).withLongOpt( "eesets" ).create( 'x' ) );
+        this.addOption( Option.builder( "x" ).desc( "Index EE sets" ).longOpt( "eesets" ).build() );
 
-        this.addOption( OptionBuilder.withDescription( "Index gene sets" ).withLongOpt( "genesets" ).create( 'y' ) );
+        this.addOption( Option.builder( "y" ).desc( "Index gene sets" ).longOpt( "genesets" ).build() );
     }
 
     @Override

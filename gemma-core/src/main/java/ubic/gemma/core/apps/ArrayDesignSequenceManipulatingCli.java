@@ -72,7 +72,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         this.addOption( eeFileListOption );
 
         this.addDateOption();
-
         this.addAutoOption();
 
     }
@@ -240,8 +239,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             arrayDesignsToProcess.add( ad );
         }
         if ( arrayDesignsToProcess.size() == 0 ) {
-            AbstractCLI.log.error( "There were no valid experiments specified" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            log.error( "There were no valid experiments specified" );
+            exitwithError();
         }
     }
 

@@ -20,7 +20,8 @@
 package ubic.gemma.model.genome;
 
 import org.junit.Test;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

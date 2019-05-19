@@ -53,8 +53,9 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     }
 
     /**
-     * @return A collection of GeneProducts that this BioSequence2GeneProduct corresponds to. A BioSequence can align to one or
-     * more GeneProducts.
+     * @return A collection of GeneProducts that this BioSequence2GeneProduct corresponds to. A BioSequence can align to
+     *         one or
+     *         more GeneProducts.
      */
     public GeneProduct getGeneProduct() {
         return this.geneProduct;
@@ -64,7 +65,8 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
         this.geneProduct = geneProduct;
     }
 
-    @SuppressWarnings("override") // Possibly used in front end
+    @Override
+    @SuppressWarnings("override")
     public Long getId() {
         return id;
     }
@@ -74,8 +76,9 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     }
 
     /**
-     * @return Degree to which the sequence overlaps with the gene product. This is often the overlap of a DNA sequence with the
-     * exons encoding the mRNA for the GeneProduct, but could have other interpretations
+     * @return Degree to which the sequence overlaps with the gene product. This is often the overlap of a DNA sequence
+     *         with the
+     *         exons encoding the mRNA for the GeneProduct, but could have other interpretations
      */
     public Integer getOverlap() {
         return this.overlap;
@@ -86,8 +89,9 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     }
 
     /**
-     * @return The score for the association between the biosequence and the gene product. This could be a BLAT similarity or
-     * other score.
+     * @return The score for the association between the biosequence and the gene product. This could be a BLAT
+     *         similarity or
+     *         other score.
      */
     public Double getScore() {
         return this.score;
@@ -106,9 +110,11 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     }
 
     /**
-     * @return A measure of how specific this association is compared to others that were obtained in the same analysis. This
-     * can be misleading if the same sequence was analyzed multiple times with different algorithms, databases, or
-     * parameters. High values are "better" but the exactly interpretation is implementation-specific.
+     * @return A measure of how specific this association is compared to others that were obtained in the same analysis.
+     *         This
+     *         can be misleading if the same sequence was analyzed multiple times with different algorithms, databases,
+     *         or
+     *         parameters. High values are "better" but the exactly interpretation is implementation-specific.
      */
     public Double getSpecificity() {
         return this.specificity;
@@ -119,8 +125,9 @@ public abstract class BioSequence2GeneProduct implements Identifiable, Serializa
     }
 
     /**
-     * @return The distance from the 3' end where this BioSequence aligns with respect to the Gene Product. This is often the
-     * location of the alignment with respect to an mRNA 3' end.
+     * @return The distance from the 3' end where this BioSequence aligns with respect to the Gene Product. This is
+     *         often the
+     *         location of the alignment with respect to an mRNA 3' end.
      */
     public Long getThreePrimeDistance() {
         return this.threePrimeDistance;

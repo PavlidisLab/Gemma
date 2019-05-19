@@ -45,10 +45,7 @@ import java.util.Collection;
 public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     public static void main( String[] args ) {
         AffyProbeCollapseCli d = new AffyProbeCollapseCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( d, args );
     }
 
     /*

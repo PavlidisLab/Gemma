@@ -22,7 +22,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;

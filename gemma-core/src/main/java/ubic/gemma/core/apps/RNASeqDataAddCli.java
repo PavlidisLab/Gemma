@@ -50,10 +50,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         RNASeqDataAddCli c = new RNASeqDataAddCli();
-        Exception e = c.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( c, args );
     }
 
     @Override
@@ -64,18 +61,18 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        super.addOption( RNASeqDataAddCli.RPKM_FILE_OPT, true, "File with RPKM data" );
-        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, true, "File with count data" );
+        super.addOption( RNASeqDataAddCli.RPKM_FILE_OPT, null, "File with RPKM data", "file path" );
+        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, null, "File with count data", "file path" );
 
-        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, true, "File with count data" );
-        super.addOption( RNASeqDataAddCli.ALLOW_MISSING, false,
+        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, null, "File with count data", "file path" );
+        super.addOption( RNASeqDataAddCli.ALLOW_MISSING,
                 "Set this if your data files don't have information for all samples." );
-        super.addOption( "a", true, "Target platform (must already exist in the system)" );
+        super.addOption( "a", null, "Target platform (must already exist in the system)", "platform short name" );
 
-        super.addOption( RNASeqDataAddCli.METADATAOPT, true,
-                "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " );
+        super.addOption( RNASeqDataAddCli.METADATAOPT, null,
+                "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' ", "length" );
 
-        super.addOption( "log2cpm", false,
+        super.addOption( "log2cpm",
                 "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
     }
@@ -237,7 +234,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         if ( arrayDesign == null ) {
             AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return arrayDesign;
     }

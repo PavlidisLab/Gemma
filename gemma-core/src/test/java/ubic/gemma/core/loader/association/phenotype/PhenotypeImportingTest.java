@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 /**
  * Minimal test of PhenotypeProcessingUtil - part of Phenocarta

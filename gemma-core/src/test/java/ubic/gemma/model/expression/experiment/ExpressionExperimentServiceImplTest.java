@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

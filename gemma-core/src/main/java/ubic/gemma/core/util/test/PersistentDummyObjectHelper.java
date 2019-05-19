@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.testing;
+package ubic.gemma.core.util.test;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
@@ -260,6 +260,7 @@ public class PersistentDummyObjectHelper {
         }
 
         ee.setBioAssays( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         assert quantitationTypes.size() > 0;
 
@@ -305,6 +306,7 @@ public class PersistentDummyObjectHelper {
         bioAssays.addAll( bioAssaysA );
         bioAssays.addAll( bioAssaysB );
         ee.setBioAssays( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         log.debug( "expression experiment => design element data vectors" );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
@@ -447,12 +449,12 @@ public class PersistentDummyObjectHelper {
             bioAssays.addAll( bioAssaysB );
         }
         ee.getBioAssays().addAll( bioAssays );
+        ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
         Collection<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<QuantitationType>() );
 
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
-
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
@@ -513,6 +515,7 @@ public class PersistentDummyObjectHelper {
      * @param  bioSequence bio sequence
      * @return             bio sequence to gene products
      */
+    @SuppressWarnings("unchecked")
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
@@ -635,21 +638,7 @@ public class PersistentDummyObjectHelper {
     public ExpressionExperiment getTestPersistentExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
-        return ee;
-    }
-
-    /**
-     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
-     * objects. This implementation does NOT fill in associations of the created object.
-     *
-     * @param  bioAssays bio assays
-     * @return           EE
-     */
-    public ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
-        ee.setBioAssays( bioAssays );
+        ee.setTaxon( this.getTestPersistentTaxon() );
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
         return ee;
     }
@@ -693,7 +682,7 @@ public class PersistentDummyObjectHelper {
         assert quantitationTypes.size() > 0;
 
         ee.setQuantitationTypes( quantitationTypes );
-
+        ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
         ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );

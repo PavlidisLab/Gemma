@@ -228,7 +228,8 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 sortable: true,
                 renderer: Gemma.Renderers.suitabilityRenderer,
                 tooltip: 'Shows the suitability score of experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.<br/><br/>If the experiment is still in curation, this score can change significantly.',
-                width: 0.05
+                width: 0.05,
+                hidden: true /* don't expose by default */
             },
             {
                 header: "Short Name",

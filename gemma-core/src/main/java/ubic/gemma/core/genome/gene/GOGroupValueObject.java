@@ -101,8 +101,8 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         GOGroupValueObject other = ( GOGroupValueObject ) obj;
         if ( goId == null ) {
             return other.goId == null;
-        } else
-            return goId.equals( other.goId );
+        }
+        return goId.equals( other.goId );
     }
 
     /**

@@ -21,7 +21,7 @@ package ubic.gemma.core.ontology;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Collection;

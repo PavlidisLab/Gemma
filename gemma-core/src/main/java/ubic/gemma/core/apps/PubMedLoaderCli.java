@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -57,8 +56,8 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "Directory" )
-                .withDescription( "Directory of PubMed XML files to load" ).withLongOpt( "dir" ).create( 'd' );
+        Option fileOption = Option.builder( "d" ).required().hasArg().argName( "Directory" )
+                .desc( "Directory of PubMed XML files to load" ).longOpt( "dir" ).build();
         this.addOption( fileOption );
 
     }

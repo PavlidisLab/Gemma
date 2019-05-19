@@ -88,8 +88,8 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
         GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
         if ( geneId == null ) {
             return other.geneId == null;
-        } else
-            return geneId.equals( other.geneId );
+        }
+        return geneId.equals( other.geneId );
     }
 
     public Long getGeneId() {
@@ -126,8 +126,9 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
     }
 
     /**
-     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
-     * support.
+     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given
+     *         threshold
+     *         support.
      */
     public byte[] getRelativeLinkRanksNegative() {
         return relativeLinkRanksNegative;
@@ -138,8 +139,9 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
     }
 
     /**
-     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
-     * support.
+     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given
+     *         threshold
+     *         support.
      */
     public byte[] getRelativeLinkRanksPositive() {
         return relativeLinkRanksPositive;

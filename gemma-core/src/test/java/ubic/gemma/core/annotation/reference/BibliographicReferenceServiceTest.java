@@ -21,7 +21,8 @@ package ubic.gemma.core.annotation.reference;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;

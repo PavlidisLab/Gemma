@@ -31,6 +31,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.util.Configuration;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchResult;
@@ -119,11 +120,10 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public void afterPropertiesSet() {
 
-        // We search in this order.
         this.ontologyServices.add( this.gemmaOntologyService );
         this.ontologyServices.add( this.experimentalFactorOntologyService );
         this.ontologyServices.add( this.obiService );
-        this.ontologyServices.add( this.nifstdOntologyService ); // DEPRECATED?
+        this.ontologyServices.add( this.nifstdOntologyService ); // DEPRECATED
         this.ontologyServices.add( this.fmaOntologyService ); // DEPRECATED
         this.ontologyServices.add( this.diseaseOntologyService );
         this.ontologyServices.add( this.cellTypeOntologyService );
@@ -136,8 +136,14 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.cellLineOntologyService );
         this.ontologyServices.add( this.uberonOntologyService );
 
-        for ( AbstractOntologyService serv : this.ontologyServices ) {
-            serv.startInitializationThread( false, false );
+        /*
+         * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
+         */
+        String doLoad = Configuration.getString( "load.ontologies" );
+        if ( StringUtils.isNotBlank( doLoad ) && Configuration.getBoolean( "load.ontologies" ) ) {
+            for ( AbstractOntologyService serv : this.ontologyServices ) {
+                serv.startInitializationThread( false, false );
+            }
         }
 
     }
@@ -472,12 +478,6 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    @Deprecated
-    public FMAOntologyService getFmaOntologyService() {
-        return fmaOntologyService;
-    }
-
-    @Override
     public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
         return humanPhenotypeOntologyService;
     }
@@ -485,12 +485,6 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService() {
         return mammalianPhenotypeOntologyService;
-    }
-
-    @Override
-    @Deprecated
-    public NIFSTDOntologyService getNifstfOntologyService() {
-        return nifstdOntologyService;
     }
 
     @Override

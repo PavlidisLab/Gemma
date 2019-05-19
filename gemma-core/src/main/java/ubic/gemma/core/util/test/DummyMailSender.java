@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.core.testing;
+package ubic.gemma.core.util.test;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

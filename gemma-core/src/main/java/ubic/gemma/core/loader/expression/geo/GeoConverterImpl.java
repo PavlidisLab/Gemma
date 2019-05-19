@@ -1989,6 +1989,7 @@ public class GeoConverterImpl implements GeoConverter {
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription.append( "," ).append( sample );
                         expExp.getBioAssays().add( ba );
+                        expExp.setTaxon( bioMaterial.getSourceTaxon() ); // denormalization
                         found = true;
                         break;
                     }
@@ -2014,6 +2015,8 @@ public class GeoConverterImpl implements GeoConverter {
 
         int expectedNumSamples = series.getSamples().size() - samplesToSkip.size();
         int actualNumSamples = expExp.getBioAssays().size();
+        expExp.setNumberOfSamples( actualNumSamples );
+
         if ( expectedNumSamples > actualNumSamples ) {
             GeoConverterImpl.log.warn( ( expectedNumSamples - actualNumSamples )
                     + " samples were not in the 'sample correspondence'"

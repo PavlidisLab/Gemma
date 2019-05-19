@@ -40,6 +40,7 @@ import java.util.Collection;
  *
  * @author ldonnison
  */
+@Deprecated
 public class StringProteinFileFetcher extends HttpFetcher implements HttpArchiveFetcherInterface {
 
     private final static String INTERACTION = "protein.string.linksdetailed.remotepath";

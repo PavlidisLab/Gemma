@@ -28,11 +28,9 @@ import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import java.util.Collection;
 
 /**
  * Perform various computations on ExpressionDataMatrices (usually in-place).

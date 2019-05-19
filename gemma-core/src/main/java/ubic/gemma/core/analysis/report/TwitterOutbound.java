@@ -26,6 +26,7 @@ import org.springframework.security.access.annotation.Secured;
  *
  * @author paul
  */
+@Deprecated
 public interface TwitterOutbound {
 
     void disable();

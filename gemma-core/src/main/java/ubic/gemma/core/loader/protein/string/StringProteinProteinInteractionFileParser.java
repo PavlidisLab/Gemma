@@ -41,6 +41,7 @@ import java.util.HashSet;
  * @author ldonnison
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Deprecated
 public class StringProteinProteinInteractionFileParser extends BasicLineParser<StringProteinProteinInteraction> {
 
     /**

@@ -15,7 +15,6 @@
 package ubic.gemma.core.association.phenotype;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 

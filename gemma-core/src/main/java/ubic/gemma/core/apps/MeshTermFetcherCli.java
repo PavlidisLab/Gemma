@@ -35,8 +35,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author pavlidis
+ * @author     pavlidis
+ * @deprecated should not be part of Gemma main code
  */
+@Deprecated
 public class MeshTermFetcherCli extends AbstractCLI {
 
     private static final int CHUNK_SIZE = 10;

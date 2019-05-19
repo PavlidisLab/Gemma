@@ -169,6 +169,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.setAccession( this.cloneAccession( toSplit.getAccession() ) ); // accession is currently unique, so have to clone
             split.setOwner( toSplit.getOwner() );
             split.setSource( toSplit.getSource() );
+            split.setTaxon( toSplit.getTaxon() );
             // starting with a fresh audit trail.
 
             Map<FactorValue, FactorValue> old2cloneFV = new HashMap<>();
@@ -275,6 +276,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split.getBioAssays().clear();
             split.getBioAssays().addAll( replaceBAs );
+            split.setNumberOfSamples( replaceBAs.size() );
 
             split = ( ExpressionExperiment ) persister.persist( split );
 
@@ -484,7 +486,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     /**
-     * @param  accession
+     * @param  de databse entry
      * @return           non-persistent clone
      */
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
@@ -494,7 +496,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     /**
-     * @param  sampleUsed
+     * @param  bm biomaterial
+     * @param ba bioassay
      * @return            non-persistent clone
      */
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {

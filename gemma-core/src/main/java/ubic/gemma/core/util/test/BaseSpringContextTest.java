@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.testing;
+package ubic.gemma.core.util.test;
 
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserManager;
@@ -490,16 +490,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentExpressionExperiment();
     }
 
-    /**
-     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
-     * objects. This implementation does NOT fill in associations of the created object.
-     *
-     * @param bioAssays bio assays
-     * @return EE
-     */
-    protected ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
-        return testHelper.getTestPersistentExpressionExperiment( bioAssays );
-    }
+   
 
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test

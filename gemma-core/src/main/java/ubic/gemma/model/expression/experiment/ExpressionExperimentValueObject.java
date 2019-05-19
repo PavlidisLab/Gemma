@@ -117,8 +117,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      *                     one.
      */
     public ExpressionExperimentValueObject( Object[] row, Integer totalInBatch ) {
-        super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[27], ( Boolean ) row[15],
-                ( AuditEvent ) row[26], ( String ) row[16], ( AuditEvent ) row[25], totalInBatch );
+        super( ( Long ) row[0], ( Date ) row[12], ( Boolean ) row[13], ( AuditEvent ) row[24], ( Boolean ) row[14],
+                ( AuditEvent ) row[23], ( String ) row[15], ( AuditEvent ) row[22], totalInBatch );
 
         // EE
         this.name = ( String ) row[1];
@@ -142,46 +142,46 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Taxon
-        this.taxon = ( String ) row[11];
-        this.taxonId = ( Long ) row[12];
+        this.taxon = ( String ) row[10]; // common name
+        this.taxonId = ( Long ) row[11];
 
-        // 13, 14 15 16 used in call to super
+        // 12-15 used in call to super
 
         // Counts
-        this.bioAssayCount = ( ( Long ) row[17] ).intValue();
-        this.arrayDesignCount = ( ( Long ) row[18] ).intValue();
-        this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
+        this.bioAssayCount =   (Integer) row[16];
+      //  this.arrayDesignCount = ( ( Long ) row[17] ).intValue();
+      //  this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
 
         // Other
-        this.experimentalDesign = ( Long ) row[20];
+        this.experimentalDesign = ( Long ) row[17];
 
         // ACL
-        AclObjectIdentity aoi = ( AclObjectIdentity ) row[21];
+        AclObjectIdentity aoi = ( AclObjectIdentity ) row[18];
 
         boolean[] permissions = EntityUtils.getPermissions( aoi );
         this.setIsPublic( permissions[0] );
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
 
-        if ( row[22] instanceof AclPrincipalSid ) {
-            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[22] ).getPrincipal(),
+        if ( row[19] instanceof AclPrincipalSid ) {
+            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[19] ).getPrincipal(),
                     SecurityUtil.getCurrentUsername() ) );
         } else {
             this.setUserOwned( false );
         }
 
         // Batch info
-        batchEffect = ( String ) row[23];
-        batchConfound = ( String ) row[24];
+        batchEffect = ( String ) row[20];
+        batchConfound = ( String ) row[21];
 
-        // 26-28 used in call to super.
+        // 24-25 used in call to super.
 
         // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
-        geeq = row[28] == null ?
+        geeq = row[25] == null ?
                 null :
                 SecurityUtil.isUserAdmin() ?
-                        new GeeqAdminValueObject( ( Geeq ) row[28] ) :
-                        new GeeqValueObject( ( Geeq ) row[28] );
+                        new GeeqAdminValueObject( ( Geeq ) row[25] ) :
+                        new GeeqValueObject( ( Geeq ) row[25] );
 
         // 29: other parts
 

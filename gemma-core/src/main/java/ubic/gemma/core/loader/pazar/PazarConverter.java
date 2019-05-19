@@ -22,6 +22,7 @@ import ubic.gemma.model.association.PazarAssociation;
  * @author paul
  *
  */
+@Deprecated
 public interface PazarConverter extends Converter<PazarRecord, PazarAssociation> {
 
 }

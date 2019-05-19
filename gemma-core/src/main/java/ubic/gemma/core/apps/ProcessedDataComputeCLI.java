@@ -23,7 +23,6 @@ import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -47,7 +46,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     public static void main( String[] args ) {
         ProcessedDataComputeCLI p = new ProcessedDataComputeCLI();
-        AbstractCLIContextCLI.tryDoWorkLogTime( p, args );
+        executeCommand( p, args );
     }
 
     @Override
@@ -67,9 +66,9 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         Option outputFileOption = Option.builder( "b" )
                 .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
                 .build();
-        this.addOption( "diagupdate", false,
+        this.addOption( "diagupdate", 
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation; may be combined with other options)" );
-        this.addOption( "rankupdate", false, "Only update the expression intensity rank information (may be combined with other options)" );
+        this.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
 
         this.addOption( outputFileOption );
     }

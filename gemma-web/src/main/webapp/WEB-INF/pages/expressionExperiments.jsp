@@ -32,7 +32,7 @@ Display table of expression experiments.
       }
 
       var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
-         height : 280,
+         height : 220,
          flex : '0',
          listeners : {
             expand : onExpandCollapse,

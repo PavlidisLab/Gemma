@@ -18,17 +18,14 @@
  */
 package ubic.gemma.core.image.aba;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A class that represents the ImageSeries information returned from the alan brain atlas
+ * Represents the ImageSeries information returned from the AIBS brain atlas
  *
  * @author kelsey
  */
-
 public class ImageSeries {
 
     private Integer imageSeriesId;

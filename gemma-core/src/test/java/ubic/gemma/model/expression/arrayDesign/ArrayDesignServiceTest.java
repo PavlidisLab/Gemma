@@ -24,7 +24,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

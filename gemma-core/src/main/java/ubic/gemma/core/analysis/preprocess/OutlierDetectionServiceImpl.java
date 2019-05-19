@@ -129,12 +129,12 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         double index;
         double fraction = ( quantileThreshold / 100.0 );
 
-        if ( fraction < ( 2.0 / 3.0 ) / ( ( double ) numCors + ( 1.0 / 3.0 ) ) ) {
+        if ( fraction < ( 2.0 / 3.0 ) / ( numCors + ( 1.0 / 3.0 ) ) ) {
             index = 1;
-        } else if ( fraction >= ( ( ( double ) numCors - ( 1.0 / 3.0 ) ) / ( ( double ) numCors + ( 1.0 / 3.0 ) ) ) ) {
-            index = ( double ) numCors;
+        } else if ( fraction >= ( ( numCors - ( 1.0 / 3.0 ) ) / ( numCors + ( 1.0 / 3.0 ) ) ) ) {
+            index = numCors;
         } else {
-            index = ( ( ( ( double ) numCors + ( 1.0 / 3.0 ) ) * fraction ) + ( 1.0 / 3.0 ) );
+            index = ( ( ( numCors + ( 1.0 / 3.0 ) ) * fraction ) + ( 1.0 / 3.0 ) );
         }
         return index;
     }

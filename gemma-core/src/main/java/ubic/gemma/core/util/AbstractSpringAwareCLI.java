@@ -95,10 +95,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /**
      * Convenience method to obtain instance of any bean by name.
      *
-     * @param <T>  the bean class type
-     * @param clz  class
-     * @param name name
-     * @return bean
+     * @param  <T>  the bean class type
+     * @param  clz  class
+     * @param  name name
+     * @return      bean
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
     protected <T> T getBean( String name, Class<T> clz ) {
@@ -117,9 +117,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * @param auditable  auditable
-     * @param eventClass can be null
-     * @return boolean
+     * @param  auditable  auditable
+     * @param  eventClass can be null
+     * @return            boolean
      */
     protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
@@ -209,19 +209,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             if ( StringUtils.isBlank( username ) ) {
                 System.err.println( "Not authenticated. Username was blank" );
                 AbstractCLI.log.debug( "Username=" + username );
-                this.bail( ErrorCode.AUTHENTICATION_ERROR );
+                exitwithError();
             }
 
             if ( StringUtils.isBlank( password ) ) {
                 System.err.println( "Not authenticated. You didn't enter a password" );
-                this.bail( ErrorCode.AUTHENTICATION_ERROR );
+                exitwithError();
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
-                this.bail( ErrorCode.AUTHENTICATION_ERROR );
+                exitwithError();
             } else {
                 AbstractCLI.log.info( "Logged in as " + username );
             }

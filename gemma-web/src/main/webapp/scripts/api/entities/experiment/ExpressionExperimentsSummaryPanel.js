@@ -8,7 +8,7 @@ Ext.namespace('Gemma');
  */
 Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
     {
-        title: 'Summary & Updates',
+        title: 'Summary & updates in the past week',
         collapsible: true,
         titleCollapse: true,
         animCollapse: false,
@@ -80,20 +80,20 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel,
             '<div id="dataSummaryTable">'
             + '<div class="roundedcornr_box_777249" style="margin-bottom: 15px; padding: 10px; -moz-border-radius: 15px; border-radius: 15px;">'
             + '<div class="roundedcornr_content_777249">'
-            + '<td align="right" style="padding-right: 10px">'
-            + '<div style="font-size: small; padding-bottom: 5px;">'
-            + '<b>Data Summary</b>'
-            + '<tpl if="drawNewColumn == true && drawUpdatedColumn == true ">'
-            + '<b> and Changes in the Last Week:</b>'
-            + '</tpl>'
-            + '<tpl if="drawNewColumn == true && drawUpdatedColumn == false ">'
-            + '<b> and Additions in the Last Week:</b>'
-            + '</tpl>'
-            + '<tpl if="drawNewColumn == false && drawUpdatedColumn == true ">'
-            + '<b> and Updates in the Last Week:</b>'
-            + '</tpl>'
-            + '</div>'
-            + '</td>'
+          //  + '<td align="right" style="padding-right: 10px">'
+            // + '<div style="font-size: small; padding-bottom: 5px;">'
+            // + '<b>Data Summary</b>'
+            // + '<tpl if="drawNewColumn == true && drawUpdatedColumn == true ">'
+            // + '<b> and Changes in the Last Week:</b>'
+            // + '</tpl>'
+            // + '<tpl if="drawNewColumn == true && drawUpdatedColumn == false ">'
+            // + '<b> and Additions in the Last Week:</b>'
+            // + '</tpl>'
+            // + '<tpl if="drawNewColumn == false && drawUpdatedColumn == true ">'
+            // + '<b> and Updates in the Last Week:</b>'
+            // + '</tpl>'
+            // + '</div>'
+          //  + '</td>'
             + '<div id="dataSummary" style="margin-left: 15px; margin-right: 15px">'
             + '<table style="white-space: nowrap">'
             + '<tr>'

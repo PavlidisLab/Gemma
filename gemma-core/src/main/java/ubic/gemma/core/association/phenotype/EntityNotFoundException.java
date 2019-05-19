@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.association.phenotype.PhenotypeExceptions;
+package ubic.gemma.core.association.phenotype;
 
 /**
  * Used to signifity that an entity was not found in the system.

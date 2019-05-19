@@ -33,7 +33,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;

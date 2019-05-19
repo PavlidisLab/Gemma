@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
@@ -57,7 +56,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
         Exception err = this.processCommandLine( args );
         if ( err != null ) {
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
             return err;
         }
 
@@ -78,7 +77,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
             if ( otherArrayDesign == null ) {
                 AbstractCLI.log.error( "No arrayDesign " + otherArrayDesignName + " found" );
-                this.bail( ErrorCode.INVALID_OPTION );
+                exitwithError();
             }
 
             otherArrayDesign = this.thaw( otherArrayDesign );
@@ -107,9 +106,9 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option otherArrayDesignOption = OptionBuilder.isRequired().hasArg().withArgName( "Other platform" )
-                .withDescription( "Short name(s) of platforms to compare to the first one, comma-delimited" )
-                .withLongOpt( "other" ).create( 'o' );
+        Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
+                .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
+                .longOpt( "other" ).build();
 
         this.addOption( otherArrayDesignOption );
     }

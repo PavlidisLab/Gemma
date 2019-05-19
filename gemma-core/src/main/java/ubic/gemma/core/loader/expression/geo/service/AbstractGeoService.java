@@ -45,11 +45,11 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
 
     @Override
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean splitIncompatiblePlatforms );
+            boolean splitByPlatform );
 
     @Override
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
+            boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
     @Override
     public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {

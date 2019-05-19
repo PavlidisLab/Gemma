@@ -41,10 +41,7 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         PubMedSearcher p = new PubMedSearcher();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        executeCommand( p, args );
     }
 
     @Override
@@ -59,7 +56,7 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions() {
-        this.addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
+        this.addOption( "d", "persist", "Persist the results. Otherwise just search.", null );
     }
 
     @Override
@@ -71,7 +68,8 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
             return err;
 
         try {
-            @SuppressWarnings("unchecked") Collection<BibliographicReference> refs = PubMedSearcher.pms
+            @SuppressWarnings("unchecked")
+            Collection<BibliographicReference> refs = PubMedSearcher.pms
                     .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
 
             System.out.println( refs.size() + " references found" );
@@ -83,7 +81,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         } catch ( IOException | ParserConfigurationException | SAXException e ) {
             return e;
         }
-        this.resetLogging();
         return null;
     }
 

@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -72,8 +72,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
                 .convert( series );
         assertTrue( r.isEmpty() );
     }
@@ -366,8 +365,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
         ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
 
@@ -762,6 +760,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         ExpressionExperiment ee = ( ExpressionExperiment ) ( ( Collection<?> ) convert ).iterator().next();
 
         assertEquals( 2, ee.getQuantitationTypes().size() );
+
+        assertNotNull( ee.getTaxon() );
     }
 
     /*

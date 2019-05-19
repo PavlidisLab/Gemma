@@ -20,9 +20,7 @@
 package ubic.gemma.core.apps;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -104,7 +102,7 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
                 }
 
                 // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent
- 
+
                 // keep only last AlignmentBasedGeneMappingEvent, ArrayDesignRepeatAnalysisEvent, ArrayDesignGeneMappingEvent, ArrayDesignSequenceAnalysisEvent 
             }
 

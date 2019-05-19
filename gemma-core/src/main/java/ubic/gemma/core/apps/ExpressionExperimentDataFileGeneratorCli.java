@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -139,9 +138,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void buildOptions() {
         super.buildOptions();
 
-        Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" )
-                .withDescription( "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" )
-                .create( 'w' );
+        Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
+                .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
+                .build();
 
         this.addThreadsOption();
         this.addOption( forceWriteOption );

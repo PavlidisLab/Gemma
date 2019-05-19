@@ -27,7 +27,7 @@ import java.io.Serializable;
  * Represents coexpression at the level of experiment, referinng to links stored as Gene2GeneCoexpression.
  *
  * @author Paul
- * FIXME the overrides are uselsess, no specific functionality, they can be represented an enumeration field.
+ *         FIXME the overrides are uselsess, no specific functionality, they can be represented an enumeration field.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class ExperimentCoexpressionLink implements Serializable {
@@ -116,8 +116,8 @@ public abstract class ExperimentCoexpressionLink implements Serializable {
             return false;
         if ( linkId == null ) {
             return other.linkId == null;
-        } else
-            return linkId.equals( other.linkId );
+        }
+        return linkId.equals( other.linkId );
     }
 
     public Long getFirstGene() {

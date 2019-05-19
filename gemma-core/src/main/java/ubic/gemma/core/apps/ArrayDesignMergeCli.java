@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -65,7 +64,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         Exception err = this.processCommandLine( args );
         if ( err != null ) {
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
             return err;
         }
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
@@ -82,27 +81,28 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option otherArrayDesignOption = OptionBuilder.isRequired().hasArg().withArgName( "Other platforms" )
-                .withDescription(
+        Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
+                .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
                                 + "If the platform given with -a is already a merged design, these will be added to it if the -add option is given"
                                 + "The designs cannot be ones already merged into another design, but they can be mergees." )
-                .withLongOpt( "other" ).create( 'o' );
+                .longOpt( "other" ).build();
 
         this.addOption( otherArrayDesignOption );
 
-        Option newAdName = OptionBuilder.hasArg().withArgName( "name" )
-                .withDescription( "Name for new platform, if the given platform is not already a merged design" )
-                .withLongOpt( "name" ).create( 'n' );
+        Option newAdName = Option.builder( "n" ).hasArg().argName( "name" )
+                .desc( "Name for new platform, if the given platform is not already a merged design" )
+                .longOpt( "name" ).build();
         this.addOption( newAdName );
-        Option newAdShortName = OptionBuilder.hasArg().withArgName( "name" )
-                .withDescription( "Short name for new platform, if the given platform is not already a merged design" )
-                .withLongOpt( "shortname" ).create( 's' );
+        Option newAdShortName = Option.builder( "s" ).hasArg().argName( "name" )
+                .desc( "Short name for new platform, if the given platform is not already a merged design" )
+                .longOpt( "shortname" ).build();
         this.addOption( newAdShortName );
 
-        Option addOption = OptionBuilder.withDescription(
+        Option addOption = Option.builder( "add" ).desc(
                 "If the given platform is already a merged design, add the -o designs to it. "
-                        + "Recommended unless there is a specific reason to create a new design." ).create( "add" );
+                        + "Recommended unless there is a specific reason to create a new design." )
+                .build();
         this.addOption( addOption );
     }
 

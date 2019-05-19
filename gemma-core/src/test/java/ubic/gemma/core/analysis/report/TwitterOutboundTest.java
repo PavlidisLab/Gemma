@@ -21,7 +21,8 @@ package ubic.gemma.core.analysis.report;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

@@ -26,6 +26,7 @@ import java.util.HashSet;
  *
  * @author paul
  */
+@Deprecated
 public class PazarParser extends BasicLineParser<PazarRecord> {
 
     private final Collection<PazarRecord> results = new HashSet<>();

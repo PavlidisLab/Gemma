@@ -26,7 +26,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Class encapsulating all the curation information for Curatable objects.
+ * Class encapsulating all the curation information for Curatable objects. This includes a flag to indicate whether
+ * the entity is "troubled". For ExpressionExperiments as of 2019, this troubled flag will reflect whether an associated
+ * ArrayDesign is troubled.
  *
  * @author tesarst
  */

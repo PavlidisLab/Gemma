@@ -2,8 +2,9 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;

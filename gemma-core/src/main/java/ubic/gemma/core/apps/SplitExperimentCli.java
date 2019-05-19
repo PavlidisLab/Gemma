@@ -47,7 +47,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         SplitExperimentCli c = new SplitExperimentCli();
-        AbstractCLIContextCLI.tryDoWork( c, args );
+        AbstractCLIContextCLI.executeCommand( c, args );
     }
 
     private Long factorId;

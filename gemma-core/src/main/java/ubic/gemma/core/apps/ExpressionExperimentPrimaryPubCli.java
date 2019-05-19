@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 
 import cern.colt.Arrays;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -50,7 +49,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     public static void main( String[] args ) {
         ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
-        tryDoWorkNoExit( p, args );
+        executeCommand( p, args );
     }
 
     @Override
@@ -60,16 +59,19 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     public String getShortDesc() {
-        return "Set or update the primary publication for experiments";
+        return "Set or update the primary publication for experiments by fetching from GEO";
     }
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option pubmedOption = OptionBuilder.hasArg().withArgName( "pubmedIDFile" ).withDescription(
-                "A text file which contains the list of pubmed IDs associated with each experiment ID. If the pubmed ID is not found, it will try to use the existing pubmed ID associated with the experiment. Each row has two columns: pubmedId and experiment shortName, e.g. 22438826<TAB>GSE27715" )
-                .withLongOpt( "pubmedIDFile" ).create( "pmidFile" );
+        Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
+                "A text file which contains the list of pubmed IDs associated with each experiment ID. "
+                        + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
+                        + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
+                        + "e.g. 22438826<TAB>GSE27715" )
+                .build();
 
         addOption( pubmedOption );
         this.addForceOption();
@@ -100,7 +102,9 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             ExpressionExperiment experiment = ( ExpressionExperiment ) bioassay;
             // if ( experiment.getPrimaryPublication() != null ) continue;
             if ( experiment.getPrimaryPublication() == null ) {
-                log.warn( experiment + " has no existing primary publication" );
+                log.warn( experiment + " has no existing primary publication, will attempt to find" );
+            } else {
+                log.info( experiment.getPrimaryPublication() + " has a primary publication, updating" );
             }
             experiment = ees.thawLite( experiment );
 

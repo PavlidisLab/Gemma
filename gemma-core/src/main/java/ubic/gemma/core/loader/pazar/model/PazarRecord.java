@@ -18,6 +18,7 @@ package ubic.gemma.core.loader.pazar.model;
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
+@Deprecated
 public class PazarRecord {
 
     private PazarMethod method;

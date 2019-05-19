@@ -20,6 +20,8 @@ package ubic.gemma.core.security.principal;
 
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.Date;
 

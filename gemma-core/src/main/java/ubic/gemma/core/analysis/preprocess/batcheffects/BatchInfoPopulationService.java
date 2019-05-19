@@ -15,7 +15,6 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.Settings;
 
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.

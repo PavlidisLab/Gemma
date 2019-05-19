@@ -20,6 +20,7 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;

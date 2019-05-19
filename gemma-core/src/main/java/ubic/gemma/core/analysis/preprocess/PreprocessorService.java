@@ -20,7 +20,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * @author Paul
  */
-@Service
 public interface PreprocessorService {
 
     ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;

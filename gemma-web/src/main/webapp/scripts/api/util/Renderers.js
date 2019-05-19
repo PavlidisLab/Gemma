@@ -46,7 +46,7 @@ Gemma.Renderers = {
 
     curationRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         if (record.get('needsAttention')) {
-            var note = record.get('curationNote') ? record.get('curationNote') : "Curation note empty";
+            var note = record.get('curationNote') ? record.get('curationNote') : "Undergoing curation"; /* default message */
             return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note + '"></i>';
         }
     },

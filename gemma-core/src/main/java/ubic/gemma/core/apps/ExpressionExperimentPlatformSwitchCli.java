@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -86,9 +85,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
+        Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
                 "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
-                .withLongOpt( "array" ).create( 'a' );
+                .longOpt( "array" ).build();
 
         this.addOption( arrayDesignOption );
         this.addForceOption();
@@ -114,7 +113,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
                     AbstractCLI.log.error( "Unknown array design" );
-                    this.bail( ErrorCode.INVALID_OPTION );
+                    exitwithError();
                 }
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );

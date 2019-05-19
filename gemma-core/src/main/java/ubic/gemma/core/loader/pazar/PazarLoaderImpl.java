@@ -32,6 +32,7 @@ import java.util.Collection;
  * @author paul
  */
 @Component
+@Deprecated
 public class PazarLoaderImpl implements PazarLoader {
 
     @Autowired

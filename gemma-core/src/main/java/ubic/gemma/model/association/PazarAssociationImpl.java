@@ -21,6 +21,7 @@ package ubic.gemma.model.association;
 
 /**
  * @see ubic.gemma.model.association.PazarAssociation
+ * @deprecated
  */
 public class PazarAssociationImpl extends ubic.gemma.model.association.PazarAssociation {
     /**

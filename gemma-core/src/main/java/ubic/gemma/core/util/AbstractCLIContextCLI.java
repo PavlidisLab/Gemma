@@ -40,50 +40,38 @@ import java.util.List;
  */
 public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
 
-    protected static void tryDoWork( AbstractCLIContextCLI p, String[] args ) {
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            System.exit( 0 );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    protected static void tryDoWorkNoExit( AbstractCLIContextCLI p, String[] args ) {
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    protected static void tryDoWorkLogTime( AbstractCLIContextCLI p, String[] args ) {
+    /**
+     * Run a command. If
+     * 
+     * @param p    command line object
+     * @param args arguments
+     */
+    protected static void executeCommand( AbstractCLIContextCLI p, String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
             Exception ex = p.doWork( args );
+            resetLogging();
+
             if ( ex != null ) {
-                ex.printStackTrace();
+                log.error( ex, ex );
+                exitwithError();
+            } else {
+                System.exit( 0 );
             }
             watch.stop();
             AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+
     }
 
     /**
      * may be tab-delimited, only first column used, commented (#) lines are ignored.
      *
-     * @param fileName the file name
-     * @return list of ee identifiers
+     * @param  fileName    the file name
+     * @return             list of ee identifiers
      * @throws IOException in case there is an IO error while reading the file
      */
     protected static List<String> readListFileToStrings( String fileName ) throws IOException {
@@ -103,7 +91,10 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    @SuppressWarnings("unused") // Possible external use
+    /**
+     * 
+     * @return the command group for this CLI
+     */
     public abstract CommandGroup getCommandGroup();
 
     protected Taxon setTaxonByName( TaxonService taxonService ) {
@@ -116,9 +107,10 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param name               of the array design to find.
-     * @param arrayDesignService the arrayDesignService to use for the AD retrieval
-     * @return an array design, if found. Bails otherwise with {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}
+     * @param  name               of the array design to find.
+     * @param  arrayDesignService the arrayDesignService to use for the AD retrieval
+     * @return                    an array design, if found. Bails otherwise with
+     *                            {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}
      */
     protected ArrayDesign locateArrayDesign( String name, ArrayDesignService arrayDesignService ) {
 
@@ -137,7 +129,7 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
 
         if ( arrayDesign == null ) {
             AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            this.bail( ErrorCode.INVALID_OPTION );
+            exitwithError();
         }
         return arrayDesign;
     }

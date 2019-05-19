@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;

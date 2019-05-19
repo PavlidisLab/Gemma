@@ -1,7 +1,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
@@ -69,7 +68,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     public static void main( String[] args ) {
         ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
-        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -84,26 +83,26 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         this.requireLogin(); // actually only needed if using the db to save results (usual case)
 
-        this.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+        this.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
                 "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
-                .withLongOpt( "identityThreshold" ).create( 'i' ) );
+                .longOpt( "identityThreshold" ).build() );
 
-        this.addOption( OptionBuilder.hasArg().withArgName( "value" )
-                .withDescription( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
-                .withLongOpt( "scoreThreshold" ).create( 's' ) );
+        this.addOption( Option.builder( "s" ).hasArg().argName( "value" )
+                .desc( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
+                .longOpt( "scoreThreshold" ).build() );
 
-        this.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+        this.addOption( Option.builder( "o" ).hasArg().argName( "value" ).desc(
                 "Minimum fraction of probe overlap with exons, default = "
                         + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
-                .withLongOpt( "overlapThreshold" )
-                .create( 'o' ) );
+                .longOpt( "overlapThreshold" )
+                .build() );
 
-        this.addOption( OptionBuilder.withDescription(
+        this.addOption( Option.builder( "usePred" ).desc(
                 "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
                         + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" )
-                .create( "usePred" ) );
+                .build() );
 
-        this.addOption( OptionBuilder.hasArg().withArgName( "configstring" ).withDescription(
+        this.addOption( Option.builder( ArrayDesignProbeMapperCli.CONFIG_OPTION ).hasArg().argName( "configstring" ).desc(
                 "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
                         + " all will be used except as listed below and in combination with the 'usePred' option:\n "
 
@@ -121,51 +120,51 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + " - search mRNA track for transcripts (Default=false)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_ENSEMBL + " - search Ensembl track for predicted genes (Default=false) \n" )
-                .create( ArrayDesignProbeMapperCli.CONFIG_OPTION ) );
+                .build() );
 
-        this.addOption( OptionBuilder.withDescription(
+        this.addOption( Option.builder( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ).desc(
                 "Only seek miRNAs; this is the same as '-config " + ArrayDesignProbeMapperCli.OPTION_MICRORNA
                         + "; overrides -config." )
-                .create( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) );
+                .build() );
 
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
                 "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
                         + " ArrayDesigns from that taxon (overrides -a)" )
-                .create( 't' );
+                .build();
 
         this.addOption( taxonOption );
 
-        Option force = OptionBuilder.withDescription( "Run no matter what" ).create( "force" );
+        Option force = Option.builder( "force" ).desc( "Run no matter what" ).build();
 
         this.addOption( force );
 
-        Option directAnnotation = OptionBuilder.withDescription(
+        Option directAnnotation = Option.builder( "import" ).desc(
                 "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
                         + "File format: 2 columns with column 1= probe name in Gemma, "
                         + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
                         + " column 3 = gene symbol (will be matched to that in Gemma)" )
-                .hasArg().withArgName( "file" )
-                .create( "import" );
+                .hasArg().argName( "file" )
+                .build();
 
         this.addOption( directAnnotation );
 
-        this.addOption( "ncbi", false,
+        this.addOption( "ncbi",
                 "If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)" );
 
-        Option databaseOption = OptionBuilder
-                .withDescription( "Source database name (GEO etc); required if using -import" ).hasArg()
-                .withArgName( "dbname" ).create( "source" );
+        Option databaseOption = Option.builder( "source" )
+                .desc( "Source database name (GEO etc); required if using -import" ).hasArg()
+                .argName( "dbname" ).build();
         this.addOption( databaseOption );
 
-        Option noDatabaseOption = OptionBuilder
-                .withDescription( "Don't save the results to the database, print to stdout instead (not with -import)" )
-                .create( "nodb" );
+        Option noDatabaseOption = Option.builder( "nodb" )
+                .desc( "Don't save the results to the database, print to stdout instead (not with -import)" )
+                .build();
 
         this.addOption( noDatabaseOption );
 
-        Option probesToDoOption = OptionBuilder
-                .withDescription( "Comma-delimited list of probe names to process (for testing); implies -nodb" )
-                .hasArg().withArgName( "probes" ).create( "probes" );
+        Option probesToDoOption = Option.builder( "probes" )
+                .desc( "Comma-delimited list of probe names to process (for testing); implies -nodb" )
+                .hasArg().argName( "probes" ).build();
 
         this.addOption( probesToDoOption );
     }

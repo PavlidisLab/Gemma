@@ -53,14 +53,19 @@ function getGeeqIcon(score) {
     return "<i class='fa fa-lg " + getSmileyCls(score) + "'></i></span>";
 }
 
-function getGeeqIconColored(score) {
+function getGeeqIconColored(score) { // PP removed  ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) +
     return '' +
-        '<span class="fa fa-lg fa-stack" ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) + '">' +
-        '   <i class="fa fa-stack-1x fa-circle" style="color: ' + scoreToColorNormalized(Number(score)) + '"></i>' +
-        '   <i class="fa fa-stack-1x ' + getSmileyCls(score) + '"></i></span>' +
-        '</span>'
+        '<span class="fa fa-stack">' +
+         '   <i class="fa fa-lg fa-stack-1x fa-circle" style="color:' + scoreToColorNormalized(Number(score)) + '"></i>' +
+        '   <i class="fa fa-lg fa-stack-1x ' + getSmileyCls(score) +  '"></i></span>'
+      + '</span> '
 }
 
+/**
+ * Translation of Quality or Suitability scores into emoticons. Thresholds are set here!
+ * @param score
+ * @returns {string}
+ */
 function getSmileyCls(score) {
     return score > 0.45 ? "fa-smile-o" : score > 0.1 ? "fa-meh-o" : "fa-frown-o";
 }
