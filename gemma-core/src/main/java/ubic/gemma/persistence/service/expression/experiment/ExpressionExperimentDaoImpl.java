@@ -1552,7 +1552,7 @@ public class ExpressionExperimentDaoImpl
 
         Query q = postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
 
-        log.info( q.getQueryString() );
+       // log.info( q.getQueryString() );
 
         return q;
     }
