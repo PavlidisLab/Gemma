@@ -475,6 +475,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
                     session.buildLockRequest( LockOptions.NONE ).lock( cs );
                     Hibernate.initialize( cs.getArrayDesign() );
+                    session.buildLockRequest( LockOptions.NONE ).lock( cs.getArrayDesign()  );
+                    Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
 
                     BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
