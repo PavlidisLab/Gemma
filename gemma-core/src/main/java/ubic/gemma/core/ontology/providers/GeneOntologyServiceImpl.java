@@ -147,7 +147,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
          * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
          */
         String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isNotBlank( doLoad ) && Configuration.getBoolean( "load.ontologies" ) ) {
+        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
             this.init( false );
         }
 

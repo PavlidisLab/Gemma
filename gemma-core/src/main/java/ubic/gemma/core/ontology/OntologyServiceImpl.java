@@ -144,6 +144,8 @@ public class OntologyServiceImpl implements OntologyService {
             for ( AbstractOntologyService serv : this.ontologyServices ) {
                 serv.startInitializationThread( false, false );
             }
+        } else {
+            log.info("Auto-loading of ontologies suppressed");
         }
 
     }
