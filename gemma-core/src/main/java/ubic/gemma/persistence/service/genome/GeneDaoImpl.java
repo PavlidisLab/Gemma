@@ -601,9 +601,9 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_GENE_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_GENE_ALIAS + ", " // 1
-                + ObjectFilter.DAO_TAXON_ALIAS + " " // 2
+                + "taxon" + " " // 2
                 + "from Gene as " + ObjectFilter.DAO_GENE_ALIAS + " " // gene
-                + "left join " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " "// taxon
+                + "left join " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "where " + ObjectFilter.DAO_GENE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
