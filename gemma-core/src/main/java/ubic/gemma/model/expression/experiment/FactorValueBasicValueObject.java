@@ -102,9 +102,10 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         return measurement;
     }
 
-    public Boolean isMeasurement() {
-        return this.measurement != null;
-    }
+    // causes a conflict with getMeasurement...
+//    public Boolean isMeasurement() {
+//        return this.measurement != null;
+//    }
 
     public String getFvValue() {
         return fvValue;
