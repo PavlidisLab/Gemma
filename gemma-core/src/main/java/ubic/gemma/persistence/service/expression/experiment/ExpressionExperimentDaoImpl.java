@@ -1425,7 +1425,7 @@ public class ExpressionExperimentDaoImpl
         String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id " // 0
                 + " from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS;
 
-queryString = queryString +         getFilterJoins(filters);
+        queryString = queryString + getFilterJoins( filters );
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1442,82 +1442,23 @@ queryString = queryString +         getFilterJoins(filters);
         return voMap;
     }
 
-    //    /**
-    //     * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
-    //     *                        description.
-    //     * @param orderByProperty the property to order by.
-    //     * @param orderDesc       whether the ordering is ascending or descending.
-    //     * @return a hibernate Query object ready to be used for EEVO retrieval.
-    //     */
-    //    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
-    //            boolean orderDesc ) {
-    //
-    //        // Restrict to non-troubled EEs for non-administrators
-    //        filters = getObjectFilters( filters );
-    //
-    //        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
-    //        String ee = ObjectFilter.DAO_EE_ALIAS;
-    //        String ad = ObjectFilter.DAO_AD_ALIAS;
-    //        String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
-    //        String queryString = "select " + ee + ".id as id, " // 0
-    //                + ee + ".name, " // 1
-    //                + ee + ".source, " // 2
-    //                + ee + ".shortName, " // 3
-    //                + ee + ".metadata, " // 4
-    //                + ee + ".numberOfDataVectors, " // 5
-    //                + "acc.accession, " // 6
-    //                + "ED.name, " // 7 external database
-    //                + "ED.webUri, " // 8
-    //                + ee + ".description, " // 9
-    //                + ad + ".technologyType, "// 10
-    //                + "taxon.commonName, " // 11
-    //                + "taxon.id, " // 12
-    //                + "s.lastUpdated, " // 13
-    //                + "s.troubled, " // 14
-    //                + "s.needsAttention, " // 15
-    //                + "s.curationNote, " // 16
-    //                + "count(distinct " + ba + "), " // 17
-    //                + "count(distinct " + ad + "), "
-    //                // 18 not needed since we pull ADs separately. but need join to check trouble?
-    //                + "count(distinct SU), " // 19
-    //                + "EDES.id,  " // 20
-    //                + "aoi, " // 21 ACL OI
-    //                + "sid, " // 22 ACL SID
-    //                + ee + ".batchEffect, " // 23
-    //                + ee + ".batchConfound, " // 24
-    //                + "eNote, " // 25
-    //                + "eAttn, " // 26
-    //                + "eTrbl, " // 27
-    //                + ObjectFilter.DAO_GEEQ_ALIAS //28
-    //                + " from ExpressionExperiment as " + ee + " inner join " + ee + ".bioAssays as " + ba + " join " + ba
-    //                + ".sampleUsed as SU join " + ba + ".arrayDesignUsed as " + ad
-    //                + " join SU.sourceTaxon as taxon left join " + ee + ".accession acc "
-    //                + "left join acc.externalDatabase as ED join " + ee + ".experimentalDesign as EDES " + "join " + ee
-    //                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join " + ee
-    //                + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
-    //                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
-    //
-    //        // not used
-    //        //                + "left join " + ee
-    //        //                + ".characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
-    //
-    //        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
-    //    }
-
-    private String getFilterJoins (List<ObjectFilter[]> filters ) {
-        // add joins for additional filters
+    // add joins for additional filters (other than ACL)
+    private String getFilterJoins( List<ObjectFilter[]> filters ) {
+        if ( filters == null )
+            return "";
         String filterJoins = "";
         for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray.length == 0 )
+            if ( filterArray == null || filterArray.length == 0 )
                 continue;
             for ( ObjectFilter filter : filterArray ) {
                 if ( filter == null )
                     continue;
+
                 if ( filter.getObjectAlias().equals( ObjectFilter.DAO_AD_ALIAS ) ) {
                     filterJoins += " join " + ObjectFilter.DAO_EE_ALIAS + ".bioAssays ba join ba.arrayDesignUsed "
                             + ObjectFilter.DAO_AD_ALIAS;
                 } else if ( filter.getObjectAlias().equals( ObjectFilter.DAO_TAXON_ALIAS ) ) {
-                    // we already have it...
+                    filterJoins += " join " + ObjectFilter.DAO_EE_ALIAS + ".taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
                 }
             }
         }
@@ -1535,15 +1476,13 @@ queryString = queryString +         getFilterJoins(filters);
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
-       String filterJoins = getFilterJoins(filters);
+        String filterJoins = getFilterJoins( filters );
 
         // Restrict to non-troubled EEs for non-administrators
         filters = getObjectFilters( filters );
 
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String ee = ObjectFilter.DAO_EE_ALIAS;
-        //       String ad = ObjectFilter.DAO_AD_ALIAS;
-        //     String ba = ObjectFilter.DAO_BIOASSAY_ALIAS;
         String queryString = "select " + ee + ".id as id, " // 0
                 + ee + ".name, " // 1
                 + ee + ".source, " // 2
@@ -1554,8 +1493,8 @@ queryString = queryString +         getFilterJoins(filters);
                 + "ED.name, " // 7 external database
                 + "ED.webUri, " // 8
                 + ee + ".description, " // 9
-                + ee + ".taxon.commonName, " // 10
-                + ee + ".taxon.id, " // 11
+                + "taxon.commonName, " // 10 instead of ee.taxon.commonName
+                + "taxon.id, " // 11 - instead of ee.taxon.id
                 + "s.lastUpdated, " // 12: date
                 + "s.troubled, " // 13
                 + "s.needsAttention, " // 14
@@ -1575,7 +1514,8 @@ queryString = queryString +         getFilterJoins(filters);
                 + ee + ".curationDetails as s " /* needed for trouble status */
                 + " left join s.lastNeedsAttentionEvent as eAttn " + " left join ee.geeq as "
                 + ObjectFilter.DAO_GEEQ_ALIAS + " left join s.lastNoteUpdateEvent as eNote "
-                + " left join s.lastTroubledEvent as eTrbl ";
+                + " left join s.lastTroubledEvent as eTrbl join " + ee + ".taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
+        // the join on taxon is only so we use the standard alias.
 
         queryString = queryString + filterJoins;
 
@@ -1588,6 +1528,7 @@ queryString = queryString +         getFilterJoins(filters);
         return q;
     }
 
+    // add filters to skip troubled experiments
     private List<ObjectFilter[]> getObjectFilters( List<ObjectFilter[]> filters ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( filters == null ) {
