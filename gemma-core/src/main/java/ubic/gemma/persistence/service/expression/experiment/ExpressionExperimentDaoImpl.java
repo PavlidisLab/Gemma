@@ -1408,6 +1408,14 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+    /**
+     * ??
+     *
+     * @param filters         filters
+     * @param orderByProperty orderByProperty
+     * @param orderDesc       orderDesc
+     * @return ?
+     */
     private Query getCountVosQueryString( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
 
         // Restrict to non-troubled EEs for non-administrators
@@ -1415,11 +1423,9 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id " // 0
-                + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
-                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA " + "left join " + ObjectFilter.DAO_EE_ALIAS
-                + ".quantitationTypes as qts left join BA.sampleUsed as SU left join SU.sourceTaxon as taxon left join BA.arrayDesignUsed as "
-                + ObjectFilter.DAO_AD_ALIAS + " left join " + ObjectFilter.DAO_EE_ALIAS + ".characteristics as "
-                + ObjectFilter.DAO_CHARACTERISTIC_ALIAS + " ";
+                + " from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS;
+
+queryString = queryString +         getFilterJoins(filters);
 
         return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     }
@@ -1498,6 +1504,27 @@ public class ExpressionExperimentDaoImpl
     //        return postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
     //    }
 
+    private String getFilterJoins (List<ObjectFilter[]> filters ) {
+        // add joins for additional filters
+        String filterJoins = "";
+        for ( ObjectFilter[] filterArray : filters ) {
+            if ( filterArray.length == 0 )
+                continue;
+            for ( ObjectFilter filter : filterArray ) {
+                if ( filter == null )
+                    continue;
+                if ( filter.getObjectAlias().equals( ObjectFilter.DAO_AD_ALIAS ) ) {
+                    filterJoins += " join " + ObjectFilter.DAO_EE_ALIAS + ".bioAssays ba join ba.arrayDesignUsed "
+                            + ObjectFilter.DAO_AD_ALIAS;
+                } else if ( filter.getObjectAlias().equals( ObjectFilter.DAO_TAXON_ALIAS ) ) {
+                    // we already have it...
+                }
+            }
+        }
+        return filterJoins;
+
+    }
+
     /**
      * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
      *                        description.
@@ -1507,6 +1534,8 @@ public class ExpressionExperimentDaoImpl
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
+
+       String filterJoins = getFilterJoins(filters);
 
         // Restrict to non-troubled EEs for non-administrators
         filters = getObjectFilters( filters );
@@ -1548,11 +1577,13 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_GEEQ_ALIAS + " left join s.lastNoteUpdateEvent as eNote "
                 + " left join s.lastTroubledEvent as eTrbl ";
 
+        queryString = queryString + filterJoins;
+
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
 
         Query q = postProcessVoQuery( filters, orderByProperty, orderDesc, queryString );
 
-       // log.info( q.getQueryString() );
+        // log.info( q.getQueryString() );
 
         return q;
     }
@@ -1720,7 +1751,6 @@ public class ExpressionExperimentDaoImpl
             String queryString ) {
         String aclClause = AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-
         queryString = queryString + aclClause;
 
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );

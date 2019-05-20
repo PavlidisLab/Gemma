@@ -102,7 +102,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     }
 
     /**
-     * Creates a CNF restriction clause from the given Filters list.
+     * Creates a CNF restriction clause from the given Filters list. FIXME The problem with this: it assumes the join is already there.
      *
      * @param  filters A list of filtering properties arrays.
      *                 Elements in each array will be in a disjunction (OR) with each other.
@@ -178,11 +178,8 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
                         // Subselect end
                         + " or (ace.sid.id = 4 and ace.mask = " + BasePermission.READ.getMask() + ")) ";
             } else {
-                // For administrators, no filtering is needed, so the ACE is completely skipped from the query.
-                // For administrators no filtering is necessary, but we include the ace.mask clause to be sure we only get one result.
-                // PP added this 5/19 because if we don't, we get mutiple aces, and thus need a group-by clause, which is confusing. 
-                // Another way would be to make the join on ace conditional in the query, but that seems harder than this.
-             //   queryString += " and (ace.mask = " + BasePermission.READ.getMask()   + " and ace.sid.id = 3)"; // sid 3 = AGENT
+                // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
+                //  queryString += " and (ace.mask = " + BasePermission.READ.getMask()   + " and ace.sid.id = 3)"; // sid 3 = AGENT
             }
         } else {
             // For anonymous users, only pick publicly readable data
@@ -199,7 +196,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      *                contain the leading ":" character that denotes a parameter keyword in the hql query.
      */
     private static String formParamName( ObjectFilter filter ) {
-        return filter.getObjectAlias() + filter.getPropertyName().replace( ".", "" );
+        return filter.getObjectAlias().replaceAll( "\\.", "_" ) + filter.getPropertyName().replaceAll( "\\.", "_" );
     }
 
     @Override
