@@ -147,7 +147,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
          * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
          */
         String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isNotBlank( doLoad ) && Configuration.getBoolean( "load.ontologies" ) ) {
+        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
             this.init( false );
         }
 
@@ -367,7 +367,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             for ( Characteristic c : annotations ) {
                 if ( !GeneOntologyServiceImpl.uri2Term.containsKey( c.getValueUri() ) ) {
                     GeneOntologyServiceImpl.log
-                            .warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
+                            .warn( "Term " + c.getValueUri() + " not found in term list can't add to results (ontology not loaded?)" );
                     continue;
                 }
                 allGOTermSet.add( GeneOntologyServiceImpl.uri2Term.get( c.getValueUri() ) );

@@ -33,7 +33,7 @@
          <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences" lazy="true" fetch="select" cascade="all">
