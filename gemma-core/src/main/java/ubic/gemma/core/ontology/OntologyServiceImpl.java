@@ -140,7 +140,7 @@ public class OntologyServiceImpl implements OntologyService {
          * If this load.ontologies is NOT configured, we go ahead (per-ontology config will be checked).
          */
         String doLoad = Configuration.getString( "load.ontologies" );
-        if ( StringUtils.isNotBlank( doLoad ) && Configuration.getBoolean( "load.ontologies" ) ) {
+        if ( StringUtils.isBlank( doLoad ) || Configuration.getBoolean( "load.ontologies" ) ) {
             for ( AbstractOntologyService serv : this.ontologyServices ) {
                 serv.startInitializationThread( false, false );
             }
@@ -684,8 +684,8 @@ public class OntologyServiceImpl implements OntologyService {
                 OntologyServiceImpl.log.info( "No characteristics in the current ID range, moving on." );
                 continue;
             }
-            OntologyServiceImpl.log.info(
-                    "Found " + chars.size() + " characteristics in the current ID range, checking for obsoletes." );
+            OntologyServiceImpl.log.info( "Found " + chars.size()
+                    + " characteristics in the current ID range, checking for obsoletes." );
 
             // Detect obsoletes
             for ( Characteristic ch : chars ) {
@@ -735,7 +735,8 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         if ( vc.getValue() == null ) {
-            OntologyServiceImpl.log.warn( "Skipping a characteristic with no value: " + res.getLabel() + " / " + res.getUri() );
+            OntologyServiceImpl.log
+                    .warn( "Skipping a characteristic with no value: " + res.getLabel() + " / " + res.getUri() );
             return null;
         }
 
@@ -810,7 +811,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                                    .size() );
+                            .size() );
 
     }
 
