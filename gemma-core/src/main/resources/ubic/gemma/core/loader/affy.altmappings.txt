@@ -1,12 +1,16 @@
 # Affymetrix array mapping of platform to desired latform.
-# No guarantee this is up to date; checked April 2018
-# Based on GEO searches for platforms and then adding the "alternative" and "affiliated" ids (python script)
+# No guarantee this is up to date; checked May 2019
+# Based on GEO searches for platforms and then adding the "alternative" and "affiliated" ids (python script) 
+# as well as manual additions for cases where GEO does not record the information.
+#
 # The first value is the platform we might need to resolve; the second value is what we resolve it to.
 # For example, GPL6096 is the gene version of MoEx-1_0-st, while GPL6538 is the exon version, and GPL6193 is an alternative CDF.
 # To be clear, the actual physical arrays are identical; the difference is how it is analyzed.
+#
+# The organization of this file into sections is just for readability.
 
 # Exon arrays
-# mouse MoEx-1_0-st
+# mouse MoEx-1_0-st  
 # this list includes both alts of the gene and exon versions (if any)
 GPL6096=GPL6096
 GPL6538=GPL6096
@@ -29,7 +33,7 @@ GPL23148=GPL6096
 GPL24139=GPL6096
 GPL24699=GPL6096
 
-# human HuEx-1_0-st
+# human HuEx-1_0-st  
 # this list includes both alts of the gene and exon versions
 GPL5175=GPL5175
 GPL5188=GPL5175
@@ -77,7 +81,7 @@ GPL22995=GPL5175
 GPL4814=GPL5175
 GPL23166=GPL5175
 
-# RaEx-1_0-st
+# RaEx-1_0-st  
 # this list includes both alts of the gene and exon versions (if any)
 GPL6543=GPL6543
 GPL6194=GPL6543
@@ -203,6 +207,7 @@ GPL19145=GPL6244
 GPL19433=GPL6244
 GPL20171=GPL6244
 GPL23526=GPL6244
+GPL15401=GPL6244
 
 # Clariom_s_Human
 GPL23159=GPL23159
