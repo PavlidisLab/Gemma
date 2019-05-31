@@ -425,6 +425,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon, Integer limit ) {
+        return this.expressionExperimentDao.findByTaxon( taxon, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }

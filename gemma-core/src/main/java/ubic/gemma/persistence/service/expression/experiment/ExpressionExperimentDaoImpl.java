@@ -439,9 +439,10 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByTaxon( Taxon taxon ) {
         //language=HQL
-        final String queryString =
-                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+//        final String queryString =
+//                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+//                        + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+        final String queryString = "select ee from ExpressionExperiment as ee where ee.taxon = (:taxon)";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
@@ -451,9 +452,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         //language=HQL
+//        final String queryString =
+//                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
+//                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
+//                        + " order by s.lastUpdated desc";
         final String queryString =
-                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
+                "select ee from ExpressionExperiment as ee join ee.curationDetails s where ee.taxon = :taxon"
                         + " order by s.lastUpdated desc";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "taxon", taxon );
