@@ -102,12 +102,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
             + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+            + " where rs in (:resultsSets)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private static final String fetchResultsBySingleResultSetQuery = "select distinct r "
             + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+            + " where rs in (:resultsSets)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private final DifferentialExpressionResultCache differentialExpressionResultCache;
 
@@ -511,8 +511,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
             Double threshold, Integer limit, Integer minNumberOfResults ) {
 
-        if ( minNumberOfResults == null ) {
-            throw new IllegalArgumentException( "Minimum number of results cannot be null" );
+        if ( minNumberOfResults == null || minNumberOfResults < 1) {
+            throw new IllegalArgumentException( "Minimum number of results must be positive" );
         }
 
         List<DifferentialExpressionValueObject> results = new ArrayList<>();
@@ -531,8 +531,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         // get it.
 
-        Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<>();
-        resultsAnalyzed.add( resultSet );
+        Collection<ExpressionAnalysisResultSet> resultsSets = new ArrayList<>();
+        resultsSets.add( resultSet );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -545,12 +545,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             tpl.setMaxResults( limit );
         }
 
-        String[] paramNames = { "resultsAnalyzed", "threshold" };
-        Object[] objectValues = { resultsAnalyzed, threshold };
+        String[] paramNames = { "resultsSets", "threshold" };
+        Object[] objectValues = { resultsSets, threshold };
 
         List<?> qResult = tpl.findByNamedParam( qs, paramNames, objectValues );
 
-        // If too few probes meet threshold, redo and just get top minNumberOfResults.
+        // If too few probes meet threshold, redo and just get top results.
         if ( qResult.size() < minNumberOfResults ) {
             AbstractDao.log.info( "No results met threshold, repeating to just get the top hits" );
             qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery + " order by r.correctedPvalue";
@@ -558,8 +558,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             tpl = new HibernateTemplate( this.getSessionFactory() );
             tpl.setMaxResults( minNumberOfResults );
 
-            String[] paramName = { "resultsAnalyzed" };
-            Object[] objectValue = { resultsAnalyzed };
+            String[] paramName = { "resultsSets" };
+            Object[] objectValue = { resultsSets };
 
             qResult = tpl.findByNamedParam( qs, paramName, objectValue );
         }

@@ -217,6 +217,9 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit );
+
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 

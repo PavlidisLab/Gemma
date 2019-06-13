@@ -48,14 +48,14 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     private ExpressionExperimentService expressionExperimentService;
 
     /**
-     * @param matrix on which mean variance relation is computed with
-     * @param mvr    object, if null, a new object is created
-     * @return MeanVarianceRelation object
+     * @param  matrix on which mean variance relation is computed with
+     * @param  mvr    object, if null, a new object is created
+     * @return        MeanVarianceRelation object
      */
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
 
         if ( matrix == null ) {
-            log.warn( "Experiment matrix is null" );
+            log.warn( "Data matrix is null" );
             return null;
         }
 
@@ -84,48 +84,44 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             return null;
         }
 
-        log.info( "Starting mean-variance computation" );
-
-        MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
-
-        if ( forceRecompute || mvr == null ) {
-
-            log.info( "Recomputing mean-variance" );
-
-            ee = expressionExperimentService.thawLiter( ee );
-            mvr = ee.getMeanVarianceRelation();
-            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
-            if ( intensities == null ) {
-                throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
-            }
-
-            Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( ee );
-            QuantitationType qt;
-
-            if ( qtList.size() == 0 ) {
-                log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
-            } else {
-                qt = qtList.iterator().next();
-                if ( qtList.size() > 1 ) {
-                    // Really this should be an error condition.
-                    log.warn(
-                            "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
-                                    + qt + ") will be used." );
-                }
-                try {
-                    intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( qt, intensities );
-                } catch ( UnknownLogScaleException e ) {
-                    log.warn(
-                            "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
-                }
-
-                mvr = calculateMeanVariance( intensities, mvr );
-
-                meanVarianceServiceHelper.createMeanVariance( ee, mvr );
-
-            }
+        if ( !forceRecompute ) {
+            MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
+            if ( mvr != null )
+                return mvr;
         }
 
+        ee = expressionExperimentService.thawLiter( ee );
+        ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
+        if ( intensities == null ) {
+            throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
+        }
+
+        Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( ee );
+        QuantitationType qt;
+
+        if ( qtList.size() == 0 ) {
+            log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
+            return null;
+        }
+        qt = qtList.iterator().next();
+        if ( qtList.size() > 1 ) {
+            // Really this should be an error condition.
+            log.warn(
+                    "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
+                            + qt + ") will be used." );
+        }
+        try {
+            intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( qt, intensities );
+        } catch ( UnknownLogScaleException e ) {
+            log.warn(
+                    "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+        }
+
+        log.info( "Computing mean-variance relationship" );
+
+        MeanVarianceRelation mvr = calculateMeanVariance( intensities, null );
+
+        meanVarianceServiceHelper.createMeanVariance( ee, mvr );
         log.info( "Mean-variance computation is complete" );
 
         return mvr;

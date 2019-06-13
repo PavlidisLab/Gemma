@@ -101,8 +101,8 @@ public interface SearchService {
     /**
      * A search of experiments only
      *
-     * @param  query   if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
-     * @param  taxonId required.
+     * @param  query   if empty, all experiments for the taxon are returned (up to limits); otherwise, we use the search facility.
+     * @param  taxonId can be null; if non-null, used to filter results.
      * @return         Collection of ids.
      */
     Collection<Long> searchExpressionExperiments( String query, Long taxonId );

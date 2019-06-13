@@ -102,7 +102,23 @@ public class SearchSettingsImpl extends SearchSettings {
      * Convenience method to get pre-configured settings.
      *
      * @param  query query
-     * @param  taxon the taxon to limit the search to
+     * @param taxon if you want to filter by taxon (can be null)
+     * @return       search settings
+     */
+    public static SearchSettings expressionExperimentSearch( String query, Taxon taxon ) {
+        SearchSettingsImpl s = new SearchSettingsImpl( query );
+        s.setSearchGenes( false );
+        s.noSearches();
+        s.setSearchExperiments( true );
+        s.setTaxon( taxon );
+        return s;
+    }
+
+    /**
+     * Convenience method to get pre-configured settings.
+     *
+     * @param  query query
+     * @param  taxon the taxon to limit the search to (can be null)
      * @return       search settings
      */
     public static SearchSettings geneSearch( String query, Taxon taxon ) {

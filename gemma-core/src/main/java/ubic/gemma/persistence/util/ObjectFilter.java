@@ -29,7 +29,7 @@ import java.util.List;
 public class ObjectFilter {
     public static final String DAO_EE_ALIAS = "ee";
     public static final String DAO_AD_ALIAS = "ad";
-    public static final String DAO_TAXON_ALIAS = DAO_EE_ALIAS + ".taxon";
+    public static final String DAO_TAXON_ALIAS = "taxon";
     public static final String DAO_PROBE_ALIAS = "probe";
     public static final String DAO_GENE_ALIAS = "gene";
     public static final String DAO_GEEQ_ALIAS = "geeq";
