@@ -24,7 +24,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.analysis.report.TwitterOutbound;
 import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.monitor.HibernateMonitor;
@@ -53,9 +52,6 @@ public class SystemMonitorController {
 
     @Autowired
     private JMSBrokerMonitor jmsBrokerMonitor;
-
-    @Autowired
-    private TwitterOutbound twitterOutbound;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX
@@ -89,16 +85,6 @@ public class SystemMonitorController {
 
     public String getCacheStatus() {
         return cacheMonitor.getStats();
-    }
-
-    public void disableTwitter() {
-        twitterOutbound.disable();
-        Log.info( "Twitter disabled" );
-    }
-
-    public void enableTwitter() {
-        twitterOutbound.enable();
-        Log.info( "Twitter enabled" );
     }
 
     public String getHibernateStatus() {
@@ -139,9 +125,9 @@ public class SystemMonitorController {
     /**
      * Used for external monitoring (e.g. Nagios)
      *
-     * @param request  request
-     * @param response response
-     * @return model and view
+     * @param  request  request
+     * @param  response response
+     * @return          model and view
      */
     @RequestMapping("/gridStatus.html")
     public ModelAndView gridStatus( HttpServletRequest request, HttpServletResponse response ) {
@@ -170,13 +156,6 @@ public class SystemMonitorController {
     @RequestMapping(value = "/admin/systemStats.html", method = RequestMethod.GET)
     public String show() {
         return "/admin/systemStats";
-    }
-
-    /**
-     * @param message manually send out a tweet. Exposed to AJAX
-     */
-    public void tweetManually( String message ) {
-        twitterOutbound.sendManualTweet( message );
     }
 
     private String getSystemStatus() {

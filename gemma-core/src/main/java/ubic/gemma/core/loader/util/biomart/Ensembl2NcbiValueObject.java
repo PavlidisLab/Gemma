@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.protein.biomart.model;
+package ubic.gemma.core.loader.util.biomart;
 
 import java.io.Serializable;
 import java.util.Collection;

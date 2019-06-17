@@ -16,10 +16,10 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.protein.biomart;
+package ubic.gemma.core.loader.util.biomart;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+
 import ubic.gemma.core.loader.util.parser.FileFormatException;
 import ubic.gemma.core.loader.util.parser.LineMapParser;
 import ubic.gemma.model.genome.Taxon;
@@ -52,7 +52,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
      * @param taxon            Taxon for the current file being processed
      * @param attributesInFile The attributes that were queried for in Biomart
      */
-    BiomartEnsembleNcbiParser( Taxon taxon, String[] attributesInFile ) {
+    public BiomartEnsembleNcbiParser( Taxon taxon, String[] attributesInFile ) {
         this.setTaxon( taxon );
         this.setBioMartFields( attributesInFile );
         results = new HashMap<>();
@@ -139,10 +139,11 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
      * one entrez gene id. As such check that the duplicate and currently processed record share the same ensemble gene
      * id as a sanity check. Add the entrez gene to the existing collection of entrez genes.
      *
-     * @param fields Parsed line split on delimiter
-     * @return BioMartEnsembleNcbi value object
+     * @param  fields                Parsed line split on delimiter
+     * @return                       BioMartEnsembleNcbi value object
      * @throws NumberFormatException Parsing a number that is not one
-     * @throws FileFormatException   Validation than when a duplicate record is found then the peptide id is the same the
+     * @throws FileFormatException   Validation than when a duplicate record is found then the peptide id is the same
+     *                               the
      *                               ensemble gene id should be the same.
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
@@ -192,7 +193,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
                 throw new FileFormatException( "A duplicate ensemblProteinId has been found: " + ensemblProteinId
                         + " but it does not match with the exisiting objects gene id " + ensemblGeneID + ", it was "
                         + bioMartEnsembleNcbiDup.getEnsemblGeneId() + ", line was:\n" + StringUtils
-                        .join( fields, " " ) );
+                                .join( fields, " " ) );
             }
         }
         return bioMartEnsembleNcbi;

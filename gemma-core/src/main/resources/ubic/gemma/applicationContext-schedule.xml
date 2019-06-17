@@ -27,7 +27,6 @@
                 <ref local="expressionExperimentReportTrigger"/>
                 <ref local="whatsNewTrigger"/>
                 <ref local="gene2CsUpdateTrigger"/>
-                <ref local="twitterOutboundTrigger"/>
                 <ref local="neurocartaTrigger"/>
                 <ref local="batchInfoTrigger"/>
                 <!-- <ref local="viewTrigger" /> -->
@@ -68,10 +67,6 @@
     <bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
         <property name="jobDetail" ref="gene2CsUpdateJobDetail"/>
         <property name="cronExpression" value="0 40 0 ? * *"/>
-    </bean>
-    <bean id="twitterOutboundTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-        <property name="jobDetail" ref="twitterOutboundJobDetail"/>
-        <property name="cronExpression" value="0 0 9 1/3 * ? *"/>
     </bean>
 
     <!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -125,12 +120,7 @@
         <property name="concurrent" value="false"/>
         <property name="targetMethod" value="updateGene2CsEntries"/>
     </bean>
-    <bean id="twitterOutboundJobDetail"
-          class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
-        <property name="targetObject" ref="twitterOutbound"/>
-        <property name="concurrent" value="false"/>
-        <property name="targetMethod" value="sendDailyFeed"/>
-    </bean>
+ 
     <bean id="neurocartaJobDetail"
           class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean"
           p:targetObject-ref="phenotypeAssociationManagerService">
@@ -142,7 +132,6 @@
           class="ubic.gemma.core.analysis.report.ExpressionExperimentReportServiceImpl"/>
     <bean id="phenotypeAssociationManagerService"
           class="ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl"/>
-    <bean id="twitterOutbound" class="ubic.gemma.core.analysis.report.TwitterOutboundImpl"/>
     <bean id="tableMaintenanceUtil" class="ubic.gemma.persistence.service.TableMaintenanceUtilImpl"/>
     <bean id="whatsNewService" class="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
     <bean id="arrayDesignReportService" class="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>

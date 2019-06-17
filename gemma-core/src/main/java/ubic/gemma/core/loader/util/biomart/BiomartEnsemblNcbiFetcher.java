@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.protein.biomart;
+package ubic.gemma.core.loader.util.biomart;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;

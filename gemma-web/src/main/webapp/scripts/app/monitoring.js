@@ -36,14 +36,6 @@ Ext.onReady( function() {
       Ext.DomHelper.overwrite( "spaceStats", data );
    }
 
-   new Ext.form.TextField( {
-      id : 'twitter-box-admin',
-      emptyText : 'Enter tweet text',
-      fieldLabel : 'Manually tweet this',
-      renderTo : 'twitter-admin-div',
-      width : 300
-   } );
-
 } );
 
 function clearAllCaches() {
@@ -102,39 +94,7 @@ function resetHibernateStats() {
       cacheName : name
    } );
 }
-
-function tweetManuallyConfirm() {
-   Ext.Msg.show( {
-      title : 'Are you sure?',
-      msg : 'Tweet this message?',
-      buttons : Ext.Msg.YESNO,
-      fn : tweetManually,
-      icon : Ext.MessageBox.QUESTION
-   } );
-}
-
-function tweetManually( btn, text, opt ) {
-   if ( btn == 'yes' ) {
-      var tweet = Ext.get( "twitter-box-admin" ).getValue();
-
-      SystemMonitorController.tweetManually( tweet );
-   }
-}
-
-function twitterControl( chk ) {
-   if ( chk.checked ) {
-      SystemMonitorController.enableTwitter( function() {
-         alert( "Enabled twitter" );
-      } );
-
-   } else {
-      SystemMonitorController.disableTwitter( function() {
-         alert( "Disabling twitter" );
-      } );
-
-   }
-}
-
+ 
 function processClearCacheResult( btn, text, opt ) {
    if ( btn == 'yes' ) {
       SystemMonitorController.clearCache( opt.cacheName );

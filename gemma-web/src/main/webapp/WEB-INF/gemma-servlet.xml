@@ -635,9 +635,6 @@
             <dwr:include method="resetHibernateStatus"/>
             <dwr:include method="enableStatistics"/>
             <dwr:include method="disableStatistics"/>
-            <dwr:include method="enableTwitter"/>
-            <dwr:include method="disableTwitter"/>
-            <dwr:include method="tweetManually"/>
         </dwr:remote>
     </bean>
 
