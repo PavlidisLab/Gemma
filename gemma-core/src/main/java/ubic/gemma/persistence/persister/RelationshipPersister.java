@@ -24,14 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GeneProteinAssociation;
-import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
-import ubic.gemma.persistence.service.association.Gene2GeneProteinAssociationDao;
-import ubic.gemma.persistence.service.association.TfGeneAssociationDao;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -50,13 +46,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private CoexpressionAnalysisDao coexpressionAnalysisDao;
 
     @Autowired
-    private TfGeneAssociationDao tfGeneAssociationDao;
-
-    @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
-
-    @Autowired
-    private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
 
     @Override
     @Transactional
@@ -70,10 +60,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
-        } else if ( entity instanceof Gene2GeneProteinAssociation ) {
-            return this.persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
-        } else if ( entity instanceof TfGeneAssociation ) {
-            return this.persistTfGeneAssociation( ( TfGeneAssociation ) entity );
         }
         return super.persist( entity );
 
@@ -118,21 +104,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return gene2GoAssociationDao.create( association );
     }
 
-    private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
-        if ( entity == null )
-            return null;
-        if ( !this.isTransient( entity ) )
-            return entity;
-
-        if ( this.isTransient( entity.getFirstGene() ) || this.isTransient( entity.getSecondGene() ) ) {
-            throw new IllegalArgumentException(
-                    "Associations can only be made between genes that already exist in the system" );
-        }
-
-        return tfGeneAssociationDao.create( entity );
-
-    }
-
     private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
         if ( entity == null )
             return null;
@@ -144,24 +115,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         }
 
         return coexpressionAnalysisDao.create( entity );
-    }
-
-    /**
-     * The persisting method for Gene2GeneProteinAssociation which validates the the Gene2GeneProteinAssociation does
-     * not already exist in the system. If it does then the persisted object is returned
-     *
-     * @param gene2GeneProteinAssociation the object to persist
-     * @return the persisted object
-     */
-    private Gene2GeneProteinAssociation persistGene2GeneProteinAssociation(
-            Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        if ( gene2GeneProteinAssociation == null )
-            return null;
-        if ( !this.isTransient( gene2GeneProteinAssociation ) )
-            return gene2GeneProteinAssociation;
-
-        // Deletes any old existing one.
-        return gene2GeneProteinAssociationDao.create( gene2GeneProteinAssociation );
     }
 
 }

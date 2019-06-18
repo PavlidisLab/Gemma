@@ -96,12 +96,8 @@
 
     <cache name="ubic.gemma.model.genome.gene.GeneSet" maxElementsInMemory="10000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.association.Gene2GeneProteinAssociationImpl" maxElementsInMemory="10000"
-           eternal="false"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.genome.gene.GeneSet.characteristics" maxElementsInMemory="1000" eternal="false"
+ 
+     <cache name="ubic.gemma.model.genome.gene.GeneSet.characteristics" maxElementsInMemory="1000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.genome.gene.GeneSet.members" maxElementsInMemory="1000" eternal="false"
@@ -634,10 +630,7 @@
     <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult.contrasts"
            maxElementsInMemory="500000" eternal="false" timeToIdleSeconds="12000" timeToLiveSeconds="12000"
            overflowToDisk="false"/>
-
-    <cache name="ubic.gemma.model.association.PazarAssociationImpl" maxElementsInMemory="10000" eternal="false"
-           timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
-
+ 
     <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            maxElementsInMemory="500000" eternal="false" timeToIdleSeconds="12000" timeToLiveSeconds="12000"
            overflowToDisk="false"/>
