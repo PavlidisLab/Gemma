@@ -445,8 +445,18 @@ public class PubMedXMLParser {
                 case "PublicationTypeList":
                     bibRef.setRetracted( this.isRetracted( item ) );
                     break;
+                case "Language":
+                case "DateCompleted":
+                case "DateRevised":
+                case "CitationSubset":
+                case "AffiliationInfo":
+                case "GrantList":
+                case "KeywordList":
+                case "ELocationID":
+                case "ArticleDate":
+                    break;
                 default:
-                    log.warn( "Unrecognized node name " + name );
+                    log.debug( "Unrecognized node name " + name ); 
             }
         }
         return journal;
@@ -535,7 +545,7 @@ public class PubMedXMLParser {
                     this.extractBookPublicationYear( bibRef, item );
                     break;
                 default:
-                    log.warn( "Unrecognized node name " + name );
+                    log.debug( "Unrecognized node name " + name );
             }
         }
 
@@ -568,7 +578,7 @@ public class PubMedXMLParser {
                             bibRef.setPublicationDate( this.extractPublicationDate( jitem ) );
                             break;
                         default:
-                            log.warn( "Unrecognized node name " + jname );
+                            log.debug( "Unrecognized node name " + jname );
                     }
                 }
             }
