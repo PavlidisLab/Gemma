@@ -252,7 +252,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         Gene converted = NcbiGeneConverter.this.convert( data );
 
                         if ( converted.getProducts().isEmpty() ) {
-                            log.info( "Gene with no products skipped: " + converted );
+                            if ( log.isDebugEnabled() ) log.debug( "Gene with no products skipped: " + converted );
                             continue;
                         }
 
