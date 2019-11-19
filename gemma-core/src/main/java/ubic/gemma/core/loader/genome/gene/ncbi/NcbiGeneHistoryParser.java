@@ -98,7 +98,7 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
             discontinuedGenes.put( taxonInt, new HashMap<String, String>() );
         }
 
-        log.info( discontinuedSymbol + ": discontinued is " + discontinuedGeneId );
+        if ( log.isDebugEnabled() ) log.debug( discontinuedSymbol + ": discontinued id=" + discontinuedGeneId );
         discontinuedGenes.get( taxonInt ).put( discontinuedSymbol, discontinuedGeneId );
 
         if ( StringUtils.isBlank( geneId ) || geneId.equals( "-" ) ) {
@@ -130,9 +130,9 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
     }
 
     /**
-     * @param geneSymbol gene symbol
-     * @param taxonId    taxon id
-     * @return null, or the NCBI ID of the gene that was discontinued.
+     * @param  geneSymbol gene symbol
+     * @param  taxonId    taxon id
+     * @return            null, or the NCBI ID of the gene that was discontinued.
      */
     public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
         if ( !discontinuedGenes.containsKey( taxonId ) )

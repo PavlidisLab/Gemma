@@ -1090,19 +1090,10 @@ SystemMonitorController.enableStatistics = function (callback) {
 SystemMonitorController.disableStatistics = function (callback) {
     dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'disableStatistics', callback);
 };
-SystemMonitorController.enableTwitter = function (callback) {
-    dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'enableTwitter', callback);
-};
-SystemMonitorController.disableTwitter = function (callback) {
-    dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'disableTwitter', callback);
-};
 SystemMonitorController.resetHibernateStatus = function (callback) {
     dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
 };
 
-SystemMonitorController.tweetManually = function (p0, callback) {
-    dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'tweetManually', p0, callback);
-};
 // ====================================================================================
 if (typeof LinkAnalysisController === 'undefined') {
     var LinkAnalysisController = {};

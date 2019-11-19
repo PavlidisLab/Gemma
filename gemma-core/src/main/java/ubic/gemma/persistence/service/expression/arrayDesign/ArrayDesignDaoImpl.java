@@ -51,7 +51,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
+ * @see    ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayDesignValueObject>
@@ -514,7 +514,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return results;
     }
 
-      private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
+    private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
+
+        if ( vos.isEmpty() ) return;
 
         Map<String, ArrayDesignValueObject> shortNames = new HashMap<>();
         for ( ArrayDesignValueObject vs : vos ) {
@@ -562,6 +564,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
+
+        if ( ids == null || ids.isEmpty() ) return 0L;
+
         //language=HQL
         final String queryString = "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
                 + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
@@ -648,9 +653,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
+                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
@@ -923,8 +927,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Loads a single value objects for the given array design.
      *
-     * @param e the array design to be converted to a value object
-     * @return a value object with properties of the given array design.
+     * @param  e the array design to be converted to a value object
+     * @return   a value object with properties of the given array design.
      */
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign e ) {
@@ -956,11 +960,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Queries the database to retrieve all array designs, based on the given parameters, and then
      * converts them to value objects.
      *
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
-     * @param orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @return list of value objects representing the ADs that matched the criteria.
+     * @param  offset  amount of ADs to skip.
+     * @param  limit   maximum amount of ADs to retrieve.
+     * @param  orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
+     * @param  asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @return         list of value objects representing the ADs that matched the criteria.
      */
     @Override
     public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
@@ -983,8 +987,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Creates and orderBy parameter.
      *
-     * @param orderBy the property to order by, if null, default ordering is used.
-     * @return and order by parameter. Default ordering is id.
+     * @param  orderBy the property to order by, if null, default ordering is used.
+     * @return         and order by parameter. Default ordering is id.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1118,7 +1122,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
-     //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
+        //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
         queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );

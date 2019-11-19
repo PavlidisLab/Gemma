@@ -455,45 +455,6 @@ Gemma.CoexpressionGrid = Ext
                 };
             },
 
-            // linkOutStyler: function (value, metadata, record, row, col, ds) {
-            //
-            // var call = "Gemma.CoexpressionGrid.getAllenAtlasImage(\'" + value.officialSymbol + "\')";
-            //
-            // return String.format(
-            // '<span onClick="{0}" id="aba-{1}-button"><img height=15 width=15
-            // src=ctxBasePath + "/images/logo/aba-icon.png"'
-            // + ' ext:qtip="Link to expression data from the Allen Brain Atlas for {2}" />'
-            // + '</span>', call, value.officialSymbol, value.officialSymbol);
-            // },
-
-            // // link for protein interactions
-            // proteinLinkStyler: function (value, metadata, record, row, col, ds) {
-            // var data = record.data;
-            // var result = "";
-            //
-            // if (data['gene2GeneProteinAssociationStringUrl']) {
-            // result = String.format('<span>' + '<a href="{0}" target="_blank" class="external">'
-            // + '<img src="' + ctxBasePath + '/images/logo/string_logo.gif" '
-            // + 'ext:qtip="Click to view the protein protein interaction obtained from {1} '
-            // + 'evidence with a combined association score of {2} from STRING" />' + '</a>'
-            // + '</span>', data['gene2GeneProteinAssociationStringUrl'],
-            // data['gene2GeneProteinInteractionEvidence'],
-            // data['gene2GeneProteinInteractionConfidenceScore']);
-            // }
-            // if (data['queryRegulatesFound']) {
-            // result = result + " "
-            // + '<span> <img height="16" width = "16" src="' + ctxBasePath + '/images/logo/pazar-icon.png"'
-            // + ' ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />'
-            // + '</span>';
-            // } else if (data['foundRegulatesQuery']) {
-            // result = result + " "
-            // + '<span> <img height="16" width = "16" src="' + ctxBasePath + '/images/logo/pazar-icon.png"'
-            // + ' ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />'
-            // + '</span>';
-            // }
-            // return result;
-            // },
-
             /**
              *
              * @param value

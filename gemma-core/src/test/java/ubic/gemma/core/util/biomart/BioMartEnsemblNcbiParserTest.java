@@ -16,11 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.protein.biomart;
+package ubic.gemma.core.util.biomart;
 
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+
+import ubic.gemma.core.loader.util.biomart.BiomartEnsembleNcbiParser;
+import ubic.gemma.core.loader.util.biomart.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;

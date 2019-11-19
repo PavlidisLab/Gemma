@@ -149,13 +149,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption();
 
-        Option factors = Option.builder( "factors" ).desc(
+        Option factors = Option.builder( "factors" ).hasArg().desc(
                 "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
                 .build();
 
         super.addOption( factors );
 
-        Option subsetFactor = Option.builder( "subset" ).desc(
+        Option subsetFactor = Option.builder( "subset" ).hasArg().desc(
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
                 .build();
         super.addOption( subsetFactor );
@@ -217,12 +217,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
             }
 
+            // note we add the given factor to the list of factors overall to make sure it is considered
             String subsetFactor = this.getOptionValue( "subset" );
             try {
                 this.subsetFactorId = Long.parseLong( subsetFactor );
-
+                this.factorIds.add( subsetFactorId );
             } catch ( NumberFormatException e ) {
                 this.subsetFactorName = subsetFactor;
+                this.factorNames.add( subsetFactor );
             }
         }
 
@@ -303,16 +305,20 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( factors.size() > 0 ) {
                 /*
-                 * Manual selection of factors
+                 * Manual selection of factors (possibly including a subset factor)
                  */
                 ExperimentalFactor subsetFactor = this.getSubsetFactor( ee );
 
                 AbstractCLI.log.info( "Using " + factors.size() + " factors provided as arguments" );
 
                 if ( subsetFactor != null ) {
-                    if ( factors.contains( subsetFactor ) ) {
-                        throw new IllegalArgumentException(
-                                "Subset factor cannot also be included as factor to analyze" );
+                    //                    if ( factors.contains( subsetFactor ) ) {
+                    //                        throw new IllegalArgumentException(
+                    //                                "Subset factor cannot also be included as factor to analyze" );
+                    //                    }
+                    factors.remove( subsetFactor );
+                    if ( factors.size() == 0 ) {
+                        throw new IllegalArgumentException( "You must specify at least one other factor when using 'subset'" );
                     }
                     AbstractCLI.log.info( "Subsetting by " + subsetFactor );
 

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -54,6 +55,9 @@ public class PubMedSearchTest {
             /*
              * at least, this was the result on 4/2008.
              */
+            BibliographicReference r = actualResult.iterator().next();
+            assertNotNull(r.getAuthorList());
+            assertNotNull(r.getPublicationDate());
         } catch ( java.net.UnknownHostException e ) {
             PubMedSearchTest.log.warn( "Test skipped due to unknown host exception" );
         } catch ( java.io.IOException e ) {

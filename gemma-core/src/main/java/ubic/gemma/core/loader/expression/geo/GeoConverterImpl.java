@@ -2317,6 +2317,9 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.environmentalHistory ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0004444";
             term = "environmental history";
+        } else if ( varType.equals( VariableType.population ) ) {
+            uri = "http://purl.obolibrary.org/obo/OBI_0000181";
+            term = "population";
         } else {
             throw new IllegalStateException( "No action for " + varType );
         }

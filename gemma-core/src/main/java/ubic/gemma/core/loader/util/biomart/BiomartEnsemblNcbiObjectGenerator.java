@@ -16,11 +16,11 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.protein.biomart;
+package ubic.gemma.core.loader.util.biomart;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+
 import ubic.gemma.core.loader.util.parser.LineParser;
 import ubic.gemma.model.genome.Taxon;
 

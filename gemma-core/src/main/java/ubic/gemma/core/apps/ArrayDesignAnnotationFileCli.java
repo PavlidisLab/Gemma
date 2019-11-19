@@ -286,6 +286,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 AbstractCLI.log.warn( "Raw sequencing platform, will not generate annotation file: " + ad );
                 continue;
             }
+            
+            toDo.add( ad );
 
             if ( ++numChecked % 100 == 0 ) {
                 log.info( "Checked for need to run: " + numChecked + " platforms" );
