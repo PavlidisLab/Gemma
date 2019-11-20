@@ -482,7 +482,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param  goId e.g. GO:0001312
+     * @param  goId e.g. GO_0001312
      * @return      null if not found
      */
     @Override
@@ -491,7 +491,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             return null;
 
         if ( !GeneOntologyServiceImpl.uri2Term.containsKey( GeneOntologyServiceImpl.toUri( goId ) ) ) {
-            GeneOntologyServiceImpl.log.warn( "GOID " + goId + " not recognized?" );
+            GeneOntologyServiceImpl.log.debug( "GOID " + goId + " not recognized?" );
         }
 
         return GeneOntologyServiceImpl.uri2Term.get( GeneOntologyServiceImpl.toUri( goId ) );
