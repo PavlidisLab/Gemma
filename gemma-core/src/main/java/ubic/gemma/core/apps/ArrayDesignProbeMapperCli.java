@@ -390,7 +390,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     break;
                 }
 
-                AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
+                AbstractCLI.log.info( "====== Start processing: " + arrayDesign + " (" + arrayDesign.getShortName() + ") =====" );
 
                 if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     continue;
