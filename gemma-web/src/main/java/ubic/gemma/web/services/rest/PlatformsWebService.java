@@ -34,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 /**
@@ -51,6 +52,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentService expressionExperimentService;
     private CompositeSequenceService compositeSequenceService;
+    private ArrayDesignAnnotationService annotationFileService;
 
     /**
      * Required by spring
@@ -64,12 +66,13 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     @Autowired
     public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
-            CompositeSequenceService compositeSequenceService ) {
+            CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService ) {
         super( arrayDesignService );
         this.geneService = geneService;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
         this.compositeSequenceService = compositeSequenceService;
+        this.annotationFileService = annotationFileService;
     }
 
     /**
@@ -100,7 +103,8 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see               WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg,
+     *                    HttpServletResponse)
      */
     @GET
     @Path("/{platformArg: [^/]+}")
@@ -122,8 +126,10 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
-     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
-     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
+     *                    from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
+     *                    for no limit.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/datasets")
@@ -136,7 +142,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( platformArg
-                        .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
+                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
                 sr );
     }
 
@@ -145,8 +151,10 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
-     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
-     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
+     *                    from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
+     *                    for no limit.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements")
@@ -191,7 +199,8 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             probesArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
             return Responder.autoCode( compositeSequenceService
                     .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
-                            probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ), sr );
+                            probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ),
+                    sr );
         } catch ( QueryException e ) {
             if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
@@ -207,10 +216,14 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
-     * @param probeArg    the name or ID of the platform element for which the genes should be retrieved. Note that names containing
-     *                    a forward slash are not accepted. Should you need this restriction temporarily lifted, please contact us.
-     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
-     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
+     * @param probeArg    the name or ID of the platform element for which the genes should be retrieved. Note that
+     *                    names containing
+     *                    a forward slash are not accepted. Should you need this restriction temporarily lifted, please
+     *                    contact us.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
+     *                    from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
+     *                    for no limit.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}/genes")
@@ -226,15 +239,16 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
         probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
         return Responder.autoCode( geneService.loadValueObjects( compositeSequenceService
                 .getGenes( probeArg.getPersistentObject( compositeSequenceService ), offset.getValue(),
-                        limit.getValue() ) ), sr );
+                        limit.getValue() ) ),
+                sr );
     }
 
     /**
      * Retrieves the annotation file for the given platform.
      *
-     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
-     *                    is more efficient. Only platforms that user has access to will be available.
-     * @return the content of the annotation file of the given platform.
+     * @param  platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *                     is more efficient. Only platforms that user has access to will be available.
+     * @return             the content of the annotation file of the given platform.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/annotations")
@@ -250,8 +264,8 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     /**
      * Creates a response with the annotation file for given array design
      *
-     * @param arrayDesign the platform to fetch and output the annotation file for.
-     * @return a Response object containing the annotation file.
+     * @param  arrayDesign the platform to fetch and output the annotation file for.
+     * @return             a Response object containing the annotation file.
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
@@ -259,9 +273,16 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         if ( !file.exists() ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
-                    String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
-            throw new GemmaApiException( errorBody );
+            try {
+                // generate it. This will cause a delay, and potentially a time-out, but better than a 404
+                annotationFileService.create( arrayDesign, true );
+                file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+                if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
+            } catch ( IOException e ) {
+                WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
+                        String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
+                throw new GemmaApiException( errorBody );
+            }
         }
 
         return Response.ok( file ).header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
