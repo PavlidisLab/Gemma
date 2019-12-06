@@ -30,6 +30,8 @@ import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;
+import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -84,13 +86,22 @@ public class DataUpdater {
     private AuditTrailService auditTrailService;
 
     @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
     private BioAssayService bioAssayService;
+
+    @Autowired
+    private ExpressionExperimentPlatformSwitchService experimentPlatformSwitchService;
 
     @Autowired
     private ExpressionExperimentService experimentService;
 
     @Autowired
     private GeoService geoService;
+
+    @Autowired
+    private PrincipalComponentAnalysisService pcaService;
 
     @Autowired
     private PreprocessorService preprocessorService;
@@ -102,19 +113,10 @@ public class DataUpdater {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private VectorMergingService vectorMergingService;
-
-    @Autowired
-    private ExpressionExperimentPlatformSwitchService experimentPlatformSwitchService;
-
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
-
-    @Autowired
     private SampleCoexpressionAnalysisService sampleCorService;
 
     @Autowired
-    private PrincipalComponentAnalysisService pcaService;
+    private VectorMergingService vectorMergingService;
 
     /**
      * Affymetrix: Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
@@ -172,6 +174,8 @@ public class DataUpdater {
     /**
      * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
      * type we use internally. Counts and FPKM (if provided) are stored in addition.
+     * 
+     * Rows (genes) that have all zero counts are ignored entirely.
      *
      * @param ee                  ee
      * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
@@ -205,6 +209,8 @@ public class DataUpdater {
         QuantitationType countqt = this.makeCountQt();
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
+    //    countEEMatrix = this.removeNoDataRows( countEEMatrix );
+
         QuantitationType log2cpmQt = this.makelog2cpmQt();
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
@@ -234,78 +240,6 @@ public class DataUpdater {
             this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
-    }
-
-    /**
-     * Generic but in practice used for RNA-seq. Add an additional data (with associated quantitation type) to the
-     * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
-     * a preferred quantitation type, an error will be thrown.
-     *
-     * @param  ee             ee
-     * @param  targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
-     *                        this
-     *                        for a multi-platform dataset)
-     * @param  data           to slot in
-     * @return                ee
-     */
-    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
-
-        if ( data.rows() == 0 ) {
-            throw new IllegalArgumentException( "Data had no rows" );
-        }
-
-        Collection<QuantitationType> qts = data.getQuantitationTypes();
-
-        if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Only support a single quantitation type" );
-        }
-
-        if ( qts.isEmpty() ) {
-            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
-        }
-
-        QuantitationType qt = qts.iterator().next();
-
-        if ( qt.getIsPreferred() ) {
-            for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
-                if ( existingQt.getIsPreferred() ) {
-                    throw new IllegalArgumentException(
-                            "You cannot add 'preferred' data to an experiment that already has it. You should first make the existing data non-preferred." );
-                }
-            }
-        }
-
-        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "no vectors!" );
-        }
-
-        ee = experimentService.addRawVectors( ee, vectors );
-
-        this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
-
-        experimentService.update( ee );
-
-        if ( qt.getIsPreferred() ) {
-            DataUpdater.log.info( "Postprocessing preferred data" );
-            ee = this.postprocess( ee );
-            assert ee.getNumberOfDataVectors() != null;
-        }
-
-        return ee;
-    }
-
-    /**
-     * Generic. Remove all raw data for an experiment
-     *
-     * @param  ee experiment
-     * @param  qt quantitation type
-     * @return    amount of vectors removed
-     */
-    @SuppressWarnings("UnusedReturnValue") // Possible external use
-    int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.experimentService.removeRawVectors( ee, qt );
     }
 
     /**
@@ -558,6 +492,78 @@ public class DataUpdater {
 
         if ( needsPost )
             this.postprocess( ee );
+    }
+
+    /**
+     * Generic but in practice used for RNA-seq. Add an additional data (with associated quantitation type) to the
+     * selected experiment. Will do postprocessing if the data quantitationType is 'preferred', but if there is already
+     * a preferred quantitation type, an error will be thrown.
+     *
+     * @param  ee             ee
+     * @param  targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use
+     *                        this
+     *                        for a multi-platform dataset)
+     * @param  data           to slot in
+     * @return                ee
+     */
+    ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
+
+        if ( data.rows() == 0 ) {
+            throw new IllegalArgumentException( "Data had no rows" );
+        }
+
+        Collection<QuantitationType> qts = data.getQuantitationTypes();
+
+        if ( qts.size() > 1 ) {
+            throw new IllegalArgumentException( "Only support a single quantitation type" );
+        }
+
+        if ( qts.isEmpty() ) {
+            throw new IllegalArgumentException( "Please supply a quantitation type with the data" );
+        }
+
+        QuantitationType qt = qts.iterator().next();
+
+        if ( qt.getIsPreferred() ) {
+            for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
+                if ( existingQt.getIsPreferred() ) {
+                    throw new IllegalArgumentException(
+                            "You cannot add 'preferred' data to an experiment that already has it. You should first make the existing data non-preferred." );
+                }
+            }
+        }
+
+        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "no vectors!" );
+        }
+
+        ee = experimentService.addRawVectors( ee, vectors );
+
+        this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
+
+        experimentService.update( ee );
+
+        if ( qt.getIsPreferred() ) {
+            DataUpdater.log.info( "Postprocessing preferred data" );
+            ee = this.postprocess( ee );
+            assert ee.getNumberOfDataVectors() != null;
+        }
+
+        return ee;
+    }
+
+    /**
+     * Generic. Remove all raw data for an experiment
+     *
+     * @param  ee experiment
+     * @param  qt quantitation type
+     * @return    amount of vectors removed
+     */
+    @SuppressWarnings("UnusedReturnValue") // Possible external use
+    int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
+        return this.experimentService.removeRawVectors( ee, qt );
     }
 
     /**
@@ -1117,6 +1123,19 @@ public class DataUpdater {
         }
         return ee;
     }
+
+//    /**
+//     * For a RNA-seq count matrix, remove rows that have only zeros.
+//     * 
+//     * @param  countEEMatrix
+//     * @return               filtered matrix
+//     */
+//    private ExpressionDataDoubleMatrix removeNoDataRows( ExpressionDataDoubleMatrix countEEMatrix ) {
+//        RowLevelFilter filter = new RowLevelFilter();
+//        filter.setMethod( Method.MAX );
+//        filter.setLowCut( 0.0 ); // rows whose maximum value is greater than zero will be kept.
+//        return filter.filter( countEEMatrix );
+//    }
 
     /**
      * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
