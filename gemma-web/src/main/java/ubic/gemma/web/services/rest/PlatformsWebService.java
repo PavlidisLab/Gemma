@@ -132,7 +132,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/datasets")
+    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformDatasets( // Params:
@@ -157,7 +157,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements")
+    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElements( // Params:
@@ -185,7 +185,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    </p>
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probesArg: [^/]+}")
+    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements/{probesArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElement( // Params:
@@ -226,7 +226,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}/genes")
+    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElementGenes( // Params:
@@ -251,7 +251,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      * @return             the content of the annotation file of the given platform.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/annotations")
+    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response platformAnnotations( // Params:
