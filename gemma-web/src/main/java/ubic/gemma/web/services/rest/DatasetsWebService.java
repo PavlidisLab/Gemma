@@ -22,10 +22,12 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -66,6 +68,7 @@ public class DatasetsWebService extends
     private GeneService geneService;
     private SVDService svdService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private AuditEventService auditEventService;
 
     /**
      * Required by spring
@@ -81,7 +84,7 @@ public class DatasetsWebService extends
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
             GeneService geneService, SVDService svdService,
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService ) {
         super( expressionExperimentService );
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
@@ -91,6 +94,7 @@ public class DatasetsWebService extends
         this.geneService = geneService;
         this.svdService = svdService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+        this.auditEventService = auditEventService;
     }
 
     /**
@@ -121,7 +125,8 @@ public class DatasetsWebService extends
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see               WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg,
+     *                    HttpServletResponse)
      */
     @GET
     @Path("/{datasetsArg: [^/]+}")
@@ -145,7 +150,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
@@ -163,7 +168,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/samples")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
@@ -180,7 +185,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/analyses/differential")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
@@ -191,7 +196,8 @@ public class DatasetsWebService extends
     ) {
         return Responder.autoCode(
                 this.getDiffExVos( datasetArg.getPersistentObject( expressionExperimentService ).getId(),
-                        offset.getValue(), limit.getValue() ), sr );
+                        offset.getValue(), limit.getValue() ),
+                sr );
     }
 
     /**
@@ -201,7 +207,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/annotations")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetAnnotations( // Params:
@@ -219,7 +225,7 @@ public class DatasetsWebService extends
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/data")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
@@ -238,7 +244,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/design")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
@@ -250,13 +256,32 @@ public class DatasetsWebService extends
     }
 
     /**
+     * Returns true if the experiment has had batch information successfully filled in. This will be true even if there
+     * is only one batch. It does not reflect the presence or absence of a batch effect.
+     * 
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/hasbatch")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetHasBatch( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        return Responder.autoCode(new Boolean(this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class )), sr);
+    }
+
+    /**
      * Retrieves the design for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/svd")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSVD( // Params:
@@ -264,9 +289,8 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() );
-        return Responder.autoCode( svd == null ?
-                null :
-                new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ), sr );
+        return Responder.autoCode( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ),
+                sr );
     }
 
     /**
@@ -281,8 +305,10 @@ public class DatasetsWebService extends
      *                        </p>
      * @param genes           a list of gene identifiers, separated by commas (','). Identifiers can be one of
      *                        NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
-     *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
-     *                        of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
+     *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use
+     *                        one
+     *                        of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of
+     *                        the
      *                        given datasets, expression levels for that gene will be missing from the response.
      *                        <p>
      *                        You can combine various identifiers in one query, but an invalid identifier will cause the
@@ -291,9 +317,12 @@ public class DatasetsWebService extends
      * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
      * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
      *                        <ul>
-     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
-     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
-     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its
+     *                        bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its
+     *                        bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all
+     *                        vectors</li>
      *                        </ul>
      */
     @GET
@@ -311,7 +340,8 @@ public class DatasetsWebService extends
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
                         genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ), sr );
+                        consolidate == null ? null : consolidate.getValue() ),
+                sr );
     }
 
     /**
@@ -329,9 +359,12 @@ public class DatasetsWebService extends
      * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
      * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
      *                        <ul>
-     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
-     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
-     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its
+     *                        bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its
+     *                        bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all
+     *                        vectors</li>
      *                        </ul>
      */
     @GET
@@ -343,14 +376,15 @@ public class DatasetsWebService extends
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,// Optional, default false
+            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         this.checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
                         component.getValue(), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ), sr );
+                        consolidate == null ? null : consolidate.getValue() ),
+                sr );
     }
 
     /**
@@ -369,9 +403,12 @@ public class DatasetsWebService extends
      * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
      * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
      *                        <ul>
-     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
-     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
-     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its
+     *                        bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its
+     *                        bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all
+     *                        vectors</li>
      *                        </ul>
      */
     @GET
@@ -392,7 +429,8 @@ public class DatasetsWebService extends
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
                         diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ), sr );
+                        consolidate == null ? null : consolidate.getValue() ),
+                sr );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
