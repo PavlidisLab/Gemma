@@ -359,48 +359,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         fail( "Didn't get expected result from search" );
     }
 
-    @Test
-    public void testSearchForUpdatedQueryResults() {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-        // test out the dao a bit
-        UserQuery userQuery = userQueryService.load( thePastUserQuery.getId() );
-
-        assertNotNull( userQuery );
-
-        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
-        assertTrue( !found.isEmpty() );
-
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
-                this.tearDown();
-                return;
-            }
-        }
-
-        this.tearDown();
-        fail( "Didn't get expected result from search" );
-    }
-
-    @Test
-    public void testSearchForUpdatedQueryResultsNoResults() {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-        // test out the dao a bit
-        UserQuery userQuery = userQueryService.load( theFutureUserQuery.getId() );
-
-        Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
-        assertTrue( found.isEmpty() );
-
-        this.tearDown();
-    }
-
     /**
      * Test we find EE tagged with a child term that matches the given uri.
      */

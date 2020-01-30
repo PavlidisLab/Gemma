@@ -5,7 +5,7 @@
 
 Ext.namespace( 'Gemma' );
 
-/*
+/* Unused?
  * Constructor...
  */
 Gemma.DatasetSearchField = function( config ) {

@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
@@ -35,7 +36,7 @@ import java.util.*;
 
 /**
  * @author Luke
- * @see CharacteristicService
+ * @see    CharacteristicService
  */
 @Service
 public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
@@ -68,13 +69,8 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
-        return this.characteristicDao.findByUri( classesToFilterOn, uriString );
-    }
-
-    @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
-        return this.characteristicDao.findByUri( classes, characteristicUris );
+    public Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit ) {
+        return this.characteristicDao.findExperimentsByUris( uriStrings, t, limit );
     }
 
     @Override
@@ -96,13 +92,18 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         Collection<Characteristic> needToSearch = new HashSet<>();
-        needToSearch.addAll(characteristics);
+        needToSearch.addAll( characteristics );
         for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
             Map<Characteristic, Object> found = this.characteristicDao.getParents( parentClass, needToSearch );
             charToParent.putAll( found );
             needToSearch.removeAll( found.keySet() );
         }
         return charToParent;
+    }
+
+    @Override
+    public Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics ) {
+        return this.characteristicDao.getParentIds( parentClass, characteristics );
     }
 
     @Override
@@ -115,16 +116,6 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
         }
         return charToParent;
     }
-
-//    @Override
-//    public Collection<Characteristic> findByValueBMEE( String searchString ) {
-//        return this.characteristicDao.findByValueBMEE( searchString );
-//    }
-//
-//    @Override
-//    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
-//        return this.characteristicDao.findByValue( classes, string );
-//    }
 
     @Override
     public Collection<? extends Characteristic> findByCategory( String query ) {

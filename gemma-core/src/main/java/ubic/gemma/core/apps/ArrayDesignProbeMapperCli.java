@@ -485,6 +485,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         } else {
             allArrayDesigns = getArrayDesignService().loadAll();
         }
+        
+        // TODO: process array designs in order of how many experiments they use (most first)
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
