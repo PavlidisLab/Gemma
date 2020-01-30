@@ -179,7 +179,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         this.addOption( sequenceTypeOption );
 
         this.addOption(
-                Option.builder( "s" ).argName( "accession" ).desc( "A single accession to update" )
+                Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
                         .longOpt( "sequence" ).build() );
 
         Option forceOption = Option.builder( "force" )
@@ -190,7 +190,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         this.addOption( forceOption );
 
-        Option taxonOption = Option.builder( "t" ).argName( "taxon" ).desc(
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
                 "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .build();
 
