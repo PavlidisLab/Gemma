@@ -1572,10 +1572,11 @@ public class SearchServiceImpl implements SearchService {
         // special case: search for experiments associated with genes 
         Collection<SearchResult> genehits = this.geneSearch( settings, true );
         if ( genehits.size() > 0 ) {
+            // TODO: make sure this is being hit correctly.
             for ( SearchResult gh : genehits ) {
                 Gene g = ( Gene ) gh.getResultObject();
                 Integer ncbiGeneId = g.getNcbiGeneId();
-                String geneuri = "http://" + NCBI_GENE + "/" + ncbiGeneId; // no, we need the full uri.
+                String geneuri = "http://" + NCBI_GENE + "/" + ncbiGeneId; // this is just enough to fool the search into looking by NCBI ID, but check working as expected
                 SearchSettings gss = SearchSettingsImpl.expressionExperimentSearch( geneuri );
                 gss.setMaxResults( settings.getMaxResults() );
                 gss.setTaxon( settings.getTaxon() );
@@ -1673,8 +1674,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * FIXME this comes too late in the process to be effective - for queries that may retrieve many results, we have to
-     * filter as we go.
+     * We only use this if we are not already filtering during the search (which is faster if the results will be large without the filter)
      *
      * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results will get
      *                            filtered out Results with no taxon associated will also get removed.
