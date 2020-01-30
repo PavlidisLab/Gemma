@@ -183,24 +183,4 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     }
 
-    @Test
-    public void testMultiTaxonArray() {
-        // This array design has not taxon so unless taxon provided will throw an exception
-        ArrayDesign ad = testHelper.getTestPersistentArrayDesign( 10, false, false );
-
-        // as taxon provided do not check array design
-        try {
-            app.validateTaxon( taxon, ad );
-        } catch ( IllegalArgumentException e ) {
-            fail();
-        }
-        try {
-            app.validateTaxon( null, ad );
-            fail();
-        } catch ( IllegalArgumentException e ) {
-            assertTrue( "Got: " + e.getMessage(), e.getMessage().contains( "please specify which taxon to run" ) );
-        }
-
-    }
-
 }
