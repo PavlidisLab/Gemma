@@ -323,13 +323,8 @@ public class SearchServiceImpl implements SearchService {
             for ( SearchResult result : results ) {
                 eeIds.add( result.getResultId() );
             }
-
-            //            // Filter by taxon
-            //            if ( taxon != null ) {
-            //                // very inefficient.
-            //                eeIds.retainAll( EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) ) );
-            //            }
         } else if ( taxonId != null ) {
+            // get all for taxon
             eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon, /* MAX_LUCENE_HITS */ null ) );
         }
         return eeIds;
@@ -1672,7 +1667,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * We only use this if we are not already filtering during the search (which is faster if the results will be large without the filter)
+     * We only use this if we are not already filtering during the search (which is faster if the results will be large
+     * without the filter)
      *
      * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results will get
      *                            filtered out Results with no taxon associated will also get removed.
@@ -2135,8 +2131,7 @@ public class SearchServiceImpl implements SearchService {
         results.put( Gene.class, new ArrayList<SearchResult>() );
         results.put( GeneSet.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperimentSet.class, new ArrayList<SearchResult>() );
-        results.put( Characteristic.class, new ArrayList<SearchResult>() ); // FIXME don't return this
-        results.put( CharacteristicValueObject.class, new ArrayList<SearchResult>() ); // FIXME don't return thiss
+        results.put( CharacteristicValueObject.class, new ArrayList<SearchResult>() ); // used for phenotypes
         results.put( BlacklistedExperiment.class, new ArrayList<SearchResult>() );
         results.put( BlacklistedPlatform.class, new ArrayList<SearchResult>() );
 
