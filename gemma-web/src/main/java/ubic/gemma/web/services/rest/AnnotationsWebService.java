@@ -222,7 +222,7 @@ public class AnnotationsWebService extends
 
             // Working only with IDs
             for ( SearchResult result : eeResults ) {
-                valueIds.add( result.getId() );
+                valueIds.add( result.getResultId() );
             }
 
             // Intersecting with previous results

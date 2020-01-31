@@ -275,7 +275,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         StringBuilder list = new StringBuilder();
 
         if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
+            ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getResultId() );
             return new ModelAndView(
                     new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
                     .addObject( "message",
@@ -283,7 +283,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         for ( SearchResult ad : searchResults ) {
-            list.append( ad.getId() ).append( "," );
+            list.append( ad.getResultId() ).append( "," );
         }
 
         overallWatch.stop();

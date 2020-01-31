@@ -22,19 +22,19 @@ package ubic.gemma.core.search;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.common.auditAndSecurity.UserQueryService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -69,15 +69,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Autowired
     private IndexerTask indexerTask;
 
-    @Autowired
-    private UserQueryService userQueryService;
-
     private ExpressionExperiment ee;
     private Gene gene;
-
-    private UserQuery thePastUserQuery;
-
-    private UserQuery theFutureUserQuery;
 
     private String geneNcbiId;
 
@@ -90,7 +83,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
             assert is != null;
 
-            // this abuses the disease ontology as our example is a legacy FMA test, but it doesn't matter since we're loading from a file anyway.
+            // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
+            // this will fail if the loading of uberon is enabled - it will collide.
             ontologyService.getUberonService().loadTermsInNameSpace( is, true );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
@@ -98,7 +92,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Characteristic eeCharSpinalCord = Characteristic.Factory.newInstance();
         eeCharSpinalCord.setCategory( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setCategoryUri( SearchServiceTest.SPINAL_CORD );
-        eeCharSpinalCord.setValue( SearchServiceTest.SPINAL_CORD );
+        eeCharSpinalCord.setValue( "spinal cord" );
         eeCharSpinalCord.setValueUri( SearchServiceTest.SPINAL_CORD );
         characteristicService.create( eeCharSpinalCord );
 
@@ -112,7 +106,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Characteristic eeCharCortexURI = Characteristic.Factory.newInstance();
         eeCharCortexURI.setCategory( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setCategoryUri( SearchServiceTest.BRAIN_CAVITY );
-        eeCharCortexURI.setValue( SearchServiceTest.BRAIN_CAVITY );
+        eeCharCortexURI.setValue( "cavity of brain" );
         eeCharCortexURI.setValueUri( SearchServiceTest.BRAIN_CAVITY );
         characteristicService.create( eeCharCortexURI );
 
@@ -129,55 +123,17 @@ public class SearchServiceTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
-        thePastUserQuery = UserQuery.Factory.newInstance();
-
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set( Calendar.YEAR, 1979 );// the past
-        calendar.set( Calendar.MONTH, 1 );
-        calendar.set( Calendar.DAY_OF_MONTH, 1 );
-
-        thePastUserQuery.setLastUsed( calendar.getTime() );
-
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-
-        settings.noSearches();
-        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
-        settings.setSearchExperiments( true );
-        settings.setUseCharacteristics( true );
-        settings.setUseIndices( false );
-        settings.setUseDatabase( false );
-
-        thePastUserQuery.setSearchSettings( settings );
-        thePastUserQuery.setUrl( "someUrl" );
-
-        calendar.add( Calendar.YEAR, 2000 );// the future
-
-        theFutureUserQuery = UserQuery.Factory.newInstance();
-        theFutureUserQuery.setLastUsed( calendar.getTime() );
-
-        SearchSettings futureSettings = SearchSettings.Factory.newInstance();
-
-        futureSettings.noSearches();
-        futureSettings.setQuery( "Brain" ); // should hit 'cavity of brain'.
-        futureSettings.setSearchExperiments( true );
-        futureSettings.setUseCharacteristics( true );
-
-        theFutureUserQuery.setSearchSettings( futureSettings );
-        theFutureUserQuery.setUrl( "someUrl" );
-
-        // save to db to load later to test if the pipes are clean
-        userQueryService.create( thePastUserQuery );
-        userQueryService.create( theFutureUserQuery );
-
     }
 
     public void tearDown() {
-        if ( gene != null )
-            geneService.remove( gene );
-        if ( ee != null )
-            eeService.remove( ee );
-
+        try {
+            if ( gene != null )
+                geneService.remove( gene );
+            if ( ee != null )
+                eeService.remove( ee );
+        } catch ( Exception e ) {
+            // no big deal.
+        }
     }
 
     /**
@@ -199,11 +155,17 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.setUseDatabase( false );
         settings.setUseIndices( false );
 
+        Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
+        assertTrue( !ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
+
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
+        List<SearchResult> eer = found.get( ExpressionExperiment.class );
+        assertTrue( !eer.isEmpty() );
+
+        for ( SearchResult sr : eer ) {
+            if ( sr.getResultId().equals( ee.getId() ) ) {
                 this.tearDown();
                 return;
             }
@@ -349,7 +311,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
+            if ( sr.getResultId().equals( ee.getId() ) ) {
                 this.tearDown();
                 return;
             }
@@ -377,7 +339,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
+            if ( sr.getResultId().equals( ee.getId() ) ) {
                 this.tearDown();
                 return;
             }
@@ -406,7 +368,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultObject().equals( ee ) ) {
+            if ( sr.getResultId().equals( ee.getId() ) ) {
                 this.tearDown();
                 return;
             }

@@ -274,7 +274,7 @@ public class ExpressionExperimentServiceImpl
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
         for ( SearchResult s : searchResults ) {
-            ids.add( s.getId() );
+            ids.add( s.getResultId() );
         }
 
         return ids;

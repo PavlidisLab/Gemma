@@ -18,14 +18,13 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ReflectionUtil;
 
 /**
  * @author paul
  */
-public class SearchResult implements Comparable<SearchResult>, Identifiable {
+public class SearchResult implements Comparable<SearchResult> {
 
     private Class<?> resultClass;
 
@@ -83,8 +82,7 @@ public class SearchResult implements Comparable<SearchResult>, Identifiable {
     /**
      * @return the id for the underlying result entity.
      */
-    @Override
-    public Long getId() {
+    public Long getResultId() {
         return objectId;
     }
 

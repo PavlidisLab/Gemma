@@ -321,7 +321,7 @@ public class SearchServiceImpl implements SearchService {
                                                                                                                         */ )
                     .get( ExpressionExperiment.class );
             for ( SearchResult result : results ) {
-                eeIds.add( result.getId() );
+                eeIds.add( result.getResultId() );
             }
 
             //            // Filter by taxon
@@ -384,7 +384,7 @@ public class SearchServiceImpl implements SearchService {
         Collection<Long> eeIds = this.expressionExperimentService
                 .filterByTaxon( EntityUtils.getIds( unfilteredResults ), t );
         for ( SearchResult sr : unfilteredResults ) {
-            if ( eeIds.contains( sr.getId() ) ) {
+            if ( eeIds.contains( sr.getResultId() ) ) {
                 filteredResults.add( sr );
             }
         }
@@ -731,8 +731,6 @@ public class SearchServiceImpl implements SearchService {
      * @return       collection of SearchResults (Experiments)
      */
     private Collection<SearchResult> characteristicEESearchTerm( String query, Taxon t, int limit ) {
-        if ( SearchServiceImpl.log.isDebugEnabled() )
-            SearchServiceImpl.log.debug( "Starting search for " + query );
 
         StopWatch watch = this.startTiming();
         Collection<SearchResult> results = new HashSet<>();

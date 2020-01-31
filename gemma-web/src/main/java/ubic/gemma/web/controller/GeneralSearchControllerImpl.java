@@ -368,11 +368,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();
-            if ( !idMap.containsKey( sr.getId() ) ) {
+            if ( !idMap.containsKey( sr.getResultId() ) ) {
                 it.remove();
                 continue;
             }
-            sr.setResultObject( idMap.get( sr.getId() ) );
+            sr.setResultObject( idMap.get( sr.getResultId() ) );
         }
 
         if ( timer.getTime() > 1000 ) {
