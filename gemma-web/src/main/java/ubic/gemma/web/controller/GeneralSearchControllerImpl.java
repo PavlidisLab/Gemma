@@ -390,7 +390,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     private Collection<ArrayDesignValueObject> filterAD( final Collection<ArrayDesignValueObject> toFilter,
             SearchSettings settings ) {
-        // FIXME taxon filtering should already have happened?
+        // Note: if possible we should move filtering into the search service (as is done for EEs) (this is not a big deal)
         Taxon tax = settings.getTaxon();
         if ( tax == null )
             return toFilter;

@@ -133,7 +133,10 @@ public class SearchServiceImpl implements SearchService {
 
     private static final Log log = LogFactory.getLog( SearchServiceImpl.class.getName() );
 
-    private static final int MAX_LUCENE_HITS = 3000;
+    /*
+     * Setting this too high is unnecessary as characteristic searches are more accurate (for experiments)
+     */
+    private static final int MAX_LUCENE_HITS = 300; 
 
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
@@ -1530,9 +1533,11 @@ public class SearchServiceImpl implements SearchService {
      * @return          {@link Collection} of SearchResults
      */
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
+        
+        StopWatch totalTime = this.startTiming();
         StopWatch watch = this.startTiming();
 
-        SearchServiceImpl.log.info( "Starting search for '" + settings + "'" );
+        SearchServiceImpl.log.info( ">>>>> Starting search for '" + settings + "'" );
 
         Collection<SearchResult> results = new HashSet<>();
 
@@ -1605,37 +1610,37 @@ public class SearchServiceImpl implements SearchService {
             watch.start();
         }
 
-        // possibly keep looking
-        if ( results.size() < settings.getMaxResults() ) { // NOTE: Experimental. previously this was only run when we had no results.
-            /*
-             * Search for bib refs NOTE unclear this really does anything since we index the bibrefs associated with
-             * experiments
-             * directly?
-             */
-            List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
-                    .search( settings.getQuery() );
-
-            if ( !bibrefs.isEmpty() ) {
-                Collection<BibliographicReference> refs = new HashSet<>();
-                Collection<SearchResult> r = this.compassBibliographicReferenceSearch( settings );
-                for ( SearchResult searchResult : r ) {
-                    refs.add( ( BibliographicReference ) searchResult.getResultObject() );
-                }
-
-                Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
-                        .getRelatedExperiments( refs );
-                for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments
-                        .entrySet() ) {
-                    results.addAll( this.dbHitsToSearchResult( e.getValue(), null ) );
-                }
-                if ( watch.getTime() > 500 )
-                    SearchServiceImpl.log
-                            .info( "Expression Experiment publication search for '" + settings + "' took " + watch
-                                    .getTime() + " ms, " + results.size() + " hits." );
-                watch.reset();
-                watch.start();
-            }
-        }
+        /* this should be unnecessary we we hit bibrefs in our regular lucene-index search. Also as written, this is very slow */
+//        // possibly keep looking
+//        if ( results.size() == 0 ) { // 
+//            watch.reset();
+//            watch.start();
+//            log.info( "Searching for experiments via publications..." );
+//            List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
+//                    .search( settings.getQuery() );
+//
+//            if ( !bibrefs.isEmpty() ) {
+//                log.info( "... found " + bibrefs.size() + " papers matching " + settings.getQuery() );
+////                Collection<BibliographicReference> refs = new HashSet<>();
+////                // this seems like an extra 
+////                Collection<SearchResult> r = this.compassBibliographicReferenceSearch( settings );
+////                for ( SearchResult searchResult : r ) {
+////                    refs.add( ( BibliographicReference ) searchResult.getResultObject() );
+////                }
+//
+//                Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
+//                        .getRelatedExperiments( bibrefs );
+//                for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments
+//                        .entrySet() ) {
+//                    results.addAll( this.dbHitsToSearchResult( e.getValue(), null ) );
+//                }
+//                if ( watch.getTime() > 500 )
+//                    SearchServiceImpl.log
+//                            .info( "... Publication search for took " + watch
+//                                    .getTime() + " ms, " + results.size() + " hits" );
+//             
+//            }
+//        }
 
         /*
          * Find data sets that match a platform. This will probably only be trigged if the search is for a GPL id. NOTE:
@@ -1643,6 +1648,8 @@ public class SearchServiceImpl implements SearchService {
          * array design
          */
         if ( results.size() == 0 ) {
+            watch.reset();
+            watch.start();
             Collection<SearchResult> matchingPlatforms = this.arrayDesignSearch( settings, null );
             for ( SearchResult adRes : matchingPlatforms ) {
                 if ( adRes.getResultObject() instanceof ArrayDesign ) {
@@ -1663,7 +1670,15 @@ public class SearchServiceImpl implements SearchService {
                 return results;
             }
         }
+        
+        if ( totalTime.getTime() > 500 )
+            SearchServiceImpl.log
+                    .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + watch.getTime()
+                            + " ms, " + results.size() + " hits." );
+        
         return results;
+        
+     
     }
 
     /**
