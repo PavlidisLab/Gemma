@@ -431,7 +431,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         for ( SearchResult sr : geneSearchResults ) {
             Gene g = geneService.load( sr.getResultId() );
-            if ( g == null ) log.debug( "No gene matching search result " + sr );
+            if ( g == null ) {
+                log.warn( "No gene matching search result " + sr );
+                continue;
+            }
             genes.add( g );
         }
 
