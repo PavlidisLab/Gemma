@@ -276,50 +276,50 @@ public class SearchServiceTest extends BaseSpringContextTest {
         fail( "Didn't get expected result from search" );
     }
 
-    @Test
-    public void testSearchByBibRefId() {
-        try {
-            this.setup();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-        String id;
-        if ( ee.getPrimaryPublication() == null ) {
-            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-            BibliographicReference bibref = fetcher.retrieveByHTTP( 21878914 );
-            bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
-            ee.setPrimaryPublication( bibref );
-            eeService.update( ee );
-            id = "21878914";
-        } else {
-            id = ee.getPrimaryPublication().getPubAccession().getAccession();
-        }
-
-        log.info( "indexing ..." );
-
-        IndexerTaskCommand c = new IndexerTaskCommand();
-        c.setIndexBibRef( true );
-
-        indexerTask.setTaskCommand( c );
-        indexerTask.execute();
-
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.noSearches();
-        settings.setQuery( id );
-        settings.setSearchExperiments( true );
-        settings.setUseCharacteristics( false );
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        assertTrue( !found.isEmpty() );
-        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
-            if ( sr.getResultId().equals( ee.getId() ) ) {
-                this.tearDown();
-                return;
-            }
-        }
-
-        this.tearDown();
-        fail( "Didn't get expected result from search" );
-    }
+//    @Test
+//    public void testSearchByBibRefId() {
+//        try {
+//            this.setup();
+//        } catch ( Exception e ) {
+//            e.printStackTrace();
+//        }
+//        String id;
+//        if ( ee.getPrimaryPublication() == null ) {
+//            PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+//            BibliographicReference bibref = fetcher.retrieveByHTTP( 21878914 );
+//            bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+//            ee.setPrimaryPublication( bibref );
+//            eeService.update( ee );
+//            id = "21878914";
+//        } else {
+//            id = ee.getPrimaryPublication().getPubAccession().getAccession();
+//        }
+//
+//        log.info( "indexing ..." );
+//
+//        IndexerTaskCommand c = new IndexerTaskCommand();
+//        c.setIndexBibRef( true );
+//
+//        indexerTask.setTaskCommand( c );
+//        indexerTask.execute();
+//
+//        SearchSettings settings = SearchSettings.Factory.newInstance();
+//        settings.noSearches();
+//        settings.setQuery( id );
+//        settings.setSearchExperiments( true );
+//        settings.setUseCharacteristics( false );
+//        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+//        assertTrue( !found.isEmpty() );
+//        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+//            if ( sr.getResultId().equals( ee.getId() ) ) {
+//                this.tearDown();
+//                return;
+//            }
+//        }
+//
+//        this.tearDown();
+//        fail( "Didn't get expected result from search" );
+//    }
 
     /**
      * Test we find EE tagged with a child term that matches the given uri.
