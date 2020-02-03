@@ -390,7 +390,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     break;
                 }
 
-                AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
+                AbstractCLI.log.info( "====== Start processing: " + arrayDesign + " (" + arrayDesign.getShortName() + ") =====" );
 
                 if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     continue;
@@ -485,6 +485,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         } else {
             allArrayDesigns = getArrayDesignService().loadAll();
         }
+        
+        // TODO: process array designs in order of how many experiments they use (most first)
 
         final SecurityContext context = SecurityContextHolder.getContext();
 

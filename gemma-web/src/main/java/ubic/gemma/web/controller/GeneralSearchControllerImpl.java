@@ -21,7 +21,6 @@ package ubic.gemma.web.controller;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.compass.core.lucene.LuceneEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
@@ -39,7 +38,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -51,8 +49,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -277,22 +273,33 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return mapping;
     }
 
+    /**
+     * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
+     * cases, possibly the entity)
+     * 
+     * @param entityClass
+     * @param results
+     * @param settings
+     */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<?> vos;
 
-        if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = this.filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
-                    settings );
+        Collection<Long> ids = new ArrayList<>();
+        for ( SearchResult r : results ) {
+            ids.add( r.getResultId() );
+        }
 
+        if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
+            vos = expressionExperimentService.loadValueObjects( ids, false );
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
             }
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( EntityUtils.getIds( results ) ), settings );
+            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( ids ), settings );
 
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
@@ -311,17 +318,18 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             bss = bibliographicReferenceService.thaw( bss );
             vos = bibliographicReferenceService.loadValueObjects( bss );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-            Collection<Gene> genes = geneService.load( EntityUtils.getIds( results ) );
+            Collection<Gene> genes = geneService.load( ids );
             genes = geneService.thawLite( genes );
             vos = geneService.loadValueObjects( genes );
-        } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
-            Collection<CharacteristicValueObject> cvos = new ArrayList<>();
-            for ( SearchResult sr : results ) {
-                Characteristic ch = ( Characteristic ) sr.getResultObject();
-                cvos.add( new CharacteristicValueObject( ch ) );
-            }
-            vos = cvos;
+            //        } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
+            //            Collection<CharacteristicValueObject> cvos = new ArrayList<>();
+            //            for ( SearchResult sr : results ) {
+            //                Characteristic ch = ( Characteristic ) sr.getResultObject();
+            //                cvos.add( new CharacteristicValueObject( ch ) );
+            //            }
+            //            vos = cvos;
         } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
+            // This is used for phenotypes.
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
                 CharacteristicValueObject ch = ( CharacteristicValueObject ) sr.getResultObject();
@@ -329,17 +337,17 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
             vos = cvos;
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
-            return;
+            return; // why?
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-            vos = geneSetService.getValueObjects( EntityUtils.getIds( results ) );
+            vos = geneSetService.getValueObjects( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            vos = experimentSetService.loadValueObjects( experimentSetService.load( EntityUtils.getIds( results ) ) );
-        } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
-            Collection<FactorValueValueObject> fvo = new ArrayList<>();
-            for ( SearchResult sr : results ) {
-                fvo.add( new FactorValueValueObject( ( FactorValue ) sr.getResultObject() ) );
-            }
-            vos = fvo;
+            vos = experimentSetService.loadValueObjects( experimentSetService.load( ids ) );
+            //        } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
+            //            Collection<FactorValueValueObject> fvo = new ArrayList<>();
+            //            for ( SearchResult sr : results ) {
+            //                fvo.add( new FactorValueValueObject( ( FactorValue ) sr.getResultObject() ) );
+            //            }
+            //            vos = fvo;
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
             Collection<BlacklistedValueObject> bvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
@@ -368,11 +376,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();
-            if ( !idMap.containsKey( sr.getId() ) ) {
+            if ( !idMap.containsKey( sr.getResultId() ) ) {
                 it.remove();
                 continue;
             }
-            sr.setResultObject( idMap.get( sr.getId() ) );
+            sr.setResultObject( idMap.get( sr.getResultId() ) );
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -382,6 +390,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     private Collection<ArrayDesignValueObject> filterAD( final Collection<ArrayDesignValueObject> toFilter,
             SearchSettings settings ) {
+        // Note: if possible we should move filtering into the search service (as is done for EEs) (this is not a big deal)
         Taxon tax = settings.getTaxon();
         if ( tax == null )
             return toFilter;
@@ -395,19 +404,19 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return filtered;
     }
 
-    private Collection<ExpressionExperimentValueObject> filterEE(
-            final Collection<ExpressionExperimentValueObject> toFilter, SearchSettings settings ) {
-        Taxon tax = settings.getTaxon();
-        if ( tax == null )
-            return toFilter;
-        Collection<ExpressionExperimentValueObject> filtered = new HashSet<>();
-        for ( ExpressionExperimentValueObject eevo : toFilter ) {
-            if ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) )
-                filtered.add( eevo );
-        }
-
-        return filtered;
-    }
+    //    private Collection<ExpressionExperimentValueObject> filterEE(
+    //            final Collection<ExpressionExperimentValueObject> toFilter, SearchSettings settings ) {
+    //        Taxon tax = settings.getTaxon();
+    //        if ( tax == null )
+    //            return toFilter;
+    //        Collection<ExpressionExperimentValueObject> filtered = new HashSet<>();
+    //        for ( ExpressionExperimentValueObject eevo : toFilter ) {
+    //            if ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) )
+    //                filtered.add( eevo );
+    //        }
+    //
+    //        return filtered;
+    //    }
 
     private void populateTaxonReferenceData( Map<String, List<?>> mapping ) {
         List<Taxon> taxa = new ArrayList<>();

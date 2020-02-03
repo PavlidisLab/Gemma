@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
@@ -36,9 +37,9 @@ public interface CharacteristicDao
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param start How far into the list to start
-     * @param limit Maximum records to retrieve (might be subject to security filtering)
-     * @return characteristics
+     * @param  start How far into the list to start
+     * @param  limit Maximum records to retrieve (might be subject to security filtering)
+     * @return       characteristics
      */
     @Override
     List<Characteristic> browse( Integer start, Integer limit );
@@ -46,11 +47,11 @@ public interface CharacteristicDao
     /**
      * Browse through the characteristics, excluding GO annotations, with sorting.
      *
-     * @param start      query offset
-     * @param limit      maximum amount of entries
-     * @param descending order direction
-     * @param sortField  order field
-     * @return characteristics
+     * @param  start      query offset
+     * @param  limit      maximum amount of entries
+     * @param  descending order direction
+     * @param  sortField  order field
+     * @return            characteristics
      */
     @Override
     List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
@@ -58,50 +59,55 @@ public interface CharacteristicDao
     Collection<? extends Characteristic> findByCategory( String query );
 
     /**
-     * @param classes            constraint of who the 'owner' of the Characteristic has to be.
-     * @param characteristicUris uris
-     * @return characteristics
+     * @param  classes            constraint of who the 'owner' of the Characteristic has to be.
+     * @param  characteristicUris uris
+     * @return                    characteristics
      */
     Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
     /**
-     * @param classesToFilterOn constraint of who the 'owner' of the Characteristic has to be.
-     * @param uriString         uri string
-     * @return characteristics
+     * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are avoided
+     * (and will thus be associated via the first uri that resulted in a hit).
+     * 
+     * @param  uriStrings
+     * @param  t          taxon to limit to (can be null for no limit)
+     * @param  limit      approximate limit to how many results to return (just used to avoid extra queries; the limit
+     *                    may be exceeded). Set to 0 for no limit.
+     * @return            map of classes (Experiment, FactorValue, BioMaterial) to the matching uri to IDs of
+     *                    experiments which have an
+     *                    associated characteristic using the given uriString. The class lets us track where the
+     *                    annotation was.
      */
-    Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+    Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit );
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 
     Collection<Characteristic> findByUri( String searchString );
 
-//    /**
-//     * @param classes constraint of who the 'owner' of the Characteristic has to be.
-//     * @param string  value
-//     * @return characteristics
-//     */
-//    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
-//
-//    /**
-//     * specialized to find just one characteristic per expression experiment associated via biomaterials
-//     * @param searchString
-//     * @return
-//     */
-//    Collection<Characteristic> findByValueBMEE( String searchString );
-
     /**
      * Finds all Characteristics whose value match the given search term
      *
-     * @param search search
-     * @return characteristics
+     * @param  search search
+     * @return        characteristics
      */
     Collection<Characteristic> findByValue( String search );
 
     /**
-     * @param characteristics characteristics
-     * @param parentClass     parent class
-     * @return a map of the specified characteristics to their parent objects.
+     * @param  characteristics characteristics
+     * @param  parentClass     parent class
+     * @return                 a map of the specified characteristics to their parent objects.
      */
     Map<Characteristic, Object> getParents( Class<?> parentClass, Collection<Characteristic> characteristics );
+
+    /**
+     * Optimized version that only retrieves the IDs of the owning objects. The parentClass has to be kept track of by
+     * the
+     * caller.
+     * 
+     * @param  parentClass
+     * @param  characteristics
+     * @return
+     */
+    Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics );
 
 }

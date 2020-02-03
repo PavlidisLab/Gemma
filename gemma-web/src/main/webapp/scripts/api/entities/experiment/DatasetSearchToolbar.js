@@ -1,7 +1,7 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * 
+ * Only used in the DatasetGroupEditor?
  * @class Gemma.DatasetSearchToolBar
  * @extends Ext.Toolbar
  */

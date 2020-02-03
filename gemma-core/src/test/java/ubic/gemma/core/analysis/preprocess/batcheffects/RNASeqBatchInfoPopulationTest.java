@@ -29,17 +29,17 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
 
@@ -56,6 +56,9 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     private ExpressionExperimentService eeService;
 
     private ExpressionExperiment ee;
+
+    @Autowired
+    private AuditEventService auditService;
 
     @Test
     public void testParseHeaders() {
@@ -125,6 +128,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         ExperimentalFactor ef = experimentalFactors.iterator().next();
         assertEquals( "batch", ef.getName() );
         assertEquals( 2, ef.getFactorValues().size() );
+
+        assertTrue( auditService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
     }
 
     @Test

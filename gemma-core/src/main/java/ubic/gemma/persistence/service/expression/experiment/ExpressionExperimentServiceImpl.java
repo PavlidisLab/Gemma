@@ -274,7 +274,7 @@ public class ExpressionExperimentServiceImpl
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
         for ( SearchResult s : searchResults ) {
-            ids.add( s.getId() );
+            ids.add( s.getResultId() );
         }
 
         return ids;
@@ -733,9 +733,20 @@ public class ExpressionExperimentServiceImpl
     @Override
     public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        // FIXME Because we switch platforms, the actual platform type for RNA-seq will be GENELIST once the data are processed. But we could look at the bioAssay.originalPlatform
-        return ads.size() <= 1 && ( ads.iterator().next().getTechnologyType().equals( TechnologyType.SEQUENCING )
-                || ads.iterator().next().getTechnologyType().equals( TechnologyType.GENELIST ) );
+        /*
+         * This isn't completely bulletproof. We are simply assuming that if any of the platforms isn't a microarray (or
+         * 'OTHER'), it's RNA-seq.
+         */
+        for ( ArrayDesign ad : ads ) {
+            TechnologyType techtype = ad.getTechnologyType();
+
+            if ( techtype.equals( TechnologyType.SEQUENCING )
+                    || techtype.equals( TechnologyType.GENELIST ) ) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     /**
