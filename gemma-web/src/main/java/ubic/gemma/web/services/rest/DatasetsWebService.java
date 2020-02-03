@@ -150,7 +150,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
@@ -168,7 +168,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/samples")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
@@ -185,7 +185,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/analyses/differential")
+    @Path("/{datasetArg: [\\w\\.\\-]+}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
@@ -207,7 +207,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/annotations")
+    @Path("/{datasetArg: [\\w\\.-]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetAnnotations( // Params:
@@ -225,7 +225,7 @@ public class DatasetsWebService extends
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/data")
+    @Path("/{datasetArg: [\\w\\.\\-]+}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
@@ -244,7 +244,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/design")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
@@ -263,7 +263,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/hasbatch")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetHasBatch( // Params:
@@ -281,7 +281,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.-_]+}/svd")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSVD( // Params:

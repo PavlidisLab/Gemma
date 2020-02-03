@@ -430,7 +430,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         for ( SearchResult sr : geneSearchResults ) {
-            genes.add( ( Gene ) sr.getResultObject() );
+            Gene g = geneService.load( sr.getResultId() );
+            if ( g == null ) log.debug( "No gene matching search result " + sr );
+            genes.add( g );
         }
 
         Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = new HashSet<>();
