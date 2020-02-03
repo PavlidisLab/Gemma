@@ -299,7 +299,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-        GeneSetSearchImpl.log.info( term );
+       // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */

@@ -972,7 +972,7 @@ public class OntologyServiceImpl implements OntologyService {
         ss.noSearches();
         ss.setTaxon( taxon );
         ss.setSearchGenes( true );
-        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true, false );
+        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true /* fill */, false );
 
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {

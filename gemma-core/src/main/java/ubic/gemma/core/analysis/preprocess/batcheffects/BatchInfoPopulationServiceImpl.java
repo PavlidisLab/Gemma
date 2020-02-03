@@ -134,7 +134,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         Collection<LocalFile> files = null;
         try {
             if ( isRNASeq ) {
-                return this.getBatchDataFromFASTQHeaders( ee );
+                this.getBatchDataFromFASTQHeaders( ee );
+                return true; // success even if only one batch.
             }
 
             files = this.fetchRawDataFiles( ee );
@@ -160,7 +161,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
     }
 
-    private boolean getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) {
+    /**
+     * Look for batch information and create a Factor for batch if there is more than one batch.
+     * 
+     * @param  ee
+     * @throws IOException if there was a problem reading the FASTQ headers
+     */
+    private void getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) throws IOException {
 
         // Read and store header data.
 
@@ -168,15 +175,26 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         try {
             headers = getFastqHeaders( ee );
         } catch ( IOException e ) {
-            log.error( "Error while processing FASTQ headers for " + ee + " " + e.getMessage() );
-            return false;
+            throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
         }
 
-        if ( headers.isEmpty() ) return false;
+        if ( headers.isEmpty() ) {
+            throw new IOException( "No FASTQ headers found for " + ee );
+        }
 
         // Create batch factor.
         ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
-        return bf != null;
+
+        int numberOfBatches = 1;
+        if ( bf != null ) {
+            numberOfBatches = bf.getFactorValues().size();
+        }
+
+        BatchInfoPopulationServiceImpl.log
+                .info( "Got batch information for: " + ee.getShortName() );
+        this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, numberOfBatches
+                + " batches.", "" );
+
     }
 
     /**
@@ -196,6 +214,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
+     * For microarray case
+     * 
      * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @param  ee    ee
      * @return       boolean
@@ -344,12 +364,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             headers.put( ba.getSampleUsed(), h );
 
             ba.setFastqHeaders( h );
-            
+
             /*
              * TODO we could use this as an opportunity to update the "original platform" if it is not populated
              */
-            if (ba.getOriginalPlatform() == null) {
-                
+            if ( ba.getOriginalPlatform() == null ) {
+
             }
 
             // Note: for microarray processing dates, we persist in the Biomaterialservice.associateBatchFactor.  

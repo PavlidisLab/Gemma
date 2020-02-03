@@ -253,7 +253,7 @@ public abstract class AbstractCLI {
 
     @SuppressWarnings("static-access")
     protected void addDateOption() {
-        Option dateOption = Option.builder( "mdate" ).desc(
+        Option dateOption = Option.builder( "mdate" ).hasArg().desc(
                 "Constrain to run only on entities with analyses older than the given date. "
                         + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                         + "If there is no record of when the analysis was last run, it will be run." )

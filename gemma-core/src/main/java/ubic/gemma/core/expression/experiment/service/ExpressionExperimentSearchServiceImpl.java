@@ -260,7 +260,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         List<Long> eeIds = new ArrayList<>();
         for ( SearchResult sr : srEEs ) {
-            eeIds.add( sr.getId() );
+            eeIds.add( sr.getResultId() );
         }
 
         Collection<ExpressionExperimentValueObject> eevos = expressionExperimentService.loadValueObjects( eeIds, true );

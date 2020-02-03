@@ -2320,8 +2320,11 @@ public class GeoConverterImpl implements GeoConverter {
         } else if ( varType.equals( VariableType.population ) ) {
             uri = "http://purl.obolibrary.org/obo/OBI_0000181";
             term = "population";
+        } else if ( varType.equals( VariableType.phenotype ) ) {
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000651"; 
+            term = "phenotype";
         } else {
-            throw new IllegalStateException( "No action for " + varType );
+            throw new IllegalStateException( "No action for variable type='" + varType + "' (no category ontology term configured)" );
         }
 
         if ( GeoConverterImpl.log.isDebugEnabled() )

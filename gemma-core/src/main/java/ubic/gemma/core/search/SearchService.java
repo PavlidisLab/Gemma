@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.search;
 
-import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 
@@ -44,7 +43,7 @@ public interface SearchService {
      * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     @SuppressWarnings("unused")
-    //Used in JS through DWR
+    //Used in JS through DWR i.e. in search.js - the main search method.
     Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settings );
 
     /**
@@ -99,10 +98,11 @@ public interface SearchService {
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
 
     /**
-     * A search of experiments only
+     * A search of experiments only. At least one of the arguments must be non-null.
      *
-     * @param  query   if empty, all experiments for the taxon are returned (up to limits); otherwise, we use the search facility.
-     * @param  taxonId can be null; if non-null, used to filter results.
+     * @param  query   if non-blank, used to search for experiments; filters and limits may be applied.
+     * @param  taxonId can be null; if non-null, used to filter results. If query is blank, all experiments for the
+     *                 taxon are returned.
      * @return         Collection of ids.
      */
     Collection<Long> searchExpressionExperiments( String query, Long taxonId );
@@ -117,7 +117,5 @@ public interface SearchService {
      * @return             only search results from one class
      */
     <T> List<T> search( SearchSettings settings, Class<T> resultClass );
-
-    Map<Class<?>, List<SearchResult>> searchForNewlyCreatedUserQueryResults( UserQuery uq );
 
 }

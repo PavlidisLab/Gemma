@@ -211,16 +211,7 @@ public class AnnotationsWebService extends
         for ( String value : values ) {
             Set<Long> valueIds = new HashSet<>();
 
-            SearchSettings settings = new SearchSettingsImpl();
-            settings.setQuery( value );
-            settings.setSearchGenes( false );
-            settings.setSearchPlatforms( false );
-            settings.setSearchExperimentSets( false );
-            settings.setSearchPhenotypes( false );
-            settings.setSearchProbes( false );
-            settings.setSearchGeneSets( false );
-            settings.setSearchBioSequences( false );
-            settings.setSearchBibrefs( false );
+            SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( value );
 
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
             List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
@@ -231,7 +222,7 @@ public class AnnotationsWebService extends
 
             // Working only with IDs
             for ( SearchResult result : eeResults ) {
-                valueIds.add( result.getId() );
+                valueIds.add( result.getResultId() );
             }
 
             // Intersecting with previous results

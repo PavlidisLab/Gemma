@@ -1,5 +1,5 @@
 # Affymetrix array mapping of platform to desired latform.
-# No guarantee this is up to date; checked May 2019
+# No guarantee this is up to date; checked January 2020
 # Based on GEO searches for platforms and then adding the "alternative" and "affiliated" ids (python script) 
 # as well as manual additions for cases where GEO does not record the information.
 #
@@ -8,7 +8,7 @@
 # To be clear, the actual physical arrays are identical; the difference is how it is analyzed.
 #
 # The organization of this file into sections is just for readability.
-
+ 
 # Exon arrays
 # mouse MoEx-1_0-st  
 # this list includes both alts of the gene and exon versions (if any)
@@ -77,6 +77,7 @@ GPL20843=GPL5175
 GPL20982=GPL5175
 GPL21472=GPL5175
 GPL22891=GPL5175
+
 GPL22995=GPL5175
 GPL4814=GPL5175
 GPL23166=GPL5175
@@ -100,6 +101,7 @@ GPL24299=GPL17586
 
 # HT_MG-430A
 GPL8759=GPL8759
+
 
 #########################
 # gene arrays, some lack CDFs so run as an exon array
@@ -211,10 +213,19 @@ GPL15401=GPL6244
 
 # Clariom_s_Human
 GPL23159=GPL23159
+GPL26070=GPL23159
+# GPL26710=GPL23159? ClariomSHuman_Hs_ENSG_22 no data sets anyway.
 
 # Clariom_s_Mouse
 GPL23038=GPL23038
 
+# Clariom_d_human
+GPL25401=GPL23126
+GPL25683=GPL23126
+
+# Clariom_s_rat
+# no alts yet.
+GPL23040=GPL23040
 
 # RaGene-1_0-st
 GPL6247=GPL6247
@@ -251,6 +262,7 @@ GPL24707=GPL17400
 GPL96=GPL96
 GPL4557=GPL96
 GPL7566=GPL96
+GPL8289=GPL96
 GPL9021=GPL96
 GPL9741=GPL96
 GPL10553=GPL96
@@ -259,6 +271,7 @@ GPL16212=GPL96
 GPL17027=GPL96
 GPL17662=GPL96
 GPL19184=GPL96
+
 
 # GPL1355
 GPL1355=GPL1355
@@ -277,6 +290,7 @@ GPL19144=GPL1355
 GPL22499=GPL1355
 
 # GPL1261
+
 GPL1261=GPL1261
 GPL5008=GPL1261
 GPL5766=GPL1261
@@ -300,6 +314,7 @@ GPL13763=GPL1261
 GPL14657=GPL1261
 GPL14661=GPL1261
 GPL14757=GPL1261
+GPL14996=GPL1261
 GPL15041=GPL1261
 GPL15592=GPL1261
 GPL15722=GPL1261
@@ -316,9 +331,10 @@ GPL18615=GPL1261
 GPL18854=GPL1261
 GPL19559=GPL1261
 GPL20766=GPL1261
+GPL21076=GPL1261
 GPL22519=GPL1261
 GPL23097=GPL1261
-
+GPL26724=GPL1261
 
 # GPL570
 GPL570=GPL570
@@ -571,7 +587,6 @@ GPL8300=GPL8300
 GPL8321=GPL8321
 GPL16763=GPL8321
 GPL21092=GPL8321
-GPL7635=GPL8321
 GPL8059=GPL8321
 
 
@@ -678,4 +693,5 @@ GPL16985=GPL16985
 
 # RTA-1_0
 GPL22388=GPL22388
+
 

@@ -91,20 +91,21 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
             }
 
+            Taxon taxon = null;
+            if ( this.hasOption( 't' ) ) {
+                assert StringUtils.isNotBlank( this.taxonName );
+                taxon = taxonService.findByCommonName( this.taxonName );
+                if ( taxon == null ) {
+                    throw new IllegalArgumentException( "No taxon named " + taxonName );
+                }
+            }
+
             if ( this.hasOption( 'f' ) ) {
                 try (InputStream sequenceFileIs = FileTools
                         .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
 
                     if ( sequenceFileIs == null ) {
                         throw new IllegalArgumentException( "No file " + sequenceFile + " was readable" );
-                    }
-
-                    Taxon taxon = null;
-                    if ( this.hasOption( 't' ) ) {
-                        taxon = taxonService.findByCommonName( this.taxonName );
-                        if ( taxon == null ) {
-                            throw new IllegalArgumentException( "No taxon named " + taxonName );
-                        }
                     }
 
                     AbstractCLI.log.info( "Processing ArrayDesign..." );
@@ -119,14 +120,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                     if ( idFileIs == null ) {
                         throw new IllegalArgumentException( "No file " + idFile + " was readable" );
-                    }
-
-                    Taxon taxon = null;
-                    if ( this.hasOption( 't' ) ) {
-                        taxon = taxonService.findByCommonName( this.taxonName );
-                        if ( taxon == null ) {
-                            throw new IllegalArgumentException( "No taxon named " + taxonName );
-                        }
                     }
 
                     AbstractCLI.log.info( "Processing ArrayDesign..." );
@@ -186,7 +179,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         this.addOption( sequenceTypeOption );
 
         this.addOption(
-                Option.builder( "s" ).argName( "accession" ).desc( "A single accession to update" )
+                Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
                         .longOpt( "sequence" ).build() );
 
         Option forceOption = Option.builder( "force" )
@@ -197,7 +190,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         this.addOption( forceOption );
 
-        Option taxonOption = Option.builder( "t" ).argName( "taxon" ).desc(
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
                 "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .build();
 
@@ -225,6 +218,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
+            if ( StringUtils.isBlank( this.taxonName ) ) {
+                throw new IllegalArgumentException( "You must provide a taxon name when using the -t option" );
+            }
         }
 
         if ( this.hasOption( 'i' ) ) {
