@@ -985,11 +985,15 @@ public class OntologyServiceImpl implements OntologyService {
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
 
+                if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
+                    throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
+                }
+
                 GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
 
                 if ( g == null ) {
                     throw new IllegalStateException(
-                            "There is no gene with ID=" + sr.getResultId() + " (in response to search that yielded: " + sr + ")" );
+                            "There is no gene with ID=" + sr.getResultId() + " (in response to search for " + queryString + ")" );
                 }
 
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
