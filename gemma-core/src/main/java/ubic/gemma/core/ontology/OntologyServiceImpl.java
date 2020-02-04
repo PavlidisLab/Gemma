@@ -18,6 +18,20 @@
  */
 package ubic.gemma.core.ontology;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -25,11 +39,26 @@ import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.CellLineOntologyService;
+import ubic.basecode.ontology.providers.CellTypeOntologyService;
+import ubic.basecode.ontology.providers.ChebiOntologyService;
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.NIFSTDOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.SequenceOntologyService;
+import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -48,12 +77,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.*;
 
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
@@ -821,7 +844,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                                    .size() );
+                            .size() );
 
     }
 
@@ -984,16 +1007,18 @@ public class OntologyServiceImpl implements OntologyService {
 
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-
                 if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
                     throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
                 }
+
+                log.debug( sr );
 
                 GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
 
                 if ( g == null ) {
                     throw new IllegalStateException(
-                            "There is no gene with ID=" + sr.getResultId() + " (in response to search for " + queryString + ")" );
+                            "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
+                                    + queryString + ")" );
                 }
 
                 if ( OntologyServiceImpl.log.isDebugEnabled() )

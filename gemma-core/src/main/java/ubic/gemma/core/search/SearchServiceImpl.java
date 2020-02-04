@@ -1498,6 +1498,7 @@ public class SearchServiceImpl implements SearchService {
         } else {
             esr = new SearchResult( e, 1.0, text );
         }
+        log.debug(esr);
         return esr;
     }
 

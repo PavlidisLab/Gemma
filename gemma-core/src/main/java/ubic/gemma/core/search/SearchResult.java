@@ -145,6 +145,7 @@ public class SearchResult implements Comparable<SearchResult> {
 
     @Override
     public String toString() {
-        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
+        return this.getResultClass().getSimpleName() + "[ID=" + this.getResultId() + "] matched in: "
+                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }
