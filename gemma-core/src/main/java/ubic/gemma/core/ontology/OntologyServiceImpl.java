@@ -1017,6 +1017,7 @@ public class OntologyServiceImpl implements OntologyService {
                     log.warn(
                             "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
                                     + queryString + ") - index out of date?" );
+                    continue;
                 }
 
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
