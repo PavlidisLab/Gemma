@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -118,9 +119,9 @@ public class OntologyServiceImpl implements OntologyService {
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
     }
-    
+
     @Autowired
-    public void setGeneService(GeneService geneService) {
+    public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
 
@@ -884,14 +885,14 @@ public class OntologyServiceImpl implements OntologyService {
      * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
      * for non-ncbi genes.
      */
-    private Characteristic gene2Characteristic( Gene g ) {
+    private Characteristic gene2Characteristic( GeneValueObject g ) {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategory( "gene" );
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
-        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
+        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxonCommonName() + "]" + " " + g.getOfficialName() );
         vc.setDescription( g.toString() );
-        if ( g.getNcbiGeneId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
+        if ( g.getNcbiId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
         }
         return vc;
     }
@@ -984,7 +985,7 @@ public class OntologyServiceImpl implements OntologyService {
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
 
-                Gene g = this.geneService.load( sr.getResultId() );
+                GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
 
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
                     OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
