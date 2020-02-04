@@ -32,6 +32,7 @@ import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.util.Configuration;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchResult;
@@ -96,6 +97,7 @@ public class OntologyServiceImpl implements OntologyService {
     private CharacteristicService characteristicService;
     private SearchService searchService;
     private GeneOntologyService geneOntologyService;
+    private GeneService geneService;
 
     @Autowired
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
@@ -115,6 +117,11 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
+    }
+    
+    @Autowired
+    public void setGeneService(GeneService geneService) {
+        this.geneService = geneService;
     }
 
     @Override
@@ -145,7 +152,7 @@ public class OntologyServiceImpl implements OntologyService {
                 serv.startInitializationThread( false, false );
             }
         } else {
-            log.info("Auto-loading of ontologies suppressed");
+            log.info( "Auto-loading of ontologies suppressed" );
         }
 
     }
@@ -813,7 +820,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
@@ -972,11 +979,13 @@ public class OntologyServiceImpl implements OntologyService {
         ss.noSearches();
         ss.setTaxon( taxon );
         ss.setSearchGenes( true );
-        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true /* fill */, false );
+        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, false, false );
 
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-                Gene g = ( Gene ) sr.getResultObject();
+
+                Gene g = this.geneService.load( sr.getResultId() );
+
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
                     OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
                 searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
