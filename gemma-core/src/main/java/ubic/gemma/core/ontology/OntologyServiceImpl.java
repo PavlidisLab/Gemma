@@ -844,7 +844,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
@@ -1011,14 +1011,12 @@ public class OntologyServiceImpl implements OntologyService {
                     throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
                 }
 
-                log.debug( sr );
-
                 GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
 
                 if ( g == null ) {
-                    throw new IllegalStateException(
+                    log.warn(
                             "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
-                                    + queryString + ")" );
+                                    + queryString + ") - index out of date?" );
                 }
 
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
