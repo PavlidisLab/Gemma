@@ -987,6 +987,11 @@ public class OntologyServiceImpl implements OntologyService {
 
                 GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
 
+                if ( g == null ) {
+                    throw new IllegalStateException(
+                            "There is no gene with ID=" + sr.getResultId() + " (in response to search that yielded: " + sr + ")" );
+                }
+
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
                     OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
                 searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
