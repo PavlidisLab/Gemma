@@ -1498,6 +1498,7 @@ public class SearchServiceImpl implements SearchService {
         } else {
             esr = new SearchResult( e, 1.0, text );
         }
+        log.debug(esr);
         return esr;
     }
 
@@ -2098,10 +2099,7 @@ public class SearchServiceImpl implements SearchService {
              */
             r.setScore( score * SearchServiceImpl.COMPASS_HIT_SCORE_PENALTY_FACTOR );
 
-            this.getHighlightedText( hits, i, r );
-
-            if ( SearchServiceImpl.log.isDebugEnabled() )
-                SearchServiceImpl.log.debug( i + " " + hits.score( i ) + " " + r );
+            this.getHighlightedText( hits, i, r ); 
 
             results.add( r );
         }

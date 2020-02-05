@@ -18,6 +18,20 @@
  */
 package ubic.gemma.core.ontology;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -25,13 +39,29 @@ import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.CellLineOntologyService;
+import ubic.basecode.ontology.providers.CellTypeOntologyService;
+import ubic.basecode.ontology.providers.ChebiOntologyService;
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.NIFSTDOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.SequenceOntologyService;
+import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.util.Configuration;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchResult;
@@ -43,15 +73,10 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.*;
 
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
@@ -96,6 +121,7 @@ public class OntologyServiceImpl implements OntologyService {
     private CharacteristicService characteristicService;
     private SearchService searchService;
     private GeneOntologyService geneOntologyService;
+    private GeneService geneService;
 
     @Autowired
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
@@ -115,6 +141,11 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
+    }
+
+    @Autowired
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     @Override
@@ -145,7 +176,7 @@ public class OntologyServiceImpl implements OntologyService {
                 serv.startInitializationThread( false, false );
             }
         } else {
-            log.info("Auto-loading of ontologies suppressed");
+            log.info( "Auto-loading of ontologies suppressed" );
         }
 
     }
@@ -813,7 +844,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                            .size() );
+                                    .size() );
 
     }
 
@@ -877,14 +908,14 @@ public class OntologyServiceImpl implements OntologyService {
      * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
      * for non-ncbi genes.
      */
-    private Characteristic gene2Characteristic( Gene g ) {
+    private Characteristic gene2Characteristic( GeneValueObject g ) {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategory( "gene" );
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
-        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
+        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxonCommonName() + "]" + " " + g.getOfficialName() );
         vc.setDescription( g.toString() );
-        if ( g.getNcbiGeneId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
+        if ( g.getNcbiId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
         }
         return vc;
     }
@@ -972,11 +1003,23 @@ public class OntologyServiceImpl implements OntologyService {
         ss.noSearches();
         ss.setTaxon( taxon );
         ss.setSearchGenes( true );
-        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true /* fill */, false );
+        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, false, false );
 
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-                Gene g = ( Gene ) sr.getResultObject();
+                if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
+                    throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
+                }
+
+                GeneValueObject g = this.geneService.loadValueObjectById( sr.getResultId() );
+
+                if ( g == null ) {
+                    log.warn(
+                            "There is no gene with ID=" + sr.getResultId() + " (in response to search for "
+                                    + queryString + ") - index out of date?" );
+                    continue;
+                }
+
                 if ( OntologyServiceImpl.log.isDebugEnabled() )
                     OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
                 searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
