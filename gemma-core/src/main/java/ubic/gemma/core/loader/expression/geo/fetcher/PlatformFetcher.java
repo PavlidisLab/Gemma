@@ -31,7 +31,8 @@ public class PlatformFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + identifier + "/" + identifier + "_family" + GeoFetcher.SOFT_GZ;
+        String idroot = identifier.replaceFirst( "(GPL[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier + "_family.soft.gz";
     }
 
     @Override

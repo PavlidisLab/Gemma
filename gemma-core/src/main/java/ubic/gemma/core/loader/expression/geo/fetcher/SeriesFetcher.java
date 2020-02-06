@@ -24,9 +24,12 @@ public class SeriesFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + identifier + "/" + identifier + "_family.soft.gz";
+        // ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE56nnn/GSE56785/soft/GSE56785_family.soft.gz
+        // the GSE ID is changed to GSEnnn; if the GSE ID has more than three digits, then the previous digits are retained.
+        String idroot = identifier.replaceFirst( "(GSE[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier + "_family.soft.gz";
     }
-    
+
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );

@@ -67,8 +67,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     }
 
     /**
-     * @param identifier The url for the supplementary file.
-     * @return local files
+     * @param  identifier The url for the supplementary file.
+     * @return            local files
      */
     @Override
     public Collection<LocalFile> fetch( String identifier ) {
@@ -128,7 +128,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      */
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
+        String idroot = identifier.replaceFirst( "(GSE[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/suppl/" + identifier + "_RAW.tar";
     }
 
     @Override
