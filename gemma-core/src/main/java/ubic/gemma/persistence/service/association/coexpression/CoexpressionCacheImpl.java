@@ -48,10 +48,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCache {
 
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
+    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 500;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 604800;
-    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 1209600;
+    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 6048;
+    private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 9600;
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
     private static final Logger log = LoggerFactory.getLogger( CoexpressionCacheImpl.class );
     private final AtomicBoolean enabled = new AtomicBoolean(
