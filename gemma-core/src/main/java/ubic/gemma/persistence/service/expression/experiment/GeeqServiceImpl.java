@@ -22,7 +22,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Stopwatch;
 
 import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
@@ -30,6 +29,7 @@ import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -840,7 +840,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     private double getMedian( double[] arr ) {
-        return Descriptive.median( new DoubleArrayList( arr ) );
+        return DescriptiveWithMissing.median( new DoubleArrayList( arr ) );
     }
 
     private double getVariance( double[] arr ) {
