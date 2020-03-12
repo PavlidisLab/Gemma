@@ -97,6 +97,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         if ( targetArrayDesign != null )
             arrayDesignService.remove( targetArrayDesign );
+
     }
 
     @Test

@@ -121,7 +121,7 @@
             <column name="OTHER_ISSUES" not-null="false" unique="false" sql-type="VARCHAR(500)"/>
         </property>
 
-        <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
+ <!--      <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
                      fetch="select">
             <column name="LAST_RUN_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
@@ -136,6 +136,6 @@
         <many-to-one name="lastBatchConfoundChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
                      lazy="false" fetch="select">
             <column name="LAST_BATCH_CONFOUND_CHANGE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
-        </many-to-one>
+        </many-to-one> -->   
     </class>
 </hibernate-mapping>
