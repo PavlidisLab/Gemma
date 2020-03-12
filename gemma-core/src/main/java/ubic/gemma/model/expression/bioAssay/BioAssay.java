@@ -200,6 +200,9 @@ public class BioAssay extends Describable implements gemma.gsec.model.SecuredChi
     }
 
     public void setOriginalPlatform( ArrayDesign originalPlatform ) {
+        if ( this.originalPlatform != null && !( this.originalPlatform.equals( originalPlatform ) ) ) {
+            System.err.println( "Warning: setting 'original platform' to a different value?" );
+        }
         this.originalPlatform = originalPlatform;
     }
 

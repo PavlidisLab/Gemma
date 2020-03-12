@@ -71,7 +71,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * platforms; for that you have to run VectorMerging. For more nutty situations this will probably create a mess.
  *
  * @author pavlidis
- * @see VectorMergingService
+ * @see    VectorMergingService
  */
 @Component
 public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
@@ -115,10 +115,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * If you know the array designs are already in a merged state, you should use switchExperimentToMergedPlatform
      *
-     * @param ee ee
-     * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
-     *        changed for them.
-     * @return the switched experiment
+     * @param  ee          ee
+     * @param  arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
+     *                     changed for them.
+     * @return             the switched experiment
      */
     public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
@@ -210,8 +210,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Automatically identify an appropriate merged platform
      *
-     * @param expExp ee
-     * @return ee
+     * @param  expExp ee
+     * @return        ee
      */
     public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
@@ -224,8 +224,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         boolean multiPlatformPerSample = false;
         for ( BioAssay assay : ee.getBioAssays() ) {
 
-            // Switch the assay to use the desired platform
-            assay.setOriginalPlatform( assay.getArrayDesignUsed() );
+            // Switch the assay to use the desired platform. However, if this is a second switch, don't lose the original value
+            if ( assay.getOriginalPlatform() == null ) {
+                assay.setOriginalPlatform( assay.getArrayDesignUsed() );
+            }
             assay.setArrayDesignUsed( arrayDesign );
 
             /*
@@ -277,8 +279,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Find the bioassaydimension that covers all the biomaterials.
      * 
-     * @param ee
-     * @param unusedBADs
+     * @param  ee
+     * @param  unusedBADs
      * @return
      */
     private BioAssayDimension doMultiSample( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs ) {
@@ -331,9 +333,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * Determine whether the two bioassaydimensions are the same, based on the samples used. Note it is inefficient to
      * call this over and over but it's not a big deal so far.
      *
-     * @param currentOrder current order
-     * @param desiredOrder desired order
-     * @return boolean
+     * @param  currentOrder current order
+     * @param  desiredOrder desired order
+     * @return              boolean
      */
     private boolean equivalent( List<BioAssay> currentOrder, List<BioAssay> desiredOrder ) {
         if ( currentOrder.size() != desiredOrder.size() ) {
@@ -408,15 +410,19 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     }
 
     /**
-     * @param designElementMap Mapping of sequences to probes for the platform that is being switch from. This is used
-     *        to identify new candidates.
-     * @param usedDesignElements probes from the new design that have already been assigned to probes from the old
-     *        design. If things are done correctly (the old design was merged into the new) then there should be enough.
-     *        Map is of the new design probe to the old design probe it was used for (this is debugging information)
-     * @param vector vector
-     * @param bad BioAssayDimension to use, if necessary. If this is null or already the one used, it's ignored.
-     *        Otherwise the vector data will be rewritten to match it.
-     * @return true if a switch was made
+     * @param  designElementMap      Mapping of sequences to probes for the platform that is being switch from. This is
+     *                               used
+     *                               to identify new candidates.
+     * @param  usedDesignElements    probes from the new design that have already been assigned to probes from the old
+     *                               design. If things are done correctly (the old design was merged into the new) then
+     *                               there should be enough.
+     *                               Map is of the new design probe to the old design probe it was used for (this is
+     *                               debugging information)
+     * @param  vector                vector
+     * @param  bad                   BioAssayDimension to use, if necessary. If this is null or already the one used,
+     *                               it's ignored.
+     *                               Otherwise the vector data will be rewritten to match it.
+     * @return                       true if a switch was made
      * @throws IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
     private boolean processVector( Map<BioSequence, Collection<CompositeSequence>> designElementMap,
@@ -472,14 +478,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * Switch the vectors from one platform to the other, using the bioassaydimension passed if non-null
      * 
-     * @param ee
-     * @param arrayDesign
-     * @param designElementMap
-     * @param targetBioAssayDimension - if null we keep the current one; otherwise we rewrite data datavectors to use
-     *        the new one.
-     * @param usedDesignElements
-     * @param oldAd
-     * @return how many vectors were switched
+     * @param  ee
+     * @param  arrayDesign
+     * @param  designElementMap
+     * @param  targetBioAssayDimension - if null we keep the current one; otherwise we rewrite data datavectors to use
+     *                                 the new one.
+     * @param  usedDesignElements
+     * @param  oldAd
+     * @return                         how many vectors were switched
      */
     private int switchDataForPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> designElementMap, BioAssayDimension targetBioAssayDimension,
@@ -583,7 +589,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * samples run on multiple platforms.
      *
      * @param vector vector
-     * @param bad to be used as the replacement.
+     * @param bad    to be used as the replacement.
      */
     private void vectorReWrite( DesignElementDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();

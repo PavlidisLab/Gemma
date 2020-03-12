@@ -195,6 +195,16 @@ public class DataUpdater {
 
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
+       
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            /*
+             * FIXME: gracefully handle the case of multiplatform RNA-seq. We can switch the data set to the merged platform
+             * so it can be run through replaceData() without issues, while recording the originalPlatform.
+             * Then it will be switched to the 'generic' gene-level platform.
+             */
+        }
+
         ee = experimentService.thawLite( ee );
 
         ee = this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
@@ -209,7 +219,7 @@ public class DataUpdater {
         QuantitationType countqt = this.makeCountQt();
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
-    //    countEEMatrix = this.removeNoDataRows( countEEMatrix );
+        //    countEEMatrix = this.removeNoDataRows( countEEMatrix );
 
         QuantitationType log2cpmQt = this.makelog2cpmQt();
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
@@ -1124,18 +1134,18 @@ public class DataUpdater {
         return ee;
     }
 
-//    /**
-//     * For a RNA-seq count matrix, remove rows that have only zeros.
-//     * 
-//     * @param  countEEMatrix
-//     * @return               filtered matrix
-//     */
-//    private ExpressionDataDoubleMatrix removeNoDataRows( ExpressionDataDoubleMatrix countEEMatrix ) {
-//        RowLevelFilter filter = new RowLevelFilter();
-//        filter.setMethod( Method.MAX );
-//        filter.setLowCut( 0.0 ); // rows whose maximum value is greater than zero will be kept.
-//        return filter.filter( countEEMatrix );
-//    }
+    //    /**
+    //     * For a RNA-seq count matrix, remove rows that have only zeros.
+    //     * 
+    //     * @param  countEEMatrix
+    //     * @return               filtered matrix
+    //     */
+    //    private ExpressionDataDoubleMatrix removeNoDataRows( ExpressionDataDoubleMatrix countEEMatrix ) {
+    //        RowLevelFilter filter = new RowLevelFilter();
+    //        filter.setMethod( Method.MAX );
+    //        filter.setLowCut( 0.0 ); // rows whose maximum value is greater than zero will be kept.
+    //        return filter.filter( countEEMatrix );
+    //    }
 
     /**
      * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
@@ -1155,7 +1165,10 @@ public class DataUpdater {
             if ( toBeSwitched != null && !toBeSwitched.contains( ba ) )
                 continue;
 
-            ba.setOriginalPlatform( ba.getArrayDesignUsed() );
+            // don't clobber the original value if this is getting switched "again"
+            if ( ba.getOriginalPlatform() == null ) {
+                ba.setOriginalPlatform( ba.getArrayDesignUsed() );
+            }
             ba.setArrayDesignUsed( targetPlatform );
 
             i++;
