@@ -43,6 +43,7 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 /**
  * Encapsulates steps that are done to expression data sets after they are loaded, or which can be triggered by certain
@@ -105,6 +106,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private OutlierDetectionService outlierDetectionService;
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
+    private GeeqService geeqService;
 
     @Override
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
@@ -269,6 +272,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
         this.processForPca( ee );
+        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL); 
+        // FIXME OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
     }
 
     /**

@@ -1285,7 +1285,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
               padding: 2
           },
           items: [{
-              html: 'Diagnostics (PCA, MV, Sample Corr): '
+              html: 'Diagnostics (PCA, MV, Sample Corr, GEEQ): '
           }]
       });
       var id = ee.id;
