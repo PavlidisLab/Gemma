@@ -1247,10 +1247,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void remove( final ExpressionExperiment ee ) {
-
+      
         if ( ee == null )
             throw new IllegalArgumentException();
 
+        log.info( "Deleting " + ee.getShortName() );
+        
         Session session = this.getSessionFactory().getCurrentSession();
 
         try {
@@ -1261,6 +1263,8 @@ public class ExpressionExperimentDaoImpl
             session.flush();
             session.clear();
 
+            log.debug( " ... clearing curation details associations" );
+            
             // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but 
             // this may be okay now with updated config - see CurationDetails.hbm.xml)
             ee.getCurationDetails().setLastNeedsAttentionEvent( null );
@@ -1280,6 +1284,8 @@ public class ExpressionExperimentDaoImpl
             Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
             Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
 
+            log.debug( " ... clearing vectors" );
+            
             ee.getRawExpressionDataVectors().clear();
 
             ee.getProcessedExpressionDataVectors().clear();
@@ -1290,10 +1296,12 @@ public class ExpressionExperimentDaoImpl
             }
             ee.getOtherParts().clear();
 
+            log.debug( " ... calling update&flush" );
+            
             session.update( ee );
             session.flush();
 
-            AbstractDao.log.debug( "Removing " + dims.size() + " BioAssayDimensions ..." );
+            AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
             for ( BioAssayDimension dim : dims ) {
                 dim.getBioAssays().clear();
                 session.update( dim );
@@ -1302,7 +1310,7 @@ public class ExpressionExperimentDaoImpl
             //   dims.clear();
             session.flush();
 
-            AbstractDao.log.info( "Removing Bioassays and biomaterials ..." );
+            AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
 
             // keep to put back in the object.
             Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
@@ -1311,7 +1319,7 @@ public class ExpressionExperimentDaoImpl
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
 
-            AbstractDao.log.info( "Last bits ..." );
+            AbstractDao.log.debug( ".. Last bits ..." );
 
             // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
             for ( BioMaterial bm : bioMaterialsToDelete ) {
@@ -1322,6 +1330,8 @@ public class ExpressionExperimentDaoImpl
                 session.delete( qt );
             }
 
+            log.info( ".... flush and final deletion ..." );
+            
             session.flush();
             session.delete( ee );
 
