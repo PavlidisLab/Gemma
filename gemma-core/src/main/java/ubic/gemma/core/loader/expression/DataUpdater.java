@@ -558,10 +558,13 @@ public class DataUpdater {
 
         if ( qt.getIsPreferred() ) {
             for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
-                if ( existingQt.equals( qt ) ) continue;
                 if ( existingQt.getIsPreferred() ) {
-                    throw new IllegalArgumentException(
-                            "You cannot add 'preferred' data to an experiment that already has it. You should first make the existing data non-preferred." );
+                    // this is okay if there is not actually any data associated with the QT.
+                    if ( this.rawExpressionDataVectorService.findRawAndProcessed( existingQt ).size() > 0 ) {
+                        throw new IllegalArgumentException(
+                                "You cannot add 'preferred' data to an experiment that already has it. "
+                                        + "You should first delete the existing data or make it non-preferred." );
+                    }
                 }
             }
         }
@@ -637,8 +640,8 @@ public class DataUpdater {
         }
 
         QuantitationType qt = qts.iterator().next();
-        qt.setIsPreferred( true ); 
-        
+        qt.setIsPreferred( true );
+
         Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
