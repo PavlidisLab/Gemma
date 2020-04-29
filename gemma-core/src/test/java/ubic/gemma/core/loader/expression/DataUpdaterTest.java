@@ -211,7 +211,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     }
 
     /*
-     * More realistic test of RNA seq. GSE19166
+     * More realistic test of RNA seq. GSE19166. Test re-loading as well.
      */
     @Test
     public void testLoadRNASeqData() throws Exception {
@@ -238,32 +238,31 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
-
+        DoubleMatrix<String, String> countMatrix;
+        DoubleMatrix<String, String> rpkmMatrix;
         try (InputStream countData = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" )) {
-
-            DoubleMatrix<String, String> countMatrix = reader.read( countData );
-
-            DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
-
-            List<String> probeNames = countMatrix.getRowNames();
-
-            assertEquals( 199, probeNames.size() );
-
-            // we have to find the right generic platform to use.
-            targetArrayDesign = this
-                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
-
-            assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
-
-            // Main step.
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+            countMatrix = reader.read( countData );
+            rpkmMatrix = reader.read( rpkmData );
         }
 
+        List<String> probeNames = countMatrix.getRowNames();
+
+        assertEquals( 199, probeNames.size() );
+
+        // we have to find the right generic platform to use.
+        targetArrayDesign = this
+                .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+        assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
+
+        // Main step.
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        ee = experimentService.load( ee.getId() );
         ee = experimentService.thaw( ee );
 
         // should have: log2cpm, counts, rpkm, and counts-masked ('preferred')
@@ -301,6 +300,12 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         }
         assertTrue( !dataVectorService.getProcessedDataVectors( experimentService.load( ee.getId() ) ).isEmpty() );
+
+        // Call it again to test that we don't leak QTs
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        ee = experimentService.load( ee.getId() );
+        ee = this.experimentService.thawLite( ee );
+        assertEquals( 4, ee.getQuantitationTypes().size() );
 
     }
 

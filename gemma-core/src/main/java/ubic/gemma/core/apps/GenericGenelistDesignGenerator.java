@@ -183,8 +183,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     continue;
                 }
                 if ( existingSymbolMap.containsKey( gene.getNcbiGeneId().toString() ) ) {
-                    log.info( " ... gene exists on platform , will update if necessary" );
                     csForGene = existingSymbolMap.get( gene.getNcbiGeneId().toString() );
+                    log.info( " ... gene exists on platform, will update if necessary [" + csForGene + "]" );
                 }
             } else if ( useEnsemblIds ) {
                 if ( gene.getEnsemblId() == null ) {
@@ -192,8 +192,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     continue;
                 }
                 if ( existingSymbolMap.containsKey( gene.getEnsemblId() ) ) {
-                    log.info( " ... gene exists on platform , will update if necessary" );
                     csForGene = existingSymbolMap.get( gene.getEnsemblId() );
+                    log.info( " ... gene exists on platform , will update if necessary [" + csForGene + "]" );
                 }
             } else {
                 // the "by symbols" platform.

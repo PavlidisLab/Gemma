@@ -195,11 +195,11 @@ public class DataUpdater {
 
         targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
-       
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             /*
-             * FIXME: gracefully handle the case of multiplatform RNA-seq. We can switch the data set to the merged platform
+             * FIXME: gracefully handle the case of multiplatform RNA-seq. We can switch the data set to the merged
+             * platform
              * so it can be run through replaceData() without issues, while recording the originalPlatform.
              * Then it will be switched to the 'generic' gene-level platform.
              */
@@ -216,20 +216,35 @@ public class DataUpdater {
         assert !properCountMatrix.getColNames().isEmpty();
         assert !properCountMatrix.getRowNames().isEmpty();
 
-        QuantitationType countqt = this.makeCountQt();
-        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
+        Collection<QuantitationType> oldQts = ee.getQuantitationTypes();
 
         //    countEEMatrix = this.removeNoDataRows( countEEMatrix );
 
         QuantitationType log2cpmQt = this.makelog2cpmQt();
+        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
+            if ( oldqt.getName().equals( log2cpmQt.getName() ) ) {
+                log2cpmQt = oldqt;
+                break;
+            }
+        }
+
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                 .convertToLog2Cpm( properCountMatrix, librarySize );
 
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
-        // important: replaceData takes care of the platform switch if necessary; call first.
+        // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
         ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+
+        QuantitationType countqt = this.makeCountQt();
+        for ( QuantitationType oldqt : oldQts ) { // use old QT if possible 
+            if ( oldqt.getName().equals( countqt.getName() ) ) {
+                countqt = oldqt;
+                break;
+            }
+        }
+        ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
         ee = this.addData( ee, targetArrayDesign, countEEMatrix );
 
@@ -245,6 +260,13 @@ public class DataUpdater {
             assert !properRPKMMatrix.getRowNames().isEmpty();
 
             QuantitationType rpkmqt = this.makeRPKMQt();
+            for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
+                if ( oldqt.getName().equals( rpkmqt.getName() ) ) {
+                    rpkmqt = oldqt;
+                    break;
+                }
+            }
+
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
 
             this.addData( ee, targetArrayDesign, rpkmEEMatrix );
@@ -536,6 +558,7 @@ public class DataUpdater {
 
         if ( qt.getIsPreferred() ) {
             for ( QuantitationType existingQt : ee.getQuantitationTypes() ) {
+                if ( existingQt.equals( qt ) ) continue;
                 if ( existingQt.getIsPreferred() ) {
                     throw new IllegalArgumentException(
                             "You cannot add 'preferred' data to an experiment that already has it. You should first make the existing data non-preferred." );
@@ -614,10 +637,9 @@ public class DataUpdater {
         }
 
         QuantitationType qt = qts.iterator().next();
-        qt.setIsPreferred( true );
-
+        qt.setIsPreferred( true ); 
+        
         Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
-
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
         }
@@ -636,7 +658,6 @@ public class DataUpdater {
 
         this.audit( ee, "Data vector replacement for " + targetPlatform, true );
         experimentService.update( ee );
-
         ee = this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;

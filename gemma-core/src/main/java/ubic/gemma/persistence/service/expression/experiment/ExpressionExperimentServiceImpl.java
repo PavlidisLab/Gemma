@@ -187,11 +187,8 @@ public class ExpressionExperimentServiceImpl
         assert bad.getBioAssays().size() > 0;
 
         QuantitationType newQt = qts.iterator().next();
-
-        if ( newQt.getId() == null ) {
+        if ( newQt.getId() == null ) { // we try to re-use QTs, but if not:
             newQt = this.quantitationTypeDao.create( newQt );
-        } else {
-            AbstractService.log.warn( "Quantitation type already had an ID...:" + newQt );
         }
 
         /*
@@ -211,7 +208,9 @@ public class ExpressionExperimentServiceImpl
                 newVectors ); // FIXME should be able to just do ee.getRawExpressionDataVectors.addAll(newVectors)
 
         // this is a denormalization; easy to forget to update this.
-        ee.getQuantitationTypes().add( newQt );
+        if ( !ee.getQuantitationTypes().contains( newQt ) ) {
+            ee.getQuantitationTypes().add( newQt );
+        }
 
         AbstractService.log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
@@ -868,9 +867,10 @@ public class ExpressionExperimentServiceImpl
             qtsToRemove.remove( newVec.getQuantitationType() );
         }
 
-        for ( QuantitationType oldQt : qtsToRemove ) {
-            quantitationTypeDao.remove( oldQt );
-        }
+        // this actually causes more problems; if we are careful to re-use QTs when possible we can avoid cruft building up.
+        //        for ( QuantitationType oldQt : qtsToRemove ) {
+        //            quantitationTypeDao.remove( oldQt );
+        //        }
 
         // Split the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
         Map<BioAssayDimension, Collection<RawExpressionDataVector>> BADs = new HashMap<>();

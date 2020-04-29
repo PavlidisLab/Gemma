@@ -95,7 +95,14 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
         // assumption: all the same QT. Further assumption: bioassaydimension already persistent.
         QuantitationType qt = vecs.iterator().next().getQuantitationType();
-        qt = quantitationTypeService.create( qt );
+        if ( qt.getId() == null ) {
+            QuantitationType existingQt = quantitationTypeService.find( ee, qt );
+            if ( existingQt != null ) {
+                qt = existingQt;
+            } else {
+                qt = quantitationTypeService.create( qt );
+            }
+        }
         for ( ProcessedExpressionDataVector v : vecs ) {
             v.setQuantitationType( qt );
         }

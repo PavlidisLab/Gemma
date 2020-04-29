@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.List;
@@ -30,7 +31,7 @@ import java.util.List;
 /**
  * @author keshav
  * @author pavlidis
- * @see QuantitationTypeService
+ * @see    QuantitationTypeService
  */
 @Service
 public class QuantitationTypeServiceImpl extends AbstractVoEnabledService<QuantitationType, QuantitationTypeValueObject>
@@ -48,6 +49,12 @@ public class QuantitationTypeServiceImpl extends AbstractVoEnabledService<Quanti
     @Transactional(readOnly = true)
     public List<QuantitationType> loadByDescription( String description ) {
         return this.quantitationTypeDao.loadByDescription( description );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return this.quantitationTypeDao.find( ee, quantitationType );
     }
 
 }

@@ -872,6 +872,7 @@ public class ExpressionExperimentDaoImpl
         return results;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id ) {
 
@@ -881,7 +882,7 @@ public class ExpressionExperimentDaoImpl
                 + "inner join ee.rawExpressionDataVectors as vectors "
                 + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
+        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
                 .list();
 
         Map<QuantitationType, Integer> qtCounts = new HashMap<>();
