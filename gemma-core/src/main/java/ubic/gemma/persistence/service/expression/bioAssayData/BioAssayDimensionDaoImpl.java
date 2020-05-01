@@ -20,6 +20,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.*;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -75,7 +77,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
-
         if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
             queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
         }
@@ -91,7 +92,8 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
             names.add( bioAssay.getName() );
         }
         queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-
+        queryObject.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
+        queryObject.list();
         BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
         if ( candidate == null )
