@@ -92,8 +92,7 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
             names.add( bioAssay.getName() );
         }
         queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-        queryObject.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
-        queryObject.list();
+        queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
         BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
         if ( candidate == null )
