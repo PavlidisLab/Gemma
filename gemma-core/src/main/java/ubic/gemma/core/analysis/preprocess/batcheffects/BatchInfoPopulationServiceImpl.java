@@ -183,6 +183,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
 
         // Create batch factor.
+        this.removeExistingBatchFactor( ee );
         ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
 
         int numberOfBatches = 1;
