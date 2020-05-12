@@ -314,20 +314,13 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = css;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
             Collection<BibliographicReference> bss = bibliographicReferenceService
-                    .load( EntityUtils.getIds( results ) );
+                    .load( ids );
             bss = bibliographicReferenceService.thaw( bss );
             vos = bibliographicReferenceService.loadValueObjects( bss );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             Collection<Gene> genes = geneService.load( ids );
             genes = geneService.thawLite( genes );
             vos = geneService.loadValueObjects( genes );
-            //        } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
-            //            Collection<CharacteristicValueObject> cvos = new ArrayList<>();
-            //            for ( SearchResult sr : results ) {
-            //                Characteristic ch = ( Characteristic ) sr.getResultObject();
-            //                cvos.add( new CharacteristicValueObject( ch ) );
-            //            }
-            //            vos = cvos;
         } else if ( CharacteristicValueObject.class.isAssignableFrom( entityClass ) ) {
             // This is used for phenotypes.
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
@@ -342,12 +335,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = geneSetService.getValueObjects( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
             vos = experimentSetService.loadValueObjects( experimentSetService.load( ids ) );
-            //        } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
-            //            Collection<FactorValueValueObject> fvo = new ArrayList<>();
-            //            for ( SearchResult sr : results ) {
-            //                fvo.add( new FactorValueValueObject( ( FactorValue ) sr.getResultObject() ) );
-            //            }
-            //            vos = fvo;
         } else if ( BlacklistedEntity.class.isAssignableFrom( entityClass ) ) {
             Collection<BlacklistedValueObject> bvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
