@@ -38,10 +38,14 @@ public class Geeq implements Identifiable, Serializable {
 
     private static final long serialVersionUID = 4783171234360698630L;
     private Long id;
-    private AuditEvent lastRun;
-    private AuditEvent lastManualOverride;
-    private AuditEvent lastBatchEffectChange;
-    private AuditEvent lastBatchConfoundChange;
+    
+    /*
+     * FIXME: ideally we would get rid of these direct associations as these are events in the experiments audit trail.
+     */
+ //   private AuditEvent lastRun;
+//    private AuditEvent lastManualOverride;
+//    private AuditEvent lastBatchEffectChange;
+//    private AuditEvent lastBatchConfoundChange;
 
     private double detectedQualityScore;
     private double manualQualityScore;
@@ -493,37 +497,37 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
     }
 
-    public AuditEvent getLastRun() {
-        return lastRun;
-    }
+//    public AuditEvent getLastRun() {
+//        return lastRun;
+//    }
+//
+//    public void setLastRun( AuditEvent lastRun ) {
+//        this.lastRun = lastRun;
+//    }
 
-    public void setLastRun( AuditEvent lastRun ) {
-        this.lastRun = lastRun;
-    }
+//    public AuditEvent getLastManualOverride() {
+//        return lastManualOverride;
+//    }
+//
+//    public void setLastManualOverride( AuditEvent lastManualOverride ) {
+//        this.lastManualOverride = lastManualOverride;
+//    }
+//
+//    public AuditEvent getLastBatchEffectChange() {
+//        return lastBatchEffectChange;
+//    }
+//
+//    public void setLastBatchEffectChange( AuditEvent lastBatchEffectChange ) {
+//        this.lastBatchEffectChange = lastBatchEffectChange;
+//    }
 
-    public AuditEvent getLastManualOverride() {
-        return lastManualOverride;
-    }
-
-    public void setLastManualOverride( AuditEvent lastManualOverride ) {
-        this.lastManualOverride = lastManualOverride;
-    }
-
-    public AuditEvent getLastBatchEffectChange() {
-        return lastBatchEffectChange;
-    }
-
-    public void setLastBatchEffectChange( AuditEvent lastBatchEffectChange ) {
-        this.lastBatchEffectChange = lastBatchEffectChange;
-    }
-
-    public AuditEvent getLastBatchConfoundChange() {
-        return lastBatchConfoundChange;
-    }
-
-    public void setLastBatchConfoundChange( AuditEvent lastBatchConfoundChange ) {
-        this.lastBatchConfoundChange = lastBatchConfoundChange;
-    }
+//    public AuditEvent getLastBatchConfoundChange() {
+//        return lastBatchConfoundChange;
+//    }
+//
+//    public void setLastBatchConfoundChange( AuditEvent lastBatchConfoundChange ) {
+//        this.lastBatchConfoundChange = lastBatchConfoundChange;
+//    }
 
     public boolean isNoVectors() {
         return noVectors;

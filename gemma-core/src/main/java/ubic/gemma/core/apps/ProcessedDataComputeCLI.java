@@ -67,7 +67,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
                 .build();
         this.addOption( "diagupdate", 
-                "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation; may be combined with other options)" );
+                "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         this.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
 
         this.addOption( outputFileOption );

@@ -34,7 +34,8 @@ public class DatasetFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + identifier + SOFT_GZ;
+        String idroot = identifier.replaceFirst( "(GDS[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier  + SOFT_GZ;
     }
 
     @Override

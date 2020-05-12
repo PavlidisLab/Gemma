@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -30,6 +31,17 @@ import java.util.List;
  * @author kelsey
  */
 public interface QuantitationTypeService extends BaseVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
+
+    /**
+     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
+     * there isn't one.
+     * 
+     * @param  ee
+     * @param  quantitationType
+     * @return                  found QT
+     */
+    @Secured({ "GROUP_USER" })
+    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })

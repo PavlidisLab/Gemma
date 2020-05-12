@@ -22,7 +22,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Stopwatch;
 
 import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
@@ -30,6 +29,7 @@ import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -130,63 +130,63 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
 
-        // Update manual quality score value
-        if ( gq.getManualQualityScore() != gqVo.getManualQualityScore() ) {
-            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score value changed",
-                    this.fromTo( gq.getManualQualityScore(), gqVo.getManualQualityScore() ) ) );
-            gq.setManualQualityScore( gqVo.getManualQualityScore() );
-        }
-        // Update manual quality score override
-        if ( gq.isManualQualityOverride() != gqVo.isManualQualityOverride() ) {
-            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score override changed",
-                    this.fromTo( gq.isManualQualityOverride(), gqVo.isManualQualityOverride() ) ) );
-            gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
-        }
+//        // Update manual quality score value
+//        if ( gq.getManualQualityScore() != gqVo.getManualQualityScore() ) {
+//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score value changed",
+//                    this.fromTo( gq.getManualQualityScore(), gqVo.getManualQualityScore() ) ) );
+//            gq.setManualQualityScore( gqVo.getManualQualityScore() );
+//        }
+//        // Update manual quality score override
+//        if ( gq.isManualQualityOverride() != gqVo.isManualQualityOverride() ) {
+//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score override changed",
+//                    this.fromTo( gq.isManualQualityOverride(), gqVo.isManualQualityOverride() ) ) );
+//            gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
+//        }
+//
+//        // Update manual suitability score value
+//        if ( gq.getManualSuitabilityScore() != gqVo.getManualSuitabilityScore() ) {
+//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score value changed",
+//                    this.fromTo( gq.getManualSuitabilityScore(), gqVo.getManualSuitabilityScore() ) ) );
+//            gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
+//        }
+//        // Update manual suitability score override
+//        if ( gq.isManualSuitabilityOverride() != gqVo.isManualSuitabilityOverride() ) {
+//            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score override changed",
+//                    this.fromTo( gq.isManualSuitabilityOverride(), gqVo.isManualSuitabilityOverride() ) ) );
+//            gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
+//        }
+//
+//        // Update manual batch confound value
+//        if ( gq.isManualHasBatchConfound() != gqVo.isManualHasBatchConfound() ) {
+//            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound value changed",
+//                    this.fromTo( gq.isManualHasBatchConfound(), gqVo.isManualHasBatchConfound() ) ) );
+//            gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
+//        }
+//        // Update manual batch confound override
+//        if ( gq.isManualBatchConfoundActive() != gqVo.isManualBatchConfoundActive() ) {
+//            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound override changed",
+//                    this.fromTo( gq.isManualBatchConfoundActive(), gqVo.isManualBatchConfoundActive() ) ) );
+//            gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
+//        }
 
-        // Update manual suitability score value
-        if ( gq.getManualSuitabilityScore() != gqVo.getManualSuitabilityScore() ) {
-            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score value changed",
-                    this.fromTo( gq.getManualSuitabilityScore(), gqVo.getManualSuitabilityScore() ) ) );
-            gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
-        }
-        // Update manual suitability score override
-        if ( gq.isManualSuitabilityOverride() != gqVo.isManualSuitabilityOverride() ) {
-            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score override changed",
-                    this.fromTo( gq.isManualSuitabilityOverride(), gqVo.isManualSuitabilityOverride() ) ) );
-            gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
-        }
-
-        // Update manual batch confound value
-        if ( gq.isManualHasBatchConfound() != gqVo.isManualHasBatchConfound() ) {
-            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound value changed",
-                    this.fromTo( gq.isManualHasBatchConfound(), gqVo.isManualHasBatchConfound() ) ) );
-            gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
-        }
-        // Update manual batch confound override
-        if ( gq.isManualBatchConfoundActive() != gqVo.isManualBatchConfoundActive() ) {
-            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound override changed",
-                    this.fromTo( gq.isManualBatchConfoundActive(), gqVo.isManualBatchConfoundActive() ) ) );
-            gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
-        }
-
-        // Update manual batch effect strong value
-        if ( gq.isManualHasStrongBatchEffect() != gqVo.isManualHasStrongBatchEffect() ) {
-            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual strong batch effect value changed",
-                    this.fromTo( gq.isManualHasStrongBatchEffect(), gqVo.isManualHasStrongBatchEffect() ) ) );
-            gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
-        }
-        // Update manual batch effect no value
-        if ( gq.isManualHasNoBatchEffect() != gqVo.isManualHasNoBatchEffect() ) {
-            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual no batch effect value changed",
-                    this.fromTo( gq.isManualHasNoBatchEffect(), gqVo.isManualHasNoBatchEffect() ) ) );
-            gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
-        }
-        // Update manual batch effect override
-        if ( gq.isManualBatchEffectActive() != gqVo.isManualBatchEffectActive() ) {
-            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual batch effect override changed",
-                    this.fromTo( gq.isManualBatchEffectActive(), gqVo.isManualBatchEffectActive() ) ) );
-            gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
-        }
+//        // Update manual batch effect strong value
+//        if ( gq.isManualHasStrongBatchEffect() != gqVo.isManualHasStrongBatchEffect() ) {
+//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual strong batch effect value changed",
+//                    this.fromTo( gq.isManualHasStrongBatchEffect(), gqVo.isManualHasStrongBatchEffect() ) ) );
+//            gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
+//        }
+//        // Update manual batch effect no value
+//        if ( gq.isManualHasNoBatchEffect() != gqVo.isManualHasNoBatchEffect() ) {
+//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual no batch effect value changed",
+//                    this.fromTo( gq.isManualHasNoBatchEffect(), gqVo.isManualHasNoBatchEffect() ) ) );
+//            gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
+//        }
+//        // Update manual batch effect override
+//        if ( gq.isManualBatchEffectActive() != gqVo.isManualBatchEffectActive() ) {
+//            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual batch effect override changed",
+//                    this.fromTo( gq.isManualBatchEffectActive(), gqVo.isManualBatchEffectActive() ) ) );
+//            gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
+//        }
 
         this.update( gq );
         Log.info( this.getClass(), GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for ee id " + eeId );
@@ -263,9 +263,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         }
 
         stopwatch.stop();
-        gq.setLastRun( this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
+        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
                 "Took " + stopwatch.elapsedMillis() + "ms.\nUnexpected problems encountered: \n" + gq
-                        .getOtherIssues() ) );
+                        .getOtherIssues() )  ;
 
         this.update( gq );
         Log.info( this.getClass(),
@@ -840,7 +840,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     private double getMedian( double[] arr ) {
-        return Descriptive.median( new DoubleArrayList( arr ) );
+        return DescriptiveWithMissing.median( new DoubleArrayList( arr ) );
     }
 
     private double getVariance( double[] arr ) {

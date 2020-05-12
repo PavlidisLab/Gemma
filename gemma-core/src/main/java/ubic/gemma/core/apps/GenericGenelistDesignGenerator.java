@@ -102,8 +102,9 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         ExternalDatabase genbank = externalDatabaseService.findByName( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.findByName( "Ensembl" );
-        assert genbank != null;
-        assert ensembl != null;
+        if ( genbank == null || ensembl == null ) {
+            throw new IllegalStateException( "A record for Genbank and/or Ensembl couldn't be found" );
+        }
 
         /*
          * Create the stub array design for the organism. The name and etc. are generated automatically. If the design
@@ -164,9 +165,11 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
             Collection<GeneProduct> products = gene.getProducts();
 
+            log.info( "> Processing: " + gene.getOfficialSymbol() );
+
             if ( products.isEmpty() ) {
                 numWithNoTranscript++;
-                AbstractCLI.log.debug( "No transcript for " + gene );
+                AbstractCLI.log.info( "No transcript for " + gene );
                 continue;
             }
 
@@ -181,6 +184,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 }
                 if ( existingSymbolMap.containsKey( gene.getNcbiGeneId().toString() ) ) {
                     csForGene = existingSymbolMap.get( gene.getNcbiGeneId().toString() );
+                    log.info( " ... gene exists on platform, will update if necessary [" + csForGene + "]" );
                 }
             } else if ( useEnsemblIds ) {
                 if ( gene.getEnsemblId() == null ) {
@@ -189,8 +193,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 }
                 if ( existingSymbolMap.containsKey( gene.getEnsemblId() ) ) {
                     csForGene = existingSymbolMap.get( gene.getEnsemblId() );
+                    log.info( " ... gene exists on platform , will update if necessary [" + csForGene + "]" );
                 }
             } else {
+                // the "by symbols" platform.
 
                 /*
                  * detect when the symbol has changed
@@ -265,9 +271,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     continue;
                 }
 
-                if ( csForGene == null ) {
-                    if ( AbstractCLI.log.isDebugEnabled() )
-                        AbstractCLI.log.debug( "New element " + " with " + bioSequence + " for " + gene );
+                if ( csForGene == null ) { // i.e. it is new
+                    log.info( "New element " + " with sequence used:" + bioSequence.getName() + " for " + gene.getOfficialSymbol() );
                     csForGene = CompositeSequence.Factory.newInstance();
                     if ( useNCBIIds ) {
                         csForGene.setName( gene.getNcbiGeneId().toString() );
@@ -284,7 +289,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;
-                } else {
+                } else { // i.e. it is already in the system; just updating
                     boolean changed = false;
                     assert csForGene.getId() != null : "No id for " + csForGene + " for " + gene;
 
@@ -340,8 +345,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                                 + " genes had no transcript and were skipped." );
         }
 
-        AbstractCLI.log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
-                + " 'probes' associated with genes." );
+        AbstractCLI.log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
+                + " 'elements' associated with genes." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),

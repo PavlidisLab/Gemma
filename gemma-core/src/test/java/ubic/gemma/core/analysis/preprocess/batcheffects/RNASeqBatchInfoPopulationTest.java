@@ -130,6 +130,12 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, ef.getFactorValues().size() );
 
         assertTrue( auditService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
+
+        // now repeat it to make sure we don't end up with duplicate factors
+        success = batchInfoPopulationService.fillBatchInformation( ee, true );
+        ee = eeService.thawLite( ee );
+        experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        assertEquals( 1, experimentalFactors.size() );
     }
 
     @Test

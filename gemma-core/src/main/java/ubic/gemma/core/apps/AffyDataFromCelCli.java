@@ -79,9 +79,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        super.addOption( AffyDataFromCelCli.APT_FILE_OPT,
+        super.addOption( AffyDataFromCelCli.APT_FILE_OPT, null,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
-                        + "ensure you used the right official CDF/MPS configuration" );
+                        + "ensure you used the right official CDF/MPS configuration",
+                "path" );
         super.addForceOption();
 
     }

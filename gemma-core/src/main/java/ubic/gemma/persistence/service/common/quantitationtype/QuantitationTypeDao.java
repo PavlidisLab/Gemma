@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.List;
@@ -30,5 +31,15 @@ import java.util.List;
 public interface QuantitationTypeDao extends BaseVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
 
     List<QuantitationType> loadByDescription( String description );
+
+    /**
+     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
+     * there isn't one.
+     * 
+     * @param  ee
+     * @param  quantitationType
+     * @return                  found QT
+     */
+    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
 }

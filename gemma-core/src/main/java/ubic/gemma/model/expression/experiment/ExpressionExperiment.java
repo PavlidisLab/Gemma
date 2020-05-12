@@ -196,11 +196,11 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.accession = accession;
     }
 
-    public void setBatchConfound( String batchConfound ) {
+    public void setBatchConfound( String batchConfound ) { // FIXME don't use a string for this
         this.batchConfound = batchConfound;
     }
 
-    public void setBatchEffect( String batchEffect ) {
+    public void setBatchEffect( String batchEffect ) { // FIXME don't use a string for this
         this.batchEffect = batchEffect;
     }
 

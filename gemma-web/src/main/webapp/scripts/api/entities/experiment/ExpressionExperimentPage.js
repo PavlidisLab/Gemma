@@ -86,7 +86,12 @@ function getBatchInfoBadges(ee) {
         if (ee.batchEffect === "Data has been batch-corrected") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
             result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffect)
         }  else if (ee.batchEffect === "No batch effect was detected" ) {
+           // if there is also a batch confound, don't show this.
+           if (ee.batchConfound !== null && ee.batchConfound !== "") {
+              // no-op.
+           } else {
             result = result + getStatusBadge('cogs', 'green', 'no batch effect', "Batch information is present, but no substantial effect was detected, so the data are not corrected.")
+           }
         } else {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
         }
