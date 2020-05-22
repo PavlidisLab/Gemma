@@ -1540,7 +1540,8 @@ public class GeoFamilyParser implements Parser<Object> {
             sample.setLibStrategy( "MeDIP-Seq" );
         } else if ( string.equalsIgnoreCase( "MNase-Seq" ) ) {
             sample.setLibStrategy( "MNase-Seq" );
-
+        } else if (string.equalsIgnoreCase( "ChIA-PET" )) {
+            sample.setLibSource( "ChIA-PET" );
         } else {
             throw new IllegalArgumentException( "Unknown library source: " + string );
         }
