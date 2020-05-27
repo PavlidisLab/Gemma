@@ -260,7 +260,7 @@ public interface ExpressionExperimentService
      * Checks the experiment for a batch confound.
      *
      * @param  ee the experiment to check.
-     * @return    a string describing the batch confound, or null if there was no batch confound.
+     * @return    a string describing the batch confound, or null if there was no batch confound.[FIXME: String return value is unsafe]
      */
     String getBatchConfound( ExpressionExperiment ee );
 

@@ -146,7 +146,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
-    /* used for situations where we don't need to recreate the processed data e.g. when the experimental design is updated */
+    /* public for situations where we don't need to recreate the processed data e.g. when the experimental design is updated */
     @Override
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
