@@ -61,9 +61,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     public boolean checkCorrectability( ExpressionExperiment ee, boolean force ) {
 
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsBatchCorrected() && !force ) {
+            if ( qt.getIsBatchCorrected() && !force ) { // this avoids batch correcting when we don't need to, but might be the wrong place for this check
                 ExpressionExperimentBatchCorrectionServiceImpl.log
-                        .warn( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
+                        .warn( "Experiment already has a batch-corrected quantitation type (use 'force' to override): " + ee + ": " + qt );
                 return false;
             }
         }
@@ -75,11 +75,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         }
 
         String bConf = expressionExperimentService.getBatchConfound( ee );
-        if ( bConf != null && !force ) {
+        if ( bConf != null ) { // we used to let force override this, but that behavior is undesirable: if there is a confound, we don't batch correct
             ExpressionExperimentBatchCorrectionServiceImpl.log
-                    .warn( "Experiment can not be batch corrected: " + bConf );
-            ExpressionExperimentBatchCorrectionServiceImpl.log
-                    .info( "To force batch-correction of a confounded experiment, use the force option (note, that this option also allows outliers while batch correcting)." );
+                    .warn( "Experiment cannot be batch corrected due to a confound: " + bConf );
             return false;
         }
 
