@@ -120,6 +120,12 @@ import ubic.gemma.persistence.util.Settings;
 public class SearchServiceImpl implements SearchService {
 
     /**
+     * Text displayed when we fail to retrieve the information on why a hit was retrieved. This was "[Matching text not
+     * available" but we decided that was confusing.
+     */
+    private static final String HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE = "";
+
+    /**
      * Penalty applied to all 'index' hits.
      */
     private static final double COMPASS_HIT_SCORE_PENALTY_FACTOR = 0.5;
@@ -136,7 +142,7 @@ public class SearchServiceImpl implements SearchService {
     /*
      * Setting this too high is unnecessary as characteristic searches are more accurate (for experiments)
      */
-    private static final int MAX_LUCENE_HITS = 300; 
+    private static final int MAX_LUCENE_HITS = 300;
 
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
@@ -1498,7 +1504,7 @@ public class SearchServiceImpl implements SearchService {
         } else {
             esr = new SearchResult( e, 1.0, text );
         }
-        log.debug(esr);
+        log.debug( esr );
         return esr;
     }
 
@@ -1534,7 +1540,7 @@ public class SearchServiceImpl implements SearchService {
      * @return          {@link Collection} of SearchResults
      */
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
-        
+
         StopWatch totalTime = this.startTiming();
         StopWatch watch = this.startTiming();
 
@@ -1611,37 +1617,40 @@ public class SearchServiceImpl implements SearchService {
             watch.start();
         }
 
-        /* this should be unnecessary we we hit bibrefs in our regular lucene-index search. Also as written, this is very slow */
-//        // possibly keep looking
-//        if ( results.size() == 0 ) { // 
-//            watch.reset();
-//            watch.start();
-//            log.info( "Searching for experiments via publications..." );
-//            List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
-//                    .search( settings.getQuery() );
-//
-//            if ( !bibrefs.isEmpty() ) {
-//                log.info( "... found " + bibrefs.size() + " papers matching " + settings.getQuery() );
-////                Collection<BibliographicReference> refs = new HashSet<>();
-////                // this seems like an extra 
-////                Collection<SearchResult> r = this.compassBibliographicReferenceSearch( settings );
-////                for ( SearchResult searchResult : r ) {
-////                    refs.add( ( BibliographicReference ) searchResult.getResultObject() );
-////                }
-//
-//                Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
-//                        .getRelatedExperiments( bibrefs );
-//                for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments
-//                        .entrySet() ) {
-//                    results.addAll( this.dbHitsToSearchResult( e.getValue(), null ) );
-//                }
-//                if ( watch.getTime() > 500 )
-//                    SearchServiceImpl.log
-//                            .info( "... Publication search for took " + watch
-//                                    .getTime() + " ms, " + results.size() + " hits" );
-//             
-//            }
-//        }
+        /*
+         * this should be unnecessary we we hit bibrefs in our regular lucene-index search. Also as written, this is
+         * very slow
+         */
+        //        // possibly keep looking
+        //        if ( results.size() == 0 ) { // 
+        //            watch.reset();
+        //            watch.start();
+        //            log.info( "Searching for experiments via publications..." );
+        //            List<BibliographicReferenceValueObject> bibrefs = bibliographicReferenceService
+        //                    .search( settings.getQuery() );
+        //
+        //            if ( !bibrefs.isEmpty() ) {
+        //                log.info( "... found " + bibrefs.size() + " papers matching " + settings.getQuery() );
+        ////                Collection<BibliographicReference> refs = new HashSet<>();
+        ////                // this seems like an extra 
+        ////                Collection<SearchResult> r = this.compassBibliographicReferenceSearch( settings );
+        ////                for ( SearchResult searchResult : r ) {
+        ////                    refs.add( ( BibliographicReference ) searchResult.getResultObject() );
+        ////                }
+        //
+        //                Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
+        //                        .getRelatedExperiments( bibrefs );
+        //                for ( Entry<BibliographicReference, Collection<ExpressionExperiment>> e : relatedExperiments
+        //                        .entrySet() ) {
+        //                    results.addAll( this.dbHitsToSearchResult( e.getValue(), null ) );
+        //                }
+        //                if ( watch.getTime() > 500 )
+        //                    SearchServiceImpl.log
+        //                            .info( "... Publication search for took " + watch
+        //                                    .getTime() + " ms, " + results.size() + " hits" );
+        //             
+        //            }
+        //        }
 
         /*
          * Find data sets that match a platform. This will probably only be trigged if the search is for a GPL id. NOTE:
@@ -1671,15 +1680,14 @@ public class SearchServiceImpl implements SearchService {
                 return results;
             }
         }
-        
+
         if ( totalTime.getTime() > 500 )
             SearchServiceImpl.log
                     .info( ">>>>>>> Expression Experiment search for '" + settings + "' took " + watch.getTime()
                             + " ms, " + results.size() + " hits." );
-        
+
         return results;
-        
-     
+
     }
 
     /**
@@ -2056,7 +2064,7 @@ public class SearchServiceImpl implements SearchService {
         if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
             r.setHighlightedText( highlightedText.getHighlightedText() );
         } else {
-            r.setHighlightedText( "[Matching text not available]" );
+            r.setHighlightedText( HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE );
         }
     }
 
@@ -2099,7 +2107,7 @@ public class SearchServiceImpl implements SearchService {
              */
             r.setScore( score * SearchServiceImpl.COMPASS_HIT_SCORE_PENALTY_FACTOR );
 
-            this.getHighlightedText( hits, i, r ); 
+            this.getHighlightedText( hits, i, r );
 
             results.add( r );
         }
