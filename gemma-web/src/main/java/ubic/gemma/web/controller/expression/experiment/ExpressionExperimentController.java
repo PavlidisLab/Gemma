@@ -291,7 +291,7 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * AJAX TODO --- include a search of subsets. NOTE: only used via DataSetSearchAndGrabToolbar -> DatasetGroupEditor?
+     * AJAX TODO --- include a search of subsets. NOTE: only used via DataSetSearchAndGrabToolbar -{@literal >} DatasetGroupEditor?
      *
      * @param  query   search string
      * @param  taxonId (if null, all taxa are searched)

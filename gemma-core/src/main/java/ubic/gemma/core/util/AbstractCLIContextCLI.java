@@ -109,8 +109,7 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
     /**
      * @param  name               of the array design to find.
      * @param  arrayDesignService the arrayDesignService to use for the AD retrieval
-     * @return                    an array design, if found. Bails otherwise with
-     *                            {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}
+     * @return                    an array design, if found. Bails otherwise with an error exit code
      */
     protected ArrayDesign locateArrayDesign( String name, ArrayDesignService arrayDesignService ) {
 

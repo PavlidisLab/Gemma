@@ -57,13 +57,14 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are
      * avoided (and will thus be associated via the first uri that resulted in a hit).
      * 
-     * @param  uriStrings uri strings
-     * @param  t          taxon to limit to; null for no limit
-     * @param  limit      try to limit to this many results. No guarantee the limit won't be exceeded. <=0 == no limit.
-     * @return            map of classes (Experiment, FactorValue, BioMaterial) to the URI to the IDs of experiments
-     *                    which have an
-     *                    associated characteristic using the given uriString. The class lets us track where the
-     *                    annotation was.
+     * @param  uriString uri strings
+     * @param  t         taxon to limit to; null for no limit
+     * @param  limit     try to limit to this many results. No guarantee the limit won't be exceeded. Negative values
+     *                   implies no limit.
+     * @return           map of classes (Experiment, FactorValue, BioMaterial) to the URI to the IDs of experiments
+     *                   which have an
+     *                   associated characteristic using the given uriString. The class lets us track where the
+     *                   annotation was.
      */
     Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriString, Taxon t, int limit );
 

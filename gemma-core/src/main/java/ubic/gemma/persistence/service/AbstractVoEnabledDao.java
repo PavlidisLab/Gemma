@@ -75,7 +75,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     }
 
     /**
-     * Create a hql join clause from ACL OI -> ACL entries and ACL OI -> ACL SID.
+     * Create a hql join clause from ACL OI -{@literal >} ACL entries and ACL OI -{@literal >} ACL SID.
      * 
      * @param  alias   placeholder for the identifier e.g. "ee.id"
      * @param  aoiType placeholder for the type e.g. "ubic.gemma.model.expression.experiment.ExpressionExperiment"

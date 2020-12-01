@@ -128,7 +128,7 @@ public interface ExpressionExperimentDao
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param  orderBy    the field to order the results by.
+     * @param  orderField the field to order the results by.
      * @param  descending whether the ordering by the orderField should be descending.
      * @param  ids        only list specific ids.
      * @param  taxon      only list experiments within specific taxon.

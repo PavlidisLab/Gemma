@@ -263,7 +263,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * This is a denormalization to speed up queries. For the definitive taxon, look at the bioAssays -> sampleUsed -> sourceTaxon
+     * This is a denormalization to speed up queries. For the definitive taxon, look at the bioAssays -{@literal >}
+     * sampleUsed -{@literal >} sourceTaxon
      *
      * @return the associated taxon
      */

@@ -131,8 +131,8 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     /**
      * @param  shortName short name of the experiment to find.
-     * @return           experiment with the given short name, if it exists. Bails otherwise with
-     *                   {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
+     * @return           experiment with the given short name, if it exists. Bails otherwise
+     *                   with an error exit code
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
