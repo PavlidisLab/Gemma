@@ -44,6 +44,11 @@
 			<name>Manuel Belmadani</name>
 			<organization>University of British Columbia</organization>
 		</developer>
+		<developer>
+			<name>Guillaume Poirier-Morency</name>
+			<email>poirigui@msl.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
