@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
 	<version>1.25.21-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
-	<description>
-        The Gemma Project for meta-analysis of genomics data
-    </description>
+	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>http://gemma.msl.ubc.ca</url>
 	<organization>
 		<name>Pavlidis lab, Michael Smith Laboratories and Department of Psychiatry, University of British Columbia</name>
@@ -22,9 +20,7 @@
 	<packaging>pom</packaging>
 	<issueManagement>
 		<system>GitHub</system>
-		<url>
-            https://github.com/PavlidisLab/Gemma/issues
-        </url>
+		<url>https://github.com/PavlidisLab/Gemma/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
@@ -44,19 +40,19 @@
 			<email>paul@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
-	  <developer>
-	    <name>Manuel Belmadani</name>
-	    			<organization>University of British Columbia</organization>
-	       </developer>
+		<developer>
+			<name>Manuel Belmadani</name>
+			<organization>University of British Columbia</organization>
+		</developer>
 	</developers>
 	<contributors>
-          <contributor>
-	    <name>Nathaniel Lim</name>
-	  </contributor>
-	       <contributor>
-	             <name>Stepan Tesar</name>
-	       </contributor>
-	       	<contributor>
+		<contributor>
+			<name>Nathaniel Lim</name>
+		</contributor>
+		<contributor>
+			<name>Stepan Tesar</name>
+		</contributor>
+		<contributor>
 			<name>Matthew Jacobson</name>
 		</contributor>
 		<contributor>
@@ -374,8 +370,8 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-               https://maven2.pavlab.msl.ubc.ca/
-            </url>
+				https://maven2.pavlab.msl.ubc.ca/
+			</url>
 			<layout>default</layout>
 			<snapshots>
 				<enabled>true</enabled>
@@ -446,8 +442,8 @@
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
-                https://maven2.pavlab.msl.ubc.ca/s
-            </url>
+				https://maven2.pavlab.msl.ubc.ca/s
+			</url>
 			<layout>default</layout>
 			<snapshots>
 				<enabled>true</enabled>
