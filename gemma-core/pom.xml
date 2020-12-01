@@ -291,6 +291,11 @@
             <version>1.4.7</version>
         </dependency>
         <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity</artifactId>
             <version>1.7</version>
@@ -444,13 +449,6 @@
             <version>4.13.1</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>limpopo-repo</id>
-            <name>Limpopo Mini-SF Repository</name>
-            <url>http://limpopo.sourceforge.net/maven/repo</url>
-        </repository>
-    </repositories>
     <dependencyManagement>
         <dependencies>
             <dependency>
