@@ -41,6 +41,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.ConsoleAppender;
@@ -63,8 +64,21 @@ import ubic.gemma.persistence.util.Settings;
  *
  * @author pavlidis
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
 public abstract class AbstractCLI {
+
+    /**
+     * Exit code used for a successful doWork execution.
+     */
+    public static final int SUCCESS = 0;
+    /**
+     * Exit code used for a failed doWork execution.
+     */
+    public static final int FAILURE = 1;
+    /**
+     * Exit code used for a successful doWork execution that resulted in failed error objects.
+     */
+    public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
 
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2018 University of British Columbia.";
     protected static final String AUTO_OPTION_NAME = "auto";
@@ -107,24 +121,45 @@ public abstract class AbstractCLI {
     protected String host = DEFAULT_HOST;
     private CommandLine commandLine;
 
+    /**
+     * Run a command. If
+     *
+     * @param p    command line object
+     * @param args arguments
+     * @return exit code
+     */
+    protected static int executeCommand( AbstractCLI p, String[] args ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            p.doWork( args );
+            return p.errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+        } catch ( Exception e ) {
+            log.error( e, e );
+            return 1;
+        } finally {
+            resetLogging();
+            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+        }
+    }
+
     public AbstractCLI() {
         this.buildStandardOptions();
         this.buildOptions();
     }
 
     /**
-     * 
-     * @param  opt option
-     * @return     Options
+     * @param opt option
+     * @return Options
      */
     public final Options addOption( Option opt ) {
         return this.options.addOption( opt );
     }
 
     /**
-     * @param  opt         option, required
-     * @param  description description, required
-     * @return             Options
+     * @param opt         option, required
+     * @param description description, required
+     * @return Options
      */
     public final Options addOption( String opt, String description ) {
         Builder b = Option.builder( opt ).desc( description );
@@ -133,11 +168,11 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param  opt         option, required
-     * @param  description description, required
-     * @param  longOpt     long option (if null, ignored)
-     * @param  argName     name of the argument of the option (if blank or null, implies there is no argument)
-     * @return             Options
+     * @param opt         option, required
+     * @param description description, required
+     * @param longOpt     long option (if null, ignored)
+     * @param argName     name of the argument of the option (if blank or null, implies there is no argument)
+     * @return Options
      */
     public final Options addOption( String opt, String longOpt, String description, String argName ) {
 
@@ -149,8 +184,8 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param  group the option group
-     * @return       see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
+     * @param group the option group
+     * @return see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
     public final Options addOptionGroup( OptionGroup group ) {
         return this.options.addOptionGroup( group );
@@ -172,16 +207,16 @@ public abstract class AbstractCLI {
     public abstract String getCommandName();
 
     /**
-     * @param  opt the option identifier
-     * @return     see org.apache.commons.cli.Options#getOption(java.lang.String)
+     * @param opt the option identifier
+     * @return see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
     public final Option getOption( String opt ) {
         return this.options.getOption( opt );
     }
 
     /**
-     * @param  opt option
-     * @return     see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
+     * @param opt option
+     * @return see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
      */
     public final OptionGroup getOptionGroup( Option opt ) {
         return this.options.getOptionGroup( opt );
@@ -333,8 +368,9 @@ public abstract class AbstractCLI {
     /**
      * Stop executing the CLI. We always fail with System exit code 1.
      */
+    @Deprecated
     protected static void exitwithError() {
-        System.exit( 1 );
+        throw new RuntimeException();
     }
 
     /**
@@ -360,7 +396,12 @@ public abstract class AbstractCLI {
 
     }
 
-    protected abstract Exception doWork( String[] args );
+    /**
+     * @param args
+     * @return exit code for the command, {@link ExitCode.FAILURE} is used if an exception is raised
+     * @throws Exception
+     */
+    protected abstract void doWork( String[] args ) throws Exception;
 
     protected final double getDoubleOptionValue( char option ) {
         try {
@@ -442,10 +483,10 @@ public abstract class AbstractCLI {
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
      * Check the error code to decide whether execution of your program should proceed.
      *
-     * @param  args args
-     * @return      Exception; null if nothing went wrong.
+     * @param args args
+     * @return Exception; null if nothing went wrong.
      */
-    protected final Exception processCommandLine( String[] args ) {
+    protected final void processCommandLine( String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();
@@ -455,7 +496,7 @@ public abstract class AbstractCLI {
 
         if ( args == null ) {
             this.printHelp();
-            return new Exception( "No arguments" );
+            throw new Exception( "No arguments" );
         }
 
         try {
@@ -479,26 +520,23 @@ public abstract class AbstractCLI {
                 AbstractCLI.log.debug( e );
             }
 
-            return e;
+            throw e;
         }
 
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
             this.printHelp();
-            return new Exception( "Help selected" );
+            throw new Exception( "Help selected" );
         }
 
         this.processStandardOptions();
         this.processOptions();
-
-        return null;
-
     }
 
     /**
      * Implement this to provide processing of options. It is called at the end of processCommandLine.
      */
-    protected abstract void processOptions();
+    protected abstract void processOptions() throws Exception;
 
     /**
      * Call in 'buildOptions' to force users to provide a user name and password.

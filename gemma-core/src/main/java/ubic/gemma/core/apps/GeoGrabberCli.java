@@ -22,8 +22,6 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,12 +33,9 @@ import java.util.Set;
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         GeoGrabberCli d = new GeoGrabberCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.error( e, e );
-        }
+        return executeCommand( d, args );
     }
 
     @Override
@@ -58,68 +53,61 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         Set<String> seen = new HashSet<>();
         GeoBrowserService gbs = this.getBean( GeoBrowserService.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
-        try {
-            int start = 0;
-            int numfails = 0;
-            int chunksize = 100;
+        int start = 0;
+        int numfails = 0;
+        int chunksize = 100;
 
-            while ( true ) {
-                List<GeoRecord> recs = gbs.getRecentGeoRecords( start, chunksize );
+        while ( true ) {
+            List<GeoRecord> recs = gbs.getRecentGeoRecords( start, chunksize );
 
-                if ( recs.isEmpty() ) {
-                    AbstractCLI.log.info( "No records received for start=" + start );
-                    numfails++;
+            if ( recs.isEmpty() ) {
+                AbstractCLI.log.info( "No records received for start=" + start );
+                numfails++;
 
-                    if ( numfails > 10 ) {
-                        AbstractCLI.log.info( "Giving up" );
-                        break;
-                    }
+                if ( numfails > 10 ) {
+                    AbstractCLI.log.info( "Giving up" );
+                    break;
+                }
 
-                    try {
-                        Thread.sleep( 500 );
-                    } catch ( InterruptedException ignored ) {
-                    }
-
-                    start++;
-                    continue;
+                try {
+                    Thread.sleep( 500 );
+                } catch ( InterruptedException ignored ) {
                 }
 
                 start++;
-
-                for ( GeoRecord geoRecord : recs ) {
-                    if ( seen.contains( geoRecord.getGeoAccession() ) ) {
-                        continue;
-                    }
-
-                    if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
-                        continue;
-                    }
-
-                    if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
-                        continue;
-                    }
-
-                    System.out.println(
-                            geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next() + "\t"
-                                    + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t" + StringUtils
-                                    .join( geoRecord.getCorrespondingExperiments(), "," ) + "\t" + geoRecord
-                                    .getSeriesType() );
-                    seen.add( geoRecord.getGeoAccession() );
-                }
+                continue;
             }
-        } catch ( IOException | ParseException exception ) {
-            return exception;
+
+            start++;
+
+            for ( GeoRecord geoRecord : recs ) {
+                if ( seen.contains( geoRecord.getGeoAccession() ) ) {
+                    continue;
+                }
+
+                if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                    continue;
+                }
+
+                if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                    continue;
+                }
+
+                System.out.println(
+                        geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next() + "\t"
+                                + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t" + StringUtils
+                                .join( geoRecord.getCorrespondingExperiments(), "," ) + "\t" + geoRecord
+                                .getSeriesType() );
+                seen.add( geoRecord.getGeoAccession() );
+            }
         }
-        return null;
     }
 
     @Override

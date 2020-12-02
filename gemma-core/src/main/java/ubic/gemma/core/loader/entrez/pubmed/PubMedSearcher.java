@@ -60,28 +60,18 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
-        Exception err = this.processCommandLine( args );
+        @SuppressWarnings("unchecked")
+        Collection<BibliographicReference> refs = PubMedSearcher.pms
+                .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
 
-        if ( err != null )
-            return err;
+        System.out.println( refs.size() + " references found" );
 
-        try {
-            @SuppressWarnings("unchecked")
-            Collection<BibliographicReference> refs = PubMedSearcher.pms
-                    .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
-
-            System.out.println( refs.size() + " references found" );
-
-            if ( this.hasOption( "d" ) ) {
-                this.getPersisterHelper().persist( refs );
-            }
-
-        } catch ( IOException | ParserConfigurationException | SAXException e ) {
-            return e;
+        if ( this.hasOption( "d" ) ) {
+            this.getPersisterHelper().persist( refs );
         }
-        return null;
     }
 
     @Override

@@ -36,7 +36,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     private String directGeneInputFileName = null;
     private String taxonName;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public ExternalFileGeneLoaderCLI() {
         super();
     }
@@ -94,18 +94,15 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
         this.processGeneList();
-        return null;
     }
 
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public void processGeneList() {
 
         ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );

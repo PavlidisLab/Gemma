@@ -135,10 +135,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
@@ -152,7 +150,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                    return null;
+                    return;
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
@@ -237,8 +235,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         } else {
             exitwithError();
         }
-
-        return null;
     }
 
     @Override

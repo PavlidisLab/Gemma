@@ -40,7 +40,7 @@ import java.util.concurrent.BlockingQueue;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
- * 
+ * <p>
  * In batch mode, platforms that are "children" (mergees or subsumees) of other platforms will be skipped. Platforms
  * which are themselves merged or subsumers, when run, will result in the child platforms being updated implicitly (via
  * an audit event and report update)
@@ -76,7 +76,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
+    @SuppressWarnings({"AccessStaticViaInstance", "static-access", "deprecation"})
     @Override
     protected void buildOptions() {
         super.buildOptions();
@@ -235,7 +235,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      */
     @Override
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+                       Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.hasOption( "force" ) ) {
             return true;
@@ -363,11 +363,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
@@ -432,7 +429,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
                             } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
                                 this.audit( arrayDesign, "Run with configuration=" + this
-                                        .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                                                .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
                                         new AlignmentBasedGeneMappingEvent() );
                             } else {
                                 this.audit( arrayDesign, "Run with default parameters",
@@ -461,10 +458,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
-            return new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
+            throw new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
         }
-
-        return null;
     }
 
     @Override
@@ -485,7 +480,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         } else {
             allArrayDesigns = getArrayDesignService().loadAll();
         }
-        
+
         // TODO: process array designs in order of how many experiments they use (most first)
 
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -655,7 +650,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     /**
      * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
      * well. We simply add an audit event, and update the report for the platform.
-     * 
+     *
      * @param design platform
      */
     private void updateMergedOrSubsumed( ArrayDesign design ) {

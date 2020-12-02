@@ -37,32 +37,21 @@ import java.util.*;
  *
  * @author nicolas
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
-    public static void main( String[] args ) {
-
+    public static int main( String[] args ) {
         EvidenceImporterCLI evidenceImporterCLI = new EvidenceImporterCLI();
 
-        try {
-            Exception ex;
+        String[] argsToTake;
 
-            String[] argsToTake;
-
-            if ( args.length == 0 ) {
-                argsToTake = EvidenceImporterCLI.initArguments();
-            } else {
-                argsToTake = args;
-            }
-
-            ex = evidenceImporterCLI.doWork( argsToTake );
-
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        if ( args.length == 0 ) {
+            argsToTake = EvidenceImporterCLI.initArguments();
+        } else {
+            argsToTake = args;
         }
+
+        return executeCommand( evidenceImporterCLI, argsToTake );
     }
 
     // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
@@ -91,82 +80,72 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
-        Exception err = super.processCommandLine( args );
-        if ( err != null )
-            return err;
+        this.createWriteFolder();
 
-        try {
-            this.createWriteFolder();
+        FileWriter fstream = new FileWriter(
+                EvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + "EvidenceImporter.log" );
+        this.logFileWriter = new BufferedWriter( fstream );
 
-            FileWriter fstream = new FileWriter(
-                    EvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + "EvidenceImporter.log" );
-            this.logFileWriter = new BufferedWriter( fstream );
+        AbstractCLI.log.info( "File: " + this.inputFile );
+        AbstractCLI.log.info( "Create in Database: " + this.createInDatabase );
 
-            AbstractCLI.log.info( "File: " + this.inputFile );
-            AbstractCLI.log.info( "Create in Database: " + this.createInDatabase );
+        this.br = new BufferedReader( new FileReader( this.inputFile ) );
 
-            this.br = new BufferedReader( new FileReader( this.inputFile ) );
+        String typeOfEvidence = this.findTypeOfEvidence();
 
-            String typeOfEvidence = this.findTypeOfEvidence();
+        // take the file received and create the real objects from it
+        Collection<EvidenceValueObject<?>> evidenceValueObjects = this.file2Objects( typeOfEvidence );
 
-            // take the file received and create the real objects from it
-            Collection<EvidenceValueObject<?>> evidenceValueObjects = this.file2Objects( typeOfEvidence );
-
-            // make sure all pubmed exists
-            if ( !this.errorMessage.isEmpty() ) {
-                System.out.println( errorMessage );
-                this.writeAllExceptions();
-
-                this.logFileWriter.close();
-                throw new Exception( "check logs" );
-            }
-
-            if ( !this.warningMessage.isEmpty() ) {
-                AbstractCLI.log.info( this.warningMessage );
-            }
-
-            if ( this.createInDatabase ) {
-                int i = 1;
-
-                // for each evidence creates it in Phenocarta
-                for ( EvidenceValueObject<?> e : evidenceValueObjects ) {
-                    try {
-                        // create the evidence in neurocarta
-                        this.phenotypeAssociationManagerService.makeEvidence( e );
-                    } catch ( EntityNotFoundException ex ) {
-
-                        this.writeError( "went into the exception" );
-
-                        // if a pubmed id was not found dont stop all processes and write to logs
-                        if ( ex.getMessage().contains( "pubmed id" ) ) {
-                            this.writeError( ex.getMessage() );
-                        } else {
-                            throw ex;
-                        }
-                    }
-                    AbstractCLI.log.info( "created evidence " + i++ );
-                }
-            } else {
-                for ( EvidenceValueObject<?> e : evidenceValueObjects ) {
-                    System.out.println( e );
-                }
-            }
+        // make sure all pubmed exists
+        if ( !this.errorMessage.isEmpty() ) {
+            System.out.println( errorMessage );
+            this.writeAllExceptions();
 
             this.logFileWriter.close();
-
-            AbstractCLI.log.info( "Import of evidence is finish" );
-            // when we import a file in production we keep a copy of the imported file and keep track of when the file
-            // was imported in a log file
-
-            // createImportLog( evidenceValueObjects.iterator().next() );
-
-        } catch ( Exception e ) {
-            return e;
+            throw new Exception( "check logs" );
         }
-        System.exit( -1 );
-        return null;
+
+        if ( !this.warningMessage.isEmpty() ) {
+            AbstractCLI.log.info( this.warningMessage );
+        }
+
+        if ( this.createInDatabase ) {
+            int i = 1;
+
+            // for each evidence creates it in Phenocarta
+            for ( EvidenceValueObject<?> e : evidenceValueObjects ) {
+                try {
+                    // create the evidence in neurocarta
+                    this.phenotypeAssociationManagerService.makeEvidence( e );
+                } catch ( EntityNotFoundException ex ) {
+
+                    this.writeError( "went into the exception" );
+
+                    // if a pubmed id was not found dont stop all processes and write to logs
+                    if ( ex.getMessage().contains( "pubmed id" ) ) {
+                        this.writeError( ex.getMessage() );
+                    } else {
+                        throw ex;
+                    }
+                }
+                AbstractCLI.log.info( "created evidence " + i++ );
+            }
+        } else {
+            for ( EvidenceValueObject<?> e : evidenceValueObjects ) {
+                System.out.println( e );
+            }
+        }
+
+        this.logFileWriter.close();
+
+        AbstractCLI.log.info( "Import of evidence is finish" );
+        // when we import a file in production we keep a copy of the imported file and keep track of when the file
+        // was imported in a log file
+
+        // createImportLog( evidenceValueObjects.iterator().next() );
     }
 
     @Override
@@ -278,7 +257,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     private Set<CharacteristicValueObject> experimentTags2Ontology( Set<String> values, String category,
-            String categoryUri, AbstractOntologyService ontologyUsed ) {
+                                                                    String categoryUri, AbstractOntologyService ontologyUsed ) {
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
@@ -496,7 +475,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject<?> evidence,
-            String evidenceTaxon ) {
+                                                    String evidenceTaxon ) {
         // OMIM got special character in description to find score
         if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
 

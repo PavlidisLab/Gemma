@@ -87,11 +87,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         SecurityService securityService = this.getBean( SecurityService.class );
 
@@ -118,8 +115,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
 
         this.summarizeProcessing();
-
-        return null;
     }
 
     @Override

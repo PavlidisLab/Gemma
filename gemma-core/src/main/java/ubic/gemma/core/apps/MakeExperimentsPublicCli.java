@@ -25,12 +25,9 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         MakeExperimentsPublicCli d = new MakeExperimentsPublicCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( d, args );
     }
 
     @Override
@@ -39,10 +36,8 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {
@@ -50,8 +45,6 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
             this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line", null );
 
         }
-
-        return null;
     }
 
     @Override

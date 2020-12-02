@@ -75,10 +75,8 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         int start = Integer.parseInt( startArg ) + 1;
         int step = Integer.parseInt( stepArg ) + 1;
@@ -99,7 +97,5 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
         }
         AbstractCLI.log.info( "======================================================" );
         AbstractCLI.log.info( "======================================================" );
-
-        return null;
     }
 }

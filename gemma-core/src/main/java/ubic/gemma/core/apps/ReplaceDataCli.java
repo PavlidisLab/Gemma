@@ -74,11 +74,8 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null ) {
-            return exception;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         DataUpdater dataUpdater = this.getBean( DataUpdater.class );
 
@@ -110,18 +107,11 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         QuantitationType qt = qts.iterator().next();
 
-        try {
-            DoubleMatrixReader reader = new DoubleMatrixReader();
+        DoubleMatrixReader reader = new DoubleMatrixReader();
 
-            DoubleMatrix<String, String> data = reader.read( file );
+        DoubleMatrix<String, String> data = reader.read( file );
 
-            dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
-
-        } catch ( IOException e ) {
-            AbstractCLI.log.error( "Failed while processing " + ee, e );
-            return e;
-        }
-        return null;
+        dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
     }
 
     @Override

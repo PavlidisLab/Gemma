@@ -44,9 +44,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         AffyDataFromCelCli c = new AffyDataFromCelCli();
-        executeCommand( c, args );
+        return executeCommand( c, args );
     }
 
     private String aptFile = null;
@@ -88,15 +88,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.isEmpty() )
-            return null;
+            return;
 
         // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService
@@ -126,14 +124,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
             }
 
-            try {
-                AbstractCLI.log.info( "Loading data from " + aptFile );
-                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
+            AbstractCLI.log.info( "Loading data from " + aptFile );
+            serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
 
-            } catch ( Exception exception ) {
-                return exception;
-            }
-            return null;
+            return;
         }
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
@@ -202,8 +196,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         }
 
         super.summarizeProcessing();
-
-        return null;
     }
 
     @Override

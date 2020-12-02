@@ -24,12 +24,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         DeleteExperimentsCli d = new DeleteExperimentsCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( d, args );
     }
 
     @Override
@@ -38,11 +35,9 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork( String[] args ) throws Exception {
         this.force = true;
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+        super.processCommandLine( args );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             try {
@@ -57,8 +52,6 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         }
 
         summarizeProcessing();
-
-        return null;
     }
 
     @Override

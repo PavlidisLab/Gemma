@@ -166,44 +166,35 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         this.taxonService = this.getBean( TaxonService.class );
 
         this.waitForGeneOntologyReady();
 
-        try {
-            this.goService.init( true );
+        this.goService.init( true );
 
-            log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
+        log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
 
-            if ( StringUtils.isNotBlank( geneFileName ) ) {
-                this.processGeneList();
-            } else if ( processAllADs ) {
-                this.processAllADs(); // 'batch'
-            } else if ( batchFileName != null ) {
-                this.processFromListInFile(); // list of ADs to run
-            } else if ( this.taxonName != null ) {
-                this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
-            } else {
-                if ( this.getArrayDesignsToProcess().isEmpty() ) {
-                    throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
-                }
-                for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
-
-                    this.processAD( arrayDesign );
-
-                }
+        if ( StringUtils.isNotBlank( geneFileName ) ) {
+            this.processGeneList();
+        } else if ( processAllADs ) {
+            this.processAllADs(); // 'batch'
+        } else if ( batchFileName != null ) {
+            this.processFromListInFile(); // list of ADs to run
+        } else if ( this.taxonName != null ) {
+            this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
+        } else {
+            if ( this.getArrayDesignsToProcess().isEmpty() ) {
+                throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
             }
+            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
-        } catch ( Exception e ) {
-            return e;
+                this.processAD( arrayDesign );
+
+            }
         }
-
-        return null;
     }
 
     private void processAD( ArrayDesign arrayDesign ) throws IOException {
@@ -286,7 +277,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 AbstractCLI.log.warn( "Raw sequencing platform, will not generate annotation file: " + ad );
                 continue;
             }
-            
+
             toDo.add( ad );
 
             if ( ++numChecked % 100 == 0 ) {
@@ -320,7 +311,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         this.summarizeProcessing();
-
     }
 
     /**
@@ -330,7 +320,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         AbstractCLI.log.info( "Loading platforms to annotate from " + this.batchFileName );
         InputStream is = new FileInputStream( this.batchFileName );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             int lineNumber = 0;
@@ -373,7 +363,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private void processGeneList() throws IOException {
         AbstractCLI.log.info( "Loading genes to annotate from " + geneFileName );
         InputStream is = new FileInputStream( geneFileName );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
             String line;
             GeneService geneService = this.getBean( GeneService.class );
             Taxon taxon = taxonService.findByCommonName( taxonName );

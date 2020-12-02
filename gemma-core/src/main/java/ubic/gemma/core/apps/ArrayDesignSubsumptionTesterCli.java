@@ -38,12 +38,9 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     private Collection<String> otherArrayDesignNames;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ArrayDesignSubsumptionTesterCli tester = new ArrayDesignSubsumptionTesterCli();
-        Exception e = tester.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( tester, args );
     }
 
     @Override
@@ -52,13 +49,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            exitwithError();
-            return err;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
@@ -76,8 +68,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             }
 
             if ( otherArrayDesign == null ) {
-                AbstractCLI.log.error( "No arrayDesign " + otherArrayDesignName + " found" );
-                exitwithError();
+                throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
             }
 
             otherArrayDesign = this.thaw( otherArrayDesign );
@@ -92,8 +83,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         }
 
         this.audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
-
-        return null;
     }
 
     @Override

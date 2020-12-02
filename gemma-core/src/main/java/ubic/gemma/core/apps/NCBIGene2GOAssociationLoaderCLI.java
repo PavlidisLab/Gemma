@@ -46,12 +46,9 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     private static final String GENE2GO_FILE = "gene2go.gz";
     private String filePath = null;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -69,12 +66,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = this.processCommandLine( args );
-        if ( e != null ) {
-            AbstractCLI.log.error( e );
-            return e;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         TaxonService taxonService = this.getBean( TaxonService.class );
 
@@ -92,15 +85,11 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         if ( filePath != null ) {
             File f = new File( filePath );
             if ( !f.canRead() ) {
-                return new IOException( "Cannot read from " + filePath );
+                throw new IOException( "Cannot read from " + filePath );
             }
             files = new HashSet<>();
             LocalFile lf = LocalFile.Factory.newInstance();
-            try {
-                lf.setLocalURL( f.toURI().toURL() );
-            } catch ( MalformedURLException e1 ) {
-                return e1;
-            }
+            lf.setLocalURL( f.toURI().toURL() );
             files.add( lf );
         } else {
             files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + NCBIGene2GOAssociationLoaderCLI.GENE2GO_FILE );
@@ -115,8 +104,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         gene2GOAssLoader.load( gene2Gofile );
 
         AbstractCLI.log.info( "Don't forget to update the annotation files for platforms." );
-
-        return null;
     }
 
     @Override

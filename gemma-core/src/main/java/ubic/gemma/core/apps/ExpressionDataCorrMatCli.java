@@ -30,15 +30,9 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
-        try {
-            ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
-            Exception ex = e.doWork( args );
-            if ( ex != null )
-                AbstractCLI.log.info( ex, ex );
-        } catch ( Exception e ) {
-            AbstractCLI.log.info( e, e );
-        }
+    public static int main( String[] args ) {
+        ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
+        return executeCommand( e, args );
     }
 
     @Override
@@ -47,8 +41,8 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = this.processCommandLine( args );
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             try {
@@ -65,7 +59,6 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
         }
         this.summarizeProcessing();
-        return exception;
     }
 
     @Override

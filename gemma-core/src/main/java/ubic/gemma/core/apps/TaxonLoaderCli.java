@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,33 +58,25 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        try {
-            Exception err = processCommandLine( args );
-            if ( err != null )
-                return err;
-            TaxonFetcher tf = new TaxonFetcher();
-            Collection<LocalFile> files = tf.fetch();
-            LocalFile names = null;
-            for ( LocalFile file : files ) {
-                if ( file.getLocalURL().toString().endsWith( "names.dmp" ) ) {
-                    names = file;
-                }
+    protected void doWork( String[] args ) throws Exception {
+        processCommandLine( args );
+        TaxonFetcher tf = new TaxonFetcher();
+        Collection<LocalFile> files = tf.fetch();
+        LocalFile names = null;
+        for ( LocalFile file : files ) {
+            if ( file.getLocalURL().toString().endsWith( "names.dmp" ) ) {
+                names = file;
             }
-
-            if ( names == null ) {
-                throw new IllegalStateException( "No names.dmp file" );
-            }
-
-            TaxonLoader tl = new TaxonLoader();
-            tl.setPersisterHelper( this.getBean( PersisterHelper.class ) );
-            int numLoaded = tl.load( names.asFile() );
-            log.info( "Loaded " + numLoaded + " taxa" );
-        } catch ( Exception e ) {
-            log.error( e );
-            return e;
         }
-        return null;
+
+        if ( names == null ) {
+            throw new IllegalStateException( "No names.dmp file" );
+        }
+
+        TaxonLoader tl = new TaxonLoader();
+        tl.setPersisterHelper( this.getBean( PersisterHelper.class ) );
+        int numLoaded = tl.load( names.asFile() );
+        log.info( "Loaded " + numLoaded + " taxa" );
     }
 
 }

@@ -94,11 +94,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null ) {
-            return exception;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         ExternalDatabase genbank = externalDatabaseService.findByName( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.findByName( "Ensembl" );
@@ -355,9 +352,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
 
         AbstractCLI.log.info( "Don't forget to update the annotation files" );
-
-        return null;
-
     }
 
     @Override

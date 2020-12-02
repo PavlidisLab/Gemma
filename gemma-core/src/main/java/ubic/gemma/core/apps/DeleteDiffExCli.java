@@ -25,12 +25,9 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
  */
 public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         DeleteDiffExCli d = new DeleteDiffExCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand(d, args);
     }
 
     @Override
@@ -39,11 +36,9 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork( String[] args ) throws Exception {
         this.force = true;
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+        super.processCommandLine( args );
 
         DifferentialExpressionAnalysisService deas = this.getBean( DifferentialExpressionAnalysisService.class );
 
@@ -64,8 +59,6 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
         }
 
         summarizeProcessing();
-
-        return null;
     }
 
     @Override

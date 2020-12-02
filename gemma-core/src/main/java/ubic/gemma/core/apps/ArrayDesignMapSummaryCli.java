@@ -43,10 +43,8 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
@@ -60,7 +58,6 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
                 System.out.println( summary );
             }
         }
-        return null;
     }
 
     @Override

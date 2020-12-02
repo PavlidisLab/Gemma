@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,13 +35,13 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
 
 /**
  * Split an experiment into parts based on an experimental factor
- * 
+ *
  * @author paul
  */
 public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /**
-     * 
+     *
      */
     private static final String FACTOR_OPTION = "factor";
 
@@ -61,7 +61,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -85,15 +85,12 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Can only split one experiment at a time" );
@@ -113,8 +110,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
         ExperimentalFactor splitOn = this.guessFactor( ee );
 
         serv.split( ee, splitOn );
-
-        return null;
     }
 
     @Override
@@ -136,8 +131,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /**
      * Adapted from code in DifferentialExpressionAnalysisCli
-     * 
-     * @param  ee
+     *
+     * @param ee
      * @return
      */
     private ExperimentalFactor guessFactor( ExpressionExperiment ee ) {

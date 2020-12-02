@@ -33,18 +33,14 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     // location of the ctd file
     private String ctdFile = "";
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public CtdDatabaseImporterCli() throws Exception {
         super();
     }
 
-    public static void main( String[] args ) throws Exception {
+    public static int main( String[] args ) throws Exception {
         CtdDatabaseImporterCli importEvidence = new CtdDatabaseImporterCli();
-
-        Exception e = importEvidence.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( importEvidence, args );
     }
 
     @Override
@@ -74,25 +70,16 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
+        super.init();
 
-        try {
-            writeFolder = ppUtil.createWriteFolderIfDoesntExist( CtdDatabaseImporterCli.CTD );
-            this.downloadCTDFileIfDoesntExist();
+        writeFolder = ppUtil.createWriteFolderIfDoesntExist( CtdDatabaseImporterCli.CTD );
+        this.downloadCTDFileIfDoesntExist();
 
-            // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
-            ppUtil.loadMESHOMIM2DOMappings();
-            this.processCTDFile();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return e;
-        }
-
-        return null;
+        // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
+        ppUtil.loadMESHOMIM2DOMappings();
+        this.processCTDFile();
     }
 
     private void downloadCTDFileIfDoesntExist() {
@@ -123,7 +110,7 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
             if ( line.indexOf( '#' ) != -1 ) {
                 continue;
             }
-            
+
             // fields: GeneSymbol    GeneID  DiseaseName     DiseaseID       DirectEvidence  InferenceChemicalName   InferenceScore  OmimIDs PubMedIDs
 
             String[] tokens = line.split( "\t" );

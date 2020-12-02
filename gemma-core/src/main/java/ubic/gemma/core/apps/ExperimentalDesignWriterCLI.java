@@ -37,12 +37,9 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     private String outFileName;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ExperimentalDesignWriterCLI cli = new ExperimentalDesignWriterCLI();
-        Exception exc = cli.doWork( args );
-        if ( exc != null ) {
-            AbstractCLI.log.error( exc.getMessage() );
-        }
+        return executeCommand( cli, args );
     }
 
     @Override
@@ -51,31 +48,27 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-                try (PrintWriter writer = new PrintWriter(
+                try ( PrintWriter writer = new PrintWriter(
                         outFileName + "_" + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() )
-                                + ".txt" )) {
+                                + ".txt" ) ) {
 
                     edWriter.write( writer, ( ExpressionExperiment ) ee, true );
                     writer.flush();
                 } catch ( IOException exception ) {
-                    return exception;
+                    throw exception;
                 }
             } else {
                 throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
             }
         }
-
-        return null;
     }
 
     @Override

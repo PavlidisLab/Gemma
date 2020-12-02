@@ -31,14 +31,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         SVDCli s = new SVDCli();
-        Exception e = s.doWork( args );
-
-        if ( e != null ) {
-            AbstractCLI.log.error( e, e );
-        }
-        System.exit( 0 ); // dangling threads?
+        return executeCommand( s, args );
     }
 
     @Override
@@ -63,11 +58,8 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         SVDService svdService = this.getBean( SVDService.class );
 
@@ -91,7 +83,6 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             }
         }
         this.summarizeProcessing();
-        return null;
     }
 
 }

@@ -94,18 +94,14 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     private static final String STRONGEST_SNP = "STRONGEST SNP-RISK ALLELE";
     private static final Integer STRONGEST_SNP_INDEX = 20;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public GwasDatabaseImporterCli() throws Exception {
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    public GwasDatabaseImporterCli() {
         super();
     }
 
-    public static void main( String[] args ) throws Exception {
-
+    public static int main( String[] args ) {
         GwasDatabaseImporterCli importEvidence = new GwasDatabaseImporterCli();
-        Exception e = importEvidence.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( importEvidence, args );
     }
 
     @Override
@@ -119,25 +115,17 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
+        super.init();
 
         // creates the folder where to place the file web downloaded files and final output files
-        try {
-            this.writeFolder = ppUtil.createWriteFolderWithDate( GwasDatabaseImporterCli.GWAS );
-            // download the GWAS file
-            String gwasFile = this.ppUtil
-                    .downloadFileFromWeb( GwasDatabaseImporterCli.GWAS_URL_PATH, "", writeFolder, GWAS_FILE );
-            // process the gwas file
-            this.processGwasFile( gwasFile );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return e;
-        }
-        return null;
+        this.writeFolder = ppUtil.createWriteFolderWithDate( GwasDatabaseImporterCli.GWAS );
+        // download the GWAS file
+        String gwasFile = this.ppUtil
+                .downloadFileFromWeb( GwasDatabaseImporterCli.GWAS_URL_PATH, "", writeFolder, GWAS_FILE );
+        // process the gwas file
+        this.processGwasFile( gwasFile );
     }
 
     @Override
@@ -176,7 +164,7 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     private void processGwasFile( String gwasFile ) throws Exception {
         Taxon human = taxonService.findByCommonName( "human" );
 
-        try (BufferedReader br = new BufferedReader( new FileReader( gwasFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( gwasFile ) ) ) {
 
             // check if we have correct headers and organ
             this.verifyHeaders( br.readLine().split( "\t" ) );
@@ -265,7 +253,7 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @Override

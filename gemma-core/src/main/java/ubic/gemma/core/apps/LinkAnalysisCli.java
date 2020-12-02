@@ -80,25 +80,20 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         if ( initializeFromOldData ) {
             AbstractCLI.log.info( "Initializing links from old data for " + this.getTaxon() );
             LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
             s.initializeLinksFromOldData( this.getTaxon() );
-            return null;
+            return;
         } else if ( updateNodeDegree ) {
 
             // we waste some time here getting the experiments.
             this.loadTaxon();
 
             this.getBean( CoexpressionService.class ).updateNodeDegrees( this.getTaxon() );
-
-            return null;
         }
 
         this.linkAnalysisService = this.getBean( LinkAnalysisService.class );
@@ -113,7 +108,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
 
             if ( arrayDesign == null ) {
-                return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
+                throw new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
 
             this.loadTaxon();
@@ -131,7 +126,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = this
                     .getBean( SimpleExpressionDataLoaderService.class );
             ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-            try (InputStream data = new FileInputStream( new File( this.dataFileName ) )) {
+            try ( InputStream data = new FileInputStream( new File( this.dataFileName ) ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
 
@@ -158,7 +153,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 AbstractCLI.log.info( "Read " + dataVectors.size() + " data vectors" );
 
             } catch ( Exception e ) {
-                return e;
+                throw e;
             }
 
             this.linkAnalysisService.processVectors( this.getTaxon(), dataVectors, filterConfig, linkAnalysisConfig );
@@ -201,8 +196,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
             this.summarizeProcessing();
         }
-
-        return null;
     }
 
     @Override

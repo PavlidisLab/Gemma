@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Option;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.File;
@@ -35,12 +34,9 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
 
     private String directory;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         PubMedLoaderCli p = new PubMedLoaderCli();
-        Exception exception = p.doWork( args );
-        if ( exception != null ) {
-            AbstractCLI.log.error( exception, exception );
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -63,13 +59,10 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
         PubMedService pms = this.getBean( PubMedService.class );
         pms.loadFromDirectory( new File( directory ) );
-        return null;
     }
 
     @Override

@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -65,20 +64,9 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         LoadExpressionDataCli p = new LoadExpressionDataCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            AbstractCLI.log.info( watch.getTime() );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -139,74 +127,65 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
+
+        GeoService geoService = this.getBean( GeoService.class );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+
+        if ( accessions == null && accessionFile == null ) {
+            throw new IllegalArgumentException(
+                    "You must specific either a file or accessions on the command line" );
         }
-        try {
 
-            GeoService geoService = this.getBean( GeoService.class );
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        if ( accessions != null ) {
+            AbstractCLI.log.info( "Got accession(s) from command line " + accessions );
+            String[] accsToRun = StringUtils.split( accessions, ',' );
 
-            if ( accessions == null && accessionFile == null ) {
-                return new IllegalArgumentException(
-                        "You must specific either a file or accessions on the command line" );
+            for ( String accession : accsToRun ) {
+
+                accession = StringUtils.strip( accession );
+
+                if ( StringUtils.isBlank( accession ) ) {
+                    continue;
+                }
+
+                if ( platformOnly ) {
+                    Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
+                    ArrayDesignService ads = this.getBean( ArrayDesignService.class );
+                    for ( Object object : designs ) {
+                        assert object instanceof ArrayDesign;
+                        ArrayDesign ad = ( ArrayDesign ) object;
+                        ad = ads.thawLite( ad );
+
+                        successObjects.add( ad.getName() + " (" + ad.getExternalReferences().iterator().next()
+                                .getAccession() + ")" );
+                    }
+                } else {
+                    this.processAccession( geoService, accession );
+                }
             }
 
-            if ( accessions != null ) {
-                AbstractCLI.log.info( "Got accession(s) from command line " + accessions );
-                String[] accsToRun = StringUtils.split( accessions, ',' );
+        }
 
-                for ( String accession : accsToRun ) {
+        if ( accessionFile != null ) {
+            AbstractCLI.log.info( "Loading accessions from " + accessionFile );
+            InputStream is = new FileInputStream( accessionFile );
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
-                    accession = StringUtils.strip( accession );
+                String accession;
+                while ( ( accession = br.readLine() ) != null ) {
 
                     if ( StringUtils.isBlank( accession ) ) {
                         continue;
                     }
 
-                    if ( platformOnly ) {
-                        Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
-                        ArrayDesignService ads = this.getBean( ArrayDesignService.class );
-                        for ( Object object : designs ) {
-                            assert object instanceof ArrayDesign;
-                            ArrayDesign ad = ( ArrayDesign ) object;
-                            ad = ads.thawLite( ad );
+                    this.processAccession( geoService, accession );
 
-                            successObjects.add( ad.getName() + " (" + ad.getExternalReferences().iterator().next()
-                                    .getAccession() + ")" );
-                        }
-                    } else {
-                        this.processAccession( geoService, accession );
-                    }
-                }
-
-            }
-
-            if ( accessionFile != null ) {
-                AbstractCLI.log.info( "Loading accessions from " + accessionFile );
-                InputStream is = new FileInputStream( accessionFile );
-                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
-
-                    String accession;
-                    while ( ( accession = br.readLine() ) != null ) {
-
-                        if ( StringUtils.isBlank( accession ) ) {
-                            continue;
-                        }
-
-                        this.processAccession( geoService, accession );
-
-                    }
                 }
             }
-            this.summarizeProcessing();
-        } catch ( Exception e ) {
-            AbstractCLI.log.error( e );
-            return e;
         }
-        return null;
+        this.summarizeProcessing();
     }
 
     @Override

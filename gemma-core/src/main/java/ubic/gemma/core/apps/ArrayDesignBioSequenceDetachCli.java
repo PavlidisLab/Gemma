@@ -62,10 +62,8 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
 
@@ -82,7 +80,6 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
                 this.audit( arrayDesign, "Removed sequence associations with CLI" );
             }
         }
-        return null;
     }
 
     @Override

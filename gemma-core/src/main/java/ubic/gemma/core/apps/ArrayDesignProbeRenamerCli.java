@@ -45,16 +45,9 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
     private String fileName;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ArrayDesignProbeRenamerCli a = new ArrayDesignProbeRenamerCli();
-        try {
-            Exception e = a.doWork( args );
-            if ( e != null ) {
-                AbstractCLI.log.fatal( e, e );
-            }
-        } catch ( RuntimeException e ) {
-            AbstractCLI.log.fatal( e, e );
-        }
+        return executeCommand( a, args );
     }
 
     @Override
@@ -83,11 +76,8 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = this.processCommandLine( args );
-        if ( e != null ) {
-            return e;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         if ( fileName == null ) {
             throw new IllegalArgumentException( "filename cannot be null" );
@@ -103,18 +93,16 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
         File file = new File( fileName );
         if ( !file.canRead() ) {
-            return new IOException( "Cannot read from " + fileName );
+            throw new IOException( "Cannot read from " + fileName );
         }
-        try (InputStream newIdFile = new FileInputStream( file )) {
+        try ( InputStream newIdFile = new FileInputStream( file ) ) {
 
             this.rename( arrayDesign, newIdFile );
             newIdFile.close();
             this.audit( arrayDesign, "Probes renamed using file " + fileName );
         } catch ( Exception ex ) {
-            return ex;
+            throw ex;
         }
-
-        return null;
     }
 
     private void rename( ArrayDesign arrayDesign, InputStream newIdFile ) {
@@ -156,7 +144,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     private Map<String, String> parseIdFile( InputStream newIdFile ) throws IOException {
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( newIdFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( newIdFile ) ) ) {
 
             String line;
 

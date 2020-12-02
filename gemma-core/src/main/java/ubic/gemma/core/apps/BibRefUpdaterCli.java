@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ import java.util.Collection;
 
 /**
  * Refreshes the information in all the bibliographic references in the system.
- * 
+ *
  * @author Paul
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
@@ -63,9 +63,8 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null ) return ex;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );
 
@@ -101,14 +100,8 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
             } catch ( Exception e ) {
                 log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
             }
-            try {
-                Thread.sleep( RandomUtils.nextInt( 1000 ) );
-            } catch ( InterruptedException e ) {
-                return e;
-            }
+            Thread.sleep( RandomUtils.nextInt( 1000 ) );
         }
-
-        return null;
     }
 
 }

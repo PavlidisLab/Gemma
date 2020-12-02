@@ -32,12 +32,9 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     private VectorMergingService mergingService;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         VectorMergingCli v = new VectorMergingCli();
-        Exception e = v.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e );
-        }
+        return executeCommand( v, args );
     }
 
     @Override
@@ -57,11 +54,8 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = this.processCommandLine( args );
-        if ( e != null ) {
-            return e;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         mergingService = this.getBean( VectorMergingService.class );
 
@@ -75,8 +69,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         }
 
         this.summarizeProcessing();
-        return null;
-
     }
 
     @Override

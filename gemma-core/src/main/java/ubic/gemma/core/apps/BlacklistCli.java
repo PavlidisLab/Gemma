@@ -81,11 +81,8 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null )
-            return ex;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
         ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
@@ -95,7 +92,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
 
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -165,11 +162,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 log.info( "Blacklisted " + accession );
             }
 
-        } catch ( IOException e ) {
-            return e;
+        } catch ( Exception e ) {
+            throw e;
         }
-
-        return null;
     }
 
     @Override

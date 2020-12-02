@@ -47,7 +47,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private BibliographicReferenceService bibliographicReferenceService = null;
     private BufferedWriter writer;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public LoadEvidenceForClassifier( String[] args ) throws Exception {
 
         this.loadServices( args );
@@ -83,8 +83,8 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        return null;
+    protected void doWork( String[] args ) {
+        // TODO
     }
 
     // creates the folder where the output files will be put, use this one if file is too big
@@ -106,10 +106,10 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private synchronized void loadServices( String[] args ) {
 
         // this gets the context, so we can access beans
-        Exception exception = this.processCommandLine( args );
-        if ( exception != null ) {
-            AbstractCLI.log.error( exception );
-            exception.printStackTrace();
+        try {
+            this.processCommandLine( args );
+        } catch ( Exception exception ) {
+            AbstractCLI.log.error( exception, exception );
         }
 
         // add services if needed later

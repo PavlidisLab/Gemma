@@ -28,13 +28,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-
-        Exception e = b.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( b, args );
     }
 
     @Override
@@ -54,11 +50,8 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null )
-            return ex;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         BatchInfoPopulationService ser = this.getBean( BatchInfoPopulationService.class );
 
@@ -91,7 +84,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
         }
 
         this.summarizeProcessing();
-        return null;
     }
 
     @Override

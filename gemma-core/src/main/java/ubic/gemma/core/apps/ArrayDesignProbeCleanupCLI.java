@@ -83,11 +83,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         File f = new File( file );
         if ( !f.canRead() ) {
@@ -101,8 +98,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        try (InputStream is = new FileInputStream( f );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( InputStream is = new FileInputStream( f );
+              BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             int count = 0;
@@ -125,10 +122,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
                 }
             }
             AbstractCLI.log.info( "Deleted " + count + " probes" );
-        } catch ( IOException e ) {
-            return e;
+        } catch ( Exception e ) {
+            throw e;
         }
-
-        return null;
     }
 }

@@ -33,7 +33,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
     protected GeneService geneService;
 
     // the init is in the constructor, we always need those
-    public ExternalDatabaseEvidenceImporterAbstractCLI() throws Exception {
+    public ExternalDatabaseEvidenceImporterAbstractCLI() {
         super();
     }
 
@@ -47,18 +47,10 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
      *
      * @return an exception, if there were any problems, or null otherwise.
      */
-    protected Exception init() {
-
-        try {
-            this.geneService = this.getBean( GeneService.class );
-            this.taxonService = getBean( TaxonService.class );
-            this.ppUtil = new PhenotypeProcessingUtil( geneService, this.getBean( OntologyService.class ) );
-        } catch ( Exception e ) {
-            return e;
-        }
-
-        return null;
-
+    protected void init() throws Exception {
+        this.geneService = this.getBean( GeneService.class );
+        this.taxonService = getBean( TaxonService.class );
+        this.ppUtil = new PhenotypeProcessingUtil( geneService, this.getBean( OntologyService.class ) );
     }
 
 }

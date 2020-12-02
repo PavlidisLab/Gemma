@@ -49,7 +49,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected AuditEventService auditEventService;
     protected BeanFactory ctx;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public AbstractSpringAwareCLI() {
         super();
     }
@@ -95,10 +95,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /**
      * Convenience method to obtain instance of any bean by name.
      *
-     * @param  <T>  the bean class type
-     * @param  clz  class
-     * @param  name name
-     * @return      bean
+     * @param <T>  the bean class type
+     * @param clz  class
+     * @param name name
+     * @return bean
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
     protected <T> T getBean( String name, Class<T> clz ) {
@@ -117,9 +117,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * @param  auditable  auditable
-     * @param  eventClass can be null
-     * @return            boolean
+     * @param auditable  auditable
+     * @param eventClass can be null
+     * @return boolean
      */
     protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;

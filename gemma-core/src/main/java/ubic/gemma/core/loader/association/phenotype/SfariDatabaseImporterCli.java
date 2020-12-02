@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     /**
-     * 
+     *
      */
     private static final String AUTISM_SPECTRUM_DISORDER_DOID = "http://purl.obolibrary.org/obo/DOID_0060041";
     // name of the external database
@@ -67,20 +67,15 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     private File autismGeneDataset = null;
     private File geneScore = null;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public SfariDatabaseImporterCli() throws Exception {
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    public SfariDatabaseImporterCli() {
         super();
     }
 
-    public static void main( String[] args ) throws Exception {
+    public static int main( String[] args ) {
         @SuppressWarnings("unused")
         SfariDatabaseImporterCli importEvidence = new SfariDatabaseImporterCli();
-        Exception e = importEvidence.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-        /*  */
-
+        return executeCommand( importEvidence, args );
     }
 
     @Override
@@ -100,23 +95,15 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
+        super.init();
 
-        try {
-            writeFolder = ppUtil.createWriteFolderIfDoesntExist( SFARI );
+        writeFolder = ppUtil.createWriteFolderIfDoesntExist( SFARI );
 
-            this.checkForSfariFiles();
-            this.processSfariScoreFile();
-            this.processSfariGeneFile();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-
-        return null;
+        this.checkForSfariFiles();
+        this.processSfariScoreFile();
+        this.processSfariGeneFile();
     }
 
     @Override
@@ -132,9 +119,9 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
     /**
      * Parse pubmed IDs
-     * 
-     * @param  linePubmedIds
-     * @param  mySet
+     *
+     * @param linePubmedIds
+     * @param mySet
      * @throws Exception
      */
     private void addAllPubmed( String linePubmedIds, Set<String> mySet ) throws NumberFormatException {
@@ -163,7 +150,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     /**
-     * 
      * @throws Exception
      */
     private void checkForSfariFiles() throws Exception {
@@ -191,14 +177,14 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
     /**
      * Parse the 'gene-summary.csv' file
-     * 
+     *
      * @throws Exception
      */
     private void processSfariGeneFile() throws Exception {
 
         ppUtil.initFinalOutputFile( "SFARI", writeFolder, true, true );
 
-        try (BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) )) {
+        try ( BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) ) ) {
 
             String[] headersTokens = StringUtil.csvSplit( brAutismGeneDataset.readLine() );
 
@@ -209,21 +195,21 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
             if ( !headersSet.contains( SfariDatabaseImporterCli.GENE_SYMBOL_HEADER ) || !headersSet
                     .contains( SfariDatabaseImporterCli.ENTREZ_GENE_ID_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.SUPPORT_FOR_AUTISM_HEADER )
+                    .contains( SfariDatabaseImporterCli.SUPPORT_FOR_AUTISM_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.EVIDENCE_OF_SUPPORT_HEADER )
+                    .contains( SfariDatabaseImporterCli.EVIDENCE_OF_SUPPORT_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.POSITIVE_REFERENCE_HEADER )
+                    .contains( SfariDatabaseImporterCli.POSITIVE_REFERENCE_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.NEGATIVE_REFERENCE_HEADER )
+                    .contains( SfariDatabaseImporterCli.NEGATIVE_REFERENCE_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.PRIMARY_REFERENCE_HEADER )
+                    .contains( SfariDatabaseImporterCli.PRIMARY_REFERENCE_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.MOST_CITED_HEADER )
+                    .contains( SfariDatabaseImporterCli.MOST_CITED_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.MOST_RECENT_HEADER )
+                    .contains( SfariDatabaseImporterCli.MOST_RECENT_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.SUPPORTING_HEADER ) ) {
+                    .contains( SfariDatabaseImporterCli.SUPPORTING_HEADER ) ) {
                 throw new Exception( "Some headers not find in the autism gene dataset" );
             }
 
@@ -298,12 +284,12 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
     /**
      * Parse the gene-score.csv file
-     * 
+     *
      * @throws Exception
      */
     private void processSfariScoreFile() throws Exception {
 
-        try (BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) )) {
+        try ( BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) ) ) {
 
             // read headers
             String[] headersTokens = StringUtil.csvSplit( brGeneScore.readLine() );
@@ -317,9 +303,9 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
             if ( !headersSet.contains( SfariDatabaseImporterCli.GENE_SYMBOL_SCORE_HEADER ) || !headersSet
                     .contains( SfariDatabaseImporterCli.SCORE_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.SCORE_DETAILS_HEADER )
+                    .contains( SfariDatabaseImporterCli.SCORE_DETAILS_HEADER )
                     || !headersSet
-                            .contains( SfariDatabaseImporterCli.DESCRIPTION_SCORE_HEADER ) ) {
+                    .contains( SfariDatabaseImporterCli.DESCRIPTION_SCORE_HEADER ) ) {
                 throw new Exception( "Some headers not find" );
             }
 
@@ -400,7 +386,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     //    }
 
     private void writeFinalSfari( Set<String> literaturePubMed, String geneSymbol, String nbciID, String description,
-            String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
+                                  String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
 
         String negative = "";
         if ( isNegative ) {
@@ -411,7 +397,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
          * there were special instructions about editing this file afterwards
          * "Also, change the columns in the generated finalResults.tsv file to ensure that "autism spectrum disorder"
          * is in the "OrginalPhenotype" [sp] column, and the phenotype URI is in the "Phenotypes" column."
-         * 
+         *
          * This code does not fill that in, but why not?
          */
         ppUtil.outFinalResults.write( geneSymbol + "\t" );
@@ -434,8 +420,8 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     /**
      * Format score information as required for downstream processing. Expected fields are ScoreType\tScore\tStrength
      * (see {@link PhenotypeProcessingUtil} initFinalOutputFile.
-     * 
-     * @param  scoreVO
+     *
+     * @param scoreVO
      * @throws IOException
      */
     private void writeScore( ScoreValueObject scoreVO ) throws IOException {

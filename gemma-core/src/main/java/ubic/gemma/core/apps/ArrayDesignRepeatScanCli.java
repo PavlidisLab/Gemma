@@ -75,10 +75,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = this.processCommandLine( args );
-        if ( exception != null )
-            return exception;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         bsService = this.getBean( BioSequenceService.class );
 
@@ -89,7 +87,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                    return null;
+                    return;
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
@@ -136,8 +134,6 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         } else {
             exitwithError();
         }
-
-        return null;
     }
 
     @Override

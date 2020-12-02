@@ -40,12 +40,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentPlatformSwitchService serv;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e, e );
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -54,12 +51,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = this.processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
 
@@ -72,8 +65,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
         }
         this.summarizeProcessing();
-        return null;
-
     }
 
     @Override

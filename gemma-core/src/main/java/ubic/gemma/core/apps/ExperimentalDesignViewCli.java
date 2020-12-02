@@ -39,9 +39,8 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );
 
@@ -138,8 +137,6 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                 }
             }
         }
-
-        return null;
     }
 
 }

@@ -22,7 +22,7 @@ import ubic.gemma.persistence.util.Settings;
 /**
  * Add batch information for RNA-seq experiments.
  *
- * @author     tesar
+ * @author tesar
  * @deprecated this should not be necessary and the regular batch population tool can be used instead.
  */
 public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
@@ -31,12 +31,9 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     private BatchInfoPopulationService batchService;
     private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         RNASeqBatchInfoCli d = new RNASeqBatchInfoCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
+        return executeCommand( d, args );
     }
 
     @Override
@@ -62,10 +59,8 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         batchService = this.getBean( BatchInfoPopulationService.class );
 
@@ -86,8 +81,6 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
         }
 
         summarizeProcessing();
-
-        return null;
     }
 
     @Override

@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * Prepare the "processed" expression data vectors, and can also do batch correction.
  *
  * @author xwan, paul
- * @see    ProcessedExpressionDataVectorServiceImpl
+ * @see ProcessedExpressionDataVectorServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
@@ -66,7 +66,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         Option outputFileOption = Option.builder( "b" )
                 .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
                 .build();
-        this.addOption( "diagupdate", 
+        this.addOption( "diagupdate",
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         this.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
 
@@ -102,22 +102,18 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         if ( expressionExperiments.size() == 0 ) {
             AbstractCLI.log.error( "You did not select any usable expression experiments" );
-            return null;
+            return;
         }
 
         for ( BioAssaySet ee : expressionExperiments ) {
             this.processExperiment( ( ExpressionExperiment ) ee );
         }
         this.summarizeProcessing();
-        return null;
     }
 
     @Override

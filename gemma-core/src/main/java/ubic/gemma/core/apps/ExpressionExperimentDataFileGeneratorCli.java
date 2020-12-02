@@ -44,12 +44,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e, e );
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -58,12 +55,8 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = this.processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
@@ -123,9 +116,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         this.waitForThreadPoolCompletion( threads );
 
         this.summarizeProcessing();
-
-        return null;
-
     }
 
     @Override

@@ -70,11 +70,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         ExpressionDataFileService fs = this.getBean( ExpressionDataFileService.class );
 
@@ -96,8 +93,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 this.errorObjects.add( ee + ": " + e );
             }
         }
-
-        return null;
     }
 
     @Override

@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,16 +30,15 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
- * 
  * work in progress
- * 
+ *
  * @author paul
  */
 public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -47,21 +46,19 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         return "adATcleanup";
     }
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         ArrayDesignAuditTrailCleanupCli c = new ArrayDesignAuditTrailCleanupCli();
-        c.doWork( args );
+        return executeCommand( c, args );
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
             arrayDesign = getArrayDesignService().thawLite( arrayDesign );
 
@@ -108,9 +105,6 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
 
             this.successObjects.add( arrayDesign );
         }
-
-        return null;
-
     }
 
 }

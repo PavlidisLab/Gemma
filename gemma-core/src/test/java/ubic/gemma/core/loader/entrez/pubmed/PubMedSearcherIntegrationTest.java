@@ -41,7 +41,7 @@ public class PubMedSearcherIntegrationTest {
     @Test
     public final void testMain() {
 
-        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
+        int result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
         if ( result != null ) {
             if ( result instanceof java.net.UnknownHostException ) {
                 PubMedSearcherIntegrationTest.log.warn( "Test skipped because of UnknownHostException" );

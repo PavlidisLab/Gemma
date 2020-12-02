@@ -32,7 +32,7 @@ import java.io.*;
 
 /**
  * @author Paul
- * @see    ExperimentalDesignImporter
+ * @see ExperimentalDesignImporter
  */
 public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
@@ -72,10 +72,8 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = this.processCommandLine( args );
-        if ( e != null )
-            return e;
+    protected void doWork( String[] args ) throws Exception {
+        this.processCommandLine( args );
 
         ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class )
                 .getExperimentalFactorOntologyService();
@@ -92,13 +90,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         ExperimentalDesignImporter edImp = this.getBean( ExperimentalDesignImporter.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         expressionExperiment = ees.thawBioAssays( expressionExperiment );
-        try {
-            edImp.importDesign( expressionExperiment, inputStream );
-        } catch ( IOException e1 ) {
-            return e1;
-        }
-
-        return null;
+        edImp.importDesign( expressionExperiment, inputStream );
     }
 
     @Override
@@ -134,7 +126,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
      * @return           experiment with the given short name, if it exists. Bails otherwise with
      *                   {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
 
         if ( shortName == null ) {

@@ -142,10 +142,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null )
-            return exception;
+    protected void doWork( String[] args ) throws Exception {
+        super.processCommandLine( args );
 
         DataUpdater serv = this.getBean( DataUpdater.class );
 
@@ -173,7 +171,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
             }
 
             this.summarizeProcessing();
-            return null;
         }
 
         /*
@@ -206,10 +203,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     allowMissingSamples );
 
         } catch ( IOException e ) {
-            AbstractCLI.log.error( "Failed while processing " + ee, e );
-            return e;
+            throw new Exception( "Failed while processing " + ee, e );
         }
-        return null;
     }
 
     @Override
@@ -217,7 +212,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         return "Add expression quantifiation to an RNA-seq experiment";
     }
 
-    private ArrayDesign locateArrayDesign( String name ) {
+    private ArrayDesign locateArrayDesign( String name ) throws Exception {
 
         ArrayDesign arrayDesign = null;
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
@@ -233,9 +228,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( arrayDesign == null ) {
-            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            exitwithError();
+            throw new Exception( "No arrayDesign " + name + " found" );
         }
+
         return arrayDesign;
     }
 

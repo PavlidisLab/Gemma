@@ -59,16 +59,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
     private TwoChannelMissingValues tcmv;
 
-    public static void main( String[] args ) {
+    public static int main( String[] args ) {
         TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-        }
+        return executeCommand( p, args );
     }
 
     @Override
@@ -117,8 +110,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                     this.extraMissingValueIndicators.add( new Double( string ) );
                 }
             } catch ( NumberFormatException e ) {
-                AbstractCLI.log.error( "Arguments to mvind must be numbers" );
-                exitwithError();
+                throw new RuntimeException( "Arguments to mvind must be numbers", e );
             }
         }
         tcmv = this.getBean( TwoChannelMissingValues.class );
@@ -135,11 +127,9 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork( String[] args ) throws Exception {
 
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+        this.processCommandLine( args );
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 this.processForMissingValues( ( ExpressionExperiment ) ee );
@@ -150,7 +140,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         this.summarizeProcessing();
-        return null;
     }
 
     @Override
