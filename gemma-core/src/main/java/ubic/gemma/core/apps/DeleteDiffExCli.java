@@ -27,7 +27,7 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
 
     public static int main( String[] args ) {
         DeleteDiffExCli d = new DeleteDiffExCli();
-        return executeCommand(d, args);
+        return executeCommand( d, args );
     }
 
     @Override
@@ -36,9 +36,8 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
+    protected void doWork() throws Exception {
         this.force = true;
-        super.processCommandLine( args );
 
         DifferentialExpressionAnalysisService deas = this.getBean( DifferentialExpressionAnalysisService.class );
 

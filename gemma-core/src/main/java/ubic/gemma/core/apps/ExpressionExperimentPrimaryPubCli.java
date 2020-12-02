@@ -78,8 +78,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        processCommandLine( args );
+    protected void doWork() throws Exception {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
         Persister ph = this.getPersisterHelper();

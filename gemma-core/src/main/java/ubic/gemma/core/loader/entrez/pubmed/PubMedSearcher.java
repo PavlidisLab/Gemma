@@ -18,13 +18,10 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.xml.sax.SAXException;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -60,9 +57,7 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         @SuppressWarnings("unchecked")
         Collection<BibliographicReference> refs = PubMedSearcher.pms
                 .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );

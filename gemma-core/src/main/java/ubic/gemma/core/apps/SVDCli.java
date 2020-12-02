@@ -58,9 +58,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         SVDService svdService = this.getBean( SVDService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {

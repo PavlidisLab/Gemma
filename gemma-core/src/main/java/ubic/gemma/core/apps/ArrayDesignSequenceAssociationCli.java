@@ -60,9 +60,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         // this is kind of an oddball function of this tool.
         if ( this.hasOption( 's' ) ) {
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,

@@ -42,9 +42,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         ProcessedExpressionDataVectorService processedExpressionDataVectorService = this
                 .getBean( ProcessedExpressionDataVectorService.class );
 

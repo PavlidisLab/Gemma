@@ -89,9 +89,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Can only split one experiment at a time" );
         }

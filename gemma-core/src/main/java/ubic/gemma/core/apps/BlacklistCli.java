@@ -32,7 +32,6 @@ import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 
 /**
  * Add entries to the blacklist
@@ -81,9 +80,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
         ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
 

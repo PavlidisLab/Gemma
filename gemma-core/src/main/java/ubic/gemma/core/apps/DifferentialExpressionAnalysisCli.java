@@ -87,9 +87,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         SecurityService securityService = this.getBean( SecurityService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {

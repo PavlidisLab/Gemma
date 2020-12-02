@@ -135,9 +135,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {

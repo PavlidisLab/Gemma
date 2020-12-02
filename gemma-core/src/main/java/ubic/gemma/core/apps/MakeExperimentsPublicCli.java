@@ -36,14 +36,11 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {
             securityService.makePublic( ee );
             this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line", null );
-
         }
     }
 

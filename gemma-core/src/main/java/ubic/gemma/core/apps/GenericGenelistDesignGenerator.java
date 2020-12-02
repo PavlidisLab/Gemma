@@ -94,9 +94,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         ExternalDatabase genbank = externalDatabaseService.findByName( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.findByName( "Ensembl" );
         if ( genbank == null || ensembl == null ) {

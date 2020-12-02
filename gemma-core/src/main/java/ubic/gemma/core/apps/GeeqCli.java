@@ -92,9 +92,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet bioassay : expressionExperiments ) {
             if ( !( bioassay instanceof ExpressionExperiment ) ) {
                 log.debug( bioassay.getName() + " is not an ExpressionExperiment" );

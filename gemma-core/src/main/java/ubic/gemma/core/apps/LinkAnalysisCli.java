@@ -80,9 +80,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         if ( initializeFromOldData ) {
             AbstractCLI.log.info( "Initializing links from old data for " + this.getTaxon() );
             LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );

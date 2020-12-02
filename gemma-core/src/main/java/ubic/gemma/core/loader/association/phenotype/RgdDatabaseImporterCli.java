@@ -64,9 +64,8 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
+    protected void doWork() throws Exception {
         // this gets the context, so we can access beans
-        super.processCommandLine( args );
         super.init();
 
         try {

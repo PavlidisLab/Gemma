@@ -83,9 +83,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         File f = new File( file );
         if ( !f.canRead() ) {
             AbstractCLI.log.fatal( "Cannot read from " + file );

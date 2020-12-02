@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,9 +48,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );

@@ -127,9 +127,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 this.processForMissingValues( ( ExpressionExperiment ) ee );

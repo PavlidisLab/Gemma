@@ -95,8 +95,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         super.init();
 
         writeFolder = ppUtil.createWriteFolderIfDoesntExist( SFARI );

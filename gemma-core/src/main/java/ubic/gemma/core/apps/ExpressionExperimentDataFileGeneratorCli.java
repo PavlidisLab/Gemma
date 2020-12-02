@@ -55,9 +55,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
         // Add the Experiments to the queue for processing

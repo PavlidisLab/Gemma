@@ -59,9 +59,7 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         batchService = this.getBean( BatchInfoPopulationService.class );
 
         log.info( "Checking folders for existing experiments in " + fastqRootDir );

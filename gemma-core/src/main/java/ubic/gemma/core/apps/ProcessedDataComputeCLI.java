@@ -102,9 +102,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         if ( expressionExperiments.size() == 0 ) {
             AbstractCLI.log.error( "You did not select any usable expression experiments" );
             return;

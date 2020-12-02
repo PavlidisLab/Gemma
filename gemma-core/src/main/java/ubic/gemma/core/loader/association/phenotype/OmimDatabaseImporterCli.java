@@ -52,9 +52,8 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     // ********************************************************************************
 
     /**
-     * @throws Exception
      */
-    OmimDatabaseImporterCli() throws Exception {
+    OmimDatabaseImporterCli() {
         super();
     }
 
@@ -79,10 +78,9 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
+    protected void doWork() throws Exception {
 
         // this gets the context, so we can access beans
-        super.processCommandLine( args );
         super.init();
 
         // creates the folder to place the downloaded files and final output files

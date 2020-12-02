@@ -142,9 +142,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.justbackfillLog2cpm ) {

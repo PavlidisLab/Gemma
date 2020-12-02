@@ -32,7 +32,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -66,9 +65,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         TaxonService taxonService = this.getBean( TaxonService.class );
 
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();

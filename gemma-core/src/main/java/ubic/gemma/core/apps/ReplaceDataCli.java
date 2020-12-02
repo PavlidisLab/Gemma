@@ -18,12 +18,10 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -74,9 +72,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         DataUpdater dataUpdater = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.size() > 1 ) {

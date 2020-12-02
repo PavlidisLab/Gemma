@@ -166,9 +166,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         this.taxonService = this.getBean( TaxonService.class );
 
         this.waitForGeneOntologyReady();

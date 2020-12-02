@@ -62,9 +62,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {

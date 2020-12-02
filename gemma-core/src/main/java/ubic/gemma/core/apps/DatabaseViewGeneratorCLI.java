@@ -87,8 +87,7 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         DatabaseViewGenerator v = this.getBean( DatabaseViewGenerator.class );
         v.runAll();
     }

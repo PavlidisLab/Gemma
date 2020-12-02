@@ -58,8 +58,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
         // Read in the mapping file, which is in the classpath. This is also used by GeoPlatform (and in the DataUpdater)

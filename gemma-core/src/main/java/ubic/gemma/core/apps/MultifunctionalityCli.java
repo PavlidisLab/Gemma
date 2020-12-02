@@ -49,9 +49,7 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         GeneMultifunctionalityPopulationService gfs = this.getBean( GeneMultifunctionalityPopulationService.class );
 
         if ( this.taxon != null ) {

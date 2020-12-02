@@ -20,7 +20,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -89,8 +88,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         /*
          * These beans are defined in Spring XML.
          */

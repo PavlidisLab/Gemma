@@ -80,9 +80,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         this.createWriteFolder();
 
         FileWriter fstream = new FileWriter(

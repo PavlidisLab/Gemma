@@ -51,9 +51,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {

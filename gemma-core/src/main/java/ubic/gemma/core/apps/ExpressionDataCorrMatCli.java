@@ -41,9 +41,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
             try {
                 if ( !( ee instanceof ExpressionExperiment ) ) {

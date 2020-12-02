@@ -363,9 +363,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.getArrayDesignsToProcess()

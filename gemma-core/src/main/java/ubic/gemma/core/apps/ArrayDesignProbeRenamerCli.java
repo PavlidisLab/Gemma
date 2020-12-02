@@ -76,9 +76,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         if ( fileName == null ) {
             throw new IllegalArgumentException( "filename cannot be null" );
         }

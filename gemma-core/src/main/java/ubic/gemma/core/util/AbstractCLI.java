@@ -132,7 +132,8 @@ public abstract class AbstractCLI {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            p.doWork( args );
+            p.processCommandLine( args );
+            p.doWork();
             return p.errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
             log.error( e, e );
@@ -397,11 +398,9 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param args
-     * @return exit code for the command, {@link ExitCode.FAILURE} is used if an exception is raised
      * @throws Exception
      */
-    protected abstract void doWork( String[] args ) throws Exception;
+    protected abstract void doWork() throws Exception;
 
     protected final double getDoubleOptionValue( char option ) {
         try {
@@ -486,7 +485,7 @@ public abstract class AbstractCLI {
      * @param args args
      * @return Exception; null if nothing went wrong.
      */
-    protected final void processCommandLine( String[] args ) throws Exception {
+    private final void processCommandLine( String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();

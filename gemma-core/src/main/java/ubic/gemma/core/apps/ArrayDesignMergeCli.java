@@ -57,8 +57,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
     }
 

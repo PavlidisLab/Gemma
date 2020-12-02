@@ -50,9 +50,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         BatchInfoPopulationService ser = this.getBean( BatchInfoPopulationService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {

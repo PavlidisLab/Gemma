@@ -74,8 +74,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         this.init();
     }
 

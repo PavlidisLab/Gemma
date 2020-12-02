@@ -63,8 +63,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );
 

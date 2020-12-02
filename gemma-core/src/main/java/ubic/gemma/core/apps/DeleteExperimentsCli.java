@@ -35,10 +35,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
+    protected void doWork() throws Exception {
         this.force = true;
-        super.processCommandLine( args );
-
         for ( BioAssaySet bas : this.expressionExperiments ) {
             try {
                 log.info( "--------- Deleting " + bas + " --------" );

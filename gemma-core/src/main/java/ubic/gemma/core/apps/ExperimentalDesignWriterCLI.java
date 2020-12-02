@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Option;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -48,9 +47,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {

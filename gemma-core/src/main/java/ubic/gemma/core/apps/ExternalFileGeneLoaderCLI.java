@@ -94,8 +94,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         this.processGeneList();
     }
 

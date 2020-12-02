@@ -65,10 +65,7 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         try {
             this.loadServices();
         } catch ( Exception e ) {

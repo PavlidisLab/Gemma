@@ -56,9 +56,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        processCommandLine( args );
-
+    protected void doWork() throws Exception {
         // ContactService contactService = this.getBean( ContactService.class );
 
         ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();

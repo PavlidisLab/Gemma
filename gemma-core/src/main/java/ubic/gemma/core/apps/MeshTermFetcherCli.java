@@ -72,9 +72,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
         Collection<Integer> ids = this.readIdsFromFile( file );

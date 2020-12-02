@@ -115,8 +115,7 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         super.init();
 
         // creates the folder where to place the file web downloaded files and final output files

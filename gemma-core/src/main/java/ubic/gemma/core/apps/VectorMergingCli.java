@@ -54,9 +54,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         mergingService = this.getBean( VectorMergingService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {

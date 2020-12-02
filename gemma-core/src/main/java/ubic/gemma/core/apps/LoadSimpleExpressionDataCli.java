@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -117,8 +116,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
+    protected void doWork() throws Exception {
         this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
         this.eeService = this.getBean( ExpressionExperimentService.class );
         this.adService = this.getBean( ArrayDesignService.class );

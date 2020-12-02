@@ -57,8 +57,7 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
             arrayDesign = getArrayDesignService().thawLite( arrayDesign );
 

@@ -70,9 +70,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         ExpressionDataFileService fs = this.getBean( ExpressionDataFileService.class );
 
         if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {

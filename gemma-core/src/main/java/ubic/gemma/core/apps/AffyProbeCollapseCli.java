@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -43,6 +44,9 @@ import java.util.Collection;
  * @author paul
  */
 public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
+
+    private String affyProbeFileName;
+
     public static void main( String[] args ) {
         AffyProbeCollapseCli d = new AffyProbeCollapseCli();
         executeCommand( d, args );
@@ -58,17 +62,32 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
         return "affyCollapse";
     }
 
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        addOption( Option.builder( "affyProbeFile" )
+                .hasArg()
+                .desc( "Affymetrix probe file to use as input" )
+                .required().build() );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        affyProbeFileName = this.getOptionValue( "affyProbeFile" );
+    }
+
     /*
      * (non-Javadoc)
      *
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected void doWork( String[] args ) throws IOException {
+    protected void doWork() throws IOException {
 
         // parse
         AffyProbeReader apr = new AffyProbeReader();
-        apr.parse( args[0] );
+        apr.parse( affyProbeFileName );
         Collection<CompositeSequence> compositeSequencesFromProbes = apr.getKeySet();
 
         for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {

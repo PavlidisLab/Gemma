@@ -47,25 +47,8 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private BibliographicReferenceService bibliographicReferenceService = null;
     private BufferedWriter writer;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
-    public LoadEvidenceForClassifier( String[] args ) throws Exception {
-
-        this.loadServices( args );
-
-        // place to put the files results
-        String writeFolder = this.createWriteFolderIfNotExists();
-
-        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
-
-        this.loadTrainingSetUsed();
-
-        this.findEvidence();
-    }
-
-    public static void main( String[] args ) throws Exception {
-
-        new LoadEvidenceForClassifier( args );
-
+    public static int main( String[] args ) {
+        return executeCommand( new LoadEvidenceForClassifier(), args );
     }
 
     @Override
@@ -83,8 +66,17 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void doWork( String[] args ) {
-        // TODO
+    protected void doWork() throws Exception {
+        this.loadServices();
+
+        // place to put the files results
+        String writeFolder = this.createWriteFolderIfNotExists();
+
+        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
+
+        this.loadTrainingSetUsed();
+
+        this.findEvidence();
     }
 
     // creates the folder where the output files will be put, use this one if file is too big
@@ -103,15 +95,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     // load all needed services
-    private synchronized void loadServices( String[] args ) {
-
-        // this gets the context, so we can access beans
-        try {
-            this.processCommandLine( args );
-        } catch ( Exception exception ) {
-            AbstractCLI.log.error( exception, exception );
-        }
-
+    private synchronized void loadServices() {
         // add services if needed later
         this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
     }

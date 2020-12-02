@@ -58,10 +58,8 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void doWork( String[] args ) throws Exception {
-        super.processCommandLine( args );
+    protected void doWork() throws Exception {
         super.init();
-
         this.checkForDGAFile();
         this.findTermsWithParents();
         this.processDGAFile();
