@@ -31,11 +31,6 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     private BatchInfoPopulationService batchService;
     private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
 
-    public static int main( String[] args ) {
-        RNASeqBatchInfoCli d = new RNASeqBatchInfoCli();
-        return executeCommand( d, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;

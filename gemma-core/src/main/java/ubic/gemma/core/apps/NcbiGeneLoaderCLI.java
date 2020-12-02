@@ -53,11 +53,6 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         super();
     }
 
-    public static void main( String[] args ) {
-        NcbiGeneLoaderCLI p = new NcbiGeneLoaderCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;

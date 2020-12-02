@@ -69,11 +69,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private boolean updateNodeDegree = false;
     private boolean deleteAnalyses = false;
 
-    public static void main( String[] args ) {
-        LinkAnalysisCli p = new LinkAnalysisCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "coexpAnalyze";

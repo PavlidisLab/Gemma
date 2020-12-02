@@ -31,11 +31,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
  */
 public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        OrderVectorsByDesignCli c = new OrderVectorsByDesignCli();
-        return executeCommand( c, args );
-    }
-
     @Override
     public String getCommandName() {
         return "orderVectorsByDesign";

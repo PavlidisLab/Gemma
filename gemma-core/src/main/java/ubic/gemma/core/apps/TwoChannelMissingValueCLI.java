@@ -59,11 +59,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
     private TwoChannelMissingValues tcmv;
 
-    public static int main( String[] args ) {
-        TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
-        return executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

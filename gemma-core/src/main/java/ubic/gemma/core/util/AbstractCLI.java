@@ -56,8 +56,10 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
+ *
  * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
  * to handle any application-specific options (they can be no-ops).
+ *
  * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
  * for testing. In that method call processCommandline. You should return any non-null return value from
  * processCommandLine.
@@ -122,31 +124,32 @@ public abstract class AbstractCLI {
     private CommandLine commandLine;
 
     /**
-     * Run a command. If
+     * Run the command.
      *
-     * @param p    command line object
-     * @param args arguments
-     * @return exit code
+     * Parse and process CLI arguments, invoke the command doWork implementation, and print basic statistics about time
+     * usage.
+     *
+     * @param args arguments Arguments to pass to {@link #processCommandLine(String[])}
+     * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
+     *         end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
+     *         internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
-    protected static int executeCommand( AbstractCLI p, String[] args ) {
+    public int executeCommand( String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            p.processCommandLine( args );
-            p.doWork();
-            return p.errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
+            buildOptions();
+            buildStandardOptions();
+            processCommandLine( args );
+            doWork();
+            return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
-            log.error( e, e );
-            return 1;
+            log.error( getCommandName() + " failed.", e );
+            return FAILURE;
         } finally {
             resetLogging();
-            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
         }
-    }
-
-    public AbstractCLI() {
-        this.buildStandardOptions();
-        this.buildOptions();
     }
 
     /**

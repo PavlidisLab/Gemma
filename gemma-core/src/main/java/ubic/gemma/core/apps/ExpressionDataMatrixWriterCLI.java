@@ -36,11 +36,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private boolean filter = false;
     private String outFileName = null;
 
-    public static void main( String[] args ) {
-        ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
-        executeCommand( cli, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;

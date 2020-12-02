@@ -36,11 +36,6 @@ import java.util.Collection;
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        BibRefUpdaterCli e = new BibRefUpdaterCli();
-        executeCommand( e, args );
-    }
-
     @Override
     public String getCommandName() {
         return "updatePubMeds";

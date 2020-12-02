@@ -24,11 +24,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        DeleteExperimentsCli d = new DeleteExperimentsCli();
-        return executeCommand( d, args );
-    }
-
     @Override
     public String getCommandName() {
         return "deleteExperiments";

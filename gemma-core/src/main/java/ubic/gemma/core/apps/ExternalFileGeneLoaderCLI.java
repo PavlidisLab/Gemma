@@ -36,17 +36,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     private String directGeneInputFileName = null;
     private String taxonName;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
-    public ExternalFileGeneLoaderCLI() {
-        super();
-    }
-
-    public static void main( String[] args ) {
-        // super constructor calls build options
-        ExternalFileGeneLoaderCLI p = new ExternalFileGeneLoaderCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public String getShortDesc() {
         return "loading genes from a non-NCBI files; only used for species like salmon";

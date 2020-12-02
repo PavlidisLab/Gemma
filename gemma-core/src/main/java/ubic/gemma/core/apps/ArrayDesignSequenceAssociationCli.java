@@ -49,11 +49,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     private String taxonName = null;
     private TaxonService taxonService;
 
-    public static void main( String[] args ) {
-        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "addPlatformSequences";

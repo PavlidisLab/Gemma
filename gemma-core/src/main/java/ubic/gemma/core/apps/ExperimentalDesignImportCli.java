@@ -39,11 +39,6 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
 
-    public static void main( String[] args ) {
-        ExperimentalDesignImportCli e = new ExperimentalDesignImportCli();
-        executeCommand( e, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

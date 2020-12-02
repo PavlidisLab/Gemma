@@ -44,11 +44,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean updateRanks = false;
     private boolean updateDiagnostics = false;
 
-    public static void main( String[] args ) {
-        ProcessedDataComputeCLI p = new ProcessedDataComputeCLI();
-        executeCommand( p, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;

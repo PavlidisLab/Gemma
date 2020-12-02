@@ -25,11 +25,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        MakeExperimentsPublicCli d = new MakeExperimentsPublicCli();
-        return executeCommand( d, args );
-    }
-
     @Override
     public String getCommandName() {
         return "makePublic";

@@ -41,7 +41,7 @@ public class PubMedSearcherIntegrationTest {
     @Test
     public final void testMain() {
         try {
-            p.doWork();
+            p.executeCommand( new String[]{"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile"} );
         } catch ( Exception e ) {
             assumeFalse( "Test skipped because of UnknownHostException", e instanceof java.net.UnknownHostException );
             assumeFalse( "Test skipped because of a 502 from NCBI", e.getMessage().contains( "code: 503" ) );

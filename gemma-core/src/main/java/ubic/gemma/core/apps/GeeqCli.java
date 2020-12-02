@@ -26,7 +26,6 @@ import static ubic.gemma.persistence.service.expression.experiment.GeeqService.O
 import org.apache.commons.cli.Option;
 
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,11 +41,6 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     private GeeqService geeqService;
 
     private String mode = GeeqService.OPT_MODE_ALL;
-
-    public static void main( String[] args ) {
-        GeeqCli p = new GeeqCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public String getShortDesc() {

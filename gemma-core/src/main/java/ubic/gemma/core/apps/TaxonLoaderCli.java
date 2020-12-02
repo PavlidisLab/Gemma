@@ -32,11 +32,6 @@ import java.util.Collection;
  */
 public class TaxonLoaderCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        TaxonLoaderCli p = new TaxonLoaderCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "loadTaxa";

@@ -32,11 +32,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     private VectorMergingService mergingService;
 
-    public static int main( String[] args ) {
-        VectorMergingCli v = new VectorMergingCli();
-        return executeCommand( v, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;

@@ -38,11 +38,6 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
         super();
     }
 
-    public static int main( String[] args ) throws Exception {
-        CtdDatabaseImporterCli importEvidence = new CtdDatabaseImporterCli();
-        return executeCommand( importEvidence, args );
-    }
-
     @Override
     public String getCommandName() {
         return "ctdDownload";

@@ -28,11 +28,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-        return executeCommand( b, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

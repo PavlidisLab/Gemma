@@ -26,7 +26,6 @@ import org.apache.commons.cli.Option;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -44,11 +43,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
      *
      */
     private static final String FACTOR_OPTION = "factor";
-
-    public static void main( String[] args ) {
-        SplitExperimentCli c = new SplitExperimentCli();
-        AbstractCLIContextCLI.executeCommand( c, args );
-    }
 
     private Long factorId;
 

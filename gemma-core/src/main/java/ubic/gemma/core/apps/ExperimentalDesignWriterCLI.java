@@ -36,11 +36,6 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     private String outFileName;
 
-    public static int main( String[] args ) {
-        ExperimentalDesignWriterCLI cli = new ExperimentalDesignWriterCLI();
-        return executeCommand( cli, args );
-    }
-
     @Override
     public String getCommandName() {
         return "printExperimentalDesign";

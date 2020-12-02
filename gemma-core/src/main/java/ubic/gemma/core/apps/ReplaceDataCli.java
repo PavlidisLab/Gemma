@@ -39,11 +39,6 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
     private String file = null;
 
-    public static void main( String[] args ) {
-        ReplaceDataCli c = new ReplaceDataCli();
-        executeCommand( c, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

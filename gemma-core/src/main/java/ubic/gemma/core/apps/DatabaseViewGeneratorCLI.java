@@ -39,11 +39,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     private boolean generateTissueSummary = false;
     private int limit = 0;
 
-    public static int main( String[] args ) {
-        DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
-        return executeCommand( o, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.ANALYSIS;

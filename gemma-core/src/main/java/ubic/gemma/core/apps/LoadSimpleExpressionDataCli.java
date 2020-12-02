@@ -70,11 +70,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     private String fileName = null;
     private TaxonService taxonService = null;
 
-    public static int main( String[] args ) {
-        LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

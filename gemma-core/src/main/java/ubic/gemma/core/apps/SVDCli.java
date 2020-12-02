@@ -31,11 +31,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        SVDCli s = new SVDCli();
-        return executeCommand( s, args );
-    }
-
     @Override
     public String getShortDesc() {
         return "Run PCA (using SVD) on data sets";

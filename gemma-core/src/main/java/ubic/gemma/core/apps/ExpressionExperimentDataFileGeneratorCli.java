@@ -44,11 +44,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
-    public static int main( String[] args ) {
-        ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "generateDataFile";

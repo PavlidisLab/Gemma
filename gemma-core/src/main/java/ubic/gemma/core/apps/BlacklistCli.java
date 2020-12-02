@@ -35,18 +35,12 @@ import java.io.FileReader;
 
 /**
  * Add entries to the blacklist
- *
  * @author paul
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
 
     String fileName = null;
     private boolean remove = false;
-
-    public static void main( String[] args ) {
-        BlacklistCli e = new BlacklistCli();
-        executeCommand( e, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {

@@ -30,12 +30,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
  */
 public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ExternalDatabaseAdderCli p = new ExternalDatabaseAdderCli();
-        executeCommand( p, args );
-
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.SYSTEM;

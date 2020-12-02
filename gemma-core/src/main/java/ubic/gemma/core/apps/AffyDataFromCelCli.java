@@ -44,11 +44,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
 
-    public static int main( String[] args ) {
-        AffyDataFromCelCli c = new AffyDataFromCelCli();
-        return executeCommand( c, args );
-    }
-
     private String aptFile = null;
     private String celchip = null;
 

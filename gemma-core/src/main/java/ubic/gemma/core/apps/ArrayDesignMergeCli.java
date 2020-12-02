@@ -46,11 +46,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newShortName;
     private HashSet<ArrayDesign> otherArrayDesigns;
 
-    public static int main( String[] args ) {
-        ArrayDesignMergeCli b = new ArrayDesignMergeCli();
-        return executeCommand( b, args );
-    }
-
     @Override
     public String getCommandName() {
         return "mergePlatforms";

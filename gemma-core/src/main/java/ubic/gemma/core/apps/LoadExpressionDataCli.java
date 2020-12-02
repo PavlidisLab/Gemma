@@ -64,11 +64,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     private boolean splitByPlatform = false;
     private boolean suppressPostProcessing = false;
 
-    public static int main( String[] args ) {
-        LoadExpressionDataCli p = new LoadExpressionDataCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

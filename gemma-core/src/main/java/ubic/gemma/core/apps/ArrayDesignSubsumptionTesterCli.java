@@ -37,11 +37,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     private Collection<String> otherArrayDesignNames;
 
-    public static int main( String[] args ) {
-        ArrayDesignSubsumptionTesterCli tester = new ArrayDesignSubsumptionTesterCli();
-        return executeCommand( tester, args );
-    }
-
     @Override
     public String getCommandName() {
         return "platformSubsumptionTest";

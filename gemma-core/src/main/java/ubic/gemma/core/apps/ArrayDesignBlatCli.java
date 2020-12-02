@@ -54,11 +54,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
 
-    public static void main( String[] args ) {
-        ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;

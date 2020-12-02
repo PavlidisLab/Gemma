@@ -45,11 +45,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     private static final String GENE2GO_FILE = "gene2go.gz";
     private String filePath = null;
 
-    public static int main( String[] args ) {
-        NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
-        return executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "updateGOAnnots";

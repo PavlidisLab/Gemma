@@ -72,12 +72,6 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
         super();
     }
 
-    public static int main( String[] args ) {
-        @SuppressWarnings("unused")
-        SfariDatabaseImporterCli importEvidence = new SfariDatabaseImporterCli();
-        return executeCommand( importEvidence, args );
-    }
-
     @Override
     public String getCommandName() {
         return "sfariDownload";

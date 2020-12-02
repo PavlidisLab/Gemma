@@ -75,12 +75,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean persist = true;
 
-    public static void main( String[] args ) {
-        DifferentialExpressionAnalysisCli p = new DifferentialExpressionAnalysisCli();
-        executeCommand( p, args );
-
-    }
-
     @Override
     public String getCommandName() {
         return "diffExAnalyze";

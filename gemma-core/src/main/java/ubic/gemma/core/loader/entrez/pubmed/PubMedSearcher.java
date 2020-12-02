@@ -36,11 +36,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         super();
     }
 
-    public static void main( String[] args ) {
-        PubMedSearcher p = new PubMedSearcher();
-        executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.MISC;

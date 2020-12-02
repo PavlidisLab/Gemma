@@ -32,16 +32,6 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     private final Set<String> linesToExclude = new HashSet<>();
     private File dgaFile = null;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
-    public DgaDatabaseImporterCli() throws Exception {
-        super();
-    }
-
-    public static int main( String[] args ) throws Exception {
-        DgaDatabaseImporterCli databaseImporter = new DgaDatabaseImporterCli();
-        return executeCommand( databaseImporter, args );
-    }
-
     @Override
     public String getCommandName() {
         return "dgaDownload";

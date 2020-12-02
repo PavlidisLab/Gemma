@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,11 +39,6 @@ import java.util.Map;
  * @author pavlidis
  */
 public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipulatingCli {
-
-    public static void main( String[] args ) {
-        ArrayDesignBioSequenceDetachCli p = new ArrayDesignBioSequenceDetachCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public String getCommandName() {

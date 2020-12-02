@@ -37,11 +37,6 @@ import java.io.InputStreamReader;
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ArrayDesignAlternativePopulateCli c = new ArrayDesignAlternativePopulateCli();
-        executeCommand( c, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;

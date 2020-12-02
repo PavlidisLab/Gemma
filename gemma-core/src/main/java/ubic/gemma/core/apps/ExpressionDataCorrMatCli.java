@@ -30,11 +30,6 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
-        return executeCommand( e, args );
-    }
-
     @Override
     public String getCommandName() {
         return "corrMat";

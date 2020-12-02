@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.association.phenotype;
 
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -46,10 +45,6 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     // the services that will be needed
     private BibliographicReferenceService bibliographicReferenceService = null;
     private BufferedWriter writer;
-
-    public static int main( String[] args ) {
-        return executeCommand( new LoadEvidenceForClassifier(), args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {

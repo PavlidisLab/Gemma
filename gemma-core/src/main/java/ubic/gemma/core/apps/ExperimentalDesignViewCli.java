@@ -14,11 +14,6 @@ import java.util.*;
  */
 public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.ANALYSIS;

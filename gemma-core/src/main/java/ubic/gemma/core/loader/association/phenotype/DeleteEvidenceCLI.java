@@ -34,12 +34,6 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     private String externalDatabaseName = "";
     private PhenotypeAssociationManagerService phenotypeAssociationService = null;
 
-    public static void main( String[] args ) {
-
-        DeleteEvidenceCLI deleteEvidenceImporterCLI = new DeleteEvidenceCLI();
-        executeCommand( deleteEvidenceImporterCLI, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PHENOTYPES;

@@ -34,11 +34,6 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
 
     private String directory;
 
-    public static int main( String[] args ) {
-        PubMedLoaderCli p = new PubMedLoaderCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.MISC;

@@ -44,18 +44,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     // FIXME INVALID URL
     private static final String OMIM_URL_PATH = "ftp://ftp.omim.org/OMIM/";// "ftp://faf.grcf.jhmi.edu/OMIM/";
 
-    public static int main( String[] args ) throws Exception {
-        OmimDatabaseImporterCli importer = new OmimDatabaseImporterCli();
-        return executeCommand( importer, args );
-    }
-
     // ********************************************************************************
-
-    /**
-     */
-    OmimDatabaseImporterCli() {
-        super();
-    }
 
     @Override
     public CommandGroup getCommandGroup() {

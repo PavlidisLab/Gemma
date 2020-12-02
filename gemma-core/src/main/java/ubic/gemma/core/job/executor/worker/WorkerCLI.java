@@ -32,11 +32,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     private RemoteTaskRunningService taskRunningService;
 
-    public static int main( String[] args ) {
-        WorkerCLI me = new WorkerCLI();
-        return executeCommand( me, args );
-    }
-
     @Override
     public String getShortDesc() {
         return "Start worker application for processing tasks sent by Gemma webapp.";

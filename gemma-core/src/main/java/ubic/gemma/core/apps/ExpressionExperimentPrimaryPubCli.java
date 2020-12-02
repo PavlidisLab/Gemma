@@ -47,11 +47,6 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
 
-    public static void main( String[] args ) {
-        ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "pubmedAssociateToExperiments";

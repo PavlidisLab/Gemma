@@ -45,11 +45,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
     private String file;
     private boolean majorTopicsOnly = false;
 
-    public static int main( String[] args ) {
-        MeshTermFetcherCli p = new MeshTermFetcherCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "fetchMeshTerms";

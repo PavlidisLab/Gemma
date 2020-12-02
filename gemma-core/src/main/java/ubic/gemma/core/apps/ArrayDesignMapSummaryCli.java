@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import java.util.Collection;
@@ -31,11 +30,6 @@ import java.util.Collection;
  * @author Paul
  */
 public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli {
-
-    public static void main( String[] args ) {
-        ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public String getCommandName() {

@@ -36,7 +36,6 @@ import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Gene;
@@ -73,11 +72,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private String taxonName;
     private boolean notifiedAboutGOState = false;
     private TaxonService taxonService;
-
-    public static void main( String[] args ) {
-        ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {

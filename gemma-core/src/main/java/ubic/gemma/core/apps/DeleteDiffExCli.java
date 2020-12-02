@@ -25,11 +25,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
  */
 public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
 
-    public static int main( String[] args ) {
-        DeleteDiffExCli d = new DeleteDiffExCli();
-        return executeCommand( d, args );
-    }
-
     @Override
     public String getCommandName() {
         return "deleteDiffEx";

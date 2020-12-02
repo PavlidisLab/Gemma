@@ -22,7 +22,6 @@ import org.apache.commons.cli.Option;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,11 +40,6 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     private BioSequenceService bsService;
     private String inputFileName;
-
-    public static void main( String[] args ) {
-        ArrayDesignRepeatScanCli p = new ArrayDesignRepeatScanCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {

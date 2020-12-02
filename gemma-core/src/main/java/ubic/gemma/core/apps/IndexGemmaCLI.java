@@ -42,11 +42,6 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     private boolean indexX = false;
     private boolean indexY = false;
 
-    public static int main( String[] args ) {
-        IndexGemmaCLI p = new IndexGemmaCLI();
-        return executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;

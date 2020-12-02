@@ -70,11 +70,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private boolean useEnsemblIds = false;
     private boolean useNCBIIds = false;
 
-    public static void main( String[] args ) {
-        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        executeCommand( b, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;

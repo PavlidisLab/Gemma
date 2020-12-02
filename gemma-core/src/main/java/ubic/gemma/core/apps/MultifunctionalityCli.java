@@ -28,11 +28,6 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
     private Taxon taxon;
 
-    public static int main( String[] args ) {
-        MultifunctionalityCli c = new MultifunctionalityCli();
-        return executeCommand( c, args );
-    }
-
     @Override
     public String getCommandName() {
         return "updateMultifunc";

@@ -38,16 +38,6 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     // name of the external database
     private static final String RGD = "RGD";
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
-    public RgdDatabaseImporterCli() {
-        super();
-    }
-
-    public static int main( String[] args ) {
-        RgdDatabaseImporterCli importEvidence = new RgdDatabaseImporterCli();
-        return executeCommand( importEvidence, args );
-    }
-
     @Override
     public String getCommandName() {
         return "rgdDownload";

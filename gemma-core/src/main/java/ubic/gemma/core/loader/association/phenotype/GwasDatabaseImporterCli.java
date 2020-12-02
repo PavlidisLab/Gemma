@@ -94,16 +94,6 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     private static final String STRONGEST_SNP = "STRONGEST SNP-RISK ALLELE";
     private static final Integer STRONGEST_SNP_INDEX = 20;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
-    public GwasDatabaseImporterCli() {
-        super();
-    }
-
-    public static int main( String[] args ) {
-        GwasDatabaseImporterCli importEvidence = new GwasDatabaseImporterCli();
-        return executeCommand( importEvidence, args );
-    }
-
     @Override
     public String getCommandName() {
         return "gwasDownload";

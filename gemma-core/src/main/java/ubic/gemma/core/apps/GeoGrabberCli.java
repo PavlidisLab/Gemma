@@ -33,11 +33,6 @@ import java.util.Set;
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
-    public static int main( String[] args ) {
-        GeoGrabberCli d = new GeoGrabberCli();
-        return executeCommand( d, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.ANALYSIS;

@@ -40,9 +40,8 @@ import java.util.*;
 @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
-    public static int main( String[] args ) {
-        EvidenceImporterCLI evidenceImporterCLI = new EvidenceImporterCLI();
-
+    @Override
+    public int executeCommand( String[] args ) {
         String[] argsToTake;
 
         if ( args.length == 0 ) {
@@ -50,8 +49,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         } else {
             argsToTake = args;
         }
-
-        return executeCommand( evidenceImporterCLI, argsToTake );
+        return super.executeCommand( argsToTake );
     }
 
     // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)

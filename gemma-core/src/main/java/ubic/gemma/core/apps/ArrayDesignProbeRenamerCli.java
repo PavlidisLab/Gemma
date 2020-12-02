@@ -45,11 +45,6 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
     private String fileName;
 
-    public static int main( String[] args ) {
-        ArrayDesignProbeRenamerCli a = new ArrayDesignProbeRenamerCli();
-        return executeCommand( a, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;

@@ -40,11 +40,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentPlatformSwitchService serv;
 
-    public static int main( String[] args ) {
-        ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
-        return executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "switchExperimentPlatform";

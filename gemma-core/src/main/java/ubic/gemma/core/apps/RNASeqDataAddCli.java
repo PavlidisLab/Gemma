@@ -48,11 +48,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
 
-    public static void main( String[] args ) {
-        RNASeqDataAddCli c = new RNASeqDataAddCli();
-        executeCommand( c, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

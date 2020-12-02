@@ -46,11 +46,6 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         return "adATcleanup";
     }
 
-    public static int main( String[] args ) {
-        ArrayDesignAuditTrailCleanupCli c = new ArrayDesignAuditTrailCleanupCli();
-        return executeCommand( c, args );
-    }
-
     /*
      * (non-Javadoc)
      *

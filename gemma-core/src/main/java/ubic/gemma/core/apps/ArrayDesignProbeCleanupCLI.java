@@ -22,7 +22,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -43,11 +42,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private String file;
-
-    public static void main( String[] args ) {
-        ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {

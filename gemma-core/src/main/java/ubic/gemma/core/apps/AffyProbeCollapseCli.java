@@ -47,11 +47,6 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
 
     private String affyProbeFileName;
 
-    public static void main( String[] args ) {
-        AffyProbeCollapseCli d = new AffyProbeCollapseCli();
-        executeCommand( d, args );
-    }
-
     /*
      * (non-Javadoc)
      *

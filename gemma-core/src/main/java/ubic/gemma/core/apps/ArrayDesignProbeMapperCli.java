@@ -6,7 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -65,11 +64,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabase sourceDatabase = null;
     private Taxon taxon = null;
     private boolean useDB = true;
-
-    public static void main( String[] args ) {
-        ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
