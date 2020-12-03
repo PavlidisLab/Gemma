@@ -83,8 +83,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * Override this method in your subclass to provide additional Spring configuration files that will be merged with
-     * the Gemma spring context. See SpringContextUtil; an example path is
-     * "classpath*:/myproject/applicationContext-mine.xml".
+     * the Gemma spring context. See SpringContextUtil; an example path is "classpath*:/myproject/applicationContext-mine.xml".
      *
      * @return string[]
      */
@@ -141,7 +140,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         AbstractCLI.log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
                         needToRun = false;
                     }
                 } else {
@@ -169,8 +168,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             }
 
             if ( !okToRun ) {
-                AbstractCLI.log.info( auditable + ": has an active 'trouble' flag" );
-                errorObjects.add( auditable + ": has an active 'trouble' flag" );
+                addErrorObject( auditable, "Has an active 'trouble' flag" );
             }
         }
 
@@ -207,21 +205,18 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             password = this.getOptionValue( 'p' );
 
             if ( StringUtils.isBlank( username ) ) {
-                System.err.println( "Not authenticated. Username was blank" );
                 AbstractCLI.log.debug( "Username=" + username );
-                exitwithError();
+                throw new RuntimeException( "Not authenticated. Username was blank" );
             }
 
             if ( StringUtils.isBlank( password ) ) {
-                System.err.println( "Not authenticated. You didn't enter a password" );
-                exitwithError();
+                throw new RuntimeException( "Not authenticated. You didn't enter a password" );
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
-                System.err.println( "Not authenticated. Make sure you entered a valid username (got '" + username
+                throw new RuntimeException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
-                exitwithError();
             } else {
                 AbstractCLI.log.info( "Logged in as " + username );
             }

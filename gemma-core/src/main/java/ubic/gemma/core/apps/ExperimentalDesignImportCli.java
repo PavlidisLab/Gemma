@@ -115,23 +115,22 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     /**
-     * @param  shortName short name of the experiment to find.
-     * @return           experiment with the given short name, if it exists. Bails otherwise with
-     *                   {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
+     * @param shortName short name of the experiment to find.
+     * @return experiment with the given short name, if it exists. Bails otherwise with {@link
+     *         ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
      */
     @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
 
         if ( shortName == null ) {
-            errorObjects.add( "Expression experiment short name must be provided" );
+            addErrorObject( null, "Expression experiment short name must be provided" );
             return null;
         }
         ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
         ExpressionExperiment experiment = eeService.findByShortName( shortName );
 
         if ( experiment == null ) {
-            AbstractCLI.log.error( "No experiment " + shortName + " found" );
-            exitwithError();
+            throw new RuntimeException( "No experiment " + shortName + " found" );
         }
         return experiment;
     }

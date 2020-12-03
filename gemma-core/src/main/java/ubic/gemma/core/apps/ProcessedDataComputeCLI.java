@@ -106,7 +106,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         for ( BioAssaySet ee : expressionExperiments ) {
             this.processExperiment( ( ExpressionExperiment ) ee );
         }
-        this.summarizeProcessing();
     }
 
     @Override
@@ -146,11 +145,9 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             }
 
             // Note the auditing is done by the service.
-            successObjects.add( ee );
-            AbstractCLI.log.info( "Successfully processed: " + ee );
+            addSuccessObject( ee, "Successfully processed: " + ee );
         } catch ( PreprocessingException | Exception e ) {
-            errorObjects.add( ee + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
+            addErrorObject( ee, e.getMessage(), e );
         }
     }
 }

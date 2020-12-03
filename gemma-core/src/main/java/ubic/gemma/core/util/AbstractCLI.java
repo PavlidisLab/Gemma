@@ -19,14 +19,7 @@
 package ubic.gemma.core.util;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.cli.AlreadySelectedException;
 import org.apache.commons.cli.CommandLine;
@@ -94,10 +87,9 @@ public abstract class AbstractCLI {
     private static final String PORT_OPTION = "P";
     private static final String USERNAME_OPTION = "u";
     private static final String VERBOSITY_OPTION = "v";
-    // needs to be concurrently modifiable.
-    protected final Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<>() );
+
     protected final Options options = new Options();
-    protected final Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<>() );
+
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
     private static final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
@@ -122,6 +114,11 @@ public abstract class AbstractCLI {
     protected Option usernameOpt;
     protected String host = DEFAULT_HOST;
     private CommandLine commandLine;
+
+    // hold the results of the command execution
+    // needs to be concurrently modifiable and kept in-order
+    private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
+    private final List<BatchProcessingResult> successObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
 
     /**
      * Run the command.
@@ -154,6 +151,8 @@ public abstract class AbstractCLI {
             log.error( getCommandName() + " failed.", e );
             return FAILURE;
         } finally {
+            // always summarize processing, even if an error is thrown
+            summarizeProcessing();
             resetLogging();
             AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
         }
@@ -377,15 +376,11 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Stop executing the CLI. We always fail with System exit code 1.
-     */
-    @Deprecated
-    protected static void exitwithError() {
-        throw new RuntimeException();
-    }
-
-    /**
+     * Build option implementation.
+     *
      * Implement this method to add options to your command line, using the OptionBuilder.
+     *
+     * This is called right after {@link #buildStandardOptions()} so the options will be added after standard options.
      */
     protected abstract void buildOptions();
 
@@ -408,7 +403,13 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @throws Exception
+     * Command line implementation.
+     *
+     * This is called after {@link #buildOptions()} and {@link #processOptions()}, so the implementation can assume that
+     * all its arguments have already been initialized.
+     *
+     * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a {@link #FAILURE}
+     *                   exit code, otherwise use {@link #addErrorObject}
      */
     protected abstract void doWork() throws Exception;
 
@@ -416,28 +417,23 @@ public abstract class AbstractCLI {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( this.invalidOptionString( "" + option ) + ", not a valid double" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( "" + option ) + ", not a valid double", e );
         }
-        return 0.0;
     }
 
     protected final double getDoubleOptionValue( String option ) {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( this.invalidOptionString( option ) + ", not a valid double" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( option ) + ", not a valid double", e );
         }
-        return 0.0;
     }
 
     protected final String getFileNameOptionValue( char c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( "" + c ) + ", cannot read from file" );
         }
         return fileName;
     }
@@ -446,8 +442,7 @@ public abstract class AbstractCLI {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( "" + c ) + ", cannot read from file" );
         }
         return fileName;
     }
@@ -456,20 +451,16 @@ public abstract class AbstractCLI {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( this.invalidOptionString( "" + option ) + ", not a valid integer" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( "" + option ) + ", not a valid integer", e );
         }
-        return 0;
     }
 
     protected final int getIntegerOptionValue( String option ) {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( this.invalidOptionString( option ) + ", not a valid integer" );
-            exitwithError();
+            throw new RuntimeException( this.invalidOptionString( option ) + ", not a valid integer", e );
         }
-        return 0;
     }
 
     protected Date getLimitingDate() {
@@ -534,7 +525,13 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Implement this to provide processing of options. It is called at the end of processCommandLine.
+     * Process command line options.
+     *
+     * Implement this to provide processing of options. It is called after {@link #buildOptions()} and right before
+     * {@link #doWork()}.
+     *
+     * @throws Exception in case of unrecoverable failure (i.e. missing option or invalid value), an exception can be
+     *                   raised and will result in an exit code of {@link #FAILURE}.
      */
     protected abstract void processOptions() throws Exception;
 
@@ -560,30 +557,71 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * Add a success object to indicate success in a batch processing.
+     *
+     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     *
+     * @param successObject object that was processed
+     * @param message       success message
+     */
+    protected void addSuccessObject( Object successObject, String message ) {
+        successObjects.add( new BatchProcessingResult( successObject, message ) );
+        log.info( successObject + ": " + message );
+    }
+
+    /**
+     * Add an error object with a stacktrace to indicate failure in a batch processing.
+     *
+     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     *
+     * This is intended to be used when an {@link Exception} is caught.
+     *
+     * @param errorObject object that was processed
+     * @param message     error message
+     * @param throwable   throwable to produce a stacktrace
+     */
+    protected void addErrorObject( Object errorObject, String message, Throwable throwable ) {
+        errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
+        log.error( errorObject + ": " + message, throwable );
+    }
+
+    /**
+     * Add an error object to indicate failure in a batch processing.
+     *
+     * This is further used in {@link #summarizeProcessing()} to summarize the execution of the command.
+     */
+    protected void addErrorObject( Object errorObject, String message ) {
+        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
+        log.error( errorObject + ": " + message );
+    }
+
+    /**
      * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
      * 'successObjects' and 'errorObjects'
      */
-    protected void summarizeProcessing() {
+    private void summarizeProcessing() {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
                     .append( " objects:\n" );
-            for ( Object object : successObjects ) {
-                buf.append( "Success\t" ).append( object ).append( "\n" );
+            for ( BatchProcessingResult result : successObjects ) {
+                buf.append( "Success\t" )
+                        .append( result.source ).append( ": " )
+                        .append( result.message ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 
             AbstractCLI.log.info( buf );
-        } else {
-            AbstractCLI.log.error( "No objects processed successfully!" );
         }
 
         if ( errorObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nErrors occurred during the processing of " )
                     .append( errorObjects.size() ).append( " objects:\n" );
-            for ( Object object : errorObjects ) {
-                buf.append( "Failed\t" ).append( object ).append( "\n" );
+            for ( BatchProcessingResult result : errorObjects ) {
+                buf.append( "Error\t" )
+                        .append( result.source ).append( ": " )
+                        .append( result.message ).append( "\n" );
             }
             buf.append( "---------------------\n" );
             AbstractCLI.log.error( buf );
@@ -733,4 +771,23 @@ public abstract class AbstractCLI {
         }
     }
 
+    /**
+     * Represents an individual result in a batch processing.
+     */
+    private static class BatchProcessingResult {
+        private Object source;
+        private String message;
+        private Throwable throwable;
+
+        public BatchProcessingResult( Object source, String message ) {
+            this.source = source;
+            this.message = message;
+        }
+
+        public BatchProcessingResult( Object source, String message, Throwable throwable ) {
+            this.source = source;
+            this.message = message;
+            this.throwable = throwable;
+        }
+    }
 }

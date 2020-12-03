@@ -131,8 +131,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                         "Can't do two-channel missing values on " + ee.getClass().getName() );
             }
         }
-
-        this.summarizeProcessing();
     }
 
     @Override
@@ -210,10 +208,10 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             }
         }
 
-        if ( !wasProcessed ) {
-            errorObjects.add( ee.getShortName() );
+        if ( wasProcessed ) {
+            addSuccessObject( ee.toString(), "Was processed" );
         } else {
-            successObjects.add( ee.toString() );
+            addErrorObject( ee.getShortName(), "Was not processed" );
         }
     }
 }

@@ -36,15 +36,12 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "--------- Deleting " + bas + " --------" );
                 this.eeService.remove( ( ExpressionExperiment ) bas );
-                successObjects.add( bas );
+                addSuccessObject( bas, "Successfully deleted " + bas );
                 log.info( "--------- Finished Deleting " + bas + " -------" );
             } catch ( Exception ex ) {
-                log.error( ex, ex );
-                errorObjects.add( bas + " " + ex.getMessage() );
+                addErrorObject( bas, ex.getMessage(), ex );
             }
         }
-
-        summarizeProcessing();
     }
 
     @Override

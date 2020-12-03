@@ -26,8 +26,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Process the blat results for an array design to map them onto genes.
- * Typical workflow would be to run:
+ * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
  * <ol>
  * <li>Create the array design, perhaps by loading a GPL or via a GSE.
  * <li>ArrayDesignSequenceAssociationCli - attach sequences to array design, fetching from BLAST database if necessary.
@@ -398,9 +397,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         this.audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
-                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
-                        AbstractCLI.log.error( e, e );
+                        addErrorObject( arrayDesign, e.getMessage(), e );
                     }
                 } else {
 
@@ -430,16 +427,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             updateMergedOrSubsumed( arrayDesign );
                         }
 
-                        successObjects.add( arrayDesign );
+                        addSuccessObject( arrayDesign, "Successfully processed " + arrayDesign );
                     } catch ( Exception e ) {
-                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
-                        AbstractCLI.log.error( e, e );
+                        addErrorObject( arrayDesign, e.getMessage(), e );
                     }
                 }
 
             }
-            this.summarizeProcessing();
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
 
             if ( directAnnotationInputFileName != null ) {
@@ -488,7 +482,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                 if ( x.getCurationDetails().getTroubled() ) {
                     AbstractCLI.log.warn( "Skipping troubled platform: " + x );
-                    errorObjects.add( x + ": " + "Skipped because it is troubled; run in non-batch-mode" );
+                    addErrorObject( x, "Skipped because it is troubled; run in non-batch-mode" );
                     return;
                 }
 
@@ -513,11 +507,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         this.waitForThreadPoolCompletion( threads );
-
-        /*
-         * All done
-         */
-        this.summarizeProcessing();
     }
 
     private void configure( ArrayDesign arrayDesign ) {
@@ -626,16 +615,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
             }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
-            successObjects.add( design );
+            addSuccessObject( design, "Successfully processed " + design );
             ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
             this.audit( design, "Part of a batch job", eventType );
 
             updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( design, e.getMessage(), e );
         }
     }
 

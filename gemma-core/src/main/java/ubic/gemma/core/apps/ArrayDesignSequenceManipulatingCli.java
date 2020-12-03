@@ -120,12 +120,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @param  arrayDesign the array design to check
-     * @return             true if the sequences on the given array design would be equivalently treated by analyzing
-     *                     another array
-     *                     design. In the case of subsumption, this only works if the array design has been either
-     *                     analyzed for
-     *                     subsuming status. (the analysis is not done as part of this call).
+     * @param arrayDesign the array design to check
+     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
+     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
+     *         subsuming status. (the analysis is not done as part of this call).
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -142,11 +140,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
-            Class<? extends ArrayDesignAnalysisEvent> cls ) {
+                                 Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
             AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
             // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
+            // TODO: use a warning instead of an error as it will cause a non-zero exit code
+            addErrorObject( design, "Skipped because it is not a microarray platform." );
             return false;
         }
 
@@ -158,17 +157,16 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                     + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
 
             // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            // TODO: use a warning instead of an error as it will cause a non-zero exit code
+            addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
             return false;
         }
 
         if ( !this.needToRun( skipIfLastRunLaterThan, design, cls ) ) {
             if ( skipIfLastRunLaterThan != null ) {
-                AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
             } else {
-                AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
-                errorObjects.add( design + " seems to be up to date or is not ready to run" );
+                addErrorObject( design, "Seems to be up to date or is not ready to run" );
             }
             return false;
         }
@@ -178,8 +176,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     /**
      * Mergees or subsumees of the platform.
      *
-     * @param  design a platform
-     * @return        related platforms
+     * @param design a platform
+     * @return related platforms
      */
     Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
         Collection<ArrayDesign> toUpdate = new HashSet<>();
@@ -189,15 +187,14 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @param  eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
-     * @return            true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if
-     *                    the last
-     *                    analysis was run before skipIfLastRunLaterThan. false otherwise.
+     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
+     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
+     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+                       Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( autoSeek ) {
             return this.needToAutoRun( arrayDesign, eventClass );
@@ -239,8 +236,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             arrayDesignsToProcess.add( ad );
         }
         if ( arrayDesignsToProcess.size() == 0 ) {
-            log.error( "There were no valid experiments specified" );
-            exitwithError();
+            throw new RuntimeException( "There were no valid experiments specified" );
         }
     }
 
@@ -248,7 +244,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @param eventClass if null, then all events are added.
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+                                        Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditTrailService.getEvents( arrayDesign ) ) {
@@ -273,8 +269,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * <li>Otherwise return false.
      * </ul>
      *
-     * @param  eventClass The type of event we are considering running on the basis of this call.
-     * @return            whether the array design needs updating based on the criteria outlined above.
+     * @param eventClass The type of event we are considering running on the basis of this call.
+     * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         if ( !autoSeek ) {
@@ -340,13 +336,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                     Long id = Long.parseLong( eeName );
                     ee = arrayDesignService.load( id );
                     if ( ee == null ) {
-                        AbstractCLI.log.error( "No ArrayDesign " + eeName + " found" );
+                        addErrorObject( eeName, "No ArrayDesign " + eeName + " found" );
                         continue;
                     }
                 } catch ( NumberFormatException e ) {
-                    AbstractCLI.log.error( "No ArrayDesign " + eeName + " found" );
+                    addErrorObject( eeName, "No ArrayDesign " + eeName + " found" );
                     continue;
-
                 }
 
             }
