@@ -141,6 +141,13 @@ public abstract class AbstractCLI {
             buildOptions();
             buildStandardOptions();
             processCommandLine( args );
+            // check if -h/--help is provided before pursuing option processing
+            if ( commandLine.hasOption( 'h' ) ) {
+                printHelp();
+                return SUCCESS;
+            }
+            processStandardOptions();
+            processOptions();
             doWork();
             return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
@@ -524,15 +531,6 @@ public abstract class AbstractCLI {
 
             throw e;
         }
-
-        /* INTERROGATION STAGE */
-        if ( commandLine.hasOption( 'h' ) ) {
-            this.printHelp();
-            throw new Exception( "Help selected" );
-        }
-
-        this.processStandardOptions();
-        this.processOptions();
     }
 
     /**
