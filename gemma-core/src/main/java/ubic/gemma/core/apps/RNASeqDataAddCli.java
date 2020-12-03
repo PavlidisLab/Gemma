@@ -152,18 +152,15 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     QuantitationType qt = pqts.iterator().next();
                     if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
                         AbstractCLI.log.warn( "Preferred data is not counts for " + ee );
-                        this.errorObjects.add( ee.getShortName() + ": Preferred data is not counts" );
+                        addErrorObject( ee.getShortName(), "Preferred data is not counts" );
                         continue;
                     }
                     serv.log2cpmFromCounts( ee, qt );
-                    this.successObjects.add( ee );
+                    addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
                 } catch ( Exception e ) {
-                    AbstractCLI.log.error( e, e );
-                    this.errorObjects.add( ( ( ExpressionExperiment ) bas ).getShortName() + ": " + e.getMessage() );
+                    addErrorObject( ( ( ExpressionExperiment ) bas ).getShortName(), e.getMessage(), e );
                 }
             }
-
-            this.summarizeProcessing();
         }
 
         /*

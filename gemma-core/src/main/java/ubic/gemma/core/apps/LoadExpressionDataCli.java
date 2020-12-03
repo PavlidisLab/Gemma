@@ -151,7 +151,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesign ad = ( ArrayDesign ) object;
                         ad = ads.thawLite( ad );
 
-                        successObjects.add( ad.getName() + " (" + ad.getExternalReferences().iterator().next()
+                        addSuccessObject( ad, ad.getName() + " (" + ad.getExternalReferences().iterator().next()
                                 .getAccession() + ")" );
                     }
                 } else {
@@ -178,7 +178,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 }
             }
         }
-        this.summarizeProcessing();
     }
 
     @Override
@@ -241,14 +240,11 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
             for ( Object object : ees ) {
                 assert object instanceof ExpressionExperiment;
-                successObjects.add( ( ( Describable ) object ).getName() + " (" + ( ( ExpressionExperiment ) object )
+                addSuccessObject( object, ( ( Describable ) object ).getName() + " (" + ( ( ExpressionExperiment ) object )
                         .getAccession().getAccession() + ")" );
             }
         } catch ( Exception e ) {
-            errorObjects.add( accession + ": " + e.getMessage() );
-            AbstractCLI.log
-                    .error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( accession, e.getMessage(), e );
         }
     }
 
@@ -285,9 +281,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             try {
                 preprocessorService.process( ee );
             } catch ( PreprocessingException e ) {
-                AbstractCLI.log.error( "Experiment was loaded, but there was an error during postprocessing: " + ee
+                addErrorObject( ee, "Experiment was loaded, but there was an error during postprocessing: " + ee
                         + " , make sure additional steps are completed", e );
-                errorObjects.add( ee.getShortName() + ": " + e.getMessage() );
             }
 
         }

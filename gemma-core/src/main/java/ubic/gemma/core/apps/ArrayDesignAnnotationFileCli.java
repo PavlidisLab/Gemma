@@ -43,9 +43,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * Given an array design creates a Gene Ontology Annotation file
- * Given a batch file creates all the Annotation files for the AD's specified in the batch file
- * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
+ * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
+ * the AD's specified in the batch file Given nothing creates annotation files for every AD that isn't subsumed or
+ * merged into another AD.
  *
  * @author klc
  * @author paul
@@ -298,11 +298,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             try {
                 this.processOneAD( ad );
             } catch ( Exception e ) {
-                errorObjects.add( ad + " " + e.getMessage() );
+                addErrorObject( ad, e.getMessage(), e );
             }
         }
-
-        this.summarizeProcessing();
     }
 
     /**
@@ -339,17 +337,11 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 try {
                     this.processAD( arrayDesign );
                 } catch ( Exception e ) {
-                    AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage()
-                            + " ********" );
-                    AbstractCLI.log.error( e, e );
-                    errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                    addErrorObject( arrayDesign, e.getMessage(), e );
                 }
 
             }
         }
-
-        this.summarizeProcessing();
-
     }
 
     private void processGeneList() throws IOException {
@@ -402,7 +394,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         this.arrayDesignAnnotationService.create( inputAd, overWrite );
 
-        successObjects.add( inputAd );
+        addSuccessObject( inputAd, "Successfully processed " + inputAd );
 
     }
 
@@ -415,9 +407,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 Thread.sleep( 10000 );
                 AbstractCLI.log.info( "Waiting for Gene Ontology to load ..." );
             } catch ( InterruptedException e ) {
-                e.printStackTrace();
-                log.error( "Failure while waiting for GO to load" );
-                exitwithError();
+                throw new RuntimeException( "Failure while waiting for GO to load", e );
             }
         }
         if ( !this.notifiedAboutGOState ) {

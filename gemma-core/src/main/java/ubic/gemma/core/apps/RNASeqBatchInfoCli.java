@@ -61,19 +61,15 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
             if ( !( ee instanceof ExpressionExperiment ) ) {
-                errorObjects.add( ee + " is not an expressionexperiment " );
+                addErrorObject( ee, "This is not an ExpressionExperiment!" );
             }
 
             if ( batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force ) ) {
-                log.info( "Added batch information for " + ee );
-                successObjects.add( ee );
+                addSuccessObject( ee, "Added batch information" );
             } else {
-                log.info( "Failed to add batch information for " + ee );
-                errorObjects.add( ee );
+                addErrorObject( ee, "Failed to add batch information" );
             }
         }
-
-        summarizeProcessing();
     }
 
     @Override

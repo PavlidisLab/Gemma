@@ -59,7 +59,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
             if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
-                this.errorObjects.add( bas + ": Already has PCA; use -force to override" );
+                addErrorObject( bas, "Already has PCA; use -force to override" );
                 continue;
             }
 
@@ -69,13 +69,11 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
                 svdService.svd( ee.getId() );
 
-                this.successObjects.add( bas.toString() );
+                addSuccessObject( bas, "Successfully processed " + bas );
             } catch ( Exception e ) {
-                AbstractCLI.log.error( e, e );
-                this.errorObjects.add( bas + ": " + e.getMessage() );
+                addErrorObject( bas, e.getMessage(), e );
             }
         }
-        this.summarizeProcessing();
     }
 
 }

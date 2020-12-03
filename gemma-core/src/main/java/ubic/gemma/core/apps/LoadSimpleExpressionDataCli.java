@@ -135,15 +135,12 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
                     try {
                         this.loadExperiment( conf );
-                        AbstractCLI.log.info( "Successfully Loaded " + expName );
-                        successObjects.add( expName );
+                        addSuccessObject( expName, "Successfully Loaded " + expName );
                     } catch ( Exception e ) {
-                        errorObjects.add( expName + ": " + e.getMessage() );
-                        AbstractCLI.log.error( "Failure loading " + expName, e );
+                        addErrorObject( expName, "Failure loading " + expName, e );
                     }
                 }
             }
-            this.summarizeProcessing();
         }
     }
 

@@ -95,16 +95,14 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
                     // not really an error, but nice to get notification.
-                    errorObjects
-                            .add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                    addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
                     continue;
                 }
 
                 if ( this.isSubsumedOrMerged( design ) ) {
                     AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
                     // not really an error, but nice to get notification.
-                    errorObjects
-                            .add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+                    addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
                     continue;
                 }
 
@@ -112,19 +110,15 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 try {
                     design = getArrayDesignService().thaw( design );
                     this.processArrayDesign( design );
-                    successObjects.add( design.getName() );
+                    addSuccessObject( design, "Successfully processed " + design.getName() );
                     this.audit( design, "" );
                 } catch ( Exception e ) {
-                    errorObjects.add( design + ": " + e.getMessage() );
-                    AbstractCLI.log
-                            .error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-                    AbstractCLI.log.error( e, e );
+                    addErrorObject( design, e.getMessage(), e );
                 }
 
             }
-            this.summarizeProcessing();
         } else {
-            exitwithError();
+            throw new RuntimeException();
         }
     }
 

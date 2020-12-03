@@ -57,7 +57,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             }
 
         }
-        this.summarizeProcessing();
     }
 
     @Override
@@ -96,8 +95,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             if ( this.arrayDesignName != null ) {
                 ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
-                    AbstractCLI.log.error( "Unknown array design" );
-                    exitwithError();
+                    throw new RuntimeException( "Unknown array design" );
                 }
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );
@@ -110,10 +108,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ats.addUpdateEvent( ee, type, "Switched to use merged array Design " );
             }
 
-            super.successObjects.add( ee.toString() );
+            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects.add( ee + ": " + e.getMessage() );
+            addErrorObject( ee, e.getMessage(), e );
         }
     }
 }

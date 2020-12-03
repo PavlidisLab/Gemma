@@ -134,9 +134,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
                  */
                 if ( this.checkForAlreadyDone( ee ) && !this.force ) {
-
-                    this.errorObjects.add( ee
-                            + ": Was already run before, use -force" );
+                    addErrorObject( ee, "Was already run before, use -force" );
                     continue;
                 }
 
@@ -144,8 +142,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * Avoid repeated attempts that won't work e.g. no data available.
                  */
                 if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
-                    this.errorObjects.add( ee
-                            + ": Failed before, use -force to re-attempt" );
+                    addErrorObject( ee, "Failed before, use -force to re-attempt" );
                     continue;
                 }
 
@@ -163,32 +160,24 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
                     AbstractCLI.log.info( ad + " looks like Affy array" );
                     serv.reprocessAffyDataFromCel( thawedEe );
-
-                    this.successObjects.add( thawedEe );
-                    AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                    addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
                 } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
                     ad = asd.thawLite( ad );
                     if ( GeoPlatform.isAffyPlatform( ad.getMergees().iterator().next().getShortName() ) ) {
                         AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
                         serv.reprocessAffyDataFromCel( thawedEe );
-                        this.successObjects.add( thawedEe );
-                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                        addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
                     }
                 } else {
 
-                    this.errorObjects.add( ee + ": " +
-                            ad
-                            + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
+                    addErrorObject( ee, ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
                 }
 
             } catch ( Exception exception ) {
-                AbstractCLI.log.error( exception, exception );
-                this.errorObjects.add( ee + " " + exception.getLocalizedMessage() );
+                addErrorObject( ee, exception.getMessage(), exception );
             }
 
         }
-
-        super.summarizeProcessing();
     }
 
     @Override

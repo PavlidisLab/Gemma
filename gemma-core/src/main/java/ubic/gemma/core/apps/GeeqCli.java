@@ -101,13 +101,10 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
             try {
                 geeqService.calculateScore( ee.getId(), mode );
-                this.successObjects.add( ee );
+                addSuccessObject( ee, "Successfully processed " + ee );
             } catch ( Exception e ) {
-                log.error( ee + " failed: " + e.getMessage() );
-                this.errorObjects.add( ee + ": " + e.getMessage() );
+                addErrorObject( ee, " failed: " + e.getMessage(), e );
             }
         }
-
-        this.summarizeProcessing();
     }
 }

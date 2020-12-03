@@ -187,7 +187,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                     throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
                 }
             }
-            this.summarizeProcessing();
         }
     }
 
@@ -317,8 +316,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log.error( "Must provide 'taxon' option when initializing from old data" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option when initializing from old data" );
             }
             // all other options ignored.
             return;
@@ -327,8 +325,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log.error( "Must provide 'taxon' option when updating node degree" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option when updating node degree" );
             }
             // all other options ignored.
             return;
@@ -336,23 +333,19 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( this.hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
-                AbstractCLI.log.error( "The 'dataFile' option is incompatible with other data set selection options" );
-                exitwithError();
+                throw new RuntimeException( "The 'dataFile' option is incompatible with other data set selection options" );
             }
 
             if ( this.hasOption( "array" ) ) {
                 this.linkAnalysisConfig.setArrayName( this.getOptionValue( "array" ) );
             } else {
-                AbstractCLI.log.error( "Must provide 'array' option if you  use 'dataFile" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'array' option if you  use 'dataFile" );
             }
 
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log
-                        .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
             }
 
             this.dataFileName = this.getOptionValue( "dataFile" );
@@ -530,9 +523,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( this.deleteAnalyses ) {
             AbstractCLI.log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
             if ( this.getBean( LinkAnalysisPersister.class ).deleteAnalyses( ee ) ) {
-                successObjects.add( ee.toString() );
+                addSuccessObject( ee, "Successfully processed" + ee.getShortName() );
             } else {
-                errorObjects.add( ee + ": Seems to not have any eligible link analysis to remove" );
+                addErrorObject( ee, "Seems to not have any eligible link analysis to remove" );
             }
             return;
         }
@@ -561,11 +554,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
-            successObjects.add( ee.toString() );
+            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
         } catch ( Exception e ) {
-            errorObjects.add( ee + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( ee, e.getMessage(), e );
         }
         AbstractCLI.log.info( "==== Done: [" + ee.getShortName() + "] ======" );
         AbstractCLI.log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );

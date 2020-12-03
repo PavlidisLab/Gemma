@@ -107,8 +107,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
 
         this.waitForThreadPoolCompletion( threads );
-
-        this.summarizeProcessing();
     }
 
     @Override
@@ -156,12 +154,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
-            super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects
-                    .add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage() );
+            addErrorObject( ee, "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage(), e );
         }
     }
 

@@ -97,7 +97,7 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
                 // keep only last AlignmentBasedGeneMappingEvent, ArrayDesignRepeatAnalysisEvent, ArrayDesignGeneMappingEvent, ArrayDesignSequenceAnalysisEvent 
             }
 
-            this.successObjects.add( arrayDesign );
+            addSuccessObject( arrayDesign, "Successfully processed " + arrayDesign );
         }
     }
 

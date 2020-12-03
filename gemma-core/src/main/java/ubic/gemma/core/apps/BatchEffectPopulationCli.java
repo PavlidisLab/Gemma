@@ -63,20 +63,17 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     ee = this.eeService.thawLite( ee );
                     boolean success = ser.fillBatchInformation( ee, force );
                     if ( success ) {
-                        this.successObjects.add( bas.toString() );
+                        addSuccessObject( bas, "Successfully processed " + bas );
                     } else {
-                        this.errorObjects.add( bas.toString() );
+                        addErrorObject( bas, "Failed to process " + bas );
                     }
 
                 } catch ( Exception e ) {
-                    AbstractCLI.log.error( e, e );
-                    this.errorObjects.add( bas + ": " + e.getMessage() );
+                    addErrorObject( bas, e.getMessage(), e );
                 }
 
             }
         }
-
-        this.summarizeProcessing();
     }
 
     @Override

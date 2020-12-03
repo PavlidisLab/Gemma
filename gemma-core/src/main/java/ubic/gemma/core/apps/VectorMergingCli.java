@@ -60,8 +60,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
                         "Can't do vector merging on non-expressionExperiment bioassaysets" );
             }
         }
-
-        this.summarizeProcessing();
     }
 
     @Override
@@ -72,15 +70,10 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             expressionExperiment = eeService.thawLite( expressionExperiment );
-
             expressionExperiment = mergingService.mergeVectors( expressionExperiment );
-
-            super.successObjects.add( expressionExperiment.toString() );
+            addSuccessObject( expressionExperiment.toString(), "Finished processing " + expressionExperiment );
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-
+            addErrorObject( expressionExperiment, e.getMessage(), e );
         }
-        AbstractCLI.log.info( "Finished processing " + expressionExperiment );
     }
 }
