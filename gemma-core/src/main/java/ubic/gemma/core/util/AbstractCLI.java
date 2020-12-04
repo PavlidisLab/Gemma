@@ -20,6 +20,7 @@ package ubic.gemma.core.util;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.*;
 
 import org.apache.commons.cli.AlreadySelectedException;
 import org.apache.commons.cli.CommandLine;
@@ -107,6 +108,7 @@ public abstract class AbstractCLI {
      */
     protected String mDate = null;
     protected int numThreads = 1;
+    private ExecutorService executorService;
     protected String password;
     protected Option passwordOpt;
     protected int port = AbstractCLI.DEFAULT_PORT;
@@ -581,7 +583,7 @@ public abstract class AbstractCLI {
      * @param throwable   throwable to produce a stacktrace
      */
     protected void addErrorObject( Object errorObject, String message, Throwable throwable ) {
-        errorObjects.add( new BatchProcessingResult( errorObject, message, throwable ) );
+        errorObjects.add( new BatchProcessingResult( errorObject, message ) );
         log.error( errorObject + ": " + message, throwable );
     }
 
@@ -629,26 +631,22 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param threads Wait for completion.
+     * Execute batch tasks using a preconfigured {@link ExecutorService} and return all the resulting tasks results.
+     *
+     * @param tasks
+     * @throws InterruptedException
      */
-    protected void waitForThreadPoolCompletion( Collection<Thread> threads ) {
-
-        while ( true ) {
-            boolean anyAlive = false;
-            for ( Thread k : threads ) {
-                if ( k.isAlive() ) {
-                    anyAlive = true;
-                }
-            }
-            if ( !anyAlive ) {
-                break;
-            }
+    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
+        List<Future<T>> futures = executorService.invokeAll( tasks );
+        List<T> futureResults = new ArrayList<>( futures.size() );
+        for ( Future<T> future : futures ) {
             try {
-                Thread.sleep( 1000 );
-            } catch ( InterruptedException e ) {
-                e.printStackTrace();
+                futureResults.add( future.get() );
+            } catch ( ExecutionException | InterruptedException e ) {
+                addErrorObject( null, "Batch task failed.", e );
             }
         }
+        return futureResults;
     }
 
     private void configureAllLoggers( int v ) {
@@ -743,6 +741,10 @@ public abstract class AbstractCLI {
             this.mDate = this.getOptionValue( "mdate" );
         }
 
+        if ( this.numThreads < 1 ) {
+            throw new IllegalArgumentException( "Number of threads must be greater than 1." );
+        }
+        this.executorService = new ForkJoinPool( this.numThreads );
     }
 
     private void setLoggerLevel( int level, Logger log4jLogger ) {

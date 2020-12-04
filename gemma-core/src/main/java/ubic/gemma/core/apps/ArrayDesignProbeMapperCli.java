@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -458,7 +459,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    private void batchRun( final Date skipIfLastRunLaterThan ) {
+    private void batchRun( final Date skipIfLastRunLaterThan ) throws InterruptedException {
         Collection<ArrayDesign> allArrayDesigns;
 
         if ( this.taxon != null ) {
@@ -470,43 +471,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         // TODO: process array designs in order of how many experiments they use (most first)
 
         final SecurityContext context = SecurityContextHolder.getContext();
-
-        class ADProbeMapperCliConsumer extends Consumer {
-
-            private ADProbeMapperCliConsumer( BlockingQueue<ArrayDesign> q ) {
-                super( q, context );
-            }
-
-            @Override
-            void consume( ArrayDesign x ) {
-
-                if ( x.getCurationDetails().getTroubled() ) {
-                    AbstractCLI.log.warn( "Skipping troubled platform: " + x );
-                    addErrorObject( x, "Skipped because it is troubled; run in non-batch-mode" );
-                    return;
-                }
-
-                /*
-                 * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
-                 * just the ones from the taxon specified.
-                 */
-                ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, x );
-
-            }
+        Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+        for ( ArrayDesign ad : allArrayDesigns ) {
+            arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
-
-        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
-        arrayDesigns.addAll( allArrayDesigns );
-
-        Collection<Thread> threads = new ArrayList<>();
-        for ( int i = 0; i < this.numThreads; i++ ) {
-            ADProbeMapperCliConsumer c1 = new ADProbeMapperCliConsumer( arrayDesigns );
-            Thread k = new Thread( c1 );
-            threads.add( k );
-            k.start();
-        }
-
-        this.waitForThreadPoolCompletion( threads );
+        executeBatchTasks( arrayDesigns );
     }
 
     private void configure( ArrayDesign arrayDesign ) {
@@ -677,4 +646,32 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
+    private class ProcessADProbeMapper implements Callable<Void> {
+
+        private ArrayDesign arrayDesign;
+        private Date skipIfLastRunLaterThan;
+
+        private ProcessADProbeMapper( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
+            this.arrayDesign = arrayDesign;
+            this.skipIfLastRunLaterThan = skipIfLastRunLaterThan;
+        }
+
+        @Override
+        public Void call() {
+
+            if ( arrayDesign.getCurationDetails().getTroubled() ) {
+                AbstractCLI.log.warn( "Skipping troubled platform: " + arrayDesign );
+                addErrorObject( arrayDesign, "Skipped because it is troubled; run in non-batch-mode" );
+                return null;
+            }
+
+            /*
+             * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
+             * just the ones from the taxon specified.
+             */
+            ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, arrayDesign );
+
+            return null;
+        }
+    }
 }
