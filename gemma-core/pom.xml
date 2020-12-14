@@ -263,6 +263,13 @@
             <artifactId>gemma-gsec</artifactId>
             <version>0.0.2</version>
             <type>jar</type>
+            <exclusions>
+                <!-- Tomcat 8.5.60 assumes Servlet API 3.1 -->
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.googlecode.javaewah</groupId>
@@ -334,12 +341,6 @@
             <groupId>jaxen</groupId>
             <artifactId>jaxen</artifactId>
             <version>1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.4</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>obo</groupId>

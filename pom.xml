@@ -309,6 +309,18 @@
 			<artifactId>baseCode</artifactId>
 			<version>1.0.29</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-servlet-api</artifactId>
+			<version>${tomcat.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jsp-api</artifactId>
+			<version>${tomcat.version}</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -588,5 +600,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.version>3.2.9.RELEASE</spring.version>
 		<spring.security.version>3.1.4.RELEASE</spring.security.version>
+		<tomcat.version>8.5.60</tomcat.version>
 	</properties>
 </project>
