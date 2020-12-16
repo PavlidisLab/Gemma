@@ -441,22 +441,6 @@
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
-			<id>pavlab</id>
-			<name>PavLab</name>
-			<url>
-				https://maven2.pavlab.msl.ubc.ca/s
-			</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</releases>
-		</pluginRepository>
-		<pluginRepository>
 			<id>central</id>
 			<name>Central Repository</name>
 			<url>https://repo.maven.apache.org/maven2</url>
