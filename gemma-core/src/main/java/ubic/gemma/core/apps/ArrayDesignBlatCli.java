@@ -37,8 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
@@ -185,40 +184,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             final SecurityContext context = SecurityContextHolder.getContext();
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
-
-            /*
-             * Here is our task runner.
-             */
-            class BlatCliConsumer extends Consumer {
-
-                private BlatCliConsumer( BlockingQueue<ArrayDesign> q ) {
-                    super( q, context );
-                }
-
-                @Override
-                void consume( ArrayDesign x ) {
-                    if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, x, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                        return;
-                    }
-                    x = getArrayDesignService().thaw( x );
-
-                    ArrayDesignBlatCli.this.processArrayDesign( x );
-
-                }
+            Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+            for ( ArrayDesign arrayDesign : allArrayDesigns ) {
+                arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
 
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
-            arrayDesigns.addAll( allArrayDesigns );
-
-            Collection<Thread> threads = new ArrayList<>();
-            for ( int i = 0; i < this.numThreads; i++ ) {
-                Consumer c1 = new BlatCliConsumer( arrayDesigns );
-                Thread k = new Thread( c1 );
-                threads.add( k );
-                k.start();
-            }
-
-            this.waitForThreadPoolCompletion( threads );
+            executeBatchTasks( arrayDesigns );
 
         } else {
             throw new RuntimeException();
@@ -287,6 +258,31 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             AbstractCLI.log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)" );
             getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
+        }
+    }
+
+    /*
+     * Here is our task runner.
+     */
+    private class ProcessArrayDesign implements Callable<Void> {
+
+        private ArrayDesign arrayDesign;
+        private Date skipIfLastRunLaterThan;
+
+        private ProcessArrayDesign( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
+            this.arrayDesign = arrayDesign;
+            this.skipIfLastRunLaterThan = skipIfLastRunLaterThan;
+        }
+
+        @Override
+        public Void call() {
+            if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                return null;
+            }
+            arrayDesign = getArrayDesignService().thaw( arrayDesign );
+            ArrayDesignBlatCli.this.processArrayDesign( arrayDesign );
+            addSuccessObject( arrayDesign, "Processed " + arrayDesign.getShortName() );
+            return null;
         }
     }
 }
