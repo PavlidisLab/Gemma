@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,12 +30,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
  */
 public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ExternalDatabaseAdderCli p = new ExternalDatabaseAdderCli();
-        executeCommand( p, args );
-
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.SYSTEM;
@@ -56,45 +50,36 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        try {
-            Exception err = processCommandLine( args );
-            if ( err != null )
-                return err;
+    protected void doWork() throws Exception {
+        // ContactService contactService = this.getBean( ContactService.class );
 
-            // ContactService contactService = this.getBean( ContactService.class );
+        ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
 
-            ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
+        // Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
+        // toAdd.setDatabaseSupplier( c );
+        // toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
+        // + "GeneChip array results with array design and annotation information." );
+        // toAdd.setName( "NetAFFX" );
+        // toAdd.setType( DatabaseType.SEQUENCE );
+        // toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
 
-            // Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
-            // toAdd.setDatabaseSupplier( c );
-            // toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
-            // + "GeneChip array results with array design and annotation information." );
-            // toAdd.setName( "NetAFFX" );
-            // toAdd.setType( DatabaseType.SEQUENCE );
-            // toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
+        // Contact c = Contact.Factory.newInstance();
+        // c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
+        // c = contactService.findOrCreate( c );
+        // toAdd.setDatabaseSupplier( c );
+        // toAdd.setDescription(
+        // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human
+        // genes and genetic phenotypes. "
+        // +
+        // "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University."
+        // );
+        // toAdd.setName( "OMIM" );
+        // toAdd.setType( DatabaseType.OTHER );
+        // toAdd.setWebUri( "http://omim.org/" );
 
-            // Contact c = Contact.Factory.newInstance();
-            // c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
-            // c = contactService.findOrCreate( c );
-            // toAdd.setDatabaseSupplier( c );
-            // toAdd.setDescription(
-            // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human
-            // genes and genetic phenotypes. "
-            // +
-            // "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University."
-            // );
-            // toAdd.setName( "OMIM" );
-            // toAdd.setType( DatabaseType.OTHER );
-            // toAdd.setWebUri( "http://omim.org/" );
+        ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 
-            ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
-
-            eds.findOrCreate( toAdd );
-        } catch ( Exception e ) {
-            return e;
-        }
-        return null;
+        eds.findOrCreate( toAdd );
     }
 
 }

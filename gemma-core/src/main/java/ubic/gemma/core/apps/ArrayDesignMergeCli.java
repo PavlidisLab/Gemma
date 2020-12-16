@@ -46,30 +46,14 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newShortName;
     private HashSet<ArrayDesign> otherArrayDesigns;
 
-    public static void main( String[] args ) {
-        ArrayDesignMergeCli b = new ArrayDesignMergeCli();
-        Exception e = b.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "mergePlatforms";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            exitwithError();
-            return err;
-        }
+    protected void doWork() throws Exception {
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
-
-        return null;
     }
 
     @Override

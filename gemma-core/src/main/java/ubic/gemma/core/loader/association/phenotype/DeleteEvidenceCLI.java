@@ -34,27 +34,6 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     private String externalDatabaseName = "";
     private PhenotypeAssociationManagerService phenotypeAssociationService = null;
 
-    public static void main( String[] args ) {
-
-        DeleteEvidenceCLI deleteEvidenceImporterCLI = new DeleteEvidenceCLI();
-
-        try {
-            Exception ex;
-
-            String[] argsToTake;
-
-            argsToTake = args;
-
-            ex = deleteEvidenceImporterCLI.doWork( argsToTake );
-
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PHENOTYPES;
@@ -80,13 +59,7 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         try {
             this.loadServices();
         } catch ( Exception e ) {
@@ -104,16 +77,14 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         while ( evidenceToDelete.size() > 0 ) {
             for ( EvidenceValueObject<?> e : evidenceToDelete ) {
                 this.phenotypeAssociationService.remove( e.getId() );
-             //   AbstractCLI.log.info( i++ );
+                //   AbstractCLI.log.info( i++ );
                 i++;
             }
-            
+
             // WTF?
             evidenceToDelete = this.phenotypeAssociationService
                     .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit, 0 );
         }
-      //  System.exit( -1 ); // ???
-        return null;
     }
 
     @Override

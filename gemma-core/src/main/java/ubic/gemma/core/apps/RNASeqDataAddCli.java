@@ -48,11 +48,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
 
-    public static void main( String[] args ) {
-        RNASeqDataAddCli c = new RNASeqDataAddCli();
-        executeCommand( c, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
@@ -142,11 +137,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null )
-            return exception;
-
+    protected void doWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.justbackfillLog2cpm ) {
@@ -161,19 +152,15 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     QuantitationType qt = pqts.iterator().next();
                     if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
                         AbstractCLI.log.warn( "Preferred data is not counts for " + ee );
-                        this.errorObjects.add( ee.getShortName() + ": Preferred data is not counts" );
+                        addErrorObject( ee.getShortName(), "Preferred data is not counts" );
                         continue;
                     }
                     serv.log2cpmFromCounts( ee, qt );
-                    this.successObjects.add( ee );
+                    addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
                 } catch ( Exception e ) {
-                    AbstractCLI.log.error( e, e );
-                    this.errorObjects.add( ( ( ExpressionExperiment ) bas ).getShortName() + ": " + e.getMessage() );
+                    addErrorObject( ( ( ExpressionExperiment ) bas ).getShortName(), e.getMessage(), e );
                 }
             }
-
-            this.summarizeProcessing();
-            return null;
         }
 
         /*
@@ -206,10 +193,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     allowMissingSamples );
 
         } catch ( IOException e ) {
-            AbstractCLI.log.error( "Failed while processing " + ee, e );
-            return e;
+            throw new Exception( "Failed while processing " + ee, e );
         }
-        return null;
     }
 
     @Override
@@ -217,7 +202,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         return "Add expression quantifiation to an RNA-seq experiment";
     }
 
-    private ArrayDesign locateArrayDesign( String name ) {
+    private ArrayDesign locateArrayDesign( String name ) throws Exception {
 
         ArrayDesign arrayDesign = null;
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
@@ -233,9 +218,9 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( arrayDesign == null ) {
-            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            exitwithError();
+            throw new Exception( "No arrayDesign " + name + " found" );
         }
+
         return arrayDesign;
     }
 

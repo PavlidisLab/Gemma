@@ -69,36 +69,24 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private boolean updateNodeDegree = false;
     private boolean deleteAnalyses = false;
 
-    public static void main( String[] args ) {
-        LinkAnalysisCli p = new LinkAnalysisCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "coexpAnalyze";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
-
+    protected void doWork() throws Exception {
         if ( initializeFromOldData ) {
             AbstractCLI.log.info( "Initializing links from old data for " + this.getTaxon() );
             LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
             s.initializeLinksFromOldData( this.getTaxon() );
-            return null;
+            return;
         } else if ( updateNodeDegree ) {
 
             // we waste some time here getting the experiments.
             this.loadTaxon();
 
             this.getBean( CoexpressionService.class ).updateNodeDegrees( this.getTaxon() );
-
-            return null;
         }
 
         this.linkAnalysisService = this.getBean( LinkAnalysisService.class );
@@ -113,7 +101,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
 
             if ( arrayDesign == null ) {
-                return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
+                throw new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
 
             this.loadTaxon();
@@ -131,7 +119,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             SimpleExpressionDataLoaderService simpleExpressionDataLoaderService = this
                     .getBean( SimpleExpressionDataLoaderService.class );
             ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-            try (InputStream data = new FileInputStream( new File( this.dataFileName ) )) {
+            try ( InputStream data = new FileInputStream( new File( this.dataFileName ) ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
 
@@ -158,7 +146,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 AbstractCLI.log.info( "Read " + dataVectors.size() + " data vectors" );
 
             } catch ( Exception e ) {
-                return e;
+                throw e;
             }
 
             this.linkAnalysisService.processVectors( this.getTaxon(), dataVectors, filterConfig, linkAnalysisConfig );
@@ -199,10 +187,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                     throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
                 }
             }
-            this.summarizeProcessing();
         }
-
-        return null;
     }
 
     @Override
@@ -331,8 +316,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log.error( "Must provide 'taxon' option when initializing from old data" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option when initializing from old data" );
             }
             // all other options ignored.
             return;
@@ -341,8 +325,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log.error( "Must provide 'taxon' option when updating node degree" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option when updating node degree" );
             }
             // all other options ignored.
             return;
@@ -350,23 +333,19 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( this.hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
-                AbstractCLI.log.error( "The 'dataFile' option is incompatible with other data set selection options" );
-                exitwithError();
+                throw new RuntimeException( "The 'dataFile' option is incompatible with other data set selection options" );
             }
 
             if ( this.hasOption( "array" ) ) {
                 this.linkAnalysisConfig.setArrayName( this.getOptionValue( "array" ) );
             } else {
-                AbstractCLI.log.error( "Must provide 'array' option if you  use 'dataFile" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'array' option if you  use 'dataFile" );
             }
 
             if ( this.hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                AbstractCLI.log
-                        .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
-                exitwithError();
+                throw new RuntimeException( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
             }
 
             this.dataFileName = this.getOptionValue( "dataFile" );
@@ -544,9 +523,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( this.deleteAnalyses ) {
             AbstractCLI.log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
             if ( this.getBean( LinkAnalysisPersister.class ).deleteAnalyses( ee ) ) {
-                successObjects.add( ee.toString() );
+                addSuccessObject( ee, "Successfully processed" + ee.getShortName() );
             } else {
-                errorObjects.add( ee + ": Seems to not have any eligible link analysis to remove" );
+                addErrorObject( ee, "Seems to not have any eligible link analysis to remove" );
             }
             return;
         }
@@ -575,11 +554,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
-            successObjects.add( ee.toString() );
+            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
         } catch ( Exception e ) {
-            errorObjects.add( ee + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( ee, e.getMessage(), e );
         }
         AbstractCLI.log.info( "==== Done: [" + ee.getShortName() + "] ======" );
         AbstractCLI.log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );

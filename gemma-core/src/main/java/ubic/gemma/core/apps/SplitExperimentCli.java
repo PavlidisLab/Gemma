@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,6 @@ import org.apache.commons.cli.Option;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -35,20 +34,15 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
 
 /**
  * Split an experiment into parts based on an experimental factor
- * 
+ *
  * @author paul
  */
 public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /**
-     * 
+     *
      */
     private static final String FACTOR_OPTION = "factor";
-
-    public static void main( String[] args ) {
-        SplitExperimentCli c = new SplitExperimentCli();
-        AbstractCLIContextCLI.executeCommand( c, args );
-    }
 
     private Long factorId;
 
@@ -61,7 +55,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -85,16 +79,11 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
-
+    protected void doWork() throws Exception {
         if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Can only split one experiment at a time" );
         }
@@ -113,8 +102,6 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
         ExperimentalFactor splitOn = this.guessFactor( ee );
 
         serv.split( ee, splitOn );
-
-        return null;
     }
 
     @Override
@@ -136,8 +123,8 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     /**
      * Adapted from code in DifferentialExpressionAnalysisCli
-     * 
-     * @param  ee
+     *
+     * @param ee
      * @return
      */
     private ExperimentalFactor guessFactor( ExpressionExperiment ee ) {

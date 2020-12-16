@@ -75,24 +75,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean persist = true;
 
-    public static void main( String[] args ) {
-        DifferentialExpressionAnalysisCli p = new DifferentialExpressionAnalysisCli();
-        executeCommand( p, args );
-
-    }
-
     @Override
     public String getCommandName() {
         return "diffExAnalyze";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
-
+    protected void doWork() throws Exception {
         SecurityService securityService = this.getBean( SecurityService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -116,10 +105,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             this.processExperiment( ( ExpressionExperiment ) ee );
         }
-
-        this.summarizeProcessing();
-
-        return null;
     }
 
     @Override
@@ -283,7 +268,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( delete ) {
                 AbstractCLI.log.info( "Deleting any analyses for experiment=" + ee );
                 differentialExpressionAnalyzerService.deleteAnalyses( ee );
-                successObjects.add( "Deleted analysis for: " + ee.toString() );
+                addSuccessObject( ee, "Deleted analysis" );
                 return;
             }
 
@@ -405,12 +390,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 }
             }
 
-            successObjects.add( ee.toString() );
+            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
 
         } catch ( Exception e ) {
-            AbstractCLI.log.error( "Error while processing " + ee + ": " + e.getMessage() );
             ExceptionUtils.printRootCauseStackTrace( e );
-            errorObjects.add( ee + ": " + e.getMessage() );
+            addErrorObject( ee, e.getMessage(), e );
         }
 
     }

@@ -14,11 +14,6 @@ import java.util.*;
  */
 public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.ANALYSIS;
@@ -39,10 +34,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
-
+    protected void doWork() throws Exception {
         ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );
 
         ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
@@ -138,8 +130,6 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
                 }
             }
         }
-
-        return null;
     }
 
 }

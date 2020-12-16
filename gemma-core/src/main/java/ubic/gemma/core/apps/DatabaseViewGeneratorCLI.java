@@ -31,21 +31,13 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  *
  * @author paul
  */
-@SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
+@SuppressWarnings({"FieldCanBeLocal", "unused"}) // Possible external use
 public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     private boolean generateDatasetSummary = false;
     private boolean generateDiffExpressionSummary = false;
     private boolean generateTissueSummary = false;
     private int limit = 0;
-
-    public static void main( String[] args ) {
-        DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
-        Exception e = o.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -90,14 +82,9 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         DatabaseViewGenerator v = this.getBean( DatabaseViewGenerator.class );
         v.runAll();
-        return null;
     }
 
     @Override

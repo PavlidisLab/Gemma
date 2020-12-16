@@ -15,11 +15,6 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
     private String stepArg = "100000";
     private String stopArg;
 
-    public static void main( String[] args ) {
-        CountObsoleteTermsCli p = new CountObsoleteTermsCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
@@ -75,11 +70,7 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         int start = Integer.parseInt( startArg ) + 1;
         int step = Integer.parseInt( stepArg ) + 1;
         int stop = Integer.parseInt( stopArg ) + 1;
@@ -99,7 +90,5 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
         }
         AbstractCLI.log.info( "======================================================" );
         AbstractCLI.log.info( "======================================================" );
-
-        return null;
     }
 }

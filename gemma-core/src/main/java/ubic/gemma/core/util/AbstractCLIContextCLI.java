@@ -41,42 +41,15 @@ import java.util.List;
 public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
 
     /**
-     * Run a command. If
-     * 
-     * @param p    command line object
-     * @param args arguments
-     */
-    protected static void executeCommand( AbstractCLIContextCLI p, String[] args ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = p.doWork( args );
-            resetLogging();
-
-            if ( ex != null ) {
-                log.error( ex, ex );
-                exitwithError();
-            } else {
-                System.exit( 0 );
-            }
-            watch.stop();
-            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
-    /**
      * may be tab-delimited, only first column used, commented (#) lines are ignored.
      *
-     * @param  fileName    the file name
-     * @return             list of ee identifiers
+     * @param fileName the file name
+     * @return list of ee identifiers
      * @throws IOException in case there is an IO error while reading the file
      */
     protected static List<String> readListFileToStrings( String fileName ) throws IOException {
         List<String> eeNames = new ArrayList<>();
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -92,7 +65,6 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
     }
 
     /**
-     * 
      * @return the command group for this CLI
      */
     public abstract CommandGroup getCommandGroup();
@@ -128,14 +100,13 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
 
         if ( arrayDesign == null ) {
             AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-            exitwithError();
         }
         return arrayDesign;
     }
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/cliContext-component-scan.xml" };
+        return new String[]{"classpath*:ubic/gemma/cliContext-component-scan.xml"};
     }
 
 }

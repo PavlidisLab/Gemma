@@ -44,27 +44,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
-    public static void main( String[] args ) {
-        ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e, e );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "generateDataFile";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = this.processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
-
+    protected void doWork() throws Exception {
         BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
         // Add the Experiments to the queue for processing
@@ -121,11 +107,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
 
         this.waitForThreadPoolCompletion( threads );
-
-        this.summarizeProcessing();
-
-        return null;
-
     }
 
     @Override
@@ -173,12 +154,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
-            super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects
-                    .add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage() );
+            addErrorObject( ee, "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage(), e );
         }
     }
 

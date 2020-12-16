@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,28 +37,13 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     private Collection<String> otherArrayDesignNames;
 
-    public static void main( String[] args ) {
-        ArrayDesignSubsumptionTesterCli tester = new ArrayDesignSubsumptionTesterCli();
-        Exception e = tester.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "platformSubsumptionTest";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            exitwithError();
-            return err;
-        }
-
+    protected void doWork() throws Exception {
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
@@ -76,8 +60,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             }
 
             if ( otherArrayDesign == null ) {
-                AbstractCLI.log.error( "No arrayDesign " + otherArrayDesignName + " found" );
-                exitwithError();
+                throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
             }
 
             otherArrayDesign = this.thaw( otherArrayDesign );
@@ -92,8 +75,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         }
 
         this.audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
-
-        return null;
     }
 
     @Override

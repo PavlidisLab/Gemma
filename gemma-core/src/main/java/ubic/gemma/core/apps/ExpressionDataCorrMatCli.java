@@ -30,42 +30,26 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
-        try {
-            ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
-            Exception ex = e.doWork( args );
-            if ( ex != null )
-                AbstractCLI.log.info( ex, ex );
-        } catch ( Exception e ) {
-            AbstractCLI.log.info( e, e );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "corrMat";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = this.processCommandLine( args );
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
             try {
                 if ( !( ee instanceof ExpressionExperiment ) ) {
-                    errorObjects.add( ee );
+                    addErrorObject( ee, "This is not an ExpressionExperiment!" );
                     continue;
                 }
                 this.processExperiment( ( ExpressionExperiment ) ee );
-                successObjects.add( ee );
+                addSuccessObject( ee, "Successfully processed " + ( ( ExpressionExperiment ) ee ).getShortName() );
             } catch ( Exception e ) {
-                AbstractCLI.log.error( "Error while processing " + ee, e );
-                errorObjects.add( ee );
+                addErrorObject( ee, "Error while processing", e );
             }
 
         }
-        this.summarizeProcessing();
-        return exception;
     }
 
     @Override
@@ -81,7 +65,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     private void audit( ExpressionExperiment ee ) {
         auditTrailService.addUpdateEvent( ee, null, "Generated sample correlation matrix" );
-        successObjects.add( ee.toString() );
+        addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {

@@ -32,14 +32,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     private RemoteTaskRunningService taskRunningService;
 
-    public static void main( String[] args ) {
-        WorkerCLI me = new WorkerCLI();
-        Exception e = me.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public String getShortDesc() {
         return "Start worker application for processing tasks sent by Gemma webapp.";
@@ -52,8 +44,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml" };
+        return new String[]{"classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml"};
     }
 
     @Override
@@ -77,18 +69,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception commandArgumentErrors = this.processCommandLine( args );
-        if ( commandArgumentErrors != null ) {
-            return commandArgumentErrors;
-        }
-
-        try {
-            this.init();
-        } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-        }
-        return null;
+    protected void doWork() throws Exception {
+        this.init();
     }
 
     private void init() {
@@ -98,7 +80,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public class ShutdownHook extends Thread {
         @Override
         public void run() {

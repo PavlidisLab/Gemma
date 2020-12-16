@@ -44,11 +44,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
 
-    public static void main( String[] args ) {
-        AffyDataFromCelCli c = new AffyDataFromCelCli();
-        executeCommand( c, args );
-    }
-
     private String aptFile = null;
     private String celchip = null;
 
@@ -88,15 +83,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.isEmpty() )
-            return null;
+            return;
 
         // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService
@@ -126,14 +117,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
             }
 
-            try {
-                AbstractCLI.log.info( "Loading data from " + aptFile );
-                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
+            AbstractCLI.log.info( "Loading data from " + aptFile );
+            serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
 
-            } catch ( Exception exception ) {
-                return exception;
-            }
-            return null;
+            return;
         }
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
@@ -147,9 +134,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
                  */
                 if ( this.checkForAlreadyDone( ee ) && !this.force ) {
-
-                    this.errorObjects.add( ee
-                            + ": Was already run before, use -force" );
+                    addErrorObject( ee, "Was already run before, use -force" );
                     continue;
                 }
 
@@ -157,8 +142,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * Avoid repeated attempts that won't work e.g. no data available.
                  */
                 if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
-                    this.errorObjects.add( ee
-                            + ": Failed before, use -force to re-attempt" );
+                    addErrorObject( ee, "Failed before, use -force to re-attempt" );
                     continue;
                 }
 
@@ -176,34 +160,24 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
                     AbstractCLI.log.info( ad + " looks like Affy array" );
                     serv.reprocessAffyDataFromCel( thawedEe );
-
-                    this.successObjects.add( thawedEe );
-                    AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                    addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
                 } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
                     ad = asd.thawLite( ad );
                     if ( GeoPlatform.isAffyPlatform( ad.getMergees().iterator().next().getShortName() ) ) {
                         AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
                         serv.reprocessAffyDataFromCel( thawedEe );
-                        this.successObjects.add( thawedEe );
-                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                        addSuccessObject( thawedEe, "Successfully processed: " + thawedEe );
                     }
                 } else {
 
-                    this.errorObjects.add( ee + ": " +
-                            ad
-                            + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
+                    addErrorObject( ee, ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
                 }
 
             } catch ( Exception exception ) {
-                AbstractCLI.log.error( exception, exception );
-                this.errorObjects.add( ee + " " + exception.getLocalizedMessage() );
+                addErrorObject( ee, exception.getMessage(), exception );
             }
 
         }
-
-        super.summarizeProcessing();
-
-        return null;
     }
 
     @Override

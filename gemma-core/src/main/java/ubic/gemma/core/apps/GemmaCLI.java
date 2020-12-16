@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
 public class GemmaCLI {
 
     public static void main( String[] args ) {
@@ -64,17 +64,17 @@ public class GemmaCLI {
                     Object cliInstance = aClazz.newInstance();
 
                     Method method = aClazz.getMethod( "getCommandName" );
-                    String commandName = ( String ) method.invoke( cliInstance, new Object[] {} );
+                    String commandName = ( String ) method.invoke( cliInstance, new Object[]{} );
                     if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                         // keep null to avoid printing some commands...
                         continue;
                     }
 
                     Method method2 = aClazz.getMethod( "getShortDesc" );
-                    String desc = ( String ) method2.invoke( cliInstance, new Object[] {} );
+                    String desc = ( String ) method2.invoke( cliInstance, new Object[]{} );
 
                     Method method3 = aClazz.getMethod( "getCommandGroup" );
-                    CommandGroup g = ( CommandGroup ) method3.invoke( cliInstance, new Object[] {} );
+                    CommandGroup g = ( CommandGroup ) method3.invoke( cliInstance, new Object[]{} );
 
                     if ( !commands.containsKey( g ) ) {
                         commands.put( g, new TreeMap<String, String>() );
@@ -95,10 +95,11 @@ public class GemmaCLI {
         if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" ) || args[0]
                 .equalsIgnoreCase( "help" ) ) {
             GemmaCLI.printHelp( commands );
+            System.exit( 1 );
         } else {
             LinkedList<String> f = new LinkedList<>( Arrays.asList( args ) );
             String commandRequested = f.remove( 0 );
-            Object[] argsToPass = f.toArray( new String[] {} );
+            String[] argsToPass = f.toArray( new String[]{} );
 
             if ( !commandClasses.containsKey( commandRequested ) ) {
                 System.err.println( "Unrecognized command: " + commandRequested );
@@ -107,19 +108,17 @@ public class GemmaCLI {
                 System.exit( 1 );
             } else {
                 try {
-                    Class<?> c = commandClasses.get( commandRequested );
-                    Method method = c.getMethod( "main", String[].class );
+                    Class<? extends AbstractCLI> c = commandClasses.get( commandRequested );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                     System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
                     //noinspection JavaReflectionInvocation // It works
-                    method.invoke( null, ( Object ) argsToPass );
+                    System.exit( c.getDeclaredConstructor().newInstance().executeCommand( argsToPass ) );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
                     System.err.println( ExceptionUtils.getStackTrace( e ) );
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
-                    System.exit( 0 );
                 }
             }
         }
@@ -127,8 +126,8 @@ public class GemmaCLI {
 
     /**
      * Mask password for logging
-     * 
-     * @param  argsToPass
+     *
+     * @param argsToPass
      * @return
      */
     public static String getOptStringForLogging( Object[] argsToPass ) {
@@ -138,7 +137,7 @@ public class GemmaCLI {
 
     /**
      * Print help and exit
-     * 
+     *
      * @param commands
      */
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {

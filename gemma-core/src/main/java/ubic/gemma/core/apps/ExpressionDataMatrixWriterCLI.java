@@ -36,11 +36,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private boolean filter = false;
     private String outFileName = null;
 
-    public static void main( String[] args ) {
-        ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
-        executeCommand( cli, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
@@ -70,12 +65,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         ExpressionDataFileService fs = this.getBean( ExpressionDataFileService.class );
 
         if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {
@@ -93,11 +83,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             try {
                 fs.writeDataFile( ( ExpressionExperiment ) ee, filter, fileName, false );
             } catch ( IOException e ) {
-                this.errorObjects.add( ee + ": " + e );
+                addErrorObject( ee, e.getMessage(), e );
             }
         }
-
-        return null;
     }
 
     @Override

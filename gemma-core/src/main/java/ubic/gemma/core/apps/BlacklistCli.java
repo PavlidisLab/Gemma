@@ -32,22 +32,15 @@ import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 
 /**
  * Add entries to the blacklist
- *
  * @author paul
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
 
     String fileName = null;
     private boolean remove = false;
-
-    public static void main( String[] args ) {
-        BlacklistCli e = new BlacklistCli();
-        executeCommand( e, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -81,12 +74,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null )
-            return ex;
-
+    protected void doWork() throws Exception {
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
         ExternalDatabaseDao externalDatabaseDao = this.getBean( ExternalDatabaseDao.class );
 
@@ -95,7 +83,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
 
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -165,11 +153,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 log.info( "Blacklisted " + accession );
             }
 
-        } catch ( IOException e ) {
-            return e;
+        } catch ( Exception e ) {
+            throw e;
         }
-
-        return null;
     }
 
     @Override

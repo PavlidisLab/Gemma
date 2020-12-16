@@ -269,8 +269,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             expressionExperiments.add( expressionExperiment );
         }
         if ( expressionExperiments.size() == 0 ) {
-            AbstractCLI.log.error( "There were no valid experimnents specified" );
-            exitwithError();
+            throw new RuntimeException( "There were no valid experimnents specified" );
         }
     }
 
@@ -331,15 +330,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     private ExpressionExperiment locateExpressionExperiment( String name ) {
 
         if ( name == null ) {
-            errorObjects.add( "Expression experiment short name must be provided" );
+            addErrorObject( null, "Expression experiment short name must be provided" );
             return null;
         }
 
         ExpressionExperiment experiment = eeService.findByShortName( name );
 
         if ( experiment == null ) {
-            AbstractCLI.log.error( "No experiment " + name + " found" );
-            exitwithError();
+            throw new RuntimeException( "No experiment " + name + " found" );
         }
         return experiment;
     }

@@ -28,14 +28,6 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
     private Taxon taxon;
 
-    public static void main( String[] args ) {
-        MultifunctionalityCli c = new MultifunctionalityCli();
-        Exception e = c.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "updateMultifunc";
@@ -52,11 +44,7 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         GeneMultifunctionalityPopulationService gfs = this.getBean( GeneMultifunctionalityPopulationService.class );
 
         if ( this.taxon != null ) {
@@ -64,8 +52,6 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
         } else {
             gfs.updateMultifunctionality();
         }
-
-        return null;
     }
 
     @Override

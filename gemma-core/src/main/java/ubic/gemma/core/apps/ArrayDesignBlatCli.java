@@ -54,11 +54,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
 
-    public static void main( String[] args ) {
-        ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
@@ -135,11 +130,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {
@@ -152,7 +143,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                    return null;
+                    return;
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
@@ -181,7 +172,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     }
                     AbstractCLI.log.info( "Persisted " + persistedResults.size() + " results" );
                 } catch ( IOException e ) {
-                    this.errorObjects.add( e );
+                    addErrorObject( null, e.getMessage(), e );
                 }
             }
 
@@ -229,16 +220,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             this.waitForThreadPoolCompletion( threads );
 
-            /*
-             * All done
-             */
-            this.summarizeProcessing();
-
         } else {
-            exitwithError();
+            throw new RuntimeException();
         }
-
-        return null;
     }
 
     @Override
@@ -259,8 +243,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         Taxon arrayDesignTaxon;
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
-            AbstractCLI.log.error( "Cannot read from " + blatResultFile );
-            exitwithError();
+            throw new RuntimeException( "Cannot read from " + blatResultFile );
         }
         // check being running for just one taxon
         arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
@@ -279,14 +262,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         try {
             // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
-            successObjects.add( design.getName() );
+            addSuccessObject( design, "Successfully processed " + design.getName() );
             this.audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
             this.updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( design, e.getMessage(), e );
         }
     }
 

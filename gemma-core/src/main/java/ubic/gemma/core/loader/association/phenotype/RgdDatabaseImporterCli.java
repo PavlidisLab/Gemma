@@ -38,21 +38,6 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     // name of the external database
     private static final String RGD = "RGD";
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public RgdDatabaseImporterCli() throws Exception {
-        super();
-    }
-
-    public static void main( String[] args ) throws Exception {
-
-        RgdDatabaseImporterCli importEvidence = new RgdDatabaseImporterCli();
-        Exception e = importEvidence.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-
-    }
-
     @Override
     public String getCommandName() {
         return "rgdDownload";
@@ -69,12 +54,9 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork() throws Exception {
         // this gets the context, so we can access beans
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
+        super.init();
 
         try {
             // creates the folder where to place the file web downloaded files and final output files
@@ -98,8 +80,6 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-
-        return null;
     }
 
     @Override

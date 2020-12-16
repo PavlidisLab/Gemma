@@ -15,9 +15,9 @@ import java.util.Set;
 
 /**
  * this importer cannot automatically download files it expects the files to already be there
- * 
+ * <p>
  * WARNING: the DGA web site is gone, and no replacement has been identified.
- * 
+ *
  * @author Nicolas
  */
 public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbstractCLI {
@@ -31,19 +31,6 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     private final Map<String, Set<OntologyTerm>> commonLines = new HashMap<>();
     private final Set<String> linesToExclude = new HashSet<>();
     private File dgaFile = null;
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public DgaDatabaseImporterCli() throws Exception {
-        super();
-    }
-
-    public static void main( String[] args ) throws Exception {
-        DgaDatabaseImporterCli databaseImporter = new DgaDatabaseImporterCli();
-        Exception e = databaseImporter.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public String getCommandName() {
@@ -61,22 +48,11 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
-
-        
-        try {
-            this.checkForDGAFile();
-            this.findTermsWithParents();
-            this.processDGAFile();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-
-        return null;
+    protected void doWork() throws Exception {
+        super.init();
+        this.checkForDGAFile();
+        this.findTermsWithParents();
+        this.processDGAFile();
     }
 
     @Override
@@ -139,7 +115,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     // example: same pubed, same gene 1-leukemia 2-myeloid leukemia 3-acute myeloid leukemia, keep only 3-
     private void findTermsWithParents() throws Exception {
 
-        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) )) {
+        try ( BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) ) ) {
             String line;
 
             while ( ( line = dgaReader.readLine() ) != null ) {
@@ -209,7 +185,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
         ppUtil.initFinalOutputFile( "DGA", this.writeFolder, false, true );
 
-        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) )) {
+        try ( BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) ) ) {
             String line;
 
             while ( ( line = dgaReader.readLine() ) != null ) {
@@ -243,11 +219,11 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
                                 // negative
                                 if ( ( geneRIF.contains( " is not " ) || geneRIF.contains( " not associated " )
                                         || geneRIF.contains( " no significant " ) || geneRIF
-                                                .contains( " no association " )
+                                        .contains( " no association " )
                                         || geneRIF.contains( " not significant " )
                                         || geneRIF.contains( " not expressed " ) )
                                         && !geneRIF
-                                                .contains( "is associated" )
+                                        .contains( "is associated" )
                                         && !geneRIF.contains( "is significant" )
                                         && !geneRIF.contains( "is not only" ) && !geneRIF.contains( "is expressed" ) ) {
 

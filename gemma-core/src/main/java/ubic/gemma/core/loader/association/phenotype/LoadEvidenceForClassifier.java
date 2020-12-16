@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.association.phenotype;
 
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -47,27 +46,6 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     private BibliographicReferenceService bibliographicReferenceService = null;
     private BufferedWriter writer;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public LoadEvidenceForClassifier( String[] args ) throws Exception {
-
-        this.loadServices( args );
-
-        // place to put the files results
-        String writeFolder = this.createWriteFolderIfNotExists();
-
-        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
-
-        this.loadTrainingSetUsed();
-
-        this.findEvidence();
-    }
-
-    public static void main( String[] args ) throws Exception {
-
-        new LoadEvidenceForClassifier( args );
-
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PHENOTYPES;
@@ -83,8 +61,17 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        return null;
+    protected void doWork() throws Exception {
+        this.loadServices();
+
+        // place to put the files results
+        String writeFolder = this.createWriteFolderIfNotExists();
+
+        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
+
+        this.loadTrainingSetUsed();
+
+        this.findEvidence();
     }
 
     // creates the folder where the output files will be put, use this one if file is too big
@@ -103,15 +90,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     // load all needed services
-    private synchronized void loadServices( String[] args ) {
-
-        // this gets the context, so we can access beans
-        Exception exception = this.processCommandLine( args );
-        if ( exception != null ) {
-            AbstractCLI.log.error( exception );
-            exception.printStackTrace();
-        }
-
+    private synchronized void loadServices() {
         // add services if needed later
         this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
     }

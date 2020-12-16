@@ -36,17 +36,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     private String directGeneInputFileName = null;
     private String taxonName;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public ExternalFileGeneLoaderCLI() {
-        super();
-    }
-
-    public static void main( String[] args ) {
-        // super constructor calls build options
-        ExternalFileGeneLoaderCLI p = new ExternalFileGeneLoaderCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public String getShortDesc() {
         return "loading genes from a non-NCBI files; only used for species like salmon";
@@ -94,18 +83,14 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork() throws Exception {
         this.processGeneList();
-        return null;
     }
 
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public void processGeneList() {
 
         ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );

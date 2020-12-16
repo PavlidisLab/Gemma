@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -31,26 +32,24 @@ import java.util.Collection;
  * Purely a testing tool, to turn Affy individual probes (by probeset) into collapsed sequences. This is what happens
  * internally when we add sequences to a platform, but this makes it possible to see (and check) the sequences first
  * before committing to them.
- * 
+ * <p>
  * Should probably be in GemmaAnalysis but that is badly broken.
- * 
+ * <p>
  * You just run this like
- * 
+ * <p>
  * $GEMMACMD affyCollapse [filename]
- * 
+ * <p>
  * It doesn't handle the regular argument setup, wasn't worth the trouble. Generates FASTA format but easy to change.
- * 
+ *
  * @author paul
  */
 public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
-    public static void main( String[] args ) {
-        AffyProbeCollapseCli d = new AffyProbeCollapseCli();
-        executeCommand( d, args );
-    }
+
+    private String affyProbeFileName;
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -58,32 +57,40 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
         return "affyCollapse";
     }
 
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        addOption( Option.builder( "affyProbeFile" )
+                .hasArg()
+                .desc( "Affymetrix probe file to use as input" )
+                .required().build() );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        affyProbeFileName = this.getOptionValue( "affyProbeFile" );
+    }
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork() throws IOException {
 
         // parse
         AffyProbeReader apr = new AffyProbeReader();
-        try {
-            apr.parse( args[0] );
-            Collection<CompositeSequence> compositeSequencesFromProbes = apr.getKeySet();
+        apr.parse( affyProbeFileName );
+        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getKeySet();
 
-            for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {
+        for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {
 
-                BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
-                String sequenceName = newCompositeSequence.getName() + "_collapsed";
-                System.out.println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
-            }
-        } catch ( IOException e ) {
-
-            e.printStackTrace();
+            BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
+            String sequenceName = newCompositeSequence.getName() + "_collapsed";
+            System.out.println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
         }
-
-        return null;
     }
 
 }
