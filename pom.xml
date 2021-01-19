@@ -128,7 +128,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<version>3.6.7.Final</version>
+			<version>${hibernate.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>net.sf.ehcache</groupId>
@@ -147,12 +147,12 @@
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-core</artifactId>
-			<version>2.6.6</version>
+			<version>${ehcache.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-terracotta</artifactId>
-			<version>2.6.6</version>
+			<version>${ehcache.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -584,6 +584,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.1.4.RELEASE</spring.security.version>
+		<hibernate.version>3.6.7.Final</hibernate.version>
+		<ehcache.version>2.6.6</ehcache.version>
 		<tomcat.version>8.5.60</tomcat.version>
 	</properties>
 </project>
