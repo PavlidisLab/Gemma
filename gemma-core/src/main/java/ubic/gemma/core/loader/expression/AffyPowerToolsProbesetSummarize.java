@@ -86,9 +86,9 @@ public class AffyPowerToolsProbesetSummarize {
     private static final String METHOD = "rma";
 
     /**
-     * @param bmap bMap
-     * @param fileName file name
-     * @return BioAssay, or null if not found.
+     * @param  bmap     bMap
+     * @param  fileName file name
+     * @return          BioAssay, or null if not found.
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
 
@@ -174,14 +174,14 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For when we are reprocessing and needed to figure out what the original platform was from the CEL files.
      *
-     * @param ee ee
-     * @param targetPlatform target platform (thawed); call multiple times if there is more than one platform (though
-     *        that should
-     *        not happen for exon arrays)
-     * @param originalPlatform original platform
-     * @param bioAssays BAs to use
-     * @param files list of CEL files (any other files included will be ignored)
-     * @return raw data vectors
+     * @param  ee               ee
+     * @param  targetPlatform   target platform (thawed); call multiple times if there is more than one platform (though
+     *                          that should
+     *                          not happen for exon arrays)
+     * @param  originalPlatform original platform
+     * @param  bioAssays        BAs to use
+     * @param  files            list of CEL files (any other files included will be ignored)
+     * @return                  raw data vectors
      */
     Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<BioAssay> bioAssays, Collection<LocalFile> files ) {
@@ -200,15 +200,17 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For either 3' or Exon arrays.
      *
-     * @param ee ee
-     * @param aptOutputFileToRead file
-     * @param targetPlatform (thawed) deal with data from this platform (call multiple times if there is more than one
-     *        platform)
-     * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
-     *        original platform, so we're not trying to match up bioassays that are not relevant.
-     * @param bioAssaysToUse that we're dealing with (could be a subset of a multi-platform experiment)
-     * @return raw data vectors
-     * @throws IOException io problem
+     * @param  ee                    ee
+     * @param  aptOutputFileToRead   file
+     * @param  targetPlatform        (thawed) deal with data from this platform (call multiple times if there is more
+     *                               than one
+     *                               platform)
+     * @param  originalPlatform      can be the same as the targetPlatform. But we specify this in case there is more
+     *                               than one
+     *                               original platform, so we're not trying to match up bioassays that are not relevant.
+     * @param  bioAssaysToUse        that we're dealing with (could be a subset of a multi-platform experiment)
+     * @return                       raw data vectors
+     * @throws IOException           io problem
      * @throws FileNotFoundException file not found
      */
     Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
@@ -300,16 +302,31 @@ public class AffyPowerToolsProbesetSummarize {
                         .info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " [" + assay
                                 .getAccession().getAccession() + "]" );
 
+                if ( bad.getBioAssays().contains( assay ) ) {
+                    // this is a fatal error, but we throw it later.
+                    log.warn( "** Ambiguous match: There is already a column matched to " + assay + " [" + assay
+                            .getAccession().getAccession() + "]" );
+                }
+
                 columnsToKeep.add( sampleName );
                 bad.getBioAssays().add( assay );
             }
 
-            if ( bad.getBioAssays().size() != bioAssaysToUse.size() ) {
+            int obtained = bad.getBioAssays().size();
+            int expected = bioAssaysToUse.size();
+
+            if ( obtained > expected ) {
+                Collection<BioAssay> extras = CollectionUtils.subtract( bad.getBioAssays(), bioAssaysToUse );
+                throw new IllegalArgumentException( "Matching was ambiguous, there is more than one matching "
+                        + "data column for at least one sample; got " + obtained + ", expected " + expected + "; problems with:\n"
+                        + StringUtils.join( extras, "\n" ) );
+            } else if ( obtained < expected ) {
                 //noinspection unchecked
                 Collection<BioAssay> missing = CollectionUtils.subtract( bioAssaysToUse, bad.getBioAssays() );
                 throw new IllegalStateException(
-                        "Failed to find a data column for every bioassay on the given platform " + targetPlatform
-                                + "; missing:\n" + StringUtils.join( missing, "\n" ) );
+                        "Failed to find a data column for every bioassay in the experiment on the given platform " + targetPlatform
+                                + "; got " + obtained + ", expected " + expected + "; missing:\n"
+                                + StringUtils.join( missing, "\n" ) );
             }
 
             if ( columnsToKeep.size() < matrix.columns() ) {
@@ -360,11 +377,11 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * Stolen from SimpleExpressionDataLoaderService.
      *
-     * @param expressionExperiment ee
-     * @param bioAssayDimension BA dim
-     * @param targetPlatform target design (thawed)
-     * @param matrix matrix read from apt output.
-     * @return raw data vectors
+     * @param  expressionExperiment ee
+     * @param  bioAssayDimension    BA dim
+     * @param  targetPlatform       target design (thawed)
+     * @param  matrix               matrix read from apt output.
+     * @return                      raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign targetPlatform,
@@ -404,8 +421,8 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ad platform
-     * @return file or null if not found
+     * @param  ad platform
+     * @return    file or null if not found
      */
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
@@ -431,11 +448,11 @@ public class AffyPowerToolsProbesetSummarize {
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
-     * @param targetPlatform ad
-     * @param cdfFileName e g. HG-U133A_2.cdf
-     * @param celfiles celfiles
-     * @param outputPath path
-     * @return string
+     * @param  targetPlatform ad
+     * @param  cdfFileName    e g. HG-U133A_2.cdf
+     * @param  celfiles       celfiles
+     * @param  outputPath     path
+     * @return                string
      */
     private String getCDFCommand( ArrayDesign targetPlatform, String cdfFileName, List<String> celfiles,
             String outputPath ) {
@@ -470,9 +487,9 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param files files
-     * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
-     * @return strings
+     * @param  files                files
+     * @param  accessionsOfInterest Used for multiplatform studies; if null, ignored
+     * @return                      strings
      */
     private List<String> getCelFiles( Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
 
@@ -528,10 +545,10 @@ public class AffyPowerToolsProbesetSummarize {
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param ad ad
-     * @param celfiles celfiles
-     * @param outputPath directory
-     * @return string or null if not found.s
+     * @param  ad         ad
+     * @param  celfiles   celfiles
+     * @param  outputPath directory
+     * @return            string or null if not found.s
      */
     private String getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
@@ -580,13 +597,13 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ee experiment
-     * @param targetPlatform platform whose configuration we're using to run apt-probeset-summarize
-     * @param originalPlatform only really necessary if we are switching platforms AND there are multiple platforms
-     *        for the data set
-     * @param files files
-     * @param bioAssays that we're dealing with (would be a subset of a dataset if multiplatform)
-     * @return raw data vectors
+     * @param  ee               experiment
+     * @param  targetPlatform   platform whose configuration we're using to run apt-probeset-summarize
+     * @param  originalPlatform only really necessary if we are switching platforms AND there are multiple platforms
+     *                          for the data set
+     * @param  files            files
+     * @param  bioAssays        that we're dealing with (would be a subset of a dataset if multiplatform)
+     * @return                  raw data vectors
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<BioAssay> bioAssays ) {
