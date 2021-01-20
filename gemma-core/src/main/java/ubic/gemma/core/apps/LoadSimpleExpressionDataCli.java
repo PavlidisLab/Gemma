@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -71,23 +70,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     private String fileName = null;
     private TaxonService taxonService = null;
 
-    public static void main( String[] args ) {
-        LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            AbstractCLI.log.info( watch.getTime() );
-        } catch ( Exception e ) {
-            AbstractCLI.log.fatal( e, e );
-            throw new RuntimeException( e );
-        }
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
@@ -129,49 +111,37 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null ) {
-            return err;
-        }
-        try {
-            this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
-            this.eeService = this.getBean( ExpressionExperimentService.class );
-            this.adService = this.getBean( ArrayDesignService.class );
-            this.taxonService = this.getBean( TaxonService.class );
-            if ( this.fileName != null ) {
-                AbstractCLI.log.info( "Loading experiments from " + this.fileName );
-                InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
-                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
-                    String conf;
-                    while ( ( conf = br.readLine() ) != null ) {
+    protected void doWork() throws Exception {
+        this.eeLoaderService = this.getBean( SimpleExpressionDataLoaderService.class );
+        this.eeService = this.getBean( ExpressionExperimentService.class );
+        this.adService = this.getBean( ArrayDesignService.class );
+        this.taxonService = this.getBean( TaxonService.class );
+        if ( this.fileName != null ) {
+            AbstractCLI.log.info( "Loading experiments from " + this.fileName );
+            InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                String conf;
+                while ( ( conf = br.readLine() ) != null ) {
 
-                        if ( StringUtils.isBlank( conf ) ) {
-                            continue;
-                        }
+                    if ( StringUtils.isBlank( conf ) ) {
+                        continue;
+                    }
 
-                        /* Comments in the list file */
-                        if ( conf.startsWith( "#" ) )
-                            continue;
+                    /* Comments in the list file */
+                    if ( conf.startsWith( "#" ) )
+                        continue;
 
-                        String expName = conf.split( LoadSimpleExpressionDataCli.SPLIT_CHAR )[0];
+                    String expName = conf.split( LoadSimpleExpressionDataCli.SPLIT_CHAR )[0];
 
-                        try {
-                            this.loadExperiment( conf );
-                            AbstractCLI.log.info( "Successfully Loaded " + expName );
-                            successObjects.add( expName );
-                        } catch ( Exception e ) {
-                            errorObjects.add( expName + ": " + e.getMessage() );
-                            AbstractCLI.log.error( "Failure loading " + expName, e );
-                        }
+                    try {
+                        this.loadExperiment( conf );
+                        addSuccessObject( expName, "Successfully Loaded " + expName );
+                    } catch ( Exception e ) {
+                        addErrorObject( expName, "Failure loading " + expName, e );
                     }
                 }
-                this.summarizeProcessing();
             }
-        } catch ( IOException e ) {
-            return e;
         }
-        return null;
     }
 
     private void checkForArrayDesignName( String[] fields ) {
@@ -289,8 +259,8 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
         this.configureArrayDesigns( fields, metaData );
 
-        try (InputStream data = new FileInputStream(
-                new File( this.dirName, fields[LoadSimpleExpressionDataCli.DATA_FILE_I] ) )) {
+        try ( InputStream data = new FileInputStream(
+                new File( this.dirName, fields[LoadSimpleExpressionDataCli.DATA_FILE_I] ) ) ) {
 
             metaData.setSourceUrl( fields[LoadSimpleExpressionDataCli.SOURCE_I] );
 

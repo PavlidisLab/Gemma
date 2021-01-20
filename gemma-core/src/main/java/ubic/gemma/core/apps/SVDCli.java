@@ -31,16 +31,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
-        SVDCli s = new SVDCli();
-        Exception e = s.doWork( args );
-
-        if ( e != null ) {
-            AbstractCLI.log.error( e, e );
-        }
-        System.exit( 0 ); // dangling threads?
-    }
-
     @Override
     public String getShortDesc() {
         return "Run PCA (using SVD) on data sets";
@@ -63,18 +53,13 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         SVDService svdService = this.getBean( SVDService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
             if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
-                this.errorObjects.add( bas + ": Already has PCA; use -force to override" );
+                addErrorObject( bas, "Already has PCA; use -force to override" );
                 continue;
             }
 
@@ -84,14 +69,11 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
                 svdService.svd( ee.getId() );
 
-                this.successObjects.add( bas.toString() );
+                addSuccessObject( bas, "Successfully processed " + bas );
             } catch ( Exception e ) {
-                AbstractCLI.log.error( e, e );
-                this.errorObjects.add( bas + ": " + e.getMessage() );
+                addErrorObject( bas, e.getMessage(), e );
             }
         }
-        this.summarizeProcessing();
-        return null;
     }
 
 }

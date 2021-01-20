@@ -47,11 +47,6 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
 
-    public static void main( String[] args ) {
-        ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
-        executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "pubmedAssociateToExperiments";
@@ -78,10 +73,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork() throws Exception {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
         Persister ph = this.getPersisterHelper();
@@ -158,8 +150,6 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         log.info( "Diff publication: " + Arrays.toString( diffPubCount.toArray() ) );
         log.info( "No initial publication: " + Arrays.toString( nullPubCount.toArray() ) );
         log.info( "No publications found: " + Arrays.toString( failedEe.toArray() ) );
-
-        return null;
     }
 
     @Override

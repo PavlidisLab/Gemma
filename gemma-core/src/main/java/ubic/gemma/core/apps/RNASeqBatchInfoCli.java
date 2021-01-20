@@ -22,7 +22,7 @@ import ubic.gemma.persistence.util.Settings;
 /**
  * Add batch information for RNA-seq experiments.
  *
- * @author     tesar
+ * @author tesar
  * @deprecated this should not be necessary and the regular batch population tool can be used instead.
  */
 public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
@@ -30,14 +30,6 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     @SuppressWarnings("FieldCanBeLocal")
     private BatchInfoPopulationService batchService;
     private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
-
-    public static void main( String[] args ) {
-        RNASeqBatchInfoCli d = new RNASeqBatchInfoCli();
-        Exception e = d.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -62,32 +54,22 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         batchService = this.getBean( BatchInfoPopulationService.class );
 
         log.info( "Checking folders for existing experiments in " + fastqRootDir );
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
             if ( !( ee instanceof ExpressionExperiment ) ) {
-                errorObjects.add( ee + " is not an expressionexperiment " );
+                addErrorObject( ee, "This is not an ExpressionExperiment!" );
             }
 
             if ( batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force ) ) {
-                log.info( "Added batch information for " + ee );
-                successObjects.add( ee );
+                addSuccessObject( ee, "Added batch information" );
             } else {
-                log.info( "Failed to add batch information for " + ee );
-                errorObjects.add( ee );
+                addErrorObject( ee, "Failed to add batch information" );
             }
         }
-
-        summarizeProcessing();
-
-        return null;
     }
 
     @Override

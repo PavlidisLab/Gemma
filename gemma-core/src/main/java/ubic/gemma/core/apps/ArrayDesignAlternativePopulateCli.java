@@ -37,11 +37,6 @@ import java.io.InputStreamReader;
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
-    public static void main( String[] args ) {
-        ArrayDesignAlternativePopulateCli c = new ArrayDesignAlternativePopulateCli();
-        executeCommand( c, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
@@ -58,15 +53,12 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null )
-            return ex;
+    protected void doWork() throws Exception {
         ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
         // Read in the mapping file, which is in the classpath. This is also used by GeoPlatform (and in the DataUpdater)
         InputStream r = this.getClass().getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" );
-        try (BufferedReader in = new BufferedReader( new InputStreamReader( r ) )) {
+        try ( BufferedReader in = new BufferedReader( new InputStreamReader( r ) ) ) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -105,9 +97,8 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
             }
         } catch ( IOException e ) {
-            return e;
+            throw e;
         }
-        return null;
     }
 
     @Override

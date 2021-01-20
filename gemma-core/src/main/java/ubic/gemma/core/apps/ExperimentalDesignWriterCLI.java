@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Option;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -37,45 +36,31 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     private String outFileName;
 
-    public static void main( String[] args ) {
-        ExperimentalDesignWriterCLI cli = new ExperimentalDesignWriterCLI();
-        Exception exc = cli.doWork( args );
-        if ( exc != null ) {
-            AbstractCLI.log.error( exc.getMessage() );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "printExperimentalDesign";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-                try (PrintWriter writer = new PrintWriter(
+                try ( PrintWriter writer = new PrintWriter(
                         outFileName + "_" + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() )
-                                + ".txt" )) {
+                                + ".txt" ) ) {
 
                     edWriter.write( writer, ( ExpressionExperiment ) ee, true );
                     writer.flush();
                 } catch ( IOException exception ) {
-                    return exception;
+                    throw exception;
                 }
             } else {
                 throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
             }
         }
-
-        return null;
     }
 
     @Override

@@ -32,14 +32,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     private VectorMergingService mergingService;
 
-    public static void main( String[] args ) {
-        VectorMergingCli v = new VectorMergingCli();
-        Exception e = v.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e );
-        }
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
@@ -57,12 +49,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = this.processCommandLine( args );
-        if ( e != null ) {
-            return e;
-        }
-
+    protected void doWork() throws Exception {
         mergingService = this.getBean( VectorMergingService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -73,10 +60,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
                         "Can't do vector merging on non-expressionExperiment bioassaysets" );
             }
         }
-
-        this.summarizeProcessing();
-        return null;
-
     }
 
     @Override
@@ -87,15 +70,10 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             expressionExperiment = eeService.thawLite( expressionExperiment );
-
             expressionExperiment = mergingService.mergeVectors( expressionExperiment );
-
-            super.successObjects.add( expressionExperiment.toString() );
+            addSuccessObject( expressionExperiment.toString(), "Finished processing " + expressionExperiment );
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-
+            addErrorObject( expressionExperiment, e.getMessage(), e );
         }
-        AbstractCLI.log.info( "Finished processing " + expressionExperiment );
     }
 }

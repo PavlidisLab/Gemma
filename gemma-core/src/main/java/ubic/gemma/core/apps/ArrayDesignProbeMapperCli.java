@@ -6,7 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -25,10 +24,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 
 /**
- * Process the blat results for an array design to map them onto genes.
- * Typical workflow would be to run:
+ * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
  * <ol>
  * <li>Create the array design, perhaps by loading a GPL or via a GSE.
  * <li>ArrayDesignSequenceAssociationCli - attach sequences to array design, fetching from BLAST database if necessary.
@@ -40,7 +39,7 @@ import java.util.concurrent.BlockingQueue;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
- * 
+ * <p>
  * In batch mode, platforms that are "children" (mergees or subsumees) of other platforms will be skipped. Platforms
  * which are themselves merged or subsumers, when run, will result in the child platforms being updated implicitly (via
  * an audit event and report update)
@@ -66,17 +65,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Taxon taxon = null;
     private boolean useDB = true;
 
-    public static void main( String[] args ) {
-        ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
+    @SuppressWarnings({"AccessStaticViaInstance", "static-access", "deprecation"})
     @Override
     protected void buildOptions() {
         super.buildOptions();
@@ -235,7 +229,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      */
     @Override
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+                       Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.hasOption( "force" ) ) {
             return true;
@@ -363,12 +357,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.getArrayDesignsToProcess()
@@ -409,9 +398,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         this.audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
-                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
-                        AbstractCLI.log.error( e, e );
+                        addErrorObject( arrayDesign, e.getMessage(), e );
                     }
                 } else {
 
@@ -432,7 +419,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
                             } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
                                 this.audit( arrayDesign, "Run with configuration=" + this
-                                        .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                                                .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
                                         new AlignmentBasedGeneMappingEvent() );
                             } else {
                                 this.audit( arrayDesign, "Run with default parameters",
@@ -441,16 +428,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             updateMergedOrSubsumed( arrayDesign );
                         }
 
-                        successObjects.add( arrayDesign );
+                        addSuccessObject( arrayDesign, "Successfully processed " + arrayDesign );
                     } catch ( Exception e ) {
-                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
-                        AbstractCLI.log.error( e, e );
+                        addErrorObject( arrayDesign, e.getMessage(), e );
                     }
                 }
 
             }
-            this.summarizeProcessing();
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
 
             if ( directAnnotationInputFileName != null ) {
@@ -461,10 +445,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
-            return new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
+            throw new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
         }
-
-        return null;
     }
 
     @Override
@@ -477,7 +459,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    private void batchRun( final Date skipIfLastRunLaterThan ) {
+    private void batchRun( final Date skipIfLastRunLaterThan ) throws InterruptedException {
         Collection<ArrayDesign> allArrayDesigns;
 
         if ( this.taxon != null ) {
@@ -485,52 +467,15 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         } else {
             allArrayDesigns = getArrayDesignService().loadAll();
         }
-        
+
         // TODO: process array designs in order of how many experiments they use (most first)
 
         final SecurityContext context = SecurityContextHolder.getContext();
-
-        class ADProbeMapperCliConsumer extends Consumer {
-
-            private ADProbeMapperCliConsumer( BlockingQueue<ArrayDesign> q ) {
-                super( q, context );
-            }
-
-            @Override
-            void consume( ArrayDesign x ) {
-
-                if ( x.getCurationDetails().getTroubled() ) {
-                    AbstractCLI.log.warn( "Skipping troubled platform: " + x );
-                    errorObjects.add( x + ": " + "Skipped because it is troubled; run in non-batch-mode" );
-                    return;
-                }
-
-                /*
-                 * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
-                 * just the ones from the taxon specified.
-                 */
-                ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, x );
-
-            }
+        Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
+        for ( ArrayDesign ad : allArrayDesigns ) {
+            arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
-
-        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
-        arrayDesigns.addAll( allArrayDesigns );
-
-        Collection<Thread> threads = new ArrayList<>();
-        for ( int i = 0; i < this.numThreads; i++ ) {
-            ADProbeMapperCliConsumer c1 = new ADProbeMapperCliConsumer( arrayDesigns );
-            Thread k = new Thread( c1 );
-            threads.add( k );
-            k.start();
-        }
-
-        this.waitForThreadPoolCompletion( threads );
-
-        /*
-         * All done
-         */
-        this.summarizeProcessing();
+        executeBatchTasks( arrayDesigns );
     }
 
     private void configure( ArrayDesign arrayDesign ) {
@@ -639,23 +584,21 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
             }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
-            successObjects.add( design );
+            addSuccessObject( design, "Successfully processed " + design );
             ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
             this.audit( design, "Part of a batch job", eventType );
 
             updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            AbstractCLI.log.error( e, e );
+            addErrorObject( design, e.getMessage(), e );
         }
     }
 
     /**
      * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
      * well. We simply add an audit event, and update the report for the platform.
-     * 
+     *
      * @param design platform
      */
     private void updateMergedOrSubsumed( ArrayDesign design ) {
@@ -703,4 +646,32 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
+    private class ProcessADProbeMapper implements Callable<Void> {
+
+        private ArrayDesign arrayDesign;
+        private Date skipIfLastRunLaterThan;
+
+        private ProcessADProbeMapper( ArrayDesign arrayDesign, Date skipIfLastRunLaterThan ) {
+            this.arrayDesign = arrayDesign;
+            this.skipIfLastRunLaterThan = skipIfLastRunLaterThan;
+        }
+
+        @Override
+        public Void call() {
+
+            if ( arrayDesign.getCurationDetails().getTroubled() ) {
+                AbstractCLI.log.warn( "Skipping troubled platform: " + arrayDesign );
+                addErrorObject( arrayDesign, "Skipped because it is troubled; run in non-batch-mode" );
+                return null;
+            }
+
+            /*
+             * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
+             * just the ones from the taxon specified.
+             */
+            ArrayDesignProbeMapperCli.this.processArrayDesign( skipIfLastRunLaterThan, arrayDesign );
+
+            return null;
+        }
+    }
 }

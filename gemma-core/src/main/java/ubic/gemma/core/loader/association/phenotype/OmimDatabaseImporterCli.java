@@ -44,22 +44,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     // FIXME INVALID URL
     private static final String OMIM_URL_PATH = "ftp://ftp.omim.org/OMIM/";// "ftp://faf.grcf.jhmi.edu/OMIM/";
 
-    public static void main( String[] args ) throws Exception {
-        OmimDatabaseImporterCli importer = new OmimDatabaseImporterCli();
-        Exception e = importer.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
-
     // ********************************************************************************
-
-    /**
-     * @throws Exception
-     */
-    OmimDatabaseImporterCli() throws Exception {
-        super();
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -82,43 +67,32 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork() throws Exception {
 
         // this gets the context, so we can access beans
-        Exception e1 = super.processCommandLine( args );
-        if ( e1 != null ) return e1;
-        e1 = super.init();
-        if ( e1 != null ) return e1;
+        super.init();
 
         // creates the folder to place the downloaded files and final output files
-        try {
-            this.writeFolder = ppUtil.createWriteFolderIfDoesntExist( OmimDatabaseImporterCli.OMIM );
-            // download the OMIM File called morbid
-            String morbidmap = this.ppUtil.downloadFileFromWeb( OmimDatabaseImporterCli.OMIM_URL_PATH, OmimDatabaseImporterCli.OMIM_FILE_MORBID,
-                    writeFolder,
-                    OMIM_FILE_MORBID + ".tsv" );
-            // download the OMIM File called mim2gene
-            String mim2gene = ppUtil
-                    .downloadFileFromWeb( OmimDatabaseImporterCli.OMIM_URL_PATH, OmimDatabaseImporterCli.OMIM_FILE_MIM, writeFolder,
-                            OMIM_FILE_MORBID + ".tsv" );
-            // find the OMIM and Mesh terms by download a version of the disease ontology
-            ppUtil.loadMESHOMIM2DOMappings();
-            // return common publications between a OMIM gene and OMIM phenotype
-            Map<Long, Collection<Long>> omimIdToPubmeds = this.findCommonPubmed( morbidmap );
-            // process the omim files to create the final output
-            this.processOmimFiles( morbidmap, mim2gene, omimIdToPubmeds );
-
-        } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            return e;
-        }
-
-        return null;
+        this.writeFolder = ppUtil.createWriteFolderIfDoesntExist( OmimDatabaseImporterCli.OMIM );
+        // download the OMIM File called morbid
+        String morbidmap = this.ppUtil.downloadFileFromWeb( OmimDatabaseImporterCli.OMIM_URL_PATH, OmimDatabaseImporterCli.OMIM_FILE_MORBID,
+                writeFolder,
+                OMIM_FILE_MORBID + ".tsv" );
+        // download the OMIM File called mim2gene
+        String mim2gene = ppUtil
+                .downloadFileFromWeb( OmimDatabaseImporterCli.OMIM_URL_PATH, OmimDatabaseImporterCli.OMIM_FILE_MIM, writeFolder,
+                        OMIM_FILE_MORBID + ".tsv" );
+        // find the OMIM and Mesh terms by download a version of the disease ontology
+        ppUtil.loadMESHOMIM2DOMappings();
+        // return common publications between a OMIM gene and OMIM phenotype
+        Map<Long, Collection<Long>> omimIdToPubmeds = this.findCommonPubmed( morbidmap );
+        // process the omim files to create the final output
+        this.processOmimFiles( morbidmap, mim2gene, omimIdToPubmeds );
     }
 
     /**
      * specific to OMIM we need to combine lines with the same ncbiGeneId + omimPhenotypeId
-     * 
+     *
      * @throws IOException
      */
     private void combinePhenotypes() throws IOException {
@@ -127,7 +101,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
         BufferedReader br = new BufferedReader( new InputStreamReader(
                 FileTools.getInputStreamFromPlainOrCompressedFile( writeFolder + "/finalResults.tsv" ) ) );
 
-        try (BufferedWriter bw = new BufferedWriter( new FileWriter( writeFolder + "/finalResultsOmimCombine.tsv" ) )) {
+        try ( BufferedWriter bw = new BufferedWriter( new FileWriter( writeFolder + "/finalResultsOmimCombine.tsv" ) ) ) {
 
             String line = br.readLine();
 
@@ -181,9 +155,8 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     /**
-     * 
-     * @param  valueUri
-     * @param  valueUri2
+     * @param valueUri
+     * @param valueUri2
      * @return
      */
     private String combineUri( String valueUri, String valueUri2 ) {
@@ -209,14 +182,14 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
 
     /**
      * return all common pubmed between an omimGeneId and a omimPhenotypeId
-     * 
-     * @param  omimGeneId
-     * @param  omimPhenotypeId
-     * @param  omimIdToPubmeds
+     *
+     * @param omimGeneId
+     * @param omimPhenotypeId
+     * @param omimIdToPubmeds
      * @return
      */
     private Collection<Long> findCommonPubmed( Long omimGeneId, Long omimPhenotypeId,
-            Map<Long, Collection<Long>> omimIdToPubmeds ) {
+                                               Map<Long, Collection<Long>> omimIdToPubmeds ) {
 
         Collection<Long> pubmedFromGeneId = omimIdToPubmeds.get( omimGeneId );
         Collection<Long> pubmedFromPhenotypeId = omimIdToPubmeds.get( omimPhenotypeId );
@@ -233,8 +206,8 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
 
     /**
      * process all OMIM files to get the data out and manipulates it
-     * 
-     * @param  morbidmap
+     *
+     * @param morbidmap
      * @return
      * @throws NumberFormatException
      * @throws IOException
@@ -246,7 +219,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
         // all omimID (gene or phenotype)
         Set<Long> allOmimId = new HashSet<>();
 
-        try (BufferedReader br = new BufferedReader( new FileReader( morbidmap ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( morbidmap ) ) ) {
             String line;
 
             // parse the morbid OMIM file
@@ -281,7 +254,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
         String line;
         Map<String, String> omimIdToGeneNCBI = new HashMap<>();
 
-        try (BufferedReader br = new BufferedReader( new FileReader( mim2gene ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( mim2gene ) ) ) {
 
             while ( ( line = br.readLine() ) != null ) {
 
@@ -337,7 +310,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
 
         String line;
 
-        try (BufferedReader br = new BufferedReader( new FileReader( morbidmap ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( morbidmap ) ) ) {
 
             // parse the morbid OMIM file
             while ( ( line = br.readLine() ) != null ) {

@@ -40,27 +40,13 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentPlatformSwitchService serv;
 
-    public static void main( String[] args ) {
-        ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e, e );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "switchExperimentPlatform";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = this.processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
-
+    protected void doWork() throws Exception {
         serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
 
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -71,9 +57,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             }
 
         }
-        this.summarizeProcessing();
-        return null;
-
     }
 
     @Override
@@ -112,8 +95,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             if ( this.arrayDesignName != null ) {
                 ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
-                    AbstractCLI.log.error( "Unknown array design" );
-                    exitwithError();
+                    throw new RuntimeException( "Unknown array design" );
                 }
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );
@@ -126,10 +108,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ats.addUpdateEvent( ee, type, "Switched to use merged array Design " );
             }
 
-            super.successObjects.add( ee.toString() );
+            addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects.add( ee + ": " + e.getMessage() );
+            addErrorObject( ee, e.getMessage(), e );
         }
     }
 }

@@ -28,15 +28,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
-        BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-
-        Exception e = b.doWork( args );
-        if ( e != null ) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
@@ -54,12 +45,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception ex = super.processCommandLine( args );
-        if ( ex != null )
-            return ex;
-
+    protected void doWork() throws Exception {
         BatchInfoPopulationService ser = this.getBean( BatchInfoPopulationService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
@@ -77,21 +63,17 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     ee = this.eeService.thawLite( ee );
                     boolean success = ser.fillBatchInformation( ee, force );
                     if ( success ) {
-                        this.successObjects.add( bas.toString() );
+                        addSuccessObject( bas, "Successfully processed " + bas );
                     } else {
-                        this.errorObjects.add( bas.toString() );
+                        addErrorObject( bas, "Failed to process " + bas );
                     }
 
                 } catch ( Exception e ) {
-                    AbstractCLI.log.error( e, e );
-                    this.errorObjects.add( bas + ": " + e.getMessage() );
+                    addErrorObject( bas, e.getMessage(), e );
                 }
 
             }
         }
-
-        this.summarizeProcessing();
-        return null;
     }
 
     @Override

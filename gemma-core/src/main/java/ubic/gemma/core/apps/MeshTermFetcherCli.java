@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author     pavlidis
+ * @author pavlidis
  * @deprecated should not be part of Gemma main code
  */
 @Deprecated
@@ -44,14 +44,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
     private static final int CHUNK_SIZE = 10;
     private String file;
     private boolean majorTopicsOnly = false;
-
-    public static void main( String[] args ) {
-        MeshTermFetcherCli p = new MeshTermFetcherCli();
-        Exception exception = p.doWork( args );
-        if ( exception != null ) {
-            AbstractCLI.log.error( exception, exception );
-        }
-    }
 
     @Override
     public String getCommandName() {
@@ -75,36 +67,25 @@ public class MeshTermFetcherCli extends AbstractCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
-        try {
-            Collection<Integer> ids = this.readIdsFromFile( file );
-            Collection<Integer> chunk = new ArrayList<>();
-            for ( Integer i : ids ) {
+        Collection<Integer> ids = this.readIdsFromFile( file );
+        Collection<Integer> chunk = new ArrayList<>();
+        for ( Integer i : ids ) {
 
-                chunk.add( i );
+            chunk.add( i );
 
-                if ( chunk.size() == MeshTermFetcherCli.CHUNK_SIZE ) {
+            if ( chunk.size() == MeshTermFetcherCli.CHUNK_SIZE ) {
 
-                    this.processChunk( fetcher, chunk );
-                    chunk.clear();
-                }
-            }
-
-            if ( !chunk.isEmpty() ) {
                 this.processChunk( fetcher, chunk );
+                chunk.clear();
             }
-
-        } catch ( IOException exception ) {
-            return exception;
         }
 
-        return null;
+        if ( !chunk.isEmpty() ) {
+            this.processChunk( fetcher, chunk );
+        }
     }
 
     @Override
@@ -121,7 +102,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
         AbstractCLI.log.info( "Reading " + inFile );
 
         Collection<Integer> ids = new ArrayList<>();
-        try (BufferedReader in = new BufferedReader( new FileReader( file ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( file ) ) ) {
             String line;
             while ( ( line = in.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) )

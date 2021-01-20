@@ -48,14 +48,9 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     private Integer startNcbiId = null;
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
     public NcbiGeneLoaderCLI() {
         super();
-    }
-
-    public static void main( String[] args ) {
-        NcbiGeneLoaderCLI p = new NcbiGeneLoaderCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
     }
 
     @Override
@@ -96,10 +91,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork() throws Exception {
         loader = new NcbiGeneLoader();
         TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
@@ -134,8 +126,6 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
                 loader.load( true );
             }
         }
-
-        return null;
     }
 
     @Override

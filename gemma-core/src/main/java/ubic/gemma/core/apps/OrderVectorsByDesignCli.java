@@ -31,27 +31,13 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
  */
 public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI {
 
-    public static void main( String[] args ) {
-        OrderVectorsByDesignCli c = new OrderVectorsByDesignCli();
-
-        Exception e = c.doWork( args );
-
-        if ( e != null ) {
-            throw ( new RuntimeException( e ) );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "orderVectorsByDesign";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception e = super.processCommandLine( args );
-        if ( e != null )
-            return e;
-
+    protected void doWork() throws Exception {
         ProcessedExpressionDataVectorService processedExpressionDataVectorService = this
                 .getBean( ProcessedExpressionDataVectorService.class );
 
@@ -63,8 +49,6 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
             ee = this.eeService.thawLite( ( ExpressionExperiment ) ee );
             processedExpressionDataVectorService.reorderByDesign( ee.getId() );
         }
-
-        return null;
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -116,8 +117,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
      *
-     * @param columnsToUse columns to use
-     * @return bio assay dimension
+     * @param  columnsToUse columns to use
+     * @return              bio assay dimension
      */
     private static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
@@ -267,8 +268,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
             Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
 
-            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes || allGenes.size()
-                    < eitherGenes ) : "There were more genes differentially expressed than exist in the experiment";
+            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes
+                    || allGenes.size() < eitherGenes ) : "There were more genes differentially expressed than exist in the experiment";
 
             HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
             HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
@@ -515,8 +516,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /*
-     * FIXME Really we should compute library sizes from the data _after_ filtering. But because filtering removes lowly
-     * expressed genes, and we don't filter very much, the effect on the total should be minor
+     *
      */
     public DoubleMatrix1D getLibrarySizes( DifferentialExpressionAnalysisConfig config,
             ExpressionDataDoubleMatrix dmatrix ) {
@@ -527,13 +527,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 Collection<BioAssay> bas = dmatrix.getBioAssaysForColumn( i );
                 assert bas.size() == 1;
                 BioAssay ba = bas.iterator().next();
-                Integer sequenceReadCount = ba.getSequenceReadCount();
-                if ( sequenceReadCount == null ) {
-                    throw new IllegalStateException( "stored read count was null for " + ba );
-                }
+
+                Double[] col = dmatrix.getColumn( i );
+                Integer sequenceReadCount = ( int ) Math.floor( DescriptiveWithMissing.sum( new cern.colt.list.DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
                 if ( sequenceReadCount <= 0 ) {
-                    throw new IllegalStateException( "stored read count was non-positive for " + ba );
+                    throw new IllegalStateException( "read count was non-positive for " + ba );
                 }
+
                 librarySize.set( i, sequenceReadCount );
             }
         }
@@ -587,8 +587,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Add interaction terms
          */
-        boolean hasInteractionTerms =
-                config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
+        boolean hasInteractionTerms = config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
 
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
@@ -624,12 +623,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param bioAssaySet       source data, could be a SubSet
-     * @param dmatrix           data (for the subset, if it's a subset)
-     * @param samplesUsed       analyzed
-     * @param factors           included in the model
-     * @param subsetFactorValue null unless analyzing a subset (only used for book-keeping)
-     * @return analysis, or null if there was a problem.
+     * @param  bioAssaySet       source data, could be a SubSet
+     * @param  dmatrix           data (for the subset, if it's a subset)
+     * @param  samplesUsed       analyzed
+     * @param  factors           included in the model
+     * @param  subsetFactorValue null unless analyzing a subset (only used for book-keeping)
+     * @return                   analysis, or null if there was a problem.
      */
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
@@ -915,9 +914,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
-     * @param factors the factors that will be included
-     * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
-     * involve the given factors.
+     * @param  factors the factors that will be included
+     * @return         an updated config; the baselines are cleared; subset is cleared; interactions are only kept if
+     *                 they only
+     *                 involve the given factors.
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
             DifferentialExpressionAnalysisConfig config, FactorValue subsetFactorValue ) {
@@ -1042,8 +1042,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 continue;
             }
 
-            assert pvalArray.length == resultLists.get( fName ).size() :
-                    pvalArray.length + " != " + resultLists.get( fName ).size();
+            assert pvalArray.length == resultLists.get( fName ).size() : pvalArray.length + " != " + resultLists.get( fName ).size();
 
             assert pvalArray.length == ranks.length;
 
@@ -1087,14 +1086,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Complete analysis config
          */
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors" + (
-                interceptFactor == null ?
-                        "" :
-                        " with intercept treated as factor" ) + ( interactionFactorLists.isEmpty() ?
-                "" :
-                " with interaction" ) + ( subsetFactorValue == null ?
-                "" :
-                "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
+                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
+                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" )
+                + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Collection<ExpressionAnalysisResultSet> resultSets = this
@@ -1246,8 +1241,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
              */
             LinearModelAnalyzer.log.info( ef );
 
-            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) :
-                    baselineConditions.get( ef ) + " is not a value of " + ef;
+            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef ) + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
         }
         return properDesignMatrix;
@@ -1407,8 +1401,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             throw new RuntimeException( e );
         }
 
-        assert rawResults.size() == namedMatrix.rows() :
-                "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
+        assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
         return rawResults;
     }
 

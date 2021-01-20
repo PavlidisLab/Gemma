@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,6 @@ import static ubic.gemma.persistence.service.expression.experiment.GeeqService.O
 import org.apache.commons.cli.Option;
 
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -34,20 +33,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 /**
- * 
  * Generate or update GEEQ scores
- * 
+ *
  * @author tesar
  */
 public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     private GeeqService geeqService;
 
     private String mode = GeeqService.OPT_MODE_ALL;
-
-    public static void main( String[] args ) {
-        GeeqCli p = new GeeqCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public String getShortDesc() {
@@ -93,11 +86,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( args );
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         for ( BioAssaySet bioassay : expressionExperiments ) {
             if ( !( bioassay instanceof ExpressionExperiment ) ) {
                 log.debug( bioassay.getName() + " is not an ExpressionExperiment" );
@@ -112,14 +101,10 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
             try {
                 geeqService.calculateScore( ee.getId(), mode );
-                this.successObjects.add( ee );
+                addSuccessObject( ee, "Successfully processed " + ee );
             } catch ( Exception e ) {
-                log.error( ee + " failed: " + e.getMessage() );
-                this.errorObjects.add( ee + ": " + e.getMessage() );
+                addErrorObject( ee, " failed: " + e.getMessage(), e );
             }
         }
-
-        this.summarizeProcessing();
-        return null;
     }
 }

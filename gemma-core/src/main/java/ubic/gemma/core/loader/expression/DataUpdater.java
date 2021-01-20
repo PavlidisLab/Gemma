@@ -680,13 +680,17 @@ public class DataUpdater {
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             Double[] col = countEEMatrix.getColumn( ba );
-            double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
+            int librarySize = ( int ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
 
+            if ( librarySize <= 0 ) {
+                // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.
+                throw new IllegalStateException( ba + " had no reads" );
+            }
             DataUpdater.log.info( ba + " total library size=" + librarySize );
 
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );
-            ba.setSequenceReadCount( ( int ) Math.floor( librarySize ) );
+            ba.setSequenceReadCount( librarySize );
 
             bioAssayService.update( ba );
 

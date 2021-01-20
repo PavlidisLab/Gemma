@@ -22,7 +22,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -43,11 +42,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     private RawExpressionDataVectorService rawExpressionDataVectorService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private String file;
-
-    public static void main( String[] args ) {
-        ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -83,16 +77,10 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-
-        if ( err != null )
-            return err;
-
+    protected void doWork() throws Exception {
         File f = new File( file );
         if ( !f.canRead() ) {
-            AbstractCLI.log.fatal( "Cannot read from " + file );
-            exitwithError();
+            throw new RuntimeException( "Cannot read from " + file );
         }
 
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
@@ -101,8 +89,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        try (InputStream is = new FileInputStream( f );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try ( InputStream is = new FileInputStream( f );
+              BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
             String line;
             int count = 0;
@@ -125,10 +113,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
                 }
             }
             AbstractCLI.log.info( "Deleted " + count + " probes" );
-        } catch ( IOException e ) {
-            return e;
+        } catch ( Exception e ) {
+            throw e;
         }
-
-        return null;
     }
 }

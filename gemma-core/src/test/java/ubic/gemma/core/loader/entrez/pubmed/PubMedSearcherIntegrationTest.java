@@ -23,12 +23,12 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
  *
  * @author pavlidis
- *
  */
 public class PubMedSearcherIntegrationTest {
 
@@ -40,19 +40,13 @@ public class PubMedSearcherIntegrationTest {
      */
     @Test
     public final void testMain() {
-
-        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
-        if ( result != null ) {
-            if ( result instanceof java.net.UnknownHostException ) {
-                PubMedSearcherIntegrationTest.log.warn( "Test skipped because of UnknownHostException" );
-                return;
-            } else if ( result.getMessage().contains( "code: 503" ) ) {
-                PubMedSearcherIntegrationTest.log.warn( "Test skipped because of a 502 from NCBI" );
-                return;
-            }
-            fail( result.getMessage() );
+        try {
+            p.executeCommand( new String[]{"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile"} );
+        } catch ( Exception e ) {
+            assumeFalse( "Test skipped because of UnknownHostException", e instanceof java.net.UnknownHostException );
+            assumeFalse( "Test skipped because of a 502 from NCBI", e.getMessage().contains( "code: 503" ) );
+            fail( e.getMessage() );
         }
-
     }
 
 }

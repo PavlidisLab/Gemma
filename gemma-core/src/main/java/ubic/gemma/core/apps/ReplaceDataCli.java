@@ -18,12 +18,10 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -40,11 +38,6 @@ import java.util.Collection;
 public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
     private String file = null;
-
-    public static void main( String[] args ) {
-        ReplaceDataCli c = new ReplaceDataCli();
-        executeCommand( c, args );
-    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -74,12 +67,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null ) {
-            return exception;
-        }
-
+    protected void doWork() throws Exception {
         DataUpdater dataUpdater = this.getBean( DataUpdater.class );
 
         if ( this.expressionExperiments.size() > 1 ) {
@@ -110,18 +98,11 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         QuantitationType qt = qts.iterator().next();
 
-        try {
-            DoubleMatrixReader reader = new DoubleMatrixReader();
+        DoubleMatrixReader reader = new DoubleMatrixReader();
 
-            DoubleMatrix<String, String> data = reader.read( file );
+        DoubleMatrix<String, String> data = reader.read( file );
 
-            dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
-
-        } catch ( IOException e ) {
-            AbstractCLI.log.error( "Failed while processing " + ee, e );
-            return e;
-        }
-        return null;
+        dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
     }
 
     @Override

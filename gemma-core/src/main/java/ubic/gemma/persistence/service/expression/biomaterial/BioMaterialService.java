@@ -101,7 +101,6 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
      * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
      *
      * @param d2fv  map of dates to factor values
-     * @param dates dates
      */
     @Secured({ "GROUP_ADMIN" })
     <T> void associateBatchFactor( Map<BioMaterial, T> descriptors, Map<T, FactorValue> d2fv );

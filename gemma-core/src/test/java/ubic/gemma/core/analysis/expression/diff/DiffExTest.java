@@ -182,12 +182,13 @@ public class DiffExTest extends AbstractGeoServiceTest {
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
                 // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
+                // also values changed very slightly with updated library size computation (post-filtering)
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
-                assertEquals( 2.2728963, Math.abs( contrast.getCoefficient() ), 0.001 ); // yes! 
-                assertEquals( 0.006149004, contrast.getPvalue(), 0.00001 );
-                assertEquals( 12.693680, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006149004, r.getPvalue(), 0.00001 );
+                assertEquals( 2.232837, Math.abs( contrast.getCoefficient() ), 0.001 ); 
+                assertEquals( 0.0066803, contrast.getPvalue(), 0.00001 );
+                assertEquals( 12.17347, Math.abs( contrast.getTstat() ), 0.001 );
+                assertEquals( 0.006680, r.getPvalue(), 0.00001 );
                 break;
             }
         }

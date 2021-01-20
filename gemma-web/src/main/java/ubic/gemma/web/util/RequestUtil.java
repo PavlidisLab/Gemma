@@ -55,25 +55,21 @@ public class RequestUtil {
      * @param ampersand String to use for ampersands (e.g. "&amp;" or "&amp;amp;" )
      * @return query string (with no leading "?")
      */
-    public static StringBuffer createQueryStringFromMap( Map<String, Object> m, String ampersand ) {
+    public static StringBuffer createQueryStringFromMap(Map<String, String[]> m, String ampersand ) {
         StringBuffer aReturn = new StringBuffer( "" );
-        Set<Entry<String, Object>> aEntryS = m.entrySet();
+        Set<Entry<String, String[]>> aEntryS = m.entrySet();
 
-        for ( Entry<String, Object> aEntry : aEntryS ) {
-            Object o = aEntry.getValue();
+        for ( Entry<String, String[]> aEntry : aEntryS ) {
+            String[] o = aEntry.getValue();
 
-            if ( o == null ) {
+            if ( o.length == 0 ) {
                 RequestUtil.append( aEntry.getKey(), "", aReturn, ampersand );
-            } else if ( o instanceof String ) {
-                RequestUtil.append( aEntry.getKey(), o, aReturn, ampersand );
-            } else if ( o instanceof String[] ) {
-                String[] aValues = ( String[] ) o;
+            } else {
+                String[] aValues = o;
 
                 for ( String aValue : aValues ) {
                     RequestUtil.append( aEntry.getKey(), aValue, aReturn, ampersand );
                 }
-            } else {
-                RequestUtil.append( aEntry.getKey(), o, aReturn, ampersand );
             }
         }
 
@@ -157,7 +153,7 @@ public class RequestUtil {
     public static String getRequestParameters( HttpServletRequest aRequest ) {
         // set the ALGORIGTHM as defined for the application
         // ALGORITHM = (String) aRequest.getAttribute(Constants.ENC_ALGORITHM);
-        Map<String, Object> m = aRequest.getParameterMap();
+        Map<String, String[]> m = aRequest.getParameterMap();
 
         return RequestUtil.createQueryStringFromMap( m, "&" ).toString();
     }

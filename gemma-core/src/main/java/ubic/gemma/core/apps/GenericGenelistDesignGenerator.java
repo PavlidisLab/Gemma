@@ -70,11 +70,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private boolean useEnsemblIds = false;
     private boolean useNCBIIds = false;
 
-    public static void main( String[] args ) {
-        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        executeCommand( b, args );
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
@@ -94,12 +89,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = super.processCommandLine( args );
-        if ( exception != null ) {
-            return exception;
-        }
-
+    protected void doWork() throws Exception {
         ExternalDatabase genbank = externalDatabaseService.findByName( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.findByName( "Ensembl" );
         if ( genbank == null || ensembl == null ) {
@@ -355,9 +345,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
 
         AbstractCLI.log.info( "Don't forget to update the annotation files" );
-
-        return null;
-
     }
 
     @Override

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 
 /**
  * @author paul
@@ -44,27 +45,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     private ExpressionDataFileService expressionDataFileService;
     private boolean force_write = false;
 
-    public static void main( String[] args ) {
-        ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            AbstractCLI.log.fatal( e, e );
-        }
-    }
-
     @Override
     public String getCommandName() {
         return "generateDataFile";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = this.processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
-
+    protected void doWork() throws Exception {
         BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
         // Add the Experiments to the queue for processing
@@ -81,51 +68,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        // Inner class for processing the experiments
-        class Worker extends Thread {
-            private SecurityContext context;
-            private BlockingQueue<BioAssaySet> q;
-
-            private Worker( BlockingQueue<BioAssaySet> q, SecurityContext context ) {
-                this.context = context;
-                this.q = q;
-            }
-
-            @Override
-            public void run() {
-
-                SecurityContextHolder.setContext( this.context );
-
-                while ( true ) {
-                    BioAssaySet ee = q.poll();
-                    if ( ee == null ) {
-                        break;
-                    }
-                    AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
-                    ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
-
-                }
-
-            }
-        }
-
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        Collection<Thread> threads = new ArrayList<>();
-
-        for ( int i = 1; i <= this.numThreads; i++ ) {
-            Worker worker = new Worker( queue, context );
-            threads.add( worker );
-            AbstractCLI.log.info( "Starting thread " + i );
-            worker.start();
+        Collection<Callable<Void>> tasks = new ArrayList<>( queue.size() );
+        for ( BioAssaySet ee : queue ) {
+            tasks.add( new ProcessBioAssaySet( ee, context ) );
         }
-
-        this.waitForThreadPoolCompletion( threads );
-
-        this.summarizeProcessing();
-
-        return null;
-
+        executeBatchTasks( tasks );
     }
 
     @Override
@@ -173,13 +122,33 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
 
             ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
-            super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            AbstractCLI.log.error( e, e );
-            super.errorObjects
-                    .add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage() );
+            addErrorObject( ee, "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage(), e );
         }
     }
 
+    // Inner class for processing the experiments
+    private class ProcessBioAssaySet implements Callable<Void> {
+        private SecurityContext context;
+        private BioAssaySet bioAssaySet;
+
+        private ProcessBioAssaySet( BioAssaySet bioAssaySet, SecurityContext context ) {
+            this.bioAssaySet = bioAssaySet;
+            this.context = context;
+        }
+
+        @Override
+        public Void call() {
+            SecurityContextHolder.setContext( this.context );
+            BioAssaySet ee = bioAssaySet;
+            if ( ee == null ) {
+                return null;
+            }
+            AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
+            ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
+            return null;
+        }
+    }
 }

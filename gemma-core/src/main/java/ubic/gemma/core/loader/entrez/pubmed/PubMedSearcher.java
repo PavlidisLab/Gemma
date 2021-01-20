@@ -18,13 +18,10 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.xml.sax.SAXException;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -37,11 +34,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
 
     PubMedSearcher() {
         super();
-    }
-
-    public static void main( String[] args ) {
-        PubMedSearcher p = new PubMedSearcher();
-        executeCommand( p, args );
     }
 
     @Override
@@ -60,28 +52,16 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
+    protected void doWork() throws Exception {
+        @SuppressWarnings("unchecked")
+        Collection<BibliographicReference> refs = PubMedSearcher.pms
+                .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
 
-        Exception err = this.processCommandLine( args );
+        System.out.println( refs.size() + " references found" );
 
-        if ( err != null )
-            return err;
-
-        try {
-            @SuppressWarnings("unchecked")
-            Collection<BibliographicReference> refs = PubMedSearcher.pms
-                    .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
-
-            System.out.println( refs.size() + " references found" );
-
-            if ( this.hasOption( "d" ) ) {
-                this.getPersisterHelper().persist( refs );
-            }
-
-        } catch ( IOException | ParserConfigurationException | SAXException e ) {
-            return e;
+        if ( this.hasOption( "d" ) ) {
+            this.getPersisterHelper().persist( refs );
         }
-        return null;
     }
 
     @Override

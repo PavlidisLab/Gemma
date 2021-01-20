@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import java.util.Collection;
@@ -32,21 +31,13 @@ import java.util.Collection;
  */
 public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli {
 
-    public static void main( String[] args ) {
-        ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        AbstractCLIContextCLI.executeCommand( p, args );
-    }
-
     @Override
     public String getCommandName() {
         return "platformMapSummary";
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
-        if ( err != null )
-            return err;
+    protected void doWork() throws Exception {
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
@@ -60,7 +51,6 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
                 System.out.println( summary );
             }
         }
-        return null;
     }
 
     @Override
