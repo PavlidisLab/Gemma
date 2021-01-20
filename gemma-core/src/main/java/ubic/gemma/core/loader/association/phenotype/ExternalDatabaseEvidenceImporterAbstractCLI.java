@@ -44,8 +44,6 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Abstra
 
     /**
      * load all needed services and initialize data structures
-     *
-     * @return an exception, if there were any problems, or null otherwise.
      */
     protected void init() throws Exception {
         this.geneService = this.getBean( GeneService.class );
