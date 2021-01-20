@@ -620,7 +620,9 @@ public class GeoConverterImpl implements GeoConverter {
         platformSpecific.setValues( series.getValues() );
         platformSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
-        converted.add( this.convertSeriesSingle( platformSpecific ) );
+        ExpressionExperiment ee = this.convertSeriesSingle( platformSpecific );
+        if ( ee != null )
+            converted.add( ee );
 
     }
 
@@ -1851,12 +1853,13 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<GeoSample> samplesToSkip = new HashSet<>();
         this.checkForDataToSkip( series, dataSetsToSkip, samplesToSkip );
         if ( dataSets.size() > 0 && dataSetsToSkip.size() == dataSets.size() ) {
+            log.info( "All data was skipped in " + series.getGeoAccession() );
             return null;
         }
 
         if ( !this.isUsable( series ) ) {
             GeoConverterImpl.log
-                    .warn( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
+                    .info( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
             return null;
         }
 
@@ -2085,7 +2088,9 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.getSeriesTypes().addAll(
                 series.getSeriesTypes() ); // even though this might apply to samples left behind in other part.
 
-        converted.add( this.convertSeriesSingle( speciesSpecific ) );
+        ExpressionExperiment ee = this.convertSeriesSingle( speciesSpecific );
+        if ( ee != null )
+            converted.add( ee );
     }
 
     private void convertSpeciesSpecificSamples( GeoSeries series, Collection<ExpressionExperiment> converted,
@@ -2130,7 +2135,9 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setValues( series.getValues( speciesSpecific.getSamples() ) );
         speciesSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
-        converted.add( this.convertSeriesSingle( speciesSpecific ) );
+        ExpressionExperiment ee = this.convertSeriesSingle( speciesSpecific );
+        if ( ee != null )
+            converted.add( ee );
 
     }
 
@@ -2321,7 +2328,7 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://purl.obolibrary.org/obo/OBI_0000181";
             term = "population";
         } else if ( varType.equals( VariableType.phenotype ) ) {
-            uri = "http://www.ebi.ac.uk/efo/EFO_0000651"; 
+            uri = "http://www.ebi.ac.uk/efo/EFO_0000651";
             term = "phenotype";
         } else {
             throw new IllegalStateException( "No action for variable type='" + varType + "' (no category ontology term configured)" );
