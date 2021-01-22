@@ -359,9 +359,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<!-- Uncomment the following if you run Java 7 -->
-					<!-- UseSplitVerifier is so Cobertura works with Java 7 -->
-					<!--<argLine>-Xmx1500M -ea -Djava.awt.headless=true -XX:MaxPermSize=512m -XX:-UseSplitVerifier</argLine>-->
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
@@ -575,7 +572,6 @@
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
-						<additionalJOption>-J-XX:MaxPermSize=512m</additionalJOption>
 					</additionalJOptions>
 				</configuration>
 			</plugin>
