@@ -19,6 +19,8 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -48,8 +50,8 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.addUserNameAndPasswordOptions( true );
+    protected void buildOptions( Options options ) {
+        super.addUserNameAndPasswordOptions( options, true );
     }
 
     @Override

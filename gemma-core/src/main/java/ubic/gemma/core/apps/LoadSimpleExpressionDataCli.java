@@ -19,7 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -81,14 +83,14 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'f' ) ) {
-            fileName = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'f' ) ) {
+            fileName = commandLine.getOptionValue( 'f' );
         }
 
-        if ( this.hasOption( 'd' ) ) {
-            dirName = this.getOptionValue( 'd' );
+        if ( commandLine.hasOption( 'd' ) ) {
+            dirName = commandLine.getOptionValue( 'd' );
         }
     }
 
@@ -99,14 +101,14 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).required().hasArg().argName( "File Name" )
                 .desc( "the list of experiments in flat file" ).longOpt( "file" ).build();
-        this.addOption( fileOption );
+        options.addOption( fileOption );
 
         Option dirOption = Option.builder( "d" ).hasArg().argName( "File Folder" )
                 .desc( "The folder for containing the experiment files" ).longOpt( "dir" ).build();
-        this.addOption( dirOption );
+        options.addOption( dirOption );
 
     }
 

@@ -19,7 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
@@ -66,8 +68,8 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option signal2noiseOption = Option.builder( "s" ).hasArg().argName( "Signal-to-noise" ).desc(
                 "Signal to noise ratio, below which values are considered missing; default="
@@ -75,30 +77,30 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 .longOpt( "signal2noise" )
                 .build();
 
-        this.addOption( signal2noiseOption );
+        options.addOption( signal2noiseOption );
 
         Option extraMissingIndicators = Option.builder( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION ).hasArg().argName( "mv indicators" )
                 .desc( "Additional numeric values (comma delimited) to be considered missing values." )
                 .build();
 
-        this.addOption( extraMissingIndicators );
+        options.addOption( extraMissingIndicators );
 
-        super.addDateOption();
-        super.addForceOption();
+        super.addDateOption( options );
+        super.addForceOption( options );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 's' ) ) {
-            this.s2n = this.getDoubleOptionValue( 's' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 's' ) ) {
+            this.s2n = this.getDoubleOptionValue( commandLine, 's' );
         }
 
-        if ( this.hasOption( "force" ) ) {
+        if ( commandLine.hasOption( "force" ) ) {
             this.force = true;
         }
-        if ( this.hasOption( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION ) ) {
-            String o = this.getOptionValue( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION );
+        if ( commandLine.hasOption( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION ) ) {
+            String o = commandLine.getOptionValue( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION );
             String[] vals = StringUtils.split( o, ',' );
             try {
                 for ( String string : vals ) {

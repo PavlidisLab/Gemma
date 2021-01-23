@@ -19,6 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
@@ -36,6 +39,8 @@ import java.util.Collection;
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
+    private String[] pmids;
+
     @Override
     public String getCommandName() {
         return "updatePubMeds";
@@ -52,9 +57,16 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.addUserNameAndPasswordOptions( true );
-        super.addOption( "pmids", null, "Pubmed ids, comma-delimited; default is to do all in DB", "ids" );
+    protected void buildOptions( Options options ) {
+        super.addUserNameAndPasswordOptions( options, true );
+        options.addOption( Option.builder( "pmids" ).longOpt( null ).desc( "Pubmed ids, comma-delimited; default is to do all in DB" ).argName( "ids" ).hasArg().build() );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( "pmids" ) ) {
+            this.pmids = StringUtils.split( commandLine.getOptionValue( "pmids" ), "," );
+        }
     }
 
     @Override
@@ -63,8 +75,8 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
                 .getBean( BibliographicReferenceService.class );
 
         Collection<Long> bibrefIds = new ArrayList<>();
-        if ( this.hasOption( "pmids" ) ) {
-            for ( String s : StringUtils.split( this.getOptionValue( "pmids" ), "," ) ) {
+        if ( this.pmids != null ) {
+            for ( String s : pmids ) {
 
                 BibliographicReference found = bibliographicReferenceService.findByExternalId( s );
                 if ( found == null ) {

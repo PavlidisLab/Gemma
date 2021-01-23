@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -73,19 +75,19 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option pathOption = Option.builder( "f" ).hasArg().argName( "Input File Path" )
                 .desc( "Optional path to the gene_info and gene2accession files" ).longOpt( "file" )
                 .build();
 
-        this.addOption( pathOption );
+        options.addOption( pathOption );
 
-        this.addOption( "taxon", null, "Specific taxon for which to update genes", "taxon" );
+        options.addOption( Option.builder( "taxon" ).longOpt( null ).desc( "Specific taxon for which to update genes" ).argName( "taxon" ).hasArg().build() );
 
-        this.addOption( "nodownload", "Set to suppress NCBI file download" );
+        options.addOption( "nodownload", "Set to suppress NCBI file download" );
 
-        this.addOption( "restart", null, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
-                + "and assumes you have the right -taxon option, if any)", "ncbi id" );
+        options.addOption( Option.builder( "restart" ).longOpt( null ).desc( "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
+                + "and assumes you have the right -taxon option, if any)" ).argName( "ncbi id" ).hasArg().build() );
 
         this.requireLogin();
     }
@@ -134,20 +136,20 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'f' ) ) {
-            filePath = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'f' ) ) {
+            filePath = commandLine.getOptionValue( 'f' );
         }
-        if ( this.hasOption( "taxon" ) ) {
-            this.taxonCommonName = this.getOptionValue( "taxon" );
+        if ( commandLine.hasOption( "taxon" ) ) {
+            this.taxonCommonName = commandLine.getOptionValue( "taxon" );
         }
-        if ( this.hasOption( "restart" ) ) {
-            this.startNcbiId = Integer.parseInt( this.getOptionValue( "restart" ) );
+        if ( commandLine.hasOption( "restart" ) ) {
+            this.startNcbiId = Integer.parseInt( commandLine.getOptionValue( "restart" ) );
             AbstractCLI.log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiId );
             this.skipDownload = true;
         }
-        if ( this.hasOption( "nodownload" ) ) {
+        if ( commandLine.hasOption( "nodownload" ) ) {
             this.skipDownload = true;
         }
     }

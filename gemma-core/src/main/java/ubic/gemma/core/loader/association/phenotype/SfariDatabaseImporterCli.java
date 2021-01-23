@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
@@ -83,7 +85,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         // No-op
 
     }
@@ -106,8 +108,8 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
     }
 
     /**

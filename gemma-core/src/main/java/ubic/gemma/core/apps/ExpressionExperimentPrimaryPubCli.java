@@ -20,7 +20,9 @@
 package ubic.gemma.core.apps;
 
 import cern.colt.Arrays;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -59,8 +61,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
                 "A text file which contains the list of pubmed IDs associated with each experiment ID. "
                         + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
@@ -68,8 +70,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
                         + "e.g. 22438826<TAB>GSE27715" )
                 .build();
 
-        addOption( pubmedOption );
-        this.addForceOption();
+        options.addOption( pubmedOption );
+        this.addForceOption( options );
     }
 
     @Override
@@ -153,10 +155,10 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( "pmidFile" ) ) {
-            this.pubmedIdFilename = this.getOptionValue( "pmidFile" );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( "pmidFile" ) ) {
+            this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );
             try {
                 this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
             } catch ( IOException e ) {

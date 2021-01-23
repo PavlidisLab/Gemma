@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.ontology.ncbo.OmimAnnotatorClient;
 import ubic.basecode.util.FileTools;
@@ -62,7 +64,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         // No-op
     }
 

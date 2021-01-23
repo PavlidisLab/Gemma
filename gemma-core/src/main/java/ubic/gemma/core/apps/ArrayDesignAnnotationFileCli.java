@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
@@ -79,8 +81,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option fileLoading = Option.builder( "l" ).desc( ArrayDesignAnnotationFileCli.FILE_LOAD_DESC ).hasArg()
                 .argName( "file of short names" ).build();
@@ -95,55 +97,55 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
 
-        this.addOption( fileLoading );
-        this.addOption( batchLoading );
-        this.addOption( overWriteOption );
-        this.addOption( taxonNameOption );
-        this.addOption( geneListFile );
+        options.addOption( fileLoading );
+        options.addOption( batchLoading );
+        options.addOption( overWriteOption );
+        options.addOption( taxonNameOption );
+        options.addOption( geneListFile );
 
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
 
         if ( autoSeek ) {
             throw new IllegalArgumentException( "This CLI doesn't support the auto option" );
         }
 
-        if ( this.hasOption( 'l' ) ) {
-            this.batchFileName = this.getOptionValue( 'l' );
+        if ( commandLine.hasOption( 'l' ) ) {
+            this.batchFileName = commandLine.getOptionValue( 'l' );
         }
 
-        if ( this.hasOption( 'b' ) ) {
+        if ( commandLine.hasOption( 'b' ) ) {
             this.processAllADs = true;
 
-            if ( this.hasOption( 'a' ) ) {
+            if ( commandLine.hasOption( 'a' ) ) {
                 throw new IllegalArgumentException(
                         "--batch overrides -a to run all platforms. If you want to run like --batch but for selected platforms use -a " );
             }
 
         }
 
-        if ( this.hasOption( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION ) ) {
-            this.geneFileName = this.getOptionValue( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
-            if ( !this.hasOption( "taxon" ) ) {
+        if ( commandLine.hasOption( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION ) ) {
+            this.geneFileName = commandLine.getOptionValue( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
+            if ( !commandLine.hasOption( "taxon" ) ) {
                 throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
             }
-            this.taxonName = this.getOptionValue( "taxon" );
+            this.taxonName = commandLine.getOptionValue( "taxon" );
 
         }
 
-        if ( this.hasOption( "taxon" ) ) {
-            this.taxonName = this.getOptionValue( "taxon" );
-            if ( this.hasOption( 'b' ) ) {
+        if ( commandLine.hasOption( "taxon" ) ) {
+            this.taxonName = commandLine.getOptionValue( "taxon" );
+            if ( commandLine.hasOption( 'b' ) ) {
                 AbstractCLI.log.info( "Will batch process array designs for " + this.taxonName );
             }
         }
 
-        if ( this.hasOption( 'o' ) )
+        if ( commandLine.hasOption( 'o' ) )
             this.overWrite = true;
 
-        super.processOptions();
+        super.processOptions( commandLine );
 
         this.arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
         this.goService = this.getBean( GeneOntologyService.class );

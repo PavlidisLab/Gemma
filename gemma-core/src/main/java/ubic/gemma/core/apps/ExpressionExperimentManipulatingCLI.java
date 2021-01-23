@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
@@ -107,38 +109,38 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     @SuppressWarnings("AccessStaticViaInstance") // Cleaner like this
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
                 "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                         + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
                 .longOpt( "experiment" ).build();
 
-        this.addOption( expOption );
+        options.addOption( expOption );
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
                 "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .longOpt( "eeListfile" ).build();
-        this.addOption( eeFileListOption );
+        options.addOption( eeFileListOption );
 
         Option eeSetOption = Option.builder( "eeset" ).hasArg().argName( "eeSetName" )
                 .desc( "Name of expression experiment set to use" ).build();
 
-        this.addOption( eeSetOption );
+        options.addOption( eeSetOption );
 
         Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon name" )
                 .desc( "Taxon of the expression experiments and genes" ).longOpt( "taxon" )
                 .build();
-        this.addOption( taxonOption );
+        options.addOption( taxonOption );
 
         Option excludeEeOption = Option.builder( "x" ).hasArg().argName( "file" )
                 .desc( "File containing list of expression experiments to exclude" )
                 .longOpt( "excludeEEFile" ).build();
-        this.addOption( excludeEeOption );
+        options.addOption( excludeEeOption );
 
         Option eeSearchOption = Option.builder( "q" ).hasArg().argName( "expressionQuery" )
                 .desc( "Use a query string for defining which expression experiments to use" )
                 .longOpt( "expressionQuery" ).build();
-        this.addOption( eeSearchOption );
+        options.addOption( eeSearchOption );
 
     }
 
@@ -153,56 +155,56 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
         eeService = this.getBean( ExpressionExperimentService.class );
         geneService = this.getBean( GeneService.class );
         taxonService = this.getBean( TaxonService.class );
         searchService = this.getBean( SearchService.class );
         this.auditEventService = this.getBean( AuditEventService.class );
-        if ( this.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( taxonService );
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxon = this.setTaxonByName( commandLine, taxonService );
         }
 
-        if ( this.hasOption( "force" ) ) {
+        if ( commandLine.hasOption( "force" ) ) {
             this.force = true;
         }
 
-        if ( this.hasOption( "eeset" ) ) {
-            this.experimentsFromEeSet( this.getOptionValue( "eeset" ) );
-        } else if ( this.hasOption( 'e' ) ) {
-            this.experimentsFromCliList();
-        } else if ( this.hasOption( 'f' ) ) {
-            String experimentListFile = this.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "eeset" ) ) {
+            this.experimentsFromEeSet( commandLine.getOptionValue( "eeset" ) );
+        } else if ( commandLine.hasOption( 'e' ) ) {
+            this.experimentsFromCliList( commandLine );
+        } else if ( commandLine.hasOption( 'f' ) ) {
+            String experimentListFile = commandLine.getOptionValue( 'f' );
             AbstractCLI.log.info( "Reading experiment list from " + experimentListFile );
             try {
                 this.expressionExperiments = this.readExpressionExperimentListFile( experimentListFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else if ( this.hasOption( 'q' ) ) {
-            AbstractCLI.log.info( "Processing all experiments that match query " + this.getOptionValue( 'q' ) );
-            this.expressionExperiments = this.findExpressionExperimentsByQuery( this.getOptionValue( 'q' ) );
+        } else if ( commandLine.hasOption( 'q' ) ) {
+            AbstractCLI.log.info( "Processing all experiments that match query " + commandLine.getOptionValue( 'q' ) );
+            this.expressionExperiments = this.findExpressionExperimentsByQuery( commandLine.getOptionValue( 'q' ) );
         } else if ( taxon != null ) {
-            if ( !this.hasOption( "dataFile" ) ) {
+            if ( !commandLine.hasOption( "dataFile" ) ) {
                 AbstractCLI.log.info( "Processing all experiments for " + taxon.getCommonName() );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.findByTaxon( taxon ) );
             }
         } else {
-            if ( !this.hasOption( "dataFile" ) ) {
+            if ( !commandLine.hasOption( "dataFile" ) ) {
                 AbstractCLI.log.info( "Processing all experiments (further filtering may modify)" );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
             }
         }
 
-        if ( this.hasOption( 'x' ) ) {
-            this.excludeFromFile();
+        if ( commandLine.hasOption( 'x' ) ) {
+            this.excludeFromFile( commandLine );
         }
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
-            if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
                 this.autoSeek = true;
                 if ( this.autoSeekEventType == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
@@ -220,7 +222,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                     + " expressionExperiments (futher filtering may modify)" );
         } else if ( ( expressionExperiments != null && expressionExperiments.size() == 0 )
                 || expressionExperiments == null ) {
-            if ( this.hasOption( "dataFile" ) ) {
+            if ( commandLine.hasOption( "dataFile" ) ) {
                 AbstractCLI.log.info( "Expression matrix from data file selected" );
             } else {
                 AbstractCLI.log.info( "No experiments selected" );
@@ -229,15 +231,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     }
 
-    void addForceOption() {
+    void addForceOption( Options options ) {
         String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         @SuppressWarnings("static-access")
         Option forceOption = Option.builder( "force" ).longOpt( "force" ).desc( desc ).build();
-        this.addOption( forceOption );
+        options.addOption( forceOption );
     }
 
-    private void excludeFromFile() {
-        String excludeEeFileName = this.getOptionValue( 'x' );
+    private void excludeFromFile( CommandLine commandLine ) {
+        String excludeEeFileName = commandLine.getOptionValue( 'x' );
         Collection<BioAssaySet> excludeExperiments;
         try {
             excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
@@ -255,8 +257,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             AbstractCLI.log.info( "Excluded " + removed + " expression experiments" );
     }
 
-    private void experimentsFromCliList() {
-        String experimentShortNames = this.getOptionValue( 'e' );
+    private void experimentsFromCliList( CommandLine commandLine ) {
+        String experimentShortNames = commandLine.getOptionValue( 'e' );
         String[] shortNames = experimentShortNames.split( "," );
 
         for ( String shortName : shortNames ) {

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.job.executor.worker;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
@@ -38,8 +40,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
     }
 
     @Override
@@ -49,8 +51,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( this.hasOption( "testing" ), false /* webapp */,
+    protected void createSpringContext( CommandLine commandLine ) {
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
                 this.getAdditionalSpringConfigLocations() );
 
         /*
@@ -65,7 +67,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
     }
 
     @Override

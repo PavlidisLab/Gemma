@@ -18,6 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -43,18 +46,17 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addOption( "o", "outputFileName",
-                "File name. If omitted, the file name will be based on the short name of the experiment.", "filename" );
-        super.addOption( "filter", "Filter expression matrix under default parameters" );
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().build() );
+        options.addOption( "filter", "Filter expression matrix under default parameters" );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        outFileName = this.getOptionValue( 'o' );
-        if ( this.hasOption( "filter" ) ) {
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        outFileName = commandLine.getOptionValue( 'o' );
+        if ( commandLine.hasOption( "filter" ) ) {
             filter = true;
         }
     }

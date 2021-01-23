@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.util;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
@@ -69,8 +69,8 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
      */
     public abstract CommandGroup getCommandGroup();
 
-    protected Taxon setTaxonByName( TaxonService taxonService ) {
-        String taxonName = this.getOptionValue( 't' );
+    protected Taxon setTaxonByName( CommandLine commandLine, TaxonService taxonService ) {
+        String taxonName = commandLine.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
             AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );

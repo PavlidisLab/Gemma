@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,14 +39,14 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addForceOption();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        super.addForceOption( options );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
     }
 

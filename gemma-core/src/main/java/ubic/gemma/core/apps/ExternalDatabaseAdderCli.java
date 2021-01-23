@@ -19,6 +19,8 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -46,7 +48,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
     }
 
     @Override

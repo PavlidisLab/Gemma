@@ -14,6 +14,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -54,49 +57,45 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addOption( RNASeqDataAddCli.RPKM_FILE_OPT, null, "File with RPKM data", "file path" );
-        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, null, "File with count data", "file path" );
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( RNASeqDataAddCli.RPKM_FILE_OPT ).longOpt( null ).desc( "File with RPKM data" ).argName( "file path" ).hasArg().build() );
+        options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
 
-        super.addOption( RNASeqDataAddCli.COUNT_FILE_OPT, null, "File with count data", "file path" );
-        super.addOption( RNASeqDataAddCli.ALLOW_MISSING,
-                "Set this if your data files don't have information for all samples." );
-        super.addOption( "a", null, "Target platform (must already exist in the system)", "platform short name" );
+        options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
+        options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
+        options.addOption( Option.builder( "a" ).longOpt( null ).desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
 
-        super.addOption( RNASeqDataAddCli.METADATAOPT, null,
-                "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' ", "length" );
+        options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36 (assumed unpaired)', or '36:unpaired' " ).argName( "length" ).hasArg().build() );
 
-        super.addOption( "log2cpm",
-                "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
+        options.addOption( "log2cpm", "Just compute log2cpm from the existing stored count data (backfill); batchmode OK, no other options needed" );
 
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
-        if ( this.hasOption( "log2cpm" ) ) {
+        if ( commandLine.hasOption( "log2cpm" ) ) {
             this.justbackfillLog2cpm = true;
 
-            if ( this.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) || this
-                    .hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
+            if ( commandLine.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) || commandLine.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
                 throw new IllegalArgumentException(
                         "Don't use the log2cpm option when loading new data; just use it to backfill old experiments." );
             }
             return;
         }
 
-        if ( this.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) ) {
-            this.rpkmFile = this.getOptionValue( RNASeqDataAddCli.RPKM_FILE_OPT );
+        if ( commandLine.hasOption( RNASeqDataAddCli.RPKM_FILE_OPT ) ) {
+            this.rpkmFile = commandLine.getOptionValue( RNASeqDataAddCli.RPKM_FILE_OPT );
         }
 
-        if ( this.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
-            this.countFile = this.getOptionValue( RNASeqDataAddCli.COUNT_FILE_OPT );
+        if ( commandLine.hasOption( RNASeqDataAddCli.COUNT_FILE_OPT ) ) {
+            this.countFile = commandLine.getOptionValue( RNASeqDataAddCli.COUNT_FILE_OPT );
         }
 
-        if ( this.hasOption( RNASeqDataAddCli.METADATAOPT ) ) {
-            String metaString = this.getOptionValue( RNASeqDataAddCli.METADATAOPT );
+        if ( commandLine.hasOption( RNASeqDataAddCli.METADATAOPT ) ) {
+            String metaString = commandLine.getOptionValue( RNASeqDataAddCli.METADATAOPT );
             String[] msf = metaString.split( ":" );
 
             if ( msf.length > 2 ) {
@@ -118,16 +117,16 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         }
 
-        this.allowMissingSamples = this.hasOption( RNASeqDataAddCli.ALLOW_MISSING );
+        this.allowMissingSamples = commandLine.hasOption( RNASeqDataAddCli.ALLOW_MISSING );
 
         if ( rpkmFile == null && countFile == null )
             throw new IllegalArgumentException( "Must provide either RPKM or count data (or both)" );
 
-        if ( !this.hasOption( "a" ) ) {
+        if ( !commandLine.hasOption( "a" ) ) {
             throw new IllegalArgumentException( "Must provide target platform" );
         }
 
-        this.platformName = this.getOptionValue( "a" );
+        this.platformName = commandLine.getOptionValue( "a" );
 
     }
 

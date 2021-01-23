@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,19 +42,26 @@ import java.util.Map;
  */
 public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipulatingCli {
 
+    private boolean delete;
+
     @Override
     public String getCommandName() {
         return "detachSequences";
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option fileOption = Option.builder( "delete" )
                 .desc( "Delete sequences instead of detaching them - use with care" ).build();
 
-        this.addOption( fileOption );
+        options.addOption( fileOption );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        this.delete = commandLine.hasOption( "delete" );
     }
 
     @Override
@@ -61,7 +70,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
-            if ( this.hasOption( "delete" ) ) {
+            if ( this.delete ) {
                 Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
                 this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
                 bioSequenceService.remove( new HashSet<>( bioSequences.values() ) );

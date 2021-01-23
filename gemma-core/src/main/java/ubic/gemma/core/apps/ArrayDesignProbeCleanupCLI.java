@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -50,24 +52,24 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
                 .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
                 .build();
 
-        this.addOption( fileOption );
+        options.addOption( fileOption );
 
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         this.compositeSequenceService = this.getBean( CompositeSequenceService.class );
         this.rawExpressionDataVectorService = this.getBean( RawExpressionDataVectorService.class );
         this.processedExpressionDataVectorService = this.getBean( ProcessedExpressionDataVectorService.class );
-        if ( this.hasOption( 'f' ) ) {
-            file = this.getOptionValue( 'f' );
+        if ( commandLine.hasOption( 'f' ) ) {
+            file = commandLine.getOptionValue( 'f' );
         }
     }
 

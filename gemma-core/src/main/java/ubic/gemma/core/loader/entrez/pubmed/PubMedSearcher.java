@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -31,6 +33,8 @@ import java.util.Collection;
  */
 public class PubMedSearcher extends AbstractCLIContextCLI {
     private static final PubMedSearch pms = new PubMedSearch();
+    private Collection<String> args;
+    private boolean persist = false;
 
     PubMedSearcher() {
         super();
@@ -47,19 +51,25 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        this.addOption( "d", "persist", "Persist the results. Otherwise just search.", null );
+    protected void buildOptions( Options options ) {
+        options.addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        this.args = commandLine.getArgList();
+        this.persist = commandLine.hasOption( "persist" );
     }
 
     @Override
     protected void doWork() throws Exception {
         @SuppressWarnings("unchecked")
         Collection<BibliographicReference> refs = PubMedSearcher.pms
-                .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
+                .searchAndRetrieveByHTTP( this.args );
 
         System.out.println( refs.size() + " references found" );
 
-        if ( this.hasOption( "d" ) ) {
+        if ( this.persist ) {
             this.getPersisterHelper().persist( refs );
         }
     }

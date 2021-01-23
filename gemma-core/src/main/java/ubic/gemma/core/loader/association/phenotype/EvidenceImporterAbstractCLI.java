@@ -14,7 +14,9 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -87,20 +89,20 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         @SuppressWarnings("static-access")
         Option fileOption = Option.builder( "f" ).desc( "The file" ).hasArg()
                 .argName( "file path" ).required().build();
-        this.addOption( fileOption );
+        options.addOption( fileOption );
         Option createOption = Option.builder( "c" ).desc( "Create in database; default is false (prints to stdout)" ).build();
-        this.addOption( createOption );
+        options.addOption( createOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.inputFile = this.getOptionValue( 'f' );
-        this.createInDatabase = this.hasOption( 'c' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        this.inputFile = commandLine.getOptionValue( 'f' );
+        this.createInDatabase = commandLine.hasOption( 'c' );
     }
 
     /**

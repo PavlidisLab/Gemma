@@ -19,6 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -63,13 +66,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @Override
-    protected void buildOptions() {
-        super.addUserNameAndPasswordOptions( true );
-        super.addOption( "file", null,
-                "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
-                        + "additional columns: name, description of entity",
-                "file name" );
-        super.addOption( "undo", "Remove items from blacklist instead of adding" );
+    protected void buildOptions( Options options ) {
+        super.addUserNameAndPasswordOptions( options, true );
+        options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
+                + "additional columns: name, description of entity" ).argName( "file name" ).hasArg().build() );
+        options.addOption( "undo", "Remove items from blacklist instead of adding" );
 
     }
 
@@ -159,15 +160,15 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( "file" ) ) {
-            this.fileName = this.getOptionValue( "file" );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( "file" ) ) {
+            this.fileName = commandLine.getOptionValue( "file" );
         } else {
             throw new IllegalArgumentException( "Must provide an input file" );
         }
 
-        if ( this.hasOption( "undo" ) ) {
+        if ( commandLine.hasOption( "undo" ) ) {
             this.remove = true;
         }
     }
