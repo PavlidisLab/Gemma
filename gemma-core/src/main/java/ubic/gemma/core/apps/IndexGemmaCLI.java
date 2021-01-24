@@ -127,7 +127,6 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         if ( this.hasOption( 'e' ) )
             indexEE = true;
 

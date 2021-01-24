@@ -78,8 +78,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     @Override
     protected void processOptions() {
-        super.processOptions();
-
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
         arrayDesignService = this.getBean( ArrayDesignService.class );
 

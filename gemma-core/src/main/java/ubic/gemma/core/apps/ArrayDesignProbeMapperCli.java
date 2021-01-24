@@ -70,12 +70,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings({"AccessStaticViaInstance", "static-access", "deprecation"})
+    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
     @Override
     protected void buildOptions() {
         super.buildOptions();
-
-        this.requireLogin(); // actually only needed if using the db to save results (usual case)
 
         this.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
                 "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
@@ -163,6 +161,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.addOption( probesToDoOption );
     }
 
+    @Override
+    protected boolean requireLogin() {
+        return true;
+    }
+
     private TaxonService taxonService;
 
     /**
@@ -229,7 +232,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      */
     @Override
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-                       Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.hasOption( "force" ) ) {
             return true;

@@ -49,7 +49,17 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions() {
-        super.addUserNameAndPasswordOptions( true );
+
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
+    }
+
+    @Override
+    protected void processOptions() throws Exception {
+
     }
 
     @Override

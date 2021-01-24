@@ -89,7 +89,7 @@ public class RgdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
     @Override
     protected void processOptions() {
-        super.processOptions();
+
     }
 
     private void processRGDFile( String taxonName, String fileName ) throws Exception {

@@ -354,8 +354,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
-
         geneService = this.getBean( GeneService.class );
         arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
         TaxonService taxonService = this.getBean( TaxonService.class );

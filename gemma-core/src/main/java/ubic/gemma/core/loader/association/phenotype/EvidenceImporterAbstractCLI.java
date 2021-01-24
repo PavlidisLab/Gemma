@@ -98,7 +98,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         this.inputFile = this.getOptionValue( 'f' );
         this.createInDatabase = this.hasOption( 'c' );
     }

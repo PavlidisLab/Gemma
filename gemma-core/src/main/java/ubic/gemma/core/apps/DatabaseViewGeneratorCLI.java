@@ -31,7 +31,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  *
  * @author paul
  */
-@SuppressWarnings({"FieldCanBeLocal", "unused"}) // Possible external use
+@SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
 public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     private boolean generateDatasetSummary = false;
@@ -51,8 +51,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions() {
-        super.buildStandardOptions();
-
         OptionBuilder
                 .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" );
         OptionBuilder.withLongOpt( "dataset" );
@@ -115,9 +113,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
                 this.limit = 0;
             }
         }
-
-        super.processOptions();
-
     }
 
 }
