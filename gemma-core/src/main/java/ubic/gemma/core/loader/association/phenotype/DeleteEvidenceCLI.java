@@ -89,7 +89,6 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         this.externalDatabaseName = this.getOptionValue( 'd' );
     }
 

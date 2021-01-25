@@ -82,7 +82,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         if ( this.hasOption( 'f' ) ) {
             fileName = this.getOptionValue( 'f' );
         }

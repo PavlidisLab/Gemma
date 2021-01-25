@@ -66,7 +66,6 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         if ( this.hasOption( 'd' ) ) {
             this.directory = this.getOptionValue( 'd' );
         }

@@ -50,6 +50,11 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions() throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         // ContactService contactService = this.getBean( ContactService.class );
 

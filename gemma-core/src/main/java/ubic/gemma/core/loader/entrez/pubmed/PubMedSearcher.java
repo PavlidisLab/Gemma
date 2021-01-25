@@ -52,6 +52,11 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions() throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         @SuppressWarnings("unchecked")
         Collection<BibliographicReference> refs = PubMedSearcher.pms

@@ -61,6 +61,11 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions() throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         this.loadServices();
 

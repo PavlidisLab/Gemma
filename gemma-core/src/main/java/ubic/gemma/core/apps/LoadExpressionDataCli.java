@@ -187,7 +187,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
         if ( this.hasOption( 'f' ) ) {
             accessionFile = this.getOptionValue( 'f' );
         }

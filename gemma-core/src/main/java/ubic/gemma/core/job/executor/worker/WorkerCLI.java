@@ -39,7 +39,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected void processOptions() {
-        super.processOptions();
+
     }
 
     @Override

@@ -46,7 +46,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
      */
     @Override
     protected void processOptions() {
-        super.processOptions();
         if ( this.hasOption( 'f' ) ) {
             directGeneInputFileName = this.getOptionValue( 'f' );
             if ( directGeneInputFileName == null ) {
@@ -90,7 +89,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void processGeneList() {
 
         ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );

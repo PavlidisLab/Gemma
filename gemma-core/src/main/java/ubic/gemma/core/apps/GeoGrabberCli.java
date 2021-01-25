@@ -48,6 +48,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions() throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         Set<String> seen = new HashSet<>();
         GeoBrowserService gbs = this.getBean( GeoBrowserService.class );

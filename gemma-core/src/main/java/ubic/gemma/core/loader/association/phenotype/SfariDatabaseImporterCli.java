@@ -67,7 +67,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     private File autismGeneDataset = null;
     private File geneScore = null;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SfariDatabaseImporterCli() {
         super();
     }
@@ -107,7 +107,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
 
     @Override
     protected void processOptions() {
-        super.processOptions();
+
     }
 
     /**
@@ -379,7 +379,7 @@ public class SfariDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAb
     //    }
 
     private void writeFinalSfari( Set<String> literaturePubMed, String geneSymbol, String nbciID, String description,
-                                  String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
+            String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
 
         String negative = "";
         if ( isNegative ) {
