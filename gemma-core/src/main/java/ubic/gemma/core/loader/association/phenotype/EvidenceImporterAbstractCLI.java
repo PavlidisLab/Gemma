@@ -100,7 +100,6 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         this.inputFile = commandLine.getOptionValue( 'f' );
         this.createInDatabase = commandLine.hasOption( 'c' );
     }
@@ -113,29 +112,29 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" ) || evidenceCode
                 .equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" )
                 || evidenceCode
-                        .equalsIgnoreCase( "IGI" )
+                .equalsIgnoreCase( "IGI" )
                 || evidenceCode.equalsIgnoreCase( "IMP" ) || evidenceCode
-                        .equalsIgnoreCase( "IPI" )
+                .equalsIgnoreCase( "IPI" )
                 || evidenceCode.equalsIgnoreCase( "ISS" ) || evidenceCode
-                        .equalsIgnoreCase( "NAS" )
+                .equalsIgnoreCase( "NAS" )
                 || evidenceCode.equalsIgnoreCase( "ND" ) || evidenceCode
-                        .equalsIgnoreCase( "RCA" )
+                .equalsIgnoreCase( "RCA" )
                 || evidenceCode.equalsIgnoreCase( "TAS" ) || evidenceCode
-                        .equalsIgnoreCase( "NR" )
+                .equalsIgnoreCase( "NR" )
                 || evidenceCode.equalsIgnoreCase( "EXP" ) || evidenceCode
-                        .equalsIgnoreCase( "ISA" )
+                .equalsIgnoreCase( "ISA" )
                 || evidenceCode.equalsIgnoreCase( "ISM" ) || evidenceCode
-                        .equalsIgnoreCase( "IGC" )
+                .equalsIgnoreCase( "IGC" )
                 || evidenceCode.equalsIgnoreCase( "ISO" ) || evidenceCode
-                        .equalsIgnoreCase( "IIA" )
+                .equalsIgnoreCase( "IIA" )
                 || evidenceCode.equalsIgnoreCase( "IBA" ) || evidenceCode
-                        .equalsIgnoreCase( "IBD" )
+                .equalsIgnoreCase( "IBD" )
                 || evidenceCode.equalsIgnoreCase( "IKR" ) || evidenceCode
-                        .equalsIgnoreCase( "IRD" )
+                .equalsIgnoreCase( "IRD" )
                 || evidenceCode.equalsIgnoreCase( "IMR" ) || evidenceCode
-                        .equalsIgnoreCase( "IED" )
+                .equalsIgnoreCase( "IED" )
                 || evidenceCode.equalsIgnoreCase( "IAGP" ) || evidenceCode
-                        .equalsIgnoreCase( "IPM" )
+                .equalsIgnoreCase( "IPM" )
                 || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
             this.writeError( "evidenceCode not known: " + evidenceCode );
         }
@@ -320,7 +319,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
      *
      * @param  ontologyTerms Collection of ontologyTerms
      * @param  search        The value we are interested in finding
-     * @return               OntologyTerm the exact match value found
+     * @return OntologyTerm the exact match value found
      */
     OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
 
@@ -347,9 +346,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
                 for ( OntologyTerm ontologyTerm : ontologyKept ) {
                     if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.obolibrary.org/obo/UBERON_0034919" ) ) { /*
-                                                                                                                        * juvenile
-                                                                                                                        * stage
-                                                                                                                        */
+                     * juvenile
+                     * stage
+                     */
                         return ontologyTerm;
                     }
                 }

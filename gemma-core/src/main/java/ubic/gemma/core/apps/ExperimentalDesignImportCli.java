@@ -95,8 +95,6 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
         String shortName = commandLine.getOptionValue( 'e' );
         this.expressionExperiment = this.locateExpressionExperiment( shortName );
         if ( this.expressionExperiment == null ) {
@@ -120,7 +118,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
      * @param shortName short name of the experiment to find.
      * @return experiment with the given short name, if it exists.
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
 
         if ( shortName == null ) {

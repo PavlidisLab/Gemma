@@ -64,7 +64,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+
     }
 
     /* this importer cannot automatically download files it expects the files to already be there */

@@ -55,6 +55,11 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions( CommandLine commandLine ) throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         TaxonFetcher tf = new TaxonFetcher();
         Collection<LocalFile> files = tf.fetch();

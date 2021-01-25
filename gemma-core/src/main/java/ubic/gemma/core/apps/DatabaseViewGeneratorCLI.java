@@ -33,7 +33,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  *
  * @author paul
  */
-@SuppressWarnings({"FieldCanBeLocal", "unused"}) // Possible external use
+@SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
 public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     private boolean generateDatasetSummary = false;
@@ -117,9 +117,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
                 this.limit = 0;
             }
         }
-
-        super.processOptions( commandLine );
-
     }
 
 }

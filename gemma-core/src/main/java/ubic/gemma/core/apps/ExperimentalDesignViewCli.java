@@ -36,6 +36,11 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions( CommandLine commandLine ) throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
         ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );
 

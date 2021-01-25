@@ -38,11 +38,15 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
-        super.addUserNameAndPasswordOptions( options, true );
         Option taxonOption = Option.builder( "t" ).hasArg()
                 .desc( "Taxon to process" ).longOpt( "taxon" )
                 .build();
         options.addOption( taxonOption );
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     @Override
@@ -62,8 +66,8 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
+
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
 
         if ( commandLine.hasOption( 't' ) ) {
             String taxonName = commandLine.getOptionValue( 't' );

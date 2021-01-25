@@ -126,7 +126,7 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+
     }
 
     private void checkHeader( String valueFile, String valueExpected ) throws Exception {

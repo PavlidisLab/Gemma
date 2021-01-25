@@ -20,6 +20,7 @@ package ubic.gemma.core.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -47,11 +48,17 @@ import java.util.List;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    private static final String USERNAME_OPTION = "u";
+    private static final String PASSWORD_OPTION = "p";
+
+    private String username;
+    private String password;
+
     protected AuditTrailService auditTrailService;
     protected AuditEventService auditEventService;
     protected BeanFactory ctx;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public AbstractSpringAwareCLI() {
         super();
     }
@@ -64,7 +71,25 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void buildStandardOptions( Options options ) {
         super.buildStandardOptions( options );
-        this.addUserNameAndPasswordOptions( options );
+        options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
+                .desc( "User name for accessing the system (optional for some tools)" )
+                .required( requireLogin() )
+                .build() );
+        options.addOption( Option.builder( PASSWORD_OPTION ).argName( "passwd" ).longOpt( "password" ).hasArg()
+                .desc( "Password for accessing the system (optional for some tools)" )
+                .required( requireLogin() )
+                .build() );
+    }
+
+    /**
+     * Indicate if the command requires authentication.
+     *
+     * Override this to return true to make authentication required.
+     *
+     * @return true if login is required, otherwise false
+     */
+    protected boolean requireLogin() {
+        return false;
     }
 
     /**
@@ -72,8 +97,15 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param commandLine
      */
     @Override
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processStandardOptions( CommandLine commandLine ) {
+        super.processStandardOptions( commandLine );
         this.createSpringContext( commandLine );
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( USERNAME_OPTION );
+        }
+        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
+            this.password = commandLine.getOptionValue( PASSWORD_OPTION );
+        }
         this.authenticate( commandLine );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         this.auditEventService = this.getBean( AuditEventService.class );

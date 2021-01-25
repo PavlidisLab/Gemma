@@ -189,7 +189,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
             accessionFile = commandLine.getOptionValue( 'f' );
         }

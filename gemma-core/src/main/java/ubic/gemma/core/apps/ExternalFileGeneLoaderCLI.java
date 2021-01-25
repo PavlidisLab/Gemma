@@ -49,7 +49,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
      */
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
             directGeneInputFileName = commandLine.getOptionValue( 'f' );
             if ( directGeneInputFileName == null ) {
@@ -70,6 +69,11 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
         return "loadGenesFromFile";
     }
 
+    @Override
+    protected boolean requireLogin() {
+        return true;
+    }
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
@@ -81,8 +85,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
         Option taxonNameOption = Option.builder( "t" ).hasArg()
                 .desc( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).build();
         options.addOption( taxonNameOption );
-
-        this.requireLogin();
     }
 
     @Override
@@ -93,7 +95,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void processGeneList() {
 
         ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );

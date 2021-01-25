@@ -112,7 +112,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
             filePath = commandLine.getOptionValue( 'f' );
         }

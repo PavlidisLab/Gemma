@@ -38,6 +38,7 @@ import java.io.FileReader;
 
 /**
  * Add entries to the blacklist
+ *
  * @author paul
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
@@ -67,11 +68,14 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      */
     @Override
     protected void buildOptions( Options options ) {
-        super.addUserNameAndPasswordOptions( options, true );
         options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
                 + "additional columns: name, description of entity" ).argName( "file name" ).hasArg().build() );
         options.addOption( "undo", "Remove items from blacklist instead of adding" );
+    }
 
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     @Override
@@ -161,7 +165,6 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         if ( commandLine.hasOption( "file" ) ) {
             this.fileName = commandLine.getOptionValue( "file" );
         } else {

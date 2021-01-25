@@ -35,7 +35,7 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     // location of the ctd file
     private String ctdFile = "";
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public CtdDatabaseImporterCli() throws Exception {
         super();
     }
@@ -52,7 +52,7 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+
     }
 
     @Override

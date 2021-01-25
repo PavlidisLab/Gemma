@@ -58,15 +58,16 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        super.addUserNameAndPasswordOptions( options, true );
         options.addOption( Option.builder( "pmids" ).longOpt( null ).desc( "Pubmed ids, comma-delimited; default is to do all in DB" ).argName( "ids" ).hasArg().build() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( "pmids" ) ) {
-            this.pmids = StringUtils.split( commandLine.getOptionValue( "pmids" ), "," );
-        }
+    protected boolean requireLogin() {
+        return true;
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws Exception {
     }
 
     @Override
