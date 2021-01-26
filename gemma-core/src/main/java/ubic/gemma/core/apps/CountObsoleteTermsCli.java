@@ -29,8 +29,6 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
         ontologyService = this.getBean( OntologyService.class );
 
         if ( commandLine.hasOption( "start" ) ) {

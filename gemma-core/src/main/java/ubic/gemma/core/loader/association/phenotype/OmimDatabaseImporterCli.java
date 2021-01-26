@@ -69,6 +69,11 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
+    protected void processOptions( CommandLine commandLine ) throws Exception {
+
+    }
+
+    @Override
     protected void doWork() throws Exception {
 
         // this gets the context, so we can access beans
@@ -191,7 +196,7 @@ public class OmimDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
      * @return
      */
     private Collection<Long> findCommonPubmed( Long omimGeneId, Long omimPhenotypeId,
-                                               Map<Long, Collection<Long>> omimIdToPubmeds ) {
+            Map<Long, Collection<Long>> omimIdToPubmeds ) {
 
         Collection<Long> pubmedFromGeneId = omimIdToPubmeds.get( omimGeneId );
         Collection<Long> pubmedFromPhenotypeId = omimIdToPubmeds.get( omimPhenotypeId );

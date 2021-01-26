@@ -41,13 +41,13 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
+
     }
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {
-        return new String[]{"classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml"};
+        return new String[] { "classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml" };
     }
 
     @Override
@@ -82,7 +82,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public class ShutdownHook extends Thread {
         @Override
         public void run() {

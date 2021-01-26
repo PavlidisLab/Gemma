@@ -82,8 +82,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        this.requireLogin(); // actually only needed if using the db to save results (usual case)
-
         options.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
                 "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .longOpt( "identityThreshold" ).build() );
@@ -167,6 +165,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg().argName( "probes" ).build();
 
         options.addOption( probesToDoOption );
+    }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
     }
 
     private TaxonService taxonService;

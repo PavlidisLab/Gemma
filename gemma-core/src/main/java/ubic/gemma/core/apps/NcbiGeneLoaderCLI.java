@@ -50,7 +50,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     private Integer startNcbiId = null;
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public NcbiGeneLoaderCLI() {
         super();
     }
@@ -88,9 +88,13 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
         options.addOption( Option.builder( "restart" ).longOpt( null ).desc( "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
                 + "and assumes you have the right -taxon option, if any)" ).argName( "ncbi id" ).hasArg().build() );
-
-        this.requireLogin();
     }
+
+    @Override
+    protected boolean requireLogin() {
+        return true;
+    }
+
 
     @Override
     protected void doWork() throws Exception {
@@ -136,8 +140,8 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
+
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
         if ( commandLine.hasOption( 'f' ) ) {
             filePath = commandLine.getOptionValue( 'f' );
         }

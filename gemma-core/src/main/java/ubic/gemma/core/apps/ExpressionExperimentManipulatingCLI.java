@@ -156,8 +156,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-        super.processOptions( commandLine );
-
         eeService = this.getBean( ExpressionExperimentService.class );
         geneService = this.getBean( GeneService.class );
         taxonService = this.getBean( TaxonService.class );

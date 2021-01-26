@@ -68,14 +68,12 @@ public abstract class AbstractCLI {
     private static final int DEFAULT_PORT = 3306;
     private static final String HEADER = "Options:";
     private static final String HOST_OPTION = "H";
-    private static final String PASSWORD_CONSTANT = "p";
     private static final String PORT_OPTION = "P";
-    private static final String USERNAME_OPTION = "u";
     private static final String VERBOSITY_OPTION = "v";
 
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
-    private static final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
+    private final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
@@ -90,13 +88,9 @@ public abstract class AbstractCLI {
      */
     protected String mDate = null;
     protected int numThreads = 1;
-    private ExecutorService executorService;
-    protected String password;
-    protected Option passwordOpt;
-    protected int port = AbstractCLI.DEFAULT_PORT;
-    protected String username;
-    protected Option usernameOpt;
     protected String host = DEFAULT_HOST;
+    protected int port = AbstractCLI.DEFAULT_PORT;
+    private ExecutorService executorService;
 
     // hold the results of the command execution
     // needs to be concurrently modifiable and kept in-order
@@ -111,16 +105,16 @@ public abstract class AbstractCLI {
      *
      * @param args arguments Arguments to pass to {@link #processCommandLine(Options, String[])}
      * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
-     *         end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
-     *         internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
+     * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
+     * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     public int executeCommand( String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
             Options options = new Options();
-            buildOptions( options );
             buildStandardOptions( options );
+            buildOptions( options );
             CommandLine commandLine = processCommandLine( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( 'h' ) ) {
@@ -210,41 +204,6 @@ public abstract class AbstractCLI {
                 .desc( "Number of threads to use for batch processing." )
                 .build();
         options.addOption( threadsOpt );
-    }
-
-    /**
-     * Add required user name and password options.
-     * @param options
-     */
-    protected void addUserNameAndPasswordOptions( Options options ) {
-        /*
-         * Changed to make it so password is not required.
-         */
-        this.addUserNameAndPasswordOptions( options, false );
-    }
-
-    /**
-     * Convenience method to add a standard pair of (required) options to intake a user name and password, optionally
-     * required
-     *
-     * @param options
-     * @param required required
-     */
-    @SuppressWarnings("static-access")
-    protected void addUserNameAndPasswordOptions( Options options, boolean required ) {
-        this.usernameOpt = Option.builder( AbstractCLI.USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
-                .desc( "User name for accessing the system (optional for some tools)" )
-                .build();
-
-        usernameOpt.setRequired( required );
-
-        this.passwordOpt = Option.builder( PASSWORD_CONSTANT ).argName( "passwd" ).longOpt( "password" ).hasArg()
-                .desc( "Password for accessing the system (optional for some tools)" )
-                .build();
-        passwordOpt.setRequired( required );
-
-        options.addOption( usernameOpt );
-        options.addOption( passwordOpt );
     }
 
     /**
@@ -410,21 +369,9 @@ public abstract class AbstractCLI {
     protected abstract void processOptions( CommandLine commandLine ) throws Exception;
 
     /**
-     * Call in 'buildOptions' to force users to provide a user name and password.
-     */
-    protected void requireLogin() {
-        if ( this.passwordOpt != null ) {
-            this.passwordOpt.setRequired( true );
-        }
-        if ( this.usernameOpt != null ) {
-            this.usernameOpt.setRequired( true );
-        }
-    }
-
-    /**
      * This is needed for CLIs that run in tests, so the logging settings get reset.
      */
-    protected static void resetLogging() {
+    protected void resetLogging() {
         for ( Logger log4jLogger : originalLoggingLevels.keySet() ) {
             log4jLogger.setLevel( originalLoggingLevels.get( log4jLogger ) );
         }
@@ -562,7 +509,7 @@ public abstract class AbstractCLI {
      * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
      * purposes.
      */
-    private void processStandardOptions( CommandLine commandLine ) {
+    protected void processStandardOptions( CommandLine commandLine ) {
 
         if ( commandLine.hasOption( AbstractCLI.HOST_OPTION ) ) {
             this.host = commandLine.getOptionValue( AbstractCLI.HOST_OPTION );
@@ -574,14 +521,6 @@ public abstract class AbstractCLI {
             this.port = this.getIntegerOptionValue( commandLine, AbstractCLI.PORT_OPTION );
         } else {
             this.port = AbstractCLI.DEFAULT_PORT;
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.USERNAME_OPTION ) ) {
-            this.username = commandLine.getOptionValue( AbstractCLI.USERNAME_OPTION );
-        }
-
-        if ( commandLine.hasOption( AbstractCLI.PASSWORD_CONSTANT ) ) {
-            this.password = commandLine.getOptionValue( AbstractCLI.PASSWORD_CONSTANT );
         }
 
         if ( commandLine.hasOption( AbstractCLI.VERBOSITY_OPTION ) ) {
