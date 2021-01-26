@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.job.executor.worker;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
@@ -38,19 +40,19 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
 
     }
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {
-        return new String[]{"classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml"};
+        return new String[] { "classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml" };
     }
 
     @Override
-    protected void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( this.hasOption( "testing" ), false /* webapp */,
+    protected void createSpringContext( CommandLine commandLine ) {
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
                 this.getAdditionalSpringConfigLocations() );
 
         /*
@@ -65,7 +67,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
     }
 
     @Override
@@ -80,7 +82,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public class ShutdownHook extends Thread {
         @Override
         public void run() {

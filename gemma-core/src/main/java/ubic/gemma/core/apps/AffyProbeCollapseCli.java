@@ -19,7 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -58,18 +60,18 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        addOption( Option.builder( "affyProbeFile" )
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( "affyProbeFile" )
                 .hasArg()
                 .desc( "Affymetrix probe file to use as input" )
                 .required().build() );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        affyProbeFileName = this.getOptionValue( "affyProbeFile" );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        affyProbeFileName = commandLine.getOptionValue( "affyProbeFile" );
     }
 
     /*

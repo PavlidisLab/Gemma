@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -123,7 +125,8 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
+
     }
 
     private void checkHeader( String valueFile, String valueExpected ) throws Exception {
@@ -245,7 +248,7 @@ public class GwasDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbs
      * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         // No-op
     }
 }

@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.26.1</version>
+	<version>1.26.2</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>http://gemma.msl.ubc.ca</url>
@@ -359,9 +359,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<!-- Uncomment the following if you run Java 7 -->
-					<!-- UseSplitVerifier is so Cobertura works with Java 7 -->
-					<!--<argLine>-Xmx1500M -ea -Djava.awt.headless=true -XX:MaxPermSize=512m -XX:-UseSplitVerifier</argLine>-->
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
@@ -373,6 +370,16 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
 				<version>3.9.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/assembly/src.xml</descriptor>
+					</descriptors>
+				</configuration>
 			</plugin>
 		</plugins>
 		<extensions>
@@ -455,54 +462,6 @@
 	</pluginRepositories>
 	<profiles>
 		<profile>
-			<id>assemble-src</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-				<property>
-					<name>assemble-src</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<configuration>
-							<descriptors>
-								<descriptor>
-									src/assembly/src-assembly.xml
-								</descriptor>
-							</descriptors>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>assemble-bin</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-				<property>
-					<name>assemble-bin</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<configuration>
-							<descriptors>
-								<descriptor>
-									src/assembly/bin-assembly.xml
-								</descriptor>
-							</descriptors>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
 			<id>local-deploy</id>
 			<activation>
@@ -559,6 +518,7 @@
 				<version>3.2.0</version>
 				<configuration>
 					<quiet>true</quiet>
+					<source>8</source>
 					<links>
 						<link>http://chibi.ubc.ca/faculty/pavlidis/basecode/apidocs/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
@@ -574,7 +534,6 @@
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
-						<additionalJOption>-J-XX:MaxPermSize=512m</additionalJOption>
 					</additionalJOptions>
 				</configuration>
 			</plugin>

@@ -14,7 +14,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -35,11 +37,11 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option taxonOption = Option.builder( "t" ).hasArg()
                 .desc( "Taxon to process" ).longOpt( "taxon" )
                 .build();
-        this.addOption( taxonOption );
+        options.addOption( taxonOption );
     }
 
     @Override
@@ -64,9 +66,11 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        if ( this.hasOption( 't' ) ) {
-            String taxonName = this.getOptionValue( 't' );
+
+    protected void processOptions( CommandLine commandLine ) {
+
+        if ( commandLine.hasOption( 't' ) ) {
+            String taxonName = commandLine.getOptionValue( 't' );
             TaxonService taxonService = this.getBean( TaxonService.class );
             this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {

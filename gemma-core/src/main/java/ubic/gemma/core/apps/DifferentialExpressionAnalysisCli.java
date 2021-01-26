@@ -19,7 +19,9 @@
 package ubic.gemma.core.apps;
 
 import gemma.gsec.SecurityService;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -114,36 +116,36 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
         /*
          * These options from the super class support: running on one or more data sets from the command line, running
          * on list of data sets from a file, running on all data sets.
          */
-        super.buildOptions();
+        super.buildOptions( options );
 
         /* Supports: running on all data sets that have not been run since a given date. */
-        super.addDateOption();
+        super.addDateOption( options );
 
         //
         //        Option topOpt = Option.builder( "top" ).hasArg().argName( "number" ).desc( "The top (most significant) results to display." )
         //                .build();
         //        super.addOption( topOpt );
 
-        super.addAutoOption();
+        super.addAutoOption( options );
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
-        super.addForceOption();
+        super.addForceOption( options );
 
         Option factors = Option.builder( "factors" ).hasArg().desc(
                 "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
                 .build();
 
-        super.addOption( factors );
+        options.addOption( factors );
 
         Option subsetFactor = Option.builder( "subset" ).hasArg().desc(
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
                 .build();
-        super.addOption( subsetFactor );
+        options.addOption( subsetFactor );
 
         Option analysisType = Option.builder( "type" ).hasArg().desc(
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
@@ -152,58 +154,57 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + " GENERICLM (generic LM, no interactions); default: auto-detect" )
                 .build();
 
-        super.addOption( analysisType );
+        options.addOption( analysisType );
 
         Option ignoreBatchOption = Option.builder( "usebatch" ).desc(
                 "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
                 .build();
 
-        super.addOption( ignoreBatchOption );
+        options.addOption( ignoreBatchOption );
 
-        super.addOption( "nodb", "Output files only to your gemma.appdata.home instead of database" );
+        options.addOption( "nodb", "Output files only to your gemma.appdata.home instead of database" );
 
-        super.addOption( "redo", "If using automatic analysis "
+        options.addOption( "redo", "If using automatic analysis "
                 + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
 
-        super.addOption( "delete",
-                "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
+        options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        super.addOption( "ebayes", "Use empirical-Bayes moderated statistics. Default: "
+        options.addOption( "ebayes", "Use empirical-Bayes moderated statistics. Default: "
                 + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
 
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
         expressionDataFileService = this.getBean( ExpressionDataFileService.class );
-        if ( this.hasOption( "type" ) ) {
+        if ( commandLine.hasOption( "type" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {
                 throw new IllegalArgumentException(
                         "You can only specify the analysis type when analyzing a single experiment" );
             }
 
-            if ( !this.hasOption( "factors" ) ) {
+            if ( !commandLine.hasOption( "factors" ) ) {
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
             }
-            this.type = AnalysisType.valueOf( this.getOptionValue( "type" ) );
+            this.type = AnalysisType.valueOf( commandLine.getOptionValue( "type" ) );
         }
 
-        if ( this.hasOption( "subset" ) ) {
+        if ( commandLine.hasOption( "subset" ) ) {
             if ( this.expressionExperiments.size() > 1 ) {
                 throw new IllegalArgumentException(
                         "You can only specify the subset factor when analyzing a single experiment" );
             }
 
-            if ( !this.hasOption( "factors" ) ) {
+            if ( !commandLine.hasOption( "factors" ) ) {
                 throw new IllegalArgumentException( "You have to specify the factors if you also specify the subset" );
             }
 
             // note we add the given factor to the list of factors overall to make sure it is considered
-            String subsetFactor = this.getOptionValue( "subset" );
+            String subsetFactor = commandLine.getOptionValue( "subset" );
             try {
                 this.subsetFactorId = Long.parseLong( subsetFactor );
                 this.factorIds.add( subsetFactorId );
@@ -213,25 +214,25 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             }
         }
 
-        if ( this.hasOption( "usebatch" ) ) {
+        if ( commandLine.hasOption( "usebatch" ) ) {
             this.ignoreBatch = false;
         }
 
-        if ( this.hasOption( "delete" ) ) {
+        if ( commandLine.hasOption( "delete" ) ) {
             this.delete = true;
         }
 
-        if ( this.hasOption( "ebayes" ) ) {
+        if ( commandLine.hasOption( "ebayes" ) ) {
             this.ebayes = true;
         }
 
-        if ( this.hasOption( "nodb" ) ) {
+        if ( commandLine.hasOption( "nodb" ) ) {
             this.persist = false;
         }
 
-        this.tryToCopyOld = this.hasOption( "redo" );
+        this.tryToCopyOld = commandLine.hasOption( "redo" );
 
-        if ( this.hasOption( "factors" ) ) {
+        if ( commandLine.hasOption( "factors" ) ) {
 
             if ( this.tryToCopyOld ) {
                 throw new IllegalArgumentException( "You can't specify 'redo' and 'factors' together" );
@@ -242,7 +243,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         "You can only specify the factors when analyzing a single experiment" );
             }
 
-            String rawFactors = this.getOptionValue( "factors" );
+            String rawFactors = commandLine.getOptionValue( "factors" );
             String[] factorIDst = StringUtils.split( rawFactors, "," );
             if ( factorIDst != null && factorIDst.length > 0 ) {
                 for ( String string : factorIDst ) {

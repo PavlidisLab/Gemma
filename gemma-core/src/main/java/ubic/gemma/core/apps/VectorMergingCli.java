@@ -18,8 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -38,9 +39,9 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addForceOption();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        super.addForceOption( options );
     }
 
     @Override

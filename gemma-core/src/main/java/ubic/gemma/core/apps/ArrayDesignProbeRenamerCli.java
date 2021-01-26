@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -51,18 +53,18 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         //noinspection AccessStaticViaInstance
-        this.addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" )
+        options.addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" )
                 .withDescription( "Two-column file with old and new identifiers (additional columns ignored)" )
                 .create( 'f' ) );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.fileName = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        this.fileName = commandLine.getOptionValue( 'f' );
     }
 
     @Override

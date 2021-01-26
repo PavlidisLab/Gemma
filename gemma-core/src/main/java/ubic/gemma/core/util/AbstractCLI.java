@@ -18,35 +18,19 @@
  */
 package ubic.gemma.core.util;
 
-import java.io.File;
-import java.util.*;
-import java.util.concurrent.*;
-
-import org.apache.commons.cli.AlreadySelectedException;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingArgumentException;
-import org.apache.commons.cli.MissingOptionException;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Option.Builder;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
+import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-
+import org.apache.log4j.*;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
@@ -87,8 +71,6 @@ public abstract class AbstractCLI {
     private static final String PORT_OPTION = "P";
     private static final String VERBOSITY_OPTION = "v";
 
-    protected final Options options = new Options();
-
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
     private final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
@@ -110,8 +92,6 @@ public abstract class AbstractCLI {
     protected int port = AbstractCLI.DEFAULT_PORT;
     private ExecutorService executorService;
 
-    private CommandLine commandLine;
-
     // hold the results of the command execution
     // needs to be concurrently modifiable and kept in-order
     private final List<BatchProcessingResult> errorObjects = Collections.synchronizedList( new ArrayList<BatchProcessingResult>() );
@@ -123,7 +103,7 @@ public abstract class AbstractCLI {
      * Parse and process CLI arguments, invoke the command doWork implementation, and print basic statistics about time
      * usage.
      *
-     * @param args arguments Arguments to pass to {@link #processCommandLine(String[])}
+     * @param args arguments Arguments to pass to {@link #processCommandLine(Options, String[])}
      * @return Exit code intended to be used with {@link System#exit(int)} to indicate a success or failure to the
      * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
      * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
@@ -132,16 +112,17 @@ public abstract class AbstractCLI {
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            buildStandardOptions();
-            buildOptions();
-            processCommandLine( args );
+            Options options = new Options();
+            buildStandardOptions( options );
+            buildOptions( options );
+            CommandLine commandLine = processCommandLine( options, args );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( 'h' ) ) {
-                printHelp();
+                printHelp( options );
                 return SUCCESS;
             }
-            processStandardOptions();
-            processOptions();
+            processStandardOptions( commandLine );
+            processOptions( commandLine );
             doWork();
             return errorObjects.isEmpty() ? SUCCESS : FAILURE_FROM_ERROR_OBJECTS;
         } catch ( Exception e ) {
@@ -156,158 +137,47 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt option
-     * @return Options
-     */
-    public final Options addOption( Option opt ) {
-        return this.options.addOption( opt );
-    }
-
-    /**
-     * @param opt         option, required
-     * @param description description, required
-     * @return Options
-     */
-    public final Options addOption( String opt, String description ) {
-        Builder b = Option.builder( opt ).desc( description );
-
-        return this.options.addOption( b.build() );
-    }
-
-    /**
-     * @param opt         option, required
-     * @param description description, required
-     * @param longOpt     long option (if null, ignored)
-     * @param argName     name of the argument of the option (if blank or null, implies there is no argument)
-     * @return Options
-     */
-    public final Options addOption( String opt, String longOpt, String description, String argName ) {
-        Builder b = Option.builder( opt ).desc( description );
-        if ( StringUtils.isNotBlank( longOpt ) ) b = b.longOpt( longOpt );
-        if ( StringUtils.isNotBlank( argName ) ) b = b.argName( argName ).hasArg();
-        return this.options.addOption( b.build() );
-
-    }
-
-    /**
-     * @param group the option group
-     * @return see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
-     */
-    public final Options addOptionGroup( OptionGroup group ) {
-        return this.options.addOptionGroup( group );
-    }
-
-    public List<?> getArgList() {
-        return commandLine.getArgList();
-    }
-
-    public String[] getArgs() {
-        return commandLine.getArgs();
-    }
-
-    /**
      * A short memorable name for the command that can be used to locate this class.
      *
      * @return name; if null, this will not be available as a shortcut command.
      */
     public abstract String getCommandName();
 
-    /**
-     * @param opt the option identifier
-     * @return see org.apache.commons.cli.Options#getOption(java.lang.String)
-     */
-    public final Option getOption( String opt ) {
-        return this.options.getOption( opt );
-    }
-
-    /**
-     * @param opt option
-     * @return see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
-     */
-    public final OptionGroup getOptionGroup( Option opt ) {
-        return this.options.getOptionGroup( opt );
-    }
-
-    public Object getOptionObject( char opt ) {
-        return commandLine.getOptionObject( opt );
-    }
-
-    /**
-     * @return see org.apache.commons.cli.Options#getOptions()
-     */
-    public final Collection<?> getOptions() {
-        return this.options.getOptions();
-    }
-
-    public String getOptionValue( char opt ) {
-        return commandLine.getOptionValue( opt );
-    }
-
-    public String getOptionValue( char opt, String defaultValue ) {
-        return commandLine.getOptionValue( opt, defaultValue );
-    }
-
-    public String getOptionValue( String opt ) {
-        return commandLine.getOptionValue( opt );
-    }
-
-    public String getOptionValue( String opt, String defaultValue ) {
-        return commandLine.getOptionValue( opt, defaultValue );
-    }
-
-    public String[] getOptionValues( char opt ) {
-        return commandLine.getOptionValues( opt );
-    }
-
-    public String[] getOptionValues( String opt ) {
-        return commandLine.getOptionValues( opt );
-    }
-
-    /**
-     * @return see org.apache.commons.cli.Options#getRequiredOptions()
-     */
-    public final List<?> getRequiredOptions() {
-        return this.options.getRequiredOptions();
-    }
-
     public abstract String getShortDesc();
-
-    public boolean hasOption( char opt ) {
-        return commandLine.hasOption( opt );
-    }
-
-    public boolean hasOption( String opt ) {
-        return commandLine.hasOption( opt );
-    }
 
     /**
      * You must implement the handling for this option.
+     * @param options
      */
-    protected void addAutoOption() {
+    @SuppressWarnings("static-access")
+    protected void addAutoOption( Options options ) {
         Option autoSeekOption = Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
                 .build();
 
-        this.addOption( autoSeekOption );
+        options.addOption( autoSeekOption );
     }
 
-    protected void addDateOption() {
+    @SuppressWarnings("static-access")
+    protected void addDateOption( Options options ) {
         Option dateOption = Option.builder( "mdate" ).hasArg().desc(
                 "Constrain to run only on entities with analyses older than the given date. "
                         + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                         + "If there is no record of when the analysis was last run, it will be run." )
                 .build();
 
-        this.addOption( dateOption );
+        options.addOption( dateOption );
     }
 
     /**
      * Convenience method to add a standard pair of options to intake a host name and port number. *
      *
+     * @param options
      * @param hostRequired Whether the host name is required
      * @param portRequired Whether the port is required
      */
-    protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
+    @SuppressWarnings("static-access")
+    protected void addHostAndPortOptions( Options options, boolean hostRequired, boolean portRequired ) {
         Option hostOpt = Option.builder( HOST_OPTION ).argName( "host name" ).longOpt( "host" ).hasArg()
                 .desc( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
                 .build();
@@ -326,8 +196,10 @@ public abstract class AbstractCLI {
 
     /**
      * Convenience method to add an option for parallel processing option.
+     * @param options
      */
-    protected void addThreadsOption() {
+    @SuppressWarnings("static-access")
+    protected void addThreadsOption( Options options ) {
         Option threadsOpt = Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
                 .build();
@@ -339,11 +211,13 @@ public abstract class AbstractCLI {
      *
      * Implement this method to add options to your command line, using the OptionBuilder.
      *
-     * This is called right after {@link #buildStandardOptions()} so the options will be added after standard options.
+     * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
+     * @param options
      */
-    protected abstract void buildOptions();
+    protected abstract void buildOptions( Options options );
 
-    protected void buildStandardOptions() {
+    @SuppressWarnings("static-access")
+    protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
@@ -363,7 +237,7 @@ public abstract class AbstractCLI {
     /**
      * Command line implementation.
      *
-     * This is called after {@link #buildOptions()} and {@link #processOptions()}, so the implementation can assume that
+     * This is called after {@link #buildOptions(Options)} and {@link #processOptions(CommandLine)}, so the implementation can assume that
      * all its arguments have already been initialized.
      *
      * @throws Exception in case of unrecoverable failure, an exception is thrown and will result in a {@link #FAILURE}
@@ -371,53 +245,53 @@ public abstract class AbstractCLI {
      */
     protected abstract void doWork() throws Exception;
 
-    protected final double getDoubleOptionValue( char option ) {
+    protected final double getDoubleOptionValue( CommandLine commandLine, char option ) {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( "" + option ) + ", not a valid double", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid double", e );
         }
     }
 
-    protected final double getDoubleOptionValue( String option ) {
+    protected final double getDoubleOptionValue( CommandLine commandLine, String option ) {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( option ) + ", not a valid double", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid double", e );
         }
     }
 
-    protected final String getFileNameOptionValue( char c ) {
+    protected final String getFileNameOptionValue( CommandLine commandLine, char c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( "" + c ) + ", cannot read from file" );
+            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
         }
         return fileName;
     }
 
-    protected final String getFileNameOptionValue( String c ) {
+    protected final String getFileNameOptionValue( CommandLine commandLine, String c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            throw new RuntimeException( this.invalidOptionString( "" + c ) + ", cannot read from file" );
+            throw new RuntimeException( this.invalidOptionString( commandLine, "" + c ) + ", cannot read from file" );
         }
         return fileName;
     }
 
-    protected final int getIntegerOptionValue( char option ) {
+    protected final int getIntegerOptionValue( CommandLine commandLine, char option ) {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( "" + option ) + ", not a valid integer", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, "" + option ) + ", not a valid integer", e );
         }
     }
 
-    protected final int getIntegerOptionValue( String option ) {
+    protected final int getIntegerOptionValue( CommandLine commandLine, String option ) {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( this.invalidOptionString( option ) + ", not a valid integer", e );
+            throw new RuntimeException( this.invalidOptionString( commandLine, option ) + ", not a valid integer", e );
         }
     }
 
@@ -430,7 +304,7 @@ public abstract class AbstractCLI {
         return skipIfLastRunLaterThan;
     }
 
-    protected void printHelp() {
+    protected void printHelp( Options options ) {
         HelpFormatter h = new HelpFormatter();
         h.setWidth( 150 );
         h.printHelp( this.getCommandName() + " [options]", this.getShortDesc() + "\n" + AbstractCLI.HEADER, options,
@@ -444,7 +318,7 @@ public abstract class AbstractCLI {
      * @param args args
      * @return Exception; null if nothing went wrong.
      */
-    private final void processCommandLine( String[] args ) throws Exception {
+    private final CommandLine processCommandLine( Options options, String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         DefaultParser parser = new DefaultParser();
         String appVersion = Settings.getAppVersion();
@@ -453,12 +327,12 @@ public abstract class AbstractCLI {
         System.err.println( "Gemma version " + appVersion );
 
         if ( args == null ) {
-            this.printHelp();
+            this.printHelp( options );
             throw new Exception( "No arguments" );
         }
 
         try {
-            commandLine = parser.parse( options, args );
+            return parser.parse( options, args );
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
@@ -472,7 +346,7 @@ public abstract class AbstractCLI {
                 e.printStackTrace();
             }
 
-            this.printHelp();
+            this.printHelp( options );
 
             if ( AbstractCLI.log.isDebugEnabled() ) {
                 AbstractCLI.log.debug( e );
@@ -485,13 +359,14 @@ public abstract class AbstractCLI {
     /**
      * Process command line options.
      *
-     * Implement this to provide processing of options. It is called after {@link #buildOptions()} and right before
+     * Implement this to provide processing of options. It is called after {@link #buildOptions(Options)} and right before
      * {@link #doWork()}.
      *
      * @throws Exception in case of unrecoverable failure (i.e. missing option or invalid value), an exception can be
      *                   raised and will result in an exit code of {@link #FAILURE}.
+     * @param commandLine
      */
-    protected abstract void processOptions() throws Exception;
+    protected abstract void processOptions( CommandLine commandLine ) throws Exception;
 
     /**
      * This is needed for CLIs that run in tests, so the logging settings get reset.
@@ -626,7 +501,7 @@ public abstract class AbstractCLI {
         AbstractCLI.log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
     }
 
-    private String invalidOptionString( String option ) {
+    private String invalidOptionString( CommandLine commandLine, String option ) {
         return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
 
@@ -634,7 +509,7 @@ public abstract class AbstractCLI {
      * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
      * purposes.
      */
-    protected void processStandardOptions() {
+    protected void processStandardOptions( CommandLine commandLine ) {
 
         if ( commandLine.hasOption( AbstractCLI.HOST_OPTION ) ) {
             this.host = commandLine.getOptionValue( AbstractCLI.HOST_OPTION );
@@ -643,13 +518,13 @@ public abstract class AbstractCLI {
         }
 
         if ( commandLine.hasOption( AbstractCLI.PORT_OPTION ) ) {
-            this.port = this.getIntegerOptionValue( AbstractCLI.PORT_OPTION );
+            this.port = this.getIntegerOptionValue( commandLine, AbstractCLI.PORT_OPTION );
         } else {
             this.port = AbstractCLI.DEFAULT_PORT;
         }
 
         if ( commandLine.hasOption( AbstractCLI.VERBOSITY_OPTION ) ) {
-            int verbosity = this.getIntegerOptionValue( AbstractCLI.VERBOSITY_OPTION );
+            int verbosity = this.getIntegerOptionValue( commandLine, AbstractCLI.VERBOSITY_OPTION );
             if ( verbosity < 0 || verbosity > 5 ) {
                 throw new RuntimeException( "Verbosity must be from 0 to 5" );
             }
@@ -662,7 +537,7 @@ public abstract class AbstractCLI {
         f.addAppender( cnslAppndr );
 
         if ( commandLine.hasOption( AbstractCLI.LOGGER_OPTION ) ) {
-            String value = this.getOptionValue( AbstractCLI.LOGGER_OPTION );
+            String value = commandLine.getOptionValue( AbstractCLI.LOGGER_OPTION );
             String[] vals = value.split( "=" );
             if ( vals.length != 2 )
                 throw new RuntimeException( "Logging value must in format [logger]=[value]" );
@@ -673,8 +548,8 @@ public abstract class AbstractCLI {
             }
         }
 
-        if ( this.hasOption( "mdate" ) ) {
-            this.mDate = this.getOptionValue( "mdate" );
+        if ( commandLine.hasOption( "mdate" ) ) {
+            this.mDate = commandLine.getOptionValue( "mdate" );
         }
 
         if ( this.numThreads < 1 ) {

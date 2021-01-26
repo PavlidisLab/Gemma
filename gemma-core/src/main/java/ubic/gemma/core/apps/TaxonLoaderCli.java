@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
@@ -48,12 +50,12 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
     }
 
     @Override
-    protected void processOptions() throws Exception {
+    protected void processOptions( CommandLine commandLine ) throws Exception {
 
     }
 

@@ -41,12 +41,10 @@ gemma-web/pom.properties
 gemma-web/logs
 gemma-web/null
 gemma-web/ehcache.disk.store.dir
-gemma-web/.idea
 gemma-web/E:
 gemma-web/$HOME
 gemma-web/src/main/main.iml
 gemma-web/src/main/webapp/*.jsp_preview_.html
-gemma-web/src/main/webapp/.idea
 gemma-web/src/main/webapp/images/icons/Thumbs.db
 gemma-web/src/test/test.iml
 .project
@@ -111,10 +109,6 @@ gemma-core/hibernate*.exc
 gemma-core/src/main/uml/*.uml
 gemma-core/src/main/uml/*.bak
 
-# disabling everything IDEA related - consider changing if more people start using IDEA.
-.idea
-*.iml
-
 ## File-based project format:
 *.iws
 
@@ -122,6 +116,9 @@ gemma-core/src/main/uml/*.bak
 
 # IntelliJ
 /out/
+.idea/
+!.idea/codeStyles/
+*.iml
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

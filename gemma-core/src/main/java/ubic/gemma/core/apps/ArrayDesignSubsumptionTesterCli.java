@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -85,20 +87,20 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
                 .longOpt( "other" ).build();
 
-        this.addOption( otherArrayDesignOption );
+        options.addOption( otherArrayDesignOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'o' ) ) {
-            String otherArrayDesignName = this.getOptionValue( 'o' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'o' ) ) {
+            String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesignNames = new HashSet<>();
             this.otherArrayDesignNames.addAll( Arrays.asList( names ) );

@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
@@ -57,9 +59,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Override
     protected void doWork() throws Exception {
         // this is kind of an oddball function of this tool.
-        if ( this.hasOption( 's' ) ) {
+        if ( this.sequenceId != null ) {
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                    new String[]{"nt", "est_others", "est_human", "est_mouse"}, null, force );
+                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
             if ( updated != null ) {
                 AbstractCLI.log.info( "Updated or created " + updated );
             }
@@ -82,7 +84,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         }
 
         Taxon taxon = null;
-        if ( this.hasOption( 't' ) ) {
+        if ( this.taxonName != null ) {
             assert StringUtils.isNotBlank( this.taxonName );
             taxon = taxonService.findByCommonName( this.taxonName );
             if ( taxon == null ) {
@@ -90,7 +92,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             }
         }
 
-        if ( this.hasOption( 'f' ) ) {
+        if ( this.sequenceFile != null ) {
             try ( InputStream sequenceFileIs = FileTools
                     .getInputStreamFromPlainOrCompressedFile( sequenceFile ) ) {
 
@@ -105,7 +107,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                 this.audit( arrayDesign, "Sequences read from file: " + sequenceFile );
             }
-        } else if ( this.hasOption( 'i' ) ) {
+        } else if ( this.idFile != null ) {
             try ( InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile ) ) {
 
                 if ( idFileIs == null ) {
@@ -115,14 +117,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 AbstractCLI.log.info( "Processing ArrayDesign..." );
 
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
-                        new String[]{"nt", "est_others", "est_human", "est_mouse"}, null, taxon, force );
+                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
 
                 this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             }
         } else {
             AbstractCLI.log.info( "Retrieving sequences from BLAST databases" );
             arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
-                    new String[]{"nt", "est_others", "est_human", "est_mouse"}, null, force );
+                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
             this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
         }
     }
@@ -134,19 +136,19 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
                 .desc( "Path to file (FASTA)" ).longOpt( "file" ).build();
 
-        this.addOption( fileOption );
+        options.addOption( fileOption );
 
         Option sequenceIdentifierOption = Option.builder( "i" ).argName( "Input identifier file" ).hasArg()
                 .desc( "Path to file (two columns with probe ids and sequence accessions)" )
                 .longOpt( "ids" ).build();
 
-        this.addOption( sequenceIdentifierOption );
+        options.addOption( sequenceIdentifierOption );
 
         StringBuilder buf = new StringBuilder();
 
@@ -160,11 +162,10 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         Option sequenceTypeOption = Option.builder( "y" ).required().argName( "Sequence type" ).hasArg()
                 .desc( seqtypes ).longOpt( "type" ).build();
 
-        this.addOption( sequenceTypeOption );
+        options.addOption( sequenceTypeOption );
 
-        this.addOption(
-                Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
-                        .longOpt( "sequence" ).build() );
+        options.addOption( Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
+                .longOpt( "sequence" ).build() );
 
         Option forceOption = Option.builder( "force" )
                 .desc(
@@ -172,46 +173,46 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                                 + "they will be overwritten; default is to leave them." )
                 .build();
 
-        this.addOption( forceOption );
+        options.addOption( forceOption );
 
         Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
                 "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .build();
 
-        this.addOption( taxonOption );
+        options.addOption( taxonOption );
 
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         arrayDesignSequenceProcessingService = this.getBean( ArrayDesignSequenceProcessingService.class );
         this.taxonService = this.getBean( TaxonService.class );
 
-        if ( this.hasOption( 'y' ) ) {
-            sequenceType = this.getOptionValue( 'y' );
+        if ( commandLine.hasOption( 'y' ) ) {
+            sequenceType = commandLine.getOptionValue( 'y' );
         }
 
-        if ( this.hasOption( 'f' ) ) {
-            this.sequenceFile = this.getOptionValue( 'f' );
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.sequenceFile = commandLine.getOptionValue( 'f' );
         }
 
-        if ( this.hasOption( 's' ) ) {
-            this.sequenceId = this.getOptionValue( 's' );
+        if ( commandLine.hasOption( 's' ) ) {
+            this.sequenceId = commandLine.getOptionValue( 's' );
         }
 
-        if ( this.hasOption( 't' ) ) {
-            this.taxonName = this.getOptionValue( 't' );
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxonName = commandLine.getOptionValue( 't' );
             if ( StringUtils.isBlank( this.taxonName ) ) {
                 throw new IllegalArgumentException( "You must provide a taxon name when using the -t option" );
             }
         }
 
-        if ( this.hasOption( 'i' ) ) {
-            this.idFile = this.getOptionValue( 'i' );
+        if ( commandLine.hasOption( 'i' ) ) {
+            this.idFile = commandLine.getOptionValue( 'i' );
         }
 
-        if ( this.hasOption( "force" ) ) {
+        if ( commandLine.hasOption( "force" ) ) {
             this.force = true;
         }
 

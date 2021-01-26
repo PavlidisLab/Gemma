@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -57,11 +59,11 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
     }
 
     @Override
-    protected void processOptions() throws Exception {
+    protected void processOptions( CommandLine commandLine ) throws Exception {
 
     }
 

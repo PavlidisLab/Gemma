@@ -18,9 +18,11 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -50,7 +52,9 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
+        super.buildStandardOptions( options );
+
         OptionBuilder
                 .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" );
         OptionBuilder.withLongOpt( "dataset" );
@@ -72,10 +76,10 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         OptionBuilder.withLongOpt( "limit" );
         Option limitOpt = OptionBuilder.create( 'l' );
 
-        this.addOption( datasetSummary );
-        this.addOption( datasetTissueSummary );
-        this.addOption( diffExpSummary );
-        this.addOption( limitOpt );
+        options.addOption( datasetSummary );
+        options.addOption( datasetTissueSummary );
+        options.addOption( diffExpSummary );
+        options.addOption( limitOpt );
 
     }
 
@@ -91,23 +95,23 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
 
-        if ( this.hasOption( 'x' ) ) {
+        if ( commandLine.hasOption( 'x' ) ) {
             this.generateDiffExpressionSummary = true;
         }
 
-        if ( this.hasOption( 'd' ) ) {
+        if ( commandLine.hasOption( 'd' ) ) {
             this.generateDatasetSummary = true;
         }
 
-        if ( this.hasOption( 't' ) ) {
+        if ( commandLine.hasOption( 't' ) ) {
             this.generateTissueSummary = true;
         }
 
-        if ( this.hasOption( 'l' ) ) {
+        if ( commandLine.hasOption( 'l' ) ) {
             try {
-                this.limit = Integer.parseInt( this.getOptionValue( 'l' ) );
+                this.limit = Integer.parseInt( commandLine.getOptionValue( 'l' ) );
             } catch ( NumberFormatException nfe ) {
                 AbstractCLI.log.warn( "Unable to process limit parameter. Processing all available experiments." );
                 this.limit = 0;

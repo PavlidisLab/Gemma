@@ -14,7 +14,9 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -50,11 +52,11 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         @SuppressWarnings("static-access")
         Option databaseOption = Option.builder( "d" ).desc( "External database name (e.g. 'GWAS_Catalog', 'DGA' etc.)" ).hasArg()
                 .argName( "name" ).required().build();
-        this.addOption( databaseOption );
+        options.addOption( databaseOption );
 
     }
 
@@ -88,8 +90,8 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        this.externalDatabaseName = this.getOptionValue( 'd' );
+    protected void processOptions( CommandLine commandLine ) {
+        this.externalDatabaseName = commandLine.getOptionValue( 'd' );
     }
 
     private synchronized void loadServices() {

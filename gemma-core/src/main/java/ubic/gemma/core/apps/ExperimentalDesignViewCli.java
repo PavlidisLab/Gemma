@@ -1,5 +1,7 @@
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
@@ -30,11 +32,11 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
     }
 
     @Override
-    protected void processOptions() throws Exception {
+    protected void processOptions( CommandLine commandLine ) throws Exception {
 
     }
 

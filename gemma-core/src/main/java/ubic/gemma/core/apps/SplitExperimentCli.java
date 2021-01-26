@@ -21,8 +21,10 @@ package ubic.gemma.core.apps;
 
 import java.util.Collection;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -69,10 +71,10 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
-        super.addOption( Option.builder( FACTOR_OPTION ).hasArg().desc(
+        options.addOption( Option.builder( FACTOR_OPTION ).hasArg().desc(
                 "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" ).build() );
 
     }
@@ -105,13 +107,13 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( !this.hasOption( FACTOR_OPTION ) ) {
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( !commandLine.hasOption( FACTOR_OPTION ) ) {
             throw new IllegalArgumentException( "Please specify the factor" );
         }
 
-        String rawFactor = this.getOptionValue( FACTOR_OPTION );
+        String rawFactor = commandLine.getOptionValue( FACTOR_OPTION );
 
         try {
             this.factorId = Long.parseLong( rawFactor );

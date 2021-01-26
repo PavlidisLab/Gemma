@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -70,17 +72,17 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
                 .desc( "File prefix for saving the output (short name will be appended)" )
                 .longOpt( "outFilePrefix" ).build();
-        this.addOption( outputFileOption );
+        options.addOption( outputFileOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        outFileName = this.getOptionValue( 'o' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        outFileName = commandLine.getOptionValue( 'o' );
     }
 }

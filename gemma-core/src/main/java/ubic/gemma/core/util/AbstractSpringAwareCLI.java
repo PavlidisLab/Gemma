@@ -19,7 +19,9 @@
 package ubic.gemma.core.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -67,8 +69,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     @Override
-    protected void buildStandardOptions() {
-        super.buildStandardOptions();
+    protected void buildStandardOptions( Options options ) {
+        super.buildStandardOptions( options );
         options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
                 .desc( "User name for accessing the system (optional for some tools)" )
                 .required( requireLogin() )
@@ -92,18 +94,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * You must override this method to process any options you added.
+     * @param commandLine
      */
     @Override
-    protected void processStandardOptions() {
-        super.processStandardOptions();
-        this.createSpringContext();
-        if ( hasOption( USERNAME_OPTION ) ) {
-            this.username = getOptionValue( USERNAME_OPTION );
+    protected void processStandardOptions( CommandLine commandLine ) {
+        super.processStandardOptions( commandLine );
+        this.createSpringContext( commandLine );
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( USERNAME_OPTION );
         }
-        if ( hasOption( PASSWORD_OPTION ) ) {
-            this.password = getOptionValue( PASSWORD_OPTION );
+        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
+            this.password = commandLine.getOptionValue( PASSWORD_OPTION );
         }
-        this.authenticate();
+        this.authenticate( commandLine );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         this.auditEventService = this.getBean( AuditEventService.class );
     }
@@ -209,10 +212,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * check if using test or production contexts
+     * @param commandLine
      */
-    protected void createSpringContext() {
+    protected void createSpringContext( CommandLine commandLine ) {
 
-        ctx = SpringContextUtil.getApplicationContext( this.hasOption( "testing" ), false /* webapp */,
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
                 this.getAdditionalSpringConfigLocations() );
 
         /*
@@ -223,8 +227,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * check username and password.
+     * @param commandLine
      */
-    private void authenticate() {
+    private void authenticate( CommandLine commandLine ) {
 
         /*
          * Allow security settings (authorization etc) in a given context to be passed into spawned threads
@@ -232,9 +237,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
-        if ( this.hasOption( 'u' ) && this.hasOption( 'p' ) ) {
-            username = this.getOptionValue( 'u' );
-            password = this.getOptionValue( 'p' );
+        if ( commandLine.hasOption( 'u' ) && commandLine.hasOption( 'p' ) ) {
+            username = commandLine.getOptionValue( 'u' );
+            password = commandLine.getOptionValue( 'p' );
 
             if ( StringUtils.isBlank( username ) ) {
                 AbstractCLI.log.debug( "Username=" + username );

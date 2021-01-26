@@ -904,8 +904,9 @@ public class DataUpdater {
 
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( bmMap.containsKey( bm.getName() ) ) {
-                // this might not actually be an error - but just in case...
-                throw new IllegalStateException( "Two biomaterials from the same experiment with the same name " );
+                // this might not actually be an error (more than one bioassay per biomaterial is possible) - but just in case...
+                throw new IllegalStateException(
+                        "More than one biomaterial with the same name: '" + bm.getName() + "'\n" + bmMap.get( bm.getName() ) + "\n" + bm );
             }
 
             bmMap.put( bm.getName(), bm );
@@ -915,17 +916,18 @@ public class DataUpdater {
                 // e.g. GSM123455
                 String accession = bioAssay.getAccession().getAccession();
                 if ( bmMap.containsKey( accession ) ) {
-                    throw new IllegalStateException( "Two bioassays with the same accession" );
+                    throw new IllegalStateException( "Two bioassays with the same accession: " + accession );
                 }
                 bmMap.put( accession, bm );
             }
 
             // I think it will always be null, if it is from GEO anyway.
             if ( bm.getExternalAccession() != null ) {
-                if ( bmMap.containsKey( bm.getExternalAccession().getAccession() ) ) {
-                    throw new IllegalStateException( "Two biomaterials with the same accession" );
+                String accession = bm.getExternalAccession().getAccession();
+                if ( bmMap.containsKey( accession ) ) {
+                    throw new IllegalStateException( "Two biomaterials with the same accession: " + accession );
                 }
-                bmMap.put( bm.getExternalAccession().getAccession(), bm );
+                bmMap.put( accession, bm );
             }
 
         }

@@ -19,6 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
@@ -72,13 +75,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addOption( AffyDataFromCelCli.APT_FILE_OPT, null,
-                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
-                        + "ensure you used the right official CDF/MPS configuration",
-                "path" );
-        super.addForceOption();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null ).desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
+                + "ensure you used the right official CDF/MPS configuration" ).argName( "path" ).hasArg().build() );
+        super.addForceOption( options );
 
     }
 
@@ -181,13 +182,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
-            this.aptFile = this.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
+            this.aptFile = commandLine.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
         }
-        if ( this.hasOption( "celchip" ) ) {
-            this.celchip = this.getOptionValue( "celchip" );
+        if ( commandLine.hasOption( "celchip" ) ) {
+            this.celchip = commandLine.getOptionValue( "celchip" );
         }
     }
 

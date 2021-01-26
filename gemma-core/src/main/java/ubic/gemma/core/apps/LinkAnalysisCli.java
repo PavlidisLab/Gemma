@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -197,133 +199,133 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
-        super.addDateOption();
+        super.addDateOption( options );
 
         Option nodeDegreeUpdate = Option.builder( "n" ).desc( "Update the node degree for taxon given by -t option. All other options ignored." )
                 .build();
-        this.addOption( nodeDegreeUpdate );
+        options.addOption( nodeDegreeUpdate );
 
-        super.addOption( "init", "Initialize links for taxon given by -t option, based on old data. All other options ignored." );
+        options.addOption( "init", "Initialize links for taxon given by -t option, based on old data. All other options ignored." );
 
         Option cdfCut = Option.builder( "c" ).hasArg().argName( "Tolerance Threshold" )
                 .desc( "The tolerance threshold for coefficient value" ).longOpt( "cdfcut" )
                 .build();
-        this.addOption( cdfCut );
+        options.addOption( cdfCut );
 
         Option tooSmallToKeep = Option.builder( "k" ).hasArg().argName( "Cache Threshold" )
                 .desc( "The threshold for coefficient cache" ).longOpt( "cachecut" ).build();
-        this.addOption( tooSmallToKeep );
+        options.addOption( tooSmallToKeep );
 
         Option fwe = Option.builder( "w" ).hasArg().argName( "Family Wise Error Rate" )
                 .desc( "The setting for family wise error control" ).longOpt( "fwe" ).build();
-        this.addOption( fwe );
+        options.addOption( fwe );
 
-        this.buildFilterConfigOptions();
+        this.buildFilterConfigOptions( options );
 
         Option absoluteValue = Option.builder( "a" )
                 .desc( "Use the absolute value of the correlation (rarely used)" ).longOpt( "abs" )
                 .build();
-        this.addOption( absoluteValue );
+        options.addOption( absoluteValue );
 
         Option noNegCorr = Option.builder( "nonegcorr" ).desc( "Omit negative correlated probes in link selection" )
                 .build();
-        this.addOption( noNegCorr );
+        options.addOption( noNegCorr );
 
         Option useDB = Option.builder( "d" ).desc( "Don't save the results in the database (i.e., testing)" )
                 .longOpt( "nodb" ).build();
-        this.addOption( useDB );
+        options.addOption( useDB );
 
         Option fileOpt = Option.builder( "dataFile" ).hasArg().argName( "Expression data file" ).desc(
                 "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
                 .build();
-        this.addOption( fileOpt );
+        options.addOption( fileOpt );
 
         // supply taxon on command line
         Option taxonNameOption = Option.builder( "t" ).hasArg().desc( "Taxon species name e.g. 'mouse'" )
                 .build();
-        this.addOption( taxonNameOption );
+        options.addOption( taxonNameOption );
 
         Option arrayOpt = Option.builder( "array" ).hasArg().argName( "Array Design" ).desc(
                 "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
                 .build();
-        this.addOption( arrayOpt );
+        options.addOption( arrayOpt );
 
         Option textOutOpt = Option.builder( "text" ).desc(
                 "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
                         + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
                 .build();
-        this.addOption( textOutOpt );
+        options.addOption( textOutOpt );
 
         Option metricOption = Option.builder( "metric" ).hasArg().argName( "metric" )
                 .desc( "Similarity metric {pearson|spearman}, default is pearson" ).build();
-        this.addOption( metricOption );
+        options.addOption( metricOption );
 
         Option imagesOption = Option.builder( "noimages" ).desc( "Suppress the generation of correlation matrix images" )
                 .build();
-        this.addOption( imagesOption );
+        options.addOption( imagesOption );
 
         Option normalizationOption = Option.builder( "normalizemethod" ).hasArg().argName( "method" ).desc(
                 "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
                 .build();
-        this.addOption( normalizationOption );
+        options.addOption( normalizationOption );
 
         Option logTransformOption = Option.builder( "logtransform" )
                 .desc( "Log-transform the data prior to analysis, if it is not already transformed." )
                 .build();
-        this.addOption( logTransformOption );
+        options.addOption( logTransformOption );
 
         Option subsetOption = Option.builder( "subset" ).hasArg().argName( "Number of coexpression links to print out" )
                 .desc(
                         "Only a random subset of total coexpression links will be written to output with approximate "
                                 + "size given as the argument; recommended if thresholds are loose to avoid memory problems or gigantic files." )
                 .build();
-        this.addOption( subsetOption );
+        options.addOption( subsetOption );
 
         Option chooseCutOption = Option.builder( "choosecut" ).hasArg().argName( "Singular correlation threshold" ).desc(
                 "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
                 .build();
-        this.addOption( chooseCutOption );
+        options.addOption( chooseCutOption );
 
         // finer-grained control is possible, of course.
         Option skipQC = Option.builder( "noqc" )
                 .desc( "Skip strict QC for outliers, batch effects and correlation distribution" )
                 .build();
-        this.addOption( skipQC );
+        options.addOption( skipQC );
 
         Option deleteOption = Option.builder( "delete" ).desc(
                 "Delete analyses for selected experiments, instead of doing analysis; supersedes all other options" )
                 .build();
-        this.addOption( deleteOption );
+        options.addOption( deleteOption );
 
-        this.addForceOption();
-        this.addAutoOption();
+        this.addForceOption( options );
+        this.addAutoOption( options );
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
         this.autoSeekEventType = LinkAnalysisEvent.class;
-        super.processOptions();
+        super.processOptions( commandLine );
 
-        if ( this.hasOption( "delete" ) ) {
+        if ( commandLine.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
             this.force = true;
             return;
-        } else if ( this.hasOption( "init" ) ) {
+        } else if ( commandLine.hasOption( "init" ) ) {
             initializeFromOldData = true;
-            if ( this.hasOption( 't' ) ) {
-                this.analysisTaxon = this.getOptionValue( 't' );
+            if ( commandLine.hasOption( 't' ) ) {
+                this.analysisTaxon = commandLine.getOptionValue( 't' );
             } else {
                 throw new RuntimeException( "Must provide 'taxon' option when initializing from old data" );
             }
             // all other options ignored.
             return;
-        } else if ( this.hasOption( 'n' ) ) {
+        } else if ( commandLine.hasOption( 'n' ) ) {
             this.updateNodeDegree = true;
-            if ( this.hasOption( 't' ) ) {
-                this.analysisTaxon = this.getOptionValue( 't' );
+            if ( commandLine.hasOption( 't' ) ) {
+                this.analysisTaxon = commandLine.getOptionValue( 't' );
             } else {
                 throw new RuntimeException( "Must provide 'taxon' option when updating node degree" );
             }
@@ -331,86 +333,86 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             return;
         }
 
-        if ( this.hasOption( "dataFile" ) ) {
+        if ( commandLine.hasOption( "dataFile" ) ) {
             if ( this.expressionExperiments.size() > 0 ) {
                 throw new RuntimeException( "The 'dataFile' option is incompatible with other data set selection options" );
             }
 
-            if ( this.hasOption( "array" ) ) {
-                this.linkAnalysisConfig.setArrayName( this.getOptionValue( "array" ) );
+            if ( commandLine.hasOption( "array" ) ) {
+                this.linkAnalysisConfig.setArrayName( commandLine.getOptionValue( "array" ) );
             } else {
                 throw new RuntimeException( "Must provide 'array' option if you  use 'dataFile" );
             }
 
-            if ( this.hasOption( 't' ) ) {
-                this.analysisTaxon = this.getOptionValue( 't' );
+            if ( commandLine.hasOption( 't' ) ) {
+                this.analysisTaxon = commandLine.getOptionValue( 't' );
             } else {
                 throw new RuntimeException( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
             }
 
-            this.dataFileName = this.getOptionValue( "dataFile" );
+            this.dataFileName = commandLine.getOptionValue( "dataFile" );
 
             this.linkAnalysisConfig.setUseDb( false );
         }
 
-        if ( this.hasOption( "logTransform" ) ) {
+        if ( commandLine.hasOption( "logTransform" ) ) {
             this.filterConfig.setLogTransform( true );
         }
 
-        if ( this.hasOption( 'c' ) ) {
-            this.linkAnalysisConfig.setCdfCut( Double.parseDouble( this.getOptionValue( 'c' ) ) );
+        if ( commandLine.hasOption( 'c' ) ) {
+            this.linkAnalysisConfig.setCdfCut( Double.parseDouble( commandLine.getOptionValue( 'c' ) ) );
         }
-        if ( this.hasOption( 'k' ) ) {
-            this.linkAnalysisConfig.setCorrelationCacheThreshold( Double.parseDouble( this.getOptionValue( 'k' ) ) );
+        if ( commandLine.hasOption( 'k' ) ) {
+            this.linkAnalysisConfig.setCorrelationCacheThreshold( Double.parseDouble( commandLine.getOptionValue( 'k' ) ) );
         }
-        if ( this.hasOption( 'w' ) ) {
-            this.linkAnalysisConfig.setFwe( Double.parseDouble( this.getOptionValue( 'w' ) ) );
+        if ( commandLine.hasOption( 'w' ) ) {
+            this.linkAnalysisConfig.setFwe( Double.parseDouble( commandLine.getOptionValue( 'w' ) ) );
         }
 
-        if ( this.hasOption( "noqc" ) ) {
+        if ( commandLine.hasOption( "noqc" ) ) {
             this.linkAnalysisConfig.setCheckCorrelationDistribution( false );
             this.linkAnalysisConfig.setCheckForBatchEffect( false );
             this.linkAnalysisConfig.setCheckForOutliers( false );
         }
 
-        this.getFilterConfigOptions();
+        this.getFilterConfigOptions( commandLine );
 
-        if ( this.hasOption( 'a' ) ) {
+        if ( commandLine.hasOption( 'a' ) ) {
             this.linkAnalysisConfig.setAbsoluteValue( true );
         }
-        if ( this.hasOption( 'd' ) ) {
+        if ( commandLine.hasOption( 'd' ) ) {
             this.linkAnalysisConfig.setUseDb( false );
         }
-        if ( this.hasOption( "metric" ) ) {
-            this.linkAnalysisConfig.setMetric( this.getOptionValue( "metric" ) );
+        if ( commandLine.hasOption( "metric" ) ) {
+            this.linkAnalysisConfig.setMetric( commandLine.getOptionValue( "metric" ) );
         }
-        if ( this.hasOption( "text" ) ) {
+        if ( commandLine.hasOption( "text" ) ) {
             this.linkAnalysisConfig.setTextOut( true );
         }
 
-        if ( this.hasOption( "noimages" ) ) {
+        if ( commandLine.hasOption( "noimages" ) ) {
             linkAnalysisConfig.setMakeSampleCorrMatImages( false );
         }
-        if ( this.hasOption( "nonegcorr" ) ) {
+        if ( commandLine.hasOption( "nonegcorr" ) ) {
             this.linkAnalysisConfig.setOmitNegLinks( true );
         }
 
-        if ( this.hasOption( "normalizemethod" ) ) {
-            String optionValue = this.getOptionValue( "normalizemethod" );
+        if ( commandLine.hasOption( "normalizemethod" ) ) {
+            String optionValue = commandLine.getOptionValue( "normalizemethod" );
 
             NormalizationMethod value = NormalizationMethod.valueOf( optionValue );
             this.linkAnalysisConfig.setNormalizationMethod( value );
         }
 
-        if ( this.hasOption( "subset" ) ) {
-            String subsetSize = this.getOptionValue( "subset" );
+        if ( commandLine.hasOption( "subset" ) ) {
+            String subsetSize = commandLine.getOptionValue( "subset" );
             AbstractCLI.log.info( "Representative subset of links requested for output" );
             this.linkAnalysisConfig.setSubsetSize( Double.parseDouble( subsetSize ) );
             this.linkAnalysisConfig.setSubset( true );
         }
 
-        if ( this.hasOption( "choosecut" ) ) {
-            String singularThreshold = this.getOptionValue( "choosecut" );
+        if ( commandLine.hasOption( "choosecut" ) ) {
+            String singularThreshold = commandLine.getOptionValue( "choosecut" );
             if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" ) || singularThreshold
                     .equals( "none" ) ) {
                 AbstractCLI.log.info( "Singular correlation threshold chosen" );
@@ -421,52 +423,52 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
         }
 
-        if ( this.hasOption( "probeDegreeLim" ) ) {
-            this.linkAnalysisConfig.setProbeDegreeThreshold( this.getIntegerOptionValue( "probeDegreeLim" ) );
+        if ( commandLine.hasOption( "probeDegreeLim" ) ) {
+            this.linkAnalysisConfig.setProbeDegreeThreshold( this.getIntegerOptionValue( commandLine, "probeDegreeLim" ) );
         }
 
     }
 
     @SuppressWarnings("static-access")
-    private void buildFilterConfigOptions() {
+    private void buildFilterConfigOptions( Options options ) {
         Option minPresentFraction = Option.builder( "m" ).hasArg().argName( "Missing Value Threshold" ).desc(
                 "Fraction of data points that must be present in a profile to be retained , default="
                         + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
                 .longOpt( "missingcut" ).build();
-        this.addOption( minPresentFraction );
+        options.addOption( minPresentFraction );
 
         Option lowExpressionCut = Option.builder( "l" ).hasArg().argName( "Expression Threshold" ).desc(
                 "Fraction of expression vectors to reject based on low values, default="
                         + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
                 .longOpt( "lowcut" ).build();
-        this.addOption( lowExpressionCut );
+        options.addOption( lowExpressionCut );
 
         Option lowVarianceCut = Option.builder( "lv" ).hasArg().argName( "Variance Threshold" ).desc(
                 "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
                         + FilterConfig.DEFAULT_LOWVARIANCECUT )
                 .longOpt( "lowvarcut" ).build();
-        this.addOption( lowVarianceCut );
+        options.addOption( lowVarianceCut );
 
         Option distinctValueCut = Option.builder( "dv" ).hasArg().argName( "Fraction distinct values threshold" )
                 .desc( "Fraction of values which must be distinct (NaN counts as one value), default="
                         + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION )
                 .longOpt( "distinctValCut" ).build();
-        this.addOption( distinctValueCut );
+        options.addOption( distinctValueCut );
 
     }
 
-    private void getFilterConfigOptions() {
-        if ( this.hasOption( 'm' ) ) {
-            filterConfig.setMinPresentFraction( Double.parseDouble( this.getOptionValue( 'm' ) ) );
+    private void getFilterConfigOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'm' ) ) {
+            filterConfig.setMinPresentFraction( Double.parseDouble( commandLine.getOptionValue( 'm' ) ) );
         }
-        if ( this.hasOption( 'l' ) ) {
-            filterConfig.setLowExpressionCut( Double.parseDouble( this.getOptionValue( 'l' ) ) );
+        if ( commandLine.hasOption( 'l' ) ) {
+            filterConfig.setLowExpressionCut( Double.parseDouble( commandLine.getOptionValue( 'l' ) ) );
         }
-        if ( this.hasOption( "lv" ) ) {
-            filterConfig.setLowVarianceCut( Double.parseDouble( this.getOptionValue( "lv" ) ) );
+        if ( commandLine.hasOption( "lv" ) ) {
+            filterConfig.setLowVarianceCut( Double.parseDouble( commandLine.getOptionValue( "lv" ) ) );
         }
-        if ( this.hasOption( "dv" ) ) {
-            filterConfig.setLowDistinctValueCut( Double.parseDouble( this.getOptionValue( "dv" ) ) );
+        if ( commandLine.hasOption( "dv" ) ) {
+            filterConfig.setLowDistinctValueCut( Double.parseDouble( commandLine.getOptionValue( "dv" ) ) );
         }
     }
 

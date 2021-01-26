@@ -470,6 +470,37 @@ public class GeoConverterImpl implements GeoConverter {
 
         return buf.toString();
     }
+    
+    /**
+     * Form title (will be experiment name) and ensure is valid length
+     * 
+     * @param  title
+     * @param  appendix can be null; e.g. species or platform name added when we are splitting up a record.
+     * @return          title
+     */
+    protected String makeTitle( String title, String appendix ) {
+
+        if ( StringUtils.isBlank( title ) ) throw new IllegalArgumentException();
+
+        /* MySQL field width we're using. Note StringUtils uses < not <= in deciding to abbreviate() */
+        int maxWidth = 255;
+
+        if ( StringUtils.isNotBlank( appendix ) ) {
+            int aplen = appendix.length();
+            int titlelen = title.length();
+            String separator = " - ";
+            int seplen = separator.length();
+
+            if ( aplen + titlelen + seplen > maxWidth + 1 ) {
+                return StringUtils.abbreviate( title, maxWidth - aplen - seplen ) + separator + appendix;
+            }
+            return title + separator + appendix;
+
+        } else if ( title.length() <= maxWidth ) {
+            return title;
+        }
+        return StringUtils.abbreviate( title, maxWidth );
+    }
 
     private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet,
             FactorValue factorValue ) {
@@ -615,7 +646,7 @@ public class GeoConverterImpl implements GeoConverter {
         platformSpecific.setReplicates( series.getReplicates() );
         platformSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
         platformSpecific.setSummaries( series.getSummaries() );
-        platformSpecific.setTitle( series.getTitle() + " - " + platform.getGeoAccession() );
+        platformSpecific.setTitle( makeTitle( series.getTitle(), platform.getGeoAccession() ) );
         platformSpecific.setWebLinks( series.getWebLinks() );
         platformSpecific.setValues( series.getValues() );
         platformSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
@@ -1885,7 +1916,8 @@ public class GeoConverterImpl implements GeoConverter {
                     expExp.getDescription() + "At time of import, last updated (by provider) on: " + series.getLastUpdateDate() + "\n" );
         }
 
-        expExp.setName( series.getTitle() );
+        // note that if this was part of a split, makeTitle will already have been called, but that's okay
+        expExp.setName( makeTitle( series.getTitle(), null ) );
         expExp.setShortName( series.getGeoAccession() );
 
         this.convertContacts( series, expExp );
@@ -2082,7 +2114,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setReplicates( series.getReplicates() );
         speciesSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
         speciesSpecific.setSummaries( series.getSummaries() );
-        speciesSpecific.setTitle( series.getTitle() + " - " + organism );
+        speciesSpecific.setTitle( makeTitle( series.getTitle(), organism ) );
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues() );
         speciesSpecific.getSeriesTypes().addAll(
@@ -2130,7 +2162,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setReplicates( series.getReplicates() );
         speciesSpecific.setSampleCorrespondence( sampleCorrespondence );
         speciesSpecific.setSummaries( series.getSummaries() );
-        speciesSpecific.setTitle( series.getTitle() + " - " + organism );
+        speciesSpecific.setTitle( makeTitle( series.getTitle(), organism ) );
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues( speciesSpecific.getSamples() ) );
         speciesSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );

@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -60,8 +62,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option blatResultOption = Option.builder( "b" ).hasArg().argName( "PSL file" ).desc(
                 "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
@@ -75,7 +77,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .longOpt( "scoreThresh" )
                 .build();
 
-        this.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
+        options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
 
         Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
                 "Taxon common name (e.g., human); if platform name not given (analysis will be "
@@ -83,36 +85,36 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                         + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .build();
 
-        this.addOption( taxonOption );
-        this.addThreadsOption();
-        this.addOption( blatScoreThresholdOption );
-        this.addOption( blatResultOption );
+        options.addOption( taxonOption );
+        this.addThreadsOption( options );
+        options.addOption( blatScoreThresholdOption );
+        options.addOption( blatResultOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
-        if ( this.hasOption( "sensitive" ) ) {
+        if ( commandLine.hasOption( "sensitive" ) ) {
             this.sensitive = true;
         }
 
-        if ( this.hasOption( 'b' ) ) {
-            this.blatResultFile = this.getOptionValue( 'b' );
+        if ( commandLine.hasOption( 'b' ) ) {
+            this.blatResultFile = commandLine.getOptionValue( 'b' );
         }
 
-        if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( "threads" );
+        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
         }
 
-        if ( this.hasOption( 's' ) ) {
-            this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
+        if ( commandLine.hasOption( 's' ) ) {
+            this.blatScoreThreshold = this.getDoubleOptionValue( commandLine, 's' );
         }
 
         TaxonService taxonService = this.getBean( TaxonService.class );
 
-        if ( this.hasOption( 't' ) ) {
-            String taxonName = this.getOptionValue( 't' );
+        if ( commandLine.hasOption( 't' ) ) {
+            String taxonName = commandLine.getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );

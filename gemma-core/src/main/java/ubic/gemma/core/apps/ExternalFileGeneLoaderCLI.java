@@ -19,7 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
@@ -43,17 +45,18 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 
     /**
      * This method is called at the end of processCommandLine
+     * @param commandLine
      */
     @Override
-    protected void processOptions() {
-        if ( this.hasOption( 'f' ) ) {
-            directGeneInputFileName = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'f' ) ) {
+            directGeneInputFileName = commandLine.getOptionValue( 'f' );
             if ( directGeneInputFileName == null ) {
                 throw new IllegalArgumentException( "No gene input file provided " );
             }
         }
-        if ( this.hasOption( 't' ) ) {
-            this.taxonName = this.getOptionValue( 't' );
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxonName = commandLine.getOptionValue( 't' );
             if ( taxonName == null ) {
                 throw new IllegalArgumentException( "No taxon name supplied " );
             }
@@ -66,19 +69,22 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
         return "loadGenesFromFile";
     }
 
+    @Override
+    protected boolean requireLogin() {
+        return true;
+    }
+
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option directGene = Option.builder( "f" )
                 .desc( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
                 .hasArg().argName( "file" ).build();
-        this.addOption( directGene );
+        options.addOption( directGene );
 
         Option taxonNameOption = Option.builder( "t" ).hasArg()
                 .desc( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).build();
-        this.addOption( taxonNameOption );
-
-        this.requireLogin();
+        options.addOption( taxonNameOption );
     }
 
     @Override

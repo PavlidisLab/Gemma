@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -51,7 +53,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
         Option expOption = Option.builder( "e" ).required().hasArg().argName( "Expression experiment name" )
                 .desc(
@@ -59,11 +61,11 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
                                 + "and if this option is omitted, the tool will be applied to all expression experiments." )
                 .longOpt( "experiment" ).build();
 
-        this.addOption( expOption );
+        options.addOption( expOption );
 
         Option designFileOption = Option.builder( "f" ).required().hasArg().argName( "Design file" )
                 .desc( "Experimental design description file" ).longOpt( "designFile" ).build();
-        this.addOption( designFileOption );
+        options.addOption( designFileOption );
     }
 
     @Override
@@ -92,14 +94,14 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        String shortName = this.getOptionValue( 'e' );
+    protected void processOptions( CommandLine commandLine ) {
+        String shortName = commandLine.getOptionValue( 'e' );
         this.expressionExperiment = this.locateExpressionExperiment( shortName );
         if ( this.expressionExperiment == null ) {
             throw new IllegalArgumentException( shortName + " not found" );
         }
 
-        File f = new File( this.getOptionValue( 'f' ) );
+        File f = new File( commandLine.getOptionValue( 'f' ) );
         if ( !f.canRead() ) {
             throw new IllegalArgumentException( "Cannot read from " + f );
         }
@@ -114,8 +116,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
     /**
      * @param shortName short name of the experiment to find.
-     * @return experiment with the given short name, if it exists. Bails otherwise with {@link
-     * ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
+     * @return experiment with the given short name, if it exists.
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     protected ExpressionExperiment locateExpressionExperiment( String shortName ) {

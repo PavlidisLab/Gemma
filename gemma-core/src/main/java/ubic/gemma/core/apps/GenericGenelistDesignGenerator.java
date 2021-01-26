@@ -18,6 +18,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
@@ -82,10 +85,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.addOption( "t", "taxon", "Taxon of the genes", "taxon" );
-        super.addOption( "ncbiids", "use NCBI numeric IDs as the identifiers instead of gene symbols" );
-        super.addOption( "ensembl", "use Ensembl identifiers instead of gene symbols" );
+    protected void buildOptions( Options options ) {
+        options.addOption( Option.builder( "t" ).longOpt( "taxon" ).desc( "Taxon of the genes" ).argName( "taxon" ).hasArg().build() );
+        options.addOption( "ncbiids", "use NCBI numeric IDs as the identifiers instead of gene symbols" );
+        options.addOption( "ensembl", "use Ensembl identifiers instead of gene symbols" );
     }
 
     @Override
@@ -353,7 +356,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
+
         geneService = this.getBean( GeneService.class );
         arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
         TaxonService taxonService = this.getBean( TaxonService.class );
@@ -364,12 +368,12 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         externalDatabaseService = this.getBean( ExternalDatabaseService.class );
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
 
-        if ( this.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( taxonService );
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxon = this.setTaxonByName( commandLine, taxonService );
         }
-        if ( this.hasOption( "ncbiids" ) ) {
+        if ( commandLine.hasOption( "ncbiids" ) ) {
             this.useNCBIIds = true;
-        } else if ( this.hasOption( "ensembl" ) ) {
+        } else if ( commandLine.hasOption( "ensembl" ) ) {
             this.useEnsemblIds = true;
         }
 

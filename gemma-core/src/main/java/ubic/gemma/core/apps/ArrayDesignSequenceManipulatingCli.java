@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,31 +62,32 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
                 .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
 
-        this.addOption( arrayDesignOption );
+        options.addOption( arrayDesignOption );
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "Array Design list file" )
                 .desc( "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
                 .longOpt( "adListFile" ).build();
-        this.addOption( eeFileListOption );
+        options.addOption( eeFileListOption );
 
-        this.addDateOption();
-        this.addAutoOption();
+        this.addDateOption( options );
+        this.addAutoOption( options );
 
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
+
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
         arrayDesignService = this.getBean( ArrayDesignService.class );
 
-        if ( this.hasOption( 'a' ) ) {
-            this.arraysFromCliList();
-        } else if ( this.hasOption( 'f' ) ) {
-            String experimentListFile = this.getOptionValue( 'f' );
+        if ( commandLine.hasOption( 'a' ) ) {
+            this.arraysFromCliList( commandLine );
+        } else if ( commandLine.hasOption( 'f' ) ) {
+            String experimentListFile = commandLine.getOptionValue( 'f' );
             AbstractCLI.log.info( "Reading arrayDesigns list from " + experimentListFile );
             try {
                 this.arrayDesignsToProcess = this.readListFile( experimentListFile );
@@ -93,20 +96,19 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             }
         }
 
-        if ( this.hasOption( "mdate" ) ) {
-            super.mDate = this.getOptionValue( "mdate" );
-            if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+        if ( commandLine.hasOption( "mdate" ) ) {
+            super.mDate = commandLine.getOptionValue( "mdate" );
+            if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
                 throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
 
-        if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+        if ( commandLine.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
             this.autoSeek = true;
-            if ( this.hasOption( "mdate" ) ) {
+            if ( commandLine.hasOption( "mdate" ) ) {
                 throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
-
     }
 
     protected ArrayDesignReportService getArrayDesignReportService() {
@@ -138,7 +140,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
-                                 Class<? extends ArrayDesignAnalysisEvent> cls ) {
+            Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
             AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
             // not really an error, but nice to get notification.
@@ -146,9 +148,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             addErrorObject( design, "Skipped because it is not a microarray platform." );
             return false;
         }
-
-        if ( this.hasOption( "force" ) )
-            return true;
 
         if ( this.isSubsumedOrMerged( design ) ) {
             AbstractCLI.log.warn( design
@@ -185,6 +184,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
+     *
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
      *         analysis was run before skipIfLastRunLaterThan. false otherwise.
@@ -192,7 +192,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-                       Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( autoSeek ) {
             return this.needToAutoRun( arrayDesign, eventClass );
@@ -219,8 +219,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         return arrayDesignService.thawLite( arrayDesign );
     }
 
-    private void arraysFromCliList() {
-        String arrayShortNames = this.getOptionValue( 'a' );
+    private void arraysFromCliList( CommandLine commandLine ) {
+        String arrayShortNames = commandLine.getOptionValue( 'a' );
         String[] shortNames = arrayShortNames.split( "," );
 
         for ( String shortName : shortNames ) {
@@ -242,7 +242,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @param eventClass if null, then all events are added.
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
-                                        Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditTrailService.getEvents( arrayDesign ) ) {

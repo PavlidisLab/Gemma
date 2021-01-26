@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.core.util.AbstractCLI;
@@ -48,18 +50,18 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option fileOption = Option.builder( "f" ).hasArg().argName( ".out file" )
                 .desc( "RepeatScan file to use as input" ).longOpt( "file" ).build();
-        this.addOption( fileOption );
+        options.addOption( fileOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'f' ) ) {
-            this.inputFileName = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.inputFileName = commandLine.getOptionValue( 'f' );
         }
     }
 

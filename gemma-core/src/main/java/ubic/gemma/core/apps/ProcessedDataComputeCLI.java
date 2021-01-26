@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService;
@@ -51,42 +53,41 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
-        super.buildOptions();
+        super.buildOptions( options );
 
-        super.addForceOption();
-        this.addDateOption();
+        super.addForceOption( options );
+        this.addDateOption( options );
 
         Option outputFileOption = Option.builder( "b" )
                 .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
                 .build();
-        this.addOption( "diagupdate",
-                "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
-        this.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
+        options.addOption( "diagupdate", "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
+        options.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
 
-        this.addOption( outputFileOption );
+        options.addOption( outputFileOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         preprocessorService = this.getBean( PreprocessorService.class );
         expressionExperimentService = this.getBean( ExpressionExperimentService.class );
         proccessedVectorService = this.getBean( ProcessedExpressionDataVectorCreateHelperService.class );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
 
-        if ( this.hasOption( "diagupdate" ) ) {
+        if ( commandLine.hasOption( "diagupdate" ) ) {
             this.updateDiagnostics = true;
         }
 
-        if ( this.hasOption( "rankupdate" ) ) {
+        if ( commandLine.hasOption( "rankupdate" ) ) {
 
             this.updateRanks = true;
         }
 
-        if ( this.hasOption( 'b' ) ) {
+        if ( commandLine.hasOption( 'b' ) ) {
             this.batchCorrect = true;
         }
     }

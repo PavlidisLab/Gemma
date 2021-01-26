@@ -19,7 +19,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
@@ -76,36 +78,36 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" ).hasArg().argName( "Input file" )
                 .desc( "Optional path to file with list of experiment accessions to load" )
                 .longOpt( "file" ).build();
 
-        this.addOption( fileOption );
+        options.addOption( fileOption );
 
         Option accessionOption = Option.builder( "e" ).hasArg().argName( "Accession(s)" )
                 .desc( "Optional comma-delimited list of accessions (GSE or GDS or GPL) to load" )
                 .longOpt( "acc" ).build();
-        this.addOption( accessionOption );
+        options.addOption( accessionOption );
 
         Option platformOnlyOption = Option.builder( "y" ).argName( "Platforms only" ).desc(
                 "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .longOpt( "platforms" ).build();
-        this.addOption( platformOnlyOption );
+        options.addOption( platformOnlyOption );
 
         Option noBioAssayMatching = Option.builder( "n" ).desc( "Do not try to match samples across platforms" )
                 .longOpt( "nomatch" ).build();
 
-        this.addOption( noBioAssayMatching );
+        options.addOption( noBioAssayMatching );
 
         Option splitByPlatformOption = Option.builder( "splitByPlatform" )
                 .desc( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
                 .build();
-        this.addOption( splitByPlatformOption );
+        options.addOption( splitByPlatformOption );
 
         Option forceOption = Option.builder( "force" ).desc( "Reload data set if it already exists in system" )
                 .longOpt( "force" ).build();
-        this.addOption( forceOption );
+        options.addOption( forceOption );
 
         // Option arrayDesign = Option.builder().hasArg().argName( "array design name" )
         // .desc( "Specify the name or short name of the platform the experiment uses (AE only)" )
@@ -113,12 +115,12 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
         // addOption( arrayDesign );
 
-        this.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
+        options.addOption( Option.builder( "nopost" ).desc( "Suppress postprocessing steps" ).build() );
 
         /*
          * add 'allowsub/super' series option;
          */
-        this.addOption( Option.builder( "allowsuper" ).desc( "Allow sub/super series to be loaded" ).build() );
+        options.addOption( Option.builder( "allowsuper" ).desc( "Allow sub/super series to be loaded" ).build() );
     }
 
     @Override
@@ -186,35 +188,35 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        if ( this.hasOption( 'f' ) ) {
-            accessionFile = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'f' ) ) {
+            accessionFile = commandLine.getOptionValue( 'f' );
         }
 
-        if ( this.hasOption( 'e' ) ) {
-            accessions = this.getOptionValue( 'e' );
+        if ( commandLine.hasOption( 'e' ) ) {
+            accessions = commandLine.getOptionValue( 'e' );
         }
 
-        if ( this.hasOption( 'y' ) ) {
+        if ( commandLine.hasOption( 'y' ) ) {
             platformOnly = true;
         }
 
-        if ( this.hasOption( "force" ) ) {
+        if ( commandLine.hasOption( "force" ) ) {
             force = true;
         }
 
-        this.allowSubSeriesLoad = this.hasOption( "allowsuper" );
-        this.allowSuperSeriesLoad = this.hasOption( "allowsuper" );
+        this.allowSubSeriesLoad = commandLine.hasOption( "allowsuper" );
+        this.allowSuperSeriesLoad = commandLine.hasOption( "allowsuper" );
 
-        if ( this.hasOption( "splitByPlatform" ) ) {
+        if ( commandLine.hasOption( "splitByPlatform" ) ) {
             this.splitByPlatform = true;
             this.doMatching = false; // defensive
         } else {
             this.splitByPlatform = false;
-            this.doMatching = !this.hasOption( 'n' );
+            this.doMatching = !commandLine.hasOption( 'n' );
         }
 
-        this.suppressPostProcessing = this.hasOption( "nopost" );
+        this.suppressPostProcessing = commandLine.hasOption( "nopost" );
 
         this.eeService = this.getBean( ExpressionExperimentService.class );
         this.preprocessorService = this.getBean( PreprocessorService.class );

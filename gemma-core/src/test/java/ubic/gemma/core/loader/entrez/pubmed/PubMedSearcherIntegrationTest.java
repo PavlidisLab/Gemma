@@ -36,7 +36,7 @@ public class PubMedSearcherIntegrationTest {
     private final PubMedSearcher p = new PubMedSearcher();
 
     /**
-     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
+     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(String[])}.
      */
     @Test
     public final void testMain() {

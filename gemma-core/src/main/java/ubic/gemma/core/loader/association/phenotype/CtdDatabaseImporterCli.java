@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
@@ -49,7 +51,8 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
+
     }
 
     @Override
@@ -58,7 +61,7 @@ public class CtdDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         // No-op
 
     }

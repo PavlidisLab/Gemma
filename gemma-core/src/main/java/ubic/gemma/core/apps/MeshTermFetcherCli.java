@@ -18,8 +18,10 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.util.AbstractCLI;
@@ -57,12 +59,12 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "Id file" )
                 .withDescription( "List of pubmed ids" ).withLongOpt( "file" ).create( 'f' );
-        this.addOption( fileOption );
+        options.addOption( fileOption );
 
-        this.addOption( OptionBuilder.withDescription( "Use major subjects only" ).create( 'm' ) );
+        options.addOption( OptionBuilder.withDescription( "Use major subjects only" ).create( 'm' ) );
 
     }
 
@@ -89,11 +91,11 @@ public class MeshTermFetcherCli extends AbstractCLI {
     }
 
     @Override
-    protected void processOptions() {
-        if ( this.hasOption( 'f' ) ) {
-            this.file = this.getOptionValue( 'f' );
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.file = commandLine.getOptionValue( 'f' );
         }
-        if ( this.hasOption( 'm' ) ) {
+        if ( commandLine.hasOption( 'm' ) ) {
             this.majorTopicsOnly = true;
         }
     }

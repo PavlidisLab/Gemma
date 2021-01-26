@@ -18,9 +18,10 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -66,21 +67,21 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     @Override
     @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
                 "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
 
-        this.addOption( arrayDesignOption );
-        this.addForceOption();
+        options.addOption( arrayDesignOption );
+        this.addForceOption( options );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'a' ) ) {
+            this.arrayDesignName = commandLine.getOptionValue( 'a' );
         }
         arrayDesignService = this.getBean( ArrayDesignService.class );
     }

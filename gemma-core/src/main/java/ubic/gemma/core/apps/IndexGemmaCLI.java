@@ -19,7 +19,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -54,32 +56,32 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         Option geneOption = Option.builder( "g" ).desc( "Index genes" ).longOpt( "genes" ).build();
-        this.addOption( geneOption );
+        options.addOption( geneOption );
 
         Option eeOption = Option.builder( "g" ).desc( "Index Expression Experiments" )
                 .longOpt( "ExpressionExperiments" ).build();
-        this.addOption( eeOption );
+        options.addOption( eeOption );
 
         Option adOption = Option.builder( "a" ).desc( "Index Array Designs" ).longOpt( "ArrayDesigns" )
                 .build();
-        this.addOption( adOption );
+        options.addOption( adOption );
 
         Option bibliographicOption = Option.builder( "b" ).desc( "Index Bibliographic References" )
                 .longOpt( "Bibliographic" ).build();
-        this.addOption( bibliographicOption );
+        options.addOption( bibliographicOption );
 
         Option probeOption = Option.builder( "s" ).desc( "Index probes" ).longOpt( "probes" ).build();
-        this.addOption( probeOption );
+        options.addOption( probeOption );
 
         Option sequenceOption = Option.builder( "q" ).desc( "Index sequences" ).longOpt( "sequences" )
                 .build();
-        this.addOption( sequenceOption );
+        options.addOption( sequenceOption );
 
-        this.addOption( Option.builder( "x" ).desc( "Index EE sets" ).longOpt( "eesets" ).build() );
+        options.addOption( Option.builder( "x" ).desc( "Index EE sets" ).longOpt( "eesets" ).build() );
 
-        this.addOption( Option.builder( "y" ).desc( "Index gene sets" ).longOpt( "genesets" ).build() );
+        options.addOption( Option.builder( "y" ).desc( "Index gene sets" ).longOpt( "genesets" ).build() );
     }
 
     @Override
@@ -126,27 +128,27 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
-        if ( this.hasOption( 'e' ) )
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'e' ) )
             indexEE = true;
 
-        if ( this.hasOption( 'a' ) )
+        if ( commandLine.hasOption( 'a' ) )
             indexAD = true;
 
-        if ( this.hasOption( 'g' ) )
+        if ( commandLine.hasOption( 'g' ) )
             indexG = true;
 
-        if ( this.hasOption( 'b' ) )
+        if ( commandLine.hasOption( 'b' ) )
             indexB = true;
 
-        if ( this.hasOption( 's' ) )
+        if ( commandLine.hasOption( 's' ) )
             indexP = true;
 
-        if ( this.hasOption( 'q' ) )
+        if ( commandLine.hasOption( 'q' ) )
             indexQ = true;
-        if ( this.hasOption( 'x' ) )
+        if ( commandLine.hasOption( 'x' ) )
             indexX = true;
-        if ( this.hasOption( 'y' ) )
+        if ( commandLine.hasOption( 'y' ) )
             indexY = true;
 
     }

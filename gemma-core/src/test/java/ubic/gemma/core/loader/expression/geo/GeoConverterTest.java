@@ -72,7 +72,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
-        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
                 .convert( series );
         assertTrue( r.isEmpty() );
     }
@@ -365,7 +366,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
         ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
 
@@ -863,6 +865,26 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         }
         fail( "No sequences!" );
+    }
+
+    @Test
+    public final void testMakeTitle() throws Exception {
+        GeoConverterImpl gi = new GeoConverterImpl();
+        assertEquals( "foo", gi.makeTitle( "foo", null ) );
+        assertEquals( "foo - bar", gi.makeTitle( "foo", "bar" ) );
+        assertEquals( "Transcriptome comparison of PAX6 ablated mouse beta cells to WT beta cells, "
+                + "ChIP-seq analysis of PAX6 bound sites both in mouse and human beta cell lines (Min6 and EndoC), "
+                + "and ChIP-seq analysis fo histone mark H3K9ac on mouse pancreatic ... - Mus musculus",
+                gi.makeTitle(
+                        "Transcriptome comparison of PAX6 ablated mouse beta cells to WT beta cells, ChIP-seq analysis of PAX6 "
+                                + "bound sites both in mouse and human beta cell lines "
+                                + "(Min6 and EndoC), and ChIP-seq analysis fo histone mark H3K9ac on mouse pancreatic beta cells.",
+                        "Mus musculus" ) );
+        assertTrue( gi.makeTitle(
+                "Transcriptome comparison of PAX6 ablated mouse beta cells to WT beta cells, ChIP-seq analysis of PAX6 bound sites "
+                        + "both in mouse and human beta cell lines "
+                        + "(Min6 and EndoC), and ChIP-seq analysis fo histone mark H3K9ac on mouse pancreatic beta cells.",
+                "Mus musculus" ).length() <= 255 );
     }
 
     private boolean checkQts( ExpressionExperiment ee ) {

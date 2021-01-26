@@ -1,5 +1,7 @@
 package ubic.gemma.core.loader.association.phenotype;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -43,7 +45,7 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
         // No-op
     }
 
@@ -61,7 +63,8 @@ public class DgaDatabaseImporterCli extends ExternalDatabaseEvidenceImporterAbst
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
+
     }
 
     /* this importer cannot automatically download files it expects the files to already be there */

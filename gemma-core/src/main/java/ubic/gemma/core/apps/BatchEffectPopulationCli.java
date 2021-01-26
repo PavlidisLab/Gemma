@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -34,9 +36,9 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        this.addForceOption();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        this.addForceOption( options );
     }
 
     @Override

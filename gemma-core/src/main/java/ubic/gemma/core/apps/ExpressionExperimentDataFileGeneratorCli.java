@@ -19,7 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -84,26 +86,26 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         Option forceWriteOption = Option.builder( "w" ).hasArg().argName( "ForceWrite" )
                 .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
-        this.addThreadsOption();
-        this.addOption( forceWriteOption );
+        this.addThreadsOption( options );
+        options.addOption( forceWriteOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
-        if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( "threads" );
+        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
         }
 
-        if ( this.hasOption( 'w' ) ) {
+        if ( commandLine.hasOption( 'w' ) ) {
             this.force_write = true;
         }
 

@@ -1,6 +1,8 @@
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
@@ -22,8 +24,6 @@ import ubic.gemma.persistence.util.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
 /**
@@ -64,6 +64,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabase sourceDatabase = null;
     private Taxon taxon = null;
     private boolean useDB = true;
+    private boolean force = false;
+    private Double blatScoreThreshold = null;
+    private boolean usePred;
+    private String configOption = null;
+    private boolean mirnaOnlyModeOption;
+    private Double identityThreshold = null;
+    private Double overlapThreshold = null;
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
@@ -72,29 +79,29 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
-        this.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
+        options.addOption( Option.builder( "i" ).hasArg().argName( "value" ).desc(
                 "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .longOpt( "identityThreshold" ).build() );
 
-        this.addOption( Option.builder( "s" ).hasArg().argName( "value" )
+        options.addOption( Option.builder( "s" ).hasArg().argName( "value" )
                 .desc( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
                 .longOpt( "scoreThreshold" ).build() );
 
-        this.addOption( Option.builder( "o" ).hasArg().argName( "value" ).desc(
+        options.addOption( Option.builder( "o" ).hasArg().argName( "value" ).desc(
                 "Minimum fraction of probe overlap with exons, default = "
                         + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
                 .longOpt( "overlapThreshold" )
                 .build() );
 
-        this.addOption( Option.builder( "usePred" ).desc(
+        options.addOption( Option.builder( "usePred" ).desc(
                 "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
                         + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" )
                 .build() );
 
-        this.addOption( Option.builder( ArrayDesignProbeMapperCli.CONFIG_OPTION ).hasArg().argName( "configstring" ).desc(
+        options.addOption( Option.builder( ArrayDesignProbeMapperCli.CONFIG_OPTION ).hasArg().argName( "configstring" ).desc(
                 "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
                         + " all will be used except as listed below and in combination with the 'usePred' option:\n "
 
@@ -114,7 +121,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + ArrayDesignProbeMapperCli.OPTION_ENSEMBL + " - search Ensembl track for predicted genes (Default=false) \n" )
                 .build() );
 
-        this.addOption( Option.builder( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ).desc(
+        options.addOption( Option.builder( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ).desc(
                 "Only seek miRNAs; this is the same as '-config " + ArrayDesignProbeMapperCli.OPTION_MICRORNA
                         + "; overrides -config." )
                 .build() );
@@ -124,11 +131,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + " ArrayDesigns from that taxon (overrides -a)" )
                 .build();
 
-        this.addOption( taxonOption );
+        options.addOption( taxonOption );
 
         Option force = Option.builder( "force" ).desc( "Run no matter what" ).build();
 
-        this.addOption( force );
+        options.addOption( force );
 
         Option directAnnotation = Option.builder( "import" ).desc(
                 "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
@@ -138,27 +145,26 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg().argName( "file" )
                 .build();
 
-        this.addOption( directAnnotation );
+        options.addOption( directAnnotation );
 
-        this.addOption( "ncbi",
-                "If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)" );
+        options.addOption( "ncbi", "If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)" );
 
         Option databaseOption = Option.builder( "source" )
                 .desc( "Source database name (GEO etc); required if using -import" ).hasArg()
                 .argName( "dbname" ).build();
-        this.addOption( databaseOption );
+        options.addOption( databaseOption );
 
         Option noDatabaseOption = Option.builder( "nodb" )
                 .desc( "Don't save the results to the database, print to stdout instead (not with -import)" )
                 .build();
 
-        this.addOption( noDatabaseOption );
+        options.addOption( noDatabaseOption );
 
         Option probesToDoOption = Option.builder( "probes" )
                 .desc( "Comma-delimited list of probe names to process (for testing); implies -nodb" )
                 .hasArg().argName( "probes" ).build();
 
-        this.addOption( probesToDoOption );
+        options.addOption( probesToDoOption );
     }
 
     @Override
@@ -171,60 +177,91 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
-     * @see ArrayDesignSequenceManipulatingCli#processOptions()
+     * @see AbstractCLI#processOptions(CommandLine)
+     * @param commandLine
      */
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
         taxonService = this.getBean( TaxonService.class );
 
-        if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( "threads" );
+        if ( commandLine.hasOption( AbstractCLI.THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( commandLine, "threads" );
         }
 
-        if ( this.hasOption( "import" ) ) {
-            if ( !this.hasOption( 't' ) ) {
+        if ( commandLine.hasOption( "import" ) ) {
+            if ( !commandLine.hasOption( 't' ) ) {
                 throw new IllegalArgumentException( "You must provide the taxon when using the import option" );
             }
-            if ( !this.hasOption( "source" ) ) {
+            if ( !commandLine.hasOption( "source" ) ) {
                 throw new IllegalArgumentException(
                         "You must provide source database name when using the import option" );
             }
-            String sourceDBName = this.getOptionValue( "source" );
+            String sourceDBName = commandLine.getOptionValue( "source" );
 
             ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 
             this.sourceDatabase = eds.findByName( sourceDBName );
 
-            this.directAnnotationInputFileName = this.getOptionValue( "import" );
+            this.directAnnotationInputFileName = commandLine.getOptionValue( "import" );
 
-            if ( this.hasOption( "ncbi" ) ) {
+            if ( commandLine.hasOption( "ncbi" ) ) {
                 this.ncbiIds = true;
             }
         }
-        if ( this.hasOption( 't' ) ) {
-            this.taxon = this.setTaxonByName( taxonService );
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxon = this.setTaxonByName( commandLine, taxonService );
         }
 
-        if ( this.hasOption( "nodb" ) ) {
+        if ( commandLine.hasOption( "nodb" ) ) {
             this.useDB = false;
         }
 
-        if ( this.hasOption( "probes" ) ) {
+        if ( commandLine.hasOption( "probes" ) ) {
 
             if ( this.getArrayDesignsToProcess() == null || this.getArrayDesignsToProcess().size() > 1 ) {
                 throw new IllegalArgumentException( "With '-probes' you must provide exactly one platform" );
             }
 
             this.useDB = false;
-            probeNames = this.getOptionValue( "probes" ).split( "," );
+            probeNames = commandLine.getOptionValue( "probes" ).split( "," );
 
             if ( probeNames.length == 0 ) {
                 throw new IllegalArgumentException( "You must provide at least one probe name when using '-probes'" );
             }
         }
 
+        if ( commandLine.hasOption( 's' ) ) {
+            blatScoreThreshold = getDoubleOptionValue( commandLine, 's' );
+            if ( blatScoreThreshold < 0 || blatScoreThreshold > 1 ) {
+                throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
+            }
+        }
+
+        this.usePred = commandLine.hasOption( "usePred" );
+
+        if ( commandLine.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
+            this.configOption = commandLine.getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION );
+        }
+
+        this.mirnaOnlyModeOption = commandLine.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION );
+
+        if ( commandLine.hasOption( 'i' ) ) {
+            identityThreshold = this.getDoubleOptionValue( commandLine, 'i' );
+            if ( identityThreshold < 0 || identityThreshold > 1 ) {
+                throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
+            }
+        }
+
+        if ( commandLine.hasOption( 'o' ) ) {
+            overlapThreshold = this.getDoubleOptionValue( commandLine, 'o' );
+            if ( overlapThreshold < 0 || overlapThreshold > 1 ) {
+                throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
+            }
+        }
+
+        this.force = commandLine.hasOption( "force" );
     }
 
     /**
@@ -234,7 +271,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( this.hasOption( "force" ) ) {
+        if ( this.force ) {
             return true;
         }
 
@@ -418,11 +455,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                         if ( useDB ) {
 
-                            if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
+                            if ( this.mirnaOnlyModeOption ) {
                                 this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
-                            } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
-                                this.audit( arrayDesign, "Run with configuration=" + this
-                                                .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                            } else if ( configOption != null ) {
+                                this.audit( arrayDesign, "Run with configuration=" + this.configOption,
                                         new AlignmentBasedGeneMappingEvent() );
                             } else {
                                 this.audit( arrayDesign, "Run with default parameters",
@@ -500,13 +536,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         boolean isMissingTracks = isRat && Settings
                 .getString( "gemma.goldenpath.db.rat" ).equals( "rn6" );
 
-        if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
+        if ( mirnaOnlyModeOption ) {
             AbstractCLI.log.info( "Micro RNA only mode" );
             config.setAllTracksOff();
             config.setUseMiRNA( true );
-        } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
+        } else if ( this.configOption != null ) {
 
-            String configString = this.getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION );
+            String configString = this.configOption;
 
             if ( !configString.matches(
                     "[" + ArrayDesignProbeMapperCli.OPTION_REFSEQ + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE
@@ -532,32 +568,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setUseKnownGene( configString.contains( ArrayDesignProbeMapperCli.OPTION_KNOWNGENE ) );
         }
 
-        if ( this.hasOption( 's' ) ) {
-            double blatscorethresh = this.getDoubleOptionValue( 's' );
-            if ( blatscorethresh < 0 || blatscorethresh > 1 ) {
-                throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
-            }
-            config.setBlatScoreThreshold( blatscorethresh );
+        if ( blatScoreThreshold != null ) {
+            config.setBlatScoreThreshold( blatScoreThreshold );
         }
 
-        if ( this.hasOption( "usePred" ) ) {
+        if ( this.usePred ) {
             config.setAllowPredictedGenes( true );
         }
 
-        if ( this.hasOption( 'i' ) ) {
-            double option = this.getDoubleOptionValue( 'i' );
-            if ( option < 0 || option > 1 ) {
-                throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
-            }
-            config.setIdentityThreshold( option );
+        if ( identityThreshold != null ) {
+            config.setIdentityThreshold( identityThreshold );
         }
 
-        if ( this.hasOption( 'o' ) ) {
-            double option = this.getDoubleOptionValue( 'o' );
-            if ( option < 0 || option > 1 ) {
-                throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
-            }
-            config.setMinimumExonOverlapFraction( option );
+        if ( overlapThreshold != null ) {
+            config.setMinimumExonOverlapFraction( overlapThreshold );
         }
 
         if ( isMissingTracks && config.isUseKnownGene() ) {

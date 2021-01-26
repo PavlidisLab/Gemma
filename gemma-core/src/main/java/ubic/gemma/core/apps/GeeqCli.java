@@ -23,8 +23,10 @@ import static ubic.gemma.persistence.service.expression.experiment.GeeqService.O
 import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_PUB;
 import static ubic.gemma.persistence.service.expression.experiment.GeeqService.OPT_MODE_REPS;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -48,14 +50,14 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
 
         eeService = this.getBean( ExpressionExperimentService.class );
         geeqService = this.getBean( GeeqService.class );
 
-        if ( this.hasOption( 'm' ) ) {
-            this.mode = this.getOptionValue( 'm' );
+        if ( commandLine.hasOption( 'm' ) ) {
+            this.mode = commandLine.getOptionValue( 'm' );
         }
     }
 
@@ -66,13 +68,13 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("AccessStaticViaInstance")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
-        super.buildOptions();
-        super.addAutoOption();
-        super.addDateOption();
+        super.buildOptions( options );
+        super.addAutoOption( options );
+        super.addDateOption( options );
         this.autoSeekEventType = GeeqEvent.class;
-        super.addForceOption();
+        super.addForceOption( options );
 
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
@@ -82,7 +84,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
                         + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
                         + "\n " + OPT_MODE_PUB + " - recalculates score for publication" )
                 .hasArg().build();
-        this.addOption( modeOption );
+        options.addOption( modeOption );
     }
 
     @Override

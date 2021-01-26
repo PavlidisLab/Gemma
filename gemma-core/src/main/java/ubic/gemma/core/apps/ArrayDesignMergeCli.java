@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -45,6 +47,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newName;
     private String newShortName;
     private HashSet<ArrayDesign> otherArrayDesigns;
+    private boolean add;
 
     @Override
     public String getCommandName() {
@@ -53,7 +56,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     protected void doWork() throws Exception {
-        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
+        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, add );
     }
 
     @Override
@@ -63,8 +66,8 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
     @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
                 .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
@@ -72,29 +75,29 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                                 + "The designs cannot be ones already merged into another design, but they can be mergees." )
                 .longOpt( "other" ).build();
 
-        this.addOption( otherArrayDesignOption );
+        options.addOption( otherArrayDesignOption );
 
         Option newAdName = Option.builder( "n" ).hasArg().argName( "name" )
                 .desc( "Name for new platform, if the given platform is not already a merged design" )
                 .longOpt( "name" ).build();
-        this.addOption( newAdName );
+        options.addOption( newAdName );
         Option newAdShortName = Option.builder( "s" ).hasArg().argName( "name" )
                 .desc( "Short name for new platform, if the given platform is not already a merged design" )
                 .longOpt( "shortname" ).build();
-        this.addOption( newAdShortName );
+        options.addOption( newAdShortName );
 
         Option addOption = Option.builder( "add" ).desc(
                 "If the given platform is already a merged design, add the -o designs to it. "
                         + "Recommended unless there is a specific reason to create a new design." )
                 .build();
-        this.addOption( addOption );
+        options.addOption( addOption );
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'o' ) ) {// required
-            String otherArrayDesignName = this.getOptionValue( 'o' );
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'o' ) ) {// required
+            String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesigns = new HashSet<>();
             for ( String string : names ) {
@@ -116,19 +119,19 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
         arrayDesign = this.thaw( arrayDesign );
 
-        if ( this.hasOption( "add" ) ) {
+        if ( commandLine.hasOption( "add" ) ) {
             if ( arrayDesign.getMergees().isEmpty() ) {
                 throw new IllegalArgumentException( "The array given must be a merged design when using -add" );
             }
         } else {
 
-            if ( this.hasOption( "n" ) ) {
-                this.newName = this.getOptionValue( 'n' );
+            if ( commandLine.hasOption( "n" ) ) {
+                this.newName = commandLine.getOptionValue( 'n' );
             } else {
                 throw new IllegalArgumentException( "You must provide a name for the new design unless using -add" );
             }
-            if ( this.hasOption( "s" ) ) {
-                this.newShortName = this.getOptionValue( 's' );
+            if ( commandLine.hasOption( "s" ) ) {
+                this.newShortName = commandLine.getOptionValue( 's' );
             } else {
                 throw new IllegalArgumentException(
                         "You must provide a short name for the new design unless using -add" );
@@ -136,6 +139,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         }
         arrayDesignMergeService = this.getBean( ArrayDesignMergeService.class );
 
+        this.add = commandLine.hasOption( "add" );
     }
 
 }

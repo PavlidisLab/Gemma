@@ -18,7 +18,8 @@
  */
 package ubic.gemma.core.apps;
 
-import ubic.gemma.core.util.AbstractCLI;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -58,9 +59,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addForceOption();
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        super.addForceOption( options );
     }
 
     private void audit( ExpressionExperiment ee ) {

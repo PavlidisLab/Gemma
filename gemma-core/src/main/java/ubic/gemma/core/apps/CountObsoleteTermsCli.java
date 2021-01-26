@@ -1,6 +1,8 @@
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -26,19 +28,19 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions( CommandLine commandLine ) {
         ontologyService = this.getBean( OntologyService.class );
 
-        if ( this.hasOption( "start" ) ) {
-            this.startArg = this.getOptionValue( "start" );
+        if ( commandLine.hasOption( "start" ) ) {
+            this.startArg = commandLine.getOptionValue( "start" );
         }
 
-        if ( this.hasOption( "step" ) ) {
-            this.stepArg = this.getOptionValue( "step" );
+        if ( commandLine.hasOption( "step" ) ) {
+            this.stepArg = commandLine.getOptionValue( "step" );
         }
 
-        if ( this.hasOption( "stop" ) ) {
-            this.stopArg = this.getOptionValue( "stop" );
+        if ( commandLine.hasOption( "stop" ) ) {
+            this.stopArg = commandLine.getOptionValue( "stop" );
         }
     }
 
@@ -49,22 +51,22 @@ public class CountObsoleteTermsCli extends AbstractCLIContextCLI {
 
     @SuppressWarnings("AccessStaticViaInstance")
     @Override
-    protected void buildOptions() {
+    protected void buildOptions( Options options ) {
 
         Option startOption = Option.builder( "start" )
                 .desc( "The ID of the first characteristic to check, i.e the end of the ID range." ).hasArg().required()
                 .build();
-        this.addOption( startOption );
+        options.addOption( startOption );
 
         Option stepOption = Option.builder( "step" )
                 .desc( "The amount of characteristics to load in one batch. Default value is 100000." ).hasArg()
                 .build();
-        this.addOption( stepOption );
+        options.addOption( stepOption );
 
         Option stopOption = Option.builder( "stop" )
                 .desc( "The ID of the last characteristic to check, i.e the end of the ID range." ).hasArg().required()
                 .build();
-        this.addOption( stopOption );
+        options.addOption( stopOption );
     }
 
     @Override

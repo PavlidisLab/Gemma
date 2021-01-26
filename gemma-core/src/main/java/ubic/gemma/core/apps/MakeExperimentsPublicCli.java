@@ -15,6 +15,7 @@
 package ubic.gemma.core.apps;
 
 import gemma.gsec.SecurityService;
+import org.apache.commons.cli.CommandLine;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
