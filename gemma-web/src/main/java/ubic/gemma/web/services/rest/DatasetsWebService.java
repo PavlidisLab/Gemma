@@ -264,7 +264,7 @@ public class DatasetsWebService extends
     /**
      * Returns true if the experiment has had batch information successfully filled in. This will be true even if there
      * is only one batch. It does not reflect the presence or absence of a batch effect.
-     * 
+     *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
@@ -277,7 +277,7 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        return Responder.autoCode(new Boolean(this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class )), sr);
+        return Responder.autoCode( new Boolean( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) ), sr );
     }
 
     /**
@@ -344,9 +344,9 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( processedExpressionDataVectorService
-                .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
-                        genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ),
+                        .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
+                                genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
+                                consolidate == null ? null : consolidate.getValue() ),
                 sr );
     }
 
@@ -387,9 +387,9 @@ public class DatasetsWebService extends
     ) {
         this.checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
-                .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
-                        component.getValue(), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ),
+                        .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
+                                component.getValue(), keepNonSpecific.getValue(),
+                                consolidate == null ? null : consolidate.getValue() ),
                 sr );
     }
 
@@ -433,9 +433,9 @@ public class DatasetsWebService extends
     ) {
         this.checkReqArg( diffExSet, "diffExSet" );
         return Responder.autoCode( processedExpressionDataVectorService
-                .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
-                        diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
-                        consolidate == null ? null : consolidate.getValue() ),
+                        .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
+                                diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
+                                consolidate == null ? null : consolidate.getValue() ),
                 sr );
     }
 
@@ -480,7 +480,7 @@ public class DatasetsWebService extends
     }
 
     @SuppressWarnings("unused") // Used for json serialization
-    private class SimpleSVDValueObject {
+    private static class SimpleSVDValueObject {
         /**
          * Order same as the rows of the v matrix.
          */

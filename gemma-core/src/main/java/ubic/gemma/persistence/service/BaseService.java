@@ -57,7 +57,7 @@ public interface BaseService<O extends Identifiable> {
      * Loads object with given id.
      *
      * @param id the id of entity to be loaded.
-     * @return the entity with matching id.
+     * @return the entity with matching id, or null if the entity does not exist.
      */
     O load( Long id );
 

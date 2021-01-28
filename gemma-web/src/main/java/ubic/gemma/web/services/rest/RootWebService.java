@@ -99,7 +99,7 @@ public class RootWebService extends WebService {
     }
 
     @SuppressWarnings("unused") // Getters used during RS serialization
-    private class ApiInfoValueObject {
+    private static class ApiInfoValueObject {
         private String welcome = MSG_WELCOME;
         private String version = WebService.API_VERSION;
         private String docs = APIDOCS_URL;

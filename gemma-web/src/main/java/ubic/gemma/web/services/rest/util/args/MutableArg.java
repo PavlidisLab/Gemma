@@ -28,7 +28,7 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      * Should only be used by the implementations of this class, which is why there is no setter for it,
      * as the whole reason behind this class is to delegate the functionality from the web service controllers.
      */
-    A value;
+    protected A value;
 
     String nullCause = "No cause specified.";
 

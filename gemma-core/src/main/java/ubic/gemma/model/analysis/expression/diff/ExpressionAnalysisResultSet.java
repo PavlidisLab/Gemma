@@ -32,7 +32,7 @@ import java.util.HashSet;
 /**
  * A group of results for an ExpressionExperiment.
  */
-public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet {
+public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet<DifferentialExpressionAnalysisResult> {
 
     private static final long serialVersionUID = 7226901182513177574L;
     private Integer numberOfProbesTested;

@@ -28,7 +28,7 @@ import java.util.Collection;
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
  */
-public abstract class AnalysisResultSet implements Identifiable, Serializable {
+public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -83,6 +83,6 @@ public abstract class AnalysisResultSet implements Identifiable, Serializable {
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     @Transient
-    public abstract Collection<?> getResults();
+    public abstract Collection<R> getResults();
 
 }

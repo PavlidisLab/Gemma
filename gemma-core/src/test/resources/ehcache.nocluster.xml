@@ -598,10 +598,10 @@
 	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" maxElementsInMemory="10000"
+		   eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet.results"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 

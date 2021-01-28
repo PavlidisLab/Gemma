@@ -18,13 +18,14 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-public abstract class FactorAssociatedAnalysisResultSet extends AnalysisResultSet {
+public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult> extends AnalysisResultSet<R> {
 
     /**
      * The serial version UID of this class. Needed for serialization.

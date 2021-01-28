@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;

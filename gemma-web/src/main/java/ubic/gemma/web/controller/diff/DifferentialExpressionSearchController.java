@@ -31,6 +31,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.visualization.DifferentialExpressionSearchTaskCommand;
+import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;

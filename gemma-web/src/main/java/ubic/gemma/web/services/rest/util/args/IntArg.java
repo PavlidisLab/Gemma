@@ -22,7 +22,7 @@ public class IntArg extends MalformableArg {
 
     @Override
     public String toString() {
-        if(this.value == null) return "";
+        if ( this.value == null ) return "";
         return String.valueOf( this.value );
     }
 
