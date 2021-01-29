@@ -518,7 +518,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /*
      *
      */
-    public DoubleMatrix1D getLibrarySizes( DifferentialExpressionAnalysisConfig config,
+    private DoubleMatrix1D getLibrarySizes( DifferentialExpressionAnalysisConfig config,
             ExpressionDataDoubleMatrix dmatrix ) {
 
         DoubleMatrix1D librarySize = new DenseDoubleMatrix1D( dmatrix.columns() );
@@ -530,7 +530,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 Double[] col = dmatrix.getColumn( i );
                 Integer sequenceReadCount = ( int ) Math.floor( DescriptiveWithMissing.sum( new cern.colt.list.DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
-                if ( sequenceReadCount <= 0 ) {
+                if ( sequenceReadCount <= 0 && !ba.getIsOutlier()) {
+                    // marked (removed) outliers have zero counts, otherwise no good
                     throw new IllegalStateException( "read count was non-positive for " + ba );
                 }
 
