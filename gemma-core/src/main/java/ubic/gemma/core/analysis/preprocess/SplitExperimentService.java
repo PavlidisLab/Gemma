@@ -38,9 +38,10 @@ public interface SplitExperimentService {
      *
      * @param expressionExperiment the experiment to split
      * @param splitOn              the factor to split the experiment on
+     * @param postProcess          post-process the experiments resulting from the split
      * @return results of the split
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
-    Collection<ExpressionExperiment> split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn );
+    Collection<ExpressionExperiment> split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess );
 
 }

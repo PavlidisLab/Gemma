@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import gemma.gsec.SecurityService;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -102,7 +103,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn ) {
+    @Transactional
+    public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
 
         toSplit = eeService.thawLite( toSplit );
 
@@ -284,10 +286,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             result.add( split );
 
             // postprocess. One problem can be that now we may have batches that are singletons etc.
-            try {
-                preprocessor.process( split );
-            } catch ( PreprocessingException e ) {
-                log.error( "Failure while preprocessing: " + split, e );
+            if ( postProcess ) {
+                try {
+                    preprocessor.process( split );
+                } catch ( PreprocessingException e ) {
+                    log.error( "Failure while preprocessing: " + split, e );
+                }
             }
         }
 

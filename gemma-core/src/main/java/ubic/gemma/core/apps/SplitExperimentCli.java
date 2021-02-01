@@ -103,7 +103,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
         ExperimentalFactor splitOn = this.guessFactor( ee );
 
-        serv.split( ee, splitOn );
+        serv.split( ee, splitOn, true );
     }
 
     @Override
