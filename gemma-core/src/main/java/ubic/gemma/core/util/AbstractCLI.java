@@ -60,6 +60,11 @@ public abstract class AbstractCLI {
      */
     public static final int FAILURE_FROM_ERROR_OBJECTS = 1;
 
+    /**
+     * Association between valid value for --verbose and --logger, and log4j {@link Level}.
+     */
+    private static final Level LEVEL_BY_VERBOSITY[] = { Level.OFF, Level.FATAL, Level.ERROR, Level.WARN, Level.INFO, Level.DEBUG };
+
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2018 University of British Columbia.";
     protected static final String AUTO_OPTION_NAME = "auto";
     protected static final String THREADS_OPTION = "threads";
@@ -70,6 +75,9 @@ public abstract class AbstractCLI {
     private static final String HOST_OPTION = "H";
     private static final String PORT_OPTION = "P";
     private static final String VERBOSITY_OPTION = "v";
+    private static final String HELP_OPTION = "h";
+    private static final String TESTING_OPTION = "testing";
+    private static final String DATE_OPTION = "mdate";
 
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
@@ -160,7 +168,7 @@ public abstract class AbstractCLI {
 
     @SuppressWarnings("static-access")
     protected void addDateOption( Options options ) {
-        Option dateOption = Option.builder( "mdate" ).hasArg().desc(
+        Option dateOption = Option.builder( DATE_OPTION ).hasArg().desc(
                 "Constrain to run only on entities with analyses older than the given date. "
                         + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                         + "If there is no record of when the analysis was last run, it will be run." )
@@ -219,12 +227,13 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void buildStandardOptions( Options options ) {
         AbstractCLI.log.debug( "Creating standard options" );
-        Option helpOpt = new Option( "h", "help", false, "Print this message" );
-        Option testOpt = new Option( "testing", false, "Use the test environment" );
-        Option logOpt = new Option( "v", "verbosity", true,
+        Option helpOpt = new Option( HELP_OPTION, "help", false, "Print this message" );
+        Option testOpt = new Option( TESTING_OPTION, false, "Use the test environment" );
+        Option logOpt = new Option( VERBOSITY_OPTION, "verbosity", true,
                 "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
-        Option otherLogOpt = Option.builder().longOpt( "logger" ).hasArg().argName( "logger" ).desc( "Configure a specific logger verbosity"
-                + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+        Option otherLogOpt = Option.builder( LOGGER_OPTION )
+                .longOpt( "logger" ).hasArg().argName( "logger" )
+                .desc( "Configure a specific logger verbosity. For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
                 .build();
 
         options.addOption( otherLogOpt );
@@ -548,8 +557,8 @@ public abstract class AbstractCLI {
             }
         }
 
-        if ( commandLine.hasOption( "mdate" ) ) {
-            this.mDate = commandLine.getOptionValue( "mdate" );
+        if ( commandLine.hasOption( DATE_OPTION ) ) {
+            this.mDate = commandLine.getOptionValue( DATE_OPTION );
         }
 
         if ( this.numThreads < 1 ) {
@@ -559,28 +568,10 @@ public abstract class AbstractCLI {
     }
 
     private void setLoggerLevel( int level, Logger log4jLogger ) {
-        switch ( level ) {
-            case 0:
-                log4jLogger.setLevel( Level.OFF );
-                break;
-            case 1:
-                log4jLogger.setLevel( Level.FATAL );
-                break;
-            case 2:
-                log4jLogger.setLevel( Level.ERROR );
-                break;
-            case 3:
-                log4jLogger.setLevel( Level.WARN );
-                break;
-            case 4:
-                log4jLogger.setLevel( Level.INFO );
-                break;
-            case 5:
-                log4jLogger.setLevel( Level.DEBUG );
-                break;
-            default:
-                throw new RuntimeException( "Verbosity must be from 0 to 5" );
-
+        if ( level < LEVEL_BY_VERBOSITY.length ) {
+            log4jLogger.setLevel( LEVEL_BY_VERBOSITY[level] );
+        } else {
+            throw new RuntimeException( "Verbosity must be from 0 to 5" );
         }
     }
 
