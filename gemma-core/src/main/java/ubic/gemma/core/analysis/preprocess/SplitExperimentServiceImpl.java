@@ -103,7 +103,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    @Transactional
     public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
 
         toSplit = eeService.thawLite( toSplit );
@@ -295,13 +294,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
         }
 
-        // Enforce relation to other parts of the split.
-        for ( ExpressionExperiment split : result ) {
-            for ( ExpressionExperiment split2 : result ) {
-                if ( split.equals( split2 ) ) continue;
-                split.getOtherParts().add( split2 );
-            }
-        }
+        enforceOtherParts( toSplit, result );
 
         for ( ExpressionExperiment split : result ) {
             eeService.update( split );
@@ -331,6 +324,17 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         // Or mark it as troubled?
 
         return result;
+    }
+
+    @Transactional
+    void enforceOtherParts( ExpressionExperiment toSplit, Collection<ExpressionExperiment> result ) {
+        // Enforce relation to other parts of the split.
+        for ( ExpressionExperiment split : result ) {
+            for ( ExpressionExperiment split2 : result ) {
+                if ( split.equals( split2 ) ) continue;
+                split.getOtherParts().add( split2 );
+            }
+        }
     }
 
     /**
