@@ -7,6 +7,8 @@
     </JavaCodeStyleSettings>
     <XML>
       <option name="XML_TEXT_WRAP" value="0" />
+      <option name="XML_ALIGN_ATTRIBUTES" value="false" />
+      <option name="XML_SPACE_INSIDE_EMPTY_TAG" value="true" />
     </XML>
     <codeStyleSettings language="JAVA">
       <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
@@ -25,6 +27,12 @@
       <option name="SPACE_WITHIN_CAST_PARENTHESES" value="true" />
       <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
       <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true" />
+    </codeStyleSettings>
+    <codeStyleSettings language="XML">
+      <indentOptions>
+        <option name="CONTINUATION_INDENT_SIZE" value="4" />
+        <option name="USE_TAB_CHARACTER" value="true" />
+      </indentOptions>
     </codeStyleSettings>
   </code_scheme>
 </component>

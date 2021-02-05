@@ -1,7 +1,7 @@
 root = true
 
-[/pom.xml]
+[*.xml]
 indent_style=tab
 
-[/gemma-web/pom.xml]
-indent_style=tab
+[/gemma-core/pom.xml]
+indent_style=space
