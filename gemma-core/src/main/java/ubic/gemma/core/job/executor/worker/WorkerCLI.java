@@ -20,10 +20,12 @@ package ubic.gemma.core.job.executor.worker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.BeanFactory;
+import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
-import ubic.gemma.persistence.util.SpringContextUtil;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 /**
  * Generic tool for starting a remote worker.
@@ -45,20 +47,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected String[] getAdditionalSpringConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml" };
-    }
-
-    @Override
-    protected void createSpringContext( CommandLine commandLine ) {
-        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
-                this.getAdditionalSpringConfigLocations() );
-
-        /*
-         * Important to ensure that threads get permissions from their context - not global!
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.MISC;
     }
 
     @Override

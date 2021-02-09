@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.*;
 import ubic.basecode.util.DateUtil;
+import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
 
@@ -574,6 +575,11 @@ public abstract class AbstractCLI {
             throw new RuntimeException( "Verbosity must be from 0 to 5" );
         }
     }
+
+    /**
+     * @return the command group for this CLI
+     */
+    public abstract GemmaCLI.CommandGroup getCommandGroup();
 
     /**
      * Represents an individual result in a batch processing.

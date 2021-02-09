@@ -20,9 +20,12 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.BeanFactory;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -64,11 +67,6 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /**
-     * @return the command group for this CLI
-     */
-    public abstract CommandGroup getCommandGroup();
-
     protected Taxon setTaxonByName( CommandLine commandLine, TaxonService taxonService ) {
         String taxonName = commandLine.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
@@ -102,11 +100,6 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
             AbstractCLI.log.error( "No arrayDesign " + name + " found" );
         }
         return arrayDesign;
-    }
-
-    @Override
-    protected String[] getAdditionalSpringConfigLocations() {
-        return new String[]{"classpath*:ubic/gemma/cliContext-component-scan.xml"};
     }
 
 }

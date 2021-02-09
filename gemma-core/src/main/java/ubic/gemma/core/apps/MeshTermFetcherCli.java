@@ -100,6 +100,11 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
+    @Override
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.MISC;
+    }
+
     private Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
         AbstractCLI.log.info( "Reading " + inFile );
 

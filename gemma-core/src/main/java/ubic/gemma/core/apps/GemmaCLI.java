@@ -20,14 +20,12 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.persistence.util.SpringContextUtil;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -35,84 +33,72 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
-@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GemmaCLI {
 
+    private static ApplicationContext ctx;
+
     public static void main( String[] args ) {
+        // check for the -testing flag to load the appropriate application context
+        boolean useTestEnvironment = Arrays.asList( args ).subList( 1, args.length ).contains( "-testing" );
+        ctx = SpringContextUtil.getApplicationContext( useTestEnvironment, false /* webapp */, new String[] {
+                "classpath*:ubic/gemma/cliContext-component-scan.xml",
+                "classpath*:ubic/gemma/cliContext-jms.xml",
+                "classpath*:ubic/gemma/cliContext-scheduler.xml" } );
+
+        /*
+         * Guarantee that the security settings are uniform throughout the application (all threads).
+         */
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         /*
          * Build a map from command names to classes.
          */
-        Map<CommandGroup, Map<String, String>> commands = new HashMap<>();
-        Map<String, Class<? extends AbstractCLI>> commandClasses = new HashMap<>();
-        try {
-
-            final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
-                    false );
-            provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
-
-            // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
-            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.core.apps" );
-            classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
-
-            for ( BeanDefinition bean : classes ) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends AbstractCLI> aClazz = ( Class<? extends AbstractCLI> ) Class
-                            .forName( bean.getBeanClassName() );
-
-                    Object cliInstance = aClazz.newInstance();
-
-                    Method method = aClazz.getMethod( "getCommandName" );
-                    String commandName = ( String ) method.invoke( cliInstance, new Object[]{} );
-                    if ( commandName == null || StringUtils.isBlank( commandName ) ) {
-                        // keep null to avoid printing some commands...
-                        continue;
-                    }
-
-                    Method method2 = aClazz.getMethod( "getShortDesc" );
-                    String desc = ( String ) method2.invoke( cliInstance, new Object[]{} );
-
-                    Method method3 = aClazz.getMethod( "getCommandGroup" );
-                    CommandGroup g = ( CommandGroup ) method3.invoke( cliInstance, new Object[]{} );
-
-                    if ( !commands.containsKey( g ) ) {
-                        commands.put( g, new TreeMap<String, String>() );
-                    }
-
-                    commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
-
-                    commandClasses.put( commandName, aClazz );
-                } catch ( Exception e ) {
-                    // OK, this can happen if we hit a non useful class.
-                }
+        Map<String, AbstractCLI> commandBeans = ctx.getBeansOfType( AbstractCLI.class );
+        Map<CommandGroup, Map<String, String>> commandGroups = new HashMap<>();
+        Map<String, AbstractCLI> commandsByName = new HashMap<>();
+        for ( Map.Entry<String, AbstractCLI> entry : commandBeans.entrySet() ) {
+            String beanName = entry.getKey();
+            AbstractCLI cliInstance = entry.getValue();
+            String commandName = cliInstance.getCommandName();
+            if ( commandName == null || StringUtils.isBlank( commandName ) ) {
+                // keep null to avoid printing some commands...
+                continue;
             }
-        } catch ( Exception e1 ) {
-            System.err.println( "ERROR! Report to developers: " + e1.getMessage() );
-            System.exit( 1 );
+
+            String desc = cliInstance.getShortDesc();
+
+            CommandGroup g = cliInstance.getCommandGroup();
+
+            if ( !commandGroups.containsKey( g ) ) {
+                commandGroups.put( g, new TreeMap<>() );
+            }
+
+            commandsByName.put( commandName, cliInstance );
+            commandGroups.get( g ).put( commandName, desc + " (" + beanName + ")" );
         }
 
-        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" ) || args[0]
-                .equalsIgnoreCase( "help" ) ) {
-            GemmaCLI.printHelp( commands );
+        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) ||
+                args[0].equalsIgnoreCase( "-help" ) ||
+                args[0].equalsIgnoreCase( "help" ) ) {
+            GemmaCLI.printHelp( commandGroups );
             System.exit( 1 );
         } else {
             LinkedList<String> f = new LinkedList<>( Arrays.asList( args ) );
             String commandRequested = f.remove( 0 );
-            String[] argsToPass = f.toArray( new String[]{} );
+            String[] argsToPass = f.toArray( new String[] {} );
 
-            if ( !commandClasses.containsKey( commandRequested ) ) {
+            if ( !commandsByName.containsKey( commandRequested ) ) {
                 System.err.println( "Unrecognized command: " + commandRequested );
-                GemmaCLI.printHelp( commands );
+                GemmaCLI.printHelp( commandGroups );
                 System.err.println( "Unrecognized command: " + commandRequested );
                 System.exit( 1 );
             } else {
                 try {
-                    Class<? extends AbstractCLI> c = commandClasses.get( commandRequested );
+                    AbstractCLI cli = commandsByName.get( commandRequested );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                     System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
-                    //noinspection JavaReflectionInvocation // It works
-                    System.exit( c.getDeclaredConstructor().newInstance().executeCommand( argsToPass ) );
+                    System.exit( cli.executeCommand( argsToPass ) );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
                     System.err.println( ExceptionUtils.getStackTrace( e ) );

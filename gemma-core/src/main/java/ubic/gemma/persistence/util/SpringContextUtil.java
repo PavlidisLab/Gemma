@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.File;
@@ -39,15 +40,15 @@ import java.util.List;
 public class SpringContextUtil {
     private static final Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
 
-    private static BeanFactory ctx = null;
+    private static ApplicationContext ctx = null;
 
     /**
+     * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @param testing                           If true, it will get a test configured-BeanFactory
      * @param isWebApp                          If true, configuration specific to the web application will be included.
-     * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return BeanFactory or null if no context could be created.
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp,
+    public static ApplicationContext getApplicationContext( boolean testing, boolean isWebApp,
             String[] additionalConfigurationLocations ) {
         if ( SpringContextUtil.ctx == null ) {
             String[] paths = SpringContextUtil.getConfigLocations( testing, isWebApp );

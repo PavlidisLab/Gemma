@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -54,11 +55,17 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private String username;
     private String password;
 
+    @Autowired
     protected AuditTrailService auditTrailService;
+    @Autowired
     protected AuditEventService auditEventService;
+    @Autowired
     protected BeanFactory ctx;
+    @Autowired
+    private ExpressionExperimentService ees;
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @Autowired
     public AbstractSpringAwareCLI() {
         super();
     }
@@ -99,7 +106,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void processStandardOptions( CommandLine commandLine ) {
         super.processStandardOptions( commandLine );
-        this.createSpringContext( commandLine );
         if ( commandLine.hasOption( USERNAME_OPTION ) ) {
             this.username = commandLine.getOptionValue( USERNAME_OPTION );
         }
@@ -107,27 +113,13 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             this.password = commandLine.getOptionValue( PASSWORD_OPTION );
         }
         this.authenticate( commandLine );
-        this.auditTrailService = this.getBean( AuditTrailService.class );
-        this.auditEventService = this.getBean( AuditEventService.class );
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setCtx( BeanFactory ctx ) {
-        this.ctx = ctx;
-    }
-
-    /**
-     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
-     * the Gemma spring context. See SpringContextUtil; an example path is "classpath*:/myproject/applicationContext-mine.xml".
-     *
-     * @return string[]
-     */
-    protected String[] getAdditionalSpringConfigLocations() {
-        return null;
     }
 
     /**
      * Convenience method to obtain instance of any bean by name.
+     *
+     * @deprecated Use {@link Autowired} to specify your dependencies, this is just a wrapper around the current
+     * {@link BeanFactory}.
      *
      * @param <T>  the bean class type
      * @param clz  class
@@ -135,16 +127,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @return bean
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
+    @Deprecated
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( name, clz );
     }
 
+    @Deprecated
     protected <T> T getBean( Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( clz );
     }
 
+    @Deprecated
     protected Persister getPersisterHelper() {
         assert ctx != null : "Spring context was not initialized";
         return ( Persister ) ctx.getBean( "persisterHelper" );
@@ -193,7 +188,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
             // special case for expression experiments - check associated ADs.
             if ( okToRun && curatable instanceof ExpressionExperiment ) {
-                ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
                 for ( ArrayDesign ad : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
                     if ( ad.getCurationDetails().getTroubled() ) {
                         okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
@@ -208,21 +202,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         return !needToRun || !okToRun;
-    }
-
-    /**
-     * check if using test or production contexts
-     * @param commandLine
-     */
-    protected void createSpringContext( CommandLine commandLine ) {
-
-        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
-                this.getAdditionalSpringConfigLocations() );
-
-        /*
-         * Guarantee that the security settings are uniform throughout the application (all threads).
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
     }
 
     /**
