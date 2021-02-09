@@ -21,6 +21,7 @@ package ubic.gemma.core.job.executor.worker;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.jms.listener.AbstractJmsListeningContainer;
 import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
@@ -35,6 +36,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 public class WorkerCLI extends AbstractSpringAwareCLI {
 
     private RemoteTaskRunningService taskRunningService;
+    private AbstractJmsListeningContainer jmsContainer;
 
     @Override
     public String getShortDesc() {
@@ -63,6 +65,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @Override
     protected void doWork() throws Exception {
         this.init();
+        jmsContainer.start();
     }
 
     private void init() {
