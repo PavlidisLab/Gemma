@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +54,10 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
         ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
         arrayDesign = this.thaw( arrayDesign );
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
+            throw new IllegalArgumentException( // note that GENELIST is also invalid but this is the likely case that could be encountered
+                    "This tool is only for microarray platforms; " + arrayDesign.getShortName() + " is a sequencing platform" );
+        }
 
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
             ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, getArrayDesignService() );
@@ -66,6 +71,11 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             }
 
             otherArrayDesign = this.thaw( otherArrayDesign );
+
+            if ( otherArrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
+                throw new IllegalArgumentException(
+                        "This tool is only for microarray platforms; " + otherArrayDesign.getShortName() + " is a sequencing platform" );
+            }
 
             Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
 
@@ -81,7 +91,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     @Override
     public String getShortDesc() {
-        return "Test array designs to see if one subsumes other(s) (in terms of sequences analyzed)"
+        return "Test microarray designs to see if one subsumes other(s) (in terms of probe sequences)"
                 + ", and if so update their information";
     }
 
