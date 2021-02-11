@@ -27,7 +27,7 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
      * @return   instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static MutableArg<?, ArrayDesign, ArrayDesignValueObject, ArrayDesignService> valueOf( final String s ) {
+    public static PlatformArg<?> valueOf( final String s ) {
         try {
             return new PlatformIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

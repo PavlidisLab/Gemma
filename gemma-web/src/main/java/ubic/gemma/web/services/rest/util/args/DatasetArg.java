@@ -26,8 +26,7 @@ public abstract class DatasetArg<T>
      * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static MutableArg<?, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> valueOf(
-            final String s ) {
+    public static DatasetArg<?> valueOf( final String s ) {
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

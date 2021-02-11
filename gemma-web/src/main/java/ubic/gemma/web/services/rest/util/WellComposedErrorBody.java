@@ -1,7 +1,7 @@
 package ubic.gemma.web.services.rest.util;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.ws.rs.core.Response;
 import java.util.HashMap;

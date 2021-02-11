@@ -38,7 +38,7 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, Ge
      * @return instance of appropriate implementation of GeneArg based on the actual property the argument represents.
      */
     @SuppressWarnings("unused")
-    public static MutableArg<?, Gene, GeneValueObject, GeneService> valueOf( final String s ) {
+    public static GeneArg<?> valueOf( final String s ) {
         try {
             return new GeneNcbiIdArg( Integer.parseInt( s.trim() ) );
         } catch ( NumberFormatException e ) {
