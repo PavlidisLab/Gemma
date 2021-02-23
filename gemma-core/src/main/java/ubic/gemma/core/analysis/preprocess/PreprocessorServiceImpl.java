@@ -118,7 +118,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             this.removeInvalidatedData( ee );
             this.processForMissingValues( ee );
             processedExpressionDataVectorService.computeProcessedExpressionData( ee );
-            ee = this.processExceptForVectorCreate( ee, true );
+            ee = this.processExceptForVectorCreate( ee, true ); // includes diagnostics and batch corr.
             expressionExperimentReportService.recalculateExperimentBatchInfo( ee );
             return ee;
         } catch ( Exception e ) {
@@ -146,7 +146,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
     }
 
-    /* public for situations where we don't need to recreate the processed data e.g. when the experimental design is updated */
+    /*
+     * public for situations where we don't need to recreate the processed data e.g. when the experimental design is
+     * updated
+     */
     @Override
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
@@ -222,6 +225,14 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return outliers;
     }
 
+    /**
+     * Do all processing steps except making the vectors (so it uses the vectors that are there) including batch
+     * correction, diagnostics, and refreshing of old analyses.
+     * 
+     * @param  ee           the experiment
+     * @param  batchCorrect if true, attempt to do batch correction (should always be true really)
+     * @return              the experiment
+     */
     private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee, Boolean batchCorrect ) {
         // refresh into context.
         ee = expressionExperimentService.thawLite( ee );
@@ -272,7 +283,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
         this.processForPca( ee );
-        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL); 
+        geeqService.calculateScore( ee.getId(), GeeqService.OPT_MODE_ALL );
         // FIXME OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
     }
 
@@ -281,7 +292,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      */
     private void processForMeanVarianceRelation( ExpressionExperiment ee ) {
         try {
-            meanVarianceService.findOrCreate( ee );
+            meanVarianceService.create( ee, true );
         } catch ( Exception e ) {
             PreprocessorServiceImpl.log.error( "Could not compute mean-variance relation: " + e.getMessage() );
         }
