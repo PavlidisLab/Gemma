@@ -36,9 +36,11 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -225,28 +227,35 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
-        boolean hasBatchInformation = false;
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
+                return true;
+            }
+        }
+
+        boolean allBAsHaveDate = true;
+        ee = this.thawBioAssays( ee );
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getProcessingDate() == null ) {
+                allBAsHaveDate = false;
                 break;
             }
         }
-        if ( !hasBatchInformation ) {
-            boolean allBAsHaveDate = true;
-            ee = this.thawBioAssays( ee );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getProcessingDate() == null ) {
-                    allBAsHaveDate = false;
-                    break;
-                }
-            }
-            if ( allBAsHaveDate ) {
-                hasBatchInformation = true;
+        if ( allBAsHaveDate ) {
+            return true;
+        }
+
+        // still nothing? Check if we have info from FASTQ headers for RNA-seq case
+        boolean allBAsHaveFASTQHeaders = true;
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getFastqHeaders() == null ) {
+                allBAsHaveFASTQHeaders = false;
+                break;
             }
         }
-        return hasBatchInformation;
+
+        return allBAsHaveFASTQHeaders;
     }
 
     @Override
