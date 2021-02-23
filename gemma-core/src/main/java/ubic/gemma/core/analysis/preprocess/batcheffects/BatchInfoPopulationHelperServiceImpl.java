@@ -75,7 +75,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<String, Collection<String>> batchIdToHeaders = this
                 .convertHeadersToBatches( headers.values() );
-
+        
         Map<String, FactorValue> headerToFv = new HashMap<>();
         ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
         bioMaterialService.associateBatchFactor( headers, headerToFv );
@@ -266,11 +266,15 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
         // switch to using string keys for batch identifiers (and check for bad headers)
         boolean anyBadHeaders = false;
+        boolean anyGoodHeaders = false;
         for ( FastqHeaderData fhd : batchInfos.keySet() ) {
 
-            if ( !fhd.hadUsableHeader ) {
+            if ( fhd.hadUsableHeader ) {
+                anyGoodHeaders = true;
+            } else {
                 anyBadHeaders = true;
             }
+
             String batchIdentifier = fhd.toString();
             if ( !result.containsKey( batchIdentifier ) ) {
                 result.put( batchIdentifier, new HashSet<String>() );
@@ -279,9 +283,18 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             result.get( batchIdentifier ).addAll( headersInBatch );
         }
 
-        //  If *any* of them are no good (and platform was constant), we fail noisily
-        if ( platforms.size() == 1 && anyBadHeaders ) {
-            throw new RuntimeException( "Batch could not be determined: at least one unusable header and platform is constant" );
+        // deal with one of the possible "one batch" scenarios.
+        if ( platforms.size() == 1 || anyBadHeaders ) {
+
+            // if some headers are good, and others bad, that's an error - we'd have to see how to deal with such cases.
+            if ( anyGoodHeaders && anyBadHeaders ) {
+                throw new RuntimeException( "Data set uses just one platform and only some headers had run/device/lane information" );
+            } else if ( platforms.size() == 1 && anyBadHeaders ) {
+                log.info( "Headers lack run/device/lane information and there is just one platform used: assuming a single batch" );
+            } else {
+                log.info( "Data set appears to have been run in a single batch based on run/device/lane information" );
+            }
+
         }
 
         // otherwise, having just one batch means as far we can tell there was only one batch.
@@ -504,6 +517,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         private String lane = null;
         private String flowCell = null;
         private String run = null;
+
+        /**
+         * This means the headers had no information on device, run or lane, so they're useless.
+         */
         private boolean hadUsableHeader = false;
 
         protected boolean hadUseableHeader() {
@@ -599,6 +616,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /*
+     * This also handles case where we decide not to create a batch factor - i.e. there is only one batch.
      * 
      * For RNA-seq, descriptorsToBatch is a map of batchids to headers
      * for microarrays, it a map of batchids to dates
@@ -614,11 +632,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                  * Corner case. It's possible we are not sure there are actually batches or not
                  * because of the lack of information. The example would be when we don't have usable FASTQ headers, and
                  * all the GPL ids are the same.
+                 * 
                  */
                 String batchIdentifier = descriptorsToBatch.keySet().iterator().next();
                 if ( batchIdentifier.startsWith( "GPL" ) ) {
                     throw new RuntimeException(
-                            "No reliable batch information was available: no usable FASTQ headers and only one GPL ID associated with the experiment." );
+                            "No reliable batch information was available: no informative "
+                            + "FASTQ headers and only one GPL ID associated with the experiment." );
                 }
 
                 // Otherwise, we trust that either the FASTQ headers or dates are a reasonable representation.

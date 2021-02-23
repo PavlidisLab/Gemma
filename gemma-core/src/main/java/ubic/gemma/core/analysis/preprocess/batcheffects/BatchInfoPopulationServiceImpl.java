@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -254,8 +255,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         BatchInfoPopulationServiceImpl.log
                 .info( "Got batch information for: " + ee.getShortName() );
-        this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, numberOfBatches
-                + " batches.", "" );
+        if ( numberOfBatches == 1 ) {
+            this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
+                    "RNA-seq experiment (most likely a single lane)" );
+        } else {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, numberOfBatches
+                    + " batches.", "" );
+        }
 
     }
 
@@ -292,10 +298,17 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             BatchInfoPopulationServiceImpl.log
                     .info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches
                             + " batches." );
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
-                    batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                            + " batches.",
-                    "Dates of sample runs: " + datesString );
+
+            if ( numberOfBatches == 1 ) {
+                this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
+                        "Dates of sample runs: " + datesString );
+            } else {
+                this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
+                        batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
+                                + " batches.",
+                        "Dates of sample runs: " + datesString );
+            }
+
             return true;
         }
 
