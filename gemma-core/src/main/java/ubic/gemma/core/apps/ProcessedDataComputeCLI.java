@@ -35,11 +35,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * Prepare the "processed" expression data vectors, and can also do batch correction.
  *
  * @author xwan, paul
- * @see ProcessedExpressionDataVectorServiceImpl
+ * @see    ProcessedExpressionDataVectorServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
-    private boolean batchCorrect = false;
+    //   private boolean batchCorrect = false;
     private PreprocessorService preprocessorService;
     private ProcessedExpressionDataVectorCreateHelperService proccessedVectorService;
     private ExpressionExperimentService expressionExperimentService;
@@ -60,13 +60,11 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         super.addForceOption( options );
         this.addDateOption( options );
 
-        Option outputFileOption = Option.builder( "b" )
-                .desc( "Attempt to batch-correct the data without recomputing data  (may be combined with other options)" ).longOpt( "batchcorr" )
-                .build();
-        options.addOption( "diagupdate", "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
+        options.addOption( "diagupdate",
+                "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         options.addOption( "rankupdate", "Only update the expression intensity rank information (may be combined with other options)" );
 
-        options.addOption( outputFileOption );
+        //  options.addOption( outputFileOption );
     }
 
     @Override
@@ -85,10 +83,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         if ( commandLine.hasOption( "rankupdate" ) ) {
 
             this.updateRanks = true;
-        }
-
-        if ( commandLine.hasOption( 'b' ) ) {
-            this.batchCorrect = true;
         }
     }
 
@@ -122,14 +116,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         try {
             ee = this.eeService.thawLite( ee );
 
-            if ( this.batchCorrect || this.updateDiagnostics || this.updateRanks ) {
+            if ( this.updateDiagnostics || this.updateRanks ) {
                 log.info( "Skipping processed data vector creation; only doing selected postprocessing steps" );
-
-                // this ordering is kind of important
-                if ( this.batchCorrect ) {
-                    log.info( "Batch correcting " + ee );
-                    this.preprocessorService.batchCorrect( ee, this.force );
-                }
 
                 if ( this.updateRanks ) {
                     log.info( "Updating ranks: " + ee );
@@ -141,7 +129,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                     this.preprocessorService.processDiagnostics( ee );
                 }
             } else {
-                // this does all of the steps.
+                // this does all of the steps including batch correction
                 this.preprocessorService.process( ee );
             }
 
