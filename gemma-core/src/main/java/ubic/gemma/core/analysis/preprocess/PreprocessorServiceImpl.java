@@ -242,7 +242,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         // batch correct
         if ( batchCorrect ) {
             try {
-                this.batchCorrect( ee, false );
+                this.batchCorrect( ee, true );
             } catch ( PreprocessingException e ) {
                 log.error( e.getMessage() );
                 log.warn( "Batch correction skipped, proceeding with experiment preprocessing..." );
