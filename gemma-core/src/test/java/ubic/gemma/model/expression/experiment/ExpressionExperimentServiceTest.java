@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -126,6 +127,13 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertNotNull( eeFound );
         assertEquals( eeFound.getId(), ee.getId() );
 
+    }
+    
+    @Test
+    public void testLoadAllValueObjects() {
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
+        assertNotNull( vos );
+        assertTrue(vos.size() > 0);
     }
 
     @Test
