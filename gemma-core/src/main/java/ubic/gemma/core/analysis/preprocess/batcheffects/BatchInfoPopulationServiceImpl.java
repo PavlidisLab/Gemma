@@ -67,6 +67,10 @@ import ubic.gemma.persistence.util.Settings;
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**
+     * 
+     */
+    private static final String GEMMA_FASTQ_HEADERS_DIR_CONFIG = "gemma.fastq.headers.dir";
+    /**
      * we have files named like GSE1234.fastq-headers-table.txt; specified in our RNA-seq pipelineF
      */
     private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
@@ -269,7 +273,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         assert eevo != null;
 
         if ( rnaSeq ) {
-            File file = new File( Settings.getString( "gemma.fastq.headers.dir" ) + ee.getAccession().getAccession() );
+            File file = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + ee.getAccession().getAccession() );
             return file.canRead() && !expressionExperimentService.checkHasBatchInfo( ee );
         }
 
@@ -404,7 +408,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
         String accession = ee.getAccession().getAccession();
-        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
+        String fhd = Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG );
+        
+        if (StringUtils.isBlank( fhd )) {
+            throw new IllegalStateException("You must configure the path to extracted headers directory (" +  GEMMA_FASTQ_HEADERS_DIR_CONFIG + ")");
+        }
+        
+        File headerFile = new File( fhd + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
 
         if ( !headerFile.canRead() ) {
@@ -425,7 +435,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
         Map<String, String> result = new HashMap<>();
-        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
+        File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
         try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
             String line = null;
