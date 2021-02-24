@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -67,10 +68,6 @@ import ubic.gemma.persistence.util.Settings;
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
 
     /**
-     * we have files named like GSE1234.fastq-headers-table.txt; specified in our RNA-seq pipelineF
-     */
-    private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
-    /**
      * String to use to delimit FASTQ headers when there is more than one per sample.
      */
     static final String MULTIFASTQHEADER_DELIMITER = ";;;";
@@ -78,22 +75,15 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * Delete unpacked raw microarray data files when done? The zipped/tarred archived will be left alone anyway.
      */
     private static final boolean CLEAN_UP = true;
+    /**
+     * we have files named like GSE1234.fastq-headers-table.txt; specified in our RNA-seq pipelineF
+     */
+    private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
+    /**
+     * 
+     */
+    private static final String GEMMA_FASTQ_HEADERS_DIR_CONFIG = "gemma.fastq.headers.dir";
     private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
-    @Autowired
-    private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService = null;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-    @Autowired
-    private AuditTrailService auditTrailService;
-    @Autowired
-    private AuditEventService auditEventService;
-
-    @Autowired
-    private BioAssayService bioAssayService;
-
-    private boolean force = false;
 
     /**
      * @param  ef ef
@@ -117,6 +107,24 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         return isBatchFactor;
     }
+
+    @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
+    @Autowired
+    private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService = null;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    private boolean force = false;
 
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean f ) {
@@ -162,40 +170,37 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Look for batch information and create a Factor for batch if there is more than one batch.
+     * Exposed for testing
      * 
-     * @param  ee
-     * @throws IOException if there was a problem reading the FASTQ headers
+     * @param  accession             GEO accession
+     * @return                       map of GEO id to headers, including the platform ID
+     * @throws IOException
+     * @throws FileNotFoundException
      */
-    private void getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) throws IOException {
+    Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
+        Map<String, String> result = new HashMap<>();
+        File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
+                + accession + FASTQHEADERSFILE_SUFFIX );
+        try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
 
-        // Read and store header data.
+                String[] fields = StringUtils.split( line, "\t" );
 
-        Map<BioMaterial, String> headers;
-        try {
-            headers = getFastqHeaders( ee );
-        } catch ( IOException e ) {
-            throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
+                if ( fields.length < 5 ) {
+                    continue;
+                }
+
+                String geoID = fields[0];
+                String geoPlatformID = fields[2]; // we may use this if the headers are not usable.
+                String headers = fields[4]; // this may be FAILURE (possibly more than once)
+
+                result.put( geoID, geoPlatformID + MULTIFASTQHEADER_DELIMITER + headers );
+            }
+
         }
 
-        if ( headers.isEmpty() ) {
-            throw new IOException( "No FASTQ headers found for " + ee );
-        }
-
-        // Create batch factor.
-        this.removeExistingBatchFactor( ee );
-        ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
-
-        int numberOfBatches = 1;
-        if ( bf != null ) {
-            numberOfBatches = bf.getFactorValues().size();
-        }
-
-        BatchInfoPopulationServiceImpl.log
-                .info( "Got batch information for: " + ee.getShortName() );
-        this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, numberOfBatches
-                + " batches.", "" );
-
+        return result;
     }
 
     /**
@@ -212,6 +217,52 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             return new HashSet<>();
         }
         return fetcher.fetch( accession.getAccession() );
+    }
+
+    /**
+     * Look for batch information and create a Factor for batch if there is more than one batch.
+     * 
+     * @param  ee
+     * @throws IOException if there was a problem reading the FASTQ headers
+     */
+    private void getBatchDataFromFASTQHeaders( ExpressionExperiment ee ) throws IOException {
+
+        // Read and store header data.
+
+        Map<BioMaterial, String> headers;
+        try {
+            headers = getFastqHeaders( ee );
+        } catch ( IOException e ) {
+            this.auditTrailService
+                    .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "Failed to locate FASTQ header information", e.getMessage() );
+            throw new IOException( "Error while processing FASTQ headers for " + ee + ": " + e.getMessage(), e );
+        }
+
+        if ( headers.isEmpty() ) {
+            this.auditTrailService
+                    .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No FASTQ headers found", "" );
+            throw new IOException( "No FASTQ headers found for " + ee );
+        }
+
+        // Create batch factor.
+        this.removeExistingBatchFactor( ee );
+        ExperimentalFactor bf = batchInfoPopulationHelperService.createRnaSeqBatchFactor( ee, headers );
+
+        int numberOfBatches = 1;
+        if ( bf != null ) {
+            numberOfBatches = bf.getFactorValues().size();
+        }
+
+        BatchInfoPopulationServiceImpl.log
+                .info( "Got batch information for: " + ee.getShortName() );
+        if ( numberOfBatches == 1 ) {
+            this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
+                    "RNA-seq experiment (most likely a single lane)" );
+        } else {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, numberOfBatches
+                    + " batches.", "" );
+        }
+
     }
 
     /**
@@ -247,91 +298,21 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             BatchInfoPopulationServiceImpl.log
                     .info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches
                             + " batches." );
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
-                    batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                            + " batches.",
-                    "Dates of sample runs: " + datesString );
+
+            if ( numberOfBatches == 1 ) {
+                this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
+                        "Dates of sample runs: " + datesString );
+            } else {
+                this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
+                        batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
+                                + " batches.",
+                        "Dates of sample runs: " + datesString );
+            }
+
             return true;
         }
 
         return false;
-    }
-
-    /**
-     * @param  ee     ee
-     * @param  rnaSeq if the data set is RNAseq
-     * @return        true if it needs processing and data is available
-     */
-    private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
-
-        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
-
-        assert eevo != null;
-
-        if ( rnaSeq ) {
-            File file = new File( Settings.getString( "gemma.fastq.headers.dir" ) + ee.getAccession().getAccession() );
-            return file.canRead() && !expressionExperimentService.checkHasBatchInfo( ee );
-        }
-
-        if ( StringUtils.isBlank( eevo.getAccession() ) ) {
-            BatchInfoPopulationServiceImpl.log.info( ee
-                    + " lacks an external accession to use for fetching, will not attempt to fetch raw data files." );
-            return false;
-        }
-
-        if ( eevo.getTechnologyType().equals( "NONE" ) ) {
-            BatchInfoPopulationServiceImpl.log
-                    .info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
-            return false;
-        }
-
-        AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( e == null )
-            return true;
-
-        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) )
-            return true; // worth trying
-        // again perhaps
-
-        // on occasions the files appear or were missed the first time ...? GSE20842
-        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) {
-            RawDataFetcher fetcher = new RawDataFetcher();
-            return fetcher.checkForFile( ee.getAccession().getAccession() );
-        }
-
-        return false; // already did it.
-
-    }
-
-    /**
-     * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
-     *
-     * @param ee ee
-     */
-    private void removeExistingBatchFactor( ExpressionExperiment ee ) {
-        ExperimentalDesign ed = ee.getExperimentalDesign();
-
-        ExperimentalFactor toRemove = null;
-
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
-
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                toRemove = ef;
-                break;
-                /*
-                 * FIXME handle the case where we somehow have two or more.
-                 */
-            }
-        }
-
-        if ( toRemove == null ) {
-            return;
-        }
-
-        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor: " + toRemove );
-        experimentalFactorService.delete( toRemove );
-        ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
-        this.expressionExperimentService.update( ee );
     }
 
     /**
@@ -383,6 +364,67 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
+     * @param  accession
+     * @return
+     */
+    private final File locateFASTQheadersForBatchInfo( String accession ) {
+        String fhd = Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG );
+
+        if ( StringUtils.isBlank( fhd ) ) {
+            throw new IllegalStateException( "You must configure the path to extracted headers directory (" + GEMMA_FASTQ_HEADERS_DIR_CONFIG + ")" );
+        }
+
+        File headerFile = new File( fhd + File.separator
+                + accession + FASTQHEADERSFILE_SUFFIX );
+        return headerFile;
+    }
+
+    /**
+     * @param  ee     ee
+     * @param  rnaSeq if the data set is RNAseq
+     * @return        true if it needs processing and data is available
+     */
+    private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
+
+        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
+
+        assert eevo != null;
+
+        if ( rnaSeq ) {
+            return !expressionExperimentService.checkHasBatchInfo( ee );
+        }
+
+        if ( StringUtils.isBlank( eevo.getAccession() ) ) {
+            BatchInfoPopulationServiceImpl.log.info( ee
+                    + " lacks an external accession to use for fetching, will not attempt to fetch raw data files." );
+            return false;
+        }
+
+        if ( eevo.getTechnologyType().equals( "NONE" ) ) {
+            BatchInfoPopulationServiceImpl.log
+                    .info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
+            return false;
+        }
+
+        AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        if ( e == null )
+            return true;
+
+        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) )
+            return true; // worth trying
+        // again perhaps
+
+        // on occasions the files appear or were missed the first time ...? GSE20842
+        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) {
+            RawDataFetcher fetcher = new RawDataFetcher();
+            return fetcher.checkForFile( ee.getAccession().getAccession() );
+        }
+
+        return false; // already did it.
+
+    }
+
+    /**
      * Expects to find a file with the following 5 tab-delimited fields (and no header):
      * 
      * <ol>
@@ -404,8 +446,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
         String accession = ee.getAccession().getAccession();
-        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
-                + accession + FASTQHEADERSFILE_SUFFIX );
+        File headerFile = locateFASTQheadersForBatchInfo( accession );
 
         if ( !headerFile.canRead() ) {
             throw new IOException( "No header file for " + ee );
@@ -416,37 +457,34 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Exposed for testing
-     * 
-     * @param  accession             GEO accession
-     * @return                       map of GEO id to headers, including the platform ID
-     * @throws IOException
-     * @throws FileNotFoundException
+     * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
+     *
+     * @param ee ee
      */
-    Map<String, String> readFastqHeaders( String accession ) throws IOException, FileNotFoundException {
-        Map<String, String> result = new HashMap<>();
-        File headerFile = new File( Settings.getString( "gemma.fastq.headers.dir" ) + File.separator
-                + accession + FASTQHEADERSFILE_SUFFIX );
-        try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
+    private void removeExistingBatchFactor( ExpressionExperiment ee ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
 
-                String[] fields = StringUtils.split( line, "\t" );
+        ExperimentalFactor toRemove = null;
 
-                if ( fields.length < 5 ) {
-                    continue;
-                }
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
-                String geoID = fields[0];
-                String geoPlatformID = fields[2]; // we may use this if the headers are not usable.
-                String headers = fields[4]; // this may be FAILURE (possibly more than once)
-
-                result.put( geoID, geoPlatformID + MULTIFASTQHEADER_DELIMITER + headers );
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                toRemove = ef;
+                break;
+                /*
+                 * FIXME handle the case where we somehow have two or more.
+                 */
             }
-
         }
 
-        return result;
+        if ( toRemove == null ) {
+            return;
+        }
+
+        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor: " + toRemove );
+        experimentalFactorService.delete( toRemove );
+        ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
+        this.expressionExperimentService.update( ee );
     }
 
 }

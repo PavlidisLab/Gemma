@@ -33,10 +33,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -136,6 +140,62 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         ee = eeService.thawLite( ee );
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 1, experimentalFactors.size() );
+    }
+
+    /*
+     * See https://github.com/PavlidisLab/Gemma/issues/129
+     */
+    @Test
+    public void testGSE14285OneBatch() throws Exception {
+        GeoService geoService = this.getBean( GeoService.class );
+
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE142485", false, true, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE142485 was not removed from the system prior to test" );
+        }
+        ee = eeService.thawLite( ee );
+        boolean success = batchInfoPopulationService.fillBatchInformation( ee, false );
+        assertTrue( success );
+        ee = eeService.thawLite( ee );
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        assertTrue( experimentalFactors.isEmpty() );
+
+        assertTrue( auditService.hasEvent( ee, SingleBatchDeterminationEvent.class ) );
+        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+    }
+
+    /*
+     * See https://github.com/PavlidisLab/Gemma/issues/129
+     */
+    @Test
+    public void testGSE156689NoBatchinfo() throws Exception {
+        GeoService geoService = this.getBean( GeoService.class );
+
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess/batcheffects/" ) ) );
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE156689", false, true, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.warn( "Test skipped because GSE156689 was not removed from the system prior to test" );
+        }
+
+        ee = eeService.thawLite( ee );
+        boolean success = batchInfoPopulationService.fillBatchInformation( ee, false );
+
+        assertTrue( !success );
+
+        ee = eeService.thawLite( ee );
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        assertTrue( experimentalFactors.isEmpty() );
+        assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
+        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+
     }
 
     @Test

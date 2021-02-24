@@ -111,7 +111,7 @@ public class GoldenPath {
         assert databaseName != null;
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
-        this.url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true&useSSL=false";
         GoldenPath.log.info( "Connecting to " + databaseName );
         GoldenPath.log.debug( "Connecting to Golden Path : " + url + " as " + user );
 

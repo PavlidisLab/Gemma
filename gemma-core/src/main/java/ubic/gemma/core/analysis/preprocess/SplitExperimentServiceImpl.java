@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import gemma.gsec.SecurityService;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -102,7 +103,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn ) {
+    public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
 
         toSplit = eeService.thawLite( toSplit );
 
@@ -225,11 +226,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber );
                 }
 
-                if ( ef.getFactorValues().isEmpty() ) {
+                // EFs that have only one level, or which aren't used at all, are removed.
+                if ( ef.getFactorValues().isEmpty() || ef.getFactorValues().size() == 1 ) {
                     toRemoveFactors.add( ef );
                 }
             }
-            // remove unused factors
+            
+            
+            // remove the unused/unneded factors
             if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
@@ -284,20 +288,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             result.add( split );
 
             // postprocess. One problem can be that now we may have batches that are singletons etc.
-            try {
-                preprocessor.process( split );
-            } catch ( PreprocessingException e ) {
-                log.error( "Failure while preprocessing: " + split, e );
+            if ( postProcess ) {
+                try {
+                    preprocessor.process( split );
+                } catch ( PreprocessingException e ) {
+                    log.error( "Failure while preprocessing: " + split, e );
+                }
             }
         }
 
-        // Enforce relation to other parts of the split.
-        for ( ExpressionExperiment split : result ) {
-            for ( ExpressionExperiment split2 : result ) {
-                if ( split.equals( split2 ) ) continue;
-                split.getOtherParts().add( split2 );
-            }
-        }
+        enforceOtherParts( toSplit, result );
 
         for ( ExpressionExperiment split : result ) {
             eeService.update( split );
@@ -327,6 +327,17 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         // Or mark it as troubled?
 
         return result;
+    }
+
+    @Transactional
+    void enforceOtherParts( ExpressionExperiment toSplit, Collection<ExpressionExperiment> result ) {
+        // Enforce relation to other parts of the split.
+        for ( ExpressionExperiment split : result ) {
+            for ( ExpressionExperiment split2 : result ) {
+                if ( split.equals( split2 ) ) continue;
+                split.getOtherParts().add( split2 );
+            }
+        }
     }
 
     /**

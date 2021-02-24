@@ -1236,6 +1236,10 @@ public class ExpressionExperimentDaoImpl
             Collection<ArrayDesignValueObject> adVos = CommonQueries
                     .getArrayDesignsUsedVOs( vo.getId(), this.getSessionFactory().getCurrentSession() );
 
+            if ( adVos.isEmpty() ) {
+                log.debug( "Missing array design information for " + vo );
+                continue;
+            }
             ArrayDesignValueObject ad = adVos.iterator().next();
             vo.setTechnologyType( ad.getTechnologyType() );
             vo.setArrayDesignCount( adVos.size() );
@@ -1248,12 +1252,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void remove( final ExpressionExperiment ee ) {
-      
+
         if ( ee == null )
             throw new IllegalArgumentException();
 
         log.info( "Deleting " + ee.getShortName() );
-        
+
         Session session = this.getSessionFactory().getCurrentSession();
 
         try {
@@ -1265,7 +1269,7 @@ public class ExpressionExperimentDaoImpl
             session.clear();
 
             log.debug( " ... clearing curation details associations" );
-            
+
             // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but 
             // this may be okay now with updated config - see CurationDetails.hbm.xml)
             ee.getCurationDetails().setLastNeedsAttentionEvent( null );
@@ -1286,7 +1290,7 @@ public class ExpressionExperimentDaoImpl
             Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
 
             log.debug( " ... clearing vectors" );
-            
+
             ee.getRawExpressionDataVectors().clear();
 
             ee.getProcessedExpressionDataVectors().clear();
@@ -1298,7 +1302,7 @@ public class ExpressionExperimentDaoImpl
             ee.getOtherParts().clear();
 
             log.debug( " ... calling update&flush" );
-            
+
             session.update( ee );
             session.flush();
 
@@ -1332,7 +1336,7 @@ public class ExpressionExperimentDaoImpl
             }
 
             log.info( ".... flush and final deletion ..." );
-            
+
             session.flush();
             session.delete( ee );
 

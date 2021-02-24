@@ -43,8 +43,8 @@ public interface ExpressionDataFileService {
 
     String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
     String DISCLAIMER = "# If you use this file for your research, please cite: \n"
-            + "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. "
-            + "Bioinformatics, 2012. \n";
+            + "# Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse. \n"
+            + "# Database, baab006 (doi:10.1093/database/baab006). \n";
     String JSON_FILE_SUFFIX = ".data.json.gz";
     String TMP_DATA_DIR =
             Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;

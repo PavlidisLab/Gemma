@@ -64,60 +64,53 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     @Autowired
     private ExpressionExperimentService eeService;
 
-    private Collection<ExpressionExperiment> results = new HashSet<>();
-
-    private ExperimentalFactor splitOn = null;
-
     @Autowired
     private SecurityService securityService;
 
-    private ExpressionExperiment ee = null;
+    private ExpressionExperiment ee;
+
+    private Collection<ExpressionExperiment> results;
 
     @Before
     public void setup() throws Exception, PreprocessingException {
+        ee = null;
+        results = new HashSet<>();
+    }
+
+    @Test
+    public void testSplitGSE17183ByOrganismPart() throws Exception, PreprocessingException {
 
         String geoId = "GSE17183";
-
-        ExpressionExperiment oldee = eeService.findByShortName( geoId );
-        if ( oldee != null ) eeService.remove( oldee );
 
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
 
         @SuppressWarnings("unchecked")
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
-        this.ee = ees.iterator().next();
+        ee = ees.iterator().next();
 
         ee = eeService.thaw( ee );
 
         securityService.makePublic( ee );
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/analysis/preprocess/2877_GSE17183_expdesign.data.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/2877_GSE17183_expdesign.data.txt" ) ) {
             assertNotNull( is );
             experimentalDesignImporter.importDesign( ee, is );
         }
 
         preprocessor.process( ee ); // to mimic real life better
 
+        ExperimentalFactor splitOn = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getName().toLowerCase().startsWith( "organism.part" ) ) {
-                this.splitOn = ef;
+                splitOn = ef;
             }
         }
 
-        assertNotNull( this.splitOn );
-    }
+        assertNotNull( splitOn );
 
-    @After
-    public void teardown() throws Exception {
-        //   eeService.remove( results );
-    }
-
-    @Test
-    public void test() throws Exception {
-
-        this.results = splitService.split( ee, splitOn );
+        results = splitService.split( ee, splitOn, true );
         assertEquals( splitOn.getFactorValues().size(), results.size() );
 
         for ( ExpressionExperiment e : results ) {
@@ -134,8 +127,53 @@ public class SplitExperimentTest extends BaseSpringContextTest {
             assertEquals( 2, e.getOtherParts().size() );
 
         }
+    }
 
-        eeService.remove( results );
+    @Test
+    public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {
+
+        String geoId = "GSE123753";
+
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
+
+        @SuppressWarnings("unchecked")
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );
+        ee = ees.iterator().next();
+
+        ee = eeService.thaw( ee );
+
+        securityService.makePublic( ee );
+
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/analysis/preprocess/17525_GSE123753_expdesign.data.txt" ) ) {
+            assertNotNull( is );
+            experimentalDesignImporter.importDesign( ee, is );
+        }
+
+        // we can't really process the data since there are no attached datasets to the GEO series
+
+        ExperimentalFactor splitOn = null;
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( ef.getName().toLowerCase().startsWith( "collection.of.material" ) ) {
+                splitOn = ef;
+            }
+        }
+
+        assertNotNull( splitOn );
+
+        results = splitService.split( ee, splitOn, false );
+        assertEquals( splitOn.getFactorValues().size(), results.size() );
+    }
+
+    @After
+    public void teardown() throws Exception {
+        if ( ee != null ) {
+            eeService.remove( ee );
+        }
+        for ( ExpressionExperiment splitEE : results ) {
+            eeService.remove( splitEE );
+        }
     }
 
 }

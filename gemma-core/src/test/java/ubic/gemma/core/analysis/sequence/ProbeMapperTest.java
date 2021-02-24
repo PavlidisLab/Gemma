@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,7 +76,8 @@ public class ProbeMapperTest extends TestCase {
 
     /*
      * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 2/2011 for hg19.
-     * <a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929">here</a>
+     * <a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929">
+     * here</a>
      * 73,461,405-73,480,144)
      */
     public void testLocateGene() {
@@ -129,7 +130,7 @@ public class ProbeMapperTest extends TestCase {
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
                         ThreePrimeDistanceMethod.RIGHT, config );
 
-        Assert.assertTrue( !results.isEmpty() );
+        Assert.assertTrue( results != null && !results.isEmpty() );
         for ( BlatAssociation blatAssociation : results ) {
             ProbeMapperTest.log.debug( blatAssociation );
             if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {
