@@ -290,7 +290,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             if ( anyGoodHeaders && anyBadHeaders ) {
                 throw new RuntimeException( "Data set uses just one platform and only some headers had run/device/lane information" );
             } else if ( platforms.size() == 1 && anyBadHeaders ) {
-                log.info( "Headers lack run/device/lane information and there is just one platform used: assuming a single batch" );
+                // all of the headers are useless.
+                throw new RuntimeException( "Data set uses just one platform, headers lacked run/device/lane information." );
             } else {
                 log.info( "Data set appears to have been run in a single batch based on run/device/lane information" );
             }

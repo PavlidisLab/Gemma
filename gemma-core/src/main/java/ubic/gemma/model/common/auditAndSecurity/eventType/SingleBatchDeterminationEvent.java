@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,30 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Indicates that we got batch information, but there was (as far as we can tell) just one batch. For example, a single
  * HiSeq lane.
- * 
+ *
  * @author paul
  */
 public class SingleBatchDeterminationEvent extends BatchInformationFetchingEvent {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = -6544162258733474787L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public SingleBatchDeterminationEvent() {
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public static final class Factory {
+        public static SingleBatchDeterminationEvent newInstance() {
+            return new SingleBatchDeterminationEvent();
+        }
+
+    }
 
 }

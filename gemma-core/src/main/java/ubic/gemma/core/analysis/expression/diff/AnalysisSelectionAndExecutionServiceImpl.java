@@ -79,6 +79,11 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         if ( config.getAnalysisType() == null ) {
             AnalysisType type = this
                     .determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
+
+            if ( type == null ) {
+                throw new IllegalArgumentException( "The analysis type could not be determined" );
+            }
+
             if ( type.equals( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION ) ) {
                 /*
                  * Ensure the config does not have interactions.
@@ -206,14 +211,16 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                         return AnalysisType.OSTTEST;
                     case 2:
                         /*
-                         * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
+                         * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it
+                         * separate for
                          * clarity.
                          */
                         return AnalysisType.TTEST;
                     default:
 
                         /*
-                         * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
+                         * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a
+                         * one-way anova
                          * with two groups is just a t-test
                          */
                         return AnalysisType.OWA;

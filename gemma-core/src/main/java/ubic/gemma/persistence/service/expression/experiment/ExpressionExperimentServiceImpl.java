@@ -37,6 +37,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -247,6 +248,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // still nothing? Check if we have info from FASTQ headers for RNA-seq case
+
         boolean allBAsHaveFASTQHeaders = true;
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( ba.getFastqHeaders() == null ) {
@@ -255,7 +257,22 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        return allBAsHaveFASTQHeaders;
+        if ( allBAsHaveFASTQHeaders ) {
+            // the presence of this information is not a reliable indicator that we have batch info
+            // , because some FASTQ headers lack usable batch information.
+            AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+            if ( ev == null ) {
+                // shouldn't be, but if we hit this...err on the side of caution
+                return false;
+            }
+            if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( ev.getClass() ) ) {
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+
     }
 
     @Override
