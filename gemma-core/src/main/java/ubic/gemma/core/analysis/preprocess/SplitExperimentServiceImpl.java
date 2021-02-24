@@ -226,11 +226,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber );
                 }
 
-                if ( ef.getFactorValues().isEmpty() ) {
+                // EFs that have only one level, or which aren't used at all, are removed.
+                if ( ef.getFactorValues().isEmpty() || ef.getFactorValues().size() == 1 ) {
                     toRemoveFactors.add( ef );
                 }
             }
-            // remove unused factors
+            
+            
+            // remove the unused/unneded factors
             if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
