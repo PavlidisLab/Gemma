@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.AbstractTask;
@@ -33,7 +34,11 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFe
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
         } else if ( taskCommand.getExpressionExperiment() != null ) {
             taskCommand.setMaxRuntime( 30 ); // time to download files etc.
-            batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true );
+            try {
+                batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true );
+            } catch ( BatchInfoPopulationException e ) {
+                log.error( "Could not fill batch information for " + taskCommand.getExpressionExperiment() + ".", e );
+            }
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

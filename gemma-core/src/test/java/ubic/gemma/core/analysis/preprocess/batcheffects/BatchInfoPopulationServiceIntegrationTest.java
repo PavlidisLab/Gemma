@@ -65,7 +65,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         assertNotNull( newee );
         newee = eeService.thawLite( newee );
 
-        assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
+        batchInfoPopulationService.fillBatchInformation( newee, true );
 
     }
 
@@ -87,7 +87,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         assertNotNull( newee );
         newee = eeService.thawLite( newee );
 
-        assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
+        batchInfoPopulationService.fillBatchInformation( newee, true );
 
         newee = eeService.thawLite( newee );
 
