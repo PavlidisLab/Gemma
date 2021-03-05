@@ -229,10 +229,19 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 // EFs that have only one level, or which aren't used at all, are removed.
                 if ( ef.getFactorValues().isEmpty() || ef.getFactorValues().size() == 1 ) {
                     toRemoveFactors.add( ef );
+                    for ( BioAssay ba : split.getBioAssays() ) {
+                        BioMaterial bm = ba.getSampleUsed();
+                        Collection<FactorValue> toClear = new HashSet<>();
+                        for ( FactorValue fv : bm.getFactorValues() ) {
+                            if ( fv.getExperimentalFactor().equals( ef ) ) {
+                                toClear.add( fv );
+                            }
+                        }
+                        bm.getFactorValues().removeAll( toClear );
+                    }
                 }
             }
-            
-            
+
             // remove the unused/unneded factors
             if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
@@ -498,7 +507,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  de databse entry
-     * @return           non-persistent clone
+     * @return    non-persistent clone
      */
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
         if ( de == null ) return null;
@@ -508,8 +517,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /**
      * @param  bm biomaterial
-     * @param ba bioassay
-     * @return            non-persistent clone
+     * @param  ba bioassay
+     * @return    non-persistent clone
      */
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
         BioMaterial clone = BioMaterial.Factory.newInstance();
