@@ -60,6 +60,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.util.SecurityUtil;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -324,10 +326,10 @@ public class SearchServiceImpl implements SearchService {
             // Initial list
             List<SearchResult> results = this
                     .search( SearchSettingsImpl.expressionExperimentSearch( query, taxon ), false /* no fill */, false /*
-                                                                                                                        * speed
-                                                                                                                        * search,
-                                                                                                                        * irrelevant
-                                                                                                                        */ )
+                     * speed
+                     * search,
+                     * irrelevant
+                     */ )
                     .get( ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getResultId() );
@@ -436,7 +438,7 @@ public class SearchServiceImpl implements SearchService {
      * @param  results        the results to which should any new results be accreted.
      * @param  settings
      * @param  webSpeedSearch - only used for gene search?
-     * @return                same object as given, possibly extended by new items from search.
+     * @return same object as given, possibly extended by new items from search.
      */
     private List<SearchResult> accreteResultsOthers( List<SearchResult> results, SearchSettings settings,
             boolean webSpeedSearch ) {
@@ -686,12 +688,12 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * Search via characteristics i.e. ontology terms.
-     * 
+     *
      * This is an important type of search but also a point of performance issues. Searches for "specific" terms are
      * generally not a big problem (yielding less than 100 results); searches for "broad" terms can return numerous
      * (thousands)
      * results.
-     * 
+     *
      * @param  settings
      * @return
      */
@@ -728,11 +730,11 @@ public class SearchServiceImpl implements SearchService {
     /**
      * Perform a Experiment search based on annotations (anchored in ontology terms) - it does not have to be one word,
      * it could be "parkinson's disease"; it can also be a URI.
-     * 
+     *
      * @param  query string
      * @param  t     taxon to limit on, can be null
      * @param  limit stop querying if we hit or surpass this limit. 0 for no limit.
-     * @return       collection of SearchResults (Experiments)
+     * @return collection of SearchResults (Experiments)
      */
     private Collection<SearchResult> characteristicEESearchTerm( String query, Taxon t, int limit ) {
 
@@ -874,7 +876,7 @@ public class SearchServiceImpl implements SearchService {
      * @param  query string
      * @param  t     taxon, can be null
      * @param  limit try to stop searching if we exceed this (0 for no limit)
-     * @return       SearchResults of Experiments
+     * @return SearchResults of Experiments
      */
     private Collection<SearchResult> characteristicEESearchWithChildren( String query, Taxon t, int limit ) {
         StopWatch timer = this.startTiming();
@@ -1261,33 +1263,37 @@ public class SearchServiceImpl implements SearchService {
         Map<ExpressionExperiment, String> results = new HashMap<>();
         String query = StringEscapeUtils.unescapeJava( settings.getQuery() );
         Collection<ExpressionExperiment> ees = expressionExperimentService.findByName( query );
-        if ( !ees.isEmpty() ) {
-            for ( ExpressionExperiment ee : ees ) {
-                results.put( ee, ee.getName() );
-            }
-        } else {
+
+        for ( ExpressionExperiment ee : ees ) {
+            results.put( ee, ee.getName() );
+        }
+
+        // in response to https://github.com/PavlidisLab/Gemma/issues/140, always keep going if admin.
+        if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
             ExpressionExperiment ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
                 results.put( ee, ee.getShortName() );
-            } else {
-
-                ees = expressionExperimentService.findByAccession( query );
-                for ( ExpressionExperiment e : ees ) {
-                    results.put( e, e.getId().toString() );
-                }
-
-                if ( results.isEmpty() ) {
-                    try {
-                        // maybe user put in a primary key value.
-                        ee = expressionExperimentService.load( new Long( query ) );
-                        if ( ee != null )
-                            results.put( ee, ee.getId().toString() );
-                    } catch ( NumberFormatException e ) {
-                        // no-op - it's not an ID.
-                    }
-                }
             }
         }
+
+        if ( results.isEmpty() || SecurityUtil.isUserAdmin() ) {
+            ees = expressionExperimentService.findByAccession( query ); // this will find split parts
+            for ( ExpressionExperiment e : ees ) {
+                results.put( e, e.getId().toString() );
+            }
+        }
+
+        if ( results.isEmpty() ) {
+            try {
+                // maybe user put in a primary key value.
+                ExpressionExperiment ee = expressionExperimentService.load( new Long( query ) );
+                if ( ee != null )
+                    results.put( ee, ee.getId().toString() );
+            } catch ( NumberFormatException e ) {
+                // no-op - it's not an ID.
+            }
+        }
+
 
         if ( settings.getTaxon() != null ) {
             Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( results.keySet() );
@@ -1531,7 +1537,7 @@ public class SearchServiceImpl implements SearchService {
      * A key method for experiment search. This search does both an database search and a compass search, and looks at
      * several different associations. To allow maximum flexibility, we try not to limit the number of results here (it
      * can be done via the settings object)
-     * 
+     *
      * If the search matches a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
      * free-text indices and ontology annotations.
      *
@@ -1558,9 +1564,10 @@ public class SearchServiceImpl implements SearchService {
 
             /*
              * If we get results here, probably we want to just stop immediately, because the user is searching for
-             * something exact.
+             * something exact. In response to https://github.com/PavlidisLab/Gemma/issues/140 we continue if the user
+             * has admin status.
              */
-            if ( !results.isEmpty() ) {
+            if ( !results.isEmpty() && !SecurityUtil.isUserAdmin() ) {
                 return results;
             }
 
@@ -2081,9 +2088,9 @@ public class SearchServiceImpl implements SearchService {
     //    }
 
     /**
-     * 
+     *
      * @param  hits CompassHits object
-     * @return      collection of SearchResult. These *do not* contain the actual entities, just their IDs and class.
+     * @return collection of SearchResult. These *do not* contain the actual entities, just their IDs and class.
      */
     private Collection<SearchResult> getSearchResults( CompassHits hits ) {
         StopWatch timer = new StopWatch();
@@ -2116,7 +2123,7 @@ public class SearchServiceImpl implements SearchService {
             SearchServiceImpl.log.info( results.size() + " hits retrieved (out of " + Math
                     .min( SearchServiceImpl.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
                     + timer
-                            .getTime()
+                    .getTime()
                     + "ms" );
         }
         if ( timer.getTime() > 5000 ) {
@@ -2131,12 +2138,12 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * Given raw results
-     * 
+     *
      * @param  settings
      * @param  rawResults
      * @param  fillObjects should the entities be filled in? Otherwise, the SearchResults will just have the Class and
      *                     Id for later retrieval.
-     * @return             map of result entity class (e.g. BioSequence or ExpressionExperiment) to SearchResult
+     * @return map of result entity class (e.g. BioSequence or ExpressionExperiment) to SearchResult
      */
     private Map<Class<?>, List<SearchResult>> getSortedLimitedResults( SearchSettings settings,
             List<SearchResult> rawResults, boolean fillObjects ) {
@@ -2225,7 +2232,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /*
-     * 
+     *
      */
     private void initializeNameToTaxonMap() {
 
