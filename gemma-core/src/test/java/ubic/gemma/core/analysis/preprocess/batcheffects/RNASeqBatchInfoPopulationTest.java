@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2019 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,11 +18,6 @@
  */
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.Collection;
@@ -47,8 +42,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
 
+import static org.junit.Assert.*;
+
 /**
- * 
+ *
  * @author paul
  */
 public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
@@ -99,7 +96,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     /**
      * Test of creating batch factor. GSE71229 has two lanes
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -119,9 +116,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         ee = ees.iterator().next();
         ee = eeService.thawLite( ee );
 
-        boolean success = batchInfoPopulationService.fillBatchInformation( ee, true );
-
-        assertTrue( success );
+        batchInfoPopulationService.fillBatchInformation( ee, true );
 
         BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
 
@@ -136,7 +131,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertTrue( auditService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
 
         // now repeat it to make sure we don't end up with duplicate factors
-        success = batchInfoPopulationService.fillBatchInformation( ee, true );
+        batchInfoPopulationService.fillBatchInformation( ee, true );
         ee = eeService.thawLite( ee );
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 1, experimentalFactors.size() );
@@ -158,8 +153,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped because GSE142485 was not removed from the system prior to test" );
         }
         ee = eeService.thawLite( ee );
-        boolean success = batchInfoPopulationService.fillBatchInformation( ee, false );
-        assertTrue( success );
+        batchInfoPopulationService.fillBatchInformation( ee, false );
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
@@ -186,9 +180,9 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.thawLite( ee );
-        boolean success = batchInfoPopulationService.fillBatchInformation( ee, false );
-
-        assertTrue( !success );
+        assertThrows( BatchInfoPopulationException.class, () -> {
+            batchInfoPopulationService.fillBatchInformation( ee, false );
+        } );
 
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

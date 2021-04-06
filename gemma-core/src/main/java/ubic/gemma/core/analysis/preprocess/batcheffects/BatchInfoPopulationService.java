@@ -31,8 +31,8 @@ public interface BatchInfoPopulationService {
      *
      * @param  ee    the experiment
      * @param  force whether to force recomputation
-     * @return       true if information was successfully obtained
+     * @throws a {@link BatchInfoPopulationException} describing the issue with populating batch information
      */
-    boolean fillBatchInformation( ExpressionExperiment ee, boolean force );
+    void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException;
 
 }

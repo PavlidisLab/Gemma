@@ -80,14 +80,14 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private static final String FASTQHEADERSFILE_SUFFIX = ".fastq-headers-table.txt";
     /**
-     * 
+     *
      */
     private static final String GEMMA_FASTQ_HEADERS_DIR_CONFIG = "gemma.fastq.headers.dir";
     private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
 
     /**
      * @param  ef ef
-     * @return    true if the factor seems to be a 'batch' factor.
+     * @return true if the factor seems to be a 'batch' factor.
      */
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
         Characteristic c = ef.getCategory();
@@ -127,7 +127,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private boolean force = false;
 
     @Override
-    public boolean fillBatchInformation( ExpressionExperiment ee, boolean f ) {
+    public void fillBatchInformation( ExpressionExperiment ee, boolean f ) throws BatchInfoPopulationException {
         this.force = f;
 
         boolean isRNASeq = expressionExperimentService.isRNASeq( ee );
@@ -136,30 +136,29 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         if ( !needed ) {
             BatchInfoPopulationServiceImpl.log
                     .info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
-            return false;
+            return;
         }
 
         Collection<LocalFile> files = null;
         try {
             if ( isRNASeq ) {
                 this.getBatchDataFromFASTQHeaders( ee );
-                return true; // success even if only one batch.
+                return;
             }
 
             files = this.fetchRawDataFiles( ee );
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService
                         .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
-                return false;
+                throw new BatchInfoPopulationException( "No file were found." );
             }
-            return this.getBatchDataFromRawFiles( ee, files );
+            this.getBatchDataFromRawFiles( ee, files );
 
         } catch ( Exception e ) {
             BatchInfoPopulationServiceImpl.log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getStackTrace( e ) );
-
-            return false;
+            throw new BatchInfoPopulationException( "", e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
@@ -171,9 +170,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Exposed for testing
-     * 
+     *
      * @param  accession             GEO accession
-     * @return                       map of GEO id to headers, including the platform ID
+     * @return map of GEO id to headers, including the platform ID
      * @throws IOException
      * @throws FileNotFoundException
      */
@@ -181,7 +180,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         Map<String, String> result = new HashMap<>();
         File headerFile = new File( Settings.getString( GEMMA_FASTQ_HEADERS_DIR_CONFIG ) + File.separator
                 + accession + FASTQHEADERSFILE_SUFFIX );
-        try (BufferedReader br = new BufferedReader( new FileReader( headerFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( headerFile ) ) ) {
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
 
@@ -207,7 +206,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * Currently only supports GEO
      *
      * @param  ee ee
-     * @return    local file
+     * @return local file
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
@@ -221,7 +220,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Look for batch information and create a Factor for batch if there is more than one batch.
-     * 
+     *
      * @param  ee
      * @throws IOException if there was a problem reading the FASTQ headers
      */
@@ -267,12 +266,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * For microarray case
-     * 
+     *
      * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @param  ee    ee
-     * @return       boolean
+     * @return boolean
      */
-    private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    private void getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) throws BatchInfoPopulationException {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
         ee = expressionExperimentService.thaw( ee );
 
@@ -288,38 +287,36 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
-        if ( !dates.isEmpty() ) {
-            int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
-
-            List<Date> allDates = new ArrayList<>( dates.values() );
-            Collections.sort( allDates );
-            String datesString = StringUtils.join( allDates, MULTIFASTQHEADER_DELIMITER );
-
-            BatchInfoPopulationServiceImpl.log
-                    .info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches
-                            + " batches." );
-
-            if ( numberOfBatches == 1 ) {
-                this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
-                        "Dates of sample runs: " + datesString );
-            } else {
-                this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
-                        batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
-                                + " batches.",
-                        "Dates of sample runs: " + datesString );
-            }
-
-            return true;
+        if ( dates.isEmpty() ) {
+            throw new BatchInfoPopulationException( "No biomaterials were associated to " + ee.getShortName() + "." );
         }
 
-        return false;
+        int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
+
+        List<Date> allDates = new ArrayList<>( dates.values() );
+        Collections.sort( allDates );
+        String datesString = StringUtils.join( allDates, MULTIFASTQHEADER_DELIMITER );
+
+        BatchInfoPopulationServiceImpl.log
+                .info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches
+                        + " batches." );
+
+        if ( numberOfBatches == 1 ) {
+            this.auditTrailService.addUpdateEvent( ee, SingleBatchDeterminationEvent.class, "Single batch experiment",
+                    "Dates of sample runs: " + datesString );
+        } else {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
+                    batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
+                            + " batches.",
+                    "Dates of sample runs: " + datesString );
+        }
     }
 
     /**
      * Finds FASTQ headers
-     * 
+     *
      * @param  ee          experiment
-     * @return             map of Biomaterial to header
+     * @return map of Biomaterial to header
      * @throws IOException if any files could not be read
      */
     private Map<BioMaterial, String> getFastqHeaders( ExpressionExperiment ee ) throws IOException {
@@ -382,7 +379,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     /**
      * @param  ee     ee
      * @param  rnaSeq if the data set is RNAseq
-     * @return        true if it needs processing and data is available
+     * @return true if it needs processing and data is available
      */
     private boolean needToRun( ExpressionExperiment ee, boolean rnaSeq ) {
 
@@ -426,7 +423,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Expects to find a file with the following 5 tab-delimited fields (and no header):
-     * 
+     *
      * <ol>
      * <li>GEO Sample ID
      * <li>SRA sample ID
@@ -434,15 +431,15 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * <li>SRA URL
      * <li>Header(s) delimited by MULTIFASTQHEADER_DELIMITER
      * </ol>
-     * 
+     *
      * Example
-     * 
+     *
      * <pre>
      * GSM2083854 SRR3212828 GPL17021 https://www.ncbi.nlm.nih.gov/sra?term=SRX1620346 @SRR3212828.1.1 1 length=101
      * </pre>
-     * 
+     *
      * @param  ee experiment
-     * @return    map of GEO id to headers, including the platform ID
+     * @return map of GEO id to headers, including the platform ID
      */
     private Map<String, String> readFastqHeaders( ExpressionExperiment ee ) throws IOException {
         String accession = ee.getAccession().getAccession();
