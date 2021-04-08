@@ -398,7 +398,7 @@ public class DatasetsWebService extends
      *                        call to yield an error.
      *                        </p>
      * @param diffExSet       the ID of the differential expression set to retrieve the data from.
-     * @param threshold       the threshold that the differential expression has to meet to be included in the response.
+     * @param threshold       the FDR threshold that the differential expression has to meet to be included in the response.
      * @param limit           maximum amount of returned gene-probe expression level pairs.
      * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
      * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
@@ -418,7 +418,7 @@ public class DatasetsWebService extends
     public ResponseDataObject datasetExpressionsDiffEx( // Params:
             @PathParam("datasets") ArrayDatasetArg datasets, // Required
             @QueryParam("diffExSet") LongArg diffExSet, // Required
-            @QueryParam("threshold") @DefaultValue("100.0") DoubleArg threshold, // Optional, default 100.0
+            @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
