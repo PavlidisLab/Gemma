@@ -72,7 +72,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     private Collection<ExpressionExperiment> results;
 
     @Before
-    public void setup() throws Exception, PreprocessingException {
+    public void setup() throws Exception {
         ee = null;
         results = new HashSet<>();
     }
