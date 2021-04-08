@@ -537,7 +537,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         StopWatch timer = new StopWatch();
         timer.start();
         String qs = DifferentialExpressionResultDaoImpl.fetchResultsBySingleResultSetQuery
-                + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
+                + " and r.correctedPvalue <= :threshold order by r.correctedPvalue";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
 
