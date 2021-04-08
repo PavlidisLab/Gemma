@@ -185,10 +185,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 // also values changed very slightly with updated library size computation (post-filtering)
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
-                assertEquals( 2.232837, Math.abs( contrast.getCoefficient() ), 0.001 ); 
-                assertEquals( 0.0066803, contrast.getPvalue(), 0.00001 );
-                assertEquals( 12.17347, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006680, r.getPvalue(), 0.00001 );
+                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.001 ); 
+                assertEquals( 0.006149004, contrast.getPvalue(), 0.00001 );
+                assertEquals( 12.693680, Math.abs( contrast.getTstat() ), 0.001 );
+                assertEquals( 0.006149004, r.getPvalue(), 0.00001 );
                 break;
             }
         }
