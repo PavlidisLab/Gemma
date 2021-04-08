@@ -57,7 +57,7 @@ public class PubMedXMLParser {
     private static final String ERROR_TAG = "Error";
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
     final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
-    private final String[] formats = new String[] { "MMM dd, yyyy", "yyyy" };
+    private final String[] formats = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
     DocumentBuilder builder;
 
     public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
@@ -146,6 +146,10 @@ public class PubMedXMLParser {
                         case "CollectiveName":
                             al.append( XMLUtils.getTextValue( f ) );
                             al.append( "; " );
+                            break;
+                        case "AffiliationInfo":
+                            break;
+                        case "Identifier":
                             break;
                         default:
                             log.warn( "Unrecognized node name " + nodeName );
@@ -308,12 +312,12 @@ public class PubMedXMLParser {
             monthText = "Jan"; // arbitrary...
         }
 
-        String dateString = monthText + " " + ( dayText == null ? "1" : dayText ) + ", " + yearText;
+        String dateString = monthText + " " + ( dayText == null ? "01" : dayText ) + ", " + yearText;
 
         try {
             return DateUtils.parseDate( dateString, formats );
         } catch ( ParseException e ) {
-            PubMedXMLParser.log.warn( "Could not parse date " + dateString + " from medlinetext=" + medLineText );
+            PubMedXMLParser.log.warn( "Could not parse date " + dateString );
             return null;
         }
     }
@@ -702,6 +706,12 @@ public class PubMedXMLParser {
 
                     }
 
+                    break;
+                case "DateCompleted":
+                case "CitationSubset":
+                case "DateRevised":
+                case "OtherID":
+                case "CoiStatement":
                     break;
                 default:
                     log.warn( "Unrecognized node name " + name );
