@@ -231,13 +231,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     toRemoveFactors.add( ef );
                     for ( BioAssay ba : split.getBioAssays() ) {
                         BioMaterial bm = ba.getSampleUsed();
-                        Collection<FactorValue> toClear = new HashSet<>();
+                        Collection<FactorValue> fvsToClear = new HashSet<>();
                         for ( FactorValue fv : bm.getFactorValues() ) {
                             if ( fv.getExperimentalFactor().equals( ef ) ) {
-                                toClear.add( fv );
+                                fvsToClear.add( fv );
                             }
                         }
-                        bm.getFactorValues().removeAll( toClear );
+                        bm.getFactorValues().removeAll( fvsToClear );
                     }
                 }
             }
@@ -301,12 +301,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 try {
                     preprocessor.process( split );
                 } catch ( PreprocessingException e ) {
-                    log.error( "Failure while preprocessing: " + split, e );
+                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
+                } catch ( Exception e ) {
+                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
                 }
             }
         }
 
-        enforceOtherParts( toSplit, result );
+        enforceOtherParts( result );
 
         for ( ExpressionExperiment split : result ) {
             eeService.update( split );
@@ -339,7 +341,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     @Transactional
-    void enforceOtherParts( ExpressionExperiment toSplit, Collection<ExpressionExperiment> result ) {
+    void enforceOtherParts( Collection<ExpressionExperiment> result ) {
         // Enforce relation to other parts of the split.
         for ( ExpressionExperiment split : result ) {
             for ( ExpressionExperiment split2 : result ) {
@@ -363,17 +365,19 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setReplicateDescription( experimentalDesign.getReplicateDescription() );
         clone.setTypes( this.cloneCharacteristics( experimentalDesign.getTypes() ) );
 
-        clone.getExperimentalFactors().addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors(), old2cloneFV ) );
+        clone.getExperimentalFactors()
+                .addAll( this.cloneExperimentalFactors( experimentalDesign.getExperimentalFactors(), experimentalDesign, old2cloneFV ) );
 
         return clone;
     }
 
     /**
      * @param  experimentalFactors
+     * @param  experimentalDesign
      * @param  old2cloneFV
      * @return                     non-persistent clones
      */
-    private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors,
+    private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors, ExperimentalDesign ed,
             Map<FactorValue, FactorValue> old2cloneFV ) {
         Collection<ExperimentalFactor> result = new HashSet<>();
         for ( ExperimentalFactor ef : experimentalFactors ) {
@@ -384,6 +388,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             clone.setDescription( ef.getDescription() );
             clone.setType( ef.getType() );
             clone.getFactorValues().addAll( this.cloneFactorValues( ef.getFactorValues(), clone, old2cloneFV ) );
+            clone.setExperimentalDesign( ed );
             result.add( clone );
             //    assert clone.getId() == null;
         }
