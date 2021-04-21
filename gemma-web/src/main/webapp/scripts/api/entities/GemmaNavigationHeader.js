@@ -46,8 +46,8 @@ Gemma.GemmaNavigationHeader = Ext
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '
                         + '(<a href="https://pavlidislab.github.io/Gemma/#credits" target="_blank">credits&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>). '
                         + '</p><p>To cite Gemma, please use: <br>'
-                        + 'Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. <em>Bioinformatics</em>, 2012.'
-                        + ' <a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
+                        + 'Lim N., et al., Curation of over 10,000 transcriptomic studies to enable data reuse. <em>Database</em>, 2021.'
+                        + ' <a href="https://doi.org/10.1093/database/baab006" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p></div>'
                   } ],
                   buttons : [ {

@@ -16,6 +16,7 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -65,11 +66,11 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
             if ( !( ee instanceof ExpressionExperiment ) ) {
                 addErrorObject( ee, "This is not an ExpressionExperiment!" );
             }
-
-            if ( batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force ) ) {
+            try {
+                batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force );
                 addSuccessObject( ee, "Added batch information" );
-            } else {
-                addErrorObject( ee, "Failed to add batch information" );
+            } catch ( BatchInfoPopulationException e ) {
+                addErrorObject( ee, "Failed to add batch information", e );
             }
         }
     }

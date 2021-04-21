@@ -14,8 +14,8 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -63,15 +63,10 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                     ee = this.eeService.thawLite( ee );
-                    boolean success = ser.fillBatchInformation( ee, force );
-                    if ( success ) {
-                        addSuccessObject( bas, "Successfully processed " + bas );
-                    } else {
-                        addErrorObject( bas, "Failed to process " + bas );
-                    }
-
-                } catch ( Exception e ) {
-                    addErrorObject( bas, e.getMessage(), e );
+                    ser.fillBatchInformation( ee, force );
+                    addSuccessObject( bas, "Successfully processed " + bas );
+                } catch ( BatchInfoPopulationException e ) {
+                    addErrorObject( bas, "Failed to process " + bas, e );
                 }
 
             }

@@ -528,12 +528,19 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 assert bas.size() == 1;
                 BioAssay ba = bas.iterator().next();
 
-                Double[] col = dmatrix.getColumn( i );
-                Integer sequenceReadCount = ( int ) Math.floor( DescriptiveWithMissing.sum( new cern.colt.list.DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
-                if ( sequenceReadCount <= 0 && !ba.getIsOutlier()) {
-                    // marked (removed) outliers have zero counts, otherwise no good
-                    throw new IllegalStateException( "read count was non-positive for " + ba );
+                Integer sequenceReadCount = ba.getSequenceReadCount();
+                if ( !ba.getIsOutlier() && ( sequenceReadCount == null || sequenceReadCount == 0 ) ) {
+                    // double check.
+                    Double[] col = dmatrix.getColumn( i );
+                    double maxExpression = DescriptiveWithMissing.max( new cern.colt.list.DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
+                    if ( maxExpression <= 0 ) {
+                        throw new IllegalStateException(
+                                "Sample has a null or zero read-count, isn't marked as an outlier, and max expression level is " + maxExpression
+                                        + ": " + ba );
+                    }
                 }
+
+                if ( sequenceReadCount == null ) sequenceReadCount = 0;
 
                 librarySize.set( i, sequenceReadCount );
             }
