@@ -125,8 +125,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( toSplit );
 
+        assert !qts.isEmpty();
+
         // Get the expression data matrices for the experiment. We'll split them and generate new vectors
+        log.info( "Fetching raw expression data vectors ... " );
         Map<QuantitationType, ExpressionDataMatrix<?>> qt2mat = new HashMap<>();
+        boolean foundPreferred = false;
         for ( QuantitationType qt : qts ) {
             if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
                 throw new UnsupportedOperationException( "Non-double values currently not supported for experiment split" );
@@ -135,16 +139,23 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             Collection<RawExpressionDataVector> vecs = rawExpressionDataVectorService.find( qt );
             rawExpressionDataVectorService.thaw( vecs );
             if ( vecs.isEmpty() ) {
-                log.debug( "No vectors for " + qt ); // that's okay, e.g. processed data
+                // this is okay if the data is processed, or if we have stray orphaned QTs
+                log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
                 continue;
             }
-            log.info( vecs.size() + " vectors for " + qt );
+            if ( qt.getIsPreferred() ) {
+                foundPreferred = true;
+            }
+            log.info( vecs.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
             qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vecs ) );
         }
 
+        if ( !foundPreferred ) {
+            log.warn( "No preferred quantitation type found; post-processing of splits will be skipped" );
+        }
+
         // stub the new experiments and create new names; all other information should be retained. Permissions should be the same. 
-        // Audit events should start over with a notated create event
         int splitNumber = 0;
 
         for ( FactorValue splitValue : splitOn.getFactorValues() ) {
@@ -212,7 +223,26 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
             }
 
-            // remove unused factorvalues from the design
+            // here we're using the original bms; we'll replace them
+            BioAssayDimension newBAD = makeBioAssayDimension( bms, toSplit );
+            // now replace the bms in the newBAD with the clones
+            List<BioAssay> badBAs = newBAD.getBioAssays();
+            List<BioAssay> replaceBAs = new ArrayList<>();
+            for ( BioAssay ba : badBAs ) {
+                BioAssay clonedBA = old2cloneBA.get( ba );
+                assert clonedBA != null;
+                assert clonedBA.getSampleUsed().getId() == null;
+                replaceBAs.add( clonedBA );
+            }
+            newBAD.getBioAssays().clear();
+            newBAD.getBioAssays().addAll( replaceBAs );
+            assert replaceBAs.size() == badBAs.size();
+
+            split.getBioAssays().clear();
+            split.getBioAssays().addAll( replaceBAs );
+            split.setNumberOfSamples( replaceBAs.size() );
+
+            // remove unused factors and factorvalues from the design and biomaterials
             Collection<ExperimentalFactor> toRemoveFactors = new HashSet<>();
             for ( ExperimentalFactor ef : split.getExperimentalDesign().getExperimentalFactors() ) {
                 Collection<FactorValue> toRemove = new HashSet<>();
@@ -223,11 +253,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
 
                 if ( ef.getFactorValues().removeAll( toRemove ) ) {
-                    log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber );
+                    log.info( toRemove.size() + " unused factor values removed for " + ef + " in split " + splitNumber + ", leaving "
+                            + ef.getFactorValues().size() + " fvs still used" );
                 }
 
-                // EFs that have only one level, or which aren't used at all, are removed.
-                if ( ef.getFactorValues().isEmpty() || ef.getFactorValues().size() == 1 ) {
+                assert !split.getBioAssays().isEmpty();
+
+                // EFs that have only one level, or which aren't used at all, are removed from the biomaterials (and gathered for removal from the ED)
+                if ( ef.getFactorValues().size() <= 1 ) {
                     toRemoveFactors.add( ef );
                     for ( BioAssay ba : split.getBioAssays() ) {
                         BioMaterial bm = ba.getSampleUsed();
@@ -237,19 +270,19 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                                 fvsToClear.add( fv );
                             }
                         }
-                        bm.getFactorValues().removeAll( fvsToClear );
+                        if ( bm.getFactorValues().removeAll( fvsToClear ) ) {
+                            log.debug( "Cleared " + fvsToClear.size() + " unused factor values from " + bm );
+                        }
                     }
                 }
             }
 
-            // remove the unused/unneded factors
+            // remove the unused/unneded factors from the ED
             if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
 
-            // here we're using the original bms; we'll replace them later
-            BioAssayDimension newBAD = makeBioAssayDimension( bms, toSplit );
-
+            log.info( "Building vectors for " + qts.size() + " quantitation types ..." );
             for ( QuantitationType qt : qt2mat.keySet() ) {
 
                 QuantitationType clonedQt = this.cloneQt( qt, split );
@@ -274,30 +307,19 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
-            // now replace the bms in the newBAD with the clones
-            List<BioAssay> badBAs = newBAD.getBioAssays();
-            List<BioAssay> replaceBAs = new ArrayList<>();
-            for ( BioAssay ba : badBAs ) {
-                BioAssay clonedBA = old2cloneBA.get( ba );
-                assert clonedBA != null;
-                assert clonedBA.getSampleUsed().getId() == null;
-                replaceBAs.add( clonedBA );
-            }
-            newBAD.getBioAssays().clear();
-            newBAD.getBioAssays().addAll( replaceBAs );
-            assert replaceBAs.size() == badBAs.size();
-
-            split.getBioAssays().clear();
-            split.getBioAssays().addAll( replaceBAs );
-            split.setNumberOfSamples( replaceBAs.size() );
-
             split = ( ExpressionExperiment ) persister.persist( split );
 
             // securityService.makePublic( split ); // temporary 
             result.add( split );
+        }
 
-            // postprocess. One problem can be that now we may have batches that are singletons etc.
-            if ( postProcess ) {
+        enforceOtherParts( result );
+
+        for ( ExpressionExperiment split : result ) {
+            eeService.update( split );
+
+            // postprocess
+            if ( foundPreferred && postProcess ) {
                 try {
                     preprocessor.process( split );
                 } catch ( PreprocessingException e ) {
@@ -305,18 +327,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 } catch ( Exception e ) {
                     log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
                 }
+            } else {
+                log.info( "Postprocessing skipped for " + split );
             }
         }
 
-        enforceOtherParts( result );
-
-        for ( ExpressionExperiment split : result ) {
-            eeService.update( split );
-        }
-
         /*
-         * Create a new "experiment set" that groups them together (not sure we'll keep this) Do we make the "source"
-         * part of this set?
+         * Create a new "experiment set" that groups them together (not sure we'll keep this)
          */
         ExpressionExperimentSet g = ExpressionExperimentSet.Factory.newInstance();
         g.setDescription( "Parts of " + toSplit.getShortName() + " that were split on " + splitOn.getName() );
@@ -325,10 +342,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         g.getExperiments().addAll( result );
         this.expressionExperimentSetService.create( g );
 
-        //   securityService.makePublic( g ); // at some point this would happen
-
-        // FIXME
         // remove useless data files
+
         dataFileService.deleteAllFiles( toSplit );
         // Clean the source experiment? remove diff and coex analyses, PCA, correlation matrices, processed data vectors
         // delete it?
