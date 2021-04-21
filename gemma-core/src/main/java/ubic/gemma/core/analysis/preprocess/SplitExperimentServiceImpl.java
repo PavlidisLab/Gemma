@@ -125,34 +125,37 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( toSplit );
 
-        assert !qts.isEmpty();
-
         // Get the expression data matrices for the experiment. We'll split them and generate new vectors
-        log.info( "Fetching raw expression data vectors ... " );
-        Map<QuantitationType, ExpressionDataMatrix<?>> qt2mat = new HashMap<>();
         boolean foundPreferred = false;
-        for ( QuantitationType qt : qts ) {
-            if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-                throw new UnsupportedOperationException( "Non-double values currently not supported for experiment split" );
+        Map<QuantitationType, ExpressionDataMatrix<?>> qt2mat = new HashMap<>();
+
+        if ( qts.size() > 0 ) {
+            log.info( "Fetching raw expression data vectors ... " );
+            for ( QuantitationType qt : qts ) {
+                if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                    throw new UnsupportedOperationException( "Non-double values currently not supported for experiment split" );
+                }
+
+                Collection<RawExpressionDataVector> vecs = rawExpressionDataVectorService.find( qt );
+                rawExpressionDataVectorService.thaw( vecs );
+                if ( vecs.isEmpty() ) {
+                    // this is okay if the data is processed, or if we have stray orphaned QTs
+                    log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
+                    continue;
+                }
+                if ( qt.getIsPreferred() ) {
+                    foundPreferred = true;
+                }
+                log.info( vecs.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
+
+                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vecs ) );
             }
 
-            Collection<RawExpressionDataVector> vecs = rawExpressionDataVectorService.find( qt );
-            rawExpressionDataVectorService.thaw( vecs );
-            if ( vecs.isEmpty() ) {
-                // this is okay if the data is processed, or if we have stray orphaned QTs
-                log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
-                continue;
+            if ( !foundPreferred ) {
+                log.warn( "No preferred quantitation type found; post-processing of splits will be skipped" );
             }
-            if ( qt.getIsPreferred() ) {
-                foundPreferred = true;
-            }
-            log.info( vecs.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
-
-            qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vecs ) );
-        }
-
-        if ( !foundPreferred ) {
-            log.warn( "No preferred quantitation type found; post-processing of splits will be skipped" );
+        } else {
+            log.warn( "Experiment has no QTs, probably doesn't have data, post-processing of splits will be skipped" );
         }
 
         // stub the new experiments and create new names; all other information should be retained. Permissions should be the same. 
