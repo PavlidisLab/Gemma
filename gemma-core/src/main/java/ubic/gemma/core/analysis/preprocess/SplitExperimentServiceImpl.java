@@ -282,7 +282,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
 
-            log.info( "Building vectors for " + qts.size() + " quantitation types ..." );
+            log.info( "Building vectors for " + qt2mat.size() + " quantitation types ..." );
             for ( QuantitationType qt : qt2mat.keySet() ) {
 
                 QuantitationType clonedQt = this.cloneQt( qt, split );
