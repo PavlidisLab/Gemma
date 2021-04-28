@@ -235,6 +235,12 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        if ( ev == null || FailedBatchInformationFetchingEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
+            // this means the batch info couldn't be obtained, or FASTQ headers weren't interpretable.
+            return false;
+        }
+
         boolean allBAsHaveDate = true;
         ee = this.thawBioAssays( ee );
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -258,16 +264,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         if ( allBAsHaveFASTQHeaders ) {
-            // the presence of this information is not a reliable indicator that we have batch info
-            // , because some FASTQ headers lack usable batch information.
-            AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
-            if ( ev == null ) {
-                // shouldn't be, but if we hit this...err on the side of caution
-                return false;
-            }
-            if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( ev.getClass() ) ) {
-                return false;
-            }
+            // means we got usable headers, doesn't mean there is more than one batch.
             return true;
         }
 
@@ -564,16 +561,34 @@ public class ExpressionExperimentServiceImpl
         return Strings.emptyToNull( result.toString() );
     }
 
+    private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
+        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
+            return true;
+        }
+
+        // address cases that were run prior to having the SingleBatchDeterminationEvent type.
+        if (ev.getNote().startsWith("1 batch")) {
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
 
         BatchEffectDetails details = new BatchEffectDetails( this.checkHasBatchInfo( ee ),
-                this.getHasBeenBatchCorrected( ee ) );
+                this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
         if ( details.hasNoBatchInfo() )
             return details;
+
+        if (details.isSingleBatch() ) {
+            return details;
+        }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
@@ -602,10 +617,16 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
+        /*
+        WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js.
+        A better way would be to use an enumeration...
+         */
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
         String result = "";
         if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
-            if ( beDetails.getDataWasBatchCorrected() ) {
+            if (beDetails.isSingleBatch() ) {
+                result = "Samples were run in a single batch";
+            } else if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
             } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
@@ -614,6 +635,8 @@ public class ExpressionExperimentServiceImpl
             } else {
                 result = "No batch effect was detected";
             }
+        } else {
+            result = "No batch information was available";
         }
         return Strings.emptyToNull( result );
     }
@@ -780,7 +803,7 @@ public class ExpressionExperimentServiceImpl
      *            the curation details of the object directly, as this method also checks all the array designs the
      *            given
      *            experiment belongs to.
-     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -1069,7 +1092,7 @@ public class ExpressionExperimentServiceImpl
     /**
      * @param  ees  experiments
      * @param  type event type
-     * @return      a map of the expression experiment ids to the last audit event for the given audit event type the
+     * @return a map of the expression experiment ids to the last audit event for the given audit event type the
      *              map
      *              can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
@@ -1086,7 +1109,7 @@ public class ExpressionExperimentServiceImpl
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isBlackListed(java.lang.String)
      */
