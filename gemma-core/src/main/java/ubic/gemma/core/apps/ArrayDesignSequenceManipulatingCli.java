@@ -234,7 +234,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             arrayDesignsToProcess.add( ad );
         }
         if ( arrayDesignsToProcess.size() == 0 ) {
-            throw new RuntimeException( "There were no valid experiments specified" );
+            throw new RuntimeException( "There were no valid platforms specified" );
         }
     }
 

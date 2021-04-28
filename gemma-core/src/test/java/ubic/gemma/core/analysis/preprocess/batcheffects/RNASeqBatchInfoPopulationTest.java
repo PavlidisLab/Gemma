@@ -180,15 +180,17 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.thawLite( ee );
-        assertThrows( BatchInfoPopulationException.class, () -> {
+        try {
             batchInfoPopulationService.fillBatchInformation( ee, false );
-        } );
+            fail( "Should have gotten an exception" );
+        } catch ( BatchInfoPopulationException expected ) {
+        }
 
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
         assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
-        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+        assertTrue( !this.eeService.checkHasBatchInfo( ee ) );
 
     }
 
@@ -248,6 +250,21 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Map<String, String> h = bs.readFastqHeaders( "GSE68376x" );
         Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
         assertEquals( 2, batches.size() );
+    }
+
+    /**
+     * See https://github.com/PavlidisLab/GemmaCuration/issues/64
+     * @throws Exception
+     */
+    @Test
+    public void testBatchMixedHeaders() throws Exception {
+        //GSE153549 - has a mix of usable headers and not, so we should fall back on the platform for the ones that are not usable. 
+        // For the usable headers, there are four lanes. For the unusable headers we just consider them as one batch.
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE153549" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 5, batches.size() );
     }
 
     @Test

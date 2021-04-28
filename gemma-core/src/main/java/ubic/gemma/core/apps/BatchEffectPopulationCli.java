@@ -66,7 +66,11 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     ser.fillBatchInformation( ee, force );
                     addSuccessObject( bas, "Successfully processed " + bas );
                 } catch ( BatchInfoPopulationException e ) {
-                    addErrorObject( bas, "Failed to process " + bas, e );
+
+                    addErrorObject( bas, "Failed to process " + bas + e.getMessage(), e );
+
+                } catch ( Exception e ) {
+                    addErrorObject( bas, e.getMessage(), e );
                 }
 
             }

@@ -15,21 +15,25 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 /**
- * provide some basic information about the strength of a batch effect.
+ * provide some basic information about the properties and strength of a batch effect, if any.
  *
  * @author Paul
  */
 public class BatchEffectDetails {
 
     private final boolean hasBatchInformation;
+
+
+    private final boolean singleBatch;
     private final boolean dataWasBatchCorrected;
     private Integer component;
     private double componentVarianceProportion;
     private double pvalue;
 
-    public BatchEffectDetails( boolean hasBatchInformation, boolean dataWasBatchCorrected ) {
+    public BatchEffectDetails( boolean hasBatchInformation, boolean dataWasBatchCorrected, boolean singleBatch ) {
         this.hasBatchInformation = hasBatchInformation;
         this.dataWasBatchCorrected = dataWasBatchCorrected;
+        this.singleBatch = singleBatch;
         this.pvalue = 1.0;
     }
 
@@ -70,5 +74,14 @@ public class BatchEffectDetails {
     public boolean hasNoBatchInfo() {
         return !hasBatchInformation;
     }
+
+    /**
+     *
+     * @return true if the experiment was determined to have just one batch, or false for any other state (including we don't know)
+     */
+    public boolean isSingleBatch() {
+        return singleBatch;
+    }
+
 
 }
