@@ -563,12 +563,15 @@ public class ExpressionExperimentServiceImpl
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
         AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+
+        if ( ev == null ) return false;
+
         if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
             return true;
         }
 
         // address cases that were run prior to having the SingleBatchDeterminationEvent type.
-        if (ev.getNote().startsWith("1 batch")) {
+        if ( ev.getNote().startsWith( "1 batch" ) ) {
             return true;
         }
 
@@ -586,7 +589,7 @@ public class ExpressionExperimentServiceImpl
         if ( details.hasNoBatchInfo() )
             return details;
 
-        if (details.isSingleBatch() ) {
+        if ( details.isSingleBatch() ) {
             return details;
         }
 
@@ -618,13 +621,13 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
         /*
-        WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js.
-        A better way would be to use an enumeration...
+         * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js.
+         * A better way would be to use an enumeration...
          */
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
         String result = "";
         if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
-            if (beDetails.isSingleBatch() ) {
+            if ( beDetails.isSingleBatch() ) {
                 result = "Samples were run in a single batch";
             } else if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
@@ -803,7 +806,7 @@ public class ExpressionExperimentServiceImpl
      *            the curation details of the object directly, as this method also checks all the array designs the
      *            given
      *            experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -1092,7 +1095,7 @@ public class ExpressionExperimentServiceImpl
     /**
      * @param  ees  experiments
      * @param  type event type
-     * @return a map of the expression experiment ids to the last audit event for the given audit event type the
+     * @return      a map of the expression experiment ids to the last audit event for the given audit event type the
      *              map
      *              can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
