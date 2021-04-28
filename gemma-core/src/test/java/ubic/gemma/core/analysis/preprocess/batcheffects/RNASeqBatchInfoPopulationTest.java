@@ -252,6 +252,21 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         assertEquals( 2, batches.size() );
     }
 
+    /**
+     * See https://github.com/PavlidisLab/GemmaCuration/issues/64
+     * @throws Exception
+     */
+    @Test
+    public void testBatchMixedHeaders() throws Exception {
+        //GSE153549 - has a mix of usable headers and not, so we should fall back on the platform for the ones that are not usable. 
+        // For the usable headers, there are four lanes. For the unusable headers we just consider them as one batch.
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE153549" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 5, batches.size() );
+    }
+
     @Test
     public void testBatchE() throws Exception {
         //GSE70484 - has FAILUREs, so we should get no batches

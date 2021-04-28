@@ -75,7 +75,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<String, Collection<String>> batchIdToHeaders = this
                 .convertHeadersToBatches( headers.values() );
-        
+
         Map<String, FactorValue> headerToFv = new HashMap<>();
         ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
         bioMaterialService.associateBatchFactor( headers, headerToFv );
@@ -250,10 +250,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         for ( String header : headers ) {
             FastqHeaderData batchInfoForSample = parseFASTQHeaderForBatch( header );
 
-            String device = batchInfoForSample.getDevice();
-            if ( device.startsWith( "GPL" ) ) {
-                platforms.add( device );
-            }
+            platforms.add( batchInfoForSample.getGplId() );
 
             if ( !batchInfos.containsKey( batchInfoForSample ) ) {
                 batchInfos.put( batchInfoForSample, new HashSet<String>() );
@@ -287,7 +284,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         if ( platforms.size() == 1 || anyBadHeaders ) {
 
             // if some headers are good, and others bad, that's an error - we'd have to see how to deal with such cases.
-            if ( anyGoodHeaders && anyBadHeaders ) {
+            if ( platforms.size() == 1 && ( anyGoodHeaders && anyBadHeaders ) ) {
                 throw new RuntimeException( "Data set uses just one platform and only some headers had run/device/lane information" );
             } else if ( platforms.size() == 1 && anyBadHeaders ) {
                 // all of the headers are useless.
@@ -423,6 +420,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 fqd = new FastqHeaderData( platform );
             }
 
+            fqd.setGplId( platform ); // always keep track of the GPL ID in case we have a mix of usable and unusable headers
+
             if ( currentBatch == null ) {
                 currentBatch = fqd;
             } else {
@@ -444,6 +443,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         @Override
         public String toString() {
             String s = null;
+
+            if ( this.gplId != null ) {
+                s = "GPL=" + this.gplId;
+            }
 
             if ( this.device != null ) {
                 s = "Device=" + device;
@@ -518,6 +521,15 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         private String lane = null;
         private String flowCell = null;
         private String run = null;
+        private String gplId = null;
+
+        protected String getGplId() {
+            return gplId;
+        }
+
+        protected void setGplId( String gplId ) {
+            this.gplId = gplId;
+        }
 
         /**
          * This means the headers had no information on device, run or lane, so they're useless.
@@ -639,7 +651,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 if ( batchIdentifier.startsWith( "GPL" ) ) {
                     throw new RuntimeException(
                             "No reliable batch information was available: no informative "
-                            + "FASTQ headers and only one GPL ID associated with the experiment." );
+                                    + "FASTQ headers and only one GPL ID associated with the experiment." );
                 }
 
                 // Otherwise, we trust that either the FASTQ headers or dates are a reasonable representation.
