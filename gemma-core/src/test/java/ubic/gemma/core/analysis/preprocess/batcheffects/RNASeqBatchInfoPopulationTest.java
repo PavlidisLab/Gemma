@@ -180,15 +180,17 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.thawLite( ee );
-        assertThrows( BatchInfoPopulationException.class, () -> {
+        try {
             batchInfoPopulationService.fillBatchInformation( ee, false );
-        } );
+            fail( "Should have gotten an exception" );
+        } catch ( BatchInfoPopulationException expected ) {
+        }
 
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertTrue( experimentalFactors.isEmpty() );
         assertTrue( auditService.hasEvent( ee, FailedBatchInformationFetchingEvent.class ) );
-        assertTrue( this.eeService.checkHasBatchInfo( ee ) );
+        assertTrue( !this.eeService.checkHasBatchInfo( ee ) );
 
     }
 
