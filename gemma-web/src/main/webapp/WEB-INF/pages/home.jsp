@@ -63,7 +63,7 @@
 <div id="footer" class="clearfix">
 	<div id="divider"></div>
 	<div class="footer">
-		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2019 &nbsp;
+		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2021 &nbsp;
 			<a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
 		</span> &nbsp; &nbsp;
 		<jsp:include page="/common/social.jsp" />
