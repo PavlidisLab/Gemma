@@ -571,7 +571,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // address cases that were run prior to having the SingleBatchDeterminationEvent type.
-        if ( ev.getNote().startsWith( "1 batch" ) ) {
+        if ( ev.getNote().startsWith( "1 batch" ) || ev.getNote().startsWith( "AffyScanDateExtractor; 0 batches" ) ) {
             return true;
         }
 

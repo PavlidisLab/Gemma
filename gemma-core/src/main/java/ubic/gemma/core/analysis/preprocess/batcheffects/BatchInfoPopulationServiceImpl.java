@@ -291,7 +291,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             throw new BatchInfoPopulationException( "No biomaterials were associated to " + ee.getShortName() + "." );
         }
 
-        int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
+        // we don't make a batch factor if there is just one batch.
+        int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 1 : factor.getFactorValues().size();
 
         List<Date> allDates = new ArrayList<>( dates.values() );
         Collections.sort( allDates );
