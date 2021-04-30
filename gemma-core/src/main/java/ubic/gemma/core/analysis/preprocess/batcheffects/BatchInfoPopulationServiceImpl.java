@@ -124,12 +124,10 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
-    private boolean force = false;
-
+ 
     @Override
-    public void fillBatchInformation( ExpressionExperiment ee, boolean f ) throws BatchInfoPopulationException {
-        this.force = f;
-
+    public void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException {
+ 
         boolean isRNASeq = expressionExperimentService.isRNASeq( ee );
         boolean needed = force || this.needToRun( ee, isRNASeq );
 
