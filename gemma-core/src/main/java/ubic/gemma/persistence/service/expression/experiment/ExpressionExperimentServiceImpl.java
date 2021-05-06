@@ -644,7 +644,7 @@ public class ExpressionExperimentServiceImpl
                 result = "No batch effect was detected";
             }
         } else {
-            result = "NoD batch information was available";
+            result = "No batch information was available";
         }
         return Strings.emptyToNull( result );
     }

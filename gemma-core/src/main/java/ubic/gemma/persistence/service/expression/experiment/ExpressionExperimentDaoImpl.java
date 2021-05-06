@@ -1895,6 +1895,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getCurationDetails() );
         Hibernate.initialize( result.getGeeq() );
+        Hibernate.initialize( result.getOtherParts() );
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {

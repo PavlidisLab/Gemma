@@ -312,6 +312,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split = ( ExpressionExperiment ) persister.persist( split );
 
+            split = eeService.thawLiter( split );
+
             // securityService.makePublic( split ); // temporary 
             result.add( split );
         }
@@ -359,7 +361,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     @Transactional
-    void enforceOtherParts( Collection<ExpressionExperiment> result ) {
+    private void enforceOtherParts( Collection<ExpressionExperiment> result ) {
         // Enforce relation to other parts of the split.
         for ( ExpressionExperiment split : result ) {
             for ( ExpressionExperiment split2 : result ) {
