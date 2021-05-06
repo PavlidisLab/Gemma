@@ -394,20 +394,6 @@
 			</releases>
 		</repository>
 		<repository>
-			<id>central</id>
-			<name>central</name>
-			<url>https://repo1.maven.org/maven2/</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
-		<repository>
 			<id>jboss</id>
 			<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
 			<layout>default</layout>
@@ -434,20 +420,6 @@
 			</releases>
 		</repository>
 	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>central</id>
-			<name>Central Repository</name>
-			<url>https://repo.maven.apache.org/maven2</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 	<profiles>
 		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
