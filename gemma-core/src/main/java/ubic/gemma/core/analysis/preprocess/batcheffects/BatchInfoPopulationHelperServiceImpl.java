@@ -56,7 +56,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     private static final Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );
 
-    private static final String FASTQ_HEADER_EXTRATION_FAILURE_INDICATOR = "FAILURE";
+    private static final String FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR = "FAILURE";
 
     @Autowired
     private BioMaterialService bioMaterialService = null;
@@ -246,6 +246,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         Map<FastqHeaderData, Collection<String>> batchInfos = new HashMap<>();
 
         // parse headers; keep track of the platforms, which we use as a fallback if the headers are not clean
+        // we also track the unusable headers in case they can be used.
         Set<String> platforms = new HashSet<>();
         for ( String header : headers ) {
             FastqHeaderData batchInfoForSample = parseFASTQHeaderForBatch( header );
@@ -258,7 +259,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             batchInfos.get( batchInfoForSample ).add( header );
         }
 
-        // key step ...
+        // key step  
+        // If the header is not parseable, we do use the platform here as the "device"
         batch( batchInfos, headers.size() );
 
         // switch to using string keys for batch identifiers (and check for bad headers)
@@ -280,19 +282,16 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             result.get( batchIdentifier ).addAll( headersInBatch );
         }
 
-        // deal with one of the possible "one batch" scenarios.
-        if ( platforms.size() == 1 || anyBadHeaders ) {
-
-            // if some headers are good, and others bad, that's an error - we'd have to see how to deal with such cases.
+        // if we have only one batch, that's probably okay if there is just one platform and/or the headers were okay.
+        if ( ( platforms.size() == 1 || anyBadHeaders ) && result.size() == 1 ) {
             if ( platforms.size() == 1 && ( anyGoodHeaders && anyBadHeaders ) ) {
                 throw new RuntimeException( "Data set uses just one platform and only some headers had run/device/lane information" );
             } else if ( platforms.size() == 1 && anyBadHeaders ) {
                 // all of the headers are useless.
-                throw new RuntimeException( "Data set uses just one platform, headers lacked run/device/lane information." );
+                throw new RuntimeException( "Data set uses just one platform, not all headers had run/device/lane information." );
             } else {
                 log.info( "Data set appears to have been run in a single batch based on run/device/lane information" );
             }
-
         }
 
         // otherwise, having just one batch means as far we can tell there was only one batch.
@@ -400,13 +399,18 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             String[] fields = field.split( "\\s" );
             String[] arr = fields[1].split( ":" );
 
+            /*
+             * Even when the header is not usable, keep it as a possible indicator of batch (along with platform)
+             */
             FastqHeaderData fqd = null;
-            if ( field.equals( FASTQ_HEADER_EXTRATION_FAILURE_INDICATOR ) ) {
+            if ( field.equals( FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR ) ) {
                 // no actual headers available, only platform
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             } else if ( fields.length != 3 ) {
                 // again, no usable headers, only platform
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             } else if ( arr.length == 7 ) {
                 fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
             } else if ( arr.length == 5 ) {
@@ -415,9 +419,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             } else if ( !fields[1].contains( ":" ) ) {
                 // not a valid header, we're expecting at least five fields delimited by :
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             } else {
                 // something else but also not usable.
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             }
 
             fqd.setGplId( platform ); // always keep track of the GPL ID in case we have a mix of usable and unusable headers
@@ -440,6 +446,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     class FastqHeaderData {
 
+        private String unusableHeader = null;
+
         @Override
         public String toString() {
             String s = null;
@@ -460,19 +468,43 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             if ( this.lane != null ) {
                 s = s + ":Lane=" + lane;
             }
+            if ( this.unusableHeader != null ) {
+                s = s + ":UnusableHeader=" + unusableHeader;
+            }
             return s;
+        }
+
+        /**
+         * @param field the unusable header
+         */
+        public void setUnusableHeader( String field ) {
+            this.unusableHeader = field;
+            this.hadUsableHeader = false; // just to be sure.
+        }
+
+        /**
+         * 
+         * @return the unusable header, or null if the header was usable
+         */
+        public String getUnusableHeader() {
+            return unusableHeader;
         }
 
         /**
          * @return
          */
         public FastqHeaderData dropResolution() {
+            // note that 'device' is the GPL if the header wasn't usable
             if ( this.lane != null ) {
                 return new FastqHeaderData( this.device, this.run, this.flowCell, null );
             } else if ( this.flowCell != null ) {
                 return new FastqHeaderData( this.device, this.run, null, null );
             } else if ( this.run != null ) {
                 return new FastqHeaderData( this.device, null, null, null );
+            } else if ( this.unusableHeader != null ) {
+                // fallback
+                FastqHeaderData f = new FastqHeaderData( this.device, null, null, null );
+                f.setUnusableHeader( this.unusableHeader );
             }
             return this; // might want to return null if we need to signal a stopping condition.
         }
@@ -572,6 +604,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             final int prime = 31;
             int result = 1;
             result = prime * result + getOuterType().hashCode();
+            //    result = prime * result + ( ( this.gplId == null ) ? 0 : gplId.hashCode() );
+            // result = prime * result + ( ( this.unusableHeader == null ) ? 0 : unusableHeader.hashCode() );
             result = prime * result + ( ( device == null ) ? 0 : device.hashCode() );
             result = prime * result + ( ( flowCell == null ) ? 0 : flowCell.hashCode() );
             result = prime * result + ( ( lane == null ) ? 0 : lane.hashCode() );
@@ -623,6 +657,24 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             } else if ( !run.equals( other.run ) ) {
                 return false;
             }
+
+            // redundant with device
+            //            if ( gplId == null ) {
+            //                if ( other.gplId != null ) {
+            //                    return false;
+            //                }
+            //            } else if ( !gplId.equals( other.gplId ) ) {
+            //                return false;
+            //            }
+
+            //            if ( unusableHeader == null ) {
+            //                if ( other.unusableHeader != null ) {
+            //                    return false;
+            //                }
+            //            } else if ( !unusableHeader.equals( other.unusableHeader ) ) {
+            //                return false;
+            //            }
+
             return true;
         }
 

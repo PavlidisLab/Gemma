@@ -78,13 +78,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         String s3 = s.parseFASTQHeaderForBatch( "GPL1234;;;@SRR5647782.1.1 D7ZQJ5M1:747:HL5TJADXX:1:1116:18513:98450 length=101" ).toString();
         assertEquals( "Device=D7ZQJ5M1:Run=747:Flowcell=HL5TJADXX:Lane=1", s3 );
 
-        // bad ones. Should always get the platform
+        // bad ones. Should always get the platform but we keep the header as well as an extra fallback
 
         String s4 = s.parseFASTQHeaderForBatch( "GPL1234;;;@SRR039864.1.1 VAB_KCl_hr0_total_RNA_b1_t11_48_981 length=35" ).toString();
-        assertEquals( "Device=GPL1234", s4 );
+        assertEquals( "Device=GPL1234:UnusableHeader=@SRR039864.1.1 VAB_KCl_hr0_total_RNA_b1_t11_48_981 length=35", s4 );
 
         String s5 = s.parseFASTQHeaderForBatch( "GPL1234;;;@SRR5680873.1.1 1 length=101" ).toString();
-        assertEquals( "Device=GPL1234", s5 );
+        assertEquals( "Device=GPL1234:UnusableHeader=@SRR5680873.1.1 1 length=101", s5 );
 
     }
 
@@ -254,6 +254,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     /**
      * See https://github.com/PavlidisLab/GemmaCuration/issues/64
+     * 
      * @throws Exception
      */
     @Test
@@ -265,6 +266,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Map<String, String> h = bs.readFastqHeaders( "GSE153549" );
         Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
         assertEquals( 5, batches.size() );
+
+        // second test but this time faking the platform all the same, but with two styles of headers. 
+        // We should still find  5 batches here
+        h = bs.readFastqHeaders( "GSE153549X" );
+        batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 5, batches.size() );
+
     }
 
     @Test
@@ -294,7 +302,7 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testBatchG() throws Exception {
-        //GSE77891; only has 4 samples. FIXME
+        //GSE77891; only has 4 samples.
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE77891" );
@@ -304,16 +312,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testBatchH() throws Exception {
-        //GSE78270  has two samples that don't have complete headers
+        //GSE78270  has two samples that don't have complete headers, but we should still get batches
+        // Since most of the headers are usable, and fall into 8 batches, the leftovers should be one batch
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE78270" );
-        try {
-            s.convertHeadersToBatches( h.values() );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception expected ) {
-
-        }
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 9, batches.size() );
     }
 
     @After
