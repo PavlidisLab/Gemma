@@ -16,7 +16,7 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
+import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -40,7 +40,6 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
 
     String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
     String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
-    String METADATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "metadata" + File.separatorChar;
 
     String DATA_FILE_SUFFIX = ".data.txt";
 
@@ -106,6 +105,11 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @return File, with location in the appropriate target directory.
      */
     File getOutputFile( String filename, boolean temporary );
+
+    /**
+     * Locate a metadata file.
+     */
+    File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type );
 
     /**
      * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -226,5 +230,4 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      */
     void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis,
             DifferentialExpressionAnalysisConfig config ) throws IOException;
-
 }

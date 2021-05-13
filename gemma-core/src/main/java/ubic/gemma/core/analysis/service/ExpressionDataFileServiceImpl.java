@@ -36,6 +36,7 @@ import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -52,12 +53,14 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -100,9 +103,6 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private CoexpressionService gene2geneCoexpressionService = null;
-
-    @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
     @Autowired
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
 
@@ -298,6 +298,57 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         }
 
         return f;
+    }
+
+    @Override
+    public File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) {
+        File file = Paths.get( Settings.getString( "gemma.appdata.home" ), "metadata", this.getEEFolderName( ee ), type.getFileName( ee ) )
+                .toFile();
+
+        // If this is a directory, check if we can read the most recent file.
+        if ( type.isDirectory() ) {
+            File fNew = this.getNewestFile( file );
+            if ( fNew != null ) {
+                file = fNew;
+            }
+        }
+
+        return file;
+    }
+
+    /**
+     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
+     *
+     * @param ee the experiment to get the folder name for.
+     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
+     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
+     * any reason, the experiments ID will be used.
+     */
+    private String getEEFolderName( ExpressionExperiment ee ) {
+        String sName = ee.getShortName();
+        if ( StringUtils.isBlank( sName ) ) {
+            return ee.getId().toString();
+        }
+        return sName.replaceAll( "\\.\\d+$", "" );
+    }
+
+    /**
+     * @param file a directory to scan
+     * @return the file in the directory that was last modified, or null, if such file doesn't exist or is not readable.
+     */
+    private File getNewestFile( File file ) {
+        File[] files = file.listFiles();
+        if ( files != null && files.length > 0 ) {
+            List<File> fList = Arrays.asList( files );
+
+            // Sort by last modified, we only want the newest file
+            fList.sort( Comparator.comparingLong( File::lastModified ) );
+
+            if ( fList.get( 0 ).canRead() ) {
+                return fList.get( 0 );
+            }
+        }
+        return null;
     }
 
     @Override
