@@ -81,10 +81,10 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         // bad ones. Should always get the platform but we keep the header as well as an extra fallback
 
         String s4 = s.parseFASTQHeaderForBatch( "GPL1234;;;@SRR039864.1.1 VAB_KCl_hr0_total_RNA_b1_t11_48_981 length=35" ).toString();
-        assertEquals( "Device=GPL1234:UnusableHeader=@SRR039864.1.1 VAB_KCl_hr0_total_RNA_b1_t11_48_981 length=35", s4 );
+        assertEquals( "Device=GPL1234", s4 );
 
         String s5 = s.parseFASTQHeaderForBatch( "GPL1234;;;@SRR5680873.1.1 1 length=101" ).toString();
-        assertEquals( "Device=GPL1234:UnusableHeader=@SRR5680873.1.1 1 length=101", s5 );
+        assertEquals( "Device=GPL1234", s5 );
 
     }
 
@@ -138,7 +138,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     }
 
     /*
-     * See https://github.com/PavlidisLab/Gemma/issues/129
+     * See https://github.com/PavlidisLab/Gemma/issues/129 - should be a single batch because samples were run in one
+     * lane
      */
     @Test
     public void testGSE14285OneBatch() throws Exception {
@@ -163,7 +164,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
     }
 
     /*
-     * See https://github.com/PavlidisLab/Gemma/issues/129
+     * See https://github.com/PavlidisLab/Gemma/issues/129. For this case, no headers are usable so we should get no
+     * batch info.
      */
     @Test
     public void testGSE156689NoBatchinfo() throws Exception {
@@ -180,11 +182,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.thawLite( ee );
-        try {
-            batchInfoPopulationService.fillBatchInformation( ee, false );
-            fail( "Should have gotten an exception" );
-        } catch ( BatchInfoPopulationException expected ) {
-        }
+
+        batchInfoPopulationService.fillBatchInformation( ee, false );
 
         ee = eeService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -196,16 +195,12 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testBatchA() throws Exception {
-        // GSE21161; nousable batch information
+        // GSE21161; no good headers, we can't form batches 
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE21161" );
-        try {
-            s.convertHeadersToBatches( h.values() );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception expected ) {
-
-        }
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 0, batches.size() );
     }
 
     @Test
@@ -230,16 +225,13 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testBatchD() throws Exception {
-        //GSE68376 - insufficient headers 
+        //GSE68376 - insufficient headers, all identical, one platform - probably should mark it as "no batch information"
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE68376" );
-        try {
-            s.convertHeadersToBatches( h.values() );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception expected ) {
 
-        }
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 0, batches.size() );
     }
 
     @Test
@@ -273,6 +265,40 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         batches = s.convertHeadersToBatches( h.values() );
         assertEquals( 5, batches.size() );
 
+        h = bs.readFastqHeaders( "GSE163323" );
+        batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 2, batches.size() );
+
+    }
+
+    @Test
+    public void testBatchMixedHeadersSinglePlatformSingleton() throws Exception {
+        // only one sample has a usable header. There are two lines in the header file for this sample.
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE160025" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+
+        //        for ( String b : batches.keySet() ) {
+        //            log.info( "Batch: " + b );
+        //            for ( String batchmember : batches.get( b ) ) {
+        //                log.info( "   " + batchmember );
+        //            }
+        //        }
+        // we don't assign batches when this happens
+        assertEquals( 0, batches.size() );
+
+    }
+
+    @Test
+    public void testBatchMixedHeadersSinglePlatform() throws Exception {
+        // GSE157825 - has a mix of usable headers and not, and on just one platform; should lead to two batches
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE157825" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+
+        assertEquals( 2, batches.size() );
     }
 
     @Test
@@ -302,12 +328,12 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
 
     @Test
     public void testBatchG() throws Exception {
-        //GSE77891; only has 4 samples.
+        //GSE77891; only has 4 samples. There are two devices, but one of the batches is a singleton
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE77891" );
         Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
-        assertEquals( 2, batches.size() );
+        assertEquals( 0, batches.size() );
     }
 
     @Test
