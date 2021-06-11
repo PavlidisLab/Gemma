@@ -17,12 +17,15 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.OutlierDetails;
+import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -69,6 +72,7 @@ public class DatasetsWebService extends
     private SVDService svdService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private AuditEventService auditEventService;
+    private OutlierDetectionService outlierDetectionService;
 
     /**
      * Required by spring
@@ -84,7 +88,8 @@ public class DatasetsWebService extends
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
             GeneService geneService, SVDService svdService,
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService ) {
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService,
+            OutlierDetectionService outlierDetectionService ) {
         super( expressionExperimentService );
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
@@ -95,6 +100,7 @@ public class DatasetsWebService extends
         this.svdService = svdService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
         this.auditEventService = auditEventService;
+        this.outlierDetectionService = outlierDetectionService;
     }
 
     /**
@@ -175,7 +181,7 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
+        return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ), sr );
     }
 
     /**
