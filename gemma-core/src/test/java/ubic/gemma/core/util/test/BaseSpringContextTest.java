@@ -21,7 +21,6 @@ package ubic.gemma.core.util.test;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
@@ -29,20 +28,12 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.TestingAuthenticationProvider;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
@@ -69,8 +60,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -124,8 +113,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         hibernateSupport.setSessionFactory( this.getBean( SessionFactory.class ) );
 
-        this.authenticationTestingUtil = new AuthenticationTestingUtil();
-        this.authenticationTestingUtil.setUserManager( this.getBean( UserManager.class ) );
+        this.authenticationTestingUtil = new AuthenticationTestingUtil( this.getBean( UserManager.class ) );
 
         this.runAsAdmin();
 
@@ -568,76 +556,4 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         testHelper.setTestElementCollectionSize( size );
     }
 
-}
-
-@SuppressWarnings("WeakerAccess")
-final class AuthenticationTestingUtil {
-
-    private UserManager userManager;
-
-    private static void putTokenInContext( AbstractAuthenticationToken token ) {
-        SecurityContextHolder.getContext().setAuthentication( token );
-    }
-
-    /**
-     * @param userManager the userManager to set
-     */
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
-    }
-
-    /**
-     * Grant authority to a test user, with admin privileges, and put the token in the context. This means your tests
-     * will be authorized to do anything an administrator would be able to do.
-     *
-     * @param ctx context
-     */
-    protected void grantAdminAuthority( ApplicationContext ctx ) {
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
-
-        // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
-
-        token.setAuthenticated( true );
-
-        AuthenticationTestingUtil.putTokenInContext( token );
-    }
-
-    protected void logOut( ApplicationContext ctx ) {
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
-
-        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
-
-        token.setAuthenticated( false );
-
-        AuthenticationTestingUtil.putTokenInContext( token );
-    }
-
-    /**
-     * Grant authority to a test user, with regular user privileges, and put the token in the context. This means your
-     * tests will be authorized to do anything that user could do
-     *
-     * @param ctx      context
-     * @param username user name
-     */
-    protected void switchToUser( ApplicationContext ctx, String username ) {
-
-        UserDetails user = userManager.loadUserByUsername( username );
-
-        List<GrantedAuthority> grantedAuthorities = new ArrayList<>( user.getAuthorities() );
-
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
-
-        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", grantedAuthorities );
-        token.setAuthenticated( true );
-
-        AuthenticationTestingUtil.putTokenInContext( token );
-    }
 }
