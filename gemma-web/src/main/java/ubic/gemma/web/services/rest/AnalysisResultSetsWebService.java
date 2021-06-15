@@ -20,9 +20,10 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
-import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
@@ -30,9 +31,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.DatabaseEntryArg;
-import ubic.gemma.web.services.rest.util.args.DatasetArg;
-import ubic.gemma.web.services.rest.util.args.ExpressionAnalysisResultSetArg;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -40,14 +39,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
  */
-@Component
+@Service("analysisResultSetWebService")
 @Path("/resultSets")
 public class AnalysisResultSetsWebService extends WebService {
 
@@ -69,33 +67,36 @@ public class AnalysisResultSetsWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<List<AnalysisResultSetValueObject>> findAll(
-            @QueryParam("datasetIds") Set<DatasetArg<?>> datasetIds,
-            @QueryParam("externalIds") Set<DatabaseEntryArg<?>> externalIds,
+    public ResponseDataObject findAll(
+            @QueryParam("datasets") ArrayDatasetArg datasets,
+            @QueryParam("databaseEntries") ArrayDatabaseEntryArg databaseEntries,
+            @QueryParam("offset") @DefaultValue("0") IntArg offset,
+            @QueryParam("limit") @DefaultValue("20") IntArg limit,
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort,
             @Context final HttpServletResponse servlet ) {
-        Collection<BioAssaySet> bioAssaySets = datasetIds.stream()
-                .map( datasetId -> datasetId.getPersistentObject( expressionExperimentService ) )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
-        Collection<DatabaseEntry> databaseEntries = externalIds.stream()
-                .map( externalId -> externalId.getPersistentObject( databaseEntryService ) )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
-        return Responder.code200( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit( bioAssaySets, databaseEntries, 10 ), servlet );
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
+                Optional.ofNullable( datasets ).map( d -> d.getPersistentObjects( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
+                Optional.ofNullable( databaseEntries ).map( de -> de.getPersistentObjects( databaseEntryService ) ).orElse( null ),
+                null,
+                offset.getValue(),
+                limit.getValue(),
+                sort.getField(),
+                sort.isAsc() );
+        return Responder.code200( expressionAnalysisResultSetService.loadValueObjects( resultSets ), servlet );
     }
 
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      *
-     * @param analysisResultSetId
+     * @param analysisResultSet
      * @return
      */
     @GET
-    @Path("/{analysisResultSetId}")
+    @Path("/{analysisResultSet:[^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<AnalysisResultSetValueObject> findById(
-            @PathParam("analysisResultSetId") ExpressionAnalysisResultSetArg analysisResultSetId,
+    public ResponseDataObject findById(
+            @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        return Responder.code200( analysisResultSetId.getValueObject( expressionAnalysisResultSetService ), servlet );
+        return Responder.code200( analysisResultSet.getValueObject( expressionAnalysisResultSetService ), servlet );
     }
 }

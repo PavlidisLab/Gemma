@@ -34,5 +34,7 @@ public abstract class AnalysisResultSetValueObject<K extends AnalysisResult, R e
         super( analysisResultSet.getId() );
     }
 
+    public abstract AnalysisValueObject getAnalysis();
+
     public abstract Collection<AnalysisResultValueObject<K>> getAnalysisResults();
 }

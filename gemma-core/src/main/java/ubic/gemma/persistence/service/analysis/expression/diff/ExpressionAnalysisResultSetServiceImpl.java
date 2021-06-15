@@ -7,7 +7,9 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValu
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Service
@@ -22,7 +24,17 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledSer
     }
 
     @Override
-    public Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, int limit ) {
-        return voDao.findByBioAssaySetInAndDatabaseEntryInLimit( bioAssaySets, externalIds, limit );
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e ) {
+        return voDao.thaw( e );
+    }
+
+    @Override
+    public Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
+        return voDao.findByBioAssaySetInAndDatabaseEntryInLimit( bioAssaySets, externalIds,
+                objectFilters,
+                offset,
+                limit,
+                orderBy,
+                isAsc );
     }
 }

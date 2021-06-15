@@ -108,7 +108,7 @@ public abstract class WebServiceWithFiltering<O extends Identifiable, VO extends
      * result to
      * the value of the {@code limit} parameter.
      */
-    protected ResponseDataObject all( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
+    protected ResponseDataObject<?> all( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
             final HttpServletResponse sr ) {
         return this.callService( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
                 filter.getObjectFilters(), sr );
@@ -126,13 +126,13 @@ public abstract class WebServiceWithFiltering<O extends Identifiable, VO extends
      * @param sr       see this#all
      * @return see this#all
      */
-    protected ResponseDataObject some( ArrayEntityArg<O, VO, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
+    protected ResponseDataObject<?> some( ArrayEntityArg<O, VO, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
             SortArg sort, final HttpServletResponse sr ) {
         return this.callService( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
                 arrayArg.combineFilters( filter.getObjectFilters(), service ), sr );
     }
 
-    private ResponseDataObject callService( int offset, int limit, String orderBy, boolean asc,
+    private ResponseDataObject<?> callService( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter, final HttpServletResponse sr ) {
         try {
             return Responder.autoCode( service.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter ), sr );

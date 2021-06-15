@@ -14,19 +14,29 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.analysis.AnalysisResultValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 
-public class DifferentialExpressionAnalysisResultValueObject extends IdentifiableValueObject<DifferentialExpressionAnalysisResult> {
+/**
+ * Unlike {@link DiffExResultSetSummaryValueObject}, this value object is meant for the public API.
+ */
+public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
+    private final CompositeSequenceValueObject probe;
     private final Double pValue;
     private final Double correctedPvalue;
     private final Double rank;
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result ) {
-        super( result.getId() );
+        super( result );
+        this.probe = new CompositeSequenceValueObject( result.getProbe() );
         this.pValue = result.getPvalue();
         this.correctedPvalue = result.getCorrectedPvalue();
         this.rank = result.getRank();
+    }
+
+    public CompositeSequenceValueObject getProbe() {
+        return probe;
     }
 
     public Double getPvalue() {

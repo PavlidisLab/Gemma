@@ -2,6 +2,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
+import ubic.gemma.model.analysis.AnalysisValueObject;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -11,18 +12,25 @@ import java.util.stream.Collectors;
  */
 public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
-    // FIXME: use Collection<DifferentialExpressionAnalysisResultValueObject>
-    private final Collection analysisResults;
+    private final DifferentialExpressionAnalysisValueObject analysis;
+
+    private final Collection<AnalysisResultValueObject<DifferentialExpressionAnalysisResult>> analysisResults;
 
     public ExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
+        this.analysis = new DifferentialExpressionAnalysisValueObject( analysisResultSet.getAnalysis() );
         this.analysisResults = analysisResultSet.getResults()
                 .stream().map( DifferentialExpressionAnalysisResultValueObject::new )
                 .collect( Collectors.toList() );
     }
 
     @Override
+    public AnalysisValueObject getAnalysis() {
+        return analysis;
+    }
+
+    @Override
     public Collection<AnalysisResultValueObject<DifferentialExpressionAnalysisResult>> getAnalysisResults() {
-        return this.analysisResults;
+        return analysisResults;
     }
 }
