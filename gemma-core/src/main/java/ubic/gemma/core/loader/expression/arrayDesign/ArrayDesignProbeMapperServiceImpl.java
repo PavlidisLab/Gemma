@@ -89,7 +89,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final ExpressionDataFileService expressionDataFileService;
     private final GeneProductService geneProductService;
     private final GeneService geneService;
-    private final Persister persisterHelper;
+    private final Persister<BlatAssociation> blatAssociationPersister;
     private final ProbeMapper probeMapper;
 
     @Autowired
@@ -98,7 +98,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
             ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultService blatResultService,
             CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
-            GeneProductService geneProductService, GeneService geneService, Persister persisterHelper ) {
+            GeneProductService geneProductService, GeneService geneService, Persister<BlatAssociation> blatAssociationPersister ) {
         this.annotationAssociationService = annotationAssociationService;
         this.arrayDesignAnnotationService = arrayDesignAnnotationService;
         this.arrayDesignReportService = arrayDesignReportService;
@@ -110,7 +110,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.expressionDataFileService = expressionDataFileService;
         this.geneProductService = geneProductService;
         this.geneService = geneService;
-        this.persisterHelper = persisterHelper;
+        this.blatAssociationPersister = blatAssociationPersister;
     }
 
     @Override
@@ -444,7 +444,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                    persisterHelper.persist( bacs.ba );
+                    blatAssociationPersister.persist( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log

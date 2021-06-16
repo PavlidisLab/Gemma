@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * @see DifferentialExpressionAnalysis
  */
-interface DifferentialExpressionAnalysisDao extends AnalysisDao<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisDao extends AnalysisDao<DifferentialExpressionAnalysis> {
 
     /**
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.

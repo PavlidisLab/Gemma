@@ -128,7 +128,9 @@ public class ExpressionExperimentController {
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     @Autowired
-    private Persister persisterHelper;
+    private Persister<BibliographicReference> bibliographicReferencePersister;
+    @Autowired
+    private Persister<BioMaterial> bioMaterialPersister;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -1021,7 +1023,7 @@ public class ExpressionExperimentController {
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );
-                    newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
+                    newMaterial = bioMaterialPersister.persist( newMaterial );
 
                     baU.setSampleUsed( newMaterial );
                     bioAssayService.update( baU );
@@ -1763,7 +1765,7 @@ public class ExpressionExperimentController {
                     // persist new publication
                     ExpressionExperimentController.log.info( "Found new publication, associating ..." );
 
-                    publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                    publication = bibliographicReferencePersister.persist( publication );
                     // publication = bibliographicReferenceService.findOrCreate( publication );
                     // assign to expressionExperiment
                     expressionExperiment.setPrimaryPublication( publication );

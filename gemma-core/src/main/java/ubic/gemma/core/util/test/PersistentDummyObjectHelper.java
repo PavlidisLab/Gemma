@@ -47,6 +47,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ExpressionExperimentPersister;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -81,7 +82,10 @@ public class PersistentDummyObjectHelper {
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private Persister persisterHelper;
+    private Persister<Object> persisterHelper;
+
+    @Autowired
+    private ExpressionExperimentPersister eePersister;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -268,8 +272,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
+        ee = eePersister.persist( ee, c );
 
         return ee;
     }
@@ -322,8 +326,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
+        ee = eePersister.persist( ee, c );
 
         return ee;
     }
@@ -353,7 +357,7 @@ public class PersistentDummyObjectHelper {
         gp.setGene( gene );
         gp.setName( RandomStringUtils.randomNumeric( 5 ) + "_test" );
         gene.getProducts().add( gp );
-        return ( Gene ) persisterHelper.persist( gene );
+        return persisterHelper.persist( gene );
     }
 
     /**
@@ -408,7 +412,7 @@ public class PersistentDummyObjectHelper {
         }
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
 
-        return ( ArrayDesign ) persisterHelper.persist( ad );
+        return persisterHelper.persist( ad );
     }
 
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
@@ -455,7 +459,7 @@ public class PersistentDummyObjectHelper {
 
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ee = persisterHelper.persist( ee );
 
         return ee;
     }
@@ -466,7 +470,7 @@ public class PersistentDummyObjectHelper {
             PersistentDummyObjectHelper.pubmed = externalDatabaseService.findByName( "PubMed" );
         }
         br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, PersistentDummyObjectHelper.pubmed ) );
-        return ( BibliographicReference ) persisterHelper.persist( br );
+        return persisterHelper.persist( br );
     }
 
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
@@ -486,29 +490,29 @@ public class PersistentDummyObjectHelper {
             throw new IllegalArgumentException();
         }
         BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
-        return ( BioAssay ) persisterHelper.persist( ba );
+        return persisterHelper.persist( ba );
     }
 
     public BioMaterial getTestPersistentBioMaterial() {
         BioMaterial bm = this.getTestNonPersistentBioMaterial();
-        return ( BioMaterial ) persisterHelper.persist( bm );
+        return persisterHelper.persist( bm );
     }
 
     public BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         BioMaterial bm = this.getTestNonPersistentBioMaterial( tax );
-        return ( BioMaterial ) persisterHelper.persist( bm );
+        return persisterHelper.persist( bm );
     }
 
     public BioSequence getTestPersistentBioSequence() {
         BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( null );
 
-        return ( BioSequence ) persisterHelper.persist( bs );
+        return persisterHelper.persist( bs );
     }
 
     public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( taxon );
 
-        return ( BioSequence ) persisterHelper.persist( bs );
+        return persisterHelper.persist( bs );
     }
 
     /**
@@ -528,7 +532,7 @@ public class PersistentDummyObjectHelper {
         b2gCol.add( b2g );
 
         //noinspection unchecked
-        return ( Collection<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
+        return persisterHelper.persist( b2gCol );
     }
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -539,7 +543,7 @@ public class PersistentDummyObjectHelper {
         }
         Chromosome chromosome = new Chromosome( "XXX", null, this.getTestPersistentBioSequence( taxon ), taxon );
         assert chromosome.getSequence() != null;
-        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        chromosome = persisterHelper.persist( chromosome );
         assert chromosome != null;
         assert chromosome.getSequence() != null;
         br.setTargetChromosome( chromosome );
@@ -552,7 +556,7 @@ public class PersistentDummyObjectHelper {
         targetAlignedRegion.setNucleotide( 10000010L );
         targetAlignedRegion.setNucleotideLength( 1001 );
         targetAlignedRegion.setStrand( "-" );
-        return ( BlatResult ) persisterHelper.persist( br );
+        return persisterHelper.persist( br );
     }
 
     /**
@@ -565,7 +569,7 @@ public class PersistentDummyObjectHelper {
         c.setName(
                 RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testcontact" );
         c.setEmail( c.getName() + "@foo.org" );
-        c = ( Contact ) persisterHelper.persist( c );
+        c = persisterHelper.persist( c );
         return c;
     }
 
@@ -603,7 +607,7 @@ public class PersistentDummyObjectHelper {
             ed = ExternalDatabase.Factory.newInstance();
             ed.setName(
                     RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testdb" );
-            ed = ( ExternalDatabase ) persisterHelper.persist( ed );
+            ed = persisterHelper.persist( ed );
         }
 
         result.setExternalDatabase( ed );
@@ -624,7 +628,7 @@ public class PersistentDummyObjectHelper {
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
-                edp = ( ExternalDatabase ) persisterHelper.persist( edp );
+                edp = persisterHelper.persist( edp );
                 return this.getTestPersistentDatabaseEntry( accession, edp );
         }
     }
@@ -639,7 +643,7 @@ public class PersistentDummyObjectHelper {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
         ee.setTaxon( this.getTestPersistentTaxon() );
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ee = persisterHelper.persist( ee );
         return ee;
     }
 
@@ -685,13 +689,13 @@ public class PersistentDummyObjectHelper {
         ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        return persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
+        return eePersister.persist( ee, c );
     }
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( gene );
-        return ( GeneProduct ) persisterHelper.persist( gp );
+        return persisterHelper.persist( gp );
     }
 
     /**
@@ -702,7 +706,7 @@ public class PersistentDummyObjectHelper {
      */
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
-        return ( QuantitationType ) persisterHelper.persist( qt );
+        return persisterHelper.persist( qt );
     }
 
     public Taxon getTestPersistentTaxon() {
@@ -712,7 +716,7 @@ public class PersistentDummyObjectHelper {
             PersistentDummyObjectHelper.testTaxon.setScientificName( "Loxodonta" );
             PersistentDummyObjectHelper.testTaxon.setNcbiId( 1245 );
             PersistentDummyObjectHelper.testTaxon.setIsGenesUsable( true );
-            PersistentDummyObjectHelper.testTaxon = ( Taxon ) persisterHelper
+            PersistentDummyObjectHelper.testTaxon = persisterHelper
                     .persist( PersistentDummyObjectHelper.testTaxon );
             assert PersistentDummyObjectHelper.testTaxon != null
                     && PersistentDummyObjectHelper.testTaxon.getId() != null;

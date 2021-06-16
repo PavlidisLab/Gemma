@@ -55,7 +55,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     private GeneService geneService;
 
     @Autowired
-    private Persister persisterHelper;
+    private Persister<Gene> genePersister;
 
     @Autowired
     private TaxonService taxonService;
@@ -141,7 +141,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         gene.setDescription( "Imported from external annotation file" );
         gene.setTaxon( taxon );
         gene.getProducts().add( createGeneProduct( gene ) );
-        gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
+        gene = genePersister.persistOrUpdate( gene );
         return gene;
     }
 

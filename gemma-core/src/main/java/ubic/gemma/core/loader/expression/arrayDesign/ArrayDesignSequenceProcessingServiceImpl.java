@@ -71,7 +71,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
     private final ExternalDatabaseService externalDatabaseService;
-    private final Persister persisterHelper;
+    private final Persister<BioSequence> persisterHelper;
 
     @Autowired
     public ArrayDesignSequenceProcessingServiceImpl( ArrayDesignReportService arrayDesignReportService,
@@ -939,7 +939,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * If the sequence already exists
      */
     private BioSequence persistSequence( BioSequence sequence ) {
-        return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
+        return persisterHelper.persistOrUpdate( sequence );
     }
 
     /**

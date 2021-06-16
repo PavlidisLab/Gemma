@@ -67,7 +67,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
 
-        gene2GOAssLoader.setPersisterHelper( this.getPersisterHelper() );
+        gene2GOAssLoader.setGene2GOAssociationPersister( this.getPersisterHelper() );
 
         Collection<Taxon> taxa = taxonService.loadAll();
 

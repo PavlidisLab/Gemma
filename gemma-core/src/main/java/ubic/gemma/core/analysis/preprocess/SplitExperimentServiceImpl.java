@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private CurationDetailsDao curationDetailsDao;
 
     @Autowired
-    private Persister persister;
+    private Persister<ExpressionExperiment> persister;
 
     @Autowired
     private SecurityService securityService;
@@ -310,7 +311,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
-            split = ( ExpressionExperiment ) persister.persist( split );
+            split = persister.persist( split );
 
             split = eeService.thawLiter( split );
 

@@ -47,7 +47,7 @@ public class NcbiGeneLoader {
     private final AtomicBoolean generatorDone;
     private final AtomicBoolean converterDone;
     private final AtomicBoolean loaderDone;
-    private Persister persisterHelper;
+    private Persister<Gene> genePersister;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
 
@@ -61,9 +61,9 @@ public class NcbiGeneLoader {
         loaderDone = new AtomicBoolean( false );
     }
 
-    public NcbiGeneLoader( Persister persisterHelper ) {
+    public NcbiGeneLoader( Persister genePersister ) {
         this();
-        this.setPersisterHelper( persisterHelper );
+        this.setGenePersister( genePersister );
     }
 
     /**
@@ -120,10 +120,10 @@ public class NcbiGeneLoader {
     }
 
     /**
-     * @param persisterHelper the persisterHelper to set
+     * @param genePersister the persisterHelper to set
      */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setGenePersister( Persister genePersister ) {
+        this.genePersister = genePersister;
     }
 
     public void setTaxonService( TaxonService bean ) {
@@ -190,7 +190,7 @@ public class NcbiGeneLoader {
                     continue;
                 }
 
-                persisterHelper.persistOrUpdate( gene );
+                genePersister.persistOrUpdate( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 || timer.getTime() > 30 * 1000 ) {
                     NcbiGeneLoader.log.info( "Processed " + loadedGeneCount + " genes. Queue has " + geneQueue.size()

@@ -58,7 +58,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private final GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
     private final GeneService geneService;
     private final PhenotypeAssoOntologyHelper ontologyHelper;
-    private final Persister persisterHelper;
+    private final Persister<BibliographicReference> bibliographicReferencePersister;
     private final PhenotypeAssociationService phenotypeAssociationService;
     private final QuantitationTypeService quantitationTypeService;
 
@@ -67,7 +67,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             CharacteristicService characteristicService, DatabaseEntryDao databaseEntryDao,
             ExternalDatabaseService externalDatabaseService,
             GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService, GeneService geneService,
-            PhenotypeAssoOntologyHelper ontologyHelper, Persister persisterHelper,
+            PhenotypeAssoOntologyHelper ontologyHelper, Persister bibliographicReferencePersister,
             PhenotypeAssociationService phenotypeAssociationService, QuantitationTypeService quantitationTypeService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
         this.characteristicService = characteristicService;
@@ -76,7 +76,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         this.geneDiffExMetaAnalysisService = geneDiffExMetaAnalysisService;
         this.geneService = geneService;
         this.ontologyHelper = ontologyHelper;
-        this.persisterHelper = persisterHelper;
+        this.bibliographicReferencePersister = bibliographicReferencePersister;
         this.phenotypeAssociationService = phenotypeAssociationService;
         this.quantitationTypeService = quantitationTypeService;
     }
@@ -416,7 +416,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
-            bibRef = ( BibliographicReference ) this.persisterHelper.persist( bibRef );
+            bibRef = this.bibliographicReferencePersister.persist( bibRef );
         }
 
         return bibRef;

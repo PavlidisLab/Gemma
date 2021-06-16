@@ -54,7 +54,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
         ad.setName( "test_" + RandomStringUtils.randomAlphabetic( 10 ) );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         auditable = ad;
 
         auditTrail = AuditTrail.Factory.newInstance();

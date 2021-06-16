@@ -69,7 +69,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         arrayDesign.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
         arrayDesign.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
         arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
-        arrayDesign = ( ArrayDesign ) this.persisterHelper.persist( arrayDesign );
+        arrayDesign = this.persisterHelper.persist( arrayDesign );
 
         assertTrue( arrayDesign.getAuditTrail() != null );
 

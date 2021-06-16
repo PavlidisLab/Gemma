@@ -163,7 +163,7 @@ public class MatrixWriter {
                     //noinspection RedundantStringOperation // being explicit
                     buf.append( "" );
                 } else if ( val instanceof Double ) {
-                    buf.append( String.format( "%.3g", ( Double ) val ) );
+                    buf.append( String.format( "%.3g", val ) );
                 } else {
                     buf.append( val );
                 }

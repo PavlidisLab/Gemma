@@ -72,7 +72,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    @Override
     @Transactional
     public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache cachedArrays ) {
 

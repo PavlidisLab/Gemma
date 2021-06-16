@@ -47,7 +47,7 @@ public class NCBIGene2GOAssociationLoader {
     private static final int BATCH_SIZE = 12000;
     private final AtomicBoolean producerDone = new AtomicBoolean( false );
     private final AtomicBoolean consumerDone = new AtomicBoolean( false );
-    private Persister persisterHelper;
+    private Persister<Gene2GOAssociation> gene2GOAssociationPersister;
     private NCBIGene2GOAssociationParser parser = null;
     private int count;
 
@@ -116,8 +116,8 @@ public class NCBIGene2GOAssociationLoader {
 
     public void load( LocalFile ncbiFile ) {
 
-        try (InputStream inputStream = FileTools
-                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() )) {
+        try ( InputStream inputStream = FileTools
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() ) ) {
             this.load( inputStream );
 
         } catch ( IOException e ) {
@@ -131,8 +131,8 @@ public class NCBIGene2GOAssociationLoader {
         this.parser = parser;
     }
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setGene2GOAssociationPersister( Persister gene2GOAssociationPersister ) {
+        this.gene2GOAssociationPersister = gene2GOAssociationPersister;
     }
 
     private void load( BlockingQueue<Gene2GOAssociation> queue ) {
@@ -154,7 +154,7 @@ public class NCBIGene2GOAssociationLoader {
 
                 itemsToPersist.add( associations );
                 if ( ++count % NCBIGene2GOAssociationLoader.BATCH_SIZE == 0 ) {
-                    persisterHelper.persist( itemsToPersist );
+                    gene2GOAssociationPersister.persist( itemsToPersist );
                     itemsToPersist.clear();
                 }
 
@@ -179,7 +179,7 @@ public class NCBIGene2GOAssociationLoader {
         }
 
         // finish up.
-        persisterHelper.persist( itemsToPersist );
+        gene2GOAssociationPersister.persist( itemsToPersist );
 
         NCBIGene2GOAssociationLoader.log.info( "Finished, loaded total of " + count + " GO associations" );
         consumerDone.set( true );

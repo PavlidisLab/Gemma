@@ -101,7 +101,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         loader = new NcbiGeneLoader();
         TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( this.getPersisterHelper() );
+        loader.setGenePersister( this.getPersisterHelper() );
         loader.setSkipDownload( this.skipDownload );
         loader.setStartingNcbiId( startNcbiId );
 

@@ -356,7 +356,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // the taxon is already populated in the test database
         this.gene.setTaxon( humanTaxon );
         this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
-        this.gene = ( Gene ) this.persisterHelper.persist( this.gene );
+        this.gene = this.persisterHelper.persist( this.gene );
     }
 
 }

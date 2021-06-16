@@ -39,10 +39,10 @@ public class TaxonLoader {
 
     private static final Log log = LogFactory.getLog( TaxonLoader.class.getName() );
 
-    private Persister persisterHelper;
+    private Persister<Taxon> taxonPersister;
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setTaxonPersister( Persister taxonPersister ) {
+        this.taxonPersister = taxonPersister;
     }
 
     public int load( File file ) throws IOException {
@@ -78,7 +78,7 @@ public class TaxonLoader {
 
             if ( TaxonLoader.log.isDebugEnabled() )
                 TaxonLoader.log.debug( "Loading " + taxon );
-            persisterHelper.persist( taxon );
+            taxonPersister.persist( taxon );
             count++;
 
         }

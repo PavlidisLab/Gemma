@@ -61,7 +61,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         gene.setProducts( gps );
 
-        gene = ( Gene ) this.persisterHelper.persistOrUpdate( gene );
+        gene = this.persisterHelper.persistOrUpdate( gene );
 
         assertNotNull( gene.getId() );
         assertNotNull( gene.getName() );
@@ -88,7 +88,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
-        gp = ( GeneProduct ) this.persisterHelper.persist( gp );
+        gp = this.persisterHelper.persist( gp );
 
         assertNotNull( gp.getId() );
         assertNotNull( gp.getGene().getId() );
@@ -103,7 +103,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         b.setSequence( "A" );
         b.setTaxon( h );
 
-        Long id = ( ( BioSequence ) this.persisterHelper.persist( b ) ).getId();
+        Long id = this.persisterHelper.persist( b ).getId();
 
         BioSequence br = BioSequence.Factory.newInstance();
         br.setName( "foo" );

@@ -54,12 +54,14 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ExpressionExperimentPersister;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -96,7 +98,9 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
     @Autowired
-    protected Persister persisterHelper;
+    protected Persister<Object> persisterHelper;
+    @Autowired
+    protected ExpressionExperimentPersister eePersister;
 
     /**
      * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
@@ -320,7 +324,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         }
         assert ( ad.getCompositeSequences().size() == probeNames.size() );
 
-        return ( ArrayDesign ) persisterHelper.persist( ad );
+        return persisterHelper.persist( ad );
     }
 
     /**

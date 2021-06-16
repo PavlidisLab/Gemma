@@ -50,7 +50,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         gene2GOAssociationService.removeAll();
         gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
-        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+        gene2GOAssLoader.setGene2GOAssociationPersister( this.persisterHelper );
     }
 
     /*

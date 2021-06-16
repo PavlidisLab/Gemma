@@ -55,7 +55,7 @@ public class GeneSearchTest extends BaseSpringContextTest {
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
 
-        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        chromosome = persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
         pl1.setNucleotideLength( 1001 );

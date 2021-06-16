@@ -72,7 +72,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eePersister.persist( expExp, eePersister.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         assertEquals( 500, calls.size() );
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
@@ -130,7 +130,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eePersister.persist( expExp, eePersister.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 30, calls.size() );
@@ -161,7 +161,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eePersister.persist( expExp, eePersister.prepare( expExp ) );
 
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         // print( calls );
@@ -219,7 +219,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = eePersister.persist( expExp, eePersister.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );

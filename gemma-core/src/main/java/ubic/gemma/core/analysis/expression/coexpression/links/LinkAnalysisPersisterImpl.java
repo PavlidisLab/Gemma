@@ -44,7 +44,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     private GeneService geneService;
 
     @Autowired
-    private Persister persisterHelper;
+    private Persister<CoexpressionAnalysis> coexpressionAnalysisPersister;
 
     @Override
     public boolean deleteAnalyses( BioAssaySet ee ) {
@@ -144,7 +144,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         // the analysis object will get updated.
         CoexpressionAnalysis analysisObj = la.getAnalysisObj();
         analysisObj.setCoexpCorrelationDistribution( la.getCorrelationDistribution() );
-        analysisObj = ( CoexpressionAnalysis ) persisterHelper.persist( analysisObj );
+        analysisObj = coexpressionAnalysisPersister.persist( analysisObj );
 
         /*
          * At this point we have the populated analysis object, but no links.

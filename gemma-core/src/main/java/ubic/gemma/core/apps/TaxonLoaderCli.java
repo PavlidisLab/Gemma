@@ -75,7 +75,7 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
         }
 
         TaxonLoader tl = new TaxonLoader();
-        tl.setPersisterHelper( this.getBean( PersisterHelper.class ) );
+        tl.setTaxonPersister( this.getBean( PersisterHelper.class ) );
         int numLoaded = tl.load( names.asFile() );
         log.info( "Loaded " + numLoaded + " taxa" );
     }

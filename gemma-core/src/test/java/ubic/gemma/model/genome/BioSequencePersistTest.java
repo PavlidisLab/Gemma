@@ -68,7 +68,7 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
     @Test
     public final void testPersistBioSequence() {
-        bs = ( BioSequence ) persisterHelper.persist( bs );
+        bs = persisterHelper.persist( bs );
         assertNotNull( bs.getId() );
     }
 

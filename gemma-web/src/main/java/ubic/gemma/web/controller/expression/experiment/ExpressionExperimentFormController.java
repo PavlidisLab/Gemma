@@ -70,7 +70,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     private BioMaterialService bioMaterialService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private ExternalDatabaseService externalDatabaseService = null;
-    private Persister persisterHelper = null;
+    private Persister<BioMaterial> bioMaterialPersister = null;
 
     private PreprocessorService preprocessorService;
     private QuantitationTypeService quantitationTypeService;
@@ -147,10 +147,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
-     * @param persisterHelper the persisterHelper to set
+     * @param bioMaterialPersister the persisterHelper to set
      */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setBioMaterialPersister( Persister<BioMaterial> bioMaterialPersister ) {
+        this.bioMaterialPersister = bioMaterialPersister;
     }
 
     public void setPreprocessorService( PreprocessorService preprocessorService ) {
@@ -328,7 +328,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 newMaterial = bioMaterialService.copy( currentBioMaterial );
                 newMaterial.setName( "Modeled after " + currentBioMaterial.getName() );
                 newMaterial.getFactorValues().clear();
-                newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
+                newMaterial = bioMaterialPersister.persist( newMaterial );
                 newBioMaterialCount++;
             } else {
                 // FIXME can we just use this from the experiment, probably no need to fetch it again.

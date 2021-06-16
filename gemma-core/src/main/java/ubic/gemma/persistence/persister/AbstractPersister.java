@@ -39,7 +39,7 @@ import java.util.HashSet;
  *
  * @author pavlidis
  */
-public abstract class AbstractPersister extends HibernateDaoSupport implements Persister {
+public abstract class AbstractPersister<T> extends HibernateDaoSupport implements ExpressionExperimentPersister<T>  {
 
     static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
     /**
@@ -53,17 +53,17 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
 
     @Override
     @Transactional
-    public Collection<?> persist( Collection<?> col ) {
+    public <S extends T> Collection<S> persist( Collection<S> col ) {
         if ( col == null || col.size() == 0 )
             return col;
 
-        Collection<Object> result = new HashSet<>();
+        Collection<S> result = new HashSet<>();
         try {
             int count = 0;
             AbstractPersister.log
                     .debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
             int numElementsPerUpdate = this.numElementsPerUpdate( col );
-            for ( Object entity : col ) {
+            for ( S entity : col ) {
                 if ( AbstractPersister.log.isDebugEnabled() ) {
                     AbstractPersister.log.debug( "Persisting: " + entity );
                 }
@@ -86,7 +86,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
 
     @Override
     @Transactional
-    public boolean isTransient( Object entity ) {
+    public boolean isTransient( T entity ) {
         if ( entity == null )
             return true;
         Long id = EntityUtils.getId( entity );
@@ -154,7 +154,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         return Math.max( ( int ) Math.ceil( col.size() / ( double ) AbstractPersister.COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
-    void persistCollectionElements( Collection<?> collection ) {
+    void persistCollectionElements( Collection<? extends T> collection ) {
         if ( collection == null )
             return;
         if ( collection.size() == 0 )
@@ -164,10 +164,10 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             StopWatch t = new StopWatch();
             t.start();
             int c = 0;
-            for ( Object object : collection ) {
+            for ( T object : collection ) {
                 if ( !this.isTransient( object ) )
                     continue;
-                Object persistedObj = this.persist( object );
+                T persistedObj = this.persist( object );
 
                 c++;
 
@@ -193,7 +193,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         // collection = persistedCollection;
     }
 
-    private int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
+    private int iteratorStatusUpdate( Collection<? extends T> col, int count, int numElementsPerUpdate, boolean increment ) {
         assert col != null && col.size() > 0;
         if ( increment )
             ++count;

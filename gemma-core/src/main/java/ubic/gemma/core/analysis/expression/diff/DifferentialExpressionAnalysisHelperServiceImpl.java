@@ -49,7 +49,10 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     @Autowired
-    private Persister persisterHelper = null;
+    private Persister<BioAssaySet> bioAssaySetPersister = null;
+
+    @Autowired
+    private Persister<Protocol> protocolPersister = null;
 
     @Override
     @Transactional
@@ -68,12 +71,12 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     @Override
     @Transactional
     public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity ) {
-        entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
+        entity.setProtocol( protocolPersister.persist( entity.getProtocol() ) );
 
         // Sometimes we have made a new EESubSet as part of the analysis.
         if ( ExpressionExperimentSubSet.class.isAssignableFrom( entity.getExperimentAnalyzed().getClass() )
                 && entity.getId() == null ) {
-            entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
+            entity.setExperimentAnalyzed( bioAssaySetPersister.persist( entity.getExperimentAnalyzed() ) );
         }
 
         entity = differentialExpressionAnalysisService.create( entity );

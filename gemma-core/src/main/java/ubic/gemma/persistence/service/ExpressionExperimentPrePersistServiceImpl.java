@@ -49,7 +49,13 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     private static final Log log = LogFactory.getLog( ExpressionExperimentPrePersistServiceImpl.class );
 
     @Autowired
-    private Persister persisterHelper;
+    private Persister<CompositeSequence> compositeSequencePersister;
+
+    @Autowired
+    private Persister<BioSequence> bioSequencePersister;
+
+    @Autowired
+    private Persister<ArrayDesign> arrayDesignPersister;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -142,7 +148,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
                     probe = cache.getFromCache( probe );
 
-                    if ( probe == null || persisterHelper.isTransient( probe ) ) {
+                    if ( probe == null || compositeSequencePersister.isTransient( probe ) ) {
                         throw new IllegalStateException( "All probes should be persistent by now" );
                     }
 
@@ -169,7 +175,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         if ( designElement == null )
             return null;
 
-        if ( !persisterHelper.isTransient( designElement ) )
+        if ( !compositeSequencePersister.isTransient( designElement ) )
             return designElement;
 
         /*
@@ -182,10 +188,10 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         designElement.setArrayDesign( arrayDesign );
 
-        if ( persisterHelper.isTransient( biologicalCharacteristic ) ) {
+        if ( bioSequencePersister.isTransient( biologicalCharacteristic ) ) {
             // transaction.
             designElement
-                    .setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( biologicalCharacteristic ) );
+                    .setBiologicalCharacteristic( bioSequencePersister.persist( biologicalCharacteristic ) );
 
         }
 
@@ -259,7 +265,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         timer.start();
 
         // transaction, but fast if the design already exists.
-        arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
+        arrayDesign = arrayDesignPersister.persist( arrayDesign );
 
         // transaction (read-only). Wasteful, if this is an existing design.
         // arrayDesign = arrayDesignService.thawRawAndProcessed( arrayDesign );

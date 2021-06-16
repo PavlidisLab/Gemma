@@ -104,7 +104,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testCascadeCreateCompositeSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         ad = arrayDesignService.find( ad );
         ad = arrayDesignService.thaw( ad );
@@ -117,28 +117,28 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testCompositeSequenceWithoutBioSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutBioSequences( ad );
         assertNotNull( cs );
     }
 
     @Test
     public void testCompositeSequenceWithoutBlatResults() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutBlatResults( ad );
         assertNotNull( cs );
     }
 
     @Test
     public void testCompositeSequenceWithoutGenes() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<CompositeSequence> cs = arrayDesignService.compositeSequenceWithoutGenes( ad );
         assertNotNull( cs );
     }
 
     @Test
     public void testCountAll() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Integer count = arrayDesignService.countAll();
         assertNotNull( count );
         assertTrue( count > 0 );
@@ -147,7 +147,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testDelete() {
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         Collection<CompositeSequence> seqs = ad.getCompositeSequences();
         Collection<Long> seqIds = new ArrayList<>();
@@ -189,7 +189,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         this.assignExternalReference( ad, gplToFind );
         this.assignExternalReference( ad, this.getGpl() );
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
@@ -214,7 +214,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad.setName( name );
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
@@ -231,7 +231,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetExpressionExperimentsById() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( ad );
         assertNotNull( ee );
     }
@@ -262,7 +262,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
             ad.getCompositeSequences().add( c1 );
         }
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
         assertEquals( 2, taxa.size() );
@@ -282,7 +282,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGetTaxaOneTaxonForArray() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
         assertEquals( 1, taxa.size() );
         Taxon tax = taxa.iterator().next();
@@ -295,7 +295,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGetTaxon() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Taxon tax = arrayDesignService.getTaxa( ad.getId() ).iterator().next();
         assertEquals( ArrayDesignServiceTest.DEFAULT_TAXON, tax.getScientificName() );
     }
@@ -311,7 +311,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testLoadAllValueObjectsOneTaxon() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
 
         Collection<Long> ids = new HashSet<>();
         ids.add( ad.getId() );
@@ -326,21 +326,21 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadCompositeSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Collection<CompositeSequence> actualValue = arrayDesignService.getCompositeSequences( ad );
         assertEquals( 3, actualValue.size() );
     }
 
     @Test
     public void testNumBioSequencesById() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Long num = arrayDesignService.numBioSequences( ad );
         assertNotNull( num );
     }
 
     @Test
     public void testNumBlatResultsById() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Long num = arrayDesignService.numBlatResults( ad );
         assertNotNull( num );
     }
@@ -351,7 +351,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testNumCompositeSequencesArrayDesign() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Long actualValue = arrayDesignService.getCompositeSequenceCount( ad );
         Long expectedValue = 3L;
         assertEquals( expectedValue, actualValue );
@@ -359,7 +359,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testNumGenesById() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         Long num = arrayDesignService.numGenes( ad );
         assertNotNull( num );
     }
@@ -425,7 +425,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         ad.setPrimaryTaxon( tax );
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = persisterHelper.persist( ad );
         ad = arrayDesignService.thaw( ad );
 
         ArrayDesign subsumedArrayDesign = ArrayDesign.Factory.newInstance();
@@ -439,7 +439,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         subsumedArrayDesign.getCompositeSequences().add( c2 );
         c2.setArrayDesign( subsumedArrayDesign );
 
-        subsumedArrayDesign = ( ArrayDesign ) persisterHelper.persist( subsumedArrayDesign );
+        subsumedArrayDesign = persisterHelper.persist( subsumedArrayDesign );
         subsumedArrayDesign = arrayDesignService.thaw( subsumedArrayDesign );
         // flushAndClearSession();
 

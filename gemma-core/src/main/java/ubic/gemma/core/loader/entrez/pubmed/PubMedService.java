@@ -44,7 +44,7 @@ public class PubMedService {
     private static final Log log = LogFactory.getLog( PubMedService.class.getName() );
 
     @Autowired
-    private Persister persisterHelper;
+    private Persister<BibliographicReference> bibliographicReferencePersister;
 
     /**
      * @param directory of XML files
@@ -70,7 +70,7 @@ public class PubMedService {
         PubMedXMLParser p = new PubMedXMLParser();
         Collection<BibliographicReference> refs = p.parse( f );
         PubMedService.log.info( "Persisting " + refs.size() );
-        persisterHelper.persist( refs );
+        bibliographicReferencePersister.persist( refs );
     }
 
 }

@@ -212,7 +212,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
-        bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+        bibref = persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
                 "ase proved to be a de novo mutation. In the third kindred, affected brothers both have a" ) );
 
@@ -248,7 +248,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
-        bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
+        bibref = persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
                 "d to chromosome 22q12. Our results confirm chromosome 22q12 as the solitary locus for FFEVF" ) );
 

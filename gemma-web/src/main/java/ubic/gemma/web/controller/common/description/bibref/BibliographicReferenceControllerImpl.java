@@ -60,7 +60,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
-    private Persister persisterHelper;
+    private Persister<BibliographicReference> bibliographicReferencePersister;
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
     @Autowired
@@ -81,7 +81,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
-            vo = new BibliographicReferenceValueObject( ( BibliographicReference ) persisterHelper.persist( bibRef ) );
+            vo = new BibliographicReferenceValueObject( bibliographicReferencePersister.persist( bibRef ) );
             this.saveMessage( request, "Added " + pubMedId + " to the system." );
         } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
             vo = this.update( pubMedId );
@@ -275,8 +275,8 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setBibliographicReferencePersister( Persister bibliographicReferencePersister ) {
+        this.bibliographicReferencePersister = bibliographicReferencePersister;
     }
 
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {

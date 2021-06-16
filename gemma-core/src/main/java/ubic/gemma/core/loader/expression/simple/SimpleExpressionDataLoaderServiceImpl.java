@@ -43,7 +43,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.ExpressionExperimentPersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -63,7 +63,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private Persister persisterHelper;
+    private ExpressionExperimentPersister persisterHelper;
     @Autowired
     private PreprocessorService preprocessorService;
     @Autowired

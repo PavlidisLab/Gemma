@@ -152,7 +152,7 @@
         <property name="bioMaterialService" ref="bioMaterialService"/>
         <property name="externalDatabaseService" ref="externalDatabaseService"/>
         <property name="preprocessorService" ref="preprocessorService"/>
-        <property name="persisterHelper" ref="persisterHelper"/>
+        <property name="bioMaterialPersister" ref="persisterHelper"/>
         <property name="quantitationTypeService" ref="quantitationTypeService"/>
         <property name="auditTrailService" ref="auditTrailService"/>
     </bean>

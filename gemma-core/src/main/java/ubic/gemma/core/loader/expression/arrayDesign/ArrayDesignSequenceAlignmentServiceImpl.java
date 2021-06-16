@@ -65,15 +65,15 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private final ArrayDesignReportService arrayDesignReportService;
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
-    private final Persister persisterHelper;
+    private final Persister<BlatResult> blatResultPersister;
 
     @Autowired
     public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
-            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister persisterHelper ) {
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister blatResultPersister ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
-        this.persisterHelper = persisterHelper;
+        this.blatResultPersister = blatResultPersister;
     }
 
     /**
@@ -401,7 +401,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             ArrayDesignSequenceAlignmentServiceImpl.log.info( duplicates + " duplicate BLAT hits skipped" );
         }
 
-        return ( Collection<BlatResult> ) persisterHelper.persist( brs );
+        return blatResultPersister.persist( brs );
     }
 
     private Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive, Blat blat ) {

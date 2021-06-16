@@ -37,6 +37,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.AbstractPersister;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -59,6 +61,11 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentReportService expressionExperimentReportService;
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
+    @Autowired
+    private Persister<ArrayDesign> arrayDesignPersister;
+    @Autowired
+    private Persister<BioSequence> bioSequencePersister;
 
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
@@ -106,7 +113,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( CompositeSequence cs : els ) {
             cs.setArrayDesign( targetPlatform );
             cs.setBiologicalCharacteristic(
-                    ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
+                    bioSequencePersister.persist( cs.getBiologicalCharacteristic() ) );
         }
 
         AbstractGeoService.log.info( "Adding " + els.size() + " elements to " + targetPlatform );
@@ -246,7 +253,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = persisterHelper.persist( ee, c );
+            ee = eePersister.persist( ee, c );
             persistedResult.add( ee );
             AbstractGeoService.log.debug( "Persisted " + seriesAccession );
 

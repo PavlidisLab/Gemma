@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.measurement.Unit;
@@ -42,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author pavlidis
  */
-abstract public class CommonPersister extends AbstractPersister {
+abstract public class CommonPersister extends AbstractPersister<Object> {
 
     private final Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<>();
     private final Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<>();
@@ -94,7 +95,7 @@ abstract public class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof Characteristic ) {
             return null; // cascade
         } else if ( entity instanceof Collection ) {
-            return super.persist( ( Collection<?> ) entity );
+            return super.persist( ( Collection ) entity );
         } else if ( entity instanceof BibliographicReference ) {
             return this.persistBibliographicReference( ( BibliographicReference ) entity );
         }

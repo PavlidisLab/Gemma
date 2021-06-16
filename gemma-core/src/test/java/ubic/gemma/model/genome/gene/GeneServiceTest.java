@@ -160,7 +160,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
-        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        chromosome = persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
         pl1.setNucleotideLength( 1001 );
@@ -180,7 +180,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene2.setTaxon( human );
         PhysicalLocation pl2 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome2 = new Chromosome( "Y", null, this.getTestPersistentBioSequence(), human );
-        chromosome2 = ( Chromosome ) persisterHelper.persist( chromosome2 );
+        chromosome2 = persisterHelper.persist( chromosome2 );
         pl2.setChromosome( chromosome2 );
         pl2.setChromosome( chromosome );
         pl2.setNucleotide( 10000010L );

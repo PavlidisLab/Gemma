@@ -173,7 +173,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setName( RandomStringUtils.random( 10 ) );
                 bs.setTaxon( taxon );
-                bs = ( BioSequence ) persisterHelper.persist( bs );
+                bs = persisterHelper.persist( bs );
 
                 assertNotNull( bs );
 
