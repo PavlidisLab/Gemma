@@ -840,7 +840,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setExperimentalDesign( ed );
         ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
         ef.setDescription(
-                "Scan date or similar proxy for 'sample processing batch'" + " extracted from the raw data files." );
+                "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
 
         ef = this.persistFactor( ee, ef );
         return ef;
