@@ -731,6 +731,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
 
+        /*
+         * FIXME: only add these if the interaction was retained in the model.
+         */
         for ( String[] fs : interactionFactorLists ) {
             String intF = StringUtils.join( fs, ":" );
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
@@ -793,7 +796,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 if ( factorsForName.size() > 1 ) {
                     /*
-                     * Interactions
+                     * Interactions FIXME: only enter this if the interaction term was retained in the model.
                      */
                     if ( factorsForName.size() > 2 ) {
                         LinearModelAnalyzer.log.error( "Handling more than two-way interactions is not implemented" );
@@ -824,10 +827,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                                     + ", further warnings suppressed" );
                             warned = true;
                         }
-
-                        if ( LinearModelAnalyzer.log.isDebugEnabled() )
-                            LinearModelAnalyzer.log.debug( "Interaction could not be computed for " + el
-                                    + ", further warnings suppressed" );
+                        //
+                        //                        if ( LinearModelAnalyzer.log.isDebugEnabled() )
+                        //                            LinearModelAnalyzer.log.debug( "Interaction could not be computed for " + el
+                        //                                    + ", further warnings suppressed" );
 
                         notUsable++; // will over count?
                         continue;
@@ -1222,6 +1225,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     }
 
+    /**
+     * Build the design matrix, including interactions if possible
+     * 
+     * @param  designMatrix           partially setup matrix
+     * @param  interactionFactorLists interactions to consider
+     * @param  baselineConditions     designation of baseline conditions for each factor
+     * @return                        final design matrix
+     */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
             List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
         /*

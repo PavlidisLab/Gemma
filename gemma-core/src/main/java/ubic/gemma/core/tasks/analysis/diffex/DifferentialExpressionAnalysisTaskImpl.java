@@ -91,14 +91,12 @@ public class DifferentialExpressionAnalysisTaskImpl
 
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( taskCommand.getToRedo() != null ) {
-            log.info( "Redoing analysis" );
-            ee = expressionExperimentService.thawLite( ee );
+            log.info( "Redoing existing analysis" );
             return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
         }
-
-        ee = expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( ee );
