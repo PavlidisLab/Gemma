@@ -37,7 +37,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private Persister<ArrayDesign> arrayDesignPersiter;
+    private Persister<ArrayDesign> arrayDesignPersister;
 
     @Override
     @Transactional
@@ -71,7 +71,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
             arrayDesign.setMergedInto( result );
             this.audit( arrayDesign, "Merged into " + result );
 
-            result = arrayDesignPersiter.persist( result );
+            result = arrayDesignPersister.persist( result );
         }
 
         return result;

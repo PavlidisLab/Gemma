@@ -36,7 +36,7 @@ public interface GeoConverter extends Converter<GeoData, Object> {
     void clear();
 
     @Override
-    Collection<Object> convert( Collection<? extends GeoData> geoObjects );
+    Collection convert( Collection<? extends GeoData> geoObjects );
 
     @Override
     Object convert( GeoData geoObject );

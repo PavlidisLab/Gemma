@@ -19,6 +19,9 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import java.util.Collection;
 
@@ -55,7 +58,7 @@ public interface Persister<T> {
      * @return     the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
-    <S extends T> S persist( S obj );
+    <S extends T> S persist( S entity );
 
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
@@ -70,7 +73,7 @@ public interface Persister<T> {
      * @return     the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
-    <S extends T> S persistOrUpdate( S obj );
+    <S extends T> S persistOrUpdate( S entity );
 
     /**
      * Determine if a entity is transient (not persistent).
@@ -80,4 +83,5 @@ public interface Persister<T> {
      */
     boolean isTransient( T entity );
 
+    void persistCollectionElements( Collection<? extends T> collection );
 }

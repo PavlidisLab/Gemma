@@ -275,7 +275,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    public void setBibliographicReferencePersister( Persister bibliographicReferencePersister ) {
+    public void setBibliographicReferencePersister( Persister<BibliographicReference> bibliographicReferencePersister ) {
         this.bibliographicReferencePersister = bibliographicReferencePersister;
     }
 

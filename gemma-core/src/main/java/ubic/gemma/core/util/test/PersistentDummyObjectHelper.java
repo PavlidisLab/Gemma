@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -47,7 +48,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.ExpressionExperimentPersister;
+import ubic.gemma.persistence.persister.expression.ExpressionExperimentPersister;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -80,12 +81,6 @@ public class PersistentDummyObjectHelper {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
-
-    @Autowired
-    private Persister<Object> persisterHelper;
-
-    @Autowired
-    private ExpressionExperimentPersister eePersister;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -163,6 +158,12 @@ public class PersistentDummyObjectHelper {
         return t;
     }
 
+    @Autowired
+    private Persister<CoexpressionAnalysis> coexpressionAnalysisPersister;
+
+    @Autowired
+    private Persister<ExpressionAnalysis> expressionAnalysisPersister;
+
     public void addTestAnalyses( ExpressionExperiment ee ) {
         /*
          * Add analyses
@@ -172,7 +173,7 @@ public class PersistentDummyObjectHelper {
 
         pca.setExperimentAnalyzed( ee );
 
-        persisterHelper.persist( pca );
+        coexpressionAnalysisPersister.persist( pca );
 
         /*
          * Diff
@@ -184,7 +185,7 @@ public class PersistentDummyObjectHelper {
         expressionAnalysis.setProtocol( protocol );
         expressionAnalysis.setExperimentAnalyzed( ee );
 
-        persisterHelper.persist( expressionAnalysis );
+        expressionAnalysisPersister.persist( expressionAnalysis );
     }
 
     /**
@@ -272,8 +273,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
-        ee = eePersister.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPersister.prepare( ee );
+        ee = expressionExperimentPersister.persist( ee, c );
 
         return ee;
     }
@@ -326,11 +327,14 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
-        ee = eePersister.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPersister.prepare( ee );
+        ee = expressionExperimentPersister.persist( ee, c );
 
         return ee;
     }
+
+    @Autowired
+    private Persister<Gene> genePersister;
 
     /**
      * @return with default taxon
@@ -357,8 +361,11 @@ public class PersistentDummyObjectHelper {
         gp.setGene( gene );
         gp.setName( RandomStringUtils.randomNumeric( 5 ) + "_test" );
         gene.getProducts().add( gp );
-        return persisterHelper.persist( gene );
+        return genePersister.persist( gene );
     }
+
+    @Autowired
+    private Persister<ArrayDesign> arrayDesignPersister;
 
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
@@ -412,8 +419,11 @@ public class PersistentDummyObjectHelper {
         }
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
 
-        return persisterHelper.persist( ad );
+        return arrayDesignPersister.persist( ad );
     }
+
+    @Autowired
+    private ExpressionExperimentPersister expressionExperimentPersister;
 
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
         return this.getTestPersistentBasicExpressionExperiment( null );
@@ -459,10 +469,13 @@ public class PersistentDummyObjectHelper {
 
         assert quantitationTypes.size() > 0;
         ee.setQuantitationTypes( quantitationTypes );
-        ee = persisterHelper.persist( ee );
+        ee = expressionExperimentPersister.persist( ee );
 
         return ee;
     }
+
+    @Autowired
+    private Persister<BibliographicReference> bibliographicReferencePersister;
 
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
@@ -470,13 +483,16 @@ public class PersistentDummyObjectHelper {
             PersistentDummyObjectHelper.pubmed = externalDatabaseService.findByName( "PubMed" );
         }
         br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, PersistentDummyObjectHelper.pubmed ) );
-        return persisterHelper.persist( br );
+        return bibliographicReferencePersister.persist( br );
     }
 
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
         BioMaterial bm = this.getTestPersistentBioMaterial();
         return this.getTestPersistentBioAssay( ad, bm );
     }
+
+    @Autowired
+    private Persister<BioAssay> bioAssayPersister;
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
@@ -490,30 +506,39 @@ public class PersistentDummyObjectHelper {
             throw new IllegalArgumentException();
         }
         BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
-        return persisterHelper.persist( ba );
+        return bioAssayPersister.persist( ba );
     }
+
+    @Autowired
+    private Persister<BioMaterial> bioMaterialPersister;
 
     public BioMaterial getTestPersistentBioMaterial() {
         BioMaterial bm = this.getTestNonPersistentBioMaterial();
-        return persisterHelper.persist( bm );
+        return bioMaterialPersister.persist( bm );
     }
 
     public BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         BioMaterial bm = this.getTestNonPersistentBioMaterial( tax );
-        return persisterHelper.persist( bm );
+        return bioMaterialPersister.persist( bm );
     }
+
+    @Autowired
+    private Persister<BioSequence> bioSequencePersister;
 
     public BioSequence getTestPersistentBioSequence() {
         BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( null );
 
-        return persisterHelper.persist( bs );
+        return bioSequencePersister.persist( bs );
     }
 
     public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( taxon );
 
-        return persisterHelper.persist( bs );
+        return bioSequencePersister.persist( bs );
     }
+
+    @Autowired
+    private Persister<BioSequence2GeneProduct> bioSequence2GeneProductPersister;
 
     /**
      * @param  bioSequence bio sequence
@@ -532,8 +557,14 @@ public class PersistentDummyObjectHelper {
         b2gCol.add( b2g );
 
         //noinspection unchecked
-        return persisterHelper.persist( b2gCol );
+        return bioSequence2GeneProductPersister.persist( b2gCol );
     }
+
+    @Autowired
+    private Persister<Chromosome> chromosomePersister;
+
+    @Autowired
+    private Persister<BlatResult> blatResultPersister;
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
         BlatResult br = BlatResult.Factory.newInstance();
@@ -543,7 +574,7 @@ public class PersistentDummyObjectHelper {
         }
         Chromosome chromosome = new Chromosome( "XXX", null, this.getTestPersistentBioSequence( taxon ), taxon );
         assert chromosome.getSequence() != null;
-        chromosome = persisterHelper.persist( chromosome );
+        chromosome = chromosomePersister.persist( chromosome );
         assert chromosome != null;
         assert chromosome.getSequence() != null;
         br.setTargetChromosome( chromosome );
@@ -556,8 +587,11 @@ public class PersistentDummyObjectHelper {
         targetAlignedRegion.setNucleotide( 10000010L );
         targetAlignedRegion.setNucleotideLength( 1001 );
         targetAlignedRegion.setStrand( "-" );
-        return persisterHelper.persist( br );
+        return blatResultPersister.persist( br );
     }
+
+    @Autowired
+    private Persister<Contact> contactPersister;
 
     /**
      * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
@@ -569,9 +603,12 @@ public class PersistentDummyObjectHelper {
         c.setName(
                 RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testcontact" );
         c.setEmail( c.getName() + "@foo.org" );
-        c = persisterHelper.persist( c );
+        c = contactPersister.persist( c );
         return c;
     }
+
+    @Autowired
+    private Persister<DatabaseEntry> databaseEntryPersister;
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
@@ -607,12 +644,15 @@ public class PersistentDummyObjectHelper {
             ed = ExternalDatabase.Factory.newInstance();
             ed.setName(
                     RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testdb" );
-            ed = persisterHelper.persist( ed );
+            ed = externalDatabasePersister.persist( ed );
         }
 
         result.setExternalDatabase( ed );
         return result;
     }
+
+    @Autowired
+    private Persister<ExternalDatabase> externalDatabasePersister;
 
     /**
      * @param  databaseName GEO or PubMed (others could be supported)
@@ -628,7 +668,7 @@ public class PersistentDummyObjectHelper {
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
-                edp = persisterHelper.persist( edp );
+                edp = externalDatabasePersister.persist( edp );
                 return this.getTestPersistentDatabaseEntry( accession, edp );
         }
     }
@@ -643,7 +683,7 @@ public class PersistentDummyObjectHelper {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testee" );
         ee.setTaxon( this.getTestPersistentTaxon() );
-        ee = persisterHelper.persist( ee );
+        ee = expressionExperimentPersister.persist( ee );
         return ee;
     }
 
@@ -689,14 +729,20 @@ public class PersistentDummyObjectHelper {
         ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = eePersister.prepare( ee );
-        return eePersister.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPersister.prepare( ee );
+        return expressionExperimentPersister.persist( ee, c );
     }
+
+    @Autowired
+    private Persister<GeneProduct> geneProductPersister;
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( gene );
-        return persisterHelper.persist( gp );
+        return geneProductPersister.persist( gp );
     }
+
+    @Autowired
+    private Persister<QuantitationType> quantitationTypePersister;
 
     /**
      * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
@@ -706,8 +752,11 @@ public class PersistentDummyObjectHelper {
      */
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
-        return persisterHelper.persist( qt );
+        return quantitationTypePersister.persist( qt );
     }
+
+    @Autowired
+    private Persister<Taxon> taxonPersister;
 
     public Taxon getTestPersistentTaxon() {
         if ( PersistentDummyObjectHelper.testTaxon == null ) {
@@ -716,7 +765,7 @@ public class PersistentDummyObjectHelper {
             PersistentDummyObjectHelper.testTaxon.setScientificName( "Loxodonta" );
             PersistentDummyObjectHelper.testTaxon.setNcbiId( 1245 );
             PersistentDummyObjectHelper.testTaxon.setIsGenesUsable( true );
-            PersistentDummyObjectHelper.testTaxon = persisterHelper
+            PersistentDummyObjectHelper.testTaxon = taxonPersister
                     .persist( PersistentDummyObjectHelper.testTaxon );
             assert PersistentDummyObjectHelper.testTaxon != null
                     && PersistentDummyObjectHelper.testTaxon.getId() != null;

@@ -37,8 +37,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.AbstractPersister;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.expression.ExpressionExperimentPersister;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -66,6 +66,8 @@ public class GeoServiceImpl extends AbstractGeoService {
     private Persister<ArrayDesign> arrayDesignPersister;
     @Autowired
     private Persister<BioSequence> bioSequencePersister;
+    @Autowired
+    private ExpressionExperimentPersister expressionExperimentPersister;
 
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
@@ -184,8 +186,8 @@ public class GeoServiceImpl extends AbstractGeoService {
                 }
             }
 
-            Collection<Object> arrayDesigns = geoConverter.convert( platforms );
-            return persisterHelper.persist( arrayDesigns );
+            Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms );
+            return arrayDesignPersister.persist( arrayDesigns );
         }
 
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
@@ -248,12 +250,11 @@ public class GeoServiceImpl extends AbstractGeoService {
         this.getPubMedInfo( result );
 
         AbstractGeoService.log.debug( "Converted " + seriesAccession );
-        assert persisterHelper != null;
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = eePersister.persist( ee, c );
+            ee = expressionExperimentPersister.persist( ee, c );
             persistedResult.add( ee );
             AbstractGeoService.log.debug( "Persisted " + seriesAccession );
 
@@ -351,7 +352,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                            .join( toSkip, "," ) );
+                    .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {

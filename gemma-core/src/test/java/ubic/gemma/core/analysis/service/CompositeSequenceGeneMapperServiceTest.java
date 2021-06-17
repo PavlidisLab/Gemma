@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -75,6 +76,8 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     private ExpressionExperimentService eeService;
     @Autowired
     private GeneService geneService = null;
+    @Autowired
+    private Persister<Gene> genePersister;
 
     // private static boolean alreadyPersistedData = false;
 
@@ -205,7 +208,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     private void loadGeneData() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
-        loader.setGenePersister( this.persisterHelper );
+        loader.setGenePersister( this.genePersister );
 
         String filePath = FileTools.resourceToPath( "/data/loader/genome/gene" );
 

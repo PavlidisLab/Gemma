@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl;
@@ -70,6 +71,10 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     private ArrayDesignService arrayDesignService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private Persister<BioSequence> bioSequencePersister;
+    @Autowired
+    private Persister<BlatAssociation> blatAssociationPersister;
 
     @After
     public void after() {
@@ -173,7 +178,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setName( RandomStringUtils.random( 10 ) );
                 bs.setTaxon( taxon );
-                bs = persisterHelper.persist( bs );
+                bs = bioSequencePersister.persist( bs );
 
                 assertNotNull( bs );
 
@@ -187,7 +192,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 br.setQuerySequence( bs );
                 blata.setBlatResult( br );
                 blata.setBioSequence( bs );
-                persisterHelper.persist( blata );
+                blatAssociationPersister.persist( blata );
                 genes.add( g );
             }
 

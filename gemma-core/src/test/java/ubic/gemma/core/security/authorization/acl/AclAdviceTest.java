@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -87,6 +88,12 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private Persister<ArrayDesign> persisterHelper;
+
+    @Autowired
+    private Persister<ExpressionExperimentSet> expressionExperimentSetPersister;
 
     @Test
     public void testSecuredNotChild() {
@@ -268,7 +275,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ees.getExperiments().add( ee );
         ees.setName( this.randomName() );
 
-        persisterHelper.persist( ees );
+        expressionExperimentSetPersister.persist( ees );
 
         // make sure the ACL for objects are there (throws an exception if not).
 

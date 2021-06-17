@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -62,6 +63,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private Persister<ArrayDesign> persisterHelper;
 
     @Before
     public void setup() {

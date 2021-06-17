@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 
 import java.util.*;
@@ -64,6 +65,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private GeneService geneService;
     @Autowired
     private UserManager userManager;
+    @Autowired
+    private Persister<Gene> genePersister;
 
     private Gene gene = null;
     private LiteratureEvidenceValueObject litEvidence = null;
@@ -356,7 +359,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // the taxon is already populated in the test database
         this.gene.setTaxon( humanTaxon );
         this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );
-        this.gene = this.persisterHelper.persist( this.gene );
+        this.gene = this.genePersister.persist( this.gene );
     }
 
 }

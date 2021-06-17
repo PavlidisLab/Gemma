@@ -22,7 +22,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.Persister;
 
 import java.io.InputStream;
 
@@ -34,6 +37,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class TaxonLoaderTest extends BaseSpringContextTest {
     private InputStream is;
+    @Autowired
+    private Persister<Taxon> persisterHelper;
 
     @After
     public void onTearDownInTransaction() throws Exception {

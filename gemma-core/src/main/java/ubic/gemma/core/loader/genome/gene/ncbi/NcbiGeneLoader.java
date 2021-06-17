@@ -61,7 +61,7 @@ public class NcbiGeneLoader {
         loaderDone = new AtomicBoolean( false );
     }
 
-    public NcbiGeneLoader( Persister genePersister ) {
+    public NcbiGeneLoader( Persister<Gene> genePersister ) {
         this();
         this.setGenePersister( genePersister );
     }
@@ -122,7 +122,7 @@ public class NcbiGeneLoader {
     /**
      * @param genePersister the persisterHelper to set
      */
-    public void setGenePersister( Persister genePersister ) {
+    public void setGenePersister( Persister<Gene> genePersister ) {
         this.genePersister = genePersister;
     }
 

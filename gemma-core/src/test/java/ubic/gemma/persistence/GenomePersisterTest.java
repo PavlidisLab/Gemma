@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.util.Collection;
@@ -42,6 +43,15 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
     @Autowired
     BioSequenceService biosequenceService;
+
+    @Autowired
+    Persister<Gene> genePersister;
+
+    @Autowired
+    Persister<GeneProduct> geneProductPersister;
+
+    @Autowired
+    Persister<BioSequence> bioSequencePersister;
 
     @Test
     public void testPersistGene() {
@@ -61,7 +71,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         gene.setProducts( gps );
 
-        gene = this.persisterHelper.persistOrUpdate( gene );
+        gene = this.genePersister.persistOrUpdate( gene );
 
         assertNotNull( gene.getId() );
         assertNotNull( gene.getName() );
@@ -88,7 +98,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
-        gp = this.persisterHelper.persist( gp );
+        gp = this.geneProductPersister.persist( gp );
 
         assertNotNull( gp.getId() );
         assertNotNull( gp.getGene().getId() );
@@ -103,13 +113,13 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         b.setSequence( "A" );
         b.setTaxon( h );
 
-        Long id = this.persisterHelper.persist( b ).getId();
+        Long id = this.bioSequencePersister.persist( b ).getId();
 
         BioSequence br = BioSequence.Factory.newInstance();
         br.setName( "foo" );
         br.setSequence( "T" );
         br.setTaxon( h );
-        this.persisterHelper.persistOrUpdate( br ); /// this is what we are testing.
+        this.bioSequencePersister.persistOrUpdate( br ); /// this is what we are testing.
 
         BioSequence bc = BioSequence.Factory.newInstance();
         bc.setName( "foo" );

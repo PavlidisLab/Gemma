@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.junit.Assert.assertNotNull;
@@ -45,6 +46,9 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private TaxonService taxonService = null;
+
+    @Autowired
+    private Persister<Gene> persisterHelper;
 
     private Gene gene;
 

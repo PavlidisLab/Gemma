@@ -25,7 +25,7 @@ import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.persister.TaxonPersisterImpl;
 
 import java.util.Collection;
 
@@ -75,7 +75,7 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
         }
 
         TaxonLoader tl = new TaxonLoader();
-        tl.setTaxonPersister( this.getBean( PersisterHelper.class ) );
+        tl.setTaxonPersister( this.getBean( TaxonPersisterImpl.class ) );
         int numLoaded = tl.load( names.asFile() );
         log.info( "Loaded " + numLoaded + " taxa" );
     }

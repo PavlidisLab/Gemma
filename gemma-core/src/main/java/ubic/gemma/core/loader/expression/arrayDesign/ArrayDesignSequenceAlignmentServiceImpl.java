@@ -69,7 +69,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
     @Autowired
     public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
-            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister blatResultPersister ) {
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister<BlatResult> blatResultPersister ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;

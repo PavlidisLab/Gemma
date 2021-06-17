@@ -35,6 +35,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -69,6 +70,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     private MutableAclService aclService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private Persister<ArrayDesign> persisterHelper;
 
     @Before
     public void setup() {

@@ -35,6 +35,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -68,6 +69,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private IndexerTask indexerTask;
+
+    @Autowired
+    private Persister<BibliographicReference> persisterHelper;
 
     private ExpressionExperiment ee;
     private Gene gene;

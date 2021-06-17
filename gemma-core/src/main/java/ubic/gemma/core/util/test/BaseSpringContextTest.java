@@ -54,14 +54,13 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.ExpressionExperimentPersister;
+import ubic.gemma.persistence.persister.expression.ExpressionExperimentPersister;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -97,8 +96,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected final Log log = LogFactory.getLog( this.getClass() );
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
-    @Autowired
-    protected Persister<Object> persisterHelper;
     @Autowired
     protected ExpressionExperimentPersister eePersister;
 
@@ -162,13 +159,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     public void setDataSource( DataSource dataSource ) {
         this.simpleJdbcTemplate = new JdbcTemplate( dataSource );
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     /**
@@ -287,6 +277,9 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
     }
 
+    @Autowired
+    private Persister<ArrayDesign> arrayDesignPersister;
+
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
      *
@@ -324,7 +317,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         }
         assert ( ad.getCompositeSequences().size() == probeNames.size() );
 
-        return persisterHelper.persist( ad );
+        return arrayDesignPersister.persist( ad );
     }
 
     /**

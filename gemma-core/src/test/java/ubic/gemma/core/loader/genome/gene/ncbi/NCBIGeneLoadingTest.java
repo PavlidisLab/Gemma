@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 
 import java.util.ArrayList;
@@ -51,6 +52,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneProductService geneProductService;
+    @Autowired
+    private Persister<Gene> persisterHelper;
 
     @Before
     public void setup() {

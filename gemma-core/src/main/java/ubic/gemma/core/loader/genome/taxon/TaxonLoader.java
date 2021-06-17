@@ -41,7 +41,7 @@ public class TaxonLoader {
 
     private Persister<Taxon> taxonPersister;
 
-    public void setTaxonPersister( Persister taxonPersister ) {
+    public void setTaxonPersister( Persister<Taxon> taxonPersister ) {
         this.taxonPersister = taxonPersister;
     }
 

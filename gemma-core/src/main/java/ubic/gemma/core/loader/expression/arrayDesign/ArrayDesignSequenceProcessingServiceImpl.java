@@ -76,7 +76,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Autowired
     public ArrayDesignSequenceProcessingServiceImpl( ArrayDesignReportService arrayDesignReportService,
             ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
-            ExternalDatabaseService externalDatabaseService, Persister persisterHelper ) {
+            ExternalDatabaseService externalDatabaseService, Persister<BioSequence> persisterHelper ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;

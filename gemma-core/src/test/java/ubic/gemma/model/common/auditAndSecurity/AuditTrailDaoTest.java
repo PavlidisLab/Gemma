@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -46,6 +47,8 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     ArrayDesignService arrayDesignService;
     private Auditable auditable;
     private AuditTrail auditTrail;
+    @Autowired
+    private Persister<ArrayDesign> persisterHelper;
 
     @Before
     public void setup() {

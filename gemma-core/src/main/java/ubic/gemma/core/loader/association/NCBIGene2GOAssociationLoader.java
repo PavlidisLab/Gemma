@@ -131,7 +131,7 @@ public class NCBIGene2GOAssociationLoader {
         this.parser = parser;
     }
 
-    public void setGene2GOAssociationPersister( Persister gene2GOAssociationPersister ) {
+    public void setGene2GOAssociationPersister( Persister<Gene2GOAssociation> gene2GOAssociationPersister ) {
         this.gene2GOAssociationPersister = gene2GOAssociationPersister;
     }
 

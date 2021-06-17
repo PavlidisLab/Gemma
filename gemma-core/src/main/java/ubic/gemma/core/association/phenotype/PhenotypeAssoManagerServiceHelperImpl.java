@@ -67,7 +67,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             CharacteristicService characteristicService, DatabaseEntryDao databaseEntryDao,
             ExternalDatabaseService externalDatabaseService,
             GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService, GeneService geneService,
-            PhenotypeAssoOntologyHelper ontologyHelper, Persister bibliographicReferencePersister,
+            PhenotypeAssoOntologyHelper ontologyHelper, Persister<BibliographicReference> bibliographicReferencePersister,
             PhenotypeAssociationService phenotypeAssociationService, QuantitationTypeService quantitationTypeService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
         this.characteristicService = characteristicService;

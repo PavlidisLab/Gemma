@@ -19,9 +19,14 @@
 package ubic.gemma.persistence.persister;
 
 import org.hibernate.FlushMode;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
@@ -42,70 +47,65 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-abstract public class ArrayDesignPersister extends GenomePersister {
+@Service
+public class ArrayDesignPersister extends AuditablePersister<ArrayDesign> {
 
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
-    @Override
-    @Transactional
-    public Object persist( Object entity ) {
-        Object result;
+    @Autowired
+    private Persister<Contact> contactPersister;
+    @Autowired
+    private Persister<CompositeSequence> compositeSequencePersister;
+    @Autowired
+    private Persister<BioSequence> bioSequencePersister;
+    @Autowired
+    private Persister<Taxon> taxonPersister;
+    @Autowired
+    private Persister<ExternalDatabase> externalDatabasePersister;
+    @Autowired
+    private Persister<AuditTrail> auditTrailPersister;
 
-        if ( entity instanceof ArrayDesign ) {
-            result = this.findOrPersistArrayDesign( ( ArrayDesign ) entity );
-            return result;
-        }
-
-        return super.persist( entity );
-
+    @Autowired
+    public ArrayDesignPersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
     }
 
     @Override
     @Transactional
-    public Object persistOrUpdate( Object entity ) {
+    public ArrayDesign persistAuditable( ArrayDesign entity ) {
         if ( entity == null )
             return null;
-        return super.persistOrUpdate( entity );
-    }
 
-    /**
-     * Persist an array design.
-     */
-    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null )
-            return null;
-
-        if ( !this.isTransient( arrayDesign ) )
-            return arrayDesign;
+        if ( !this.isTransient( entity ) )
+            return entity;
 
         /*
          * Note we don't do a full find here.
          */
-        ArrayDesign existing = arrayDesignDao.find( arrayDesign );
+        ArrayDesign existing = arrayDesignDao.find( entity );
 
         if ( existing == null ) {
 
             /*
              * Try less stringent search.
              */
-            existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
+            existing = arrayDesignDao.findByShortName( entity.getShortName() );
 
             if ( existing == null ) {
-                AbstractPersister.log.info( arrayDesign + " is new, processing..." );
-                return this.persistNewArrayDesign( arrayDesign );
+                AbstractPersister.log.info( entity + " is new, processing..." );
+                return this.persistNewArrayDesign( entity );
             }
 
             AbstractPersister.log
-                    .info( "Platform exactly matching " + arrayDesign + " doesn't exist, but found " + existing
+                    .info( "Platform exactly matching " + entity + " doesn't exist, but found " + existing
                             + "; returning" );
 
         } else {
-            AbstractPersister.log.info( "Platform " + arrayDesign + " already exists, returning..." );
+            AbstractPersister.log.info( "Platform " + entity + " already exists, returning..." );
         }
 
         return existing;
-
     }
 
     /**
@@ -122,21 +122,21 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
             if ( arrayDesign.getDesignProvider() != null )
-                arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
+                arrayDesign.setDesignProvider( contactPersister.persist( arrayDesign.getDesignProvider() ) );
 
             if ( arrayDesign.getPrimaryTaxon() == null ) {
                 throw new IllegalArgumentException( "Primary taxon cannot be null" );
             }
 
-            arrayDesign.setPrimaryTaxon( ( Taxon ) this.persist( arrayDesign.getPrimaryTaxon() ) );
+            arrayDesign.setPrimaryTaxon( this.taxonPersister.persist( arrayDesign.getPrimaryTaxon() ) );
 
             for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
-                externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase() ) );
+                externalRef.setExternalDatabase( this.externalDatabasePersister.persist( externalRef.getExternalDatabase() ) );
             }
 
             AbstractPersister.log.info( "Persisting " + arrayDesign );
 
-            if ( arrayDesign.getAuditTrail() != null && this.isTransient( arrayDesign.getAuditTrail() ) )
+            if ( arrayDesign.getAuditTrail() != null && this.auditTrailPersister.isTransient( arrayDesign.getAuditTrail() ) )
                 arrayDesign.getAuditTrail().setId( null );
 
             Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
@@ -162,7 +162,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int numElementsPerUpdate = this.numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            if ( !this.isTransient( compositeSequence ) ) {
+            if ( !compositeSequencePersister.isTransient( compositeSequence ) ) {
                 // in case of retry (not used?)
                 continue;
             }
@@ -172,7 +172,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
 
-            BioSequence persistedBs = this.persistBioSequence( biologicalCharacteristic );
+            BioSequence persistedBs = this.bioSequencePersister.persist( biologicalCharacteristic );
 
             compositeSequence.setBiologicalCharacteristic( persistedBs );
 

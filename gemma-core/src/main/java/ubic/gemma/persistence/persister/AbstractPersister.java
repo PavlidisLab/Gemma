@@ -23,9 +23,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.FlushMode;
+import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -39,9 +41,9 @@ import java.util.HashSet;
  *
  * @author pavlidis
  */
-public abstract class AbstractPersister<T> extends HibernateDaoSupport implements ExpressionExperimentPersister<T>  {
+public abstract class AbstractPersister<T> extends HibernateDaoSupport implements Persister<T> {
 
-    static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
+    protected static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
     /**
      * Collections smaller than this don't result in logging about progress.
      */
@@ -50,6 +52,11 @@ public abstract class AbstractPersister<T> extends HibernateDaoSupport implement
      * How many times per collection to update us (at most)
      */
     private static final int COLLECTION_INFO_FREQUENCY = 10;
+
+    @Autowired
+    public AbstractPersister( SessionFactory sessionFactory ) {
+        setSessionFactory( sessionFactory );
+    }
 
     @Override
     @Transactional
@@ -82,6 +89,13 @@ public abstract class AbstractPersister<T> extends HibernateDaoSupport implement
             throw new RuntimeException( e );
         }
         return result;
+    }
+
+    @Override
+    public <S extends T> S persistOrUpdate( S entity ) {
+        if ( entity == null )
+            return null;
+        throw new UnsupportedOperationException( "Don't know how to persistOrUpdate a " + entity.getClass().getName() );
     }
 
     @Override
@@ -154,7 +168,8 @@ public abstract class AbstractPersister<T> extends HibernateDaoSupport implement
         return Math.max( ( int ) Math.ceil( col.size() / ( double ) AbstractPersister.COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
-    void persistCollectionElements( Collection<? extends T> collection ) {
+    @Override
+    public void persistCollectionElements( Collection<? extends T> collection ) {
         if ( collection == null )
             return;
         if ( collection.size() == 0 )
