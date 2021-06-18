@@ -129,12 +129,6 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>net.sf.ehcache</groupId>
-					<artifactId>ehache-core</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<!-- required by hibernate, explicitly import so we get it at runtime. -->
@@ -143,22 +137,6 @@
 			<version>3.4.GA</version>
 			<scope>runtime</scope>
 			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-core</artifactId>
-			<version>${ehcache.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-terracotta</artifactId>
-			<version>${ehcache.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.terracotta</groupId>
-			<artifactId>terracotta-toolkit-1.6-runtime</artifactId>
-			<version>5.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -263,13 +241,11 @@
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.9.4</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -406,19 +382,6 @@
 				<updatePolicy>never</updatePolicy>
 			</releases>
 		</repository>
-		<repository>
-			<id>terracotta-releases</id>
-			<url>https://www.terracotta.org/download/reflector/releases</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
 	</repositories>
 	<profiles>
 		<profile>
@@ -501,11 +464,10 @@
 	</reporting>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gsec.version>0.0.2</gsec.version>
+		<gsec.version>0.0.4</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
-		<spring.security.version>3.1.4.RELEASE</spring.security.version>
-		<hibernate.version>3.6.7.Final</hibernate.version>
-		<ehcache.version>2.6.6</ehcache.version>
+		<spring.security.version>3.2.10.RELEASE</spring.security.version>
+		<hibernate.version>3.6.10.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
 		<tomcat.version>8.5.60</tomcat.version>
 	</properties>
