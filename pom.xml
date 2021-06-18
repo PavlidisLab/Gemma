@@ -369,19 +369,6 @@
 				<updatePolicy>never</updatePolicy>
 			</releases>
 		</repository>
-		<repository>
-			<id>jboss</id>
-			<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
 	</repositories>
 	<profiles>
 		<profile>
