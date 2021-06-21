@@ -163,6 +163,7 @@
 				<artifactId>jetty-maven-plugin</artifactId>
 				<version>9.4.40.v20210413</version>
 				<configuration>
+					<skip>false</skip>
 					<scanIntervalSeconds>10</scanIntervalSeconds>
 				</configuration>
 			</plugin>
