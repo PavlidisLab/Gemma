@@ -8,7 +8,7 @@
 	<!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component, @Service, @Repository -->
 	<context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
 		<!-- FIXME: we should use @Component on each CLI, or maybe introduce a @CLI annotation -->
-		<context:include-filter type="assignable" expression="ubic.gemma.core.util.AbstractCLI" />
+		<context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI" />
 		<context:exclude-filter type="aspectj" expression="ubic.gemma.web.*" />
 		<context:exclude-filter type="aspectj" expression="ubic.gemma.core.search.indexer.*" />
 		<context:exclude-filter type="aspectj" expression="ubic.gemma.core.job.progress.*" />

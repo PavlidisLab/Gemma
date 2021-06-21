@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.*;
 import ubic.basecode.util.DateUtil;
-import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
 
@@ -46,7 +45,7 @@ import java.util.concurrent.*;
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class AbstractCLI {
+public abstract class AbstractCLI implements CLI {
 
     /**
      * Exit code used for a successful doWork execution.
@@ -117,6 +116,7 @@ public abstract class AbstractCLI {
      * end-user. Any exception raised by doWork results in a value of {@link #FAILURE}, and any error set in the
      * internal error objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
+    @Override
     public int executeCommand( String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -144,15 +144,6 @@ public abstract class AbstractCLI {
             AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds." );
         }
     }
-
-    /**
-     * A short memorable name for the command that can be used to locate this class.
-     *
-     * @return name; if null, this will not be available as a shortcut command.
-     */
-    public abstract String getCommandName();
-
-    public abstract String getShortDesc();
 
     /**
      * You must implement the handling for this option.
@@ -575,11 +566,6 @@ public abstract class AbstractCLI {
             throw new RuntimeException( "Verbosity must be from 0 to 5" );
         }
     }
-
-    /**
-     * @return the command group for this CLI
-     */
-    public abstract GemmaCLI.CommandGroup getCommandGroup();
 
     /**
      * Represents an individual result in a batch processing.

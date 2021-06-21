@@ -23,6 +23,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
 import java.util.*;
@@ -54,12 +55,12 @@ public class GemmaCLI {
         /*
          * Build a map from command names to classes.
          */
-        Map<String, AbstractCLI> commandBeans = ctx.getBeansOfType( AbstractCLI.class );
+        Map<String, CLI> commandBeans = ctx.getBeansOfType( CLI.class );
         Map<CommandGroup, Map<String, String>> commandGroups = new HashMap<>();
-        Map<String, AbstractCLI> commandsByName = new HashMap<>();
-        for ( Map.Entry<String, AbstractCLI> entry : commandBeans.entrySet() ) {
+        Map<String, CLI> commandsByName = new HashMap<>();
+        for ( Map.Entry<String, CLI> entry : commandBeans.entrySet() ) {
             String beanName = entry.getKey();
-            AbstractCLI cliInstance = entry.getValue();
+            CLI cliInstance = entry.getValue();
             String commandName = cliInstance.getCommandName();
             if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                 // keep null to avoid printing some commands...
@@ -95,7 +96,7 @@ public class GemmaCLI {
                 System.exit( 1 );
             } else {
                 try {
-                    AbstractCLI cli = commandsByName.get( commandRequested );
+                    CLI cli = commandsByName.get( commandRequested );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                     System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
                     System.exit( cli.executeCommand( argsToPass ) );
