@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,12 +39,27 @@ import java.util.*;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GemmaCLI {
 
+    private static final String HELP_OPTION = "help",
+            TESTING_OPTION = "testing";
+
+
     private static ApplicationContext ctx;
 
     public static void main( String[] args ) {
+        Options options = new Options()
+                .addOption( HELP_OPTION, "--help", false, "Show Help" )
+                .addOption( TESTING_OPTION, "--testing", false, "Enable testing environment" );
+        CommandLineParser parser = new DefaultParser();
+        CommandLine commandLine;
+        try {
+            commandLine = parser.parse( options, args, true );
+        } catch ( ParseException e ) {
+            System.exit( 1 );
+            return; // that's silly...
+        }
+
         // check for the -testing flag to load the appropriate application context
-        boolean useTestEnvironment = Arrays.asList( args ).subList( 1, args.length ).contains( "-testing" );
-        ctx = SpringContextUtil.getApplicationContext( useTestEnvironment, false /* webapp */, new String[] {
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( TESTING_OPTION ), false /* webapp */, new String[] {
                 "classpath*:ubic/gemma/cliContext-component-scan.xml",
                 "classpath*:ubic/gemma/cliContext-jms.xml",
                 "classpath*:ubic/gemma/cliContext-scheduler.xml" } );
@@ -79,34 +96,39 @@ public class GemmaCLI {
             commandGroups.get( g ).put( commandName, desc + " (" + beanName + ")" );
         }
 
-        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) ||
-                args[0].equalsIgnoreCase( "-help" ) ||
-                args[0].equalsIgnoreCase( "help" ) ) {
+        if ( commandLine.hasOption( HELP_OPTION ) ) {
             GemmaCLI.printHelp( commandGroups );
             System.exit( 1 );
-        } else {
-            LinkedList<String> f = new LinkedList<>( Arrays.asList( args ) );
-            String commandRequested = f.remove( 0 );
-            String[] argsToPass = f.toArray( new String[] {} );
+        }
 
-            if ( !commandsByName.containsKey( commandRequested ) ) {
-                System.err.println( "Unrecognized command: " + commandRequested );
-                GemmaCLI.printHelp( commandGroups );
-                System.err.println( "Unrecognized command: " + commandRequested );
-                System.exit( 1 );
-            } else {
-                try {
-                    CLI cli = commandsByName.get( commandRequested );
-                    System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
-                    System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
-                    System.exit( cli.executeCommand( argsToPass ) );
-                } catch ( Exception e ) {
-                    System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
-                    System.err.println( ExceptionUtils.getStackTrace( e ) );
-                    throw new RuntimeException( e );
-                } finally {
-                    System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
-                }
+        // no command is passed
+        if ( commandLine.getArgList().isEmpty() ) {
+            GemmaCLI.printHelp( commandGroups );
+            System.exit( 1 );
+        }
+
+        // the first element of the remaining args is the command and the rest are the arguments
+        LinkedList<String> commandArgs = new LinkedList<>( commandLine.getArgList() );
+        String commandRequested = commandArgs.remove( 0 );
+        String[] argsToPass = commandArgs.toArray( new String[] {} );
+
+        if ( !commandsByName.containsKey( commandRequested ) ) {
+            System.err.println( "Unrecognized command: " + commandRequested );
+            GemmaCLI.printHelp( commandGroups );
+            System.err.println( "Unrecognized command: " + commandRequested );
+            System.exit( 1 );
+        } else {
+            try {
+                CLI cli = commandsByName.get( commandRequested );
+                System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
+                System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
+                System.exit( cli.executeCommand( argsToPass ) );
+            } catch ( Exception e ) {
+                System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
+                System.err.println( ExceptionUtils.getStackTrace( e ) );
+                throw new RuntimeException( e );
+            } finally {
+                System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
             }
         }
     }

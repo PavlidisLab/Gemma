@@ -21,15 +21,9 @@
 		</property>
 	</bean>
 
-	<!-- make sure that the JSM container listener does not start automatically -->
-	<bean id="jmsContainerListener" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
-		<property name="connectionFactory" ref="jmsFactory" />
-		<property name="autoStartup" value="false" />
-	</bean>
-
 	<!-- The Spring message listener container configuration -->
 	<!--suppress RequiredBeanTypeInspection --> <!-- Un-parsed bean -->
-	<jms:listener-container connection-factory="jmsFactory">
+	<jms:listener-container connection-factory="jmsFactory" auto-startup="false">
 		<jms:listener destination="${gemma.remoteTasks.taskSubmissionQueue}"
 			ref="taskSubmissionListener" method="onMessage" />
 		<jms:listener destination="${gemma.remoteTasks.controlQueue}"
