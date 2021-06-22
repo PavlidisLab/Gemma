@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultValueObject;
 
 import java.util.Collection;
 
@@ -34,7 +35,15 @@ public abstract class AnalysisResultSetValueObject<K extends AnalysisResult, R e
         super( analysisResultSet.getId() );
     }
 
+    /**
+     * Obtain the VO of the analysis from which this result set is derived.
+     * @return
+     */
     public abstract AnalysisValueObject getAnalysis();
 
-    public abstract Collection<AnalysisResultValueObject<K>> getAnalysisResults();
+    /**
+     * Obtain the VO of the associated analysis result to this result set.
+     * @return
+     */
+    public abstract Collection<? extends AnalysisResultValueObject<K>> getAnalysisResults();
 }

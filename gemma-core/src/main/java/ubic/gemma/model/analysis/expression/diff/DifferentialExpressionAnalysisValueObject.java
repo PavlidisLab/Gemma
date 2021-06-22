@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -38,7 +39,8 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private static final long serialVersionUID = 622877438067070041L;
 
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
-    private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<DiffExResultSetSummaryValueObject> resultSets = null;
     private Collection<Long> arrayDesignsUsed = null;
     private Long bioAssaySetId;
     private Long sourceExperiment;

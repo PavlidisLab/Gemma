@@ -1,8 +1,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
-import ubic.gemma.model.analysis.AnalysisResultValueObject;
-import ubic.gemma.model.analysis.AnalysisValueObject;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -14,23 +14,31 @@ public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetVal
 
     private final DifferentialExpressionAnalysisValueObject analysis;
 
-    private final Collection<AnalysisResultValueObject<DifferentialExpressionAnalysisResult>> analysisResults;
+    /**
+     * Related analysis results.
+     *
+     * Note that this field is excluded from the JSON serialization if left unset.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<DifferentialExpressionAnalysisResultValueObject> analysisResults;
 
     public ExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
         this.analysis = new DifferentialExpressionAnalysisValueObject( analysisResultSet.getAnalysis() );
-        this.analysisResults = analysisResultSet.getResults()
-                .stream().map( DifferentialExpressionAnalysisResultValueObject::new )
-                .collect( Collectors.toList() );
+        if ( Hibernate.isInitialized( analysisResultSet.getResults() ) ) {
+            this.analysisResults = analysisResultSet.getResults()
+                    .stream().map( DifferentialExpressionAnalysisResultValueObject::new )
+                    .collect( Collectors.toList() );
+        }
     }
 
     @Override
-    public AnalysisValueObject getAnalysis() {
+    public DifferentialExpressionAnalysisValueObject getAnalysis() {
         return analysis;
     }
 
     @Override
-    public Collection<AnalysisResultValueObject<DifferentialExpressionAnalysisResult>> getAnalysisResults() {
+    public Collection<DifferentialExpressionAnalysisResultValueObject> getAnalysisResults() {
         return analysisResults;
     }
 }

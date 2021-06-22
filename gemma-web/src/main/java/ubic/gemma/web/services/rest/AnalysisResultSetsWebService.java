@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
@@ -67,7 +68,7 @@ public class AnalysisResultSetsWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject findAll(
+    public ResponseDataObject<?> findAll(
             @QueryParam("datasets") ArrayDatasetArg datasets,
             @QueryParam("databaseEntries") ArrayDatabaseEntryArg databaseEntries,
             @QueryParam("offset") @DefaultValue("0") IntArg offset,
@@ -94,9 +95,11 @@ public class AnalysisResultSetsWebService extends WebService {
     @GET
     @Path("/{analysisResultSet:[^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject findById(
+    public ResponseDataObject<?> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        return Responder.code200( analysisResultSet.getValueObject( expressionAnalysisResultSetService ), servlet );
+        ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
+        ears = expressionAnalysisResultSetService.thaw( ears );
+        return Responder.code200( new ExpressionAnalysisResultSetValueObject( ears ), servlet );
     }
 }

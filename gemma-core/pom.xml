@@ -473,6 +473,12 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.5</version>
         </dependency>
+        <!-- some of the gemma-core models are annotated for tuning JSON serialization in gemma-web -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.8.4</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

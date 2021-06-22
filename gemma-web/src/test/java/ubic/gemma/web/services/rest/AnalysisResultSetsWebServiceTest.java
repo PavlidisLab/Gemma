@@ -5,19 +5,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -26,7 +26,7 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -48,7 +48,12 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Autowired
     private DatabaseEntryService databaseEntryService;
 
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
     /* fixtures */
+    private ArrayDesign arrayDesign;
+    private CompositeSequence probe;
     private ExpressionExperiment ee;
     private DifferentialExpressionAnalysis dea;
     private ExpressionAnalysisResultSet dears;
@@ -66,6 +71,17 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
         dears = expressionAnalysisResultSetService.create( dears );
+
+        arrayDesign = testHelper.getTestPersistentArrayDesign( 1, true, true );
+        probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
+        assertNotNull( probe );
+
+        DifferentialExpressionAnalysisResult dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
+        dear.setCorrectedPvalue( 0.0001 );
+        dear.setResultSet( dears );
+        dear.setProbe( probe );
+        dears.setResults( Collections.singleton( dear ) );
+        expressionAnalysisResultSetService.update( dears );
 
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assertNotNull( geo );
@@ -88,6 +104,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
         databaseEntryService.remove( databaseEntry2 );
+        arrayDesignService.remove( arrayDesign );
     }
 
     @Test
@@ -102,6 +119,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         assertEquals( response.getStatus(), 200 );
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
+        // individual analysis results are not exposed from this endpoint
+        assertNull( results.get( 0 ).getAnalysisResults() );
     }
 
     @Test
@@ -168,6 +187,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
+        assertNotNull( dearsVo.getAnalysisResults() );
     }
 
     @Test

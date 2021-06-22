@@ -15,8 +15,7 @@ public class ExpressionAnalysisResultSetArg extends MutableArg<Long, ExpressionA
 
     @Override
     public ExpressionAnalysisResultSet getPersistentObject( ExpressionAnalysisResultSetService service ) {
-        ExpressionAnalysisResultSet result = service.load( value );
-        return result == null ? null : service.thaw( result );
+        return service.load( value );
     }
 
     @Override

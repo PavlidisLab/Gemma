@@ -208,12 +208,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
     public Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
+                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
                 .createAlias( "analysis", "a" )
-                .createAlias( "analysis.experimentAnalyzed", "e" )
-                .setFetchMode( "results", FetchMode.JOIN )
-                .setFetchMode( "results.probe", FetchMode.JOIN )
-                .setFetchMode( "experimentalFactors.experimentalDesign", FetchMode.JOIN );
-
+                .createAlias( "analysis.experimentAnalyzed", "e" );
 
         if ( bioAssaySets != null ) {
             query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
