@@ -658,8 +658,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             return null;
         }
 
-        final Map<String, Collection<ExperimentalFactor>> label2Factors = this.getRNames( factors );
-
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
                 .getBaselineConditions( samplesUsed, factors );
 
@@ -683,6 +681,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 .buildDesignMatrix( factors, samplesUsed, baselineConditions );
 
         config.setBaseLineFactorValues( baselineConditions );
+
+        final Map<String, Collection<ExperimentalFactor>> label2Factors = this.getRNames( factors );
 
         boolean oneSampleTTest = interceptFactor != null && factors.size() == 1;
         if ( !oneSampleTTest ) {
@@ -726,19 +726,24 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<>();
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<>();
 
-        for ( String factorName : label2Factors.keySet() ) {
+        // We use the design matrix to ensure that we only consider terms that actually ended up in the model. 
+        for ( String factorName : properDesignMatrix.getTerms() ) {
+            if ( !label2Factors.containsKey( factorName ) ) continue; // so we skip the intercept
+            log.info( "Setting up results for " + factorName );
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
 
-        /*
-         * FIXME: only add these if the interaction was retained in the model.
-         */
-        for ( String[] fs : interactionFactorLists ) {
-            String intF = StringUtils.join( fs, ":" );
-            resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( intF, new ArrayList<Double>() );
-        }
+        // the following block turns out to be redundant with the previous one.
+        //        /*
+        //         * Note we only add these if the interaction was retained in the model.
+        //         */
+        //        for ( String[] fs : properDesignMatrix.getInteractionTerms() ) {
+        //            String intF = StringUtils.join( fs, ":" );
+        //            log.info( "Setting up results for " + intF );
+        //            resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
+        //            pvaluesForQvalue.put( intF, new ArrayList<Double>() );
+        //        }
 
         if ( pvaluesForQvalue.isEmpty() ) {
             LinearModelAnalyzer.log.warn( "No results were obtained for the current stage of analysis." );
@@ -750,7 +755,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
         boolean warned = false;
-        int notUsable = 0;
+        //  int notUsable = 0;
         int processed = 0;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
@@ -768,7 +773,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     LinearModelAnalyzer.log.warn( "No result for " + el + ", further warnings suppressed" );
                     warned = true;
                 }
-                notUsable++;
+                // notUsable++;
                 continue;
             }
 
@@ -785,10 +790,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 probeAnalysisResult.setProbe( el );
 
                 if ( lm.getCoefficients() == null ) {
-                    // probeAnalysisResult.setPvalue( null );
-                    // pvaluesForQvalue.get( factorName ).add( overallPValue );
-                    // resultLists.get( factorName ).add( probeAnalysisResult );
-                    notUsable++;
+                    //     notUsable++;
                     continue;
                 }
 
@@ -822,17 +824,17 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                         }
                     } else {
-                        if ( !warned ) {
-                            LinearModelAnalyzer.log.warn( "Interaction could not be computed for " + el
-                                    + ", further warnings suppressed" );
-                            warned = true;
-                        }
+                        //                        if ( !warned ) {
+                        //                            LinearModelAnalyzer.log.warn( "Interaction could not be computed for " + el
+                        //                                    + ", further warnings suppressed" );
+                        //                            warned = true;
+                        //                        }
                         //
                         //                        if ( LinearModelAnalyzer.log.isDebugEnabled() )
                         //                            LinearModelAnalyzer.log.debug( "Interaction could not be computed for " + el
                         //                                    + ", further warnings suppressed" );
 
-                        notUsable++; // will over count?
+                        // notUsable++; // will over count?
                         continue;
                     }
 
@@ -879,7 +881,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                             LinearModelAnalyzer.log
                                     .debug( "ANOVA could not be done for " + experimentalFactor + " on " + el );
 
-                        notUsable++; // will over count?
+                        //  notUsable++; // will over count?
                         continue;
                     }
                 }
@@ -893,10 +895,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         } // over probes
 
-        if ( notUsable > 0 ) {
-            LinearModelAnalyzer.log
-                    .info( notUsable + " elements or results were not usable - model could not be fit, etc." );
-        }
+        //        if ( notUsable > 0 ) {
+        //            LinearModelAnalyzer.log
+        //                    .info( notUsable + " elements or results were not usable - model could not be fit, etc." );
+        //        }
 
         this.getRanksAndQvalues( resultLists, pvaluesForQvalue );
 
