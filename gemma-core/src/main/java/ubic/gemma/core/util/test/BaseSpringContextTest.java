@@ -43,6 +43,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -181,8 +182,14 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         this.taxonService = taxonService;
     }
 
-    protected void addTestAnalyses( ExpressionExperiment ee ) {
-        testHelper.addTestAnalyses( ee );
+    /**
+     * Create test {@link Analysis} for the given expression experiment.
+     *
+     * @param ee expression experiment to use for creating test analyses
+     * @return a collection of persisted analyses that were created
+     */
+    protected Collection<Analysis> addTestAnalyses( ExpressionExperiment ee ) {
+        return testHelper.addTestAnalyses( ee );
     }
 
     /**
@@ -490,7 +497,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentExpressionExperiment();
     }
 
-   
 
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test

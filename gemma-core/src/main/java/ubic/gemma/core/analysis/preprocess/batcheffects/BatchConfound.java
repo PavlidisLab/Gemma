@@ -98,6 +98,10 @@ public class BatchConfound {
             if ( ef.equals( batchFactor ) )
                 continue;
 
+            // ignore factors that we add with the aim of resolving confounds.
+            if ( ef.getCategory().getValue().equalsIgnoreCase( "collection of material" ) )
+                continue;
+
             Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
             int numBioMaterials = bmToFv.keySet().size();
 

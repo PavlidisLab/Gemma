@@ -5,10 +5,10 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.26.5</version>
+	<version>1.26.6</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
-	<url>http://gemma.msl.ubc.ca</url>
+	<url>https://gemma.msl.ubc.ca</url>
 	<organization>
 		<name>Pavlidis lab, Michael Smith Laboratories and Department of Psychiatry, University of British Columbia</name>
 		<url>http://pavlab.msl.ubc.ca/</url>
@@ -129,12 +129,6 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
 			<version>${hibernate.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>net.sf.ehcache</groupId>
-					<artifactId>ehache-core</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<!-- required by hibernate, explicitly import so we get it at runtime. -->
@@ -143,22 +137,6 @@
 			<version>3.4.GA</version>
 			<scope>runtime</scope>
 			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-core</artifactId>
-			<version>${ehcache.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-terracotta</artifactId>
-			<version>${ehcache.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.terracotta</groupId>
-			<artifactId>terracotta-toolkit-1.6-runtime</artifactId>
-			<version>5.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -263,13 +241,11 @@
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.9.4</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -307,7 +283,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.29</version>
+			<version>1.0.30</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -369,6 +345,14 @@
 					</descriptors>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>${jetty.version}</version>
+				<configuration>
+					<skip>true</skip> <!-- only enabled for gemma-web -->
+				</configuration>
+			</plugin>
 		</plugins>
 		<extensions>
 			<extension>
@@ -393,61 +377,7 @@
 				<updatePolicy>never</updatePolicy>
 			</releases>
 		</repository>
-		<repository>
-			<id>central</id>
-			<name>central</name>
-			<url>https://repo1.maven.org/maven2/</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
-		<repository>
-			<id>jboss</id>
-			<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
-		<repository>
-			<id>terracotta-releases</id>
-			<url>http://www.terracotta.org/download/reflector/releases</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
 	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>central</id>
-			<name>Central Repository</name>
-			<url>https://repo.maven.apache.org/maven2</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 	<profiles>
 		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
@@ -529,11 +459,12 @@
 	</reporting>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gsec.version>0.0.2</gsec.version>
+		<gsec.version>0.0.4</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
-		<spring.security.version>3.1.4.RELEASE</spring.security.version>
-		<hibernate.version>3.6.7.Final</hibernate.version>
-		<ehcache.version>2.6.6</ehcache.version>
+		<spring.security.version>3.2.10.RELEASE</spring.security.version>
+		<hibernate.version>3.6.10.Final</hibernate.version>
+		<jersey.version>2.25.1</jersey.version>
 		<tomcat.version>8.5.60</tomcat.version>
+		<jetty.version>9.4.40.v20210413</jetty.version>
 	</properties>
 </project>

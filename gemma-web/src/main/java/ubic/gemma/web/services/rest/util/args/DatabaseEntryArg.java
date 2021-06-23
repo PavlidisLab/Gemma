@@ -19,7 +19,7 @@ public abstract class DatabaseEntryArg<T>
      * @return instance of appropriate implementation of DatabaseEntryArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static DatabaseEntryArg valueOf( final String s ) {
+    public static DatabaseEntryArg<?> valueOf( final String s ) {
         try {
             return new DatabaseEntryIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

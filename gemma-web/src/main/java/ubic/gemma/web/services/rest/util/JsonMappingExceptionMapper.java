@@ -1,7 +1,7 @@
 package ubic.gemma.web.services.rest.util;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.JsonMappingException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

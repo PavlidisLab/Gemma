@@ -20,24 +20,30 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -57,10 +63,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
                 "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + " left outer join fetch res.probe left join fetch res.contrasts "
-                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "left join fetch res.probe left join fetch res.contrasts "
+                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
                         + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
+        // FIXME: this check should be unnecessary since we're using outer jointures, unless the result set was
+        //  nonexistent in the first place
         assert !res.isEmpty();
 
         if ( timer.getTime() > 1000 ) {
@@ -183,4 +191,42 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
         super.remove( resultSet );
         this.getSessionFactory().getCurrentSession().flush();
     }
+
+    @Override
+    public ExpressionAnalysisResultSetValueObject loadValueObject( ExpressionAnalysisResultSet entity ) {
+        return new ExpressionAnalysisResultSetValueObject( entity );
+    }
+
+    @Override
+    public Collection<ExpressionAnalysisResultSetValueObject> loadValueObjects( Collection<ExpressionAnalysisResultSet> entities ) {
+        return entities.stream()
+                .map( ExpressionAnalysisResultSetValueObject::new )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    public Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
+        Criteria query = this.getSessionFactory().getCurrentSession()
+                .createCriteria( ExpressionAnalysisResultSet.class )
+                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
+                .createAlias( "analysis", "a" )
+                .createAlias( "analysis.experimentAnalyzed", "e" );
+
+        if ( bioAssaySets != null ) {
+            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+        }
+
+        if ( databaseEntries != null ) {
+            query.add( Restrictions.in( "e.accession", databaseEntries ) );
+        }
+
+        // TODO: apply object filters
+
+        query.setFirstResult( offset );
+        query.setMaxResults( limit );
+        query.addOrder( isAsc ? Order.asc( orderBy ) : Order.desc( orderBy ) );
+
+        return ( List<ExpressionAnalysisResultSet> ) query.list();
+    }
+
 }

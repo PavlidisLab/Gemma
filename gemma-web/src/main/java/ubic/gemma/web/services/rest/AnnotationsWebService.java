@@ -266,7 +266,7 @@ public class AnnotationsWebService extends
         }
     }
 
-    private class AnnotationSearchResultValueObject {
+    private static class AnnotationSearchResultValueObject {
         public String value;
         public String valueUri;
         public String category;

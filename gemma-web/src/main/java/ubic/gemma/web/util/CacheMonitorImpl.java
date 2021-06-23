@@ -22,8 +22,8 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaClientConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,15 +82,14 @@ public class CacheMonitorImpl implements CacheMonitor {
         String[] cacheNames = cacheManager.getCacheNames();
         Arrays.sort( cacheNames );
 
-        // Terracotta clustered?
-        TerracottaClientConfiguration terracottaConfig = cacheManager.getConfiguration().getTerracottaConfiguration();
-        buf.append( "Distributed caching is " );
-        buf.append( terracottaConfig != null ? "enabled" : "disabled" );
-        buf.append( " in the configuration file" );
-        buf.append( terracottaConfig != null ?
-                ". The cache server's configuration URL is at [" + terracottaConfig.getUrl() + "]" :
-                "" );
-        buf.append( ".<br/>" );
+        for ( String cacheName : cacheNames ) {
+            // Terracotta clustered?
+            boolean isTerracottaClustered = cacheManager.getCache( cacheName ).getCacheConfiguration().isTerracottaClustered();
+            buf.append( "Distributed caching is " );
+            buf.append( isTerracottaClustered ? "enabled" : "disabled" );
+            buf.append( " in the configuration file for " + cacheName );
+            buf.append( ".<br/>" );
+        }
 
         buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
@@ -149,14 +148,7 @@ public class CacheMonitorImpl implements CacheMonitor {
             boolean eternal = cacheConfiguration.isEternal();
             buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
 
-            Strategy strategy;
-            strategy = cacheConfiguration.getPersistenceConfiguration() == null ?
-                    null :
-                    cacheConfiguration.getPersistenceConfiguration().getStrategy();
-
-            buf.append( "<td>" ).append( strategy == null || strategy.equals( Strategy.NONE ) ? "" : "&bull;" )
-                    .append( "</td>" );
-            buf.append( "<td>" ).append( cacheConfiguration.getMaxEntriesLocalHeap() ).append( "</td>" );
+            buf.append( "<td>" ).append( cacheConfiguration.getMaxElementsInMemory() ).append( "</td>" );
 
             if ( eternal ) {
                 // timeouts are irrelevant.

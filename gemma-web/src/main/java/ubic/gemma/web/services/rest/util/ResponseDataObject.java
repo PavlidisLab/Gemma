@@ -6,18 +6,18 @@ package ubic.gemma.web.services.rest.util;
  *
  * @author tesarst
  */
-public class ResponseDataObject {
+public class ResponseDataObject<T> {
 
-    private final Object data;
+    private final T data;
 
     /**
      * @param payload the data to be serialised and returned as the response payload.
      */
-    ResponseDataObject( Object payload ) {
+    ResponseDataObject( T payload ) {
         this.data = payload;
     }
 
-    public Object getData() {
+    public T getData() {
         return data;
     }
 }

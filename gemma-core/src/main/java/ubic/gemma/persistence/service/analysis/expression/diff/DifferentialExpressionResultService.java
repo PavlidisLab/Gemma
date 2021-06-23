@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

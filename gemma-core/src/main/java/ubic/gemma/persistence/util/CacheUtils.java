@@ -36,8 +36,6 @@ public class CacheUtils {
                 CacheConfiguration config = new CacheConfiguration( cacheName, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.addPersistence(
-                        new PersistenceConfiguration().strategy( PersistenceConfiguration.Strategy.NONE ) );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( MAX_ELEMENTS_ON_DISK );

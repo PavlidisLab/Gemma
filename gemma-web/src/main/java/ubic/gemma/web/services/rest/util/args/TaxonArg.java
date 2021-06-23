@@ -35,10 +35,10 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
      * Used by RS to parse value of request parameters.
      *
      * @param  s the request taxon argument
-     * @return   instance of appropriate implementation of TaxonArg based on the actual Type the argument represents.
+     * @return instance of appropriate implementation of TaxonArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static MutableArg<?, Taxon, TaxonValueObject, TaxonService> valueOf( final String s ) {
+    public static TaxonArg<?> valueOf( final String s ) {
         try {
             Long id = Long.parseLong( s.trim() );
             return id < TaxonArg.MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );

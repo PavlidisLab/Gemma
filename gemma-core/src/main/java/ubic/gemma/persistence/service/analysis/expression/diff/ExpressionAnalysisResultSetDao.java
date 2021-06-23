@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,22 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.persistence.util.ObjectFilter;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalysisResultSet> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
@@ -40,4 +48,16 @@ public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalys
 
     ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
+    /**
+     * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
+     *
+     * @param bioAssaySets related {@link BioAssaySet}, or any if null
+     * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
+     * @param objectFilters list of object filters
+     * @param orderBy field by which the collection is sorted
+     * @param isAsc whether the sort should be ascending or descending
+     * @param limit maximum number of results to return
+     * @return
+     */
+    Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc );
 }

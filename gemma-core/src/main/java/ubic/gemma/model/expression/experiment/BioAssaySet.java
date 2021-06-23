@@ -20,6 +20,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Collection;
@@ -33,8 +34,16 @@ import java.util.HashSet;
 public abstract class BioAssaySet extends Investigation {
 
     private static final long serialVersionUID = 2368063046639481521L;
+    private DatabaseEntry accession;
+    protected Collection<BioAssay> bioAssays = new HashSet<>();
 
-    Collection<BioAssay> bioAssays = new HashSet<>();
+    public DatabaseEntry getAccession() {
+        return this.accession;
+    }
+
+    public void setAccession( DatabaseEntry accession ) {
+        this.accession = accession;
+    }
 
     @SuppressWarnings("JpaAttributeTypeInspection") // Inspector is not handling this correctly
     public abstract Collection<BioAssay> getBioAssays();

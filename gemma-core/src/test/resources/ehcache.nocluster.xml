@@ -41,8 +41,6 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenValues"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
-		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenVectors"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.probeLoadings"
@@ -51,8 +49,6 @@
 
 	<cache name="ubic.gemma.model.analysis.expression.diff.HitListSizeImpl" maxElementsInMemory="100000"
 		eternal="false" timeToIdleSeconds="10000" timeToLiveSeconds="10000" overflowToDisk="false" />
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.hitListSizes"
-		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
 	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" maxElementsInMemory="100000" eternal="false"
@@ -598,12 +594,14 @@
 	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" maxElementsInMemory="10000"
+		   eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet.results"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.hitListSizes"
+		   maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
 
 	<cache name="ubic.gemma.model.analysis.expression.ProbeAnalysisResultImpl" maxElementsInMemory="50000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />

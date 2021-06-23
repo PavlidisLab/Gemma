@@ -115,7 +115,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
             width: 40,
             dataIndex: "baDate",
             sortable: true,
-            tooltip: 'BioAssay processing date'
+            tooltip: 'BioAssay processing date (primarily available for microarrays only)'
         }];
 
         this.factorValueEditors = [];

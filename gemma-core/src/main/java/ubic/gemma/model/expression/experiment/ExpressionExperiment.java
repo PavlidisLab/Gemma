@@ -42,7 +42,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     private static final long serialVersionUID = -1342753625018841735L;
-    private DatabaseEntry accession;
     private String batchConfound;
     private String batchEffect;
     private CurationDetails curationDetails;
@@ -100,10 +99,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return this.getShortName().equals( that.getShortName() );
         }
         return false;
-    }
-
-    public DatabaseEntry getAccession() {
-        return this.accession;
     }
 
     public String getBatchConfound() {
@@ -190,10 +185,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return this.getShortName().hashCode();
         }
         return result;
-    }
-
-    public void setAccession( DatabaseEntry accession ) {
-        this.accession = accession;
     }
 
     public void setBatchConfound( String batchConfound ) { // FIXME don't use a string for this

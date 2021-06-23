@@ -56,7 +56,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     private static final Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );
 
-    private static final String FASTQ_HEADER_EXTRATION_FAILURE_INDICATOR = "FAILURE";
+    private static final String FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR = "FAILURE";
 
     @Autowired
     private BioMaterialService bioMaterialService = null;
@@ -76,11 +76,19 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         Map<String, Collection<String>> batchIdToHeaders = this
                 .convertHeadersToBatches( headers.values() );
 
-        Map<String, FactorValue> headerToFv = new HashMap<>();
-        ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
-        bioMaterialService.associateBatchFactor( headers, headerToFv );
+        if ( batchIdToHeaders.isEmpty() ) {
+            // we were unable to find batches.
+            return null;
+        } else if ( batchIdToHeaders.size() == 1 ) {
+            // this is a hack to signal the caller that we have only one batch.
+            return ExperimentalFactor.Factory.newInstance();
+        } else {
 
-        return ef;
+            Map<String, FactorValue> headerToFv = new HashMap<>();
+            ExperimentalFactor ef = createExperimentalFactor( ee, batchIdToHeaders, headerToFv );
+            bioMaterialService.associateBatchFactor( headers, headerToFv );
+            return ef;
+        }
     }
 
     @Override
@@ -234,44 +242,81 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /**
-     * Apply some heuristics to condense the fastq headers to batches. This operates only on strings to make testing
+     * RNA-seq; Apply some heuristics to condense the fastq headers to batches. This operates only on strings to make
+     * testing
      * easier.
      *
      * @param  headers collection of fastq headers for all samples.
-     * @return         map of batch names to the headers (sample-specific) for that batch.
+     * @return         map of batch names to the headers (sample-specific) for that batch. It will be empty if batches
+     *                 couldn't be determined.
      */
     Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers ) {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
-        Map<FastqHeaderData, Collection<String>> batchInfos = new HashMap<>();
+        Map<FastqHeaderData, Collection<String>> goodHeaderSampleInfos = new HashMap<>();
+        Map<FastqHeaderData, Collection<String>> badHeaderSampleInfos = new HashMap<>();
 
-        // parse headers; keep track of the platforms, which we use as a fallback if the headers are not clean
+        // we keep track of the platforms, which we use as a fallback if the headers are not clean
+        // we also track the "unusable" headers
         Set<String> platforms = new HashSet<>();
+        Set<String> platformsForGoodHeaderSamples = new HashSet<>();
+        Set<String> platformsForBadHeaderSamples = new HashSet<>();
+        //   Set<String> badHeaderSampleHeaders = new HashSet<>();
         for ( String header : headers ) {
             FastqHeaderData batchInfoForSample = parseFASTQHeaderForBatch( header );
 
             platforms.add( batchInfoForSample.getGplId() );
 
-            if ( !batchInfos.containsKey( batchInfoForSample ) ) {
-                batchInfos.put( batchInfoForSample, new HashSet<String>() );
+            // This splitting up and batching separately shouldn't be required
+            if ( batchInfoForSample.hadUsableHeader ) {
+                if ( !goodHeaderSampleInfos.containsKey( batchInfoForSample ) ) {
+                    goodHeaderSampleInfos.put( batchInfoForSample, new HashSet<String>() );
+                }
+                goodHeaderSampleInfos.get( batchInfoForSample ).add( header );
+                platformsForGoodHeaderSamples.add( batchInfoForSample.getGplId() );
+
+            } else {
+
+                if ( !badHeaderSampleInfos.containsKey( batchInfoForSample ) ) {
+                    badHeaderSampleInfos.put( batchInfoForSample, new HashSet<String>() );
+                }
+                badHeaderSampleInfos.get( batchInfoForSample ).add( header );
+                platformsForBadHeaderSamples.add( batchInfoForSample.getGplId() );
+                //  badHeaderSampleHeaders.add( header ); // to track if they are all the same or not. Not used
+
             }
-            batchInfos.get( batchInfoForSample ).add( header );
         }
 
-        // key step ...
-        batch( batchInfos, headers.size() );
+        /*
+         * Case 1: all headers are usable (has device, lane etc. info). No problem
+         * Case 2: no headers are usable, only one platform, and all headers are the same - no batches will be found.
+         * Either flag as "no batch info" or just a single batch?
+         * Case 3: no headers are usable, but there are either more than one header style and/or more than one platform.
+         * We batch based on those.
+         * Case 4: various mixtures
+         * Case 4a: mix of case 1 and 2. We would put all the "unusable" ones in one batch, and batch the others.
+         * Case 4b: mix of case 1 and 3. Again, samples with usable headers will be batched, ones without will be
+         * batches as best we can
+         * 
+         * Complication: Batches with one sample. It is going to be hard to determine what batch they belong to. This is
+         * annoying if the other samples are batchable.
+         * Complication: Case 3 for when there is more than one platform, and one or both platforms have a mix of usable
+         * and unusable headers. Probably we would just ignore this.
+         */
+        Map<FastqHeaderData, Collection<String>> batchInfos = new HashMap<>();
+        if ( !goodHeaderSampleInfos.isEmpty() ) {
+            batch( goodHeaderSampleInfos, headers.size() );
+            batchInfos.putAll( goodHeaderSampleInfos );
+        }
 
-        // switch to using string keys for batch identifiers (and check for bad headers)
-        boolean anyBadHeaders = false;
-        boolean anyGoodHeaders = false;
+        if ( !badHeaderSampleInfos.isEmpty() ) {
+            //   batchSamplesWithUnusableHeaders( badHeaderSampleInfos, platformsForBadHeaderSamples, badHeaderSampleHeaders, headers.size() );
+            // we don't actually have to batch them separately - it will happen all by itself
+            batchInfos.putAll( badHeaderSampleInfos );
+        }
+
+        // switch to using string keys for batch identifiers, this forms the final set of batches
         for ( FastqHeaderData fhd : batchInfos.keySet() ) {
-
-            if ( fhd.hadUsableHeader ) {
-                anyGoodHeaders = true;
-            } else {
-                anyBadHeaders = true;
-            }
-
             String batchIdentifier = fhd.toString();
             if ( !result.containsKey( batchIdentifier ) ) {
                 result.put( batchIdentifier, new HashSet<String>() );
@@ -280,32 +325,58 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             result.get( batchIdentifier ).addAll( headersInBatch );
         }
 
-        // deal with one of the possible "one batch" scenarios.
-        if ( platforms.size() == 1 || anyBadHeaders ) {
+        // DEBUG CODE
+        //        log.info( "--------------------------" );
+        //        for ( String b : result.keySet() ) {
+        //            log.info( "Batch: " + b );
+        //            for ( String batchmember : result.get( b ) ) {
+        //                log.info( "   " + batchmember );
+        //            }
+        //        }
 
-            // if some headers are good, and others bad, that's an error - we'd have to see how to deal with such cases.
-            if ( platforms.size() == 1 && ( anyGoodHeaders && anyBadHeaders ) ) {
-                throw new RuntimeException( "Data set uses just one platform and only some headers had run/device/lane information" );
-            } else if ( platforms.size() == 1 && anyBadHeaders ) {
-                // all of the headers are useless.
-                throw new RuntimeException( "Data set uses just one platform, headers lacked run/device/lane information." );
-            } else {
-                log.info( "Data set appears to have been run in a single batch based on run/device/lane information" );
+        /*
+         * Finalize
+         */
+
+        // if we have only one batch, that's probably okay if there is just one platform and/or the headers were okay. However, if all the headers were "bad", that's a different situation
+        if ( result.size() == 1 ) {
+            if ( goodHeaderSampleInfos.isEmpty() ) {
+                // throw new BatchInfoPopulationException( "Samples didn't have any useable information for batching" );
+                // perhaps we should just return an empty result to signal this instead of raising an exception
+                result.clear();
             }
 
+        } else {
+            //check for singleton batches
+            boolean singleton = false;
+            for ( String batchid : result.keySet() ) {
+                if ( result.get( batchid ).size() == 1 ) {
+                    singleton = true;
+                }
+            }
+            if ( singleton ) {
+                result.clear(); // not sure what to do - this could be overkill.
+            } else {
+                // OK.
+            }
         }
 
-        // otherwise, having just one batch means as far we can tell there was only one batch.
         log.info( result.size() + " batches detected" );
 
         return result;
 
     }
 
-    /*
+    /**
      * 
-     * RNA-seq: See how many batches we have for each level of granularity; pick the best number. This is pretty crude,
+     * 
+     * RNA-seq, for the case of when we have "usable" headers with device, lane etc.: See how many batches we have for
+     * each level of granularity; pick the best number. This is pretty crude,
      * and involves recreating the map multiple times
+     * 
+     * 
+     * @param batchInfos only of samples that have "good" headers
+     * @param numSamples how many samples
      */
     private void batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
 
@@ -318,17 +389,24 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         if ( numBatches == 1 ) {
             // no batches - this will get sorted out later, proceed
             return;
-        } else if ( numBatches == numSamples || ( double ) numBatches / ( double ) numSamples < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
-            // too few samples per batch. Try to reduce resolution and recount.
-            Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
+        } else if ( numBatches == numSamples || ( double ) numBatches / numSamples < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
 
-            if ( updatedBatchInfos.size() == batchInfos.size() ) {
-                return;
+            for ( FastqHeaderData hd : batchInfos.keySet() ) {
+                int batchSize = batchInfos.get( hd ).size();
+                if ( batchSize < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+                    // too few samples for at least one batch. Try to reduce resolution and recount.
+                    Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
+
+                    if ( updatedBatchInfos.size() == batchInfos.size() ) {
+                        return;
+                    }
+
+                    batchInfos = updatedBatchInfos;
+
+                    batch( batchInfos, numSamples ); // recurse
+                }
             }
 
-            batchInfos = updatedBatchInfos;
-
-            batch( batchInfos, numSamples ); // recurse
         } else {
             // reasonable number of samples per batch -- proceed. 
             return;
@@ -345,11 +423,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         Map<FastqHeaderData, Collection<String>> result = new HashMap<>();
         for ( FastqHeaderData fhd : batchInfos.keySet() ) {
 
-            if ( !fhd.hadUseableHeader() ) {
-                // cannot drop resolution.
-                result.put( fhd, batchInfos.get( fhd ) );
-                continue;
-            }
+            //            if ( !fhd.hadUseableHeader() ) {
+            //                // cannot drop resolution.
+            //                result.put( fhd, batchInfos.get( fhd ) );
+            //                continue;
+            //            }
 
             FastqHeaderData updated = fhd.dropResolution();
 
@@ -366,7 +444,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     /**
-     * We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100
+     * We expect something like: @SRR5938435.1.1 D8ZGT8Q1:199:C5GKYACXX:5:1101:1224:1885 length=100 but can have extra
+     * fields like
+     * @SRR12623632.1.1 NB551168:228:HF7FFBGX7:1:11101:12626:1034_RX:Z:CGCTNTNN_QX:Z:36,36,36,36,2,36,2,2 length=75
+     * 
      * Only interested middle section (D8ZGT8Q1:199:C5GKYACXX:5 of the example);
      * 
      * We augment the original header with the GPL id, which is only used if the machine etc. cannot be read from the
@@ -377,6 +458,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * number>:<index sequence>; we can use the first four fields
      * 
      * Format 2: <platform id>;;;<machine_id>:<lane>:<tile>:<x_coord>:<y_coord>; we can use machine and lane.
+     * 
      * 
      * @param  header FASTQ header (can be multi-headers for cases where there is more than on FASTQ file)
      * @return        representation of the batch info, which is going to be a portion of the header string
@@ -400,14 +482,19 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             String[] fields = field.split( "\\s" );
             String[] arr = fields[1].split( ":" );
 
+            /*
+             * Even when the header is not usable, keep it as a possible indicator of batch (along with platform)
+             */
             FastqHeaderData fqd = null;
-            if ( field.equals( FASTQ_HEADER_EXTRATION_FAILURE_INDICATOR ) ) {
+            if ( field.equals( FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR ) ) {
                 // no actual headers available, only platform
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             } else if ( fields.length != 3 ) {
                 // again, no usable headers, only platform
                 fqd = new FastqHeaderData( platform );
-            } else if ( arr.length == 7 ) {
+                fqd.setUnusableHeader( field );
+            } else if ( arr.length >= 7 ) {
                 fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
             } else if ( arr.length == 5 ) {
                 // device and lane are the only usable fields
@@ -415,9 +502,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             } else if ( !fields[1].contains( ":" ) ) {
                 // not a valid header, we're expecting at least five fields delimited by :
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             } else {
                 // something else but also not usable.
                 fqd = new FastqHeaderData( platform );
+                fqd.setUnusableHeader( field );
             }
 
             fqd.setGplId( platform ); // always keep track of the GPL ID in case we have a mix of usable and unusable headers
@@ -440,6 +529,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     class FastqHeaderData {
 
+        private String unusableHeader = null;
+
         @Override
         public String toString() {
             String s = null;
@@ -460,19 +551,45 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             if ( this.lane != null ) {
                 s = s + ":Lane=" + lane;
             }
+
+            // this will probably not work as each unusable header will probably be unique to the sample
+            //            if ( this.unusableHeader != null ) {
+            //                s = s + ":UnusableHeader=" + unusableHeader;
+            //            }
             return s;
+        }
+
+        /**
+         * @param field the unusable header
+         */
+        public void setUnusableHeader( String field ) {
+            this.unusableHeader = field;
+            this.hadUsableHeader = false; // just to be sure.
+        }
+
+        /**
+         * 
+         * @return the unusable header, or null if the header was usable
+         */
+        public String getUnusableHeader() {
+            return unusableHeader;
         }
 
         /**
          * @return
          */
-        public FastqHeaderData dropResolution() {
+        private FastqHeaderData dropResolution() {
+            // note that 'device' is the GPL if the header wasn't usable
             if ( this.lane != null ) {
                 return new FastqHeaderData( this.device, this.run, this.flowCell, null );
             } else if ( this.flowCell != null ) {
                 return new FastqHeaderData( this.device, this.run, null, null );
             } else if ( this.run != null ) {
                 return new FastqHeaderData( this.device, null, null, null );
+            } else if ( this.unusableHeader != null ) {
+                // fallback
+                FastqHeaderData f = new FastqHeaderData( this.device, this.unusableHeader, null, null );
+                f.hadUsableHeader = false; // we don't count having a platform as a usable header
             }
             return this; // might want to return null if we need to signal a stopping condition.
         }
@@ -572,6 +689,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             final int prime = 31;
             int result = 1;
             result = prime * result + getOuterType().hashCode();
+            //    result = prime * result + ( ( this.gplId == null ) ? 0 : gplId.hashCode() );
+            // result = prime * result + ( ( this.unusableHeader == null ) ? 0 : unusableHeader.hashCode() );
             result = prime * result + ( ( device == null ) ? 0 : device.hashCode() );
             result = prime * result + ( ( flowCell == null ) ? 0 : flowCell.hashCode() );
             result = prime * result + ( ( lane == null ) ? 0 : lane.hashCode() );
@@ -623,6 +742,24 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             } else if ( !run.equals( other.run ) ) {
                 return false;
             }
+
+            // redundant with device
+            //            if ( gplId == null ) {
+            //                if ( other.gplId != null ) {
+            //                    return false;
+            //                }
+            //            } else if ( !gplId.equals( other.gplId ) ) {
+            //                return false;
+            //            }
+
+            //            if ( unusableHeader == null ) {
+            //                if ( other.unusableHeader != null ) {
+            //                    return false;
+            //                }
+            //            } else if ( !unusableHeader.equals( other.unusableHeader ) ) {
+            //                return false;
+            //            }
+
             return true;
         }
 
@@ -647,12 +784,14 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                  * all the GPL ids are the same.
                  * 
                  */
-                String batchIdentifier = descriptorsToBatch.keySet().iterator().next();
-                if ( batchIdentifier.startsWith( "GPL" ) ) {
-                    throw new RuntimeException(
-                            "No reliable batch information was available: no informative "
-                                    + "FASTQ headers and only one GPL ID associated with the experiment." );
-                }
+
+                // I don't think this case will happen with the code revisions and we don't want to throw an exception.
+                //   String batchIdentifier = descriptorsToBatch.keySet().iterator().next();
+                //                if ( batchIdentifier.startsWith( "GPL" ) ) {
+                //                    throw new RuntimeException(
+                //                            "No reliable batch information was available: no informative "
+                //                                    + "FASTQ headers and only one GPL ID associated with the experiment." );
+                //                }
 
                 // Otherwise, we trust that either the FASTQ headers or dates are a reasonable representation.
                 BatchInfoPopulationHelperServiceImpl.log.info( "There is only one 'batch', no factor will be created" );
@@ -701,7 +840,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setExperimentalDesign( ed );
         ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
         ef.setDescription(
-                "Scan date or similar proxy for 'sample processing batch'" + " extracted from the raw data files." );
+                "Scan date or similar proxy for 'batch'" + " extracted from the raw data files." );
 
         ef = this.persistFactor( ee, ef );
         return ef;

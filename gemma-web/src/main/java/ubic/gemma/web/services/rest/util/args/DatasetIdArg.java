@@ -13,7 +13,7 @@ public class DatasetIdArg extends DatasetArg<Long> {
     /**
      * @param l intentionally primitive type, so the value property can never be null.
      */
-    DatasetIdArg( long l ) {
+    public DatasetIdArg( long l ) {
         this.value = l;
         setNullCause( "ID", "Dataset" );
     }

@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
+
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -551,13 +552,17 @@ public class ExpressionExperimentServiceImpl
         for ( BatchConfoundValueObject c : listConfounds ) {
             if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
-                if ( !result.toString().isEmpty() ) {
+                if ( result.toString().isEmpty() ) {
+                    result.append(
+                            "One or more factors were confounded with batches in the full design; batch correction was not performed. "
+                                    + "Analyses may not be affected if performed on non-confounded subsets. Factor(s) confounded were: " );
+                } else {
                     result.append( ", " );
                 }
-                result.append( "Factor '" ).append( factorName ).append( "' may be confounded with batches; p=" )
-                        .append( String.format( "%.2g", c.getP() ) );
+                result.append( factorName );
             }
         }
+
         return Strings.emptyToNull( result.toString() );
     }
 
@@ -571,7 +576,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // address cases that were run prior to having the SingleBatchDeterminationEvent type.
-        if ( ev.getNote().startsWith( "1 batch" ) ) {
+        if ( ev.getNote().startsWith( "1 batch" ) || ev.getNote().startsWith( "AffyScanDateExtractor; 0 batches" ) ) {
             return true;
         }
 

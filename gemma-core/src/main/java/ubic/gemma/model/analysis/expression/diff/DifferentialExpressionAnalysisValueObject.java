@@ -14,7 +14,9 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
@@ -30,14 +32,15 @@ import java.util.Map;
  * @author paul
  */
 @SuppressWarnings("unused") // Used in frontend
-public class DifferentialExpressionAnalysisValueObject extends IdentifiableValueObject<DifferentialExpressionAnalysis>
+public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObject<DifferentialExpressionAnalysis>
         implements Serializable {
 
     public static final double DEFAULT_THRESHOLD = 0.05; // should be one of the values stored in the HitListSizes
     private static final long serialVersionUID = 622877438067070041L;
 
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
-    private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<DiffExResultSetSummaryValueObject> resultSets = null;
     private Collection<Long> arrayDesignsUsed = null;
     private Long bioAssaySetId;
     private Long sourceExperiment;
@@ -50,7 +53,7 @@ public class DifferentialExpressionAnalysisValueObject extends IdentifiableValue
      * @param analysis the analysis to read the values from
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
-        this.id = analysis.getId();
+        super( analysis );
         this.bioAssaySetId = analysis.getExperimentAnalyzed().getId();
         if ( analysis.getSubsetFactorValue() != null ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );

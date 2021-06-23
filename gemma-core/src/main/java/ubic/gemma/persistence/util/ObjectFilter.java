@@ -35,6 +35,8 @@ public class ObjectFilter {
     public static final String DAO_GEEQ_ALIAS = "geeq";
     public static final String DAO_CHARACTERISTIC_ALIAS = "ch";
     public static final String DAO_BIOASSAY_ALIAS = "ba";
+    public static final String DAO_DATABASE_ENTRY_ALIAS = "accession";
+    public static final String DAO_EARS_ALIAS = "ears";
 
     public static final String is = "=";
     public static final String isNot = "!=";

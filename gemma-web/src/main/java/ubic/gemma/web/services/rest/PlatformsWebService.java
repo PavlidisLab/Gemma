@@ -231,7 +231,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElementGenes( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
-            @PathParam("probeArg") CompositeSequenceArg probeArg, // Required
+            @PathParam("probeArg") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.

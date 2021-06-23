@@ -27,6 +27,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

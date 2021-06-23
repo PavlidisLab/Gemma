@@ -61,10 +61,10 @@ public class DifferentialExpressionAnalysisController {
     private ExpressionExperimentReportService experimentReportService;
 
     /**
-     * Ajax method. Pick the analysis type when we want it to be completely automated.
+     * Ajax method. Pick the analysis type when we want it to be completely automated. Does not support subset factors
      *
-     * @param id id
-     * @return analysis info
+     * @param  id id
+     * @return    analysis info
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -78,7 +78,7 @@ public class DifferentialExpressionAnalysisController {
                 .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
 
         AnalysisType analyzer = this.analysisSelectionAndExecutionService
-                .determineAnalysis( ee, factorsWithoutBatch, null, true );
+                .determineAnalysis( ee, factorsWithoutBatch, null /* subset */, true /* include interactions */ );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
@@ -104,9 +104,9 @@ public class DifferentialExpressionAnalysisController {
     /**
      * AJAX entry point to redo an analysis.
      *
-     * @param eeId ee id
-     * @param id   id
-     * @return string
+     * @param  eeId ee id
+     * @param  id   id
+     * @return      string
      */
     public String redo( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -141,8 +141,8 @@ public class DifferentialExpressionAnalysisController {
     /**
      * AJAX entry point to remove an analysis given by the ID
      *
-     * @param id id
-     * @return string
+     * @param  id id
+     * @return    string
      */
     public String remove( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -163,8 +163,8 @@ public class DifferentialExpressionAnalysisController {
     /**
      * AJAX entry point when running completely automatically.
      *
-     * @param id id
-     * @return string
+     * @param  id id
+     * @return    string
      */
     public String run( Long id ) {
 
@@ -185,6 +185,15 @@ public class DifferentialExpressionAnalysisController {
         return taskRunningService.submitRemoteTask( cmd );
     }
 
+    /**
+     * Perform a customized DEA based on user input on web interface.
+     * 
+     * @param  id                  of the experiment
+     * @param  factorids           to include
+     * @param  includeInteractions if possible
+     * @param  subsetFactorId      if required
+     * @return                     task identifier
+     */
     public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId ) {
 
         if ( factorids.isEmpty() ) {

@@ -23,7 +23,6 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.*;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.springframework.beans.factory.InitializingBean;
@@ -183,7 +182,6 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
                         DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
