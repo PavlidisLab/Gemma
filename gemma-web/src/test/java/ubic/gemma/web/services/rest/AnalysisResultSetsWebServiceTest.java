@@ -1,5 +1,8 @@
 package ubic.gemma.web.services.rest;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +29,13 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,6 +67,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     private ExpressionExperiment ee;
     private DifferentialExpressionAnalysis dea;
     private ExpressionAnalysisResultSet dears;
+    private DifferentialExpressionAnalysisResult dear;
     private DatabaseEntry databaseEntry;
     private DatabaseEntry databaseEntry2;
 
@@ -76,7 +87,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         probe = arrayDesign.getCompositeSequences().stream().findFirst().orElse( null );
         assertNotNull( probe );
 
-        DifferentialExpressionAnalysisResult dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
+        dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
+        dear.setPvalue( 1.0 );
         dear.setCorrectedPvalue( 0.0001 );
         dear.setResultSet( dears );
         dear.setProbe( probe );
@@ -198,5 +210,24 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
             service.findById( new ExpressionAnalysisResultSetArg( id ), response );
         } );
         assertEquals( e.getCode(), Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testFindByIdToTsv() throws IOException {
+        HttpServletResponse response = new MockHttpServletResponse();
+        StreamingOutput result = service.findByIdToTsv( new ExpressionAnalysisResultSetArg( dears.getId() ), response );
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        result.write( byteArrayOutputStream );
+        byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );
+        CSVParser reader = CSVFormat.TDF
+                .withCommentMarker( '#' )
+                .withFirstRecordAsHeader()
+                .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
+        assertTrue( reader.getHeaderNames().containsAll( Arrays.asList( "id", "probe_name", "probe_biological_characteristic_name", "probe_biological_characteristic_sequence_database_entry_accession", "pvalue", "corrected_pvalue", "rank" ) ) );
+        CSVRecord record = reader.iterator().next();
+        assertEquals( record.get( "pvalue" ), "1E0" );
+        assertEquals( record.get( "corrected_pvalue" ), "1E-4" );
+        // rank is null, it should appear as an empty string
+        assertEquals( record.get( "rank" ), "" );
     }
 }

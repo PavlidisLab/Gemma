@@ -46,6 +46,19 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
 
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+    /**
+     * Thaw everything but contrasts.
+     *
+     *  - results
+     *  - probe
+     *  - probe.biologicalCharacteristic
+     *  - probe.biologicalCharacteristic.sequenceDatabaseEntry
+     *  - experimentalFactors
+     *  - experimentalFactors.factorValues
+     *
+     * @param resultSet
+     * @return
+     */
     ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**

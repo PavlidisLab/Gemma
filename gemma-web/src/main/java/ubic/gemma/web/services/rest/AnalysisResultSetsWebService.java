@@ -19,16 +19,17 @@
 package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
-import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
@@ -38,8 +39,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -58,6 +64,9 @@ public class AnalysisResultSetsWebService extends WebService {
 
     @Autowired
     private DatabaseEntryService databaseEntryService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
 
     /**
      * Retrieve all {@link AnalysisResultSet} matching a set of criteria.
@@ -99,7 +108,46 @@ public class AnalysisResultSetsWebService extends WebService {
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
         ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
-        ears = expressionAnalysisResultSetService.thaw( ears );
+        if ( ears == null ) {
+            throw new GemmaApiException( Response.Status.NOT_FOUND, "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        }
+        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
         return Responder.code200( new ExpressionAnalysisResultSetValueObject( ears ), servlet );
     }
+
+    /**
+     * Retrieve an {@link AnalysisResultSet} in a tabular format.
+     *
+     * @param analysisResultSet
+     * @param servlet
+     * @return
+     */
+    @GET
+    @Path("/{analysisResultSet:[^/]+}")
+    @Produces("text/tab-separated-values; qs=0.9")
+    public StreamingOutput findByIdToTsv(
+            @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Context final HttpServletResponse servlet ) {
+        ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
+        // only thaw the related analysis and experimental factors without contrasts
+        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
+        return new ExpressionAnalysisResultSetTsvStreamingOutput( ears );
+    }
+
+    private class ExpressionAnalysisResultSetTsvStreamingOutput implements StreamingOutput {
+
+        private final ExpressionAnalysisResultSet resultSet;
+
+        public ExpressionAnalysisResultSetTsvStreamingOutput( ExpressionAnalysisResultSet resultSet ) {
+            this.resultSet = resultSet;
+        }
+
+        @Override
+        public void write( OutputStream outputStream ) throws IOException, WebApplicationException {
+            try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( resultSet, writer );
+            }
+        }
+    }
+
 }

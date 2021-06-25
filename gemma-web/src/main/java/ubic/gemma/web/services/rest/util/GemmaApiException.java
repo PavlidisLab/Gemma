@@ -17,6 +17,10 @@ public class GemmaApiException extends RuntimeException {
         this.code = code;
     }
 
+    public GemmaApiException( Response.Status code, String message ) {
+        this( new WellComposedErrorBody( code, message ) );
+    }
+
     public GemmaApiException( WellComposedErrorBody body ) {
         super( body.getMessage() );
         this.errorObject = new ResponseErrorObject( body );

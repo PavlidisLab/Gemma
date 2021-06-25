@@ -17,5 +17,7 @@ public interface ExpressionAnalysisResultSetService extends BaseService<Expressi
 
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
+    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears );
+
     Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String field, boolean isAsc );
 }

@@ -26,4 +26,9 @@ public class ExpressionAnalysisResultSetArg extends MutableArg<Long, ExpressionA
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {
         return new ExpressionAnalysisResultSetArg( Long.parseLong( s ) );
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf( value );
+    }
 }

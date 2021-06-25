@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Order;
@@ -33,10 +34,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -132,8 +130,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
                 "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + " left outer join fetch res.probe "
-                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "left join fetch res.probe p left join fetch p.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
                         + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
         if ( timer.getTime() > 1000 ) {
