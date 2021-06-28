@@ -19,6 +19,7 @@ import java.util.Objects;
  * Created by tesarst on 01/06/17.
  * Base DAO providing value object functionality.
  */
+@Deprecated
 public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractDao<O> implements BaseVoEnabledDao<O, VO> {
 

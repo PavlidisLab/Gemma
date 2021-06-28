@@ -10,7 +10,12 @@ import java.util.List;
 /**
  * Created by tesarst on 01/06/17.
  * Interface for DAOs providing value object functionality
+ *
+ * @deprecated This interface is deprecated because providing generic DAOs makes little sense since once VO cannot
+ * satisfy all the possible usage context. For example, we might need a different VO for the RESTful API than the
+ * JavaScript frontend. Instead, the VO should be defined and created where needed.
  */
+@Deprecated
 public interface BaseVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends BaseDao<O> {
 
     /**
@@ -19,6 +24,7 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @param entity the entity to turn into a value object
      * @return a value object
      */
+    @Deprecated
     VO loadValueObject( O entity );
 
     /**
@@ -27,10 +33,13 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @param entities the entities to turn into value objects
      * @return a collection of value objects
      */
+    @Deprecated
     Collection<VO> loadValueObjects( Collection<O> entities );
 
+    @Deprecated
     Collection<VO> loadAllValueObjects();
 
+    @Deprecated
     Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }
