@@ -1,8 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -19,7 +18,7 @@ import javax.ws.rs.core.Response;
  * @param <VO> the value object type.
  * @author tesarst
  */
-public abstract class MutableArg<A, O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>> {
+public abstract class MutableArg<A, O extends Identifiable, VO, S extends BaseService<O>> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
@@ -47,17 +46,6 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
     }
 
     /**
-     * Calls appropriate backend logic to retrieve the value object of the persistent object that this argument represents.
-     *
-     * @param service the service to use for the value object retrieval.
-     * @return the value object whose identifier matches the value of this mutable argument.
-     */
-    public final VO getValueObject( S service ) {
-        O object = this.value == null ? null : this.getPersistentObject( service );
-        return check( service.loadValueObject( object ) );
-    }
-
-    /**
      * Calls appropriate backend logic to retrieve the persistent object that this mutable argument represents.
      *
      * @param service the service to use for the value object retrieval.
@@ -78,22 +66,6 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      * @throws GemmaApiException if the given response is null.
      */
     protected O check( O response ) {
-        if ( response == null ) {
-            throwNotFound();
-        }
-        return response;
-    }
-
-    /**
-     * Checks whether the response Value Object is null, and throws an appropriate exception if necessary.
-     * This double check on the VO is necessary, as some services will allow to return the persistent object, but not
-     * the value object (interceptors have different rules for them).
-     *
-     * @param response the Value Object that should be checked for being null.
-     * @return the same object as given.
-     * @throws GemmaApiException if the given response is null.
-     */
-    protected VO check( VO response ) {
         if ( response == null ) {
             throwNotFound();
         }

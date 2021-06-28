@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Order;
@@ -26,22 +25,27 @@ import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -189,18 +193,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
         AbstractDao.log.info( "Removing result set " + resultSet.getId() );
         super.remove( resultSet );
         this.getSessionFactory().getCurrentSession().flush();
-    }
-
-    @Override
-    public ExpressionAnalysisResultSetValueObject loadValueObject( ExpressionAnalysisResultSet entity ) {
-        return new ExpressionAnalysisResultSetValueObject( entity );
-    }
-
-    @Override
-    public Collection<ExpressionAnalysisResultSetValueObject> loadValueObjects( Collection<ExpressionAnalysisResultSet> entities ) {
-        return entities.stream()
-                .map( ExpressionAnalysisResultSetValueObject::new )
-                .collect( Collectors.toList() );
     }
 
     @Override

@@ -24,7 +24,6 @@ import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ import java.util.Collection;
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 

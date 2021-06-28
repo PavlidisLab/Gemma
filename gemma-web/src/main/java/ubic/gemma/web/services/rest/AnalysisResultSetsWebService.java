@@ -46,6 +46,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -92,7 +93,10 @@ public class AnalysisResultSetsWebService extends WebService {
                 limit.getValue(),
                 sort.getField(),
                 sort.isAsc() );
-        return Responder.code200( expressionAnalysisResultSetService.loadValueObjects( resultSets ), servlet );
+        List<ExpressionAnalysisResultSetValueObject> resultSetVos = resultSets.stream()
+                .map( ExpressionAnalysisResultSetValueObject::new )
+                .collect( Collectors.toList() );
+        return Responder.code200( resultSetVos, servlet );
     }
 
     /**
