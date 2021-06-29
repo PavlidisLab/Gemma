@@ -3,17 +3,15 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ArrayCompositeSequenceArg
-        extends ArrayEntityArg<CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> {
+        extends ArrayEntityArg<CompositeSequence, CompositeSequenceService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "element ID or name, or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine IDs and names in one query.";
@@ -66,7 +64,7 @@ public class ArrayCompositeSequenceArg
     @Override
     protected void setPropertyNameAndType( CompositeSequenceService service ) {
         String value = this.getValue().get( 0 );
-        MutableArg<?, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> arg = CompositeSequenceArg
+        MutableArg<?, CompositeSequence, CompositeSequenceService> arg = CompositeSequenceArg
                 .valueOf( value );
         this.argValueName = this.checkPropertyNameString( arg, value, service );
         this.argValueClass = arg.value.getClass();

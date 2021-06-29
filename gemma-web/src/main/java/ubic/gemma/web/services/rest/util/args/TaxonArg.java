@@ -5,7 +5,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
@@ -24,7 +23,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject, TaxonService> {
+public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService> {
 
     /**
      * Minimum value to be considered an NCBI ID, lower values will be considered a regular gemma Taxon ID.

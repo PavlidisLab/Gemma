@@ -2,7 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
@@ -10,7 +9,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, TaxonService> {
+public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
@@ -38,7 +37,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
             return new ArrayTaxonArg( String.format( ArrayTaxonArg.ERROR_MSG, s ),
                     new IllegalArgumentException( ArrayTaxonArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayTaxonArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
+        return new ArrayTaxonArg( Arrays.asList( ArrayArg.splitString( s ) ) );
     }
 
     /**
@@ -55,7 +54,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
         for ( int i = 0; i < this.getValue().size(); i++ ) {
             try {
                 String value = this.getValue().get( i );
-                MutableArg<?, Taxon, TaxonValueObject, TaxonService> arg = TaxonArg.valueOf( value );
+                MutableArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
                 this.argValueName = this.checkPropertyNameString( arg, value, service );
                 this.argValueClass = arg.value.getClass();
             } catch ( GemmaApiException e ) {

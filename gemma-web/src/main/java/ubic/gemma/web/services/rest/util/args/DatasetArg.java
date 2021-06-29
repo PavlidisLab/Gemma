@@ -7,7 +7,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
  * @author tesarst
  */
 public abstract class DatasetArg<T>
-        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
     /**
      * Used by RS to parse value of request parameters.

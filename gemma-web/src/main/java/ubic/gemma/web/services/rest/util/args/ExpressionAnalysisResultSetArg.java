@@ -1,13 +1,12 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 
 /**
  * Represents an expression analysis result set identifier.
  */
-public class ExpressionAnalysisResultSetArg extends MutableArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject, ExpressionAnalysisResultSetService> {
+public class ExpressionAnalysisResultSetArg extends MutableArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
 
     public ExpressionAnalysisResultSetArg( long value ) {
         this.value = value;

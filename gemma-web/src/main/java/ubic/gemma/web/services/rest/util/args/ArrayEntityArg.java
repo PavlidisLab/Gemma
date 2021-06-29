@@ -3,7 +3,7 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class ArrayEntityArg<O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>>
+public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseService<O>>
         extends ArrayStringArg {
 
     Class<?> argValueClass = null;
@@ -85,9 +85,9 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
         for ( String s : this.getValue() ) {
             try {
-                MutableArg<?, O, VO, S> arg;
+                MutableArg<?, O, S> arg;
                 // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
-                arg = ( MutableArg<?, O, VO, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
+                arg = ( MutableArg<?, O, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
                 objects.add( arg.getPersistentObject( service ) );
             } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
                 e.printStackTrace();
@@ -117,7 +117,7 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
      * @param          <T> type of the given MutableArg.
      * @return         the name of the property that the values in this arrayArg refer to.
      */
-    <T extends MutableArg<?, O, VO, S>> String checkPropertyNameString( T arg, String value, S service ) {
+    <T extends MutableArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,

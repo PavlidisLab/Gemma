@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -18,7 +17,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignValueObject, ArrayDesignService> {
+public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignService> {
 
     /**
      * Used by RS to parse value of request parameters.

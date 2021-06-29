@@ -19,7 +19,7 @@ import java.util.Objects;
  *
  * @author tesarst
  */
-public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, GeneService> {
+public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService> {
 
     private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";
     private static final String ENSEMBL_ID_REGEX = "(ENSTBE|MGP_BALBcJ_|MGP_PWKPhJ_|ENSMUS|MGP_129S1SvImJ_|"

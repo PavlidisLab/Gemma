@@ -15,10 +15,9 @@ import javax.ws.rs.core.Response;
  * @param <A>  the type that the argument is expected to mutate to.
  * @param <O>  the persistent object type.
  * @param <S>  the service for the object type.
- * @param <VO> the value object type.
  * @author tesarst
  */
-public abstract class MutableArg<A, O extends Identifiable, VO, S extends BaseService<O>> {
+public abstract class MutableArg<A, O extends Identifiable, S extends BaseService<O>> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";

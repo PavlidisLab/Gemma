@@ -126,7 +126,7 @@ public abstract class WebServiceWithFiltering<O extends Identifiable, VO extends
      * @param sr       see this#all
      * @return see this#all
      */
-    protected ResponseDataObject<?> some( ArrayEntityArg<O, VO, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
+    protected ResponseDataObject<?> some( ArrayEntityArg<O, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
             SortArg sort, final HttpServletResponse sr ) {
         return this.callService( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
                 arrayArg.combineFilters( filter.getObjectFilters(), service ), sr );

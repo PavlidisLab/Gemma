@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
@@ -10,7 +9,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  * @author tesarst
  */
 public abstract class DatabaseEntryArg<T>
-        extends MutableArg<T, DatabaseEntry, DatabaseEntryValueObject, DatabaseEntryService> {
+        extends MutableArg<T, DatabaseEntry, DatabaseEntryService> {
 
     /**
      * Used by RS to parse value of request parameters.

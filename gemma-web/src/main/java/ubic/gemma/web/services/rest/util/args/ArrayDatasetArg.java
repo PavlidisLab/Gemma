@@ -2,7 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
@@ -11,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ArrayDatasetArg
-        extends ArrayEntityArg<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+        extends ArrayEntityArg<ExpressionExperiment, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
 
@@ -37,13 +36,13 @@ public class ArrayDatasetArg
             return new ArrayDatasetArg( String.format( ArrayDatasetArg.ERROR_MSG, s ),
                     new IllegalArgumentException( ArrayDatasetArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayDatasetArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
+        return new ArrayDatasetArg( Arrays.asList( ArrayArg.splitString( s ) ) );
     }
 
     @Override
     protected void setPropertyNameAndType( ExpressionExperimentService service ) {
         String value = this.getValue().get( 0 );
-        MutableArg<?, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> arg = DatasetArg
+        MutableArg<?, ExpressionExperiment, ExpressionExperimentService> arg = DatasetArg
                 .valueOf( value );
         this.argValueName = this.checkPropertyNameString( arg, value, service );
         this.argValueClass = arg.value.getClass();

@@ -2,7 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 /**
@@ -11,7 +10,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  * @author tesarst
  */
 public abstract class CompositeSequenceArg<T>
-        extends MutableArg<T, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> {
+        extends MutableArg<T, CompositeSequence, CompositeSequenceService> {
 
     protected ArrayDesign arrayDesign;
 
