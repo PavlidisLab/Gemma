@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
-import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -17,19 +16,18 @@ import java.util.List;
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseService<O>>
-        extends ArrayStringArg {
+public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends ArrayArg<String> {
 
     Class<?> argValueClass = null;
     String argValueName = null;
-    private Class<? extends MutableArg> argClass;
+    private Class<? extends AbstractEntityArg> argClass;
 
-    ArrayEntityArg( List<String> values, Class<? extends MutableArg> argClass ) {
+    AbstractEntityArrayArg( List<String> values, Class<? extends AbstractEntityArg> argClass ) {
         super( values );
         this.argClass = argClass;
     }
 
-    ArrayEntityArg( String errorMessage, Exception exception ) {
+    AbstractEntityArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -37,9 +35,9 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
      * Splits string by the ',' comma character and trims the resulting strings.
      *
      * @param  arg the string to process
-     * @return     trimmed strings exploded from the input.
+     * @return trimmed strings exploded from the input.
      */
-    static String[] splitString( String arg ) {
+    protected static String[] splitString( String arg ) {
         String[] array = arg.split( "," );
         for ( int i = 0; i < array.length; i++ )
             array[i] = array[i].trim();
@@ -57,7 +55,7 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
      *
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @param  filters the filters list to add the new filter to. Can be null.
-     * @return         the same array list as given, with a new added element, or a new ArrayList, in case the given
+     * @return the same array list as given, with a new added element, or a new ArrayList, in case the given
      *                 filters
      *                 was null.
      */
@@ -79,15 +77,15 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
      * a 404 error will be thrown.
      *
      * @param  service the service that will be used to retrieve the persistent objects.
-     * @return         a collection of persistent objects matching the identifiers on this array arg.
+     * @return a collection of persistent objects matching the identifiers on this array arg.
      */
     public Collection<O> getPersistentObjects( S service ) {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
         for ( String s : this.getValue() ) {
             try {
-                MutableArg<?, O, S> arg;
+                AbstractEntityArg<?, O, S> arg;
                 // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
-                arg = ( MutableArg<?, O, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
+                arg = ( AbstractEntityArg<?, O, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
                 objects.add( arg.getPersistentObject( service ) );
             } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
                 e.printStackTrace();
@@ -115,9 +113,9 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
      * @param  value   one of the values of the property that has been passed into this array arg.
      * @param  service service that may be used to retrieve the property from the MutableArg.
      * @param          <T> type of the given MutableArg.
-     * @return         the name of the property that the values in this arrayArg refer to.
+     * @return the name of the property that the values in this arrayArg refer to.
      */
-    <T extends MutableArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
+    <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
@@ -128,7 +126,7 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
 
     /**
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @return         the name of the property that the values in this array represent.
+     * @return the name of the property that the values in this array represent.
      */
     private String getPropertyName( S service ) {
         if ( this.argValueName == null ) {
@@ -139,7 +137,7 @@ public abstract class ArrayEntityArg<O extends Identifiable, S extends BaseServi
 
     /**
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @return         the type of the property that the values in this array represent.
+     * @return the type of the property that the values in this array represent.
      */
     private Class<?> getPropertyType( S service ) {
         if ( argValueClass == null ) {

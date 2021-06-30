@@ -14,8 +14,8 @@ public class TaxonNcbiIdArg extends TaxonArg<Long> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     TaxonNcbiIdArg( long l ) {
-        this.value = l;
-        setNullCause("ID", "Taxon" );
+        super( l );
+        setNullCause( "ID", "Taxon" );
     }
 
     @Override

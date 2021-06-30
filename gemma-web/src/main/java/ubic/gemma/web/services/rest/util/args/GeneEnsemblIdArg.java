@@ -16,7 +16,7 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
      * @param s intentionally primitive type, so the value property can never be null.
      */
     GeneEnsemblIdArg( String s ) {
-        this.value = s;
+        super( s );
         setNullCause( ID_NAME, "Gene" );
     }
 

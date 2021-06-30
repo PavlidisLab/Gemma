@@ -7,23 +7,15 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class LongArg extends MalformableArg {
+public class LongArg extends AbstractArg<Long> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a long number";
 
-    private Long value;
-
     private LongArg( long value ) {
-        this.value = value;
+        super( value );
     }
 
     private LongArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
-    }
-
-    @Override
-    public String toString() {
-        if(this.value == null) return "";
-        return String.valueOf( this.value );
     }
 
     /**
@@ -41,15 +33,6 @@ public class LongArg extends MalformableArg {
         } catch ( NumberFormatException e ) {
             return new LongArg( String.format( ERROR_MSG, s ), e );
         }
-    }
-
-    /**
-     * @return the long value of the original String argument. If the original argument could not be converted into
-     * a long number, will produce a {@link GemmaApiException} instead.
-     */
-    public long getValue() {
-        this.checkMalformed();
-        return value;
     }
 
 }

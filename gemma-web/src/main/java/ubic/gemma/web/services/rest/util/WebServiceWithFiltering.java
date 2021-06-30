@@ -5,7 +5,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.args.ArrayEntityArg;
+import ubic.gemma.web.services.rest.util.args.AbstractEntityArrayArg;
 import ubic.gemma.web.services.rest.util.args.FilterArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
@@ -126,7 +126,7 @@ public abstract class WebServiceWithFiltering<O extends Identifiable, VO extends
      * @param sr       see this#all
      * @return see this#all
      */
-    protected ResponseDataObject<?> some( ArrayEntityArg<O, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
+    protected ResponseDataObject<?> some( AbstractEntityArrayArg<O, S> arrayArg, FilterArg filter, IntArg offset, IntArg limit,
             SortArg sort, final HttpServletResponse sr ) {
         return this.callService( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
                 arrayArg.combineFilters( filter.getObjectFilters(), service ), sr );

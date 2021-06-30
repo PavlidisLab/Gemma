@@ -12,7 +12,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
-        this.value = s;
+        super( s );
         this.setNullCause( "short name", "Dataset" );
     }
 

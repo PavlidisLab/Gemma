@@ -12,7 +12,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
-        this.value = s;
+        super( s );
         setNullCause( "common or scientific name, ", "Taxon" );
     }
 
@@ -41,7 +41,7 @@ public class TaxonStringArg extends TaxonArg<String> {
      * Tries to retrieve a Taxon based on its names.
      *
      * @param  service the TaxonService that handles the search.
-     * @return         Taxon or null if no taxon with any property matching this#value was found.
+     * @return Taxon or null if no taxon with any property matching this#value was found.
      */
     private Taxon tryAllNameProperties( TaxonService service ) {
         // Most commonly used

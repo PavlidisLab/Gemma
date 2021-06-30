@@ -17,7 +17,6 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
@@ -25,7 +24,6 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -131,7 +129,7 @@ public class DatasetsWebService extends
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg,
+     * @see               WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
      *                    HttpServletResponse)
      */
     @GET
@@ -139,7 +137,7 @@ public class DatasetsWebService extends
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasets( // Params:
-            @PathParam("datasetsArg") ArrayDatasetArg datasetsArg, // Optional
+            @PathParam("datasetsArg") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -336,8 +334,8 @@ public class DatasetsWebService extends
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressions( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
-            @PathParam("genes") ArrayGeneArg genes, // Required
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
             // Optional, default false
@@ -378,7 +376,7 @@ public class DatasetsWebService extends
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressionsPca( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
@@ -422,7 +420,7 @@ public class DatasetsWebService extends
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressionsDiffEx( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100

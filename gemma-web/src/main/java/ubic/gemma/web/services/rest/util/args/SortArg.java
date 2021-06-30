@@ -7,17 +7,13 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class SortArg extends MalformableArg {
+public class SortArg extends AbstractArg<SortArg.FieldWithDirection> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
                     + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
 
-    private String field;
-    private boolean asc;
-
     private SortArg( String field, boolean asc ) {
-        this.field = field;
-        this.asc = asc;
+        super( new FieldWithDirection( field, asc ) );
     }
 
     /**
@@ -67,16 +63,24 @@ public class SortArg extends MalformableArg {
      * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
      */
     public String getField() {
-        this.checkMalformed();
-        return field;
+        return getValue().field;
     }
 
     /**
      * @return the direction of sort. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
      */
     public boolean isAsc() {
-        this.checkMalformed();
-        return asc;
+        return getValue().isAsc;
+    }
+
+    static class FieldWithDirection {
+        public String field;
+        public boolean isAsc;
+
+        public FieldWithDirection( String field, boolean asc ) {
+            this.field = field;
+            this.isAsc = asc;
+        }
     }
 
 }

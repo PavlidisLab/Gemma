@@ -83,14 +83,14 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                <p>
      *                Do not combine different identifiers in one query.
      *                </p>
-     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{taxaArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject taxa( // Params:
-            @PathParam("taxaArg") ArrayTaxonArg taxaArg, // Optional
+            @PathParam("taxaArg") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return super.some( taxaArg, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
@@ -258,7 +258,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject findCandidateGenes( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @QueryParam("phenotypes") ArrayStringArg phenotypes, // Required
+            @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting)
     ) {
@@ -277,7 +277,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                           is malformed.
      */
     private ResponseDataObject getCandidateGenes( TaxonArg<Object> taxonArg, BoolArg editableOnly,
-            ArrayStringArg phenotypes, HttpServletResponse sr ) {
+            StringArrayArg phenotypes, HttpServletResponse sr ) {
         Object response;
         try {
             response = this.phenotypeAssociationManagerService.findCandidateGenes(

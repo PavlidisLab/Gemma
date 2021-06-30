@@ -20,7 +20,7 @@ public class GeneSymbolArg extends GeneArg<String> {
     private static final String ID_NAME = "Official Symbol";
 
     GeneSymbolArg( String s ) {
-        this.value = s;
+        super( s );
         setNullCause( ID_NAME, "Gene" );
     }
 

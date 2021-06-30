@@ -103,7 +103,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg,
+     * @see               WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
      *                    HttpServletResponse)
      */
     @GET
@@ -111,7 +111,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platforms( // Params:
-            @PathParam("platformArg") ArrayPlatformArg datasetsArg, // Optional
+            @PathParam("platformArg") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -190,7 +190,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElement( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
-            @PathParam("probesArg") ArrayCompositeSequenceArg probesArg, // Required
+            @PathParam("probesArg") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.

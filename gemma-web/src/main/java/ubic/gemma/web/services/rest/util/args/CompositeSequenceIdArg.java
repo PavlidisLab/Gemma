@@ -11,7 +11,7 @@ import java.util.Objects;
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {
-        this.value = s;
+        super( s );
         setNullCause( "ID", "Composite Sequence" );
     }
 

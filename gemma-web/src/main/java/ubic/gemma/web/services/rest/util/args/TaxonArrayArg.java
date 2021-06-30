@@ -9,17 +9,17 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonService> {
+public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Taxon identifiers";
 
-    private ArrayTaxonArg( List<String> values ) {
+    private TaxonArrayArg( List<String> values ) {
         super( values, TaxonArg.class );
     }
 
-    private ArrayTaxonArg( String errorMessage, Exception exception ) {
+    private TaxonArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -32,12 +32,12 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonService> {
      * input String can not be converted into an array of Taxon identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayTaxonArg valueOf( final String s ) {
+    public static TaxonArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayTaxonArg( String.format( ArrayTaxonArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( ArrayTaxonArg.ERROR_MSG_DETAIL ) );
+            return new TaxonArrayArg( String.format( TaxonArrayArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( TaxonArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayTaxonArg( Arrays.asList( ArrayArg.splitString( s ) ) );
+        return new TaxonArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
     }
 
     /**
@@ -54,7 +54,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonService> {
         for ( int i = 0; i < this.getValue().size(); i++ ) {
             try {
                 String value = this.getValue().get( i );
-                MutableArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
+                AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
                 this.argValueName = this.checkPropertyNameString( arg, value, service );
                 this.argValueClass = arg.value.getClass();
             } catch ( GemmaApiException e ) {

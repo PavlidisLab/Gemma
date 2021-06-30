@@ -12,13 +12,14 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {
-        this.value = s;
-        setNullCause("name", "Composite Sequence" );
+        super( s );
+        setNullCause( "name", "Composite Sequence" );
     }
 
     @Override
     public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        if( arrayDesign == null ) throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
         return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
     }
 

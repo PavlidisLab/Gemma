@@ -21,7 +21,11 @@ import java.util.stream.Collectors;
  * @author tesarst
  */
 public abstract class DatasetArg<T>
-        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentService> {
+        extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
+
+    DatasetArg( T value ) {
+        super( value );
+    }
 
     /**
      * Used by RS to parse value of request parameters.

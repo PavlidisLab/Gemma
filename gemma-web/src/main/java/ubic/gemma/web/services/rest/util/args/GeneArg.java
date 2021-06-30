@@ -19,7 +19,7 @@ import java.util.Objects;
  *
  * @author tesarst
  */
-public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService> {
+public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService> {
 
     private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";
     private static final String ENSEMBL_ID_REGEX = "(ENSTBE|MGP_BALBcJ_|MGP_PWKPhJ_|ENSMUS|MGP_129S1SvImJ_|"
@@ -30,6 +30,10 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService> {
             + "ENSCEL|ENSFAL|ENSPSI|ENSAPL|ENSCAF|MGP_SPRETEiJ_|ENSLAC|MGP_C57BL6NJ_|ENSSAR|ENSBTA|ENSMIC|"
             + "ENSEEU|ENSTTR|ENSOGA|ENSMLU|ENSSTO|ENSCIN|MGP_WSBEiJ_|ENSMEU|ENSPVA|ENSPMA|ENSPTR|ENSFCA|"
             + "ENSPPY|ENSMGA|ENSOAR|ENSCJA|ENSETE|ENSTGU|MGP_AKRJ_|ENSONI|ENSGAL).*";
+
+    GeneArg( T value ) {
+        super( value );
+    }
 
     /**
      * Used by RS to parse value of request parameters.
@@ -55,9 +59,8 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService> {
      * @return a collection of Gene value objects..
      */
     public Collection<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
-            TaxonArg taxonArg ) {
-        //noinspection unchecked
-        Taxon taxon = ( Taxon ) taxonArg.getPersistentObject( taxonService );
+            TaxonArg<?> taxonArg ) {
+        Taxon taxon = taxonArg.getPersistentObject( taxonService );
         return this.getValueObjects( geneService, taxon );
     }
 

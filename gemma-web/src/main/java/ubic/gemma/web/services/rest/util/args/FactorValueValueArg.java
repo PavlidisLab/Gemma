@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 public class FactorValueValueArg extends FactorValueArg<String> {
 
     public FactorValueValueArg( String value ) {
-        this.value = value;
+        super( value );
     }
 
     @Override

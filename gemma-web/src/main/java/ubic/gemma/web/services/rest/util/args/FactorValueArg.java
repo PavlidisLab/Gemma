@@ -7,7 +7,11 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
  * Represents an API arguments that maps to a {@link FactorValue} by its ID or name.
  * @author poirigui
  */
-public abstract class FactorValueArg<A> extends MutableArg<A, FactorValue, FactorValueService> {
+public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue, FactorValueService> {
+
+    FactorValueArg( A value ) {
+        super( value );
+    }
 
     public static FactorValueArg<?> valueOf( String value ) {
         try {

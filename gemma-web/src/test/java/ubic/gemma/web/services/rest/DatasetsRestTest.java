@@ -7,7 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.args.ArrayDatasetArg;
+import ubic.gemma.web.services.rest.util.args.DatasetArrayArg;
 import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
@@ -55,7 +55,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Test
     public void testSome() {
-        ResponseDataObject response = datasetsWebService.datasets( ArrayDatasetArg.valueOf(
+        ResponseDataObject response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
                 DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
                         .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );

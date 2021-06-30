@@ -17,6 +17,10 @@ import java.util.Collections;
  */
 public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
+    GeneAnyIdArg( T value ) {
+        super( value );
+    }
+
     @Override
     public Collection<GeneValueObject> getValueObjects( GeneService service ) {
         return Collections.singleton( service.loadValueObject( this.getPersistentObject( service ) ) );

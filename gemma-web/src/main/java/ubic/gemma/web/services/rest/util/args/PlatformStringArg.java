@@ -11,7 +11,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
-        this.value = s;
+        super( s );
         setNullCause( "short name", "Platform" );
     }
 

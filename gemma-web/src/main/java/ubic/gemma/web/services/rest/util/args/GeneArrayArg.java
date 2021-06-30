@@ -9,15 +9,15 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneService> {
+public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one Ncbi ID, Ensembl ID or official symbol, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine Ensembl and Ncbi IDs.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Gene identifiers";
 
-    private ArrayGeneArg( List<String> values ) {
+    private GeneArrayArg( List<String> values ) {
         super( values, GeneArg.class );
     }
 
-    private ArrayGeneArg( String errorMessage, Exception exception ) {
+    private GeneArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -30,18 +30,18 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneService> {
      * input String can not be converted into an array of Gene identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayGeneArg valueOf( final String s ) {
+    public static GeneArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayGeneArg( String.format( ArrayGeneArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( ArrayGeneArg.ERROR_MSG_DETAIL ) );
+            return new GeneArrayArg( String.format( GeneArrayArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayGeneArg( Arrays.asList( ArrayArg.splitString( s ) ) );
+        return new GeneArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
     }
 
     @Override
     protected void setPropertyNameAndType( GeneService service ) {
         String value = this.getValue().get( 0 );
-        MutableArg<?, Gene, GeneService> arg = GeneArg.valueOf( value );
+        AbstractEntityArg<?, Gene, GeneService> arg = GeneArg.valueOf( value );
         this.argValueName = this.checkPropertyNameString( arg, value, service );
         this.argValueClass = arg.value.getClass();
     }

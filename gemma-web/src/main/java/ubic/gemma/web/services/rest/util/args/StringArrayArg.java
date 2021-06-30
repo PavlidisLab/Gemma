@@ -11,14 +11,14 @@ import java.util.List;
  *
  * @author tesarst
  */
-public class ArrayStringArg extends ArrayArg<String> {
+public class StringArrayArg extends ArrayArg<String> {
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Strings";
 
-    public ArrayStringArg( List<String> values ) {
+    public StringArrayArg( List<String> values ) {
         super( values );
     }
 
-    public ArrayStringArg( String errorMessage, Exception exception ) {
+    public StringArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -32,12 +32,12 @@ public class ArrayStringArg extends ArrayArg<String> {
      *           array of strings.
      */
     @SuppressWarnings("unused")
-    public static ArrayStringArg valueOf( final String s ) {
+    public static StringArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayStringArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
+            return new StringArrayArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
                     "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
         }
-        return new ArrayStringArg( Arrays.asList( s.split( "," ) ) );
+        return new StringArrayArg( Arrays.asList( s.split( "," ) ) );
     }
 
 }

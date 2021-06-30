@@ -10,9 +10,13 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  * @author tesarst
  */
 public abstract class CompositeSequenceArg<T>
-        extends MutableArg<T, CompositeSequence, CompositeSequenceService> {
+        extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 
     protected ArrayDesign arrayDesign;
+
+    CompositeSequenceArg( T arg ) {
+        super( arg );
+    }
 
     /**
      * Used by RS to parse value of request parameters.

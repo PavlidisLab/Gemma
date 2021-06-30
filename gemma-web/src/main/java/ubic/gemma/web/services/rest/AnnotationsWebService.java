@@ -121,7 +121,7 @@ public class AnnotationsWebService extends
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
-            @PathParam("query") ArrayStringArg query, // Required
+            @PathParam("query") StringArrayArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( this.getTerms( query ), sr );
@@ -130,7 +130,7 @@ public class AnnotationsWebService extends
     /**
      * Does a search for datasets containing characteristics matching the given string.
      * If filter, offset, limit or sort parameters are provided, acts same as
-     * {@link WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) }.
+     * {@link WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) }.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of dataset that match the search query.
@@ -141,7 +141,7 @@ public class AnnotationsWebService extends
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasets( // Params:
-            @PathParam("query") ArrayStringArg query, // Required
+            @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
@@ -160,7 +160,7 @@ public class AnnotationsWebService extends
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
             return super
-                    .some( ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
+                    .some( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
                             sr );
         }
 
@@ -179,7 +179,7 @@ public class AnnotationsWebService extends
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("query") ArrayStringArg query, // Required
+            @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
@@ -194,7 +194,7 @@ public class AnnotationsWebService extends
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
         return Responder.autoCode( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
-                ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) )
+                DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) )
                         .combineFilters( filter.getObjectFilters(), expressionExperimentService ), offset.getValue(),
                 limit.getValue(), sort.getField(), sort.isAsc() ), sr );
     }
@@ -244,7 +244,7 @@ public class AnnotationsWebService extends
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private Collection<AnnotationSearchResultValueObject> getTerms( ArrayStringArg arg ) {
+    private Collection<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) {
         Collection<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();

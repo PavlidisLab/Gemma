@@ -83,7 +83,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         // Calling valueOf with empty string to get the correct exception
-        return Responder.autoCode( ArrayGeneArg.valueOf( null ).getValue(), sr );
+        return Responder.autoCode( GeneArrayArg.valueOf( null ).getValue(), sr );
     }
 
     /**
@@ -95,14 +95,14 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
      *              <p>
      *              Do not combine different identifiers in one query.
      *              </p>
-     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{genes: [a-zA-Z0-9\\.,%]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject genes( // Params:
-            @PathParam("genes") ArrayGeneArg genes, // Required
+            @PathParam("genes") GeneArrayArg genes, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return super.some( genes, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),

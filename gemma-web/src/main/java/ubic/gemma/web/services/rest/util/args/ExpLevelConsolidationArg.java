@@ -9,11 +9,12 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class ExpLevelConsolidationArg extends MalformableArg {
+public class ExpLevelConsolidationArg extends AbstractArg<String> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
     private String value;
 
     private ExpLevelConsolidationArg( String value ) {
+        super( value );
         this.value = value;
     }
 
@@ -49,15 +50,6 @@ public class ExpLevelConsolidationArg extends MalformableArg {
         if ( this.value == null )
             return "";
         return String.valueOf( this.value );
-    }
-
-    /**
-     * @return the boolean value of the original String argument. If the original argument could not be converted into
-     * a boolean, will produce a {@link GemmaApiException} instead.
-     */
-    public String getValue() {
-        this.checkMalformed();
-        return value;
     }
 
 }

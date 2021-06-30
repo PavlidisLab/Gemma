@@ -7,23 +7,15 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class BoolArg extends MalformableArg {
+public class BoolArg extends AbstractArg<Boolean> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 
-    private Boolean value;
-
     private BoolArg( boolean value ) {
-        this.value = value;
+        super( value );
     }
 
     private BoolArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
-    }
-
-    @Override
-    public String toString() {
-        if(this.value == null) return "";
-        return String.valueOf( this.value );
     }
 
     /**
@@ -40,15 +32,6 @@ public class BoolArg extends MalformableArg {
                     new IllegalArgumentException( "Boolean value has to be either 'true' or 'false'" ) );
         }
         return new BoolArg( Boolean.parseBoolean( s ) );
-    }
-
-    /**
-     * @return the boolean value of the original String argument. If the original argument could not be converted into
-     * a boolean, will produce a {@link GemmaApiException} instead.
-     */
-    public boolean getValue() {
-        this.checkMalformed();
-        return value;
     }
 
 }

@@ -17,13 +17,17 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignService> {
+public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
+
+    PlatformArg( T value ) {
+        super( value );
+    }
 
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param  s the request dataset argument.
-     * @return   instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
+     * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
     public static PlatformArg<?> valueOf( final String s ) {
@@ -39,7 +43,7 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
      *
      * @param  service   service that will be used to retrieve the persistent AD object.
      * @param  eeService service to use to retrieve the EEs.
-     * @return           a collection of Datasets that the platform represented by this argument contains.
+     * @return a collection of Datasets that the platform represented by this argument contains.
      */
     public Collection<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
@@ -55,7 +59,7 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
      * Retrieves the Elements of the Platform that this argument represents.
      *
      * @param  service service that will be used to retrieve the persistent AD object.
-     * @return         a collection of Composite Sequence VOs that the platform represented by this argument contains.
+     * @return a collection of Composite Sequence VOs that the platform represented by this argument contains.
      */
     public Collection<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {

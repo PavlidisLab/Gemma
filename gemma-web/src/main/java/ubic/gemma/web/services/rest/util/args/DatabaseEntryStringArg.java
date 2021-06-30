@@ -11,7 +11,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
-        this.value = s;
+        super( s );
         setNullCause( "Accession ID", "Database Entry" );
     }
 

@@ -6,9 +6,10 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 /**
  * Represents an expression analysis result set identifier.
  */
-public class ExpressionAnalysisResultSetArg extends MutableArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
+public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
 
     public ExpressionAnalysisResultSetArg( long value ) {
+        super( value );
         this.value = value;
     }
 

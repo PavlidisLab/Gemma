@@ -11,13 +11,15 @@ import javax.ws.rs.core.Response;
  *
  * @author tesarst
  */
-abstract class MalformableArg {
+abstract class AbstractArg<T> {
 
+    private final T value;
     private final boolean malformed;
     private String errorMessage = "";
     private Exception exception;
 
-    MalformableArg() {
+    AbstractArg( T value ) {
+        this.value = value;
         this.malformed = false;
     }
 
@@ -27,7 +29,8 @@ abstract class MalformableArg {
      * @param errorMessage the error message to be displayed to the client.
      * @param exception    the exception that the client should be informed about.
      */
-    MalformableArg( String errorMessage, Exception exception ) {
+    AbstractArg( String errorMessage, Exception exception ) {
+        this.value = null;
         this.malformed = true;
         this.exception = exception;
         this.errorMessage = errorMessage;
@@ -37,7 +40,7 @@ abstract class MalformableArg {
      * Checks whether the instance of this object was created as a malformed argument, and if true, throws an
      * exception using the information provided in the constructor.
      */
-    void checkMalformed() {
+    private void checkMalformed() throws GemmaApiException {
         if ( this.malformed ) {
             WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
             WellComposedErrorBody.addExceptionFields( body, this.exception );
@@ -45,4 +48,18 @@ abstract class MalformableArg {
         }
     }
 
+    public final T getValue() throws GemmaApiException {
+        if ( this.malformed ) {
+            WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
+            WellComposedErrorBody.addExceptionFields( body, this.exception );
+            throw new GemmaApiException( body );
+        }
+        return this.value;
+    }
+
+    @Override
+    public String toString() {
+        if ( this.value == null ) return "";
+        return String.valueOf( this.value );
+    }
 }

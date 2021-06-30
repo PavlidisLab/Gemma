@@ -8,16 +8,16 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayDatabaseEntryArg extends ArrayEntityArg<DatabaseEntry, DatabaseEntryService> {
+public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry, DatabaseEntryService> {
 
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Database entry identifiers";
 
-    private ArrayDatabaseEntryArg( List<String> values ) {
+    private DatabaseEntryArrayArg( List<String> values ) {
         super( values, DatabaseEntryArg.class );
     }
 
-    public ArrayDatabaseEntryArg( String format, IllegalArgumentException e ) {
+    public DatabaseEntryArrayArg( String format, IllegalArgumentException e ) {
         super( format, e );
     }
 
@@ -31,11 +31,11 @@ public class ArrayDatabaseEntryArg extends ArrayEntityArg<DatabaseEntry, Databas
 
     }
 
-    public static ArrayDatabaseEntryArg valueOf( final String s ) {
+    public static DatabaseEntryArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayDatabaseEntryArg( String.format( ArrayDatabaseEntryArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( ArrayDatabaseEntryArg.ERROR_MSG_DETAIL ) );
+            return new DatabaseEntryArrayArg( String.format( DatabaseEntryArrayArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( DatabaseEntryArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayDatabaseEntryArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
+        return new DatabaseEntryArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
     }
 }

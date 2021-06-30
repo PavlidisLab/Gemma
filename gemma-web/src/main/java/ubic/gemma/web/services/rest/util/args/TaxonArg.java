@@ -23,12 +23,16 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService> {
+public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonService> {
 
     /**
      * Minimum value to be considered an NCBI ID, lower values will be considered a regular gemma Taxon ID.
      */
     private static final Long MIN_NCBI_ID = 999L;
+
+    TaxonArg( T arg ) {
+        super( arg );
+    }
 
     /**
      * Used by RS to parse value of request parameters.
@@ -56,7 +60,7 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService> {
      * @param  limit                       see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  sort                        see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @return                             a collection of EEVOs matching the input parameters.
+     * @return a collection of EEVOs matching the input parameters.
      */
     public Collection<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
@@ -80,7 +84,7 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService> {
      * @param  chromosomeName    name of the chromosome to look on
      * @param  start             the start nucleotide denoting the location to look for genes at.
      * @param  size              the size (in nucleotides) of the location from the 'start' nucleotide.
-     * @return                   collection of Gene VOs overlapping the location defined by the 'start' and 'size'
+     * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size'
      *                           parameters.
      */
     public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,

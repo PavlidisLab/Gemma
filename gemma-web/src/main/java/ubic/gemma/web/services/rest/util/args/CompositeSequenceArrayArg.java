@@ -10,8 +10,8 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayCompositeSequenceArg
-        extends ArrayEntityArg<CompositeSequence, CompositeSequenceService> {
+public class CompositeSequenceArrayArg
+        extends AbstractEntityArrayArg<CompositeSequence, CompositeSequenceService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "element ID or name, or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine IDs and names in one query.";
@@ -19,11 +19,11 @@ public class ArrayCompositeSequenceArg
 
     private ArrayDesign arrayDesign;
 
-    private ArrayCompositeSequenceArg( List<String> values ) {
+    private CompositeSequenceArrayArg( List<String> values ) {
         super( values, CompositeSequenceArg.class );
     }
 
-    private ArrayCompositeSequenceArg( String errorMessage, Exception exception ) {
+    private CompositeSequenceArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -38,12 +38,12 @@ public class ArrayCompositeSequenceArg
      *           input String can not be converted into an array of CompositeSequence identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayCompositeSequenceArg valueOf( final String s ) {
+    public static CompositeSequenceArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayCompositeSequenceArg( String.format( ArrayCompositeSequenceArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( ArrayCompositeSequenceArg.ERROR_MSG_DETAIL ) );
+            return new CompositeSequenceArrayArg( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayCompositeSequenceArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
+        return new CompositeSequenceArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
@@ -64,7 +64,7 @@ public class ArrayCompositeSequenceArg
     @Override
     protected void setPropertyNameAndType( CompositeSequenceService service ) {
         String value = this.getValue().get( 0 );
-        MutableArg<?, CompositeSequence, CompositeSequenceService> arg = CompositeSequenceArg
+        AbstractEntityArg<?, CompositeSequence, CompositeSequenceService> arg = CompositeSequenceArg
                 .valueOf( value );
         this.argValueName = this.checkPropertyNameString( arg, value, service );
         this.argValueClass = arg.value.getClass();

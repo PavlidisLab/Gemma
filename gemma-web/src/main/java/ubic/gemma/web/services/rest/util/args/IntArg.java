@@ -7,12 +7,13 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class IntArg extends MalformableArg {
+public class IntArg extends AbstractArg<Integer> {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 
     private Integer value;
 
     private IntArg( int value ) {
+        super( value );
         this.value = value;
     }
 
@@ -41,15 +42,6 @@ public class IntArg extends MalformableArg {
         } catch ( NumberFormatException e ) {
             return new IntArg( String.format( ERROR_MSG, s ), e );
         }
-    }
-
-    /**
-     * @return the integer value of the original String argument. If the original argument could not be converted into
-     * an integer, will produce a {@link GemmaApiException} instead.
-     */
-    public int getValue() {
-        this.checkMalformed();
-        return value;
     }
 
 }

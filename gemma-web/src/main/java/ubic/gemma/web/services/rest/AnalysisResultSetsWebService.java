@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -45,7 +44,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,8 +77,8 @@ public class AnalysisResultSetsWebService extends WebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject<?> findAll(
-            @QueryParam("datasets") ArrayDatasetArg datasets,
-            @QueryParam("databaseEntries") ArrayDatabaseEntryArg databaseEntries,
+            @QueryParam("datasets") DatasetArrayArg datasets,
+            @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("offset") @DefaultValue("0") IntArg offset,
             @QueryParam("limit") @DefaultValue("20") IntArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort,

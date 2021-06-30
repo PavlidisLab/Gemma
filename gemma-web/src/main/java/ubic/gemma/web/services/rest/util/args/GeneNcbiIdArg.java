@@ -16,7 +16,7 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     GeneNcbiIdArg( int l ) {
-        this.value = l;
+        super( l );
         setNullCause( ID_NAME, "Gene" );
     }
 

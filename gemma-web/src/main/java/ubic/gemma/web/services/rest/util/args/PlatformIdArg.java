@@ -14,7 +14,7 @@ public class PlatformIdArg extends PlatformArg<Long> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     PlatformIdArg( long l ) {
-        this.value = l;
+        super( l );
         setNullCause( "ID", "Platform" );
     }
 

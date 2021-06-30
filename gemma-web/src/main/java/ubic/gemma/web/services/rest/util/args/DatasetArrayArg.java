@@ -9,16 +9,16 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayDatasetArg
-        extends ArrayEntityArg<ExpressionExperiment, ExpressionExperimentService> {
+public class DatasetArrayArg
+        extends AbstractEntityArrayArg<ExpressionExperiment, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
 
-    private ArrayDatasetArg( List<String> values ) {
+    private DatasetArrayArg( List<String> values ) {
         super( values, DatasetArg.class );
     }
 
-    private ArrayDatasetArg( String errorMessage, Exception exception ) {
+    private DatasetArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
@@ -31,18 +31,18 @@ public class ArrayDatasetArg
      * input String can not be converted into an array of Dataset identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayDatasetArg valueOf( final String s ) {
+    public static DatasetArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayDatasetArg( String.format( ArrayDatasetArg.ERROR_MSG, s ),
-                    new IllegalArgumentException( ArrayDatasetArg.ERROR_MSG_DETAIL ) );
+            return new DatasetArrayArg( String.format( DatasetArrayArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayDatasetArg( Arrays.asList( ArrayArg.splitString( s ) ) );
+        return new DatasetArrayArg( Arrays.asList( splitString( s ) ) );
     }
 
     @Override
     protected void setPropertyNameAndType( ExpressionExperimentService service ) {
         String value = this.getValue().get( 0 );
-        MutableArg<?, ExpressionExperiment, ExpressionExperimentService> arg = DatasetArg
+        AbstractEntityArg<?, ExpressionExperiment, ExpressionExperimentService> arg = DatasetArg
                 .valueOf( value );
         this.argValueName = this.checkPropertyNameString( arg, value, service );
         this.argValueClass = arg.value.getClass();

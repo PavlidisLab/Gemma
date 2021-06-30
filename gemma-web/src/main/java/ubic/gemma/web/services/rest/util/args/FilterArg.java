@@ -15,17 +15,13 @@ import java.util.*;
  *
  * @author tesarst
  */
-public abstract class FilterArg extends MalformableArg {
+public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
     private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
     private static final String ERROR_MSG_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
     private static final String ERROR_MSG_ARGS_MISALIGNED = "Filter query problem: Amount of properties, operators and values does not match";
 
-    private List<String[]> propertyNames;
-    private List<String[]> propertyValues;
-    private List<String[]> propertyOperators;
-    private List<Class[]> propertyTypes;
     private String objectAlias;
 
     /**
@@ -43,11 +39,7 @@ public abstract class FilterArg extends MalformableArg {
      */
     FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<String[]> propertyOperators,
             List<Class[]> propertyTypes, String objectAlias ) {
-        super();
-        this.propertyNames = propertyNames;
-        this.propertyValues = propertyValues;
-        this.propertyOperators = propertyOperators;
-        this.propertyTypes = propertyTypes;
+        super( new Filter( propertyNames, propertyValues, propertyOperators, propertyTypes ) );
         this.objectAlias = objectAlias;
     }
 
@@ -117,7 +109,7 @@ public abstract class FilterArg extends MalformableArg {
                 propertyOperatorsDisjunction = new LinkedList<>();
                 propertyValuesDisjunction = new LinkedList<>();
                 i++;
-            } else if ( parts[i].toLowerCase().equals( "or" ) ) {
+            } else if ( parts[i].equalsIgnoreCase( "or" ) ) {
                 // Skip this part and continue the disjunction
                 i++;
             }
@@ -205,17 +197,17 @@ public abstract class FilterArg extends MalformableArg {
      * then represent a conjunction (AND) with other arrays in the list.
      */
     public ArrayList<ObjectFilter[]> getObjectFilters() {
-        this.checkMalformed();
-        if ( propertyNames == null || propertyNames.isEmpty() )
+        Filter filter = getValue();
+        if ( filter.propertyNames == null || filter.propertyNames.isEmpty() )
             return null;
-        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( propertyNames.size() );
+        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( filter.propertyNames.size() );
 
-        for ( int i = 0; i < propertyNames.size(); i++ ) {
+        for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
             try {
-                String[] properties = propertyNames.get( i );
-                String[] values = propertyValues.get( i );
-                String[] operators = propertyOperators.get( i );
-                Class[] types = propertyTypes.get( i );
+                String[] properties = filter.propertyNames.get( i );
+                String[] values = filter.propertyValues.get( i );
+                String[] operators = filter.propertyOperators.get( i );
+                Class[] types = filter.propertyTypes.get( i );
 
                 ObjectFilter[] filterArray = new ObjectFilter[properties.length];
                 for ( int j = 0; j < properties.length; j++ ) {
@@ -241,18 +233,18 @@ public abstract class FilterArg extends MalformableArg {
      * @param objectAlias the object alias
      * @return an object filter that accounts for all allowed possibilities.
      */
-    private ObjectFilter getFilterAllowSpecials(String propertyName, Class propertyType, String requiredValue, String operator, String objectAlias){
+    private ObjectFilter getFilterAllowSpecials( String propertyName, Class propertyType, String requiredValue, String operator, String objectAlias ) {
         // Convert to a collection if the current operator is an "in" operator.
-        Object finalValue = operator.equalsIgnoreCase( ObjectFilter.in ) ? convertCollection(requiredValue) : requiredValue;
+        Object finalValue = operator.equalsIgnoreCase( ObjectFilter.in ) ? convertCollection( requiredValue ) : requiredValue;
 
         // Allow characteristics property filtering
-        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+        if ( objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" ) ) {
             propertyName = propertyName.replaceFirst( "characteristics.", "" );
             objectAlias = ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
         }
 
         // Allow bioAssays property filtering
-        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+        if ( objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" ) ) {
             propertyName = propertyName.replaceFirst( "bioAssays.", "" );
             objectAlias = ObjectFilter.DAO_BIOASSAY_ALIAS;
         }
@@ -269,7 +261,22 @@ public abstract class FilterArg extends MalformableArg {
     private Object convertCollection( String value ) {
         value = value.replace( "(", "" );
         value = value.replace( ")", "" );
-        return Arrays.asList(value.split("\\s*,\\s*"));
+        return Arrays.asList( value.split( "\\s*,\\s*" ) );
+    }
+
+    static class Filter {
+
+        List<String[]> propertyNames;
+        List<String[]> propertyValues;
+        List<String[]> propertyOperators;
+        List<Class[]> propertyTypes;
+
+        public Filter( List<String[]> propertyNames, List<String[]> propertyValues, List<String[]> propertyOperators, List<Class[]> propertyTypes ) {
+            this.propertyNames = propertyNames;
+            this.propertyValues = propertyValues;
+            this.propertyOperators = propertyOperators;
+            this.propertyTypes = propertyTypes;
+        }
     }
 
 }

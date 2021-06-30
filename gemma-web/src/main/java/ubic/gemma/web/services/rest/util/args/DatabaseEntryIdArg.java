@@ -11,7 +11,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {
-        this.value = l;
+        super( l );
         setNullCause( "ID", "Database Entry" );
     }
 

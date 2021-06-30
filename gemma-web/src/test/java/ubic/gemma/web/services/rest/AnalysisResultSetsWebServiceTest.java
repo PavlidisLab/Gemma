@@ -138,7 +138,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ArrayDatasetArg datasets = ArrayDatasetArg.valueOf( String.valueOf( ee.getId() ) );
+        DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
         ResponseDataObject<?> result = service.findAll(
                 datasets,
                 null,
@@ -155,7 +155,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     public void testFindAllWhenDatasetDoesNotExistThenRaise404NotFound() {
         HttpServletResponse response = new MockHttpServletResponse();
         GemmaApiException e = assertThrows( GemmaApiException.class, () -> service.findAll(
-                ArrayDatasetArg.valueOf( "GEO123124" ),
+                DatasetArrayArg.valueOf( "GEO123124" ),
                 null,
                 IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ),
@@ -168,7 +168,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.findAll( null,
-                ArrayDatabaseEntryArg.valueOf( ee.getAccession().getAccession() ),
+                DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
@@ -183,7 +183,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         HttpServletResponse response = new MockHttpServletResponse();
         GemmaApiException e = assertThrows( GemmaApiException.class, () -> service.findAll(
                 null,
-                ArrayDatabaseEntryArg.valueOf( "GEO123124,GEO1213121" ),
+                DatabaseEntryArrayArg.valueOf( "GEO123124,GEO1213121" ),
                 IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),

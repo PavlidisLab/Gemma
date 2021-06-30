@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 public class FactorValueIdArg extends FactorValueArg<Long> {
 
     public FactorValueIdArg( Long value ) {
-        this.value = value;
+        super( value );
     }
 
     @Override

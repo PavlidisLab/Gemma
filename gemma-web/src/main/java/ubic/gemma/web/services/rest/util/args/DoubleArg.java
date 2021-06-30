@@ -7,24 +7,17 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  *
  * @author tesarst
  */
-public class DoubleArg extends MalformableArg {
+public class DoubleArg extends AbstractArg<Double> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a double number";
 
-    private Double value;
-
     private DoubleArg( double value ) {
-        this.value = value;
+        super( value );
     }
 
     private DoubleArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
-    @Override
-    public String toString() {
-        if(this.value == null) return "";
-        return String.valueOf( this.value );
-    }
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -40,15 +33,6 @@ public class DoubleArg extends MalformableArg {
         } catch ( NumberFormatException e ) {
             return new DoubleArg( String.format( ERROR_MSG, s ), e );
         }
-    }
-
-    /**
-     * @return the double value of the original String argument. If the original argument could not be converted into
-     * a double number, will produce a {@link GemmaApiException} instead.
-     */
-    public double getValue() {
-        this.checkMalformed();
-        return value;
     }
 
 }
