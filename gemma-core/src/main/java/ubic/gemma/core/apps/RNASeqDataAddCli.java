@@ -139,6 +139,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     protected void doWork() throws Exception {
         DataUpdater serv = this.getBean( DataUpdater.class );
 
+        if ( this.expressionExperiments.isEmpty() ) {
+            throw new Exception( "No experiment to be processed. Check in the logs above for troubled experiments." );
+        }
+
         if ( this.justbackfillLog2cpm ) {
             for ( BioAssaySet bas : this.expressionExperiments ) {
                 try {

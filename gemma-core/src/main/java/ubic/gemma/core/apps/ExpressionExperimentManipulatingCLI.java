@@ -21,8 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -45,8 +43,10 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -212,7 +212,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
             }
 
-            this.removeTroubledEes( expressionExperiments );
+            Set<BioAssaySet> troubledExpressionExperiments = this.getTroubledExpressionExperiments();
+
+            // only retain non-troubled experiments
+            expressionExperiments.removeAll( troubledExpressionExperiments );
+
+            if ( troubledExpressionExperiments.size() == 1 ) {
+                AbstractCLI.log.info( troubledExpressionExperiments.stream().findFirst().get().getName() + " has an active trouble flag" );
+            } else if ( troubledExpressionExperiments.size() > 1 ) {
+                AbstractCLI.log.info( "Removed " + troubledExpressionExperiments.size() + " experiments with 'trouble' flags, leaving "
+                        + expressionExperiments.size() );
+            }
         }
 
         if ( expressionExperiments != null && expressionExperiments.size() > 1 ) {
@@ -372,36 +382,19 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
-     * removes EEs that are troubled, or their parent Array design is troubled.
+     * Obtain EEs that are troubled among {@link ExpressionExperimentManipulatingCLI#expressionExperiments}.
+     * @return a collection of troubled experiemnt, or an empty set of non are
      */
-    private void removeTroubledEes( Collection<BioAssaySet> ees ) {
-        if ( ees == null || ees.size() == 0 ) {
+    private Set<BioAssaySet> getTroubledExpressionExperiments() {
+        if ( expressionExperiments == null || expressionExperiments.size() == 0 ) {
             AbstractCLI.log.warn( "No experiments to remove troubled from" );
-            return;
+            return Collections.emptySet();
         }
 
-        BioAssaySet theOnlyOne = null;
-        if ( ees.size() == 1 ) {
-            theOnlyOne = ees.iterator().next();
-        }
-        int size = ees.size();
-
-        CollectionUtils.filter( ees, new Predicate() {
-            @Override
-            public boolean evaluate( Object object ) {
-                return !( ( ExpressionExperiment ) object ).getCurationDetails().getTroubled();
-            }
-        } );
-        int newSize = ees.size();
-        if ( newSize != size ) {
-            assert newSize < size;
-            if ( size == 1 && theOnlyOne != null ) {
-                AbstractCLI.log.info( theOnlyOne.getName() + " has an active trouble flag" );
-            } else {
-                AbstractCLI.log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving "
-                        + newSize );
-            }
-        }
+        return expressionExperiments.stream()
+                .map( ExpressionExperiment.class::cast )
+                .filter( ee -> ee.getCurationDetails().getTroubled() )
+                .collect( Collectors.toSet() );
     }
 
 }
