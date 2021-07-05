@@ -23,10 +23,23 @@ public class StringArrayArg extends ArrayArg<String> {
     }
 
     /**
+     * Splits string by the ',' comma character and trims the resulting strings.
+     *
+     * @param  arg the string to process
+     * @return trimmed strings exploded from the input.
+     */
+    protected static String[] splitString( String arg ) {
+        String[] array = arg.split( "," );
+        for ( int i = 0; i < array.length; i++ )
+            array[i] = array[i].trim();
+        return array;
+    }
+
+    /**
      * Used by RS to parse value of request parameters.
      *
      * @param  s the request arrayString argument
-     * @return   an instance of ArrayStringArg representing array of strings from the input string, or a malformed
+     * @return an instance of ArrayStringArg representing array of strings from the input string, or a malformed
      *           ArrayStringArg that will throw an
      *           {@link GemmaApiException} when accessing its value, if the input String can not be converted into an
      *           array of strings.
@@ -37,7 +50,7 @@ public class StringArrayArg extends ArrayArg<String> {
             return new StringArrayArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
                     "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
         }
-        return new StringArrayArg( Arrays.asList( s.split( "," ) ) );
+        return new StringArrayArg( Arrays.asList( ArrayArg.splitString( s ) ) );
     }
 
 }

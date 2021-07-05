@@ -14,7 +14,12 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayD
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Platform identifiers";
 
     private PlatformArrayArg( List<String> values ) {
-        super( values, PlatformArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return PlatformArg.class;
     }
 
     private PlatformArrayArg( String errorMessage, Exception exception ) {
@@ -36,14 +41,6 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayD
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new PlatformArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
-    }
-
-    @Override
-    protected void setPropertyNameAndType( ArrayDesignService service ) {
-        String value = this.getValue().get( 0 );
-        AbstractEntityArg<?, ArrayDesign, ArrayDesignService> arg = PlatformArg.valueOf( value );
-        this.argValueName = this.checkPropertyNameString( arg, value, service );
-        this.argValueClass = arg.value.getClass();
     }
 
     @Override

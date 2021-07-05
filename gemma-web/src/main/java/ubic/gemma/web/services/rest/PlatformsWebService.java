@@ -196,7 +196,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         try {
-            probesArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
+            probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
             return Responder.autoCode( compositeSequenceService
                     .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
                             probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ),
@@ -236,9 +236,9 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
+        probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
         return Responder.autoCode( geneService.loadValueObjects( compositeSequenceService
-                .getGenes( probeArg.getPersistentObject( compositeSequenceService ), offset.getValue(),
+                .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
                         limit.getValue() ) ),
                 sr );
     }
@@ -258,7 +258,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return outputAnnotationFile( platformArg.getPersistentObject( arrayDesignService ) );
+        return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );
     }
 
     /**

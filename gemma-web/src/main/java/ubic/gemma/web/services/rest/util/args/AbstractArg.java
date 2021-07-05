@@ -14,6 +14,8 @@ import javax.ws.rs.core.Response;
 abstract class AbstractArg<T> {
 
     private final T value;
+
+    /* if this is malformed */
     private final boolean malformed;
     private String errorMessage = "";
     private Exception exception;
@@ -37,17 +39,11 @@ abstract class AbstractArg<T> {
     }
 
     /**
+     * Obtain the value, or exception represented by this argument.
+     *
      * Checks whether the instance of this object was created as a malformed argument, and if true, throws an
      * exception using the information provided in the constructor.
      */
-    private void checkMalformed() throws GemmaApiException {
-        if ( this.malformed ) {
-            WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
-            WellComposedErrorBody.addExceptionFields( body, this.exception );
-            throw new GemmaApiException( body );
-        }
-    }
-
     public final T getValue() throws GemmaApiException {
         if ( this.malformed ) {
             WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
@@ -59,7 +55,10 @@ abstract class AbstractArg<T> {
 
     @Override
     public String toString() {
-        if ( this.value == null ) return "";
-        return String.valueOf( this.value );
+        if ( this.malformed ) {
+            return "This " + getClass().getName() + " is malformed because of the following error: " + errorMessage;
+        } else {
+            return this.value == null ? "" : String.valueOf( this.value );
+        }
     }
 }

@@ -17,16 +17,15 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
      */
     GeneNcbiIdArg( int l ) {
         super( l );
-        setNullCause( ID_NAME, "Gene" );
     }
 
     @Override
-    public Gene getPersistentObject( GeneService service ) {
-        return check( service.findByNCBIId( this.value ) );
+    public Gene getEntity( GeneService service ) {
+        return checkEntity( service.findByNCBIId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( GeneService service ) {
+    public String getPropertyName() {
         return "ncbiGeneId";
     }
 

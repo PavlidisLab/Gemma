@@ -16,7 +16,12 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Taxon identifiers";
 
     private TaxonArrayArg( List<String> values ) {
-        super( values, TaxonArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return TaxonArg.class;
     }
 
     private TaxonArrayArg( String errorMessage, Exception exception ) {
@@ -56,7 +61,7 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
                 String value = this.getValue().get( i );
                 AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
                 this.argValueName = this.checkPropertyNameString( arg, value, service );
-                this.argValueClass = arg.value.getClass();
+                this.argValueClass = arg.getValue().getClass();
             } catch ( GemmaApiException e ) {
                 if ( i == this.getValue().size() - 1 ) {
                     throw e;

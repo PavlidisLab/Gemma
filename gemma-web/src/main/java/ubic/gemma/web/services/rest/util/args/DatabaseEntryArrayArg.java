@@ -14,7 +14,12 @@ public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry,
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Database entry identifiers";
 
     private DatabaseEntryArrayArg( List<String> values ) {
-        super( values, DatabaseEntryArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return DatabaseEntryArg.class;
     }
 
     public DatabaseEntryArrayArg( String format, IllegalArgumentException e ) {
@@ -24,11 +29,6 @@ public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry,
     @Override
     protected String getObjectDaoAlias() {
         return ObjectFilter.DAO_DATABASE_ENTRY_ALIAS;
-    }
-
-    @Override
-    protected void setPropertyNameAndType( DatabaseEntryService service ) {
-
     }
 
     public static DatabaseEntryArrayArg valueOf( final String s ) {

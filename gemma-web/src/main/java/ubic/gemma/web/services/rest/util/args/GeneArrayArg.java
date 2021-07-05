@@ -14,7 +14,12 @@ public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Gene identifiers";
 
     private GeneArrayArg( List<String> values ) {
-        super( values, GeneArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return GeneArg.class;
     }
 
     private GeneArrayArg( String errorMessage, Exception exception ) {
@@ -36,14 +41,6 @@ public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
                     new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new GeneArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
-    }
-
-    @Override
-    protected void setPropertyNameAndType( GeneService service ) {
-        String value = this.getValue().get( 0 );
-        AbstractEntityArg<?, Gene, GeneService> arg = GeneArg.valueOf( value );
-        this.argValueName = this.checkPropertyNameString( arg, value, service );
-        this.argValueClass = arg.value.getClass();
     }
 
     @Override

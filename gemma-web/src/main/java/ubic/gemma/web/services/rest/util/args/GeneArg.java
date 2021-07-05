@@ -10,9 +10,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Mutable argument type base class for Gene API.
@@ -60,7 +60,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      */
     public Collection<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
             TaxonArg<?> taxonArg ) {
-        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        Taxon taxon = taxonArg.getEntity( taxonService );
         return this.getValueObjects( geneService, taxon );
     }
 
@@ -74,7 +74,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      */
     public Object getGeneEvidence( GeneService geneService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) {
-        Gene gene = this.getPersistentObject( geneService );
+        Gene gene = this.getEntity( geneService );
         return phenotypeAssociationManagerService
                 .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
     }
@@ -110,7 +110,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      */
     public Collection<GeneOntologyTermValueObject> getGoTerms( GeneService geneService,
             GeneOntologyService geneOntologyService ) {
-        Gene gene = this.getPersistentObject( geneService );
+        Gene gene = this.getEntity( geneService );
         return geneOntologyService.getValueObjects( gene );
     }
 
@@ -135,17 +135,13 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @return collection of Gene Value Objects.
      */
     private Collection<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
-        Collection<GeneValueObject> genes = this.getValueObjects( service );
-        Collection<GeneValueObject> result = new ArrayList<>( genes.size() );
-        for ( GeneValueObject vo : genes ) {
-            if ( Objects.equals( vo.getTaxonId(), taxon.getId() ) ) {
-                result.add( vo );
-            }
-        }
-        if ( result.isEmpty() ) {
-            this.nullCause = this.getTaxonError();
-            return null;
-        }
-        return result;
+        return this.getValueObjects( service ).stream()
+                .filter( vo -> Objects.equals( vo.getTaxonId(), taxon.getId() ) )
+                .collect( Collectors.toList() );
+    }
+
+    @Override
+    public String getEntityName() {
+        return "Gene";
     }
 }

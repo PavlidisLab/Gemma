@@ -35,6 +35,8 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private static final long serialVersionUID = 2063274043081170625L;
 
+    private Long id;
+
     private Long analysisId;
 
     private Collection<Long> arrayDesignsUsed;
@@ -65,6 +67,14 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     public DiffExResultSetSummaryValueObject() {
         super();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public Long getBioAssaySetAnalyzedId() {

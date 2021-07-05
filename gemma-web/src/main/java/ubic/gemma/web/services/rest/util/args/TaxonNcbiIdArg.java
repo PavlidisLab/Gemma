@@ -15,16 +15,15 @@ public class TaxonNcbiIdArg extends TaxonArg<Long> {
      */
     TaxonNcbiIdArg( long l ) {
         super( l );
-        setNullCause( "ID", "Taxon" );
     }
 
     @Override
-    public Taxon getPersistentObject( TaxonService service ) {
-        return check( service.findByNcbiId( this.value ) );
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( service.findByNcbiId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

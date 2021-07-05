@@ -10,21 +10,12 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 public class IntArg extends AbstractArg<Integer> {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 
-    private Integer value;
-
     private IntArg( int value ) {
         super( value );
-        this.value = value;
     }
 
     private IntArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
-    }
-
-    @Override
-    public String toString() {
-        if ( this.value == null ) return "";
-        return String.valueOf( this.value );
     }
 
     /**

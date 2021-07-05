@@ -161,7 +161,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( compositeSequenceService
-                .loadValueObjectsForGene( geneArg.getPersistentObject( geneService ), offset.getValue(),
+                .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
                         limit.getValue() ), sr );
     }
 
@@ -204,8 +204,8 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
         super.checkReqArg( with, "with" );
         return Responder
                 .autoCode( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
-                    this.add( geneArg.getPersistentObject( geneService ).getId() );
-                    this.add( with.getPersistentObject( geneService ).getId() );
+                    this.add( geneArg.getEntity( geneService ).getId() );
+                    this.add( with.getEntity( geneService ).getId() );
                 }}, 1, limit.getValue(), false ).getResults(), sr );
     }
 

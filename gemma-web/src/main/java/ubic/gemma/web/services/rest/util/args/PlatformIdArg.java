@@ -15,16 +15,15 @@ public class PlatformIdArg extends PlatformArg<Long> {
      */
     PlatformIdArg( long l ) {
         super( l );
-        setNullCause( "ID", "Platform" );
     }
 
     @Override
-    public ArrayDesign getPersistentObject( ArrayDesignService service ) {
-        return check( service.load( this.value ) );
+    public ArrayDesign getEntity( ArrayDesignService service ) {
+        return checkEntity( service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( ArrayDesignService service ) {
+    public String getPropertyName() {
         return "id";
     }
 

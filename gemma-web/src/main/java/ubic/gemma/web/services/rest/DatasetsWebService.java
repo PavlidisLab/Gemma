@@ -199,7 +199,7 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode(
-                this.getDiffExVos( datasetArg.getPersistentObject( expressionExperimentService ).getId(),
+                this.getDiffExVos( datasetArg.getEntity( expressionExperimentService ).getId(),
                         offset.getValue(), limit.getValue() ),
                 sr );
     }
@@ -237,7 +237,7 @@ public class DatasetsWebService extends
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDataFile( ee, filterData.getValue() );
     }
 
@@ -255,7 +255,7 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDesignFile( ee );
     }
 
@@ -274,7 +274,7 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return Responder.autoCode( new Boolean( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) ), sr );
     }
 
@@ -292,7 +292,7 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        SVDValueObject svd = svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() );
+        SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
         return Responder.autoCode( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ),
                 sr );
     }
@@ -342,8 +342,8 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
-                                genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
+                        .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
+                                genes.getEntities( geneService ), keepNonSpecific.getValue(),
                                 consolidate == null ? null : consolidate.getValue() ),
                 sr );
     }
@@ -385,7 +385,7 @@ public class DatasetsWebService extends
     ) {
         this.checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
+                        .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValue(),
                                 component.getValue(), keepNonSpecific.getValue(),
                                 consolidate == null ? null : consolidate.getValue() ),
                 sr );
@@ -431,7 +431,7 @@ public class DatasetsWebService extends
     ) {
         this.checkReqArg( diffExSet, "diffExSet" );
         return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
+                        .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
                                 diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
                                 consolidate == null ? null : consolidate.getValue() ),
                 sr );

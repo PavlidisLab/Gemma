@@ -47,7 +47,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      */
     public Collection<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
-        ArrayDesign ad = this.getPersistentObject( service );
+        ArrayDesign ad = this.getEntity( service );
 
         List<ObjectFilter[]> filters = new ArrayList<>( 1 );
         filters.add( new ObjectFilter[] {
@@ -63,7 +63,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      */
     public Collection<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
-        final ArrayDesign ad = this.getPersistentObject( service );
+        final ArrayDesign ad = this.getEntity( service );
         ArrayList<ObjectFilter[]> filters = new ArrayList<ObjectFilter[]>() {
             {
                 add( new ObjectFilter[] {
@@ -74,4 +74,8 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
 
     }
 
+    @Override
+    public String getEntityName() {
+        return "Platform";
+    }
 }

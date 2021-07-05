@@ -14,12 +14,12 @@ public class FactorValueValueArg extends FactorValueArg<String> {
     }
 
     @Override
-    public FactorValue getPersistentObject( FactorValueService service ) {
-        return service.findByValue( value ).stream().findFirst().get();
+    public FactorValue getEntity( FactorValueService service ) {
+        return checkEntity( service.findByValue( getValue() ).stream().findFirst().get() );
     }
 
     @Override
-    public String getPropertyName( FactorValueService service ) {
-        return "factorValueValue";
+    public String getPropertyName() {
+        return "value";
     }
 }

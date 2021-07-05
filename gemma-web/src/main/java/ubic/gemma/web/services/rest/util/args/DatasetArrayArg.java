@@ -15,7 +15,12 @@ public class DatasetArrayArg
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
 
     private DatasetArrayArg( List<String> values ) {
-        super( values, DatasetArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return DatasetArg.class;
     }
 
     private DatasetArrayArg( String errorMessage, Exception exception ) {
@@ -37,15 +42,6 @@ public class DatasetArrayArg
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new DatasetArrayArg( Arrays.asList( splitString( s ) ) );
-    }
-
-    @Override
-    protected void setPropertyNameAndType( ExpressionExperimentService service ) {
-        String value = this.getValue().get( 0 );
-        AbstractEntityArg<?, ExpressionExperiment, ExpressionExperimentService> arg = DatasetArg
-                .valueOf( value );
-        this.argValueName = this.checkPropertyNameString( arg, value, service );
-        this.argValueClass = arg.value.getClass();
     }
 
     @Override

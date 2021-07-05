@@ -13,28 +13,16 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         super( s );
-        setNullCause( "common or scientific name, ", "Taxon" );
     }
 
     @Override
-    public Taxon getPersistentObject( TaxonService service ) {
-        return check( this.value == null ? null : this.tryAllNameProperties( service ) );
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( this.getValue() == null ? null : this.tryAllNameProperties( service ) );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
-        Taxon taxon = service.findByCommonName( this.value );
-
-        if ( taxon != null ) {
-            return "commonName";
-        }
-        taxon = service.findByScientificName( this.value );
-
-        if ( taxon != null ) {
-            return "scientificName";
-        }
-
-        return null;
+    public String getPropertyName() {
+        return "commonName or scientificName";
     }
 
     /**
@@ -45,10 +33,10 @@ public class TaxonStringArg extends TaxonArg<String> {
      */
     private Taxon tryAllNameProperties( TaxonService service ) {
         // Most commonly used
-        Taxon taxon = service.findByCommonName( this.value );
+        Taxon taxon = service.findByCommonName( this.getValue() );
 
         if ( taxon == null ) {
-            taxon = service.findByScientificName( this.value );
+            taxon = service.findByScientificName( this.getValue() );
         }
 
         return taxon;

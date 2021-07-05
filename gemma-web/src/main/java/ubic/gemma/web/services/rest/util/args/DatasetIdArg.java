@@ -14,17 +14,16 @@ public class DatasetIdArg extends DatasetArg<Long> {
      * @param l intentionally primitive type, so the value property can never be null.
      */
     public DatasetIdArg( long l ) {
-        super(l);
-        setNullCause( "ID", "Dataset" );
+        super( l );
     }
 
     @Override
-    public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return check( service.load( this.value ) );
+    public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
+        return checkEntity( service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( ExpressionExperimentService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

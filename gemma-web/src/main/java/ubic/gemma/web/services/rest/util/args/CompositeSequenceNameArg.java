@@ -13,18 +13,17 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {
         super( s );
-        setNullCause( "name", "Composite Sequence" );
     }
 
     @Override
-    public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
+    public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
-        return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
+        return checkEntity( this.getValue() == null ? null : service.findByName( arrayDesign, this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( CompositeSequenceService service ) {
+    public String getPropertyName() {
         return "name";
     }
 

@@ -15,6 +15,11 @@ public abstract class DatabaseEntryArg<T>
         super( value );
     }
 
+    @Override
+    public String getEntityName() {
+        return "DatabaseEntry";
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *

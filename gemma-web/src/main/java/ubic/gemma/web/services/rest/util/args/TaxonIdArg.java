@@ -15,16 +15,15 @@ public class TaxonIdArg extends TaxonArg<Long> {
      */
     TaxonIdArg( long l ) {
         super( l );
-        setNullCause( "ID", "Taxon" );
     }
 
     @Override
-    public Taxon getPersistentObject( TaxonService service ) {
-        return check( service.load( this.value ) );
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

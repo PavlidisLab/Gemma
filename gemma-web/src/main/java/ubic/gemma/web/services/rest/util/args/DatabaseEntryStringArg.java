@@ -12,16 +12,16 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
         super( s );
-        setNullCause( "Accession ID", "Database Entry" );
     }
 
     @Override
-    public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return check( this.value == null ? null : service.load( this.value ) );
+    public DatabaseEntry getEntity( DatabaseEntryService service ) {
+        String value = getValue();
+        return checkEntity( value == null ? null : service.load( value ) );
     }
 
     @Override
-    public String getPropertyName( DatabaseEntryService service ) {
+    public String getPropertyName() {
         return "accession";
     }
 }

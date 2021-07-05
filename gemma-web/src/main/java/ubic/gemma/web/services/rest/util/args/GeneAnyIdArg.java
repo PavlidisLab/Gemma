@@ -23,21 +23,20 @@ public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
     @Override
     public Collection<GeneValueObject> getValueObjects( GeneService service ) {
-        return Collections.singleton( service.loadValueObject( this.getPersistentObject( service ) ) );
+        return Collections.singleton( service.loadValueObject( this.getEntity( service ) ) );
     }
 
     @Override
     public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
-        Gene gene = this.getPersistentObject( geneService );
+        Gene gene = this.getEntity( geneService );
         return geneService.getPhysicalLocationsValueObjects( gene );
     }
 
     @Override
     public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
-        Gene gene = this.getPersistentObject( geneService );
+        Gene gene = this.getEntity( geneService );
         if ( !gene.getTaxon().equals( taxon ) ) {
-            this.nullCause = getTaxonError();
-            return null;
+            throw new IllegalArgumentException( "Taxon does not match the gene's taxon." );
         }
         return geneService.getPhysicalLocationsValueObjects( gene );
     }

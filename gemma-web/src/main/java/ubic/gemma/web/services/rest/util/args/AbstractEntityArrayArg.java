@@ -16,15 +16,13 @@ import java.util.List;
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends ArrayArg<String> {
+public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends StringArrayArg {
 
-    Class<?> argValueClass = null;
-    String argValueName = null;
-    private Class<? extends AbstractEntityArg> argClass;
+    protected Class<?> argValueClass = null;
+    protected String argValueName = null;
 
-    AbstractEntityArrayArg( List<String> values, Class<? extends AbstractEntityArg> argClass ) {
+    AbstractEntityArrayArg( List<String> values ) {
         super( values );
-        this.argClass = argClass;
     }
 
     AbstractEntityArrayArg( String errorMessage, Exception exception ) {
@@ -32,17 +30,9 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
     }
 
     /**
-     * Splits string by the ',' comma character and trims the resulting strings.
-     *
-     * @param  arg the string to process
-     * @return trimmed strings exploded from the input.
+     * Obtain the class for the argument used to wrap individual entities.
      */
-    protected static String[] splitString( String arg ) {
-        String[] array = arg.split( "," );
-        for ( int i = 0; i < array.length; i++ )
-            array[i] = array[i].trim();
-        return array;
-    }
+    protected abstract Class<? extends AbstractEntityArg> getEntityArgClass();
 
     /**
      * Combines the given filters with the properties in this array to create a final filter to be used for VO
@@ -79,17 +69,12 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      * @param  service the service that will be used to retrieve the persistent objects.
      * @return a collection of persistent objects matching the identifiers on this array arg.
      */
-    public Collection<O> getPersistentObjects( S service ) {
+    public Collection<O> getEntities( S service ) {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
         for ( String s : this.getValue() ) {
-            try {
-                AbstractEntityArg<?, O, S> arg;
-                // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
-                arg = ( AbstractEntityArg<?, O, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
-                objects.add( arg.getPersistentObject( service ) );
-            } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-                e.printStackTrace();
-            }
+            AbstractEntityArg<?, O, S> arg;
+            arg = this.entityArgValueOf( s );
+            objects.add( arg.checkEntity( arg.getEntity( service ) ) );
         }
         return objects;
     }
@@ -104,7 +89,12 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      *
      * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
      */
-    protected abstract void setPropertyNameAndType( S service );
+    protected void setPropertyNameAndType( S service ) {
+        String value = this.getValue().get( 0 );
+        AbstractEntityArg<?, O, S> arg = this.entityArgValueOf( value );
+        this.argValueName = this.checkPropertyNameString( arg, value, service );
+        this.argValueClass = arg.getValue().getClass();
+    }
 
     /**
      * Reads the given MutableArgs property name and checks whether it is null or empty.
@@ -115,8 +105,8 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      * @param          <T> type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
-        String identifier = arg.getPropertyName( service );
+    protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
+        String identifier = arg.getPropertyName();
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     "Identifier " + value + " not recognized." ) );
@@ -140,10 +130,22 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      * @return the type of the property that the values in this array represent.
      */
     private Class<?> getPropertyType( S service ) {
-        if ( argValueClass == null ) {
-            this.getPropertyName( service );
+        if ( this.argValueClass == null ) {
+            this.setPropertyNameAndType( service );
         }
         return argValueClass;
     }
 
+    /**
+     * Call the valueOf method of the entity arg that consititute the elements of this array.
+     */
+    private AbstractEntityArg<?, O, S> entityArgValueOf( String s ) {
+        try {
+            // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
+            return ( AbstractEntityArg<?, O, S> ) getEntityArgClass().getMethod( "valueOf", String.class ).invoke( null, s );
+        } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

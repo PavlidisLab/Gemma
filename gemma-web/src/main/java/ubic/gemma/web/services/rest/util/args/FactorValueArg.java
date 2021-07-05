@@ -13,6 +13,11 @@ public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue
         super( value );
     }
 
+    @Override
+    public String getEntityName() {
+        return "FactorValue";
+    }
+
     public static FactorValueArg<?> valueOf( String value ) {
         try {
             return new FactorValueIdArg( Long.valueOf( value ) );

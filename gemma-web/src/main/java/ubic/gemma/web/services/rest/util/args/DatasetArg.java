@@ -27,6 +27,11 @@ public abstract class DatasetArg<T>
         super( value );
     }
 
+    @Override
+    public String getEntityName() {
+        return "Dataset";
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -51,7 +56,7 @@ public abstract class DatasetArg<T>
      */
     public Collection<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
             ArrayDesignService adService ) {
-        ExpressionExperiment ee = this.getPersistentObject( service );
+        ExpressionExperiment ee = this.getEntity( service );
         return adService.loadValueObjectsForEE( ee.getId() );
     }
 
@@ -64,7 +69,7 @@ public abstract class DatasetArg<T>
      */
     public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
-        ExpressionExperiment ee = service.thawBioAssays( this.getPersistentObject( service ) );
+        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
                 .map( OutlierDetails::getBioAssay )
                 .map( BioAssay::getId )
@@ -81,7 +86,7 @@ public abstract class DatasetArg<T>
      * @return a collection of Annotations value objects that represent the experiments annotations.
      */
     public Collection<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
-        ExpressionExperiment ee = this.getPersistentObject( service );
+        ExpressionExperiment ee = this.getEntity( service );
         return service.getAnnotations( ee.getId() );
     }
 }

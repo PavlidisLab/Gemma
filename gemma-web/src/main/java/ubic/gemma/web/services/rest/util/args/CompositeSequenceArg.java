@@ -18,6 +18,11 @@ public abstract class CompositeSequenceArg<T>
         super( arg );
     }
 
+    @Override
+    public String getEntityName() {
+        return "CompositeSequence";
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -39,7 +44,4 @@ public abstract class CompositeSequenceArg<T>
     public void setPlatform( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
-
-    @Override
-    public abstract CompositeSequence getPersistentObject( CompositeSequenceService service );
 }

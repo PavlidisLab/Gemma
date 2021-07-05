@@ -34,6 +34,11 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         super( arg );
     }
 
+    @Override
+    public String getEntityName() {
+        return "Taxon";
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -69,7 +74,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
             filters = new ArrayList<>( 1 );
         }
         filters.add( new ObjectFilter[] {
-                new ObjectFilter( "id", this.getPersistentObject( taxonService ).getId(), ObjectFilter.is,
+                new ObjectFilter( "id", this.getEntity( taxonService ).getId(), ObjectFilter.is,
                         ObjectFilter.DAO_TAXON_ALIAS ) } );
 
         return expressionExperimentService.loadValueObjectsPreFilter( offset, limit, sort, sortAsc, filters );
@@ -91,7 +96,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
             int size ) {
         // Taxon argument
-        Taxon taxon = this.getPersistentObject( taxonService );
+        Taxon taxon = this.getEntity( taxonService );
 
         //Chromosome argument
         Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );

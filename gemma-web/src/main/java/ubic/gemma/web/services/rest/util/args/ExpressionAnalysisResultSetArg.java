@@ -10,25 +10,25 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
 
     public ExpressionAnalysisResultSetArg( long value ) {
         super( value );
-        this.value = value;
     }
 
     @Override
-    public ExpressionAnalysisResultSet getPersistentObject( ExpressionAnalysisResultSetService service ) {
-        return service.load( value );
+    public ExpressionAnalysisResultSet getEntity( ExpressionAnalysisResultSetService service ) {
+        return service.load( getValue() );
     }
 
     @Override
-    public String getPropertyName( ExpressionAnalysisResultSetService service ) {
+    public String getPropertyName() {
         return null;
+    }
+
+    @Override
+    public String getEntityName() {
+        return "ExpressionAnalysisResultSet";
     }
 
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {
         return new ExpressionAnalysisResultSetArg( Long.parseLong( s ) );
     }
 
-    @Override
-    public String toString() {
-        return String.valueOf( value );
-    }
 }

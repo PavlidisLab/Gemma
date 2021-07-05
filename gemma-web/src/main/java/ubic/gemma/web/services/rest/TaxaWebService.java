@@ -162,7 +162,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        Taxon taxon = taxonArg.getEntity( taxonService );
         return Responder
                 .autoCode( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ), sr );
     }
@@ -184,7 +184,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        Taxon taxon = taxonArg.getEntity( taxonService );
         return Responder.autoCode( geneArg.getGeneLocation( geneService, taxon ), sr );
     }
 
@@ -235,7 +235,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             @QueryParam("tree") @DefaultValue("false") BoolArg tree, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        Taxon taxon = taxonArg.getEntity( taxonService );
         if ( tree.getValue() ) {
             return Responder.autoCode( phenotypeAssociationManagerService
                     .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
@@ -281,7 +281,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
         Object response;
         try {
             response = this.phenotypeAssociationManagerService.findCandidateGenes(
-                    new EvidenceFilter( taxonArg.getPersistentObject( taxonService ).getId(), editableOnly.getValue() ),
+                    new EvidenceFilter( taxonArg.getEntity( taxonService ).getId(), editableOnly.getValue() ),
                     new HashSet<>( phenotypes.getValue() ) );
         } catch ( EntityNotFoundException e ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND, e.getMessage() );

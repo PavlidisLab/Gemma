@@ -17,16 +17,15 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
      */
     GeneEnsemblIdArg( String s ) {
         super( s );
-        setNullCause( ID_NAME, "Gene" );
     }
 
     @Override
-    public Gene getPersistentObject( GeneService service ) {
-        return check( service.findByEnsemblId( this.value ) );
+    public Gene getEntity( GeneService service ) {
+        return checkEntity( service.findByEnsemblId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( GeneService service ) {
+    public String getPropertyName() {
         return "ensemblId";
     }
 

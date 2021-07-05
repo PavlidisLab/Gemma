@@ -20,7 +20,12 @@ public class CompositeSequenceArrayArg
     private ArrayDesign arrayDesign;
 
     private CompositeSequenceArrayArg( List<String> values ) {
-        super( values, CompositeSequenceArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return CompositeSequenceArg.class;
     }
 
     private CompositeSequenceArrayArg( String errorMessage, Exception exception ) {
@@ -43,7 +48,7 @@ public class CompositeSequenceArrayArg
             return new CompositeSequenceArrayArg( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new CompositeSequenceArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
+        return new CompositeSequenceArrayArg( Arrays.asList( ArrayArg.splitString( s ) ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
@@ -60,14 +65,4 @@ public class CompositeSequenceArrayArg
     protected String getObjectDaoAlias() {
         return ObjectFilter.DAO_PROBE_ALIAS;
     }
-
-    @Override
-    protected void setPropertyNameAndType( CompositeSequenceService service ) {
-        String value = this.getValue().get( 0 );
-        AbstractEntityArg<?, CompositeSequence, CompositeSequenceService> arg = CompositeSequenceArg
-                .valueOf( value );
-        this.argValueName = this.checkPropertyNameString( arg, value, service );
-        this.argValueClass = arg.value.getClass();
-    }
-
 }

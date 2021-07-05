@@ -12,16 +12,15 @@ public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {
         super( l );
-        setNullCause( "ID", "Database Entry" );
     }
 
     @Override
-    public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return check( service.load( value ) );
+    public DatabaseEntry getEntity( DatabaseEntryService service ) {
+        return checkEntity( service.load( getValue() ) );
     }
 
     @Override
-    public String getPropertyName( DatabaseEntryService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

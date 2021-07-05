@@ -9,17 +9,17 @@ import java.util.List;
 public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, FactorValueService> {
 
     public FactorValueArrayArg( List<String> values ) {
-        super( values, FactorValueArg.class );
+        super( values );
+    }
+
+    @Override
+    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
+        return FactorValueArg.class;
     }
 
     @Override
     protected String getObjectDaoAlias() {
         return null;
-    }
-
-    @Override
-    protected void setPropertyNameAndType( FactorValueService service ) {
-
     }
 
     public static FactorValueArrayArg valueOf( String s ) {

@@ -84,8 +84,8 @@ public class AnalysisResultSetsWebService extends WebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort,
             @Context final HttpServletResponse servlet ) {
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                Optional.ofNullable( datasets ).map( d -> d.getPersistentObjects( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
-                Optional.ofNullable( databaseEntries ).map( de -> de.getPersistentObjects( databaseEntryService ) ).orElse( null ),
+                Optional.ofNullable( datasets ).map( d -> d.getEntities( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
+                Optional.ofNullable( databaseEntries ).map( de -> de.getEntities( databaseEntryService ) ).orElse( null ),
                 null,
                 offset.getValue(),
                 limit.getValue(),
@@ -109,7 +109,7 @@ public class AnalysisResultSetsWebService extends WebService {
     public ResponseDataObject<?> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
+        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
         if ( ears == null ) {
             throw new GemmaApiException( Response.Status.NOT_FOUND, "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
@@ -130,7 +130,7 @@ public class AnalysisResultSetsWebService extends WebService {
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
+        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
         // only thaw the related analysis and experimental factors without contrasts
         ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
         return new ExpressionAnalysisResultSetTsvStreamingOutput( ears );

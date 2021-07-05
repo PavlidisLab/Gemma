@@ -11,11 +11,9 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  */
 public class ExpLevelConsolidationArg extends AbstractArg<String> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
-    private String value;
 
     private ExpLevelConsolidationArg( String value ) {
         super( value );
-        this.value = value;
     }
 
     private ExpLevelConsolidationArg( String errorMessage, Exception exception ) {
@@ -43,13 +41,6 @@ public class ExpLevelConsolidationArg extends AbstractArg<String> {
                                     + ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) );
         }
         return new ExpLevelConsolidationArg( s );
-    }
-
-    @Override
-    public String toString() {
-        if ( this.value == null )
-            return "";
-        return String.valueOf( this.value );
     }
 
 }
