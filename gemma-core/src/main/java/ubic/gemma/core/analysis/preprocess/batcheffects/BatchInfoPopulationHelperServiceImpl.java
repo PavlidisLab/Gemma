@@ -498,11 +498,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                     arr = fields[1].split( "_" );
 
                     // this may still be invalid, as in VAB_KCl_hr0_total_RNA_b1_t11_48_981
-                    // ensure the second and third fields are numbers.
+                    // ensure the second and third fields are numbers. Might not be enough to ensure validity
                     if ( !( arr.length > 2 && arr[1].matches( "[0-9]+" ) && arr[2].matches( "[0-9]+" ) ) ) {
                         fqd = new FastqHeaderData( platform );
                         fqd.setUnusableHeader( field );
-                        arr = new String[1]; // unusable, so clear
+                        arr = new String[1]; // unusabe
                     }
 
                 } else {
@@ -521,15 +521,17 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                     fqd = new FastqHeaderData( platform );
                     fqd.setUnusableHeader( field );
                 } else if ( arr.length == 3 ) { // example: 1_40_501
-                    // This is not usable as far as we know. seen for one ABI genetic analyzer
+                    // This is not usable as far as we know. seen for one ABI
                     fqd = new FastqHeaderData( platform );
                     fqd.setUnusableHeader( field );
                 } else if ( arr.length >= 7 ) { // this is the normal format, though it should be 7 exactly
                     fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
-                } else if ( arr.length == 5 ) { // this is another normal format
+                } else if ( arr.length == 5 ) { // this is another normal format (legacy)
                     // device and lane are the only usable fields
                     fqd = new FastqHeaderData( arr[0], arr[1] );
-                } else if ( arr.length == 6 ) { // HW-ST997_0144_6_1101_1138_2179 - this is not an official format but we work with it
+//                } else if (arr.length == 4) { //  rare and not usable e.g. 3:1:231:803 - first value is not lane, nor is second likely
+//                    fqd = new FastqHeaderData(null, arr[1]); 
+                } else if ( arr.length == 6 ) { // HW-ST997_0144_6_1101_1138_2179 - this is not an official format? but we work with it
                     fqd = new FastqHeaderData( arr[0], arr[1], arr[0] );
                 } else {
                     // something else but also not usable.
