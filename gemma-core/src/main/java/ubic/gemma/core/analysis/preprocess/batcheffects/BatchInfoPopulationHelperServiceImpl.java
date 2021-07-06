@@ -478,37 +478,65 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             if ( StringUtils.isBlank( field ) ) continue;
             if ( field.equals( platform ) ) continue; // skip the first field.
 
-            // first actual header
-            String[] fields = field.split( "\\s" );
-            String[] arr = fields[1].split( ":" );
-
-            /*
-             * Even when the header is not usable, keep it as a possible indicator of batch (along with platform)
-             */
             FastqHeaderData fqd = null;
+
             if ( field.equals( FASTQ_HEADER_EXTRACTION_FAILURE_INDICATOR ) ) {
                 // no actual headers available, only platform
                 fqd = new FastqHeaderData( platform );
                 fqd.setUnusableHeader( field );
-            } else if ( fields.length != 3 ) {
-                // again, no usable headers, only platform
-                fqd = new FastqHeaderData( platform );
-                fqd.setUnusableHeader( field );
-            } else if ( arr.length >= 7 ) {
-                fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
-            } else if ( arr.length == 5 ) {
-                // device and lane are the only usable fields
-                fqd = new FastqHeaderData( arr[0], arr[1] );
-            } else if ( !fields[1].contains( ":" ) ) {
-                // not a valid header, we're expecting at least five fields delimited by :
-                fqd = new FastqHeaderData( platform );
-                fqd.setUnusableHeader( field );
             } else {
-                // something else but also not usable.
-                fqd = new FastqHeaderData( platform );
-                fqd.setUnusableHeader( field );
-            }
 
+                // first actual header
+                String[] fields = field.split( "\\s" );
+
+                String[] arr = new String[1];
+                if ( fields[1].contains( ":" ) ) {
+                    arr = fields[1].split( ":" );
+                } else if ( fields[1].contains( "_" ) ) {
+                    // fallback in case it uses underscores. Cannot use by default because
+                    // in the ":" version the strings can contain "_".
+                    arr = fields[1].split( "_" );
+
+                    // this may still be invalid, as in VAB_KCl_hr0_total_RNA_b1_t11_48_981
+                    // ensure the second and third fields are numbers.
+                    if ( !( arr.length > 2 && arr[1].matches( "[0-9]+" ) && arr[2].matches( "[0-9]+" ) ) ) {
+                        fqd = new FastqHeaderData( platform );
+                        fqd.setUnusableHeader( field );
+                        arr = new String[1]; // unusable, so clear
+                    }
+
+                } else {
+                    // not a valid header, we're expecting at least five fields delimited by : or "_"
+                    fqd = new FastqHeaderData( platform );
+                    fqd.setUnusableHeader( field );
+                }
+
+                /*
+                 * Even when the header is not usable, keep it as a possible indicator of batch (along with platform)
+                 * See https://github.com/PavlidisLab/Gemma/issues/97 for some discussion
+                 */
+
+                if ( fields.length != 3 ) {
+                    // again, no usable headers, only platform
+                    fqd = new FastqHeaderData( platform );
+                    fqd.setUnusableHeader( field );
+                } else if ( arr.length == 3 ) { // example: 1_40_501
+                    // This is not usable as far as we know. seen for one ABI genetic analyzer
+                    fqd = new FastqHeaderData( platform );
+                    fqd.setUnusableHeader( field );
+                } else if ( arr.length >= 7 ) { // this is the normal format, though it should be 7 exactly
+                    fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
+                } else if ( arr.length == 5 ) { // this is another normal format
+                    // device and lane are the only usable fields
+                    fqd = new FastqHeaderData( arr[0], arr[1] );
+                } else if ( arr.length == 6 ) { // HW-ST997_0144_6_1101_1138_2179 - this is not an official format but we work with it
+                    fqd = new FastqHeaderData( arr[0], arr[1], arr[0] );
+                } else {
+                    // something else but also not usable.
+                    fqd = new FastqHeaderData( platform );
+                    fqd.setUnusableHeader( field );
+                }
+            }
             fqd.setGplId( platform ); // always keep track of the GPL ID in case we have a mix of usable and unusable headers
 
             if ( currentBatch == null ) {
@@ -677,6 +705,19 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             this( device, lane );
             this.flowCell = flowCell;
             this.run = run;
+            this.hadUsableHeader = true;
+        }
+
+        /**
+         * e.g. HW-ST997_0144_6_1101_1138_2179 - first three fields.
+         * 
+         * @param device
+         * @param flowcell
+         * @param lane
+         */
+        public FastqHeaderData( String device, String flowcell, String lane ) {
+            this( device, lane );
+            this.flowCell = flowcell;
             this.hadUsableHeader = true;
         }
 

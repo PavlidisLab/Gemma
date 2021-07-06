@@ -346,7 +346,49 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
         assertEquals( 9, batches.size() );
     }
+    
+    @Test
+    public void testBatchI() throws Exception {
+        //GSE73508 
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE73508" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 8, batches.size() );
+    }
 
+    @Test
+    public void testBatchJ() throws Exception {
+        //GSE59765
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE59765" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 4, batches.size() );
+    }
+    
+
+    @Test
+    public void testBatchK() throws Exception {
+        //GSE55790 - has some underscore formatted, some not
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE55790" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 7, batches.size() );
+    }
+    
+
+    @Test
+    public void testBatchL() throws Exception {
+        //GSE51827 - has underscore format, three fields, considered unusable (ABI)
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE51827" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 0, batches.size() );
+    }
+    
     @After
     public void teardown() {
         if ( ee != null )
