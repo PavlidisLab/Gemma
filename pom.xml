@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.26.6</version>
+	<version>1.26.7</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -437,6 +437,7 @@
 				<configuration>
 					<quiet>true</quiet>
 					<source>8</source>
+					<doclint>none</doclint>
 					<links>
 						<link>http://chibi.ubc.ca/faculty/pavlidis/basecode/apidocs/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
