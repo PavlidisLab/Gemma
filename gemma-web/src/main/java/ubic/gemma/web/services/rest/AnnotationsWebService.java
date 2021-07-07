@@ -30,7 +30,6 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -39,7 +38,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -56,7 +54,7 @@ import java.util.*;
 @Component
 @Path("/annotations")
 public class AnnotationsWebService extends
-        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+        WebService {
     private static final String URL_PREFIX = "http://";
 
     private OntologyService ontologyService;
@@ -78,7 +76,6 @@ public class AnnotationsWebService extends
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
             TaxonService taxonService ) {
-        super( expressionExperimentService );
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
@@ -129,8 +126,7 @@ public class AnnotationsWebService extends
 
     /**
      * Does a search for datasets containing characteristics matching the given string.
-     * If filter, offset, limit or sort parameters are provided, acts same as
-     * {@link WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) }.
+     * If filter, offset, limit or sort parameters are provided.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of dataset that match the search query.
@@ -159,9 +155,7 @@ public class AnnotationsWebService extends
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
-            return super
-                    .some( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
-                            sr );
+            return Responder.autoCode( expressionExperimentService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters(), expressionExperimentService ) ), sr );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.

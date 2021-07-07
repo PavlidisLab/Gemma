@@ -20,12 +20,10 @@ import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchSe
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -44,8 +42,9 @@ import java.util.ArrayList;
  */
 @Component
 @Path("/genes")
-public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObject, GeneService> {
+public class GeneWebService extends WebService {
 
+    private GeneService service;
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private CompositeSequenceService compositeSequenceService;
@@ -66,7 +65,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             GeneCoexpressionSearchService geneCoexpressionSearchService ) {
-        super( geneService );
+        this.service = geneService;
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.compositeSequenceService = compositeSequenceService;
@@ -95,7 +94,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
      *              <p>
      *              Do not combine different identifiers in one query.
      *              </p>
-     * @see WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see GeneWebService#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{genes: [a-zA-Z0-9\\.,%]+}")
@@ -105,8 +104,8 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             @PathParam("genes") GeneArrayArg genes, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( genes, FilterArg.EMPTY_FILTER, IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
-                SortArg.valueOf( "+id" ), sr );
+        SortArg sort = SortArg.valueOf( "+id" );
+        return Responder.autoCode( service.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), genes.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), service ) ), sr );
     }
 
     /**

@@ -7,7 +7,6 @@ import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
@@ -29,7 +28,7 @@ import java.util.HashSet;
  */
 @Service
 @Path("/taxa")
-public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObject, TaxonService> {
+public class TaxaWebService extends WebService {
 
     private TaxonService taxonService;
     private GeneService geneService;
@@ -51,7 +50,6 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             ExpressionExperimentService expressionExperimentService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             ChromosomeService chromosomeService ) {
-        super( taxonService );
         this.taxonService = taxonService;
         this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
@@ -83,7 +81,6 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                <p>
      *                Do not combine different identifiers in one query.
      *                </p>
-     * @see WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{taxaArg: [^/]+}")
@@ -93,8 +90,8 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             @PathParam("taxaArg") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( taxaArg, FilterArg.EMPTY_FILTER, IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
-                SortArg.valueOf( "+id" ), sr );
+        SortArg sort = SortArg.valueOf( "+id" );
+        return Responder.autoCode( taxonService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), taxaArg.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), taxonService ) ), sr );
     }
 
     /**
@@ -193,8 +190,6 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
-     * filter, offset, limit and sort arguments.
      */
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/datasets")

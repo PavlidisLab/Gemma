@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -44,7 +43,7 @@ import java.util.regex.Pattern;
  */
 @Component
 @Path("/platforms")
-public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, ArrayDesignValueObject, ArrayDesignService> {
+public class PlatformsWebService extends WebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
@@ -67,7 +66,6 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService ) {
-        super( arrayDesignService );
         this.geneService = geneService;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
@@ -75,9 +73,6 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
         this.annotationFileService = annotationFileService;
     }
 
-    /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -88,7 +83,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.all( filter, offset, limit, sort, sr );
+        return Responder.autoCode( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ), sr );
     }
 
     /**
@@ -103,8 +98,6 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
-     *                    HttpServletResponse)
      */
     @GET
     @Path("/{platformArg: [^/]+}")
@@ -118,7 +111,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( datasetsArg, filter, offset, limit, sort, sr );
+        return Responder.autoCode( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), arrayDesignService ) ), sr );
     }
 
     /**

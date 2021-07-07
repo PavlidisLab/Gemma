@@ -26,7 +26,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisV
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -55,12 +54,12 @@ import java.util.Map;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends
-        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+public class DatasetsWebService extends WebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
+    private ExpressionExperimentService service;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
@@ -88,7 +87,7 @@ public class DatasetsWebService extends
             GeneService geneService, SVDService svdService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService,
             OutlierDetectionService outlierDetectionService ) {
-        super( expressionExperimentService );
+        this.service = expressionExperimentService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
@@ -102,7 +101,7 @@ public class DatasetsWebService extends
     }
 
     /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see DatasetsWebService#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -114,7 +113,7 @@ public class DatasetsWebService extends
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.all( filter, offset, limit, sort, sr );
+        return Responder.autoCode( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ), sr );
     }
 
     /**
@@ -129,7 +128,7 @@ public class DatasetsWebService extends
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
+     * @see               DatasetsWebService#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
      *                    HttpServletResponse)
      */
     @GET
@@ -144,7 +143,7 @@ public class DatasetsWebService extends
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( datasetsArg, filter, offset, limit, sort, sr );
+        return Responder.autoCode( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), service ) ), sr );
     }
 
     /**
