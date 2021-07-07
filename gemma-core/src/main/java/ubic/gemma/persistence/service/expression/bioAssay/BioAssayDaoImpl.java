@@ -193,13 +193,4 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
         return new BioAssayValueObject( entity, false );
     }
 
-    @Override
-    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities ) {
-        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
-        for ( BioAssay e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
 }

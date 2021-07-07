@@ -338,15 +338,6 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return new CharacteristicValueObject( entity );
     }
 
-    @Override
-    public Collection<CharacteristicValueObject> loadValueObjects( Collection<Characteristic> entities ) {
-        Collection<CharacteristicValueObject> vos = new LinkedHashSet<>();
-        for ( Characteristic e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
     @SuppressWarnings("SameParameterValue") // Better for general use
     private Collection<Characteristic> getBatchList( Collection<String> batch, String queryString ) {
         //noinspection unchecked

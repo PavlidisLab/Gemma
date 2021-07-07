@@ -135,15 +135,6 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public Collection<ExperimentalFactorValueObject> loadValueObjects( Collection<ExperimentalFactor> entities ) {
-        Collection<ExperimentalFactorValueObject> vos = new LinkedHashSet<>();
-        for ( ExperimentalFactor fv : entities ) {
-            vos.add( new ExperimentalFactorValueObject( fv ) );
-        }
-        return vos;
-    }
-
-    @Override
     public ExperimentalFactor thaw( ExperimentalFactor ef ) {
         ef = this.load( ef.getId() );
         Hibernate.initialize( ef );

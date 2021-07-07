@@ -53,12 +53,4 @@ public class DatabaseEntryDaoImpl extends AbstractVoEnabledDao<DatabaseEntry, Da
         return new DatabaseEntryValueObject( entity );
     }
 
-    @Override
-    public Collection<DatabaseEntryValueObject> loadValueObjects( Collection<DatabaseEntry> entities ) {
-        Collection<DatabaseEntryValueObject> vos = new LinkedHashSet<>();
-        for ( DatabaseEntry e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

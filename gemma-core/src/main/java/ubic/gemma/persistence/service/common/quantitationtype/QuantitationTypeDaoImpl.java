@@ -125,13 +125,4 @@ public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationTy
         return new QuantitationTypeValueObject( entity );
     }
 
-    @Override
-    public Collection<QuantitationTypeValueObject> loadValueObjects( Collection<QuantitationType> entities ) {
-        Collection<QuantitationTypeValueObject> vos = new LinkedHashSet<>();
-        for ( QuantitationType e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
 }

@@ -66,15 +66,6 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
     }
 
     @Override
-    public Collection<AuditEventValueObject> loadValueObjects( Collection<AuditEvent> entities ) {
-        Collection<AuditEventValueObject> vos = new LinkedHashSet<>();
-        for ( AuditEvent e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
-    @Override
     public List<AuditEvent> getEvents( final Auditable auditable ) {
         if ( auditable == null )
             throw new IllegalArgumentException( "Auditable cannot be null" );

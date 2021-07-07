@@ -100,15 +100,6 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public Collection<CompositeSequenceValueObject> loadValueObjects( Collection<CompositeSequence> entities ) {
-        Collection<CompositeSequenceValueObject> vos = new LinkedHashSet<>();
-        for ( CompositeSequence e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
-    @Override
     public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         // Compose query

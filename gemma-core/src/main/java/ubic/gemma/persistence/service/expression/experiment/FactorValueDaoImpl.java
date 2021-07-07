@@ -136,15 +136,6 @@ public class FactorValueDaoImpl extends AbstractVoEnabledDao<FactorValue, Factor
         return new FactorValueValueObject( entity );
     }
 
-    @Override
-    public Collection<FactorValueValueObject> loadValueObjects( Collection<FactorValue> entities ) {
-        Collection<FactorValueValueObject> vos = new LinkedHashSet<>();
-        for ( FactorValue fv : entities ) {
-            vos.add( this.loadValueObject( fv ) );
-        }
-        return vos;
-    }
-
     private void debug( List<?> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nFactorValues found:\n" );

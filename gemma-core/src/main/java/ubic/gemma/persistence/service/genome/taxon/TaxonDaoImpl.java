@@ -133,15 +133,6 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public Collection<TaxonValueObject> loadValueObjects( Collection<Taxon> entities ) {
-        Collection<TaxonValueObject> vos = new LinkedHashSet<>();
-        for ( Taxon e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
-    @Override
     public Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         // Compose query

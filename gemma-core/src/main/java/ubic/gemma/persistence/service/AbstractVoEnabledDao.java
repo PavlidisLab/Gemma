@@ -14,6 +14,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Created by tesarst on 01/06/17.
@@ -204,7 +205,9 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     public abstract VO loadValueObject( O entity );
 
     @Override
-    public abstract Collection<VO> loadValueObjects( Collection<O> entities );
+    public Collection<VO> loadValueObjects( Collection<O> entities ) {
+        return entities.stream().map( this::loadValueObject ).collect( Collectors.toList() );
+    }
 
     /**
      * Should be overridden for any entity that requires special handling of larger amounts of VOs.

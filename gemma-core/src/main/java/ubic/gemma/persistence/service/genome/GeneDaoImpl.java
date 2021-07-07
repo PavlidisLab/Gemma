@@ -548,15 +548,6 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     }
 
     @Override
-    public Collection<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
-        Collection<GeneValueObject> vos = new LinkedHashSet<>();
-        for ( Gene e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
-    @Override
     public Collection<GeneValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
