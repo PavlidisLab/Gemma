@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -56,37 +57,38 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
+    @Transactional
     public void remove( ExperimentalFactor experimentalFactor ) {
-        Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
-                .load( ExperimentalDesign.class, experimentalDesignId );
+        ExperimentalDesign ed = experimentalFactor.getExperimentalDesign();
 
         //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
-        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+        List<ExpressionExperiment> results = this.getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
 
-        if ( results.size() == 0 ) {
-            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
+        if ( results.isEmpty() ) {
+            log.warn( "No expression experiment for experimental design " + ed );
         }
 
-        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
         Session session = this.getSessionFactory().getCurrentSession();
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        // remove associations with the experimental factor in related expression experiments
+        for ( ExpressionExperiment ee : results ) {
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
 
-            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
-            for ( FactorValue factorValue : bm.getFactorValues() ) {
-                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
-                    factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
+                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
+                for ( FactorValue factorValue : bm.getFactorValues() ) {
+                    if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
+                        factorValuesToRemoveFromBioMaterial.add( factorValue );
+                        this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
+                    }
                 }
-            }
 
-            // if there are factor values to remove
-            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                session.update( bm );
+                // if there are factor values to remove
+                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                    session.update( bm );
+                }
             }
         }
 
