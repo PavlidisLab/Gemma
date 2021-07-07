@@ -93,7 +93,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             @PathParam("taxaArg") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( taxaArg, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
+        return super.some( taxaArg, FilterArg.EMPTY_FILTER, IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
                 SortArg.valueOf( "+id" ), sr );
     }
 

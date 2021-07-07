@@ -17,6 +17,8 @@ import java.util.*;
  */
 public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
 
+    public static final FilterArg EMPTY_FILTER = new FilterArg( null, null, null, null, null ) {};
+
     public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
     private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
     private static final String ERROR_MSG_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
@@ -45,11 +47,6 @@ public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     FilterArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
-    }
-
-    public static FilterArg EMPTY_FILTER() {
-        return new FilterArg( null, null, null, null, null ) {
-        };
     }
 
     /**

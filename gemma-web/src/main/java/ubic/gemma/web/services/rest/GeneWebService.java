@@ -105,7 +105,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             @PathParam("genes") GeneArrayArg genes, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( genes, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
+        return super.some( genes, FilterArg.EMPTY_FILTER, IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
                 SortArg.valueOf( "+id" ), sr );
     }
 
