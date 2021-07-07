@@ -12,12 +12,6 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
     protected Long id = null;
 
     /**
-     * A meta information about how many total results are available with the same filters as this
-     * object.
-     */
-    protected int _totalInQuery;
-
-    /**
      * Required when using the implementing classes as a spring beans.
      */
     public IdentifiableValueObject() {
@@ -49,13 +43,5 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
     @Override
     public int hashCode() {
         return 31 * id.hashCode();
-    }
-
-    public final int get_totalInQuery() {
-        return _totalInQuery;
-    }
-
-    protected final void set_totalInQuery( int _totalInQuery ) {
-        this._totalInQuery = _totalInQuery;
     }
 }
