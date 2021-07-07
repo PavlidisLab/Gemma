@@ -39,8 +39,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private static final long serialVersionUID = 622877438067070041L;
 
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Collection<DiffExResultSetSummaryValueObject> resultSets = null;
+    private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
     private Collection<Long> arrayDesignsUsed = null;
     private Long bioAssaySetId;
     private Long sourceExperiment;
