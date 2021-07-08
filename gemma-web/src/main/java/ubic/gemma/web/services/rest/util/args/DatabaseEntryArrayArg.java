@@ -4,8 +4,8 @@ import com.google.common.base.Strings;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry, DatabaseEntryService> {
@@ -36,6 +36,6 @@ public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry,
             return new DatabaseEntryArrayArg( String.format( DatabaseEntryArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatabaseEntryArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new DatabaseEntryArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
+        return new DatabaseEntryArrayArg( StringUtils.splitAndTrim( s ) );
     }
 }

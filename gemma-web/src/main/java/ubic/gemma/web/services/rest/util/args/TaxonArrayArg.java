@@ -5,8 +5,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
@@ -42,7 +42,7 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
             return new TaxonArrayArg( String.format( TaxonArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( TaxonArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new TaxonArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
+        return new TaxonArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
     /**

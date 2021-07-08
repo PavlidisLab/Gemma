@@ -5,8 +5,8 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
@@ -40,7 +40,7 @@ public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
             return new GeneArrayArg( String.format( GeneArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new GeneArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
+        return new GeneArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
     @Override

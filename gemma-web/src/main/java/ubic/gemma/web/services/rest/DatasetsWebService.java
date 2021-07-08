@@ -176,6 +176,7 @@ public class DatasetsWebService extends WebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("factorValues") FactorValueArrayArg factorValues,
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ), sr );

@@ -10,13 +10,14 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends StringArrayArg {
+public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends ArrayArg<String> {
 
     protected Class<?> argValueClass = null;
     protected String argValueName = null;
@@ -148,4 +149,5 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
             return null;
         }
     }
+
 }

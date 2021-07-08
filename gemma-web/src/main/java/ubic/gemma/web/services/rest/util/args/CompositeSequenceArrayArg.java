@@ -6,8 +6,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CompositeSequenceArrayArg
@@ -36,7 +36,7 @@ public class CompositeSequenceArrayArg
      * Used by RS to parse value of request parameters.
      *
      * @param  s the request arrayCompositeSequence argument
-     * @return   an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from
+     * @return an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from
      *           the input string,
      *           or a malformed ArrayCompositeSequenceArg that will throw an {@link GemmaApiException} when accessing
      *           its value, if the
@@ -48,7 +48,7 @@ public class CompositeSequenceArrayArg
             return new CompositeSequenceArrayArg( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new CompositeSequenceArrayArg( Arrays.asList( ArrayArg.splitString( s ) ) );
+        return new CompositeSequenceArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
