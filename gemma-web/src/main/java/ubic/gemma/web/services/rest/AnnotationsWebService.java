@@ -30,6 +30,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -38,6 +39,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -88,7 +90,7 @@ public class AnnotationsWebService extends
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject all( // Params:
+    public ResponseDataObject<WellComposedErrorBody> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
@@ -100,7 +102,7 @@ public class AnnotationsWebService extends
     @GET
     @Path("/search/")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject emptySearch( // Params:
+    public ResponseDataObject<WellComposedErrorBody> emptySearch( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.code400( "Search query empty.", sr );
@@ -117,7 +119,7 @@ public class AnnotationsWebService extends
     @GET
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject search( // Params:
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> search( // Params:
             @PathParam("query") StringArrayArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -136,7 +138,7 @@ public class AnnotationsWebService extends
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasets( // Params:
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -147,7 +149,7 @@ public class AnnotationsWebService extends
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.autoCode( foundIds, sr );
+            return Responder.autoCode( Collections.emptyList(), sr );
         }
 
         // If there are filters other than the search query, intersect the results.
@@ -168,10 +170,10 @@ public class AnnotationsWebService extends
      * see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/search/{query}/datasets")
+    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxonDatasets( // Params:
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
@@ -183,7 +185,7 @@ public class AnnotationsWebService extends
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.autoCode( foundIds, sr );
+            return Responder.autoCode( Collections.emptyList(), sr );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
@@ -238,8 +240,8 @@ public class AnnotationsWebService extends
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private Collection<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) {
-        Collection<AnnotationSearchResultValueObject> vos = new LinkedList<>();
+    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) {
+        List<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
             if ( query.startsWith( AnnotationsWebService.URL_PREFIX ) ) {

@@ -17,10 +17,14 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.BoolArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -29,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.Set;
 
 /**
  * RESTful interface for phenotypes.
@@ -61,7 +66,7 @@ public class PhenotypeWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject all( // Params:
+    public ResponseDataObject<WellComposedErrorBody> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
@@ -79,7 +84,7 @@ public class PhenotypeWebService extends WebService {
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject evidence( // Params:
+    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
             @QueryParam("database") String database, // required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
@@ -100,7 +105,7 @@ public class PhenotypeWebService extends WebService {
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject dumps( // Params:
+    public ResponseDataObject<Set<DumpsValueObject>> dumps( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
         return Responder.autoCode( this.phenotypeAssociationManagerService.helpFindAllDumps(), sr );

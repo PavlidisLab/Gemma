@@ -24,8 +24,13 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -43,9 +48,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * RESTful interface for datasets.
@@ -100,13 +103,10 @@ public class DatasetsWebService extends WebService {
         this.outlierDetectionService = outlierDetectionService;
     }
 
-    /**
-     * @see DatasetsWebService#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject all( // Params:
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> all( // Params:
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -128,14 +128,12 @@ public class DatasetsWebService extends WebService {
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               DatasetsWebService#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg,
-     *                    HttpServletResponse)
      */
     @GET
     @Path("/{datasetsArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasets( // Params:
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
             @PathParam("datasetsArg") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -153,11 +151,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
-    public ResponseDataObject datasetPlatforms( // Params:
+    public ResponseDataObject<List<ArrayDesignValueObject>> datasetPlatforms( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -171,10 +169,10 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/samples")
+    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetSamples( // Params:
+    public ResponseDataObject<List<BioAssayValueObject>> datasetSamples( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @QueryParam("factorValues") FactorValueArrayArg factorValues,
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -189,10 +187,10 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.\\-]+}/analyses/differential")
+    @Path("/{datasetArg: [\\w.\\-]+}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetDiffAnalysis( // Params:
+    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -211,10 +209,10 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.-]+}/annotations")
+    @Path("/{datasetArg: [\\w.-]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetAnnotations( // Params:
+    public ResponseDataObject<Set<AnnotationValueObject>> datasetAnnotations( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -229,7 +227,7 @@ public class DatasetsWebService extends WebService {
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.\\-]+}/data")
+    @Path("/{datasetArg: [\\w.\\-]+}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
@@ -248,7 +246,7 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/design")
+    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
@@ -267,15 +265,15 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/hasbatch")
+    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetHasBatch( // Params:
+    public ResponseDataObject<Boolean> datasetHasBatch( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
-        return Responder.autoCode( new Boolean( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) ), sr );
+        return Responder.autoCode( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ), sr );
     }
 
     /**
@@ -285,10 +283,10 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/svd")
+    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetSVD( // Params:
+    public ResponseDataObject<SimpleSVDValueObject> datasetSVD( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -333,7 +331,7 @@ public class DatasetsWebService extends WebService {
     @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressions( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressions( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
@@ -375,7 +373,7 @@ public class DatasetsWebService extends WebService {
     @Path("/{datasets: [^/]+}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressionsPca( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
@@ -419,7 +417,7 @@ public class DatasetsWebService extends WebService {
     @Path("/{datasets: [^/]+}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressionsDiffEx( // Params:
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsDiffEx( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
@@ -468,11 +466,11 @@ public class DatasetsWebService extends WebService {
         }
     }
 
-    private Collection getDiffExVos( Long eeId, int offset, int limit ) {
-        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
+    private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
+        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
         if ( map == null || map.size() < 1 ) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return map.get( map.keySet().iterator().next() );
     }
@@ -482,13 +480,13 @@ public class DatasetsWebService extends WebService {
         /**
          * Order same as the rows of the v matrix.
          */
-        private Long[] bioMaterialIds;
+        private final Long[] bioMaterialIds;
 
         /**
          * An array of values representing the fraction of the variance each component accounts for
          */
-        private Double[] variances;
-        private DoubleMatrix<Long, Integer> vMatrix;
+        private final Double[] variances;
+        private final DoubleMatrix<Long, Integer> vMatrix;
 
         SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
             this.bioMaterialIds = bioMaterialIds;

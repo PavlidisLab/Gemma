@@ -100,7 +100,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public List<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );

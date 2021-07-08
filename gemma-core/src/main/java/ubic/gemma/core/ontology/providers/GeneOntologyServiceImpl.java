@@ -35,7 +35,6 @@ import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.SearchIndex;
@@ -512,8 +511,8 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms ) {
-        Collection<GeneOntologyTermValueObject> vos = new ArrayList<>( terms.size() );
+    public List<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms ) {
+        List<GeneOntologyTermValueObject> vos = new ArrayList<>( terms.size() );
         for ( OntologyTerm term : terms ) {
             vos.add( this.getValueObject( term ) );
         }
@@ -521,7 +520,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene ) {
+    public List<GeneOntologyTermValueObject> getValueObjects( Gene gene ) {
         return gene == null ? null : this.getValueObjects( this.getGOTerms( gene ) );
     }
 

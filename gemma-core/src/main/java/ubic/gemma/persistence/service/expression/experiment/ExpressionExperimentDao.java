@@ -145,7 +145,7 @@ public interface ExpressionExperimentDao
 
     ExpressionExperimentValueObject loadValueObject( Long eeId );
 
-    Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
+    List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
     Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids );
@@ -161,7 +161,7 @@ public interface ExpressionExperimentDao
      *                 description (no but seriously do look it might not work as you would expect).
      */
     @Override
-    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );

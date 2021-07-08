@@ -133,7 +133,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );

@@ -25,10 +25,7 @@ import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
+import java.util.*;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities. (Most of these methods are not secured, but
@@ -58,11 +55,11 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Given set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      *
-     * @param  phenotypesValuesUri the roots phenotype of the query
      * @param  evidenceFilter      can specify a taxon and to show modifiable evidence (optional)
+     * @param  phenotypesValuesUri the roots phenotype of the query
      * @return                     A collection of the genes found
      */
-    Collection<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+    Set<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri );
 
     /**
@@ -146,11 +143,11 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      *
-     * @param  taxonId can be null to not constrain by taxon
      * @param  query   query
+     * @param  taxonId can be null to not constrain by taxon
      * @return         list of Genes
      */
-    Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
+    List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
 
     /**
      * Load an evidence
@@ -190,7 +187,7 @@ public interface PhenotypeAssociationManagerService {
      *
      * @return A collection of objects with information about external data sources in Phenocarta
      */
-    Collection<DumpsValueObject> helpFindAllDumps();
+    Set<DumpsValueObject> helpFindAllDumps();
 
     /**
      * use if we want to reimport data from a specific external Database
@@ -200,7 +197,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  externalDatabaseName database name
      * @return                      evidence VOs
      */
-    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
+    Set<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
             String externalDatabaseName, Integer limit, int start );
 
     /**

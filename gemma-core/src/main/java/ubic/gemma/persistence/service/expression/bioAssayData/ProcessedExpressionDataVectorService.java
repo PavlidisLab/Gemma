@@ -79,7 +79,7 @@ public interface ProcessedExpressionDataVectorService
      * @return value objects containing structured information about the expression levels of given genes
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
+    List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode );
 
     /**
@@ -93,7 +93,7 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
-    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
+    List<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
             int threshold, int component, boolean keepGeneNonSpecific, String consolidateMode );
 
     /**
@@ -108,7 +108,7 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
-    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
+    List<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
             Long diffExResultSetId, double threshold, int max, boolean keepGeneNonSpecific, String consolidateMode );
 
     /**

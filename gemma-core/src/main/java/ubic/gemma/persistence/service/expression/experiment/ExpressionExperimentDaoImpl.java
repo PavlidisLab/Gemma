@@ -18,17 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
@@ -724,7 +714,7 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * @param  Id if of the expression experiment
-     * @return    count of RAW vectors.
+     * @return count of RAW vectors.
      */
     @Override
     public Integer getDesignElementDataVectorCountById( long Id ) {
@@ -1022,18 +1012,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
+    public List<ExpressionExperimentValueObject> loadAllValueObjects() {
         return this.loadValueObjectsPreFilter( 0, -1, null, true, null );
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
             boolean descending ) {
         return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, null, true );
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
         ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
@@ -1041,7 +1031,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
             boolean descending, Taxon taxon ) {
 
         final ObjectFilter[] filter = new ObjectFilter[] {
@@ -1137,18 +1127,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
+    public List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
         return this.loadValueObjects( EntityUtils.getIds( entities ), false );
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        boolean isList = ( ids instanceof List );
+    public List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
         if ( ids == null || ids.size() == 0 ) {
-            if ( isList ) {
-                return Collections.emptyList();
-            }
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
 
         List<Long> idl = new ArrayList<>( ids );
@@ -1157,10 +1143,10 @@ public class ExpressionExperimentDaoImpl
         final ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( "id", idl, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS ) };
 
-        Collection<ExpressionExperimentValueObject> vos = this
+        List<ExpressionExperimentValueObject> vos = this
                 .loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
 
-        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<>();
+        List<ExpressionExperimentValueObject> finalValues = new ArrayList<>( vos.size() );
         if ( maintainOrder ) {
             Map<Long, ExpressionExperimentValueObject> map = this.getExpressionExperimentValueObjectMap( vos );
             for ( Long id : ids ) {
@@ -1174,10 +1160,6 @@ public class ExpressionExperimentDaoImpl
 
         if ( finalValues.isEmpty() ) {
             AbstractDao.log.error( "No values were retrieved for the ids provided" );
-        }
-
-        if ( isList ) {
-            return new ArrayList<>( finalValues );
         }
 
         return finalValues;
@@ -1207,10 +1189,10 @@ public class ExpressionExperimentDaoImpl
      *                 E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
      * @param  asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
      * @param  filter  see this#formRestrictionClause(ArrayList) filters argument for description.
-     * @return         list of value objects representing the EEs that matched the criteria.
+     * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
 
         String orderByProperty = this.getOrderByProperty( orderBy );
@@ -1470,7 +1452,7 @@ public class ExpressionExperimentDaoImpl
      *                         description.
      * @param  orderByProperty the property to order by.
      * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for EEVO retrieval.
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
@@ -1551,7 +1533,7 @@ public class ExpressionExperimentDaoImpl
      * "curationDetails.lastTroubledEvent.date"
      *
      * @param  orderBy the order field requested by front end or API.
-     * @return         a string that can be used as the orderByProperty param in
+     * @return a string that can be used as the orderByProperty param in
      *                 {@link this#getLoadValueObjectsQueryString(List, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
@@ -1585,7 +1567,7 @@ public class ExpressionExperimentDaoImpl
      * Retrieve the IDs of experiments related via splitting of a source experiment.
      *
      * @param  id of the experiment
-     * @return    ids
+     * @return ids
      */
     private Collection<ExpressionExperimentValueObject> getOtherParts( Long id ) {
         List<?> o = this.getSessionFactory().getCurrentSession().createQuery(
@@ -1613,10 +1595,10 @@ public class ExpressionExperimentDaoImpl
      * @param  disjunction true to signal that the filters property is a disjunction (OR). False will cause the
      *                     filters property to be treated as a conjunction (AND).
      *                     If you are passing a single filter, using <code>false</code> is slightly more effective;
-     * @return             a hibernate Query object ready to be used for EEVO retrieval.
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     @SuppressWarnings("SameParameterValue") // Better reusability
-    private Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit,
+    private List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit,
             String orderBy, boolean asc, ObjectFilter[] filters, boolean disjunction ) {
         if ( filters == null ) {
             return this.loadValueObjectsPreFilter( offset, limit, orderBy, asc, null );
@@ -1685,7 +1667,7 @@ public class ExpressionExperimentDaoImpl
      * @param  orderByProperty order by property.
      * @param  orderDesc       true to order by the orderByProperty in descending order.
      * @param  queryString     the query string postprocess.
-     * @return                 finished query ready to be executed.
+     * @return finished query ready to be executed.
      */
     private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
             String queryString ) {
@@ -1868,7 +1850,7 @@ public class ExpressionExperimentDaoImpl
      * Method for the front end display
      *
      * @param  ee expression experiment to be thawed
-     * @return    thawed expression experiment.
+     * @return thawed expression experiment.
      */
     private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
         if ( ee == null ) {

@@ -31,10 +31,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author klc
@@ -237,13 +234,13 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
     }
 
     @Override
-    public Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+    public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
         return this.arrayDesignDao.loadValueObjectsForEE( eeId );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
         return this.arrayDesignDao.loadValueObjectsByIds( ids );
     }
 

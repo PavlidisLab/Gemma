@@ -20,6 +20,10 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -34,6 +38,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -76,7 +81,7 @@ public class PlatformsWebService extends WebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject all( // Params:
+    public ResponseDataObject<List<ArrayDesignValueObject>> all( // Params:
             @QueryParam("filter") @DefaultValue("") PlatformFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -103,7 +108,7 @@ public class PlatformsWebService extends WebService {
     @Path("/{platformArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platforms( // Params:
+    public ResponseDataObject<List<ArrayDesignValueObject>> platforms( // Params:
             @PathParam("platformArg") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -125,17 +130,17 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/datasets")
+    @Path("/{platformArg: [a-zA-Z0-9_.]+}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platformDatasets( // Params:
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> platformDatasets( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( platformArg
-                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
+                        .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
                 sr );
     }
 
@@ -150,10 +155,10 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements")
+    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platformElements( // Params:
+    public ResponseDataObject<List<CompositeSequenceValueObject>> platformElements( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -178,10 +183,10 @@ public class PlatformsWebService extends WebService {
      *                    </p>
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements/{probesArg: [^/]+}")
+    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements/{probesArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platformElement( // Params:
+    public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
             @PathParam("probesArg") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -191,16 +196,15 @@ public class PlatformsWebService extends WebService {
         try {
             probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
             return Responder.autoCode( compositeSequenceService
-                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
-                            probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ),
+                            .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
+                                    probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ),
                     sr );
         } catch ( QueryException e ) {
             if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
             }
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
+            throw new GemmaApiException( Response.Status.BAD_REQUEST,
                     FilterArg.ERROR_MSG_MALFORMED_REQUEST );
-            return Responder.code( error.getStatus(), error, sr );
         }
     }
 
@@ -219,10 +223,10 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}/genes")
+    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements/{probeArg: [a-zA-Z0-9_%2F.-]+}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platformElementGenes( // Params:
+    public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
             @PathParam("probeArg") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -231,8 +235,8 @@ public class PlatformsWebService extends WebService {
     ) {
         probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
         return Responder.autoCode( geneService.loadValueObjects( compositeSequenceService
-                .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
-                        limit.getValue() ) ),
+                        .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
+                                limit.getValue() ) ),
                 sr );
     }
 
@@ -241,10 +245,10 @@ public class PlatformsWebService extends WebService {
      *
      * @param  platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                     is more efficient. Only platforms that user has access to will be available.
-     * @return             the content of the annotation file of the given platform.
+     * @return the content of the annotation file of the given platform.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_\\.]+}/annotations")
+    @Path("/{platformArg: [a-zA-Z0-9_.]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response platformAnnotations( // Params:
@@ -258,7 +262,7 @@ public class PlatformsWebService extends WebService {
      * Creates a response with the annotation file for given array design
      *
      * @param  arrayDesign the platform to fetch and output the annotation file for.
-     * @return             a Response object containing the annotation file.
+     * @return a Response object containing the annotation file.
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )

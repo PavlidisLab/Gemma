@@ -50,7 +50,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     }
 
     @Override
-    public Collection<GeeqValueObject> loadValueObjects( Collection<Geeq> entities ) {
+    public List<GeeqValueObject> loadValueObjects( Collection<Geeq> entities ) {
         //noinspection unchecked
         List<Object[]> rows = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select GQ from Geeq as GQ where GQ.id in (:ids) " )
@@ -60,7 +60,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     }
 
     @Override
-    public Collection<GeeqValueObject> loadAllValueObjects() {
+    public List<GeeqValueObject> loadAllValueObjects() {
         //noinspection unchecked
         List<Object[]> rows = this.getSessionFactory().getCurrentSession().createQuery( "select GQ from Geeq as GQ" )
                 .list();
@@ -69,13 +69,13 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     }
 
     @Override
-    public Collection<GeeqValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public List<GeeqValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         throw new NotYetImplementedException(
                 "filtering not implemented for Geeq VOs, as they should come with EEs (filter the EEs instead)." );
     }
 
-    private Collection<GeeqValueObject> createVosFromRows( List<Object[]> rows ) {
+    private List<GeeqValueObject> createVosFromRows( List<Object[]> rows ) {
         ArrayList<GeeqValueObject> vos = new ArrayList<>( rows.size() );
         for ( Object[] row : rows ) {
             vos.add( new GeeqValueObject( row ) );

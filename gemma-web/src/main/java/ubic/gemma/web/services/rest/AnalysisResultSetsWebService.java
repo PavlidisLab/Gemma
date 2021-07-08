@@ -70,13 +70,12 @@ public class AnalysisResultSetsWebService extends WebService {
     /**
      * Retrieve all {@link AnalysisResultSet} matching a set of criteria.
      *
-     * @param datasetIds filter result sets that belong to any of the provided dataset identifiers, or null to ignore
-     * @param externalIds filter by associated datasets with given external identifiers, or null to ignore
-     * @param servlet
+     * @param datasets filter result sets that belong to any of the provided dataset identifiers, or null to ignore
+     * @param databaseEntries filter by associated datasets with given external identifiers, or null to ignore
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<?> findAll(
+    public ResponseDataObject<List<ExpressionAnalysisResultSetValueObject>> findAll(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("offset") @DefaultValue("0") IntArg offset,
@@ -99,14 +98,11 @@ public class AnalysisResultSetsWebService extends WebService {
 
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
-     *
-     * @param analysisResultSet
-     * @return
      */
     @GET
     @Path("/{analysisResultSet:[^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<?> findById(
+    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
         ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
@@ -119,10 +115,6 @@ public class AnalysisResultSetsWebService extends WebService {
 
     /**
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
-     *
-     * @param analysisResultSet
-     * @param servlet
-     * @return
      */
     @GET
     @Path("/{analysisResultSet:[^/]+}")

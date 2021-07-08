@@ -67,7 +67,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @return a collection of EEVOs matching the input parameters.
      */
-    public Collection<ExpressionExperimentValueObject> getTaxonDatasets(
+    public List<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
             List<ObjectFilter[]> filters, int offset, int limit, String sort, boolean sortAsc ) {
         if ( filters == null ) {
@@ -92,7 +92,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size'
      *                           parameters.
      */
-    public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
+    public List<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
             int size ) {
         // Taxon argument
@@ -113,7 +113,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         region.setNucleotideLength( size );
         // region.setStrand( strand );
 
-        Collection<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
+        List<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
         if ( GVOs == null ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                     "No genes found on chromosome " + chromosomeName + " between positions " + start + " and " + start

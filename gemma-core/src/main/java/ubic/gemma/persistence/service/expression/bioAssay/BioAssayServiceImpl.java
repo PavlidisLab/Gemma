@@ -25,6 +25,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,7 +99,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
     }
 
     @Override
-    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
         return entities == null ? null : bioAssayDao.loadValueObjects( entities, basic );
     }
 

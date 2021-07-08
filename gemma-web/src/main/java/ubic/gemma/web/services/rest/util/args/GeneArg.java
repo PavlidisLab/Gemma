@@ -8,10 +8,13 @@ import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +61,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param geneService service that will be used to retrieve the persistent Gene object.
      * @return a collection of Gene value objects..
      */
-    public Collection<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
+    public List<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
             TaxonArg<?> taxonArg ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
         return this.getValueObjects( geneService, taxon );
@@ -72,7 +75,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param taxon                              the taxon to limit the search to. Can be null.
      * @return collection of gene evidence VOs matching the criteria, or an error response, if there is an error.
      */
-    public Object getGeneEvidence( GeneService geneService,
+    public List<GeneEvidenceValueObject> getGeneEvidence( GeneService geneService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) {
         Gene gene = this.getEntity( geneService );
         return phenotypeAssociationManagerService
@@ -83,7 +86,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param service the service used to load the Gene value objects.
      * @return all genes that match the value of the GeneArg.
      */
-    public abstract Collection<GeneValueObject> getValueObjects( GeneService service );
+    public abstract List<GeneValueObject> getValueObjects( GeneService service );
 
     /**
      * Returns all known locations of the gene(s) that this GeneArg represents.
@@ -91,7 +94,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param geneService service that will be used to retrieve the persistent Gene object.
      * @return collection of physical location objects.
      */
-    public abstract Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService );
+    public abstract List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService );
 
     /**
      * Returns all known locations of the gene that this GeneArg represents.
@@ -100,7 +103,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param taxon       the taxon to limit the search to. Can be null.
      * @return collection of physical location objects.
      */
-    public abstract Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon );
+    public abstract List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon );
 
     /**
      * Returns GO terms for the gene that this GeneArg represents.
@@ -108,7 +111,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param geneService service that will be used to retrieve the persistent Gene object.
      * @return collection of physical location objects.
      */
-    public Collection<GeneOntologyTermValueObject> getGoTerms( GeneService geneService,
+    public List<GeneOntologyTermValueObject> getGoTerms( GeneService geneService,
             GeneOntologyService geneOntologyService ) {
         Gene gene = this.getEntity( geneService );
         return geneOntologyService.getValueObjects( gene );
@@ -134,7 +137,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @param taxon   the taxon to limit the genes search to.
      * @return collection of Gene Value Objects.
      */
-    private Collection<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
+    private List<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
         return this.getValueObjects( service ).stream()
                 .filter( vo -> Objects.equals( vo.getTaxonId(), taxon.getId() ) )
                 .collect( Collectors.toList() );

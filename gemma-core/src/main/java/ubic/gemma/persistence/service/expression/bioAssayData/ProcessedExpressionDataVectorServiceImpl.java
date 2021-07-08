@@ -98,10 +98,10 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
+    public List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode ) {
         Collection<DoubleVectorValueObject> vectors = this.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
-        Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
+        List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
@@ -134,10 +134,10 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca(
+    public List<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca(
             Collection<ExpressionExperiment> ees, int limit, int component, boolean keepGeneNonSpecific,
             String consolidateMode ) {
-        Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
+        List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
@@ -151,10 +151,10 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx(
+    public List<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx(
             Collection<ExpressionExperiment> ees, Long diffExResultSetId, double threshold, int max,
             boolean keepGeneNonSpecific, String consolidateMode ) {
-        Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>();
+        List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {

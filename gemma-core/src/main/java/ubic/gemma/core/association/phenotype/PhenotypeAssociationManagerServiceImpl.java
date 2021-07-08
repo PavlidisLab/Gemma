@@ -205,7 +205,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+    public Set<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
 
         this.addDefaultExcludedDatabases( evidenceFilter );
@@ -408,7 +408,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
+    public List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
 
         if ( query == null || query.length() == 0 ) {
             throw new IllegalArgumentException( "No search query provided" );
@@ -426,7 +426,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
-            return new HashSet<>();
+            return Collections.emptyList();
         }
 
         for ( SearchResult sr : geneSearchResults ) {
@@ -446,7 +446,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             geneEvidenceValueObjects.add( geneEvidenceValueObject );
         }
 
-        Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<>();
+        List<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<>();
 
         for ( GeneEvidenceValueObject gene : geneEvidenceValueObjects ) {
             if ( gene.getEvidence() != null && gene.getEvidence().size() != 0 ) {
@@ -505,9 +505,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
-    public Collection<DumpsValueObject> helpFindAllDumps() {
+    public Set<DumpsValueObject> helpFindAllDumps() {
 
-        Collection<DumpsValueObject> dumpsValueObjects = new HashSet<>();
+        Set<DumpsValueObject> dumpsValueObjects = new HashSet<>();
 
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<>(
                 this.phenoAssocService.loadStatisticsOnExternalDatabases(
@@ -528,7 +528,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
+    public Set<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
             String externalDatabaseName, Integer limit, int start ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit, start );
@@ -1205,10 +1205,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param  phenotypeAssociations The List of entities we need to convert to value object
      * @return                       Collection<EvidenceValueObject> the converted results
      */
-    private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> convert2ValueObjects(
+    private Set<EvidenceValueObject<? extends PhenotypeAssociation>> convert2ValueObjects(
             Collection<? extends PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> returnEvidenceVO = new HashSet<>();
+        Set<EvidenceValueObject<? extends PhenotypeAssociation>> returnEvidenceVO = new HashSet<>();
 
         if ( phenotypeAssociations != null ) {
 
@@ -1481,11 +1481,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return null;
     }
 
-    private Collection<GeneEvidenceValueObject> filterGenesWithPhenotypes(
+    private Set<GeneEvidenceValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             Map<String, Set<String>> phenotypesWithChildren ) {
 
-        Collection<GeneEvidenceValueObject> genesVO = new HashSet<>();
+        Set<GeneEvidenceValueObject> genesVO = new HashSet<>();
 
         for ( GeneEvidenceValueObject geneEvidenceValueObject : geneEvidenceValueObjects ) {
 
