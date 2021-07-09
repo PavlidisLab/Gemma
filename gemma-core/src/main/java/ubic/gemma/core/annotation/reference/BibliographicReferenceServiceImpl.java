@@ -74,7 +74,7 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    public Collection<BibliographicReferenceValueObject> loadAllValueObjects() {
+    public List<BibliographicReferenceValueObject> loadAllValueObjects() {
         return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }
 
@@ -294,10 +294,10 @@ public class BibliographicReferenceServiceImpl
         return this.bibliographicReferenceDao.thaw( bibliographicReferences );
     }
 
-    private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+    private List<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
             Collection<BibliographicReference> bibRefs ) {
         if ( bibRefs.isEmpty() ) {
-            return new ArrayList<>();
+            Collections.emptyList();
         }
         Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
 
@@ -309,7 +309,7 @@ public class BibliographicReferenceServiceImpl
         this.populateRelatedExperiments( bibRefs, idToBibRefVO );
         this.populateBibliographicPhenotypes( idToBibRefVO );
 
-        return idToBibRefVO.values();
+        return new ArrayList<>( idToBibRefVO.values() );
     }
 
     private void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {

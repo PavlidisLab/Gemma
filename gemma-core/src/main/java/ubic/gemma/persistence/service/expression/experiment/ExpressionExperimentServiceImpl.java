@@ -471,9 +471,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
+    public Set<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = this.load( eeId );
-        Collection<AnnotationValueObject> annotations = new HashSet<>();
+        Set<AnnotationValueObject> annotations = new HashSet<>();
 
         Collection<String> seenTerms = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
@@ -865,7 +865,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
+    public List<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
     }
@@ -1074,7 +1074,7 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }

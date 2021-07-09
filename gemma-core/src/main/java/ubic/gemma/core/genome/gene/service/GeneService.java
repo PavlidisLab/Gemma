@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -141,7 +142,7 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      */
     Collection<Gene> getGenesByTaxon( Taxon taxon );
 
-    Collection<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
+    List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
     /**
      * @param geneId gene id

@@ -2,13 +2,16 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -21,6 +24,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * RESTful interface for taxa.
@@ -29,7 +34,7 @@ import java.util.HashSet;
  */
 @Service
 @Path("/taxa")
-public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObject, TaxonService> {
+public class TaxaWebService extends WebService {
 
     private TaxonService taxonService;
     private GeneService geneService;
@@ -51,7 +56,6 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
             ExpressionExperimentService expressionExperimentService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             ChromosomeService chromosomeService ) {
-        super( taxonService );
         this.taxonService = taxonService;
         this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
@@ -66,7 +70,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject all( // Params:
+    public ResponseDataObject<List<TaxonValueObject>> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( taxonService.loadAllValueObjects(), sr );
@@ -83,18 +87,17 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                <p>
      *                Do not combine different identifiers in one query.
      *                </p>
-     * @see WebServiceWithFiltering#some(AbstractEntityArrayArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
-    @Path("/{taxaArg: [^/]+}")
+    @Path("/{taxa}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxa( // Params:
-            @PathParam("taxaArg") TaxonArrayArg taxaArg, // Optional
+    public ResponseDataObject<List<TaxonValueObject>> taxa( // Params:
+            @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( taxaArg, FilterArg.EMPTY_FILTER, IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
-                SortArg.valueOf( "+id" ), sr );
+        SortArg sort = SortArg.valueOf( "+id" );
+        return Responder.autoCode( taxonService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), taxaArg.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), taxonService ) ), sr );
     }
 
     /**
@@ -109,11 +112,11 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * @return GeneValue objects of the genes in the region.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9\\.]+}/genes")
+    @Path("/{taxon}/chromosomes/{chromosome}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject taxonChromosomeGenes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("chromosomeArg") String chromosomeName, // Required
+    public ResponseDataObject<List<GeneValueObject>> taxonChromosomeGenes( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("chromosome") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
             @QueryParam("start") LongArg start, // Required
             @QueryParam("size") IntArg size, // Required
@@ -134,12 +137,12 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}")
+    @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject genes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+    public ResponseDataObject<List<GeneValueObject>> genes( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg ), sr );
@@ -154,12 +157,12 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
+    @Path("/{taxon}/genes/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject genesEvidence( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+    public ResponseDataObject<List<GeneEvidenceValueObject>> genesEvidence( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
@@ -176,12 +179,12 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/locations")
+    @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject genesLocation( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+    public ResponseDataObject<List<PhysicalLocationValueObject>> genesLocation( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
@@ -193,15 +196,13 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
-     * filter, offset, limit and sort arguments.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/datasets")
+    @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxonDatasets( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -217,6 +218,9 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * Loads all phenotypes for the given taxon. Unfortunately, pagination is not possible as the
      * phenotypes are loaded in a tree structure.
      *
+     * TODO: We need to split this in two methods because otherwise we cannot infer the type this endpoint is producing
+     *       and provide a backward compatible switch.
+     *
      * @param taxonArg     the taxon to list the phenotypes for.
      * @param editableOnly whether to only list editable phenotypes.
      * @param tree         whether the returned structure should be an actual tree (nested JSON objects). Default is
@@ -226,11 +230,11 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * TreeCharacteristicValueObjects, if the
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/phenotypes")
+    @Path("/{taxon}/phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxonPhenotypes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+    public ResponseDataObject<?> taxonPhenotypes( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @QueryParam("tree") @DefaultValue("false") BoolArg tree, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
@@ -253,11 +257,11 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * @return a list of genes associated with given phenotypes.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/phenotypes/candidates")
+    @Path("/{taxon}/phenotypes/candidates")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject findCandidateGenes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+    public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenes( // Params:
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting)
@@ -276,9 +280,9 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * @throws GemmaApiException in case one of the given phenotypes was not found, or one of the given arguments
      *                           is malformed.
      */
-    private ResponseDataObject getCandidateGenes( TaxonArg<Object> taxonArg, BoolArg editableOnly,
+    private ResponseDataObject<Set<GeneEvidenceValueObject>> getCandidateGenes( TaxonArg<Object> taxonArg, BoolArg editableOnly,
             StringArrayArg phenotypes, HttpServletResponse sr ) {
-        Object response;
+        Set<GeneEvidenceValueObject> response;
         try {
             response = this.phenotypeAssociationManagerService.findCandidateGenes(
                     new EvidenceFilter( taxonArg.getEntity( taxonService ).getId(), editableOnly.getValue() ),

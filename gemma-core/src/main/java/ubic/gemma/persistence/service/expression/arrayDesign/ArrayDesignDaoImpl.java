@@ -498,7 +498,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
         if ( ids == null || ids.isEmpty() ) {
             return new ArrayList<>();
         }
@@ -507,7 +507,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS );
         Query queryObject = this.getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
 
-        Collection<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( eeCounts, queryObject, 0 );
+        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( eeCounts, queryObject, 0 );
 
         populateBlacklisted( results );
         return results;
@@ -532,7 +532,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+    public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
         if ( eeId == null ) {
             return new ArrayList<>();
         }
@@ -940,7 +940,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Use {@link #loadValueObjectsByIds(Collection)} instead if possible.
      */
     @Override
-    public Collection<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
+    public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
         return this.loadValueObjectsByIds( EntityUtils.getIds( entities ) );
     }
 
@@ -948,9 +948,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Loads value objects for all array designs, and populates the EE counts.
      */
     @Override
-    public Collection<ArrayDesignValueObject> loadAllValueObjects() {
+    public List<ArrayDesignValueObject> loadAllValueObjects() {
         Query queryObject = this.getLoadValueObjectsQueryString( null, null, false );
-        Collection<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject, 0 );
+        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), queryObject, 0 );
         this.populateBlacklisted( results );
         return results;
     }
@@ -966,7 +966,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return         list of value objects representing the ADs that matched the criteria.
      */
     @Override
-    public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         String orderByProperty = this.getOrderByProperty( orderBy );
 
@@ -1144,14 +1144,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     /**
      * Process query results for LoadAllValueObjects or LoadValueObjects
+     * @return
      */
-    private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
+    private List<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
             final Query query, int totalCnt ) {
         query.setCacheable( true );
 
         //noinspection unchecked
         List<Object[]> list = query.list();
-        Collection<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
+        List<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
 
         for ( Object[] row : list ) {
             ArrayDesignValueObject vo = new ArrayDesignValueObject( row, totalCnt );

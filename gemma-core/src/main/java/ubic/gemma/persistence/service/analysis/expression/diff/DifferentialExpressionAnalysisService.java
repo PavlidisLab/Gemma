@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -123,11 +124,11 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit );
 
 }

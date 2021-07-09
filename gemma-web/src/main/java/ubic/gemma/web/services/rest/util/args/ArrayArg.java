@@ -19,17 +19,4 @@ public abstract class ArrayArg<T> extends AbstractArg<List<T>> {
     protected ArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
-
-    /**
-     * Splits string by the ',' comma character and trims the resulting strings.
-     *
-     * @param  arg the string to process
-     * @return trimmed strings exploded from the input.
-     */
-    protected static String[] splitString( String arg ) {
-        String[] array = arg.split( "," );
-        for ( int i = 0; i < array.length; i++ )
-            array[i] = array[i].trim();
-        return array;
-    }
 }

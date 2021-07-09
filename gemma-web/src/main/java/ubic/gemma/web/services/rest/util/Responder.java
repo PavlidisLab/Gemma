@@ -24,7 +24,7 @@ public class Responder {
      *                           is an instance of {@link WellComposedErrorBody}, it will be passed to the exception to act as a payload.
      *                           ToReturn arguments of different type will be discarded.
      */
-    public static ResponseDataObject code( Response.Status code, Object toReturn,
+    public static <T> ResponseDataObject<T> code( Response.Status code, T toReturn,
             HttpServletResponse servletResponse ) {
 
         // Handle error codes
@@ -38,7 +38,7 @@ public class Responder {
 
         // non-error codes
         Responder.sendHeaders( code, servletResponse );
-        return new ResponseDataObject( toReturn );
+        return new ResponseDataObject<>( toReturn );
     }
 
     /**
@@ -48,7 +48,7 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on
      * @return always null, as the response payload for code 204 has to be empty.
      */
-    public static ResponseDataObject code200( Object toReturn, HttpServletResponse servletResponse ) {
+    public static <T> ResponseDataObject<T> code200( T toReturn, HttpServletResponse servletResponse ) {
         return Responder.code( Response.Status.OK, toReturn, servletResponse );
     }
 
@@ -68,7 +68,7 @@ public class Responder {
     @SuppressWarnings({ "SameReturnValue", "WeakerAccess", "unused" })
     // Same return value: Intentional behavior - has to be consistent with other methods.
     // Weaker access, unused - we currently only have GET methods, none of which uses 204. Keeping the method for future use.
-    public static ResponseDataObject code204( HttpServletResponse servletResponse ) {
+    public static <T> ResponseDataObject<T> code204( HttpServletResponse servletResponse ) {
         Responder.sendHeaders( Response.Status.NO_CONTENT, servletResponse );
         return null;
     }
@@ -86,7 +86,7 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on
      * @return response data object
      */
-    public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
+    public static ResponseDataObject<WellComposedErrorBody> code400( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.BAD_REQUEST;
         return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
@@ -105,7 +105,7 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on
      * @return response data object
      */
-    public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
+    public static ResponseDataObject<WellComposedErrorBody> code404( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.NOT_FOUND;
         return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
@@ -118,7 +118,7 @@ public class Responder {
      * @return response data object
      */
     @SuppressWarnings("unused") // Keeping the method in case we need it handy on short notice.
-    public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
+    public static ResponseDataObject<WellComposedErrorBody> code503( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.SERVICE_UNAVAILABLE;
         return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
@@ -135,14 +135,14 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on
      * @return response data object
      */
-    public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
+    public static <T> ResponseDataObject<T> autoCode( T toReturn, HttpServletResponse servletResponse ) throws GemmaApiException {
         if ( toReturn == null ) { // object is null.
-            return Responder.code404( Responder.DEFAULT_ERR_MSG_NULL_OBJECT, servletResponse );
+            throw new GemmaApiException( Response.Status.NOT_FOUND, Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
 
         } else if (  // empty collection/array.
                 ( toReturn instanceof Collection<?> && ( ( Collection<?> ) toReturn ).isEmpty() ) //
                         || ( toReturn.getClass().isArray() && Array.getLength( toReturn ) == 0 )  //
-                ) {
+        ) {
             // Keeping this as a special case, in case we decide to handle it differently.
             return Responder.code200( toReturn, servletResponse );
         } else if ( toReturn instanceof WellComposedErrorBody ) { // pre-prepared error body.

@@ -2,8 +2,8 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, FactorValueService> {
@@ -23,7 +23,7 @@ public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, Fac
     }
 
     public static FactorValueArrayArg valueOf( String s ) {
-        return new FactorValueArrayArg( Arrays.asList( splitString( s ) ) );
+        return new FactorValueArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
 }

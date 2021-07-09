@@ -83,7 +83,7 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
+    public List<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
         return this.loadValueObjects( this.compositeSequenceDao.findByGene( gene, start, limit ) );
     }
 
@@ -251,9 +251,9 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public List<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
-        Collection<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+        List<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
         for ( CompositeSequenceValueObject vo : vos ) {
             // Not passing the vo since that would create data redundancy in the returned structure
             vo.setGeneMappingSummaries( this.getGeneMappingSummary(

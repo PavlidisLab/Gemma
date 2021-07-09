@@ -5,8 +5,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayDesignService> {
@@ -40,7 +40,7 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayD
             return new PlatformArrayArg( String.format( PlatformArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new PlatformArrayArg( Arrays.asList( AbstractEntityArrayArg.splitString( s ) ) );
+        return new PlatformArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
     @Override

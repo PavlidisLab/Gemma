@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import org.jetbrains.annotations.NotNull;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
@@ -43,7 +44,11 @@ abstract class AbstractArg<T> {
      *
      * Checks whether the instance of this object was created as a malformed argument, and if true, throws an
      * exception using the information provided in the constructor.
+     *
+     * Even though the internal value can be null, it is only the case when it is malformed and this method will produce
+     * a {@link GemmaApiException}, thus guaranteeing non-nullity.
      */
+    @NotNull
     public final T getValue() throws GemmaApiException {
         if ( this.malformed ) {
             WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );

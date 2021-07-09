@@ -6,8 +6,8 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Base class for GeneArg representing any of the identifiers of a Gene.
@@ -22,18 +22,18 @@ public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
     }
 
     @Override
-    public Collection<GeneValueObject> getValueObjects( GeneService service ) {
-        return Collections.singleton( service.loadValueObject( this.getEntity( service ) ) );
+    public List<GeneValueObject> getValueObjects( GeneService service ) {
+        return Collections.singletonList( service.loadValueObject( this.getEntity( service ) ) );
     }
 
     @Override
-    public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
+    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
         Gene gene = this.getEntity( geneService );
         return geneService.getPhysicalLocationsValueObjects( gene );
     }
 
     @Override
-    public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
+    public List<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
         Gene gene = this.getEntity( geneService );
         if ( !gene.getTaxon().equals( taxon ) ) {
             throw new IllegalArgumentException( "Taxon does not match the gene's taxon." );

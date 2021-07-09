@@ -548,7 +548,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     }
 
     @Override
-    public Collection<GeneValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public List<GeneValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
 

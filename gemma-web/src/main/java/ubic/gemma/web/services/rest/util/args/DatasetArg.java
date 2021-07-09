@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public abstract class DatasetArg<T>
      * @param adService service to use to retrieve the ADs.
      * @return a collection of Platforms that the dataset represented by this argument is in.
      */
-    public Collection<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
+    public List<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
             ArrayDesignService adService ) {
         ExpressionExperiment ee = this.getEntity( service );
         return adService.loadValueObjectsForEE( ee.getId() );
@@ -67,14 +68,14 @@ public abstract class DatasetArg<T>
      *                                corresponding predictedOutlier attribute.
      * @return a collection of BioAssays that represent the experiments samples.
      */
-    public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
+    public List<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
                 .map( OutlierDetails::getBioAssay )
                 .map( BioAssay::getId )
                 .collect( Collectors.toSet() );
-        Collection<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
         for ( BioAssayValueObject vo : bioAssayValueObjects ) {
             vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
         }
@@ -85,7 +86,7 @@ public abstract class DatasetArg<T>
      * @param service service that will be used to retrieve the persistent EE object.
      * @return a collection of Annotations value objects that represent the experiments annotations.
      */
-    public Collection<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
         ExpressionExperiment ee = this.getEntity( service );
         return service.getAnnotations( ee.getId() );
     }

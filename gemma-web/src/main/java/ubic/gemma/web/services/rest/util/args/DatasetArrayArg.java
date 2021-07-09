@@ -5,8 +5,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class DatasetArrayArg
@@ -41,7 +41,7 @@ public class DatasetArrayArg
             return new DatasetArrayArg( String.format( DatasetArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new DatasetArrayArg( Arrays.asList( splitString( s ) ) );
+        return new DatasetArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
     @Override

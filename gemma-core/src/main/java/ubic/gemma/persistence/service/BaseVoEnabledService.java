@@ -35,7 +35,7 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      * @return          a collection of value objects representing he given entities.
      */
     @Deprecated
-    Collection<VO> loadValueObjects( Collection<O> entities );
+    List<VO> loadValueObjects( Collection<O> entities );
 
     /**
      * Loads value objects representing all the entities of specific type.
@@ -43,7 +43,7 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      * @return a collection of value objects
      */
     @Deprecated
-    Collection<VO> loadAllValueObjects();
+    List<VO> loadAllValueObjects();
 
     /**
      * Loads all value objects based on the given properties.
@@ -56,6 +56,6 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      * @return         collection of value objects.
      */
     @Deprecated
-    Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }

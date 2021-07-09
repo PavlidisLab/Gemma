@@ -2,8 +2,8 @@ package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -23,19 +23,6 @@ public class StringArrayArg extends ArrayArg<String> {
     }
 
     /**
-     * Splits string by the ',' comma character and trims the resulting strings.
-     *
-     * @param  arg the string to process
-     * @return trimmed strings exploded from the input.
-     */
-    protected static String[] splitString( String arg ) {
-        String[] array = arg.split( "," );
-        for ( int i = 0; i < array.length; i++ )
-            array[i] = array[i].trim();
-        return array;
-    }
-
-    /**
      * Used by RS to parse value of request parameters.
      *
      * @param  s the request arrayString argument
@@ -50,7 +37,7 @@ public class StringArrayArg extends ArrayArg<String> {
             return new StringArrayArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
                     "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
         }
-        return new StringArrayArg( Arrays.asList( ArrayArg.splitString( s ) ) );
+        return new StringArrayArg( StringUtils.splitAndTrim( s ) );
     }
 
 }

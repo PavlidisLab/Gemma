@@ -45,6 +45,7 @@
 			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
+			<id>poirigui</id>
 			<name>Guillaume Poirier-Morency</name>
 			<email>poirigui@msl.ubc.ca</email>
 			<organization>University of British Columbia</organization>

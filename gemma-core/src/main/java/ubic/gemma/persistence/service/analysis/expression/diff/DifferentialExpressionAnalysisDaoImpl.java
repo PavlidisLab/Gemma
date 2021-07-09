@@ -371,14 +371,14 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
     }
 
     @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
+    public Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit ) {
 
         /*
          * There are three cases to consider: the ids are experiments; the ids are experiment subsets; the ids are
          * experiments that have subsets.
          */
-        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
+        Map<Long, List<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
 
         Map<Long, Collection<Long>> arrayDesignsUsed = CommonQueries
                 .getArrayDesignsUsedEEMap( expressionExperimentIds, this.getSessionFactory().getCurrentSession() );

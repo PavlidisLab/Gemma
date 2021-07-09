@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -103,5 +104,5 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
-    Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
+    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

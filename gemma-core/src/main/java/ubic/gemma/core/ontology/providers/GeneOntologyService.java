@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -228,7 +229,7 @@ public interface GeneOntologyService extends InitializingBean {
      * @param  gene the Gene to retrieve GO Terms for and convert them to VOs.
      * @return      Gene Ontology VOs representing all GO Terms associated with the given gene.
      */
-    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
+    List<GeneOntologyTermValueObject> getValueObjects( Gene gene );
 
     void init( boolean force );
 
