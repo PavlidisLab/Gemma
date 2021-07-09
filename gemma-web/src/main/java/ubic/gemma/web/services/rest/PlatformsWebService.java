@@ -105,11 +105,11 @@ public class PlatformsWebService extends WebService {
      *                    </p>
      */
     @GET
-    @Path("/{platformArg: [^/]+}")
+    @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ArrayDesignValueObject>> platforms( // Params:
-            @PathParam("platformArg") PlatformArrayArg datasetsArg, // Optional
+            @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -130,11 +130,11 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_.]+}/datasets")
+    @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExpressionExperimentValueObject>> platformDatasets( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -155,11 +155,11 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements")
+    @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElements( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -183,12 +183,12 @@ public class PlatformsWebService extends WebService {
      *                    </p>
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements/{probesArg: [^/]+}")
+    @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
-            @PathParam("probesArg") CompositeSequenceArrayArg probesArg, // Required
+            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -223,12 +223,12 @@ public class PlatformsWebService extends WebService {
      *                    for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_.]+}/elements/{probeArg: [a-zA-Z0-9_%2F.-]+}/genes")
+    @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
-            @PathParam("probeArg") CompositeSequenceArg<Object> probeArg, // Required
+            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -248,11 +248,11 @@ public class PlatformsWebService extends WebService {
      * @return the content of the annotation file of the given platform.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9_.]+}/annotations")
+    @Path("/{platform}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response platformAnnotations( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Optional, default null
+            @PathParam("platform") PlatformArg<Object> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );

@@ -24,7 +24,6 @@ import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociation
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.BoolArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -59,17 +58,6 @@ public class PhenotypeWebService extends WebService {
     @Autowired
     public PhenotypeWebService( PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
-    }
-
-    /**
-     * Placeholder for root call
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<WellComposedErrorBody> all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**

@@ -89,11 +89,11 @@ public class TaxaWebService extends WebService {
      *                </p>
      */
     @GET
-    @Path("/{taxaArg: [^/]+}")
+    @Path("/{taxa}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<TaxonValueObject>> taxa( // Params:
-            @PathParam("taxaArg") TaxonArrayArg taxaArg, // Optional
+            @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
@@ -112,11 +112,11 @@ public class TaxaWebService extends WebService {
      * @return GeneValue objects of the genes in the region.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9.]+}/genes")
+    @Path("/{taxon}/chromosomes/{chromosome}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject<List<GeneValueObject>> taxonChromosomeGenes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("chromosomeArg") String chromosomeName, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("chromosome") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
             @QueryParam("start") LongArg start, // Required
             @QueryParam("size") IntArg size, // Required
@@ -137,12 +137,12 @@ public class TaxaWebService extends WebService {
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/genes/{geneArg: [a-zA-Z0-9.]+}")
+    @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneValueObject>> genes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg ), sr );
@@ -157,12 +157,12 @@ public class TaxaWebService extends WebService {
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/genes/{geneArg: [a-zA-Z0-9.]+}/evidence")
+    @Path("/{taxon}/genes/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneEvidenceValueObject>> genesEvidence( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
@@ -179,12 +179,12 @@ public class TaxaWebService extends WebService {
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/genes/{geneArg: [a-zA-Z0-9.]+}/locations")
+    @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<PhysicalLocationValueObject>> genesLocation( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
@@ -198,11 +198,11 @@ public class TaxaWebService extends WebService {
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/datasets")
+    @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -230,11 +230,11 @@ public class TaxaWebService extends WebService {
      * TreeCharacteristicValueObjects, if the
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/phenotypes")
+    @Path("/{taxon}/phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<?> taxonPhenotypes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @QueryParam("tree") @DefaultValue("false") BoolArg tree, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
@@ -257,11 +257,11 @@ public class TaxaWebService extends WebService {
      * @return a list of genes associated with given phenotypes.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20.]+}/phenotypes/candidates")
+    @Path("/{taxon}/phenotypes/candidates")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenes( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting)

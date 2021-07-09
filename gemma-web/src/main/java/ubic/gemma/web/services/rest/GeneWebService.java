@@ -101,7 +101,7 @@ public class GeneWebService extends WebService {
      *              </p>
      */
     @GET
-    @Path("/{genes: [a-zA-Z0-9.,%]+}")
+    @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneValueObject>> genes( // Params:
@@ -119,11 +119,11 @@ public class GeneWebService extends WebService {
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9.]+}/evidence")
+    @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneEvidenceValueObject>> geneEvidence( // Params:
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder
@@ -137,11 +137,11 @@ public class GeneWebService extends WebService {
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9.]+}/locations")
+    @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<PhysicalLocationValueObject>> geneLocations( // Params:
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( geneArg.getGeneLocation( geneService ), sr );
@@ -154,11 +154,11 @@ public class GeneWebService extends WebService {
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9.]+}/probes")
+    @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<CompositeSequenceValueObject>> geneProbes( // Params:
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -175,11 +175,11 @@ public class GeneWebService extends WebService {
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9.]+}/goTerms")
+    @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<GeneOntologyTermValueObject>> genesGoTerms( // Params:
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( geneArg.getGoTerms( geneService, geneOntologyService ), sr );
@@ -194,11 +194,11 @@ public class GeneWebService extends WebService {
      * @param stringency optional parameter controlling the stringency of coexpression search. Defaults to 1.
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9.]+}/coexpression")
+    @Path("/{gene}/coexpression")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<CoexpressionValueObjectExt>> geneCoexpression( // Params:
-            @PathParam("geneArg") final GeneArg<Object> geneArg, // Required
+            @PathParam("gene") final GeneArg<Object> geneArg, // Required
             @QueryParam("with") final GeneArg<Object> with, // Required
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1

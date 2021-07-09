@@ -22,7 +22,6 @@ import java.util.Collection;
  * @author tesarst
  */
 @Service
-@Path("/")
 public class RootWebService extends WebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
@@ -62,7 +61,7 @@ public class RootWebService extends WebService {
      * @param uName the username
      */
     @GET
-    @Path("users/{uname: [a-zA-Z0-9_]+}")
+    @Path("/users/{uname}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @PreAuthorize("hasRole('GROUP_USER')")

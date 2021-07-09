@@ -130,11 +130,11 @@ public class DatasetsWebService extends WebService {
      *                    </p>
      */
     @GET
-    @Path("/{datasetsArg: [^/]+}")
+    @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
-            @PathParam("datasetsArg") DatasetArrayArg datasetsArg, // Optional
+            @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -151,12 +151,12 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/platforms")
+    @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject<List<ArrayDesignValueObject>> datasetPlatforms( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
@@ -169,11 +169,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/samples")
+    @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<BioAssayValueObject>> datasetSamples( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("factorValues") FactorValueArrayArg factorValues,
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -187,7 +187,7 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w.\\-]+}/analyses/differential")
+    @Path("/{datasetArg}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> datasetDiffAnalysis( // Params:
@@ -209,11 +209,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w.-]+}/annotations")
+    @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<Set<AnnotationValueObject>> datasetAnnotations( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getAnnotations( expressionExperimentService ), sr );
@@ -227,11 +227,11 @@ public class DatasetsWebService extends WebService {
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [\\w.\\-]+}/data")
+    @Path("/{dataset}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -246,11 +246,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/design")
+    @Path("/{dataset}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
@@ -265,11 +265,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/hasbatch")
+    @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<Boolean> datasetHasBatch( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
@@ -283,11 +283,11 @@ public class DatasetsWebService extends WebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9.\\-_]+}/svd")
+    @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<SimpleSVDValueObject> datasetSVD( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
@@ -328,7 +328,7 @@ public class DatasetsWebService extends WebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
+    @Path("/{datasets}/expressions/genes/{genes: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressions( // Params:
@@ -370,7 +370,7 @@ public class DatasetsWebService extends WebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/pca")
+    @Path("/{datasets}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsPca( // Params:
@@ -414,7 +414,7 @@ public class DatasetsWebService extends WebService {
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/differential")
+    @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsDiffEx( // Params:

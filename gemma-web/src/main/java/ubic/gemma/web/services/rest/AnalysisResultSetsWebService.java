@@ -100,7 +100,7 @@ public class AnalysisResultSetsWebService extends WebService {
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
     @GET
-    @Path("/{analysisResultSet:[^/]+}")
+    @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
@@ -117,7 +117,7 @@ public class AnalysisResultSetsWebService extends WebService {
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
      */
     @GET
-    @Path("/{analysisResultSet:[^/]+}")
+    @Path("/{analysisResultSet}")
     @Produces("text/tab-separated-values; qs=0.9")
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,

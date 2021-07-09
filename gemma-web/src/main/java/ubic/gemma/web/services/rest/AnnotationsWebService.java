@@ -86,17 +86,6 @@ public class AnnotationsWebService extends
     }
 
     /**
-     * Placeholder for root call
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<WellComposedErrorBody> all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
-    }
-
-    /**
      * Placeholder for search call without a query parameter
      */
     @GET
