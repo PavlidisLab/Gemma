@@ -305,7 +305,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         Map<FastqHeaderData, Collection<String>> batchInfos = new HashMap<>();
         if ( !goodHeaderSampleInfos.isEmpty() ) {
-            batch( goodHeaderSampleInfos, headers.size() );
+            goodHeaderSampleInfos = batch( goodHeaderSampleInfos, headers.size() );
             batchInfos.putAll( goodHeaderSampleInfos );
         }
 
@@ -375,10 +375,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * and involves recreating the map multiple times
      * 
      * 
-     * @param batchInfos only of samples that have "good" headers
-     * @param numSamples how many samples
+     * @param  batchInfos only of samples that have "good" headers
+     * @param  numSamples how many samples
+     * @return
      */
-    private void batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
+    private Map<FastqHeaderData, Collection<String>> batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
 
         int numBatches = batchInfos.size();
 
@@ -388,29 +389,30 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          */
         if ( numBatches == 1 ) {
             // no batches - this will get sorted out later, proceed
-            return;
+            return batchInfos;
         } else if ( numBatches == numSamples || ( double ) numBatches / numSamples < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
 
             for ( FastqHeaderData hd : batchInfos.keySet() ) {
+                assert batchInfos.containsKey( hd );
+                if ( batchInfos.get( hd ) == null ) {
+                    log.warn( "Fuck" );
+                }
                 int batchSize = batchInfos.get( hd ).size();
                 if ( batchSize < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
                     // too few samples for at least one batch. Try to reduce resolution and recount.
                     Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
 
                     if ( updatedBatchInfos.size() == batchInfos.size() ) {
-                        return;
+                        return updatedBatchInfos;
                     }
 
-                    batchInfos = updatedBatchInfos;
-
-                    batch( batchInfos, numSamples ); // recurse
+                    batch( updatedBatchInfos, numSamples ); // recurse
                 }
             }
 
-        } else {
-            // reasonable number of samples per batch -- proceed. 
-            return;
         }
+        // reasonable number of samples per batch -- proceed. 
+        return batchInfos;
 
     }
 
@@ -431,8 +433,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
             FastqHeaderData updated = fhd.dropResolution();
 
-            if ( updated.equals( fhd ) ) return batchInfos;
+            if ( updated.equals( fhd ) ) { // we can reduce resolution no more
+                return batchInfos;
+            }
 
+            log.info( "Adding: " + updated );
             if ( !result.containsKey( updated ) ) {
                 result.put( updated, new HashSet<String>() );
             }
@@ -449,6 +454,9 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * @SRR12623632.1.1 NB551168:228:HF7FFBGX7:1:11101:12626:1034_RX:Z:CGCTNTNN_QX:Z:36,36,36,36,2,36,2,2 length=75
      * 
      * Only interested middle section (D8ZGT8Q1:199:C5GKYACXX:5 of the example);
+     * 
+     * Underscores can be used instead of ":", see https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/ and
+     * https://help.basespace.illumina.com/articles/descriptive/fastq-files/
      * 
      * We augment the original header with the GPL id, which is only used if the machine etc. cannot be read from the
      * rest of the header
@@ -524,15 +532,15 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                     // This is not usable as far as we know. seen for one ABI
                     fqd = new FastqHeaderData( platform );
                     fqd.setUnusableHeader( field );
-                } else if ( arr.length >= 7 ) { // this is the normal format, though it should be 7 exactly
+                } else if ( arr.length >= 7 ) { // this is the normal format, though it should be 7 exactly we see variants
                     fqd = new FastqHeaderData( arr[0], arr[1], arr[2], arr[3] );
                 } else if ( arr.length == 5 ) { // this is another normal format (legacy)
                     // device and lane are the only usable fields
                     fqd = new FastqHeaderData( arr[0], arr[1] );
-//                } else if (arr.length == 4) { //  rare and not usable e.g. 3:1:231:803 - first value is not lane, nor is second likely
-//                    fqd = new FastqHeaderData(null, arr[1]); 
+                    //                } else if (arr.length == 4) { //  rare and not usable e.g. 3:1:231:803 - first value is not lane, nor is second likely
+                    //                    fqd = new FastqHeaderData(null, arr[1]); 
                 } else if ( arr.length == 6 ) { // HW-ST997_0144_6_1101_1138_2179 - this is not an official format? but we work with it
-                    fqd = new FastqHeaderData( arr[0], arr[1], arr[0] );
+                    fqd = new FastqHeaderData( arr[0], arr[1], arr[2] );
                 } else {
                     // something else but also not usable.
                     fqd = new FastqHeaderData( platform );

@@ -307,13 +307,8 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
         BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
         Map<String, String> h = bs.readFastqHeaders( "GSE70484" );
-
-        try {
-            s.convertHeadersToBatches( h.values() );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception expected ) {
-
-        }
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 0, batches.size() );
     }
 
     @Test
@@ -388,6 +383,17 @@ public class RNASeqBatchInfoPopulationTest extends AbstractGeoServiceTest {
         Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
         assertEquals( 0, batches.size() );
     }
+    
+    @Test
+    public void testBatchM() throws Exception {
+        //GSE62826 - was yielding an npe, has singletons, should yield no batches
+        BatchInfoPopulationHelperServiceImpl s = new BatchInfoPopulationHelperServiceImpl();
+        BatchInfoPopulationServiceImpl bs = new BatchInfoPopulationServiceImpl();
+        Map<String, String> h = bs.readFastqHeaders( "GSE62826" );
+        Map<String, Collection<String>> batches = s.convertHeadersToBatches( h.values() );
+        assertEquals( 0, batches.size() );
+    }
+    
     
     @After
     public void teardown() {
