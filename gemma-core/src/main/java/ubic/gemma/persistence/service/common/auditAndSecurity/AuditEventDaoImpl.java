@@ -324,7 +324,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
          * also queryObject.setParameter("type", type.getClass()); doesn't work. Although technically this is now
          * vulnerable to an sql injection attack, it seems moot as an attacker would have to have access to the JVM to
          * inject a malformed AuditEventType class name and if they had access to the JVM then sql injection is the
-         * least of our worries. The real annoyance here is dealing with subclasses of event types.
+         * least of our worries. The real annoyance here is dealing with subclasses of event types. [FIXME is this relevant?]
          */
 
         List<String> classes = this.getClassHierarchy( type );
@@ -337,7 +337,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
         final String queryString = "select event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
                 + "fetch all properties where trail = :trail and et.class in (:classes) "
-                + "order by event.date,event.id desc ";
+                + "order by event.date desc ";
 
         org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
@@ -353,7 +353,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
             return null;
 
         AuditEvent result = results.iterator().next();
-        Hibernate.initialize( result.getPerformer() ); // Hit performer to make hibernate initialize it.
+        Hibernate.initialize( result.getPerformer() );
         return result;
 
     }
