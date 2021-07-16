@@ -530,4 +530,11 @@ public interface ExpressionExperimentService
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
     boolean isBlackListed( String geoAccession );
+
+    /**
+     * @param ee
+     * @return true if the experiment is not explicitly marked as unsuitable for DEA; false otherwise.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Boolean isSuitableForDEA( ExpressionExperiment ee );
 }

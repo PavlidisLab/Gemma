@@ -38,11 +38,13 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionSuitabilityEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.UnsuitableForDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -241,35 +243,36 @@ public class ExpressionExperimentServiceImpl
             // this means the batch info couldn't be obtained, or FASTQ headers weren't interpretable.
             return false;
         }
+        return true; // pretty sure this should be okay, we don't need the additional checks below anymore.
 
-        boolean allBAsHaveDate = true;
-        ee = this.thawBioAssays( ee );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getProcessingDate() == null ) {
-                allBAsHaveDate = false;
-                break;
-            }
-        }
-        if ( allBAsHaveDate ) {
-            return true;
-        }
-
-        // still nothing? Check if we have info from FASTQ headers for RNA-seq case
-
-        boolean allBAsHaveFASTQHeaders = true;
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            if ( ba.getFastqHeaders() == null ) {
-                allBAsHaveFASTQHeaders = false;
-                break;
-            }
-        }
-
-        if ( allBAsHaveFASTQHeaders ) {
-            // means we got usable headers, doesn't mean there is more than one batch.
-            return true;
-        }
-
-        return false;
+        //        boolean allBAsHaveDate = true;
+        //        ee = this.thawBioAssays( ee );
+        //        for ( BioAssay ba : ee.getBioAssays() ) {
+        //            if ( ba.getProcessingDate() == null ) {
+        //                allBAsHaveDate = false;
+        //                break;
+        //            }
+        //        }
+        //        if ( allBAsHaveDate ) {
+        //            return true;
+        //        }
+        //
+        //        // still nothing? Check if we have info from FASTQ headers for RNA-seq case
+        //
+        //        boolean allBAsHaveFASTQHeaders = true;
+        //        for ( BioAssay ba : ee.getBioAssays() ) {
+        //            if ( ba.getFastqHeaders() == null ) {
+        //                allBAsHaveFASTQHeaders = false;
+        //                break;
+        //            }
+        //        }
+        //
+        //        if ( allBAsHaveFASTQHeaders ) {
+        //            // means we got usable headers, doesn't mean there is more than one batch.
+        //            return true;
+        //        }
+        //
+        //        return false;
 
     }
 
@@ -568,7 +571,6 @@ public class ExpressionExperimentServiceImpl
 
     private boolean checkIfSingleBatch( ExpressionExperiment ee ) {
         AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
-
         if ( ev == null ) return false;
 
         if ( SingleBatchDeterminationEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
@@ -630,6 +632,7 @@ public class ExpressionExperimentServiceImpl
          * A better way would be to use an enumeration...
          */
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
+        log.info( beDetails );
         String result = "";
         if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
             if ( beDetails.isSingleBatch() ) {
@@ -1124,6 +1127,16 @@ public class ExpressionExperimentServiceImpl
     @Override
     public boolean isBlackListed( String geoAccession ) {
         return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+    }
+
+    @Override
+    public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
+        AuditEvent ev = auditEventDao.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
+        if ( ev == null ) return true;
+        if ( UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getClass() ) ) {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -210,7 +210,10 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             data: this.comment
                 ? [['CommentedEvent', 'Comment', 'pencil-square-o']]
                 : [['TroubledStatusFlagEvent', 'Mark as unusable', 'exclamation-triangle'],
-                  ['NotTroubledStatusFlagEvent', 'Mark as usable', 'check-circle']]
+                  ['NotTroubledStatusFlagEvent', 'Mark as usable', 'check-circle'],
+                    ['UnsuitableForDifferentialExpressionAnalysisEvent', 'Mark as unusable for DEA', 'exclamation-triangle'],
+                    ['ResetSuitabilityForDifferentialExpressionAnalysisEvent', 'Reset usability for DEA', 'check-circle']
+                ]
         });
 
         var self = this;
