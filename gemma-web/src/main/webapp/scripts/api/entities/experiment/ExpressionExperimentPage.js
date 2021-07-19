@@ -99,15 +99,15 @@ function getBatchInfoBadges(ee) {
             } else {
                 result = result + getStatusBadge('cogs', 'green', 'no batch effect', "Batch information is present, but no substantial effect was detected, so the data are not corrected.")
             }
-        } else if (ee.batchEffect == "Samples were run in a single batch" ) {
+        } else if (ee.batchEffect === "Samples were run in a single batch" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
-        } else if (ee.batchEffect == "No batch information was available") { // redundant
+        } else if (ee.batchEffect === "No batch information was available") { // redundant
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', "Information on sample batching was not available");
         } else {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
         }
     }
-    
+
     if (!ee.suitableForDEA) {
         result = result + getStatusBadge('exclamation-triangle', 'orange', 'Unsuitable for diff. ex.',
             Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusUnsuitableForDEA);
