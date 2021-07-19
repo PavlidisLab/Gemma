@@ -440,7 +440,8 @@ Gemma.HelpText.WidgetDefaults = {
          + 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements',
        dataReprocessed : "Reprocessed from raw data by Gemma.",
        dataExternal : "Data are from external source.",
-       noBatchInfo : "Information on sample batching was not available."
+       noBatchInfo : "Information on sample batching was not available.",
+	   statusUnsuitableForDEA : "Data or experimental design not suitable for differential expression analysis."
    },
    ExpressionExperimentGrid : {
    // only column TTs, skipped

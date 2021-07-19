@@ -107,6 +107,11 @@ function getBatchInfoBadges(ee) {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
         }
     }
+    
+    if (!ee.suitableForDEA) {
+        result = result + getStatusBadge('exclamation-triangle', 'orange', 'Unsuitable for diff. ex.',
+            Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusUnsuitableForDEA);
+    }
 
     return result;
 }
