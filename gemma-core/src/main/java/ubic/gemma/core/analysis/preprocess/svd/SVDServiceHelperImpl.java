@@ -52,7 +52,7 @@ import java.util.*;
  * Perform SVD on expression data and store the results.
  *
  * @author paul
- * @see PrincipalComponentAnalysisService
+ * @see    PrincipalComponentAnalysisService
  */
 @Component
 public class SVDServiceHelperImpl implements SVDServiceHelper {
@@ -85,6 +85,13 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    /**
+     * Retrieve relationships between factors, biomaterials and factorvalues.
+     * 
+     * @param bioMaterialFactorMap to be populated, of experimental factor -> biomaterial ID -> ID of the factor value
+     *                             (just an indicator)
+     * @param biomaterial          to populate for
+     */
     public static void populateBMFMap( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
             BioMaterial bm ) {
         for ( FactorValue fv : bm.getFactorValues() ) {
@@ -106,7 +113,8 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
             } else {
                 /*
-                 * This is a hack. We're storing the ID but as a double.
+                 * This is a hack so we don't need special datastructures for
+                 * continuous and categorical. We're storing the ID but as a double.
                  */
                 valueToStore = fv.getId().doubleValue();
             }

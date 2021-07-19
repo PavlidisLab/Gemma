@@ -14,8 +14,10 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * Represents a summary of a batch effect confound.
@@ -27,12 +29,12 @@ public class BatchConfoundValueObject {
 
     private final double chiSquare;
     private final int df;
-    private final ExpressionExperiment ee;
+    private final BioAssaySet ee;
     private final ExperimentalFactor ef;
     private final double p;
     private final int numBatches;
 
-    public BatchConfoundValueObject( ExpressionExperiment ee, ExperimentalFactor ef, double chiSquare, int df, double p,
+    public BatchConfoundValueObject( BioAssaySet ee, ExperimentalFactor ef, double chiSquare, int df, double p,
             int numBatches ) {
         this.ee = ee;
         this.ef = ef;
@@ -50,7 +52,7 @@ public class BatchConfoundValueObject {
         return df;
     }
 
-    public ExpressionExperiment getEe() {
+    public BioAssaySet getEe() {
         return ee;
     }
 
@@ -68,7 +70,13 @@ public class BatchConfoundValueObject {
 
     @Override
     public String toString() {
-        return ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getCategory().getCategory() + "\t"
+        String name = null;
+        if ( ee instanceof ExpressionExperimentSubSet ) {
+            name = ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getShortName();
+        } else {
+            name = " Subset " + ee.getName() + " of " + ( ( ExpressionExperiment ) ee ).getShortName();
+        }
+        return ee.getId() + "\t" + name + "\t" + ef.getId() + "\t" + ef.getCategory().getCategory() + "\t"
                 + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) + "\t"
                 + numBatches;
     }

@@ -566,6 +566,25 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
+        // Now check subsets, if relevant.
+        if ( !listConfounds.isEmpty() && gemma.gsec.util.SecurityUtil.isUserAdmin() ) {
+            Collection<ExpressionExperimentSubSet> subSets = this.getSubSets( ee );
+            if ( !subSets.isEmpty() ) {
+                for ( ExpressionExperimentSubSet subset : subSets ) {
+                    try {
+                        confounds = BatchConfound.test( subset );
+                        for ( BatchConfoundValueObject c : confounds ) {
+                            if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
+                                result.append( "<br/><br/>Confound still exists for " + c.getEf().getName() + " in " + subset );
+                            }
+                        }
+                    } catch ( NotStrictlyPositiveException e ) {
+
+                    }
+                }
+            }
+        }
+
         return Strings.emptyToNull( result.toString() );
     }
 
@@ -632,7 +651,7 @@ public class ExpressionExperimentServiceImpl
          * A better way would be to use an enumeration...
          */
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
-        log.info( beDetails );
+        //log.info( beDetails );
         String result = "";
         if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
             if ( beDetails.isSingleBatch() ) {
