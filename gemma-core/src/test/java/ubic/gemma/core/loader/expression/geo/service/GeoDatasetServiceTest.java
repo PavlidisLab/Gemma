@@ -175,35 +175,37 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     /*
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
-     * have descriptions.
+     * have descriptions. Converted into a test of taxon filtering.
      */
     @Test
     public void testFetchAndLoadGSE13657() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE13657", false, true, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
-            return;
+            geoService.fetchAndLoad( "GSE13657", false, true, false );
+            fail( "Expected an exception for no supported taxa" );
+            // ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( IllegalStateException e ) {
+            // expected
         }
-        ee = this.eeService.thawLite( ee );
-        aclTestUtils.checkEEAcls( ee );
-        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
-        assertEquals( 13, qts.size() );
 
-        // make sure we got characteristics and treatments for both channels.
-        for ( BioAssay ba : ee.getBioAssays() ) {
-
-            BioMaterial bm = ba.getSampleUsed();
-
-            assertNotNull( bm );
-
-            log.info( bm + " " + bm.getDescription() );
-
-            assertEquals( 9, bm.getCharacteristics().size() );
-
-        }
+        // part of original test, for checking QT inclusion
+        //        ee = this.eeService.thawLite( ee );
+        //        aclTestUtils.checkEEAcls( ee );
+        //        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
+        //        assertEquals( 13, qts.size() );
+        //
+        //        // make sure we got characteristics and treatments for both channels.
+        //        for ( BioAssay ba : ee.getBioAssays() ) {
+        //
+        //            BioMaterial bm = ba.getSampleUsed();
+        //
+        //            assertNotNull( bm );
+        //
+        //            log.info( bm + " " + bm.getDescription() );
+        //
+        //            assertEquals( 9, bm.getCharacteristics().size() );
+        //
+        //        }
 
     }
 

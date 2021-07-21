@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import java.util.*;
@@ -59,17 +60,19 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentReportService expressionExperimentReportService;
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+    private final TaxonService taxonService;
 
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
             ExpressionExperimentReportService expressionExperimentReportService,
             ExpressionExperimentService expressionExperimentService,
-            ExpressionExperimentPrePersistService expressionExperimentPrePersistService ) {
+            ExpressionExperimentPrePersistService expressionExperimentPrePersistService, TaxonService taxonService ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.bioAssayService = bioAssayService;
         this.expressionExperimentReportService = expressionExperimentReportService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
+        this.taxonService = taxonService;
     }
 
     @Override
@@ -130,7 +133,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
      * <ol>
-     * <li>Check that it doesn't already exist in the system</li>
+     * <li>Check that it doesn't already exist in the system, filter samples</li>
      * <li>Download and parse GDS files and GSE file needed</li>
      * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
@@ -226,6 +229,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         this.matchToExistingPlatforms( geoConverter, series, c );
 
+        this.checkForSupportedTaxa( series );
         this.checkSamplesAreNew( series );
 
         this.getSubSeriesInformation( series );
@@ -288,6 +292,53 @@ public class GeoServiceImpl extends AbstractGeoService {
                 throw new AlreadyExistsInSystemException( message, existing );
             }
         }
+    }
+
+    private void checkForSupportedTaxa( GeoSeries series ) {
+        Collection<GeoSample> toSkip = new HashSet<>();
+        Collection<String> unsupportedTaxa = new HashSet<>();
+
+        for ( GeoSample sample : series.getSamples() ) {
+
+            // the GEO sample organism is the binomial e.g. Mus musculus, hopefully this is consistent
+            if ( taxonService.findByScientificName( sample.getOrganism() ) == null ) {
+                toSkip.add( sample );
+                unsupportedTaxa.add( sample.getOrganism() );
+            }
+
+        }
+
+        for ( GeoSample gs : toSkip ) {
+            series.getSamples().remove( gs );
+            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+        }
+
+        for ( GeoDataset gds : series.getDatasets() ) {
+            for ( GeoSubset gSub : gds.getSubsets() ) {
+                for ( GeoSample gs : toSkip ) {
+                    gSub.getSamples().remove( gs );
+                }
+            }
+        }
+
+        if ( series.getSamples().isEmpty() ) {
+            throw new IllegalStateException(
+                    "Data set is for unsupported taxa (" + StringUtils.join( unsupportedTaxa, ";" ) + ")" + series );
+        }
+
+        if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */ ) {
+            throw new IllegalStateException(
+                    "After removing samples from unsupported taxa, this data set is too small to load: " + series
+                            .getSamples().size() + " left (removed " + toSkip.size() + ")" );
+        }
+
+        if ( !toSkip.isEmpty() ) {
+            AbstractGeoService.log.info( "Found " + toSkip.size()
+                    + " samples from unsupported taxa: " + StringUtils.join( unsupportedTaxa, "; " ) );
+            AbstractGeoService.log
+                    .info( "Series now contains " + series.getSamples().size() );
+        }
+
     }
 
     /**
