@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
@@ -10,10 +11,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +22,7 @@ import java.util.List;
  *
  * @author tesarst
  */
+@Schema(anyOf = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonStringArg.class })
 public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonService> {
 
     /**
@@ -101,9 +101,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         //Chromosome argument
         Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
         if ( chromosomes.isEmpty() ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    "Chromosome " + chromosomeName + " not found for taxon " + taxon.getScientificName() );
-            throw new GemmaApiException( errorBody );
+            throw new NotFoundException( "Chromosome " + chromosomeName + " not found for taxon " + taxon.getScientificName() );
         }
         Chromosome chromosome = chromosomes.iterator().next();
 
@@ -115,10 +113,9 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
 
         List<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
         if ( GVOs == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+            throw new NotFoundException(
                     "No genes found on chromosome " + chromosomeName + " between positions " + start + " and " + start
                             + size + "." );
-            throw new GemmaApiException( errorBody );
         }
         return GVOs;
     }

@@ -14,9 +14,13 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,7 +31,8 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -35,7 +40,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -46,10 +50,11 @@ import java.util.regex.Pattern;
  *
  * @author tesarst
  */
-@Component
+@Service
 @Path("/platforms")
-public class PlatformsWebService extends WebService {
+public class PlatformsWebService {
 
+    private static final Log log = LogFactory.getLog( PlatformsWebService.class.getName() );
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
     private GeneService geneService;
@@ -81,6 +86,7 @@ public class PlatformsWebService extends WebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve all platforms")
     public ResponseDataObject<List<ArrayDesignValueObject>> all( // Params:
             @QueryParam("filter") @DefaultValue("") PlatformFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
@@ -88,7 +94,7 @@ public class PlatformsWebService extends WebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ), sr );
+        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
     }
 
     /**
@@ -108,6 +114,7 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
     public ResponseDataObject<List<ArrayDesignValueObject>> platforms( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
@@ -116,7 +123,7 @@ public class PlatformsWebService extends WebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), arrayDesignService ) ), sr );
+        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), arrayDesignService ) ) );
     }
 
     /**
@@ -133,15 +140,16 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve all experiments within a given platform")
     public ResponseDataObject<List<ExpressionExperimentValueObject>> platformDatasets( // Params:
             @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( platformArg
-                        .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
-                sr );
+        return Responder.respond( platformArg
+                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() )
+        );
     }
 
     /**
@@ -158,14 +166,15 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the composite sequences for a given platform")
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElements( // Params:
             @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( platformArg
-                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), sr );
+        return Responder.respond( platformArg
+                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ) );
     }
 
     /**
@@ -186,6 +195,7 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the selected composite sequences for a given platform")
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
             @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
@@ -195,16 +205,15 @@ public class PlatformsWebService extends WebService {
     ) {
         try {
             probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-            return Responder.autoCode( compositeSequenceService
-                            .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
-                                    probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) ),
-                    sr );
+            return Responder.respond( compositeSequenceService
+                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), null, true,
+                            probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ) )
+            );
         } catch ( QueryException e ) {
             if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
             }
-            throw new GemmaApiException( Response.Status.BAD_REQUEST,
-                    FilterArg.ERROR_MSG_MALFORMED_REQUEST );
+            throw new BadRequestException( FilterArg.ERROR_MSG_MALFORMED_REQUEST );
         }
     }
 
@@ -226,6 +235,7 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
     public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
             @PathParam("platform") PlatformArg<Object> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
@@ -234,10 +244,10 @@ public class PlatformsWebService extends WebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        return Responder.autoCode( geneService.loadValueObjects( compositeSequenceService
-                        .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
-                                limit.getValue() ) ),
-                sr );
+        return Responder.respond( geneService.loadValueObjects( compositeSequenceService
+                .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
+                        limit.getValue() ) )
+        );
     }
 
     /**
@@ -251,6 +261,7 @@ public class PlatformsWebService extends WebService {
     @Path("/{platform}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the annotations of a given platform")
     public Response platformAnnotations( // Params:
             @PathParam("platform") PlatformArg<Object> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -276,9 +287,7 @@ public class PlatformsWebService extends WebService {
                 file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
                 if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
             } catch ( IOException e ) {
-                WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
-                        String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
-                throw new GemmaApiException( errorBody );
+                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
 

@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -9,6 +10,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
@@ -7,6 +8,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
  * Maps a long identifier to a {@link FactorValue}.
  * @author poirigui
  */
+@Schema(implementation = Long.class)
 public class FactorValueIdArg extends FactorValueArg<Long> {
 
     public FactorValueIdArg( long value ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
@@ -7,6 +8,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
  * Maps {@link FactorValue} by its factor value.
  * @author poirigui
  */
+@Schema(implementation = String.class)
 public class FactorValueValueArg extends FactorValueArg<String> {
 
     public FactorValueValueArg( String value ) {

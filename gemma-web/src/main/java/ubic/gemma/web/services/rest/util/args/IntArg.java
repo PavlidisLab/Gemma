@@ -1,12 +1,13 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Class representing an API argument that should be an integer.
  *
  * @author tesarst
  */
+@Schema(implementation = Integer.class)
 public class IntArg extends AbstractArg<Integer> {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 
@@ -23,7 +24,7 @@ public class IntArg extends AbstractArg<Integer> {
      *
      * @param s the request integer argument
      * @return an instance of IntArg representing integer value of the input string, or a malformed IntArg that will throw an
-     * {@link ubic.gemma.web.services.rest.util.GemmaApiException} when accessing its value, if the input String can not
+     * {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not
      * be converted into an integer.
      */
     @SuppressWarnings("unused")

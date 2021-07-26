@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -8,6 +9,7 @@ import java.util.Objects;
 /**
  * Composite Sequence argument for CS ID.
  */
+@Schema(implementation = Long.class)
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {

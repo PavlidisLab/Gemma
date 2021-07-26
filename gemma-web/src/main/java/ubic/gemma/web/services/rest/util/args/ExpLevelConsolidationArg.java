@@ -1,14 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 /**
  * Class representing an API argument that should be one of the expression level consolidation options.
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class ExpLevelConsolidationArg extends AbstractArg<String> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 
@@ -25,7 +26,7 @@ public class ExpLevelConsolidationArg extends AbstractArg<String> {
      *
      * @param s the request boolean argument
      * @return an instance of BoolArg representing boolean value of the input string, or a malformed BoolArg that will throw an
-     * {@link GemmaApiException} when accessing its value, if the input String can not be converted into a boolean.
+     * {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not be converted into a boolean.
      */
     @SuppressWarnings("unused")
     public static ExpLevelConsolidationArg valueOf( final String s ) {

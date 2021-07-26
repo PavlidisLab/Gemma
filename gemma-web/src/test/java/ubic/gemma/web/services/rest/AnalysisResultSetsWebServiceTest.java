@@ -22,12 +22,13 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayInputStream;
@@ -154,14 +155,14 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWhenDatasetDoesNotExistThenRaise404NotFound() {
         HttpServletResponse response = new MockHttpServletResponse();
-        GemmaApiException e = assertThrows( GemmaApiException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
                 DatasetArrayArg.valueOf( "GEO123124" ),
                 null,
                 IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response ) );
-        assertEquals( e.getCode(), Response.Status.NOT_FOUND );
+        assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
@@ -181,14 +182,14 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWhenDatabaseEntryDoesNotExistThenRaise404NotFound() {
         HttpServletResponse response = new MockHttpServletResponse();
-        GemmaApiException e = assertThrows( GemmaApiException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
                 null,
                 DatabaseEntryArrayArg.valueOf( "GEO123124,GEO1213121" ),
                 IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response ) );
-        assertEquals( e.getCode(), Response.Status.NOT_FOUND );
+        assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
@@ -206,10 +207,10 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         Long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        GemmaApiException e = assertThrows( GemmaApiException.class, () -> {
+        NotFoundException e = assertThrows( NotFoundException.class, () -> {
             service.findById( new ExpressionAnalysisResultSetArg( id ), response );
         } );
-        assertEquals( e.getCode(), Response.Status.NOT_FOUND );
+        assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test

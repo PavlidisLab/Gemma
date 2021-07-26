@@ -1,23 +1,26 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends ArrayArg<String> {
+public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends AbstractArrayArg<String> {
+
+    private static Log log = LogFactory.getLog( AbstractEntityArrayArg.class.getClass() );
 
     protected Class<?> argValueClass = null;
     protected String argValueName = null;
@@ -70,7 +73,7 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      * @param  service the service that will be used to retrieve the persistent objects.
      * @return a collection of persistent objects matching the identifiers on this array arg.
      */
-    public Collection<O> getEntities( S service ) {
+    public Collection<O> getEntities( S service ) throws NotFoundException {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
         for ( String s : this.getValue() ) {
             AbstractEntityArg<?, O, S> arg;
@@ -109,8 +112,7 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
     protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
         String identifier = arg.getPropertyName();
         if ( Strings.isNullOrEmpty( identifier ) ) {
-            throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    "Identifier " + value + " not recognized." ) );
+            throw new BadRequestException( "Identifier " + value + " not recognized." );
         }
         return identifier;
     }
@@ -145,8 +147,7 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
             // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
             return ( AbstractEntityArg<?, O, S> ) getEntityArgClass().getMethod( "valueOf", String.class ).invoke( null, s );
         } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-            e.printStackTrace();
-            return null;
+            throw new NotImplementedException( "Could not call 'valueOf' for " + getEntityArgClass().getName(), e );
         }
     }
 

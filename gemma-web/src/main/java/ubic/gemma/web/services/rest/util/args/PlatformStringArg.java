@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -8,6 +9,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {

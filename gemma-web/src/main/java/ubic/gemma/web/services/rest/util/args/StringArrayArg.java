@@ -1,7 +1,8 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -11,8 +12,9 @@ import java.util.List;
  *
  * @author tesarst
  */
-public class StringArrayArg extends ArrayArg<String> {
-    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Strings";
+@ArraySchema(schema = @Schema(implementation = String.class))
+public class StringArrayArg extends AbstractArrayArg<String> {
+    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Strings";
 
     public StringArrayArg( List<String> values ) {
         super( values );
@@ -28,7 +30,7 @@ public class StringArrayArg extends ArrayArg<String> {
      * @param  s the request arrayString argument
      * @return an instance of ArrayStringArg representing array of strings from the input string, or a malformed
      *           ArrayStringArg that will throw an
-     *           {@link GemmaApiException} when accessing its value, if the input String can not be converted into an
+     *           {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not be converted into an
      *           array of strings.
      */
     @SuppressWarnings("unused")

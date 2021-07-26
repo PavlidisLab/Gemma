@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -28,17 +29,14 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,7 +51,7 @@ import java.util.stream.Collectors;
  */
 @Service("analysisResultSetWebService")
 @Path("/resultSets")
-public class AnalysisResultSetsWebService extends WebService {
+public class AnalysisResultSetsWebService {
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -75,6 +73,7 @@ public class AnalysisResultSetsWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve all result sets matching the provided criteria")
     public ResponseDataObject<List<ExpressionAnalysisResultSetValueObject>> findAll(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
@@ -93,7 +92,7 @@ public class AnalysisResultSetsWebService extends WebService {
         List<ExpressionAnalysisResultSetValueObject> resultSetVos = resultSets.stream()
                 .map( ExpressionAnalysisResultSetValueObject::new )
                 .collect( Collectors.toList() );
-        return Responder.code200( resultSetVos, servlet );
+        return Responder.respond( resultSetVos );
     }
 
     /**
@@ -102,15 +101,16 @@ public class AnalysisResultSetsWebService extends WebService {
     @GET
     @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
         ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
         if ( ears == null ) {
-            throw new GemmaApiException( Response.Status.NOT_FOUND, "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return Responder.code200( new ExpressionAnalysisResultSetValueObject( ears ), servlet );
+        return Responder.respond( new ExpressionAnalysisResultSetValueObject( ears ) );
     }
 
     /**
@@ -119,6 +119,7 @@ public class AnalysisResultSetsWebService extends WebService {
     @GET
     @Path("/{analysisResultSet}")
     @Produces("text/tab-separated-values; qs=0.9")
+    @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {

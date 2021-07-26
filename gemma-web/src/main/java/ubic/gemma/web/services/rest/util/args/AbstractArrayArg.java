@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-
 import java.util.List;
 
 /**
@@ -9,14 +7,14 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class ArrayArg<T> extends AbstractArg<List<T>> {
+public abstract class AbstractArrayArg<T> extends AbstractArg<List<T>> {
     static final String ERROR_MSG = "Value '%s' can not converted to an array of ";
 
-    ArrayArg( List<T> values ) {
+    AbstractArrayArg( List<T> values ) {
         super( values );
     }
 
-    protected ArrayArg( String errorMessage, Exception exception ) {
+    protected AbstractArrayArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 }

@@ -1,0 +1,15 @@
+package ubic.gemma.web.services.rest.util.args;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(implementation = String.class)
+public class StringArg extends AbstractArg<String> {
+
+    public StringArg( String s ) {
+        super( s );
+    }
+
+    public StringArg valueOf( String s ) {
+        return new StringArg( s );
+    }
+}

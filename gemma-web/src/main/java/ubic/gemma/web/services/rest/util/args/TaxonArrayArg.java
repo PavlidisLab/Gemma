@@ -1,19 +1,22 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
 
+@ArraySchema(schema = @Schema(implementation = TaxonArg.class))
 public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
-    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Taxon identifiers";
+    private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Taxon identifiers";
 
     private TaxonArrayArg( List<String> values ) {
         super( values );
@@ -33,7 +36,7 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
      *
      * @param s the request arrayTaxon argument
      * @return an instance of ArrayTaxonArg representing an array of Taxon identifiers from the input string,
-     * or a malformed ArrayTaxonArg that will throw an {@link GemmaApiException} when accessing its value, if the
+     * or a malformed ArrayTaxonArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the
      * input String can not be converted into an array of Taxon identifiers.
      */
     @SuppressWarnings("unused")
@@ -62,7 +65,7 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
                 AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
                 this.argValueName = this.checkPropertyNameString( arg, value, service );
                 this.argValueClass = arg.getValue().getClass();
-            } catch ( GemmaApiException e ) {
+            } catch ( MalformedArgException e ) {
                 if ( i == this.getValue().size() - 1 ) {
                     throw e;
                 }

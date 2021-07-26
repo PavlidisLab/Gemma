@@ -2,10 +2,10 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
 /**
@@ -40,24 +40,22 @@ public abstract class AbstractEntityArg<A, O extends Identifiable, S extends Bas
      * Calls appropriate backend logic to retrieve the persistent object that this mutable argument represents.
      *
      * @param service the service to use for the value object retrieval.
+     * @throws NotFoundException if the service cannot provide the entity
      * @return an object whose identifier matches the value of this mutable argument.
      */
-    public abstract O getEntity( S service ) throws GemmaApiException;
+    public abstract O getEntity( S service ) throws NotFoundException;
 
     /**
      * Checks whether the given object is null, and throws an appropriate exception if necessary.
      *
      * @param entity the object that should be checked for being null.
      * @return the same object as given.
-     * @throws GemmaApiException if the given entity is null.
+     * @throws NotFoundException if the given entity is null.
      */
-    protected O checkEntity( O entity ) throws GemmaApiException {
+    protected O checkEntity( O entity ) throws NotFoundException {
         if ( entity == null ) {
-            String cause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, getPropertyName(), getEntityName(), this.getValue() );
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( cause ) );
-            throw new GemmaApiException( errorBody );
+            EntityNotFoundException cause = new EntityNotFoundException( String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, getPropertyName(), getEntityName(), this.getValue() ) );
+            throw new NotFoundException( ERROR_MSG_ENTITY_NOT_FOUND, cause );
         }
         return entity;
     }

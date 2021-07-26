@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -8,6 +9,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
+@Schema(implementation = Long.class)
 public class DatasetIdArg extends DatasetArg<Long> {
 
     /**
