@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Used to contain GEO summary information from the 'Browse' views.
  *
@@ -36,24 +38,30 @@ public class GeoRecord extends GeoData {
     private Collection<Long> correspondingExperiments;
     private int numSamples;
     private Collection<String> organisms;
-    private String platform; // should be just one for GSE
+    private String platform; // can be more than one here, for mixed data type series
     /*
      * How many times a curator has already looked at the details. this helps us track data sets we've already examined
      * for usefulness.
      */
     private int previousClicks = 0;
+    private String pubMedIds = "";
+
     private Date releaseDate;
 
     private String seriesType;
 
+    private boolean subSeries = false;
+
+    private String subSeriesOf = "";
+
     private String summary;
+
+    private boolean superSeries = false;
 
     /*
      * Curator judgement about whether this is loadable. False indicates a problem.
      */
     private boolean usable = true;
-
-    private boolean superSeries = false;
 
     public GeoRecord() {
         super();
@@ -85,6 +93,10 @@ public class GeoRecord extends GeoData {
         return previousClicks;
     }
 
+    public String getPubMedIds() {
+        return this.pubMedIds;
+    }
+
     public Date getReleaseDate() {
         return releaseDate;
     }
@@ -93,8 +105,20 @@ public class GeoRecord extends GeoData {
         return seriesType;
     }
 
+    public String getSubSeriesOf() {
+        return subSeriesOf;
+    }
+
     public String getSummary() {
         return this.summary;
+    }
+
+    public boolean isSubSeries() {
+        return subSeries;
+    }
+
+    public boolean isSuperSeries() {
+        return this.superSeries;
     }
 
     public boolean isUsable() {
@@ -125,6 +149,11 @@ public class GeoRecord extends GeoData {
         this.previousClicks = previousClicks;
     }
 
+    public void setPubMedIds( String pubMedIds ) {
+        if ( StringUtils.isNotBlank( pubMedIds ) )
+            this.pubMedIds = pubMedIds;
+    }
+
     public void setReleaseDate( Date releaseDate ) {
         this.releaseDate = releaseDate;
     }
@@ -133,17 +162,22 @@ public class GeoRecord extends GeoData {
         this.seriesType = seriesType;
     }
 
+    /**
+     * @param b
+     */
+    public void setSubSeries( boolean b ) {
+        this.subSeries = b;
+    }
+
+    /**
+     * @param relTo
+     */
+    public void setSubSeriesOf( String relTo ) {
+        this.subSeriesOf = relTo;
+    }
+
     public void setSummary( String summary ) {
         this.summary = summary;
-    }
-
-    public void setUsable( boolean usable ) {
-        this.usable = usable;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + " " + this.getTitle();
     }
 
     /**
@@ -153,8 +187,13 @@ public class GeoRecord extends GeoData {
         this.superSeries = isSuperSeries;
     }
 
-    public boolean isSuperSeries() {
-        return this.superSeries;
+    public void setUsable( boolean usable ) {
+        this.usable = usable;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + " " + this.getTitle();
     }
 
 }

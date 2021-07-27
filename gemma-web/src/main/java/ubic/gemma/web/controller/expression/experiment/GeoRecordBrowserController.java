@@ -69,7 +69,7 @@ public class GeoRecordBrowserController {
             log.info( "getRecentGeoRecords fired from Controller.browse" );
         } else {
             // Search term entered; FIX ME
-            geoRecords = geoBrowserService.searchGeoRecords( searchString, start, count );
+            geoRecords = geoBrowserService.searchGeoRecords( searchString, start, count, false );
             // TEST log
             log.info( "searchGeoRecords fired from Controller.browse" );
         }

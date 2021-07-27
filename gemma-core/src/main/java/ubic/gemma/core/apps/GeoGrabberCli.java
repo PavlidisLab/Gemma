@@ -72,10 +72,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
-        System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tTitle\tSummary" );
+        System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
+                + "\tPubMed\tTitle\tSummary" );
 
         while ( true ) {
-            List<GeoRecord> recs = gbs.searchGeoRecords( null, start, chunksize );
+            List<GeoRecord> recs = gbs.searchGeoRecords( null, start, chunksize, true );
 
             if ( recs.isEmpty() ) {
                 AbstractCLI.log.info( "No records received for start=" + start );
@@ -110,11 +111,10 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     }
                 }
 
-                //                
-                //                String experimentType = geoRecord.getType();
-                //                if 
-                //                
-                //                
+                if ( !geoRecord.getSeriesType().contains( "Expression profiling" ) ) {
+                    continue;
+                }
+
                 if ( !anyTaxonAcceptable ) {
                     continue;
                 }
@@ -145,7 +145,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                 + "\t" + geoRecord.getNumSamples()
                                 + "\t" + geoRecord.getSeriesType()
                                 + "\t" + geoRecord.isSuperSeries()
-
+                                + "\t" + geoRecord.getSubSeriesOf()
+                                + "\t" + geoRecord.getPubMedIds()
                                 + "\t" + geoRecord.getTitle()
                                 + "\t" + geoRecord.getSummary() );
                 seen.add( geoRecord.getGeoAccession() );

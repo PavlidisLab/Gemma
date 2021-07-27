@@ -57,7 +57,7 @@ public class GeoBrowserTest {
         GeoBrowser b = new GeoBrowser();
 
         try {
-            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10 );
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
 
@@ -79,13 +79,13 @@ public class GeoBrowserTest {
             throw e;
         }
     }
-
+ 
     @Test
     public void testGetGeoRecords() throws Exception {
         GeoBrowser b = new GeoBrowser();
 
         try {
-            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10 );
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, false );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
 

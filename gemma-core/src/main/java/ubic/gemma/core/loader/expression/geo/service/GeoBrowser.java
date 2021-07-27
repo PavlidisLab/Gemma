@@ -18,27 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jasper.tagplugins.jstl.core.ForEach;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import ubic.basecode.util.DateUtil;
-import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
-import ubic.gemma.core.util.XMLUtils;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +27,38 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathException;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import ubic.basecode.util.DateUtil;
+import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.XMLUtils;
 
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
@@ -82,10 +92,11 @@ public class GeoBrowser {
      * @param  start       start
      * @param  pageSize    page size
      * @param  searchTerms search terms
+     * @param  detailed    if true, additional information is fetched (slower)
      * @return             list of GeoRecords
      * @throws IOException if there is a problem while manipulating the file
      */
-    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize )
+    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed )
             throws IOException, RuntimeException {
 
         List<GeoRecord> records = new ArrayList<>();
@@ -156,6 +167,8 @@ public class GeoBrowser {
             XPathExpression xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
             XPathExpression xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
 
+            XPathExpression xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list
+
             Document summaryDocument;
             try (InputStream is = conn.getInputStream()) {
                 DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
@@ -185,6 +198,9 @@ public class GeoBrowser {
                 Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
                 NodeList typeNodes = ( NodeList ) type;
 
+                Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList pubmedNodes = ( NodeList ) pubmed;
+
                 // Create GeoRecords using information parsed from XML file
                 for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
@@ -212,9 +228,13 @@ public class GeoBrowser {
                     record.setPlatform( platformS );
                     record.setSeriesType( typeNodes.item( i ).getTextContent() );
                     record.setSummary( summaryNodes.item( i ).getTextContent() );
-
-                    // note: no indication of subseries
+                    record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ) );
                     record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
+
+                    // at the moment, getDetails only determines if it is a subseries, so we avoid checking if we can
+                    if ( detailed && !record.isSuperSeries() ) {
+                        getDetails( record );
+                    }
 
                     records.add( record );
                 }
@@ -231,6 +251,72 @@ public class GeoBrowser {
         }
         return records;
 
+    }
+
+    /**
+     * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
+     * a subseries.
+     * 
+     * @param  record
+     * @throws MalformedURLException
+     * @throws IOException
+     * @throws XPathExpressionException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     */
+    private void getDetails( GeoRecord record )
+            throws MalformedURLException, IOException, XPathExpressionException, ParserConfigurationException, SAXException {
+        URL detailsURL = new URL(
+                "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + record.getGeoAccession() );
+
+        /*
+         * This is pretty painful because it is slow. I can't find a better way, though: the eutils doesn't provide this
+         * information other than mentioning when a series is a superseries. Determining subseries status is impossible
+         * without another query. I don't think batch queries for MiniML is possible.
+         */
+
+        URLConnection dconn = detailsURL.openConnection();
+        dconn.connect();
+
+        try (InputStream isd = dconn.getInputStream()) {
+            parseMINiML( record, isd );
+        }
+    }
+
+    /**
+     * exposed for testing
+     * 
+     * @param  record
+     * @param  is
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException
+     * @throws XPathExpressionException
+     */
+    void parseMINiML( GeoRecord record, InputStream is )
+            throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+
+        XPathFactory xFactoryD = XPathFactory.newInstance();
+        XPath xpathD = xFactoryD.newXPath();
+
+        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
+        XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
+        DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
+        Document detailsDocument = builderD.parse( is );
+        Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
+        NodeList relTypeNodes = ( NodeList ) relationTypes;
+
+        for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
+
+            String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
+            String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
+
+            if ( relType.startsWith( "SubSeries" ) ) {
+                record.setSubSeries( true );
+                record.setSubSeriesOf( relTo );
+            }
+
+        }
     }
 
     /**

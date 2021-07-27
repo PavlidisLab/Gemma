@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<MINiML
+   xmlns="http://www.ncbi.nlm.nih.gov/geo/info/MINiML"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.ncbi.nlm.nih.gov/geo/info/MINiML http://www.ncbi.nlm.nih.gov/geo/info/MINiML.xsd"
+   version="0.5.0" >
+
+  <Contributor iid="contrib1">
+    <Person><First>Sunduz</First><Last>Keles</Last></Person>
+    <Email>keles@stat.wisc.edu</Email>
+    <Laboratory>Keles Lab</Laboratory>
+    <Department>Biostatistics and Medical Informatics, Statistics</Department>
+    <Organization>University of Wisconsin-Madison</Organization>
+    <Address>
+      <Line>1300 University Ave</Line>
+      <City>Madison</City>
+      <State>WI</State>
+      <Zip-Code>53706</Zip-Code>
+      <Country>USA</Country>
+    </Address>
+  </Contributor>
+
+  <Contributor iid="contrib2">
+    <Person><First>Shane</First><Middle>P</Middle><Last>Simonett</Last></Person>
+  </Contributor>
+
+  <Contributor iid="contrib3">
+    <Person><First>Donnie</First><Middle>S</Middle><Last>Stapleton</Last></Person>
+  </Contributor>
+
+  <Contributor iid="contrib4">
+    <Person><First>Kathryn</First><Middle>L</Middle><Last>Schueler</Last></Person>
+  </Contributor>
+
+  <Database iid="GEO">
+    <Name>Gene Expression Omnibus (GEO)</Name>
+    <Public-ID>GEO</Public-ID>
+    <Organization>NCBI NLM NIH</Organization>
+    <Web-Link>http://www.ncbi.nlm.nih.gov/geo</Web-Link>
+    <Email>geo@ncbi.nlm.nih.gov</Email>
+  </Database>
+
+  <Sample iid="GSM5461497">
+    <Accession database="GEO">GSM5461497</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461498">
+    <Accession database="GEO">GSM5461498</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461499">
+    <Accession database="GEO">GSM5461499</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461500">
+    <Accession database="GEO">GSM5461500</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461501">
+    <Accession database="GEO">GSM5461501</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461502">
+    <Accession database="GEO">GSM5461502</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461503">
+    <Accession database="GEO">GSM5461503</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461504">
+    <Accession database="GEO">GSM5461504</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461505">
+    <Accession database="GEO">GSM5461505</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461506">
+    <Accession database="GEO">GSM5461506</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461507">
+    <Accession database="GEO">GSM5461507</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461508">
+    <Accession database="GEO">GSM5461508</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461509">
+    <Accession database="GEO">GSM5461509</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461510">
+    <Accession database="GEO">GSM5461510</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461511">
+    <Accession database="GEO">GSM5461511</Accession>
+  </Sample>
+
+  <Sample iid="GSM5461512">
+    <Accession database="GEO">GSM5461512</Accession>
+  </Sample>
+
+  <Series iid="GSE180363">
+    <Status database="GEO">
+      <Submission-Date>2021-07-19</Submission-Date>
+      <Release-Date>2021-07-27</Release-Date>
+      <Last-Update-Date>2021-07-27</Last-Update-Date>
+    </Status>
+    <Title>Genome-wide chromatin accessibility of founder mice pancreatic islets</Title>
+    <Accession database="GEO">GSE180363</Accession>
+    <Summary>
+ATAC-seq data of founder mice pancreatic islets
+    </Summary>
+    <Overall-Design>
+8 founder strains, 2 sexes, 8 lanes each sample
+    </Overall-Design>
+    <Type>Genome binding/occupancy profiling by high throughput sequencing</Type>
+    <Contributor-Ref ref="contrib2" position="1" />
+    <Contributor-Ref ref="contrib3" position="2" />
+    <Contributor-Ref ref="contrib4" position="3" />
+    <Contact-Ref ref="contrib1" />
+    <Sample-Ref ref="GSM5461497" />
+    <Sample-Ref ref="GSM5461498" />
+    <Sample-Ref ref="GSM5461499" />
+    <Sample-Ref ref="GSM5461500" />
+    <Sample-Ref ref="GSM5461501" />
+    <Sample-Ref ref="GSM5461502" />
+    <Sample-Ref ref="GSM5461503" />
+    <Sample-Ref ref="GSM5461504" />
+    <Sample-Ref ref="GSM5461505" />
+    <Sample-Ref ref="GSM5461506" />
+    <Sample-Ref ref="GSM5461507" />
+    <Sample-Ref ref="GSM5461508" />
+    <Sample-Ref ref="GSM5461509" />
+    <Sample-Ref ref="GSM5461510" />
+    <Sample-Ref ref="GSM5461511" />
+    <Sample-Ref ref="GSM5461512" />
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_129-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_129-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_129_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_AJ-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_AJ-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_AJ_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_B6-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_B6-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_B6_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_CAST-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_CAST-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_CAST_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NOD-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NOD-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NOD_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NZO-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NZO-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_NZO_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_PWK-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_PWK-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_PWK_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_WSB-F_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_WSB-M_ref_default-fdr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Supplementary-Data type="NARROWPEAK">
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE180nnn/GSE180363/suppl/GSE180363_WSB_default-fdr.05-idr.05.narrowPeak.gz
+    </Supplementary-Data>
+    <Relation type="SubSeries of" target="GSE180810" />
+    <Relation type="BioProject" target="https://www.ncbi.nlm.nih.gov/bioproject/PRJNA747993" />
+    <Relation type="SRA" target="https://www.ncbi.nlm.nih.gov/sra?term=SRP328921" />
+  </Series>
+
+</MINiML>
