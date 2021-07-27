@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jasper.tagplugins.jstl.core.ForEach;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -30,6 +31,8 @@ import org.xml.sax.SAXException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
+import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -60,6 +63,7 @@ public class GeoBrowser {
     private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
     // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
+    private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
     // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
     // because of garbled tabbed lines returned
@@ -71,21 +75,29 @@ public class GeoBrowser {
     private final String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
 
     /**
-     * Performs an E-utilities query of the GEO database with the given searchTerms. Returns at most pageSize records
+     * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
+     * searchTerms (search terms can be ommitted). Returns at most pageSize records
      * (if found) starting at record #start.
      *
-     * @param start       start
-     * @param pageSize    page size
-     * @param searchTerms search terms
-     * @return list of GeoRecords
+     * @param  start       start
+     * @param  pageSize    page size
+     * @param  searchTerms search terms
+     * @return             list of GeoRecords
      * @throws IOException if there is a problem while manipulating the file
      */
     public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize )
             throws IOException, RuntimeException {
 
         List<GeoRecord> records = new ArrayList<>();
-        URL searchUrl = new URL(
-                GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+        URL searchUrl;
+
+        if ( StringUtils.isBlank( searchTerms ) ) {
+            searchUrl = new URL( GeoBrowser.ERETRIEVE + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+        } else {
+            searchUrl = new URL(
+                    GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+        }
+
         Document searchDocument;
         URLConnection conn = searchUrl.openConnection();
         conn.connect();
@@ -129,71 +141,105 @@ public class GeoBrowser {
 
         conn = fetchUrl.openConnection();
         conn.connect();
-        Document summaryDocument;
-        try (InputStream is = conn.getInputStream()) {
-            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-            summaryDocument = builder.parse( is );
 
-            XPathFactory xFactory = XPathFactory.newInstance();
-            XPath xpath = xFactory.newXPath();
+        XPathFactory xFactory = XPathFactory.newInstance();
+        XPath xpath = xFactory.newXPath();
 
+        try {
             // Get relevant data from the XML file
             XPathExpression xaccession = xpath.compile( "//DocSum/Item[@Name='GSE']" );
             XPathExpression xtitle = xpath.compile( "//DocSum/Item[@Name='title']" );
             XPathExpression xnumSamples = xpath.compile( "//DocSum/Item[@Name='n_samples']" );
             XPathExpression xreleaseDate = xpath.compile( "//DocSum/Item[@Name='PDAT']" );
             XPathExpression xorganisms = xpath.compile( "//DocSum/Item[@Name='taxon']" );
+            XPathExpression xgpl = xpath.compile( "//DocSum/Item[@Name='GPL']" );
+            XPathExpression xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
+            XPathExpression xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
 
-            Object accessions = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList accNodes = ( NodeList ) accessions;
+            Document summaryDocument;
+            try (InputStream is = conn.getInputStream()) {
+                DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
+                summaryDocument = builder.parse( is );
 
-            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList titleNodes = ( NodeList ) titles;
+                Object accessions = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList accNodes = ( NodeList ) accessions;
 
-            Object samples = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList sampleNodes = ( NodeList ) samples;
+                Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList titleNodes = ( NodeList ) titles;
 
-            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList dateNodes = ( NodeList ) dates;
+                Object samples = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList sampleNodes = ( NodeList ) samples;
 
-            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            NodeList orgnNodes = ( NodeList ) organisms;
+                Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList dateNodes = ( NodeList ) dates;
 
-            // Create GeoRecords using information parsed from XML file
-            for ( int i = 0; i < accNodes.getLength(); i++ ) {
+                Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList orgnNodes = ( NodeList ) organisms;
 
-                GeoRecord record = new GeoRecord();
+                Object platforms = xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList platformNodes = ( NodeList ) platforms;
 
-                record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
+                Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList summaryNodes = ( NodeList ) summary;
 
-                record.setTitle( titleNodes.item( i ).getTextContent() );
+                Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
+                NodeList typeNodes = ( NodeList ) type;
 
-                record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+                // Create GeoRecords using information parsed from XML file
+                for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
-                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
-                record.setReleaseDate( date );
+                    GeoRecord record = new GeoRecord();
 
-                record.setOrganisms( this.getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
+                    record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
-                records.add( record );
+                    record.setTitle( titleNodes.item( i ).getTextContent() );
+
+                    record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+
+                    Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                    record.setReleaseDate( date );
+
+                    record.setOrganisms( this.getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
+
+                    // there can be more than one, delimited by ';'
+                    String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
+                    List<String> finalPlatformIds = new ArrayList<>();
+                    for ( String p : platformlist ) {
+                        finalPlatformIds.add( "GPL" + p );
+                    }
+                    String platformS = StringUtils.join( finalPlatformIds, ";" );
+
+                    record.setPlatform( platformS );
+                    record.setSeriesType( typeNodes.item( i ).getTextContent() );
+                    record.setSummary( summaryNodes.item( i ).getTextContent() );
+
+                    // note: no indication of subseries
+                    record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
+
+                    records.add( record );
+                }
+
+                if ( records.isEmpty() ) {
+                    GeoBrowser.log.warn( "No records obtained" );
+                }
+            } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
+                throw new IOException( "Could not parse data: " + searchUrl, e );
             }
 
-            if ( records.isEmpty() ) {
-                GeoBrowser.log.warn( "No records obtained" );
-            }
-        } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
-            throw new IOException( "Could not parse data: " + searchUrl, e );
+        } catch ( XPathException e ) {
+            throw new RuntimeException( e );
         }
         return records;
 
     }
 
     /**
-     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage.
+     * Retrieves and parses tab delimited file from GEO. File contains pageSize GEO records starting from startPage. The
+     * retrieved information is pretty minimal.
      *
-     * @param startPage start page
-     * @param pageSize  page size
-     * @return list of GeoRecords
+     * @param  startPage      start page
+     * @param  pageSize       page size
+     * @return                list of GeoRecords
      * @throws IOException    if there is a problem while manipulating the file
      * @throws ParseException if there is a parsing problem
      */
@@ -276,8 +322,8 @@ public class GeoBrowser {
     /**
      * Extracts taxon names from input string; returns a collection of taxon names
      *
-     * @param input input
-     * @return taxon names
+     * @param  input input
+     * @return       taxon names
      */
     private Collection<String> getTaxonCollection( String input ) {
         Collection<String> taxa = new ArrayList<>();

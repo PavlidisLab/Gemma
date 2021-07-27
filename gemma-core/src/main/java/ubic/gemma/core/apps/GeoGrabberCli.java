@@ -22,14 +22,18 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Scans GEO for experiments that are not in Gemma.
+ * Scans GEO for ALL experiments that are not in Gemma.
  *
  * @author paul
  */
@@ -59,13 +63,19 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         Set<String> seen = new HashSet<>();
         GeoBrowserService gbs = this.getBean( GeoBrowserService.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
+        TaxonService ts = this.getBean( TaxonService.class );
+        ArrayDesignService ads = this.getBean( ArrayDesignService.class );
 
         int start = 0;
         int numfails = 0;
         int chunksize = 100;
 
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
+
+        System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tTitle\tSummary" );
+
         while ( true ) {
-            List<GeoRecord> recs = gbs.getRecentGeoRecords( start, chunksize );
+            List<GeoRecord> recs = gbs.searchGeoRecords( null, start, chunksize );
 
             if ( recs.isEmpty() ) {
                 AbstractCLI.log.info( "No records received for start=" + start );
@@ -92,6 +102,23 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     continue;
                 }
 
+                boolean anyTaxonAcceptable = false;
+                for ( String o : geoRecord.getOrganisms() ) {
+                    if ( ts.findByScientificName( o ) != null ) {
+                        anyTaxonAcceptable = true;
+                        break;
+                    }
+                }
+
+                //                
+                //                String experimentType = geoRecord.getType();
+                //                if 
+                //                
+                //                
+                if ( !anyTaxonAcceptable ) {
+                    continue;
+                }
+
                 if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
                     continue;
                 }
@@ -100,11 +127,27 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     continue;
                 }
 
+                boolean platformIsInGemma = true;
+                String[] platforms = geoRecord.getPlatform().split( ";" );
+                for ( String p : platforms ) {
+                    if ( ads.findByShortName( p ) == null ) {
+                        platformIsInGemma = false;
+                        break;
+                    }
+                }
+
                 System.out.println(
-                        geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next() + "\t"
-                                + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t" + StringUtils
-                                .join( geoRecord.getCorrespondingExperiments(), "," ) + "\t" + geoRecord
-                                .getSeriesType() );
+                        geoRecord.getGeoAccession()
+                                + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
+                                + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
+                                + "\t" + geoRecord.getPlatform()
+                                + "\t" + platformIsInGemma
+                                + "\t" + geoRecord.getNumSamples()
+                                + "\t" + geoRecord.getSeriesType()
+                                + "\t" + geoRecord.isSuperSeries()
+
+                                + "\t" + geoRecord.getTitle()
+                                + "\t" + geoRecord.getSummary() );
                 seen.add( geoRecord.getGeoAccession() );
             }
         }
