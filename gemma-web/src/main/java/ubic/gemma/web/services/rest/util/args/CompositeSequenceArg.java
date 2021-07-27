@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -9,6 +10,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  *
  * @author tesarst
  */
+@Schema(anyOf = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
 public abstract class CompositeSequenceArg<T>
         extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 

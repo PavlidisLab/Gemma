@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -17,6 +18,7 @@ import java.util.List;
  *
  * @author tesarst
  */
+@Schema(anyOf = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
     PlatformArg( T value ) {

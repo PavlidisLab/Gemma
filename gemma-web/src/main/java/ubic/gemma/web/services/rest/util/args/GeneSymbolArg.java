@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
@@ -16,6 +17,7 @@ import java.util.List;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class GeneSymbolArg extends GeneArg<String> {
 
     private static final String ID_NAME = "Official Symbol";

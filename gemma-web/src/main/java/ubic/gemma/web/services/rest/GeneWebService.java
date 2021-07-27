@@ -14,8 +14,9 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
@@ -27,9 +28,9 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -47,9 +48,9 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Component
+@Service
 @Path("/genes")
-public class GeneWebService extends WebService {
+public class GeneWebService {
 
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
@@ -79,18 +80,6 @@ public class GeneWebService extends WebService {
     }
 
     /**
-     * Placeholder for root call
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<?> all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        // Calling valueOf with empty string to get the correct exception
-        return Responder.autoCode( GeneArrayArg.valueOf( null ).getValue(), sr );
-    }
-
-    /**
      * Retrieves all genes matching the identifier.
      *
      * @param genes a list of gene identifiers, separated by commas (','). Identifiers can be one of
@@ -104,12 +93,13 @@ public class GeneWebService extends WebService {
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve genes matching a gene identifier")
     public ResponseDataObject<List<GeneValueObject>> genes( // Params:
             @PathParam("genes") GeneArrayArg genes, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
-        return Responder.autoCode( geneService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), genes.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), geneService ) ), sr );
+        return Responder.respond( geneService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), genes.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), geneService ) ) );
     }
 
     /**
@@ -122,12 +112,13 @@ public class GeneWebService extends WebService {
     @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the evidence for a given gene")
     public ResponseDataObject<List<GeneEvidenceValueObject>> geneEvidence( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder
-                .autoCode( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ), sr );
+                .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
     }
 
     /**
@@ -140,11 +131,12 @@ public class GeneWebService extends WebService {
     @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the physical locations of a given gene")
     public ResponseDataObject<List<PhysicalLocationValueObject>> geneLocations( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( geneArg.getGeneLocation( geneService ), sr );
+        return Responder.respond( geneArg.getGeneLocation( geneService ) );
     }
 
     /**
@@ -157,15 +149,16 @@ public class GeneWebService extends WebService {
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the probes associated to a genes")
     public ResponseDataObject<List<CompositeSequenceValueObject>> geneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( compositeSequenceService
+        return Responder.respond( compositeSequenceService
                 .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
-                        limit.getValue() ), sr );
+                        limit.getValue() ) );
     }
 
     /**
@@ -178,11 +171,12 @@ public class GeneWebService extends WebService {
     @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the GO terms associated to a gene")
     public ResponseDataObject<List<GeneOntologyTermValueObject>> genesGoTerms( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( geneArg.getGoTerms( geneService, geneOntologyService ), sr );
+        return Responder.respond( geneArg.getGoTerms( geneService, geneOntologyService ) );
     }
 
     /**
@@ -197,6 +191,7 @@ public class GeneWebService extends WebService {
     @Path("/{gene}/coexpression")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the coexpression of two given genes")
     public ResponseDataObject<List<CoexpressionValueObjectExt>> geneCoexpression( // Params:
             @PathParam("gene") final GeneArg<Object> geneArg, // Required
             @QueryParam("with") final GeneArg<Object> with, // Required
@@ -204,12 +199,12 @@ public class GeneWebService extends WebService {
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        super.checkReqArg( with, "with" );
+        ArgUtils.checkReqArg( with, "with" );
         return Responder
-                .autoCode( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
+                .respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
                     this.add( geneArg.getEntity( geneService ).getId() );
                     this.add( with.getEntity( geneService ).getId() );
-                }}, 1, limit.getValue(), false ).getResults(), sr );
+                }}, 1, limit.getValue(), false ).getResults() );
     }
 
 }

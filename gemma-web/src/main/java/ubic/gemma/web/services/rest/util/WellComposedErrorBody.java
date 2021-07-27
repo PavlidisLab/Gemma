@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.ws.rs.core.Response;
@@ -17,6 +18,11 @@ public class WellComposedErrorBody {
     private final int code;
 
     private final String message;
+
+    /**
+     * Exclude this field from serialization if unset.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> errors = null;
 
     /**

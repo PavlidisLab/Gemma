@@ -1,12 +1,13 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Class representing an API argument that should be a boolean.
  *
  * @author tesarst
  */
+@Schema(implementation = Boolean.class)
 public class BoolArg extends AbstractArg<Boolean> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 
@@ -23,7 +24,7 @@ public class BoolArg extends AbstractArg<Boolean> {
      *
      * @param s the request boolean argument
      * @return an instance of BoolArg representing boolean value of the input string, or a malformed BoolArg that will throw an
-     * {@link GemmaApiException} when accessing its value, if the input String can not be converted into a boolean.
+     * {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not be converted into a boolean.
      */
     @SuppressWarnings("unused")
     public static BoolArg valueOf( final String s ) {

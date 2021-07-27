@@ -1,12 +1,13 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Class representing an API argument that should be a long.
  *
  * @author tesarst
  */
+@Schema(implementation = Long.class)
 public class LongArg extends AbstractArg<Long> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a long number";
 
@@ -23,7 +24,7 @@ public class LongArg extends AbstractArg<Long> {
      *
      * @param s the request long number argument
      * @return an instance of LongArg representing long number value of the input string, or a malformed LongArg that will throw a
-     * {@link GemmaApiException} when accessing its value, if the input String can not
+     * {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not
      * be converted into a long.
      */
     @SuppressWarnings("unused")

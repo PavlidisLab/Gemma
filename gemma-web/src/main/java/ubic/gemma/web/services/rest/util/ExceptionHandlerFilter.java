@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
+/**
+ * Handle exceptions that slip through registered jax-rs exception mappers.
+ */
 public class ExceptionHandlerFilter extends OncePerRequestFilter {
 
     private static final String MESSAGE_401 = "Incorrect authentication credentials.";

@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 
@@ -8,6 +9,7 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
+@Schema(implementation = Integer.class)
 public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     private static final String ID_NAME = "NCBI ID";

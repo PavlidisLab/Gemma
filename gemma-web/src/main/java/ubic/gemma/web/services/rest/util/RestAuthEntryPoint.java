@@ -1,6 +1,9 @@
 package ubic.gemma.web.services.rest.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.AuthenticationException;
@@ -11,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
+@SecurityScheme(name = "restBasicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
 public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
 
     private static Log log = LogFactory.getLog( RestAuthEntryPoint.class );

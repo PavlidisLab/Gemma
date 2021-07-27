@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
@@ -8,6 +9,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {

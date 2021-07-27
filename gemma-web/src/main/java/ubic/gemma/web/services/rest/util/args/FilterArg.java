@@ -1,10 +1,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.BadRequestException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -63,9 +62,11 @@ import java.util.*;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
 
-    public static final FilterArg EMPTY_FILTER = new FilterArg( null, null, null, null, null ) {};
+    public static final FilterArg EMPTY_FILTER = new FilterArg( null, null, null, null, null ) {
+    };
 
     public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
     private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
@@ -261,8 +262,7 @@ public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
                 filterList.add( filterArray );
 
             } catch ( IndexOutOfBoundsException e ) {
-                throw new GemmaApiException(
-                        new WellComposedErrorBody( Response.Status.BAD_REQUEST, ERROR_MSG_ARGS_MISALIGNED ) );
+                throw new BadRequestException( ERROR_MSG_ARGS_MISALIGNED );
             }
         }
 

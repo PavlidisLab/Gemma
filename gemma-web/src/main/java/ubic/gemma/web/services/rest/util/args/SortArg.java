@@ -1,12 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.web.services.rest.util.GemmaApiException;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import javax.ws.rs.BadRequestException;
 
 /**
  * Class representing an API argument that should be an integer.
  *
  * @author tesarst
  */
+@Schema(implementation = String.class, type = "string", example = "+id")
 public class SortArg extends AbstractArg<SortArg.FieldWithDirection> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
@@ -31,7 +34,7 @@ public class SortArg extends AbstractArg<SortArg.FieldWithDirection> {
      *
      * @param s the request taxon argument
      * @return a new SortArg object representing the sort options in the given string, or a malformed SortArg that will
-     * throw a {@link ubic.gemma.web.services.rest.util.GemmaApiException}, if the given string was not well-formed.
+     * throw a {@link javax.ws.rs.BadRequestException}, if the given string was not well-formed.
      */
     @SuppressWarnings("unused")
     public static SortArg valueOf( final String s ) {
@@ -60,16 +63,18 @@ public class SortArg extends AbstractArg<SortArg.FieldWithDirection> {
     }
 
     /**
-     * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
+     * @return the field to sort by.
+     * @throws BadRequestException if the original argument was not well-composed
      */
-    public String getField() {
+    public String getField() throws BadRequestException {
         return getValue().field;
     }
 
     /**
-     * @return the direction of sort. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
+     * @return the direction of sort.
+     * @throws BadRequestException if the original argument was not well-composed
      */
-    public boolean isAsc() {
+    public boolean isAsc() throws BadRequestException {
         return getValue().isAsc;
     }
 
