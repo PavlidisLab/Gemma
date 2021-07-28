@@ -202,6 +202,7 @@ public class GeoBrowser {
                 NodeList pubmedNodes = ( NodeList ) pubmed;
 
                 // Create GeoRecords using information parsed from XML file
+                log.debug( "Got " + accNodes.getLength() + " XML records" );
                 for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
                     GeoRecord record = new GeoRecord();
@@ -239,9 +240,6 @@ public class GeoBrowser {
                     records.add( record );
                 }
 
-                if ( records.isEmpty() ) {
-                    GeoBrowser.log.warn( "No records obtained" );
-                }
             } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
                 throw new IOException( "Could not parse data: " + searchUrl, e );
             }
@@ -249,6 +247,13 @@ public class GeoBrowser {
         } catch ( XPathException e ) {
             throw new RuntimeException( e );
         }
+
+        if ( records.isEmpty() ) {
+            GeoBrowser.log.warn( "No records obtained" );
+        } else {
+            log.debug( "Parsed " + records.size() + " records" );
+        }
+
         return records;
 
     }

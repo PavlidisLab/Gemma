@@ -21,6 +21,7 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -79,7 +80,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     @Override
     protected void doWork() throws Exception {
         Set<String> seen = new HashSet<>();
-        GeoBrowserService gbs = this.getBean( GeoBrowserService.class );
+        GeoBrowser gbs = new GeoBrowser();
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         TaxonService ts = this.getBean( TaxonService.class );
         ArrayDesignService ads = this.getBean( ArrayDesignService.class );
@@ -98,7 +99,10 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         boolean keepGoing = true;
 
         while ( keepGoing ) {
-            List<GeoRecord> recs = gbs.searchGeoRecords( null, start, chunksize, true );
+
+            log.debug( "Searching from " + start + ", seeking " + chunksize + " records" );
+
+            List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */ );
 
             if ( recs.isEmpty() ) {
                 AbstractCLI.log.info( "No records received for start=" + start );
@@ -114,18 +118,19 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 } catch ( InterruptedException ignored ) {
                 }
 
-                start++;
+                start++; // increment until we hit something
                 continue;
             }
 
-            start++;
+            log.debug( "Retrieved " + recs.size() );
+            start += chunksize; // this seems the best way to avoid hitting them more than once.
 
             for ( GeoRecord geoRecord : recs ) {
 
                 numProcessed++;
 
                 if ( numProcessed % 100 == 0 ) {
-                    log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                    System.err.println( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
                 }
 
                 if ( this.dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
@@ -141,6 +146,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 }
 
                 if ( seen.contains( geoRecord.getGeoAccession() ) ) {
+                    log.info( "Already saw " + geoRecord.getGeoAccession() ); // this would be a bug IMO, want to avoid!
                     continue;
                 }
 
