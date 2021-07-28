@@ -156,6 +156,12 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
                 boolean anyTaxonAcceptable = false;
                 for ( String o : geoRecord.getOrganisms() ) {
+
+                    if ( StringUtils.isBlank( o ) ) {
+                        log.warn( "missing taxon for " + geoRecord.getGeoAccession() );
+                        continue;
+                    }
+
                     if ( ts.findByScientificName( o ) != null ) {
                         anyTaxonAcceptable = true;
                         break;
