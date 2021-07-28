@@ -75,45 +75,29 @@
         <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
     </filter>
 
-    <!-- Filter mappings -->
-    <filter-mapping>
-        <filter-name>exceptionHandlerFilter</filter-name>
-        <url-pattern>/rest/v2/*</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>encodingFilter</filter-name>
-        <url-pattern>/j_spring_security_check</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>encodingFilter</filter-name>
-        <url-pattern>/dwr/*</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>encodingFilter</filter-name>
-        <url-pattern>*.html</url-pattern>
-    </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>encodingFilter</filter-name>
-        <url-pattern>*.jsp</url-pattern>
-    </filter-mapping>
-
-    <!-- Security -->
+    <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <!-- Filter mappings -->
+    <filter-mapping>
+        <filter-name>exceptionHandlerFilter</filter-name>
+        <servlet-name>gemma-rest</servlet-name>
+    </filter-mapping>
+
+    <!-- enforce UTF-8 -->
+    <filter-mapping>
+        <filter-name>encodingFilter</filter-name>
+        <url-pattern>/j_spring_security_check</url-pattern>
+        <servlet-name>gemma</servlet-name>
+    </filter-mapping>
 
     <!-- All requests are decorated with sitemesh -->
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
-        <url-pattern>/*</url-pattern>
-        <dispatcher>REQUEST</dispatcher>
-        <dispatcher>FORWARD</dispatcher>
+        <servlet-name>gemma</servlet-name>
     </filter-mapping>
 
     <listener>
@@ -134,15 +118,13 @@
 
     <!-- Dispatch Servlet Configuration -->
     <servlet>
-        <description>Everything from Gemma.</description>
         <servlet-name>gemma</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <!-- Defines the Spring-WS MessageDispatcherServlet -->
     <servlet>
-        <servlet-name>spring-ws</servlet-name>
+        <servlet-name>gemma-ws</servlet-name>
         <servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
         <init-param>
             <!-- Transform the location attributes in WSDLs -->
@@ -152,34 +134,42 @@
     </servlet>
 
     <servlet>
-        <servlet-name>JawrImgServlet</servlet-name>
+        <servlet-name>gemma-rest</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.web.services.rest</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>gemma-static-js</servlet-name>
         <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
+        <init-param>
+            <param-name>configLocation</param-name>
+            <param-value>/jawr.properties</param-value>
+        </init-param>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>gemma-static-binary</servlet-name>
+        <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
+        <init-param>
+            <param-name>type</param-name>
+            <param-value>binary</param-value>
+        </init-param>
         <init-param>
             <param-name>configLocation</param-name>
             <param-value>/jawr.properties</param-value>
         </init-param>
         <!-- The Jawr Image servlet must start before the Jawr CSS Servlet -->
-        <load-on-startup>3</load-on-startup>
-    </servlet>
-
-
-    <servlet>
-        <servlet-name>JavascriptCompressServlet</servlet-name>
-        <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
-
-        <!-- Location in classpath of the config file -->
-        <init-param>
-            <param-name>configLocation</param-name>
-            <param-value>/jawr.properties</param-value>
-        </init-param>
-        <load-on-startup>4</load-on-startup>
+        <load-on-startup>0</load-on-startup>
     </servlet>
 
     <servlet>
-        <servlet-name>CSSCompressServlet</servlet-name>
+        <servlet-name>gemma-static-css</servlet-name>
         <servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
-
-        <!-- Location in classpath of the config file -->
         <init-param>
             <param-name>configLocation</param-name>
             <param-value>/jawr.properties</param-value>
@@ -188,118 +178,63 @@
             <param-name>type</param-name>
             <param-value>css</param-value>
         </init-param>
-        <load-on-startup>5</load-on-startup>
-    </servlet>
-
-    <!-- REST web service -->
-    <servlet>
-        <servlet-name>rest-ws-servlet</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>ubic.gemma.web.services.rest,io.swagger.v3.jaxrs2.integration.resources</param-value>
-        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-    <!--  servlet mappings -->
     <servlet-mapping>
         <servlet-name>gemma</servlet-name>
         <url-pattern>/</url-pattern>
+        <url-pattern>/dwr/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>spring-ws</servlet-name>
+        <servlet-name>gemma-ws</servlet-name>
         <url-pattern>/ws/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.gif</url-pattern>
+        <servlet-name>gemma-rest</servlet-name>
+        <url-pattern>/rest/v2/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
-        <url-pattern>*.png</url-pattern>
+        <url-pattern>/resources/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.txt</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.ico</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.jpg</url-pattern>
-    </servlet-mapping>
-
-    <!-- fontawesome -->
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.svg</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.woff</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.woff2</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.ttf</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.eot</url-pattern>
-    </servlet-mapping><!-- end fontawesome -->
-
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>*.swf</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma</servlet-name>
-        <url-pattern>*.html</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>gemma</servlet-name>
-        <url-pattern>/dwr/*</url-pattern>
-    </servlet-mapping>
-
-    <!-- JAWR js and css compression -->
-    <servlet-mapping>
-        <servlet-name>JavascriptCompressServlet</servlet-name>
+        <servlet-name>gemma-static-js</servlet-name>
         <url-pattern>*.js</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>CSSCompressServlet</servlet-name>
+        <servlet-name>gemma-static-css</servlet-name>
         <url-pattern>*.css</url-pattern>
     </servlet-mapping>
 
-    <!-- REST web service -->
     <servlet-mapping>
-        <servlet-name>rest-ws-servlet</servlet-name>
-        <url-pattern>/rest/v2/*</url-pattern>
+        <servlet-name>gemma-static-binary</servlet-name>
+        <!-- images -->
+        <url-pattern>*.png</url-pattern>
+        <url-pattern>*.jpg</url-pattern>
+        <url-pattern>*.gif</url-pattern>
+        <url-pattern>*.svg</url-pattern>
+        <url-pattern>*.ico</url-pattern>
+        <!-- fonts -->
+        <url-pattern>*.otf</url-pattern>
+        <url-pattern>*.eot</url-pattern>
+        <url-pattern>*.ttf</url-pattern>
+        <url-pattern>*.woff</url-pattern>
+        <url-pattern>*.woff2</url-pattern>
+        <!-- flash animation -->
+        <url-pattern>*.swf</url-pattern>
     </servlet-mapping>
 
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
 
+    <!-- redefined to exclude index.htm from defaults -->
     <welcome-file-list>
         <welcome-file>/WEB-INF/pages/index.jsp</welcome-file>
     </welcome-file-list>
@@ -351,9 +286,3 @@
         <mime-type>image/svg+xml</mime-type>
     </mime-mapping>
 </web-app>
-
-
-
-
-
-
