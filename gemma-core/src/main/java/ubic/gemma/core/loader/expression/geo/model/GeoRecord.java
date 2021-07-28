@@ -36,7 +36,7 @@ public class GeoRecord extends GeoData {
 
     private String contactName;
     private Collection<Long> correspondingExperiments;
-    private String meshHeadings;
+    private String meshHeadings = "";
     private int numSamples;
     private Collection<String> organisms;
     private String platform; // can be more than one here, for mixed data type series
@@ -49,6 +49,9 @@ public class GeoRecord extends GeoData {
     private String pubMedIds = "";
 
     private Date releaseDate;
+    private String sampleDetails = "";
+
+    private Collection<String> sampleGEOAccessions;
 
     private String seriesType;
 
@@ -105,6 +108,14 @@ public class GeoRecord extends GeoData {
 
     public Date getReleaseDate() {
         return releaseDate;
+    }
+
+    public String getSampleDetails() {
+        return sampleDetails;
+    }
+
+    public Collection<String> getSampleGEOAccessions() {
+        return sampleGEOAccessions;
     }
 
     public String getSeriesType() {
@@ -170,6 +181,14 @@ public class GeoRecord extends GeoData {
 
     public void setReleaseDate( Date releaseDate ) {
         this.releaseDate = releaseDate;
+    }
+
+    public void setSampleDetails( String sampleDetails ) {
+        this.sampleDetails = sampleDetails;
+    }
+
+    public void setSampleGEOAccessions( Collection<String> sampleGEOAccessions ) {
+        this.sampleGEOAccessions = sampleGEOAccessions;
     }
 
     public void setSeriesType( String seriesType ) {

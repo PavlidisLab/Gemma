@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<MINiML
+   xmlns="http://www.ncbi.nlm.nih.gov/geo/info/MINiML"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.ncbi.nlm.nih.gov/geo/info/MINiML http://www.ncbi.nlm.nih.gov/geo/info/MINiML.xsd"
+   version="0.5.0" >
+
+  <Contributor iid="contrib1">
+    <Person><First>Chang Ohk</First><Last>Sung</Last></Person>
+    <Department>Pathology</Department>
+    <Organization>Asan Medical Center</Organization>
+    <Address>
+      <Line>Song-Pa gu,Pung-nap dong</Line>
+      <City>Seoul</City>
+      <Postal-Code>138736</Postal-Code>
+      <Country>South Korea</Country>
+    </Address>
+  </Contributor>
+
+  <Database iid="GEO">
+    <Name>Gene Expression Omnibus (GEO)</Name>
+    <Public-ID>GEO</Public-ID>
+    <Organization>NCBI NLM NIH</Organization>
+    <Web-Link>http://www.ncbi.nlm.nih.gov/geo</Web-Link>
+    <Email>geo@ncbi.nlm.nih.gov</Email>
+  </Database>
+
+  <Platform iid="GPL16791">
+    <Accession database="GEO">GPL16791</Accession>
+  </Platform>
+
+  <Sample iid="GSM5230452">
+    <Status database="GEO">
+      <Submission-Date>2021-04-08</Submission-Date>
+      <Release-Date>2021-07-20</Release-Date>
+      <Last-Update-Date>2021-07-20</Last-Update-Date>
+    </Status>
+    <Title>Primary cancer, AMC-17CT-095</Title>
+    <Accession database="GEO">GSM5230452</Accession>
+    <Type>SRA</Type>
+    <Channel-Count>1</Channel-Count>
+    <Channel position="1">
+      <Source>colorectal cancer</Source>
+      <Organism taxid="9606">Homo sapiens</Organism>
+      <Characteristics tag="cancer site">
+Large intestine
+      </Characteristics>
+      <Characteristics tag="age">
+75
+      </Characteristics>
+      <Characteristics tag="tissue">
+colorectal cancer
+      </Characteristics>
+      <Treatment-Protocol>
+Formalin-fixed paraffin-embedded tissue
+      </Treatment-Protocol>
+      <Molecule>total RNA</Molecule>
+      <Extract-Protocol>
+RNA was extracted using the RNeasy Mini Kit (Qiagen).
+cDNA library was constructed using the TruSeq RNA Access Library Prep Kit (Illumina)
+      </Extract-Protocol>
+    </Channel>
+    <Description>
+gene expression
+    </Description>
+    <Data-Processing>
+Sequenced reads were removed low quality and adapter sequence before analysis. Then th raw RNA-seq data were analyzed using TCGA RNAseq RSEMv2 pipeline.
+Mapping by MapSplice v2.2.1 and gene expression estimation after filtering by RSEM v1.3.0, and fixed upper quartile normalization for gene expression.
+Genome_build: GRCh37
+Supplementary_files_format_and_content: tab-delimited text file include column head with sample name, and row name with gene symbol, and upper quartile normalized log2 values for each sample.
+    </Data-Processing>
+    <Platform-Ref ref="GPL16791" />
+    <Library-Strategy>RNA-Seq</Library-Strategy>
+    <Library-Source>transcriptomic</Library-Source>
+    <Library-Selection>cDNA</Library-Selection>
+    <Instrument-Model>
+      <Predefined>Illumina HiSeq 2500</Predefined>
+    </Instrument-Model>
+    <Contact-Ref ref="contrib1" />
+    <Supplementary-Data type="unknown">
+NONE
+    </Supplementary-Data>
+    <Relation type="BioSample" target="https://www.ncbi.nlm.nih.gov/biosample/SAMN18672241" />
+  </Sample>
+
+</MINiML>

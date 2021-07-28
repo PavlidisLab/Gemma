@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -233,6 +234,30 @@ public class GeoBrowserServiceParseTest {
             GeoRecord rec = new GeoRecord();
             serv.parseMINiML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) );
             assertTrue( rec.isSubSeries() );
+        }
+
+    }
+
+    @Test
+    public void testSampleMINiMLParse() throws Exception {
+
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSM5230452.xml" );
+                BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
+
+            String l;
+            StringBuilder buf = new StringBuilder();
+            while ( ( l = r.readLine() ) != null ) {
+                buf.append( l );
+            }
+            String response = buf.toString();
+            GeoBrowser serv = new GeoBrowser();
+            GeoRecord rec = new GeoRecord();
+            String info = StringUtils.join( serv.parseSampleMINiML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) ),
+                    ";" );
+            assertTrue( info.contains( "colorectal cancer" ) );
+            assertTrue( info.contains( "Large intestine" ) );
+
         }
 
     }

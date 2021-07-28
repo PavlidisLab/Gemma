@@ -85,6 +85,11 @@ public class GeoBrowserTest {
         }
     }
 
+    /**
+     * Exercises getting details
+     * 
+     * @throws Exception
+     */
     @Test
     public void testGetGeoRecords() throws Exception {
         GeoBrowser b = new GeoBrowser();
