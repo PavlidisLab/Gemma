@@ -36,6 +36,7 @@ public class GeoRecord extends GeoData {
 
     private String contactName;
     private Collection<Long> correspondingExperiments;
+    private String meshHeadings;
     private int numSamples;
     private Collection<String> organisms;
     private String platform; // can be more than one here, for mixed data type series
@@ -44,6 +45,7 @@ public class GeoRecord extends GeoData {
      * for usefulness.
      */
     private int previousClicks = 0;
+
     private String pubMedIds = "";
 
     private Date releaseDate;
@@ -75,6 +77,10 @@ public class GeoRecord extends GeoData {
 
     public Collection<Long> getCorrespondingExperiments() {
         return correspondingExperiments;
+    }
+
+    public String getMeshHeadings() {
+        return meshHeadings;
     }
 
     public int getNumSamples() {
@@ -131,6 +137,14 @@ public class GeoRecord extends GeoData {
 
     public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
         this.correspondingExperiments = correspondingExperiments;
+    }
+
+    /**
+     * @param join
+     */
+    public void setMeshHeadings( String meshheadings ) {
+        this.meshHeadings = meshheadings;
+
     }
 
     public void setNumSamples( int numSamples ) {

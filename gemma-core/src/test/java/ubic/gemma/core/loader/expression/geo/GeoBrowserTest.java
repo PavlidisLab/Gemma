@@ -92,7 +92,7 @@ public class GeoBrowserTest {
         try {
             Thread.sleep( 200 );
 
-            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, false );
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, true );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
 

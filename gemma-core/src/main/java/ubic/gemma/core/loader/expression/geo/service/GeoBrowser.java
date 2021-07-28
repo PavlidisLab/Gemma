@@ -58,8 +58,11 @@ import org.xml.sax.SAXException;
 
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.XMLUtils;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Settings;
 
 /**
@@ -70,23 +73,24 @@ import ubic.gemma.persistence.util.Settings;
  */
 public class GeoBrowser {
 
-    private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
-
-    private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
     private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
+
+    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
+    private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
     // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
-    private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
-    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
+    private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
+    private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
+    private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
+    private final String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+    @SuppressWarnings("FieldCanBeLocal") // Constant is better
+    private final String GEO_BROWSE_SUFFIX = "&display=";
     // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
     // because of garbled tabbed lines returned
     // from GEO.
-    @SuppressWarnings("FieldCanBeLocal") // Constant is better
-    private final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
-    @SuppressWarnings("FieldCanBeLocal") // Constant is better
-    private final String GEO_BROWSE_SUFFIX = "&display=";
-    private final String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+    private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
+
+    private PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
 
     /**
      * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
@@ -242,7 +246,6 @@ public class GeoBrowser {
                     record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ) );
                     record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
 
-                    // at the moment, getDetails only determines if it is a subseries, so we avoid checking if we can
                     if ( detailed && !record.isSuperSeries() ) {
                         getDetails( record );
                     }
@@ -266,77 +269,6 @@ public class GeoBrowser {
 
         return records;
 
-    }
-
-    /**
-     * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
-     * a subseries.
-     * 
-     * @param  record
-     * @throws MalformedURLException
-     * @throws IOException
-     * @throws XPathExpressionException
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     */
-    private void getDetails( GeoRecord record )
-            throws MalformedURLException, IOException, XPathExpressionException, ParserConfigurationException, SAXException {
-        URL detailsURL = new URL(
-                "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + record.getGeoAccession() );
-
-        /*
-         * This is pretty painful because it is slow. I can't find a better way, though: the eutils doesn't provide this
-         * information other than mentioning when a series is a superseries. Determining subseries status is impossible
-         * without another query. I don't think batch queries for MiniML is possible.
-         */
-
-        URLConnection dconn = detailsURL.openConnection();
-        dconn.connect();
-
-        try (InputStream isd = dconn.getInputStream()) {
-            parseMINiML( record, isd );
-        }
-    }
-
-    /**
-     * exposed for testing
-     * 
-     * @param  record
-     * @param  is
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws IOException
-     * @throws XPathExpressionException
-     */
-    void parseMINiML( GeoRecord record, InputStream is )
-            throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-
-        XPathFactory xFactoryD = XPathFactory.newInstance();
-        XPath xpathD = xFactoryD.newXPath();
-        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-        XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
-
-        try {
-            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
-            Document detailsDocument = builderD.parse( is );
-            Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
-            NodeList relTypeNodes = ( NodeList ) relationTypes;
-
-            for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
-
-                String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
-                String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
-
-                if ( relType.startsWith( "SubSeries" ) ) {
-                    record.setSubSeries( true );
-                    record.setSubSeriesOf( relTo );
-                }
-
-            }
-        } catch ( UTFDataFormatException e ) {
-            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
-                    + ", subseries status will not be determined." );
-        }
     }
 
     /**
@@ -423,6 +355,109 @@ public class GeoBrowser {
         }
         return records;
 
+    }
+
+    /**
+     * exposed for testing
+     * 
+     * @param  record
+     * @param  is
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException
+     * @throws XPathExpressionException
+     */
+    void parseMINiML( GeoRecord record, InputStream is )
+            throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+
+        XPathFactory xFactoryD = XPathFactory.newInstance();
+        XPath xpathD = xFactoryD.newXPath();
+        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
+        XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
+
+        try {
+            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
+            Document detailsDocument = builderD.parse( is );
+            Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
+            NodeList relTypeNodes = ( NodeList ) relationTypes;
+
+            for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
+
+                String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
+                String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
+
+                if ( relType.startsWith( "SubSeries" ) ) {
+                    record.setSubSeries( true );
+                    record.setSubSeriesOf( relTo );
+                }
+
+            }
+        } catch ( UTFDataFormatException e ) {
+            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
+                    + ", subseries status will not be determined." );
+        }
+    }
+
+    /**
+     * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
+     * a subseries, and MESH headings associated with any publication.
+     * 
+     * @param  record
+     * @throws MalformedURLException
+     * @throws IOException
+     * @throws XPathExpressionException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     */
+    private void getDetails( GeoRecord record )
+            throws MalformedURLException, IOException, XPathExpressionException, ParserConfigurationException, SAXException {
+
+        URL miniMLURL = new URL(
+                "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + record.getGeoAccession() );
+
+        /*
+         * I can't find a better way, though: the eutils doesn't provide this
+         * information other than mentioning when a series is a superseries. Determining subseries status is impossible
+         * without another query. I don't think batch queries for MiniML is possible.
+         */
+
+        URLConnection dconn = miniMLURL.openConnection();
+        dconn.connect();
+
+        try (InputStream isd = dconn.getInputStream()) {
+            parseMINiML( record, isd );
+        }
+        if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
+            getMeshHeadings( record );
+        }
+
+    }
+
+    /**
+     * @param  record      to process
+     * @throws IOException
+     */
+    private void getMeshHeadings( GeoRecord record ) throws IOException {
+        Collection<String> meshheadings = new ArrayList<>();
+        // not sure about separator, but usually just one anyway
+        List<String> idlist = Arrays.asList( StringUtils.split( record.getPubMedIds(), ";" ) );
+        List<Integer> idints = new ArrayList<>();
+        for ( String s : idlist ) {
+            try {
+                idints.add( Integer.parseInt( s ) );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Invalid PubMed ID '" + s + "' for " + record.getGeoAccession() );
+            }
+        }
+        Collection<BibliographicReference> refs = pubmedFetcher.retrieveByHTTP( idints );
+        for ( BibliographicReference ref : refs ) {
+            for ( MedicalSubjectHeading mesh : ref.getMeshTerms() ) {
+                meshheadings.add( mesh.getTerm() );
+            }
+        }
+
+        if ( !meshheadings.isEmpty() )
+            record.setMeshHeadings( StringUtils.join( meshheadings, ";" ) );
     }
 
     /**

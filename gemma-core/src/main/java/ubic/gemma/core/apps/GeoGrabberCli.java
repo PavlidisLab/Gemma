@@ -91,7 +91,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
         System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                + "\tPubMed\tTitle\tSummary" );
+                + "\tPubMed\tTitle\tSummary\tMeSH" );
 
         int numProcessed = 0;
         int numUsed = 0;
@@ -213,7 +213,9 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                 + "\t" + geoRecord.getSubSeriesOf()
                                 + "\t" + geoRecord.getPubMedIds()
                                 + "\t" + geoRecord.getTitle()
-                                + "\t" + geoRecord.getSummary() );
+                                + "\t" + geoRecord.getSummary()
+                                + "\t" + geoRecord.getMeshHeadings() );
+
                 seen.add( geoRecord.getGeoAccession() );
 
                 numUsed++;
