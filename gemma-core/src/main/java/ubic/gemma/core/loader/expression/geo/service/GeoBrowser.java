@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UTFDataFormatException;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,6 +60,7 @@ import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.XMLUtils;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
@@ -67,6 +69,8 @@ import ubic.gemma.core.util.XMLUtils;
  * @author pavlidis
  */
 public class GeoBrowser {
+
+    private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
 
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
     private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -100,14 +104,19 @@ public class GeoBrowser {
             throws IOException, RuntimeException {
 
         List<GeoRecord> records = new ArrayList<>();
-        URL searchUrl;
 
+        String searchUrlString;
         if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrl = new URL( GeoBrowser.ERETRIEVE + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+            searchUrlString = GeoBrowser.ERETRIEVE + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
         } else {
-            searchUrl = new URL(
-                    GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+            searchUrlString = GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
         }
+
+        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
+            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+        }
+
+        URL searchUrl = new URL( searchUrlString );
 
         Document searchDocument;
         URLConnection conn = searchUrl.openConnection();
@@ -148,7 +157,8 @@ public class GeoBrowser {
 
         URL fetchUrl = new URL(
                 GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start + "&retmax="
-                        + pageSize + "&WebEnv=" + cookie );
+                        + pageSize + "&WebEnv=" + cookie
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
 
         conn = fetchUrl.openConnection();
         conn.connect();
@@ -305,21 +315,27 @@ public class GeoBrowser {
         XPath xpathD = xFactoryD.newXPath();
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
         XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
-        DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
-        Document detailsDocument = builderD.parse( is );
-        Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
-        NodeList relTypeNodes = ( NodeList ) relationTypes;
 
-        for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
+        try {
+            DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
+            Document detailsDocument = builderD.parse( is );
+            Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
+            NodeList relTypeNodes = ( NodeList ) relationTypes;
 
-            String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
-            String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
+            for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
 
-            if ( relType.startsWith( "SubSeries" ) ) {
-                record.setSubSeries( true );
-                record.setSubSeriesOf( relTo );
+                String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
+                String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
+
+                if ( relType.startsWith( "SubSeries" ) ) {
+                    record.setSubSeries( true );
+                    record.setSubSeriesOf( relTo );
+                }
+
             }
-
+        } catch ( UTFDataFormatException e ) {
+            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
+                    + ", subseries status will not be determined." );
         }
     }
 
