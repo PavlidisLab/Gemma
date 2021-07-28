@@ -15,7 +15,9 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -28,6 +30,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +41,9 @@ import java.util.Set;
  * @author paul
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
+
+    private Date dateLimit;
+    private String gseLimit;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -51,11 +57,23 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption(
+                Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy.MM.dd e.g. 2010.01.12" )
+                        .argName( "date limit" ).hasArg().build() );
+        options.addOption(
+                Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
+                        .build() );
+
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws Exception {
-
+        if ( commandLine.hasOption( "date" ) ) {
+            this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
+        }
+        if ( commandLine.hasOption( "gselimit" ) ) {
+            this.gseLimit = commandLine.getOptionValue( "gselimit" );
+        }
     }
 
     @Override
@@ -75,7 +93,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
                 + "\tPubMed\tTitle\tSummary" );
 
-        while ( true ) {
+        int numProcessed = 0;
+        int numUsed = 0;
+        boolean keepGoing = true;
+
+        while ( keepGoing ) {
             List<GeoRecord> recs = gbs.searchGeoRecords( null, start, chunksize, true );
 
             if ( recs.isEmpty() ) {
@@ -99,6 +121,25 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
             start++;
 
             for ( GeoRecord geoRecord : recs ) {
+
+                numProcessed++;
+
+                if ( numProcessed % 100 == 0 ) {
+                    log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                }
+
+                if ( this.dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
+                    log.info( "Stopping as reached date limit" );
+                    keepGoing = false;
+                    break;
+                }
+
+                if ( this.gseLimit != null && geoRecord.getGeoAccession().equals( this.gseLimit ) ) {
+                    log.info( "Stopping as have reached " + gseLimit );
+                    keepGoing = false;
+                    break;
+                }
+
                 if ( seen.contains( geoRecord.getGeoAccession() ) ) {
                     continue;
                 }
@@ -163,7 +204,10 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                 + "\t" + geoRecord.getTitle()
                                 + "\t" + geoRecord.getSummary() );
                 seen.add( geoRecord.getGeoAccession() );
+
+                numUsed++;
             }
+
         }
     }
 
