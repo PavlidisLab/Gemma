@@ -103,6 +103,10 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     continue;
                 }
 
+                if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                    continue;
+                }
+
                 boolean anyTaxonAcceptable = false;
                 for ( String o : geoRecord.getOrganisms() ) {
                     if ( ts.findByScientificName( o ) != null ) {
@@ -128,12 +132,21 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 }
 
                 boolean platformIsInGemma = true;
+                boolean anyNonBlacklistedPlatforms = false;
                 String[] platforms = geoRecord.getPlatform().split( ";" );
                 for ( String p : platforms ) {
                     if ( ads.findByShortName( p ) == null ) {
                         platformIsInGemma = false;
                         break;
                     }
+                    if ( !ees.isBlackListed( p ) ) {
+                        anyNonBlacklistedPlatforms = true;
+                    }
+                }
+
+                // we skip if all the platforms for the GSE are blacklisted
+                if ( !anyNonBlacklistedPlatforms ) {
+                    continue;
                 }
 
                 System.out.println(

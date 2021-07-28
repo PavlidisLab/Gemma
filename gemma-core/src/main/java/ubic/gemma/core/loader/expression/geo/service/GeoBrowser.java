@@ -167,7 +167,7 @@ public class GeoBrowser {
             XPathExpression xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
             XPathExpression xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
 
-            XPathExpression xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list
+            XPathExpression xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
 
             Document summaryDocument;
             try (InputStream is = conn.getInputStream()) {
@@ -298,7 +298,6 @@ public class GeoBrowser {
 
         XPathFactory xFactoryD = XPathFactory.newInstance();
         XPath xpathD = xFactoryD.newXPath();
-
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
         XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
         DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
