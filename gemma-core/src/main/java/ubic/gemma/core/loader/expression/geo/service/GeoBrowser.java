@@ -181,10 +181,10 @@ public class GeoBrowser {
             XPathExpression xgpl = xpath.compile( "//DocSum/Item[@Name='GPL']" );
             XPathExpression xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
             XPathExpression xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
-            XPathExpression xsamples = xpath.compile( "//DocSum/Item[@Name='Samples']" );
+            //   XPathExpression xsamples = xpath.compile( "//DocSum/Item[@Name='Samples']" );
             XPathExpression xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
 
-            XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
+            //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
 
             Document summaryDocument;
             try (InputStream is = conn.getInputStream()) {
@@ -218,8 +218,8 @@ public class GeoBrowser {
                 Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
                 NodeList pubmedNodes = ( NodeList ) pubmed;
 
-                Object samples = xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList sampleLists = ( NodeList ) samples;
+                //                Object samples = xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
+                //                NodeList sampleLists = ( NodeList ) samples;
 
                 // Create GeoRecords using information parsed from XML file
                 log.debug( "Got " + accNodes.getLength() + " XML records" );
@@ -245,19 +245,19 @@ public class GeoBrowser {
                         finalPlatformIds.add( "GPL" + p );
                     }
 
-                    if ( detailed ) {
-                        Collection<String> sampleAccs = new ArrayList<>();
-                        NodeList sampleInfo = sampleLists.item( i ).getChildNodes();
-                        for ( int j = 0; j < sampleInfo.getLength(); j++ ) {
-                            Node item = sampleInfo.item( j );
-                            NodeList sampledets = ( NodeList ) xsampleaccs.evaluate( item, XPathConstants.NODESET );
-                            for ( int k = 0; k < sampledets.getLength(); k++ ) {
-                                String s = sampledets.item( k ).getTextContent();
-                                sampleAccs.add( s );
-                            }
-                        }
-                        record.setSampleGEOAccessions( sampleAccs );
-                    }
+                    //                    if ( detailed ) {
+                    //                        Collection<String> sampleAccs = new ArrayList<>();
+                    //                        NodeList sampleInfo = sampleLists.item( i ).getChildNodes();
+                    //                        for ( int j = 0; j < sampleInfo.getLength(); j++ ) {
+                    //                            Node item = sampleInfo.item( j );
+                    //                            NodeList sampledets = ( NodeList ) xsampleaccs.evaluate( item, XPathConstants.NODESET );
+                    //                            for ( int k = 0; k < sampledets.getLength(); k++ ) {
+                    //                                String s = sampledets.item( k ).getTextContent();
+                    //                                sampleAccs.add( s );
+                    //                            }
+                    //                        }
+                    //                        record.setSampleGEOAccessions( sampleAccs );
+                    //                    }
 
                     String platformS = StringUtils.join( finalPlatformIds, ";" );
 
@@ -420,7 +420,7 @@ public class GeoBrowser {
     }
 
     /**
-     * Parse MINiML for a single sample. Exposed for testing
+     * Parse MINiML for samples. Exposed for testing
      * 
      * @param isd
      */
@@ -445,12 +445,17 @@ public class GeoBrowser {
                 NodeList sources = ( NodeList ) source.evaluate( item, XPathConstants.NODESET );
                 for ( int k = 0; k < sources.getLength(); k++ ) {
                     String s = sources.item( k ).getTextContent();
-                    props.add( s );
+                    String v = StringUtils.strip( s );
+                    if ( v.matches( "[0-9]+" ) ) continue; // skip unadorned numbers
+
+                    props.add( v );
                 }
                 NodeList chars = ( NodeList ) characteristics.evaluate( item, XPathConstants.NODESET );
                 for ( int k = 0; k < chars.getLength(); k++ ) {
                     String s = chars.item( k ).getTextContent();
-                    props.add( StringUtils.strip( s ) );
+                    String v = StringUtils.strip( s );
+                    if ( v.matches( "[0-9]+" ) ) continue;
+                    props.add( v );
                 }
             }
             return props;
@@ -496,21 +501,19 @@ public class GeoBrowser {
                 }
             }
 
-            // Fetch miniML for the samples.
-            // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5230452&targ=self&form=xml&view=full
-            Set<String> terms = new HashSet<>();
-            for ( String sampleAcc : record.getSampleGEOAccessions() ) {
-                Thread.sleep( 100 ); // avoid overspamming them, we are limited to 10 reqs per second.
-                URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=self&form=xml&view=full&acc=" + sampleAcc );
-                URLConnection sconn = sampleMINIMLURL.openConnection();
-                sconn.connect();
+            // Fetch miniML for the samples. 
+            // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
 
-                try (InputStream isd = sconn.getInputStream()) {
-                    terms.addAll( parseSampleMINiML( record, isd ) );
-                }
+            URL sampleMINIMLURL = new URL(
+                    "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + record.getGeoAccession() );
+            URLConnection sconn = sampleMINIMLURL.openConnection();
+            sconn.connect();
+
+            try (InputStream isd = sconn.getInputStream()) {
+                Set<String> terms = parseSampleMINiML( record, isd );
+                record.setSampleDetails( StringUtils.join( terms, ";" ) );
+
             }
-
-            record.setSampleDetails( StringUtils.join( terms, ";" ) );
 
             // another query. Note that new Pubmed IDs generally don't have mesh headings yet, so this might not be that useful.
             if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
@@ -522,8 +525,6 @@ public class GeoBrowser {
 
         } catch ( IOException e ) {
             log.error( "Error while getting details for " + record.getGeoAccession() + ": " + e.getMessage() );
-        } catch ( InterruptedException e ) {
-            //
         }
 
     }

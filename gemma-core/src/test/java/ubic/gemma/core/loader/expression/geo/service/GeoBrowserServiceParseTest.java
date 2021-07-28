@@ -242,7 +242,7 @@ public class GeoBrowserServiceParseTest {
     public void testSampleMINiMLParse() throws Exception {
 
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSM5230452.xml" );
+                .getResourceAsStream( "/data/loader/expression/geo/GSE171682.xml" );
                 BufferedReader r = new BufferedReader( new InputStreamReader( is ) )) {
 
             String l;
