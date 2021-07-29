@@ -24,6 +24,8 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -37,8 +39,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,7 +109,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         int start = 0;
         int numfails = 0;
-        int chunksize = 100;
+        int chunksize = 20;
 
         assert outputFileName != null;
         log.info( "Writing output to " + outputFileName );
@@ -118,13 +122,13 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         outputFile.createNewFile();
 
-        log.info( "Writing results to " + outputFileName );
+        Map<Long, ArrayDesign> seenArrayDesigns = new HashMap<>();
 
         try (Writer os = new FileWriter( outputFile )) {
 
             DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
-            os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
+            os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
                     + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );
             os.flush();
 
@@ -202,17 +206,30 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
-                    boolean platformIsInGemma = true;
+                    boolean allPlatformsInGemma = true;
                     boolean anyNonBlacklistedPlatforms = false;
+                    boolean isAffymetrix = false;
                     String[] platforms = geoRecord.getPlatform().split( ";" );
                     for ( String p : platforms ) {
-                        if ( ads.findByShortName( p ) == null ) {
-                            platformIsInGemma = false;
+
+                        ArrayDesign ad = ads.findByShortName( p );
+                        if ( ad == null ) {
+                            allPlatformsInGemma = false; // don't skip, just indicate
                             break;
                         }
+
+                        if ( seenArrayDesigns.containsKey( ad.getId() ) ) {
+                            ad = seenArrayDesigns.get( ad.getId() ); // cache
+                        } else {
+                            ad = ads.thawLite( ad );
+                            seenArrayDesigns.put( ad.getId(), ad );
+                        }
+                        isAffymetrix = ad.getDesignProvider() != null && "Affymetrix".equals( ad.getDesignProvider().getName() );
+
                         if ( !ees.isBlackListed( p ) ) {
                             anyNonBlacklistedPlatforms = true;
                         }
+                        // check for Affymetrix
                     }
 
                     // we skip if all the platforms for the GSE are blacklisted
@@ -225,7 +242,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                     + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
                                     + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
                                     + "\t" + geoRecord.getPlatform()
-                                    + "\t" + platformIsInGemma
+                                    + "\t" + allPlatformsInGemma
+                                    + "\t" + isAffymetrix
                                     + "\t" + geoRecord.getNumSamples()
                                     + "\t" + geoRecord.getSeriesType()
                                     + "\t" + geoRecord.isSuperSeries()
