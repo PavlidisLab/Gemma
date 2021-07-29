@@ -24,12 +24,14 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -97,11 +99,17 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         int numUsed = 0;
         boolean keepGoing = true;
 
+        Collection<String> allowedTaxa = new HashSet<>();
+        for ( Taxon t : ts.loadAll() ) {
+            allowedTaxa.add( t.getScientificName() );
+        }
+        log.info( allowedTaxa.size() + " Taxa considered usable" );
+
         while ( keepGoing ) {
 
             log.debug( "Searching from " + start + ", seeking " + chunksize + " records" );
 
-            List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */ );
+            List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */, allowedTaxa );
 
             if ( recs.isEmpty() ) {
                 AbstractCLI.log.info( "No records received for start=" + start );
@@ -121,14 +129,14 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 continue;
             }
 
-            log.debug( "Retrieved " + recs.size() );
+            log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
             start += chunksize; // this seems the best way to avoid hitting them more than once.
 
             for ( GeoRecord geoRecord : recs ) {
 
                 numProcessed++;
 
-                if ( numProcessed % 100 == 0 ) {
+                if ( numProcessed % 50 == 0 ) {
                     System.err.println( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
                 }
 
@@ -150,28 +158,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 }
 
                 if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
-                    continue;
-                }
-
-                boolean anyTaxonAcceptable = false;
-                for ( String o : geoRecord.getOrganisms() ) {
-
-                    if ( StringUtils.isBlank( o ) ) {
-                        log.warn( "missing taxon for " + geoRecord.getGeoAccession() );
-                        continue;
-                    }
-
-                    if ( ts.findByScientificName( o ) != null ) {
-                        anyTaxonAcceptable = true;
-                        break;
-                    }
-                }
-
-                if ( !geoRecord.getSeriesType().contains( "Expression profiling" ) ) {
-                    continue;
-                }
-
-                if ( !anyTaxonAcceptable ) {
                     continue;
                 }
 

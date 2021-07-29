@@ -125,7 +125,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
         GeoBrowser browser = new GeoBrowser();
-        List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count, detailed );
+        List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count, detailed, null );
 
         return this.filterGeoRecords( records );
     }

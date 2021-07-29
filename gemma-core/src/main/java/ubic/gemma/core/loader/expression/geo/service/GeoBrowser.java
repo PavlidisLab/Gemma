@@ -42,13 +42,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -91,21 +91,66 @@ public class GeoBrowser {
     @SuppressWarnings("FieldCanBeLocal") // Constant is better
     private final String GEO_BROWSE_SUFFIX = "&display=";
 
+    XPathFactory xFactory = XPathFactory.newInstance();
+    XPath xpath = xFactory.newXPath();
+
+    XPathExpression xaccession;
+    XPathExpression xtitle;
+    XPathExpression xnumSamples;
+    XPathExpression xreleaseDate;
+    XPathExpression xorganisms;
+    XPathExpression xgpl;
+    XPathExpression xsummary;
+    XPathExpression xtype;
+    XPathExpression xpubmed;
+    XPathExpression xChannel;
+
+    XPathExpression source;
+    XPathExpression characteristics;
+    XPathExpression xRelationType;
+
+    public GeoBrowser() {
+        try {
+            // Get relevant data from the XML file
+            xaccession = xpath.compile( "//DocSum/Item[@Name='GSE']" );
+            xtitle = xpath.compile( "//DocSum/Item[@Name='title']" );
+            xnumSamples = xpath.compile( "//DocSum/Item[@Name='n_samples']" );
+            xreleaseDate = xpath.compile( "//DocSum/Item[@Name='PDAT']" );
+            xorganisms = xpath.compile( "//DocSum/Item[@Name='taxon']" );
+            xgpl = xpath.compile( "//DocSum/Item[@Name='GPL']" );
+            xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
+            xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
+            xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
+
+            xChannel = xpath.compile( "//MINiML/Sample/Channel" );
+            source = xpath.compile( "//Source" );
+            characteristics = xpath.compile( "//Characteristics" );
+
+            xRelationType = xpath.compile( "//MINiML/Series/Relation" );
+
+            //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
+        } catch ( Exception e ) {
+            throw new RuntimeException( "Error setting up GEOBrowser xpaths: " + e.getMessage() );
+        }
+
+    }
+
     private PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
 
     /**
      * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
-     * searchTerms (search terms can be ommitted). Returns at most pageSize records
-     * (if found) starting at record #start.
+     * searchTerms (search terms can be ommitted). Returns at most pageSize records. Does some screening of results for
+     * expression studies, and (optionally) taxa
      *
-     * @param  start       start
-     * @param  pageSize    page size
+     * @param  start       start an offset to retrieve batches
+     * @param  pageSize    page size how many to retrive
      * @param  searchTerms search terms
      * @param  detailed    if true, additional information is fetched (slower)
+     * @param  allowedTaxa if not null, data sets not containing any of these taxa will be skipped
      * @return             list of GeoRecords
      * @throws IOException if there is a problem while manipulating the file
      */
-    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed )
+    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed, Collection<String> allowedTaxa )
             throws IOException, RuntimeException {
 
         List<GeoRecord> records = new ArrayList<>();
@@ -165,121 +210,124 @@ public class GeoBrowser {
                         + pageSize + "&WebEnv=" + cookie
                         + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
 
+        StopWatch t = new StopWatch();
+        t.start();
         conn = fetchUrl.openConnection();
         conn.connect();
 
-        XPathFactory xFactory = XPathFactory.newInstance();
-        XPath xpath = xFactory.newXPath();
+        Document summaryDocument;
+        try (InputStream is = conn.getInputStream()) {
+            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
+            summaryDocument = builder.parse( is );
 
-        try {
-            // Get relevant data from the XML file
-            XPathExpression xaccession = xpath.compile( "//DocSum/Item[@Name='GSE']" );
-            XPathExpression xtitle = xpath.compile( "//DocSum/Item[@Name='title']" );
-            XPathExpression xnumSamples = xpath.compile( "//DocSum/Item[@Name='n_samples']" );
-            XPathExpression xreleaseDate = xpath.compile( "//DocSum/Item[@Name='PDAT']" );
-            XPathExpression xorganisms = xpath.compile( "//DocSum/Item[@Name='taxon']" );
-            XPathExpression xgpl = xpath.compile( "//DocSum/Item[@Name='GPL']" );
-            XPathExpression xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
-            XPathExpression xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
-            //   XPathExpression xsamples = xpath.compile( "//DocSum/Item[@Name='Samples']" );
-            XPathExpression xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
+            Object accessions = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList accNodes = ( NodeList ) accessions;
 
-            //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
+            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList titleNodes = ( NodeList ) titles;
 
-            Document summaryDocument;
-            try (InputStream is = conn.getInputStream()) {
-                DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
-                summaryDocument = builder.parse( is );
+            Object sampleCounts = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList sampleNodes = ( NodeList ) sampleCounts;
 
-                Object accessions = xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList accNodes = ( NodeList ) accessions;
+            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList dateNodes = ( NodeList ) dates;
 
-                Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList titleNodes = ( NodeList ) titles;
+            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList orgnNodes = ( NodeList ) organisms;
 
-                Object sampleCounts = xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList sampleNodes = ( NodeList ) sampleCounts;
+            Object platforms = xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList platformNodes = ( NodeList ) platforms;
 
-                Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList dateNodes = ( NodeList ) dates;
+            Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList summaryNodes = ( NodeList ) summary;
 
-                Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList orgnNodes = ( NodeList ) organisms;
+            Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList typeNodes = ( NodeList ) type;
 
-                Object platforms = xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList platformNodes = ( NodeList ) platforms;
+            Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList pubmedNodes = ( NodeList ) pubmed;
 
-                Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList summaryNodes = ( NodeList ) summary;
+            //                Object samples = xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
+            //                NodeList sampleLists = ( NodeList ) samples;
 
-                Object type = xtype.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList typeNodes = ( NodeList ) type;
+            // Create GeoRecords using information parsed from XML file
+            log.debug( "Got " + accNodes.getLength() + " XML records" );
 
-                Object pubmed = xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-                NodeList pubmedNodes = ( NodeList ) pubmed;
+            for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
-                //                Object samples = xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
-                //                NodeList sampleLists = ( NodeList ) samples;
+                GeoRecord record = new GeoRecord();
 
-                // Create GeoRecords using information parsed from XML file
-                log.debug( "Got " + accNodes.getLength() + " XML records" );
-                for ( int i = 0; i < accNodes.getLength(); i++ ) {
+                record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
-                    GeoRecord record = new GeoRecord();
-
-                    record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-
-                    record.setTitle( titleNodes.item( i ).getTextContent() );
-
-                    record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
-
-                    Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
-                    record.setReleaseDate( date );
-
-                    record.setOrganisms( this.getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
-
-                    // there can be more than one, delimited by ';'
-                    String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
-                    List<String> finalPlatformIds = new ArrayList<>();
-                    for ( String p : platformlist ) {
-                        finalPlatformIds.add( "GPL" + p );
-                    }
-
-                    //                    if ( detailed ) {
-                    //                        Collection<String> sampleAccs = new ArrayList<>();
-                    //                        NodeList sampleInfo = sampleLists.item( i ).getChildNodes();
-                    //                        for ( int j = 0; j < sampleInfo.getLength(); j++ ) {
-                    //                            Node item = sampleInfo.item( j );
-                    //                            NodeList sampledets = ( NodeList ) xsampleaccs.evaluate( item, XPathConstants.NODESET );
-                    //                            for ( int k = 0; k < sampledets.getLength(); k++ ) {
-                    //                                String s = sampledets.item( k ).getTextContent();
-                    //                                sampleAccs.add( s );
-                    //                            }
-                    //                        }
-                    //                        record.setSampleGEOAccessions( sampleAccs );
-                    //                    }
-
-                    String platformS = StringUtils.join( finalPlatformIds, ";" );
-
-                    record.setPlatform( platformS );
-                    record.setSeriesType( typeNodes.item( i ).getTextContent() );
-                    record.setSummary( summaryNodes.item( i ).getTextContent() );
-                    record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ) );
-                    record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
-
-                    if ( detailed ) {
-                        getDetails( record );
-                    }
-
-                    records.add( record );
+                record.setSeriesType( typeNodes.item( i ).getTextContent() );
+                if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
+                    continue;
                 }
 
-            } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
-                throw new IOException( "Could not parse data: " + searchUrl, e );
+                Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
+                if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+                    boolean useableTaxa = false;
+                    for ( String ta : taxa ) {
+                        if ( allowedTaxa.contains( ta ) ) {
+                            useableTaxa = true;
+                        }
+                    }
+                    if ( !useableTaxa ) {
+                        continue;
+                    }
+                }
+                record.setOrganisms( taxa );
+
+                record.setTitle( titleNodes.item( i ).getTextContent() );
+
+                record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                record.setReleaseDate( date );
+
+                // there can be more than one, delimited by ';'
+                String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
+                List<String> finalPlatformIds = new ArrayList<>();
+                for ( String p : platformlist ) {
+                    finalPlatformIds.add( "GPL" + p );
+                }
+
+                //                    if ( detailed ) {
+                //                        Collection<String> sampleAccs = new ArrayList<>();
+                //                        NodeList sampleInfo = sampleLists.item( i ).getChildNodes();
+                //                        for ( int j = 0; j < sampleInfo.getLength(); j++ ) {
+                //                            Node item = sampleInfo.item( j );
+                //                            NodeList sampledets = ( NodeList ) xsampleaccs.evaluate( item, XPathConstants.NODESET );
+                //                            for ( int k = 0; k < sampledets.getLength(); k++ ) {
+                //                                String s = sampledets.item( k ).getTextContent();
+                //                                sampleAccs.add( s );
+                //                            }
+                //                        }
+                //                        record.setSampleGEOAccessions( sampleAccs );
+                //                    }
+
+                String platformS = StringUtils.join( finalPlatformIds, ";" );
+
+                record.setPlatform( platformS );
+
+                record.setSummary( summaryNodes.item( i ).getTextContent() );
+                record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ) );
+                record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
+
+                if ( detailed ) {
+                    getDetails( record );
+                }
+
+                records.add( record );
+
+                System.err.println(
+                        "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                t.reset();
+                t.start();
             }
 
-        } catch ( XPathException e ) {
-            throw new RuntimeException( e );
+        } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
+            throw new IOException( "Could not parse data: " + searchUrl, e );
         }
 
         if ( records.isEmpty() ) {
@@ -392,10 +440,7 @@ public class GeoBrowser {
 
         try {
 
-            XPathFactory xFactoryD = XPathFactory.newInstance();
-            XPath xpathD = xFactoryD.newXPath();
             // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-            XPathExpression xRelationType = xpathD.compile( "//MINiML/Series/Relation" );
             DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
             Document detailsDocument = builderD.parse( is );
             Object relationTypes = xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
@@ -427,17 +472,11 @@ public class GeoBrowser {
     Set<String> parseSampleMINiML( GeoRecord record, InputStream is ) {
         try {
 
-            XPathFactory xFactoryD = XPathFactory.newInstance();
-            XPath xpathD = xFactoryD.newXPath();
-            XPathExpression xChannel = xpathD.compile( "//MINiML/Sample/Channel" );
             // Source, Characteristics
             DocumentBuilder builderD = GeoBrowser.docFactory.newDocumentBuilder(); // can move out
             Document detailsDocument = builderD.parse( is );
             Object channels = xChannel.evaluate( detailsDocument, XPathConstants.NODESET );
             NodeList channelNodes = ( NodeList ) channels;
-
-            XPathExpression source = xpathD.compile( "//Source" );
-            XPathExpression characteristics = xpathD.compile( "//Characteristics" );
 
             Set<String> props = new HashSet<>(); // expect duplicate terms
             for ( int i = 0; i < channelNodes.getLength(); i++ ) {
@@ -502,8 +541,7 @@ public class GeoBrowser {
             }
 
             // Fetch miniML for the samples. 
-            // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
-
+            // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
             URL sampleMINIMLURL = new URL(
                     "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + record.getGeoAccession() );
             URLConnection sconn = sampleMINIMLURL.openConnection();
