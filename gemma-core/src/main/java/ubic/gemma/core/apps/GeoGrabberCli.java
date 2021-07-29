@@ -29,7 +29,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -38,7 +42,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Scans GEO for ALL experiments that are not in Gemma.
+ * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
+ * screening. See https://github.com/PavlidisLab/Gemma/issues/169
  *
  * @author paul
  */
@@ -46,6 +51,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     private Date dateLimit;
     private String gseLimit;
+    private String outputFileName = "";
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -66,16 +72,27 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
                         .build() );
 
+        options.addOption( Option.builder( "output" ).desc( "File path for output (required)" ).argName( "path" ).hasArg().required().build() );
+
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws Exception {
         if ( commandLine.hasOption( "date" ) ) {
-            this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
+            try {
+                this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
+            } catch ( ParseException e ) {
+                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) );
+            }
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
             this.gseLimit = commandLine.getOptionValue( "gselimit" );
         }
+
+        if ( !commandLine.hasOption( "output" ) ) {
+            throw new IllegalArgumentException( "You must provide an output file name" );
+        }
+        this.outputFileName = commandLine.getOptionValue( "output" );
     }
 
     @Override
@@ -90,125 +107,144 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         int numfails = 0;
         int chunksize = 100;
 
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
+        assert outputFileName != null;
+        log.info( "Writing output to " + outputFileName );
+        File outputFile = new File( outputFileName );
 
-        System.out.println( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                + "\tPubMed\tTitle\tSummary\tMeSH" );
-
-        int numProcessed = 0;
-        int numUsed = 0;
-        boolean keepGoing = true;
-
-        Collection<String> allowedTaxa = new HashSet<>();
-        for ( Taxon t : ts.loadAll() ) {
-            allowedTaxa.add( t.getScientificName() );
+        if ( outputFile.exists() ) {
+            log.warn( "Overwriting existing file ..." );
+            Thread.sleep( 500 );
         }
-        log.info( allowedTaxa.size() + " Taxa considered usable" );
 
-        while ( keepGoing ) {
+        outputFile.createNewFile();
 
-            log.debug( "Searching from " + start + ", seeking " + chunksize + " records" );
+        log.info( "Writing results to " + outputFileName );
 
-            List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */, allowedTaxa );
+        try (Writer os = new FileWriter( outputFile )) {
 
-            if ( recs.isEmpty() ) {
-                AbstractCLI.log.info( "No records received for start=" + start );
-                numfails++;
+            DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
-                if ( numfails > 10 ) {
-                    AbstractCLI.log.info( "Giving up" );
-                    break;
-                }
+            os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
+                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );
+            os.flush();
 
-                try {
-                    Thread.sleep( 500 );
-                } catch ( InterruptedException ignored ) {
-                }
+            int numProcessed = 0;
+            int numUsed = 0;
+            boolean keepGoing = true;
 
-                start++; // increment until we hit something
-                continue;
+            Collection<String> allowedTaxa = new HashSet<>();
+            for ( Taxon t : ts.loadAll() ) {
+                allowedTaxa.add( t.getScientificName() );
             }
+            log.info( allowedTaxa.size() + " Taxa considered usable" );
 
-            log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
-            start += chunksize; // this seems the best way to avoid hitting them more than once.
+            while ( keepGoing ) {
 
-            for ( GeoRecord geoRecord : recs ) {
+                log.debug( "Searching from " + start + ", seeking " + chunksize + " records" );
 
-                numProcessed++;
+                List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */, allowedTaxa );
 
-                if ( numProcessed % 50 == 0 ) {
-                    System.err.println( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
-                }
+                if ( recs.isEmpty() ) {
+                    AbstractCLI.log.info( "No records received for start=" + start );
+                    numfails++;
 
-                if ( this.dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
-                    log.info( "Stopping as reached date limit" );
-                    keepGoing = false;
-                    break;
-                }
-
-                if ( this.gseLimit != null && geoRecord.getGeoAccession().equals( this.gseLimit ) ) {
-                    log.info( "Stopping as have reached " + gseLimit );
-                    keepGoing = false;
-                    break;
-                }
-
-                if ( seen.contains( geoRecord.getGeoAccession() ) ) {
-                    log.info( "Already saw " + geoRecord.getGeoAccession() ); // this would be a bug IMO, want to avoid!
-                    continue;
-                }
-
-                if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
-                    continue;
-                }
-
-                if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
-                    continue;
-                }
-
-                if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
-                    continue;
-                }
-
-                boolean platformIsInGemma = true;
-                boolean anyNonBlacklistedPlatforms = false;
-                String[] platforms = geoRecord.getPlatform().split( ";" );
-                for ( String p : platforms ) {
-                    if ( ads.findByShortName( p ) == null ) {
-                        platformIsInGemma = false;
+                    if ( numfails > 10 ) {
+                        AbstractCLI.log.info( "Giving up" );
                         break;
                     }
-                    if ( !ees.isBlackListed( p ) ) {
-                        anyNonBlacklistedPlatforms = true;
-                    }
-                }
 
-                // we skip if all the platforms for the GSE are blacklisted
-                if ( !anyNonBlacklistedPlatforms ) {
+                    try {
+                        Thread.sleep( 500 );
+                    } catch ( InterruptedException ignored ) {
+                    }
+
+                    start++; // increment until we hit something
                     continue;
                 }
 
-                System.out.println(
-                        geoRecord.getGeoAccession()
-                                + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
-                                + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
-                                + "\t" + geoRecord.getPlatform()
-                                + "\t" + platformIsInGemma
-                                + "\t" + geoRecord.getNumSamples()
-                                + "\t" + geoRecord.getSeriesType()
-                                + "\t" + geoRecord.isSuperSeries()
-                                + "\t" + geoRecord.getSubSeriesOf()
-                                + "\t" + geoRecord.getPubMedIds()
-                                + "\t" + geoRecord.getTitle()
-                                + "\t" + geoRecord.getSummary()
-                                + "\t" + geoRecord.getMeshHeadings()
-                                + "\t" + geoRecord.getSampleDetails() );
+                log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
+                start += chunksize; // this seems the best way to avoid hitting them more than once.
 
-                seen.add( geoRecord.getGeoAccession() );
+                for ( GeoRecord geoRecord : recs ) {
 
-                numUsed++;
+                    numProcessed++;
+
+                    if ( numProcessed % 50 == 0 ) {
+                        System.err.println( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                    }
+
+                    if ( this.dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
+                        log.info( "Stopping as reached date limit" );
+                        keepGoing = false;
+                        break;
+                    }
+
+                    if ( this.gseLimit != null && geoRecord.getGeoAccession().equals( this.gseLimit ) ) {
+                        log.info( "Stopping as have reached " + gseLimit );
+                        keepGoing = false;
+                        break;
+                    }
+
+                    if ( seen.contains( geoRecord.getGeoAccession() ) ) {
+                        log.info( "Already saw " + geoRecord.getGeoAccession() ); // this would be a bug IMO, want to avoid!
+                        continue;
+                    }
+
+                    if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                        continue;
+                    }
+
+                    if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                        continue;
+                    }
+
+                    if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                        continue;
+                    }
+
+                    boolean platformIsInGemma = true;
+                    boolean anyNonBlacklistedPlatforms = false;
+                    String[] platforms = geoRecord.getPlatform().split( ";" );
+                    for ( String p : platforms ) {
+                        if ( ads.findByShortName( p ) == null ) {
+                            platformIsInGemma = false;
+                            break;
+                        }
+                        if ( !ees.isBlackListed( p ) ) {
+                            anyNonBlacklistedPlatforms = true;
+                        }
+                    }
+
+                    // we skip if all the platforms for the GSE are blacklisted
+                    if ( !anyNonBlacklistedPlatforms ) {
+                        continue;
+                    }
+
+                    os.write(
+                            geoRecord.getGeoAccession()
+                                    + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
+                                    + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
+                                    + "\t" + geoRecord.getPlatform()
+                                    + "\t" + platformIsInGemma
+                                    + "\t" + geoRecord.getNumSamples()
+                                    + "\t" + geoRecord.getSeriesType()
+                                    + "\t" + geoRecord.isSuperSeries()
+                                    + "\t" + geoRecord.getSubSeriesOf()
+                                    + "\t" + geoRecord.getPubMedIds()
+                                    + "\t" + geoRecord.getTitle()
+                                    + "\t" + geoRecord.getSummary()
+                                    + "\t" + geoRecord.getMeshHeadings()
+                                    + "\t" + geoRecord.getSampleDetails() + "\n" );
+
+                    seen.add( geoRecord.getGeoAccession() );
+
+                    numUsed++;
+                }
+                os.flush();
+
             }
-
         }
+
     }
 
     @Override
