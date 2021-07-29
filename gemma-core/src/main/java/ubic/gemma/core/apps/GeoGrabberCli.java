@@ -200,7 +200,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                 + "\t" + geoRecord.getPubMedIds()
                                 + "\t" + geoRecord.getTitle()
                                 + "\t" + geoRecord.getSummary()
-                                + "\t" + geoRecord.getMeshHeadings() );
+                                + "\t" + geoRecord.getMeshHeadings()
+                                + "\t" + geoRecord.getSampleDetails() );
 
                 seen.add( geoRecord.getGeoAccession() );
 
