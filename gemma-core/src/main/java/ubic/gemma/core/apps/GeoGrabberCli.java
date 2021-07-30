@@ -61,6 +61,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
+    private boolean getPlatforms = false;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -83,6 +84,9 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         options.addOption( Option.builder( "output" ).desc( "File path for output (required)" ).argName( "path" ).hasArg().required().build() );
 
+        options.addOption(
+                Option.builder( "platforms" ).desc( "Fetch a list of all platforms instead of experiments (date and gselimit ignored)" ).build() );
+
     }
 
     @Override
@@ -101,6 +105,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         if ( !commandLine.hasOption( "output" ) ) {
             throw new IllegalArgumentException( "You must provide an output file name" );
         }
+
+        if ( commandLine.hasOption( "platforms" ) ) {
+            this.getPlatforms = true;
+        }
+
         this.outputFileName = commandLine.getOptionValue( "output" );
     }
 
@@ -111,6 +120,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         TaxonService ts = this.getBean( TaxonService.class );
         ArrayDesignService ads = this.getBean( ArrayDesignService.class );
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
         int start = 0;
 
@@ -125,11 +135,31 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         outputFile.createNewFile();
 
+        if ( getPlatforms ) {
+            Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms();
+            log.info( "Fetched " + allGEOPlatforms.size() + " records" );
+            try (Writer os = new FileWriter( outputFile )) {
+                os.append( "Acc\tRelaseDate\tTaxa\tTitle\tSummary\tTechType\n" );
+                for ( GeoRecord geoRecord : allGEOPlatforms ) {
+
+                    os.write(
+                            geoRecord.getGeoAccession()
+                                    + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
+                                    + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
+                                    + "\t" + geoRecord.getTitle()
+                                    + "\t" + geoRecord.getSummary()
+                                    + "\t" + geoRecord.getSeriesType()
+                                    + "\n" );
+
+                }
+            }
+            return;
+        }
+
         Map<Long, ArrayDesign> seenArrayDesigns = new HashMap<>();
 
         try (Writer os = new FileWriter( outputFile )) {
 
-            DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
 
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
                     + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );

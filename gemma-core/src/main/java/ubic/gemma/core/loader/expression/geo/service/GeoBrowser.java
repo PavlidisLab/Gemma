@@ -51,6 +51,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -70,6 +71,8 @@ import ubic.gemma.persistence.util.Settings;
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
  * Gemma.
  *
+ * See {@link https://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html} for some information
+ *
  * @author pavlidis
  */
 public class GeoBrowser {
@@ -77,6 +80,7 @@ public class GeoBrowser {
     private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
+    private static final String EPLATRETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
     private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
     // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
@@ -98,6 +102,8 @@ public class GeoBrowser {
     XPathExpression xnumSamples;
     XPathExpression xorganisms;
     XPath xpath = xFactory.newXPath();
+    XPathExpression xPlataccession;
+    XPathExpression xPlatformTech;
     XPathExpression xpubmed;
     XPathExpression xRelationType;
     XPathExpression xreleaseDate;
@@ -130,10 +136,132 @@ public class GeoBrowser {
 
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
 
+            xPlataccession = xpath.compile( "//DocSum/Item[@Name='GPL']" );
+
+            xPlatformTech = xpath.compile( "//DocSum/Item[@Name='ptechType']" );
+
             //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
         } catch ( Exception e ) {
             throw new RuntimeException( "Error setting up GEOBrowser xpaths: " + e.getMessage() );
         }
+
+    }
+
+    /**
+     * A bit hacky, can be improved. Limited to human, mouse, rat, is not guaranteed to get everything, though as of
+     * 7/2021, this is sufficient (~8000 platforms)
+     * 
+     * @return             all relevant platforms up to single-query limit of NCBI
+     * @throws IOException
+     */
+    public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
+
+        List<GeoRecord> records = new ArrayList<>();
+
+        String searchUrlString;
+
+        searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
+
+        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
+            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+        }
+
+        URL searchUrl = new URL( searchUrlString );
+
+        Document searchDocument;
+        URLConnection conn = searchUrl.openConnection();
+        conn.connect();
+        try (InputStream is = conn.getInputStream()) {
+
+            GeoBrowser.docFactory.setIgnoringComments( true );
+            GeoBrowser.docFactory.setValidating( false );
+
+            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
+            searchDocument = builder.parse( is );
+        } catch ( ParserConfigurationException | SAXException e ) {
+            throw new RuntimeException( e );
+        }
+
+        NodeList countNode = searchDocument.getElementsByTagName( "Count" );
+        Node countEl = countNode.item( 0 );
+
+        int count;
+        try {
+            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+        } catch ( NumberFormatException e ) {
+            throw new IOException( "Could not parse count from: " + searchUrl );
+        }
+
+        if ( count == 0 )
+            throw new IOException( "Got no records from: " + searchUrl );
+
+        NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
+
+        Element queryIdEl = ( Element ) qnode.item( 0 );
+
+        NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
+        Element cookieEl = ( Element ) cknode.item( 0 );
+
+        String queryId = XMLUtils.getTextValue( queryIdEl );
+        String cookie = XMLUtils.getTextValue( cookieEl );
+
+        URL fetchUrl = new URL(
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retmax="
+                        + 10000 + "&WebEnv=" + cookie
+                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
+
+        StopWatch t = new StopWatch();
+        t.start();
+        conn = fetchUrl.openConnection();
+        conn.connect();
+
+        Document summaryDocument;
+        try (InputStream is = conn.getInputStream()) {
+            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
+            summaryDocument = builder.parse( is );
+
+            Object accessions = xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList accNodes = ( NodeList ) accessions;
+
+            Object titles = xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList titleNodes = ( NodeList ) titles;
+
+            Object summary = xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList summaryNodes = ( NodeList ) summary;
+
+            Object tech = xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList techNodes = ( NodeList ) tech;
+
+            Object organisms = xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList orgnNodes = ( NodeList ) organisms;
+
+            Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
+            NodeList dateNodes = ( NodeList ) dates;
+
+            log.debug( "Got " + accNodes.getLength() + " XML records" );
+
+            for ( int i = 0; i < accNodes.getLength(); i++ ) {
+
+                GeoRecord record = new GeoRecord();
+
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                record.setReleaseDate( date );
+                record.setGeoAccession( "GPL" + accNodes.item( i ).getTextContent() );
+                record.setTitle( titleNodes.item( i ).getTextContent() );
+                record.setOrganisms( null );
+                record.setSummary( summaryNodes.item( i ).getTextContent() );
+                record.setSeriesType( techNodes.item( i ).getTextContent() ); // slight abuse
+                Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
+                record.setOrganisms( taxa );
+                records.add( record );
+            }
+
+        } catch ( ParserConfigurationException | XPathExpressionException | SAXException | DOMException | ParseException e ) {
+            log.error( e.getMessage() );
+
+        }
+
+        return records;
 
     }
 
@@ -292,20 +420,6 @@ public class GeoBrowser {
                 for ( String p : platformlist ) {
                     finalPlatformIds.add( "GPL" + p );
                 }
-
-                //                    if ( detailed ) {
-                //                        Collection<String> sampleAccs = new ArrayList<>();
-                //                        NodeList sampleInfo = sampleLists.item( i ).getChildNodes();
-                //                        for ( int j = 0; j < sampleInfo.getLength(); j++ ) {
-                //                            Node item = sampleInfo.item( j );
-                //                            NodeList sampledets = ( NodeList ) xsampleaccs.evaluate( item, XPathConstants.NODESET );
-                //                            for ( int k = 0; k < sampledets.getLength(); k++ ) {
-                //                                String s = sampledets.item( k ).getTextContent();
-                //                                sampleAccs.add( s );
-                //                            }
-                //                        }
-                //                        record.setSampleGEOAccessions( sampleAccs );
-                //                    }
 
                 String platformS = StringUtils.join( finalPlatformIds, ";" );
 
