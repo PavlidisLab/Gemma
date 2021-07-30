@@ -253,10 +253,10 @@ public class GeoBrowserServiceParseTest {
             String response = buf.toString();
             GeoBrowser serv = new GeoBrowser();
             GeoRecord rec = new GeoRecord();
-            String info = StringUtils.join( serv.parseSampleMINiML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) ),
-                    ";" );
-            assertTrue( info.contains( "colorectal cancer" ) );
-            assertTrue( info.contains( "Large intestine" ) );
+            serv.parseSampleMiNIML( rec, new ByteArrayInputStream( response.getBytes( StandardCharsets.UTF_8 ) ) );
+
+            assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
+            assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
 
         }
 

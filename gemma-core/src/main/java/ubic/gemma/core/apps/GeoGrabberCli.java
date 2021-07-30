@@ -25,7 +25,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -33,6 +32,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -53,6 +53,11 @@ import java.util.Set;
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
+    /**
+     * 
+     */
+    private static final int NCBI_CHUNK_SIZE = 100;
+    private static final int MAX_RETRIES = 5;
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
@@ -108,8 +113,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         ArrayDesignService ads = this.getBean( ArrayDesignService.class );
 
         int start = 0;
-        int numfails = 0;
-        int chunksize = 20;
 
         assert outputFileName != null;
         log.info( "Writing output to " + outputFileName );
@@ -144,30 +147,41 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
             while ( keepGoing ) {
 
-                log.debug( "Searching from " + start + ", seeking " + chunksize + " records" );
+                log.debug( "Searching from " + start + ", seeking " + NCBI_CHUNK_SIZE + " records" );
+                List<GeoRecord> recs = null;
+                int retries = 0;
+                try {
+                    recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa );
+                    if ( recs == null || recs.isEmpty() ) {
+                        // this doesn't happen any more, in my experience
+                        AbstractCLI.log.info( "No records received for start=" + start );
+                        retries++;
 
-                List<GeoRecord> recs = gbs.getGeoRecordsBySearchTerm( null, start, chunksize, true /* details */, allowedTaxa );
+                        if ( retries > MAX_RETRIES ) {
+                            AbstractCLI.log.info( "Too many failures, giving up" );
+                            break;
+                        }
 
-                if ( recs.isEmpty() ) {
-                    AbstractCLI.log.info( "No records received for start=" + start );
-                    numfails++;
-
-                    if ( numfails > 10 ) {
-                        AbstractCLI.log.info( "Giving up" );
-                        break;
+                        try {
+                            Thread.sleep( 500 );
+                        } catch ( InterruptedException ignored ) {
+                        }
+                        continue;
                     }
-
-                    try {
+                } catch ( IOException e ) {
+                    // this definitely can happen, occasional 500s from NCBI
+                    retries++;
+                    if ( retries <= MAX_RETRIES ) {
+                        log.warn( "Failure while fetching records, retrying " + e.getMessage() );
                         Thread.sleep( 500 );
-                    } catch ( InterruptedException ignored ) {
+                        continue;
                     }
+                    throw new IOException( "Too many failures: " + e.getMessage() );
 
-                    start++; // increment until we hit something
-                    continue;
                 }
 
                 log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
-                start += chunksize; // this seems the best way to avoid hitting them more than once.
+                start += NCBI_CHUNK_SIZE; // this seems the best way to avoid hitting them more than once.
 
                 for ( GeoRecord geoRecord : recs ) {
 
