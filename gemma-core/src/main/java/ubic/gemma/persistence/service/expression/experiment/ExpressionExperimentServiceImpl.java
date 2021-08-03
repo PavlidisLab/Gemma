@@ -18,13 +18,25 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import com.google.common.base.Strings;
-import gemma.gsec.SecurityService;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.base.Strings;
+
+import gemma.gsec.SecurityService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
@@ -39,7 +51,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionSuitabilityEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -57,7 +68,13 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
@@ -72,8 +89,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.ObjectFilter;
-
-import java.util.*;
 
 /**
  * @author pavlidis
@@ -239,40 +254,23 @@ public class ExpressionExperimentServiceImpl
         }
 
         AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( ev == null || FailedBatchInformationFetchingEvent.class.isAssignableFrom( ev.getEventType().getClass() ) ) {
-            // this means the batch info couldn't be obtained, or FASTQ headers weren't interpretable.
-            return false;
-        }
-        return true; // pretty sure this should be okay, we don't need the additional checks below anymore.
+        if ( ev == null ) return false;
+        return ev.getEventType().getClass().isAssignableFrom( BatchInformationFetchingEvent.class )
+                || ev.getEventType().getClass().isAssignableFrom( SingleBatchDeterminationEvent.class ); // 
+    }
 
-        //        boolean allBAsHaveDate = true;
-        //        ee = this.thawBioAssays( ee );
-        //        for ( BioAssay ba : ee.getBioAssays() ) {
-        //            if ( ba.getProcessingDate() == null ) {
-        //                allBAsHaveDate = false;
-        //                break;
-        //            }
-        //        }
-        //        if ( allBAsHaveDate ) {
-        //            return true;
-        //        }
-        //
-        //        // still nothing? Check if we have info from FASTQ headers for RNA-seq case
-        //
-        //        boolean allBAsHaveFASTQHeaders = true;
-        //        for ( BioAssay ba : ee.getBioAssays() ) {
-        //            if ( ba.getFastqHeaders() == null ) {
-        //                allBAsHaveFASTQHeaders = false;
-        //                break;
-        //            }
-        //        }
-        //
-        //        if ( allBAsHaveFASTQHeaders ) {
-        //            // means we got usable headers, doesn't mean there is more than one batch.
-        //            return true;
-        //        }
-        //
-        //        return false;
+    @Override
+    public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                return new BatchInformationFetchingEvent(); // signal success
+            }
+        }
+
+        AuditEvent ev = this.auditEventDao.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        if ( ev == null ) return null;
+        return ( BatchInformationFetchingEvent ) ev.getEventType();
 
     }
 
@@ -609,13 +607,11 @@ public class ExpressionExperimentServiceImpl
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
 
-        BatchEffectDetails details = new BatchEffectDetails( this.checkHasBatchInfo( ee ),
+        BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
 
-        if ( details.hasNoBatchInfo() )
-            return details;
-
-        if ( details.isSingleBatch() ) {
+        if ( details.hasNoBatchInfo() || details.isSingleBatch() || details.isFailedToGetBatchInformation()
+                || details.getHadUninformativeHeaders() || details.getHadSingletonBatches() ) {
             return details;
         }
 
@@ -647,26 +643,30 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
         /*
-         * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js.
-         * A better way would be to use an enumeration...
+         * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
          */
         BatchEffectDetails beDetails = this.getBatchEffect( ee );
         //log.info( beDetails );
         String result = "";
-        if ( beDetails != null && !beDetails.hasNoBatchInfo() ) {
-            if ( beDetails.isSingleBatch() ) {
-                result = "Samples were run in a single batch";
+        if ( beDetails != null ) {
+
+            if ( beDetails.getHadSingletonBatches() ) {
+                result = "SINGLETON_BATCHES_FAILURE";
+            } else if ( beDetails.getHadUninformativeHeaders() ) {
+                result = "UNINFORMATIVE_HEADERS_FAILURE";
+            } else if ( beDetails.isSingleBatch() ) {
+                result = "SINGLE_BATCH_SUCCESS";
             } else if ( beDetails.getDataWasBatchCorrected() ) {
-                result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
+                result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
             } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
                 result = "This data set may have a batch artifact" + pc + ", p=" + String
                         .format( "%.5g", beDetails.getPvalue() );
             } else {
-                result = "No batch effect was detected";
+                result = "NO_BATCH_EFFECT_SUCCESS";
             }
         } else {
-            result = "No batch information was available";
+            result = "NO_BATCH_INFO";
         }
         return Strings.emptyToNull( result );
     }

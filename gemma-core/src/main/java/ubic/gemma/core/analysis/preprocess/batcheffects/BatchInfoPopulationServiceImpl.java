@@ -252,9 +252,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
                 this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, bf.getFactorValues().size()
                         + " batches.", "" );
             }
-        } else {
-            this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "Batches unable to be determined",
-                    "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
         }
 
     }

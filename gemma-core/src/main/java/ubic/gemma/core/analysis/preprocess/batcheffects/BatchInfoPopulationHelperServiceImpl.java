@@ -23,9 +23,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -67,18 +71,33 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Autowired
     private ExpressionExperimentService experimentService;
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     @Override
     @Transactional
     public ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers ) {
         /*
          * Go through the headers and convert to factor values.
          */
-        Map<String, Collection<String>> batchIdToHeaders = this
-                .convertHeadersToBatches( headers.values() );
+        Map<String, Collection<String>> batchIdToHeaders;
+        try {
+            batchIdToHeaders = this
+                    .convertHeadersToBatches( headers.values() );
+        } catch ( FASTQHeadersPresentButNotUsableException e ) {
+            this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined",
+                    "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
+            return null;
+        } catch ( SingletonBatchesException e ) {
+            this.auditTrailService.addUpdateEvent( ee, SingletonBatchInvalidEvent.class, "At least one singleton batch",
+                    "RNA-seq experiment, FASTQ headers indicate at least one batch of just one sample" );
+            return null;
+        }
 
+        // other situations
         if ( batchIdToHeaders.isEmpty() ) {
             // we were unable to find batches.
-            return null;
+            return null; // should be handled by the exception above
         } else if ( batchIdToHeaders.size() == 1 ) {
             // this is a hack to signal the caller that we have only one batch.
             return ExperimentalFactor.Factory.newInstance();
@@ -246,11 +265,15 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * testing
      * easier.
      *
-     * @param  headers collection of fastq headers for all samples.
-     * @return         map of batch names to the headers (sample-specific) for that batch. It will be empty if batches
-     *                 couldn't be determined.
+     * @param  headers                                  collection of fastq headers for all samples.
+     * @return                                          map of batch names to the headers (sample-specific) for that
+     *                                                  batch. It will be empty if batches
+     *                                                  couldn't be determined.
+     * @throws FASTQHeadersPresentButNotUsableException
+     * @throws SingletonBatchesException
      */
-    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers ) {
+    Map<String, Collection<String>> convertHeadersToBatches( Collection<String> headers )
+            throws FASTQHeadersPresentButNotUsableException, SingletonBatchesException {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
 
         Map<FastqHeaderData, Collection<String>> goodHeaderSampleInfos = new HashMap<>();
@@ -338,12 +361,13 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
          * Finalize
          */
 
-        // if we have only one batch, that's probably okay if there is just one platform and/or the headers were okay. However, if all the headers were "bad", that's a different situation
+        // if we have only one batch, that's probably okay if there is just one platform and/or the headers were okay. 
+        // However, if all the headers were "bad", that's a different situation
         if ( result.size() == 1 ) {
             if ( goodHeaderSampleInfos.isEmpty() ) {
-                // throw new BatchInfoPopulationException( "Samples didn't have any useable information for batching" );
+                throw new FASTQHeadersPresentButNotUsableException( "Samples didn't have any useable information for batching" );
                 // perhaps we should just return an empty result to signal this instead of raising an exception
-                result.clear();
+                //  result.clear();
             }
 
         } else {
@@ -355,9 +379,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 }
             }
             if ( singleton ) {
-                result.clear(); // not sure what to do - this could be overkill.
-            } else {
-                // OK.
+                throw new SingletonBatchesException( "Could not resolve singleton batches" );
             }
         }
 
@@ -377,7 +399,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * 
      * @param  batchInfos only of samples that have "good" headers
      * @param  numSamples how many samples
-     * @return
+     * @return            Map of batches (represented by the appropriate FastqHeaderData) to samples that are in the
+     *                    batch.
      */
     private Map<FastqHeaderData, Collection<String>> batch( Map<FastqHeaderData, Collection<String>> batchInfos, int numSamples ) {
 
@@ -394,15 +417,16 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
             for ( FastqHeaderData hd : batchInfos.keySet() ) {
                 assert batchInfos.containsKey( hd );
-                if ( batchInfos.get( hd ) == null ) {
-                    log.warn( "Fuck" );
-                }
+
                 int batchSize = batchInfos.get( hd ).size();
                 if ( batchSize < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+
                     // too few samples for at least one batch. Try to reduce resolution and recount.
                     Map<FastqHeaderData, Collection<String>> updatedBatchInfos = dropResolution( batchInfos );
 
                     if ( updatedBatchInfos.size() == batchInfos.size() ) {
+                        // we've reached the bottom
+
                         return updatedBatchInfos;
                     }
 
@@ -540,6 +564,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                     //                } else if (arr.length == 4) { //  rare and not usable e.g. 3:1:231:803 - first value is not lane, nor is second likely
                     //                    fqd = new FastqHeaderData(null, arr[1]); 
                 } else if ( arr.length == 6 ) { // HW-ST997_0144_6_1101_1138_2179 - this is not an official format? but we work with it
+                    // there are a number of variants of this, with or without underscores. See https://github.com/PavlidisLab/Gemma/issues/171
                     fqd = new FastqHeaderData( arr[0], arr[1], arr[2] );
                 } else {
                     // something else but also not usable.

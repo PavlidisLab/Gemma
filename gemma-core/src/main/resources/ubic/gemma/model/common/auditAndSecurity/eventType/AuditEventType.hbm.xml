@@ -73,6 +73,10 @@
 					name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent">
 					<subclass abstract="false" discriminator-value="FailedBatchInformationMissingEvent"
 						name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent" />
+					<subclass abstract="false" discriminator-value="UninformativeFASTQHeadersForBatchingEvent"
+						name="ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent" />
+					<subclass abstract="false" discriminator-value="SingletonBatchInvalidEvent"
+						name="ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent" />
 				</subclass>
 				<subclass abstract="false" discriminator-value="SingleBatchDeterminationEvent"
 					name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent">

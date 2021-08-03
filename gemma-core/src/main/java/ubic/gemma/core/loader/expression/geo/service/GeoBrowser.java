@@ -237,6 +237,8 @@ public class GeoBrowser {
 
             Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
             NodeList dateNodes = ( NodeList ) dates;
+            
+            // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
             log.debug( "Got " + accNodes.getLength() + " XML records" );
 
