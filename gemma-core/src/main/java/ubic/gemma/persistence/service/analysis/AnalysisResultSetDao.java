@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.analysis;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
+import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
@@ -11,5 +12,5 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
  * @param <O>
  * @param <VO>
  */
-public interface AnalysisResultSetDao<K extends AnalysisResult, O extends AnalysisResultSet<K>, VO extends AnalysisResultSetValueObject<K, O>> extends BaseVoEnabledDao<O, VO> {
+public interface AnalysisResultSetDao<K extends AnalysisResult, O extends AnalysisResultSet<K>> extends BaseDao<O> {
 }

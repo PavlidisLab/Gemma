@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
@@ -8,20 +9,21 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
-        this.value = s;
-        setNullCause( "short name", "Platform" );
+        super( s );
     }
 
     @Override
-    public ArrayDesign getPersistentObject( ArrayDesignService service ) {
-        return check( this.value == null ? null : service.findByShortName( this.value ) );
+    public ArrayDesign getEntity( ArrayDesignService service ) {
+        String value = this.getValue();
+        return checkEntity( value == null ? null : service.findByShortName( value ) );
     }
 
     @Override
-    public String getPropertyName( ArrayDesignService service ) {
+    public String getPropertyName() {
         return "shortName";
     }
 

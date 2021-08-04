@@ -207,15 +207,6 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         return new GeneProductValueObject( entity );
     }
 
-    @Override
-    public Collection<GeneProductValueObject> loadValueObjects( Collection<GeneProduct> entities ) {
-        Collection<GeneProductValueObject> vos = new LinkedHashSet<>();
-        for ( GeneProduct e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
     private void debug( Collection<?> results ) {
 
         StringBuilder buf = new StringBuilder();

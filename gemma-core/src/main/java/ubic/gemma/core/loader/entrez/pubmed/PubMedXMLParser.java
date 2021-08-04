@@ -136,20 +136,16 @@ public class PubMedXMLParser {
                             break;
                         case "ForeName":
                             al.append( XMLUtils.getTextValue( f ) );
-
                             al.append( "; " );
-
-                            break;
-                        case "Initials":
-                            // noop ;
                             break;
                         case "CollectiveName":
                             al.append( XMLUtils.getTextValue( f ) );
                             al.append( "; " );
                             break;
+                        case "Initials":
                         case "AffiliationInfo":
-                            break;
                         case "Identifier":
+                        case "Suffix":
                             break;
                         default:
                             log.warn( "Unrecognized node name " + nodeName );
@@ -460,7 +456,7 @@ public class PubMedXMLParser {
                 case "ArticleDate":
                     break;
                 default:
-                    log.debug( "Unrecognized node name " + name ); 
+                    log.debug( "Unrecognized node name " + name );
             }
         }
         return journal;
@@ -712,6 +708,10 @@ public class PubMedXMLParser {
                 case "DateRevised":
                 case "OtherID":
                 case "CoiStatement":
+                case "InvestigatorList":
+                case "OtherAbstract":
+                case "Suffix":
+                case "SupplMeshList": //hmm.
                     break;
                 default:
                     log.warn( "Unrecognized node name " + name );

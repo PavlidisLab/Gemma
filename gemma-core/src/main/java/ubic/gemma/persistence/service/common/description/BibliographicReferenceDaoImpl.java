@@ -178,14 +178,4 @@ public class BibliographicReferenceDaoImpl
         return new BibliographicReferenceValueObject( entity );
     }
 
-    @Override
-    public Collection<BibliographicReferenceValueObject> loadValueObjects(
-            Collection<BibliographicReference> entities ) {
-        Collection<BibliographicReferenceValueObject> vos = new LinkedHashSet<>();
-        for ( BibliographicReference e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
 }

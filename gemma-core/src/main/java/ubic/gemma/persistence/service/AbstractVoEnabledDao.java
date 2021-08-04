@@ -14,11 +14,13 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Created by tesarst on 01/06/17.
  * Base DAO providing value object functionality.
  */
+@Deprecated
 public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractDao<O> implements BaseVoEnabledDao<O, VO> {
 
@@ -203,7 +205,9 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     public abstract VO loadValueObject( O entity );
 
     @Override
-    public abstract Collection<VO> loadValueObjects( Collection<O> entities );
+    public List<VO> loadValueObjects( Collection<O> entities ) {
+        return entities.stream().map( this::loadValueObject ).collect( Collectors.toList() );
+    }
 
     /**
      * Should be overridden for any entity that requires special handling of larger amounts of VOs.
@@ -211,7 +215,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * @return VOs of all instances of the class this DAO manages.
      */
     @Override
-    public Collection<VO> loadAllValueObjects() {
+    public List<VO> loadAllValueObjects() {
         return this.loadValueObjects( this.loadAll() );
     }
 
@@ -229,7 +233,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      *                 further be checked by ACLs.
      */
     @Override
-    public Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         throw new NotYetImplementedException( "This entity does not have pre-filtered VO retrieval implemented yet" );
     }

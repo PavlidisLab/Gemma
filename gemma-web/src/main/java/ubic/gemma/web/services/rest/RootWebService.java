@@ -2,15 +2,15 @@ package ubic.gemma.web.services.rest;
 
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -26,8 +26,9 @@ import java.util.Collection;
  */
 @Service
 @Path("/")
-public class RootWebService extends WebService {
+public class RootWebService {
 
+    public static final String API_VERSION = "2.3.4";
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
     private static final String APIDOCS_URL = Settings.getBaseUrl() + "resources/restapidocs/";
     private static final String ERROR_MSG_USER_INFO_ACCESS = "Inappropriate privileges. Only your user info is available.";
@@ -51,10 +52,11 @@ public class RootWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject all( // Params:
+    @Operation(summary = "Retrieve an object with basic API information")
+    public ResponseDataObject<ApiInfoValueObject> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code200( new ApiInfoValueObject(), sr );
+        return Responder.respond( new ApiInfoValueObject() );
     }
 
     /**
@@ -65,24 +67,25 @@ public class RootWebService extends WebService {
      * @param uName the username
      */
     @GET
-    @Path("users/{uname: [a-zA-Z0-9_]+}")
+    @Path("/users/{uname}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @PreAuthorize("hasRole('GROUP_USER')")
-    public ResponseDataObject loadUser( // Params:
+    @Operation(summary = "Retrieve the user information associated to the authenticated session")
+    public ResponseDataObject<UserValueObject> loadUser( // Params:
             @PathParam("uname") String uName, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return this.checkUser( uName, sr );
     }
 
-    private ResponseDataObject checkUser( String uName, HttpServletResponse sr ) {
+    private ResponseDataObject<UserValueObject> checkUser( String uName, HttpServletResponse sr ) throws AccessDeniedException {
         User user = userManager.getCurrentUser();
 
         // Check the logged in user is the one we are retrieving the info for
         if ( !user.getUserName().equals( uName ) ) {
             Response.Status code = Response.Status.FORBIDDEN;
-            return Responder.code( code, new WellComposedErrorBody( code, ERROR_MSG_USER_INFO_ACCESS ), sr );
+            throw new AccessDeniedException( ERROR_MSG_USER_INFO_ACCESS );
         }
 
         // Convert to a VO and check for admin
@@ -95,14 +98,14 @@ public class RootWebService extends WebService {
             }
         }
 
-        return Responder.autoCode( uvo, sr );
+        return Responder.respond( uvo );
     }
 
     @SuppressWarnings("unused") // Getters used during RS serialization
     private static class ApiInfoValueObject {
-        private String welcome = MSG_WELCOME;
-        private String version = WebService.API_VERSION;
-        private String docs = APIDOCS_URL;
+        private final String welcome = MSG_WELCOME;
+        private final String version = RootWebService.API_VERSION;
+        private final String docs = APIDOCS_URL;
 
         public String getWelcome() {
             return welcome;

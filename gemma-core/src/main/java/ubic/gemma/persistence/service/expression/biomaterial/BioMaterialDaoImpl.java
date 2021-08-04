@@ -150,12 +150,4 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         return new BioMaterialValueObject( entity );
     }
 
-    @Override
-    public Collection<BioMaterialValueObject> loadValueObjects( Collection<BioMaterial> entities ) {
-        Collection<BioMaterialValueObject> vos = new LinkedHashSet<>();
-        for ( BioMaterial e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

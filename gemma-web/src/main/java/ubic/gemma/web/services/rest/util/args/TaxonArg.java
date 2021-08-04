@@ -1,20 +1,18 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,12 +22,22 @@ import java.util.List;
  *
  * @author tesarst
  */
-public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject, TaxonService> {
+@Schema(anyOf = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonStringArg.class })
+public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonService> {
 
     /**
      * Minimum value to be considered an NCBI ID, lower values will be considered a regular gemma Taxon ID.
      */
     private static final Long MIN_NCBI_ID = 999L;
+
+    TaxonArg( T arg ) {
+        super( arg );
+    }
+
+    @Override
+    public String getEntityName() {
+        return "Taxon";
+    }
 
     /**
      * Used by RS to parse value of request parameters.
@@ -57,16 +65,16 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
      * @param  limit                       see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  sort                        see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @return                             a collection of EEVOs matching the input parameters.
+     * @return a collection of EEVOs matching the input parameters.
      */
-    public Collection<ExpressionExperimentValueObject> getTaxonDatasets(
+    public List<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
             List<ObjectFilter[]> filters, int offset, int limit, String sort, boolean sortAsc ) {
         if ( filters == null ) {
             filters = new ArrayList<>( 1 );
         }
         filters.add( new ObjectFilter[] {
-                new ObjectFilter( "id", this.getPersistentObject( taxonService ).getId(), ObjectFilter.is,
+                new ObjectFilter( "id", this.getEntity( taxonService ).getId(), ObjectFilter.is,
                         ObjectFilter.DAO_TAXON_ALIAS ) } );
 
         return expressionExperimentService.loadValueObjectsPreFilter( offset, limit, sort, sortAsc, filters );
@@ -81,21 +89,19 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
      * @param  chromosomeName    name of the chromosome to look on
      * @param  start             the start nucleotide denoting the location to look for genes at.
      * @param  size              the size (in nucleotides) of the location from the 'start' nucleotide.
-     * @return                   collection of Gene VOs overlapping the location defined by the 'start' and 'size'
+     * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size'
      *                           parameters.
      */
-    public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
+    public List<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
             int size ) {
         // Taxon argument
-        Taxon taxon = this.getPersistentObject( taxonService );
+        Taxon taxon = this.getEntity( taxonService );
 
         //Chromosome argument
         Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );
         if ( chromosomes.isEmpty() ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    "Chromosome " + chromosomeName + " not found for taxon " + taxon.getScientificName() );
-            throw new GemmaApiException( errorBody );
+            throw new NotFoundException( "Chromosome " + chromosomeName + " not found for taxon " + taxon.getScientificName() );
         }
         Chromosome chromosome = chromosomes.iterator().next();
 
@@ -105,12 +111,11 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
         region.setNucleotideLength( size );
         // region.setStrand( strand );
 
-        Collection<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
+        List<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );
         if ( GVOs == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+            throw new NotFoundException(
                     "No genes found on chromosome " + chromosomeName + " between positions " + start + " and " + start
                             + size + "." );
-            throw new GemmaApiException( errorBody );
         }
         return GVOs;
     }

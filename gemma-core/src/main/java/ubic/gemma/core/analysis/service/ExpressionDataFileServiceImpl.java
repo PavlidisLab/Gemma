@@ -67,9 +67,8 @@ import java.util.zip.ZipOutputStream;
  * @author paul
  */
 @Component
-public class ExpressionDataFileServiceImpl implements ExpressionDataFileService {
+public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<ExpressionExperiment> implements ExpressionDataFileService {
 
-    private static final String DECIMAL_FORMAT = "%.4g";
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
     private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
@@ -191,14 +190,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Double correctedPvalue = dear.getCorrectedPvalue();
             Double pvalue = dear.getPvalue();
 
-            String formattedCP = correctedPvalue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, correctedPvalue );
-            String formattedP = pvalue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pvalue );
-            probeBuffer.append( "\t" ).append( formattedCP ).append( "\t" ).append( formattedP );
+            probeBuffer.append( "\t" ).append( format( correctedPvalue ) ).append( "\t" ).append( format( pvalue ) );
 
         }
         return sortedFirstColumnOfResults;
 
     }
+
 
     @Override
     public void deleteAllFiles( ExpressionExperiment ee ) {
@@ -534,13 +532,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
                 Double coefficient = contrast.getCoefficient();
                 Double pValue = contrast.getPvalue();
-                String formattedPvalue = pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
-                String formattedCoefficient = coefficient == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, coefficient );
-                String contrastData = "\t" + formattedCoefficient + "\t" + formattedPvalue;
+                String contrastData = "\t" + format( coefficient ) + "\t" + format( pValue );
 
                 rowBuffer.append( contrastData );
 
-                buf.append( rowBuffer.toString() ).append( '\n' );
+                buf.append( rowBuffer ).append( '\n' );
             }
 
         } else {
@@ -589,10 +585,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     Double foldChange = contrast.getLogFoldChange();
                     Double pValue = contrast.getPvalue();
                     Double tStat = contrast.getTstat();
-                    String formattedPvalue = pValue == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, pValue );
-                    String formattedFoldChange = foldChange == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, foldChange );
-                    String formattedTState = tStat == null ? "" : String.format( ExpressionDataFileServiceImpl.DECIMAL_FORMAT, tStat );
-                    String contrastData = "\t" + formattedFoldChange + "\t" + formattedTState + "\t" + formattedPvalue;
+                    String contrastData = "\t" + format( foldChange ) + "\t" + format( tStat ) + "\t" + format( pValue );
                     assert contrast.getFactorValue() != null;
 
                     factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
@@ -1136,4 +1129,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 
+    @Override
+    public void writeTsvToAppendable( ExpressionExperiment entity, Appendable appendable ) throws IOException {
+        // FIXME: implement this
+    }
 }

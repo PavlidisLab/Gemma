@@ -48,6 +48,6 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
     Taxon findByNcbiId( Long ncbiId );
 
     @Override
-    Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }

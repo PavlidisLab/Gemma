@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -9,20 +10,20 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
-        this.value = s;
-        this.setNullCause( "short name", "Dataset" );
+        super( s );
     }
 
     @Override
-    public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return this.check( Strings.isNullOrEmpty( this.value ) ? null : service.findByShortName( this.value ) );
+    public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
+        return this.checkEntity( Strings.isNullOrEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( ExpressionExperimentService service ) {
+    public String getPropertyName() {
         return "shortName";
     }
 

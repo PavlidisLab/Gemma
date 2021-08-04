@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -8,27 +9,32 @@ import java.util.Objects;
 /**
  * Composite Sequence argument for CS ID.
  */
+@Schema(implementation = Long.class)
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {
-        this.value = s;
-        setNullCause( "ID", "Composite Sequence" );
+        super( s );
     }
 
     @Override
-    public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
+    public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
-        CompositeSequence cs = service.load( this.value );
+        CompositeSequence cs = service.load( this.getValue() );
         if ( !Objects.equals( cs.getArrayDesign().getId(), this.arrayDesign.getId() ) ) {
-            throwNotFound();
+            throw new IllegalArgumentException( "Platform does not match the sequence's platform." );
         }
-        return check( this.value == null ? null : cs );
+        return checkEntity( this.getValue() == null ? null : cs );
     }
 
     @Override
-    public String getPropertyName( CompositeSequenceService service ) {
+    public String getPropertyName() {
         return "id";
+    }
+
+    @Override
+    public String getEntityName() {
+        return "CompositeSequence";
     }
 
 }

@@ -95,7 +95,7 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+    public List<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
             boolean loadEEIds ) {
         return this.fetchValueObjects( eeSetIds, loadEEIds );
     }
@@ -130,7 +130,7 @@ public class ExpressionExperimentSetDaoImpl
      */
     @Deprecated
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects(
+    public List<ExpressionExperimentSetValueObject> loadValueObjects(
             Collection<ExpressionExperimentSet> entities ) {
         return this.loadValueObjects( EntityUtils.getIds( entities ), false );
     }
@@ -216,7 +216,7 @@ public class ExpressionExperimentSetDaoImpl
      *                  EESets this might want to be avoided.
      * @return EE set VOs
      */
-    private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
+    private List<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
             boolean loadEEIds ) {
         Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );
@@ -258,6 +258,6 @@ public class ExpressionExperimentSetDaoImpl
 
         Collection<ExpressionExperimentSetValueObject> result = vo.values();
         this.populateAnalysisInformation( result );
-        return result;
+        return new ArrayList<>( result );
     }
 }

@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 
@@ -8,6 +9,7 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
     private static final String ID_NAME = "Ensembl ID";
@@ -16,17 +18,16 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
      * @param s intentionally primitive type, so the value property can never be null.
      */
     GeneEnsemblIdArg( String s ) {
-        this.value = s;
-        setNullCause( ID_NAME, "Gene" );
+        super( s );
     }
 
     @Override
-    public Gene getPersistentObject( GeneService service ) {
-        return check( service.findByEnsemblId( this.value ) );
+    public Gene getEntity( GeneService service ) {
+        return checkEntity( service.findByEnsemblId( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( GeneService service ) {
+    public String getPropertyName() {
         return "ensemblId";
     }
 

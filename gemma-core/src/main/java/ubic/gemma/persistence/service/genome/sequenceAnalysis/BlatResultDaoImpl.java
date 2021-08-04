@@ -134,12 +134,4 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
         return new BlatResultValueObject( entity );
     }
 
-    @Override
-    public Collection<BlatResultValueObject> loadValueObjects( Collection<BlatResult> entities ) {
-        Collection<BlatResultValueObject> vos = new LinkedHashSet<>();
-        for ( BlatResult e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

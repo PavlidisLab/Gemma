@@ -205,15 +205,6 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         return BioSequenceValueObject.fromEntity( entity );
     }
 
-    @Override
-    public Collection<BioSequenceValueObject> loadValueObjects( Collection<BioSequence> entities ) {
-        Collection<BioSequenceValueObject> vos = new LinkedHashSet<>();
-        for ( BioSequence e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public BioSequence find( BioSequence bioSequence ) {

@@ -43,12 +43,4 @@ public class ExperimentalEvidenceDaoImpl
         return new ExperimentalEvidenceValueObject( entity );
     }
 
-    @Override
-    public Collection<ExperimentalEvidenceValueObject> loadValueObjects( Collection<ExperimentalEvidence> entities ) {
-        Collection<ExperimentalEvidenceValueObject> vos = new LinkedHashSet<>();
-        for ( ExperimentalEvidence e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

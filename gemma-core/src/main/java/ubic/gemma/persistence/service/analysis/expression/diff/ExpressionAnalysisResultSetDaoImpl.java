@@ -25,12 +25,14 @@ import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -132,8 +134,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
                 "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + " left outer join fetch res.probe "
-                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "left join fetch res.probe p left join fetch p.biologicalCharacteristic bc "
+                        + "left join fetch bc.sequenceDatabaseEntry "
+                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
                         + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
         if ( timer.getTime() > 1000 ) {
@@ -190,18 +193,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
         AbstractDao.log.info( "Removing result set " + resultSet.getId() );
         super.remove( resultSet );
         this.getSessionFactory().getCurrentSession().flush();
-    }
-
-    @Override
-    public ExpressionAnalysisResultSetValueObject loadValueObject( ExpressionAnalysisResultSet entity ) {
-        return new ExpressionAnalysisResultSetValueObject( entity );
-    }
-
-    @Override
-    public Collection<ExpressionAnalysisResultSetValueObject> loadValueObjects( Collection<ExpressionAnalysisResultSet> entities ) {
-        return entities.stream()
-                .map( ExpressionAnalysisResultSetValueObject::new )
-                .collect( Collectors.toList() );
     }
 
     @Override

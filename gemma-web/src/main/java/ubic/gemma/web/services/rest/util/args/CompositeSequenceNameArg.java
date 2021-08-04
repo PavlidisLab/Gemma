@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
@@ -9,21 +10,22 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {
-        this.value = s;
-        setNullCause("name", "Composite Sequence" );
+        super( s );
     }
 
     @Override
-    public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        if( arrayDesign == null ) throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
-        return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
+    public CompositeSequence getEntity( CompositeSequenceService service ) {
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
+        return checkEntity( this.getValue() == null ? null : service.findByName( arrayDesign, this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( CompositeSequenceService service ) {
+    public String getPropertyName() {
         return "name";
     }
 

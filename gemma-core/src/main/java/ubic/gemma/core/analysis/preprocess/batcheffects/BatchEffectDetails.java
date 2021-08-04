@@ -14,6 +14,11 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
+
 /**
  * provide some basic information about the properties and strength of a batch effect, if any.
  *
@@ -21,17 +26,37 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
  */
 public class BatchEffectDetails {
 
-    private final boolean hasBatchInformation;
+    private Integer component = null;
 
-
-    private final boolean singleBatch;
-    private final boolean dataWasBatchCorrected;
-    private Integer component;
     private double componentVarianceProportion;
+    private final boolean dataWasBatchCorrected;
+    private boolean failedToGetBatchInformation = false;
+    private Boolean hadSingletonBatches = false;
+    private Boolean hadUninformativeHeaders = false;
+    private final boolean hasBatchInformation;
     private double pvalue;
 
-    public BatchEffectDetails( boolean hasBatchInformation, boolean dataWasBatchCorrected, boolean singleBatch ) {
-        this.hasBatchInformation = hasBatchInformation;
+    private final boolean singleBatch;
+
+    public BatchEffectDetails( BatchInformationFetchingEvent infoEvent, boolean dataWasBatchCorrected, boolean singleBatch ) {
+
+        if ( infoEvent == null ) {
+            this.hasBatchInformation = false;
+        } else {
+            if ( SingletonBatchInvalidEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
+                this.hasBatchInformation = false;
+                this.hadSingletonBatches = true;
+            } else if ( UninformativeFASTQHeadersForBatchingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
+                this.hasBatchInformation = false;
+                this.hadUninformativeHeaders = true;
+            } else if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
+                this.hasBatchInformation = false;
+                this.failedToGetBatchInformation = true;
+            } else {
+                this.hasBatchInformation = true;
+            }
+        }
+
         this.dataWasBatchCorrected = dataWasBatchCorrected;
         this.singleBatch = singleBatch;
         this.pvalue = 1.0;
@@ -41,24 +66,49 @@ public class BatchEffectDetails {
         return component;
     }
 
-    public void setComponent( Integer component ) {
-        this.component = component;
-    }
-
     public double getComponentVarianceProportion() {
         return componentVarianceProportion;
-    }
-
-    public void setComponentVarianceProportion( double componentVarianceProportion ) {
-        this.componentVarianceProportion = componentVarianceProportion;
     }
 
     public boolean getDataWasBatchCorrected() {
         return this.dataWasBatchCorrected;
     }
 
+    public Boolean getHadSingletonBatches() {
+        return hadSingletonBatches;
+    }
+
+    public Boolean getHadUninformativeHeaders() {
+        return hadUninformativeHeaders;
+    }
+
     public double getPvalue() {
         return pvalue;
+    }
+
+    public boolean hasNoBatchInfo() {
+        return !hasBatchInformation;
+    }
+
+    public boolean isFailedToGetBatchInformation() {
+        return failedToGetBatchInformation;
+    }
+
+    /**
+     *
+     * @return true if the experiment was determined to have just one batch, or false for any other state (including we
+     *         don't know)
+     */
+    public boolean isSingleBatch() {
+        return singleBatch;
+    }
+
+    public void setComponent( Integer component ) {
+        this.component = component;
+    }
+
+    public void setComponentVarianceProportion( double componentVarianceProportion ) {
+        this.componentVarianceProportion = componentVarianceProportion;
     }
 
     public void setPvalue( double pvalue ) {
@@ -70,18 +120,5 @@ public class BatchEffectDetails {
         return String.format( "BatchEffectDetails [pvalue=%.2g, component=%d, varFraction=%.2f]", pvalue, component,
                 componentVarianceProportion );
     }
-
-    public boolean hasNoBatchInfo() {
-        return !hasBatchInformation;
-    }
-
-    /**
-     *
-     * @return true if the experiment was determined to have just one batch, or false for any other state (including we don't know)
-     */
-    public boolean isSingleBatch() {
-        return singleBatch;
-    }
-
 
 }

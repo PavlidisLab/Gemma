@@ -33,7 +33,7 @@ import java.util.Map;
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
-public interface ExpressionDataFileService {
+public interface ExpressionDataFileService extends TsvFileService<ExpressionExperiment> {
 
     String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
     String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;

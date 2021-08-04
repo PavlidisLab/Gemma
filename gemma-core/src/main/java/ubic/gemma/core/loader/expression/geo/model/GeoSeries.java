@@ -70,8 +70,8 @@ public class GeoSeries extends GeoData {
     /**
      * See also GeoDataset.convertStringToExperimentType
      *
-     * @param string series type string
-     * @return series type object
+     * @param  string series type string
+     * @return        series type object
      */
     public static SeriesType convertStringToSeriesType( String string ) {
         if ( string.equalsIgnoreCase( "Expression profiling by array" ) ) {
@@ -102,11 +102,15 @@ public class GeoSeries extends GeoData {
                 .equalsIgnoreCase( "cell_type_comparison_design" ) ) {
             return SeriesType.other;
         } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" ) || string
-                .equalsIgnoreCase( "time-course" ) || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
-                .equalsIgnoreCase( "SuperSeries" ) || string.equalsIgnoreCase( "Logical set" ) || string
-                .equalsIgnoreCase( "DNA Oligonucleotide Array" ) || string
-                .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
+                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
+                || string
+                        .equalsIgnoreCase( "time-course" )
+                || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
+                        .equalsIgnoreCase( "SuperSeries" )
+                || string.equalsIgnoreCase( "Logical set" ) || string
+                        .equalsIgnoreCase( "DNA Oligonucleotide Array" )
+                || string
+                        .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
             // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
             // different than 'Other' (note capitalization). The old meaning is still expression arrays.
             return SeriesType.geneExpressionByArray;
@@ -114,7 +118,7 @@ public class GeoSeries extends GeoData {
             return SeriesType.geneExpressionBySAGE;
         } else {
             // there are too many hanging around, it's actually not so bad to guess.
-            log.warn( "Unknown series type, assuming is expression arrays" );
+            log.warn( "Unknown series type '" + string + "', assuming is expression arrays" );
             return SeriesType.geneExpressionByArray;
             //
             // throw new IllegalArgumentException( "Unknown series type '" + string + "'" );
@@ -328,8 +332,8 @@ public class GeoSeries extends GeoData {
     /**
      * Get a subset of the values. This is only used for 'splitting' a series.
      *
-     * @param s Samples to include data from.
-     * @return geo values
+     * @param  s Samples to include data from.
+     * @return   geo values
      */
     public GeoValues getValues( Collection<GeoSample> s ) {
         return values.subset( s );

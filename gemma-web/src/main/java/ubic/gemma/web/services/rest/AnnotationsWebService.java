@@ -19,10 +19,11 @@
 
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
@@ -38,8 +39,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -53,10 +52,10 @@ import java.util.*;
  *
  * @author tesarst
  */
-@Component
+@Service
 @Path("/annotations")
-public class AnnotationsWebService extends
-        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+public class AnnotationsWebService {
+
     private static final String URL_PREFIX = "http://";
 
     private OntologyService ontologyService;
@@ -78,35 +77,11 @@ public class AnnotationsWebService extends
     public AnnotationsWebService( OntologyService ontologyService, SearchService searchService,
             CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
             TaxonService taxonService ) {
-        super( expressionExperimentService );
         this.ontologyService = ontologyService;
         this.searchService = searchService;
         this.characteristicService = characteristicService;
         this.expressionExperimentService = expressionExperimentService;
         this.taxonService = taxonService;
-    }
-
-    /**
-     * Placeholder for root call
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
-    }
-
-    /**
-     * Placeholder for search call without a query parameter
-     */
-    @GET
-    @Path("/search/")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject emptySearch( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.code400( "Search query empty.", sr );
     }
 
     /**
@@ -120,17 +95,20 @@ public class AnnotationsWebService extends
     @GET
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject search( // Params:
-            @PathParam("query") ArrayStringArg query, // Required
+    @Operation(summary = "Search for annotation tags")
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> search( // Params:
+            @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( this.getTerms( query ), sr );
+        if ( query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query empty." );
+        }
+        return Responder.respond( this.getTerms( query ) );
     }
 
     /**
      * Does a search for datasets containing characteristics matching the given string.
-     * If filter, offset, limit or sort parameters are provided, acts same as
-     * {@link WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) }.
+     * If filter, offset, limit or sort parameters are provided.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of dataset that match the search query.
@@ -140,8 +118,9 @@ public class AnnotationsWebService extends
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasets( // Params:
-            @PathParam("query") ArrayStringArg query, // Required
+    @Operation(summary = "Retrieve datasets associated to an annotation tags search")
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
+            @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
@@ -151,7 +130,7 @@ public class AnnotationsWebService extends
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.autoCode( foundIds, sr );
+            return Responder.respond( Collections.emptyList() );
         }
 
         // If there are filters other than the search query, intersect the results.
@@ -159,13 +138,11 @@ public class AnnotationsWebService extends
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
-            return super
-                    .some( ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) ), filter, offset, limit, sort,
-                            sr );
+            return Responder.respond( expressionExperimentService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters(), expressionExperimentService ) ) );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.autoCode( expressionExperimentService.loadValueObjects( foundIds, false ), sr );
+        return Responder.respond( expressionExperimentService.loadValueObjects( foundIds, false ) );
     }
 
     /**
@@ -174,12 +151,13 @@ public class AnnotationsWebService extends
      * see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/search/{query}/datasets")
+    @Path("/{taxonArg}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxonDatasets( // Params:
+    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
-            @PathParam("query") ArrayStringArg query, // Required
+            @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("0") IntArg limit, // Optional, default 0
@@ -189,14 +167,14 @@ public class AnnotationsWebService extends
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.autoCode( foundIds, sr );
+            return Responder.respond( Collections.emptyList() );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
-        return Responder.autoCode( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
-                ArrayDatasetArg.valueOf( StringUtils.join( foundIds, ',' ) )
+        return Responder.respond( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
+                DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) )
                         .combineFilters( filter.getObjectFilters(), expressionExperimentService ), offset.getValue(),
-                limit.getValue(), sort.getField(), sort.isAsc() ), sr );
+                limit.getValue(), sort.getField(), sort.isAsc() ) );
     }
 
     /**
@@ -244,8 +222,8 @@ public class AnnotationsWebService extends
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private Collection<AnnotationSearchResultValueObject> getTerms( ArrayStringArg arg ) {
-        Collection<AnnotationSearchResultValueObject> vos = new LinkedList<>();
+    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) {
+        List<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
             if ( query.startsWith( AnnotationsWebService.URL_PREFIX ) ) {

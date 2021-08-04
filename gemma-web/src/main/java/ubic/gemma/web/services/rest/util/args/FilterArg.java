@@ -1,10 +1,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.BadRequestException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -13,19 +12,67 @@ import java.util.*;
 /**
  * A base class for filter arguments implementing methods common to all filter arguments.
  *
+ * <p>
+ * Filtering can be done on any* property or nested property that the ExpressionExperiment/ArrayDesign class has (and is
+ * mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
+ * </p>
+ * * Any property of a supported type. Currently supported types are:
+ * <ul>
+ * <li>String - property of String type, required value can be any String.</li>
+ * <li>Number - any Number implementation. Required value must be a string parseable to the specific
+ * Number type.</li>
+ * <li>Boolean - required value will be parsed to true only if the string matches 'true', ignoring
+ * case.</li>
+ * </ul>
+ * Accepted operator keywords are:
+ * <ul>
+ * <li>'=' - equality</li>
+ * <li>'!=' - non-equality</li>
+ * <li>'&lt;' - smaller than</li>
+ * <li>'&gt;' - larger than</li>
+ * <li>'&lt;=' - smaller or equal</li>
+ * <li>'=&gt;' - larger or equal</li>
+ * <li>'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator
+ * (given value will be surrounded by % signs)</li>
+ * </ul>
+ * <p>
+ * Multiple filters can be chained using 'AND' or 'OR' keywords.
+ * </p>
+ * <p>
+ * Leave space between the keywords and the previous/next word!
+ * </p>
+ * <p>
+ * E.g: <code>?filter=property1 &lt; value1 AND property2 like value2</code>
+ * </p>
+ * <p>
+ * If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive
+ * normal
+ * form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
+ * </p>
+ * Example:
+ * <code>?filter=p1 = v1 OR p1 != v2 AND p2 &lt;=v2 AND p3 &gt; v3 OR p3 &lt; v4</code>
+ * Above query will translate to:
+ * <code>(p1 = v1 OR p1 != v2) AND (p2 &lt;=v2) AND (p3 &gt; v3 OR p3 &lt; v4;)</code>
+ * <p>
+ * Breaking the CNF results in an error.
+ * </p>
+ * <p>
+ * Filter "curationDetails.troubled" will be ignored if user is not an administrator.
+ * </p>
+ *
  * @author tesarst
  */
-public abstract class FilterArg extends MalformableArg {
+@Schema(implementation = String.class)
+public abstract class FilterArg extends AbstractArg<FilterArg.Filter> {
+
+    public static final FilterArg EMPTY_FILTER = new FilterArg( null, null, null, null, null ) {
+    };
 
     public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
     private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
     private static final String ERROR_MSG_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
     private static final String ERROR_MSG_ARGS_MISALIGNED = "Filter query problem: Amount of properties, operators and values does not match";
 
-    private List<String[]> propertyNames;
-    private List<String[]> propertyValues;
-    private List<String[]> propertyOperators;
-    private List<Class[]> propertyTypes;
     private String objectAlias;
 
     /**
@@ -43,21 +90,12 @@ public abstract class FilterArg extends MalformableArg {
      */
     FilterArg( List<String[]> propertyNames, List<String[]> propertyValues, List<String[]> propertyOperators,
             List<Class[]> propertyTypes, String objectAlias ) {
-        super();
-        this.propertyNames = propertyNames;
-        this.propertyValues = propertyValues;
-        this.propertyOperators = propertyOperators;
-        this.propertyTypes = propertyTypes;
+        super( new Filter( propertyNames, propertyValues, propertyOperators, propertyTypes ) );
         this.objectAlias = objectAlias;
     }
 
     FilterArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
-    }
-
-    public static FilterArg EMPTY_FILTER() {
-        return new FilterArg( null, null, null, null, null ) {
-        };
     }
 
     /**
@@ -117,7 +155,7 @@ public abstract class FilterArg extends MalformableArg {
                 propertyOperatorsDisjunction = new LinkedList<>();
                 propertyValuesDisjunction = new LinkedList<>();
                 i++;
-            } else if ( parts[i].toLowerCase().equals( "or" ) ) {
+            } else if ( parts[i].equalsIgnoreCase( "or" ) ) {
                 // Skip this part and continue the disjunction
                 i++;
             }
@@ -205,17 +243,17 @@ public abstract class FilterArg extends MalformableArg {
      * then represent a conjunction (AND) with other arrays in the list.
      */
     public ArrayList<ObjectFilter[]> getObjectFilters() {
-        this.checkMalformed();
-        if ( propertyNames == null || propertyNames.isEmpty() )
+        Filter filter = getValue();
+        if ( filter.propertyNames == null || filter.propertyNames.isEmpty() )
             return null;
-        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( propertyNames.size() );
+        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( filter.propertyNames.size() );
 
-        for ( int i = 0; i < propertyNames.size(); i++ ) {
+        for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
             try {
-                String[] properties = propertyNames.get( i );
-                String[] values = propertyValues.get( i );
-                String[] operators = propertyOperators.get( i );
-                Class[] types = propertyTypes.get( i );
+                String[] properties = filter.propertyNames.get( i );
+                String[] values = filter.propertyValues.get( i );
+                String[] operators = filter.propertyOperators.get( i );
+                Class[] types = filter.propertyTypes.get( i );
 
                 ObjectFilter[] filterArray = new ObjectFilter[properties.length];
                 for ( int j = 0; j < properties.length; j++ ) {
@@ -224,8 +262,7 @@ public abstract class FilterArg extends MalformableArg {
                 filterList.add( filterArray );
 
             } catch ( IndexOutOfBoundsException e ) {
-                throw new GemmaApiException(
-                        new WellComposedErrorBody( Response.Status.BAD_REQUEST, ERROR_MSG_ARGS_MISALIGNED ) );
+                throw new BadRequestException( ERROR_MSG_ARGS_MISALIGNED );
             }
         }
 
@@ -241,18 +278,18 @@ public abstract class FilterArg extends MalformableArg {
      * @param objectAlias the object alias
      * @return an object filter that accounts for all allowed possibilities.
      */
-    private ObjectFilter getFilterAllowSpecials(String propertyName, Class propertyType, String requiredValue, String operator, String objectAlias){
+    private ObjectFilter getFilterAllowSpecials( String propertyName, Class propertyType, String requiredValue, String operator, String objectAlias ) {
         // Convert to a collection if the current operator is an "in" operator.
-        Object finalValue = operator.equalsIgnoreCase( ObjectFilter.in ) ? convertCollection(requiredValue) : requiredValue;
+        Object finalValue = operator.equalsIgnoreCase( ObjectFilter.in ) ? convertCollection( requiredValue ) : requiredValue;
 
         // Allow characteristics property filtering
-        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+        if ( objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" ) ) {
             propertyName = propertyName.replaceFirst( "characteristics.", "" );
             objectAlias = ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
         }
 
         // Allow bioAssays property filtering
-        if(objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" )){
+        if ( objectAlias.equals( ObjectFilter.DAO_EE_ALIAS ) && propertyName.startsWith( "characteristics" ) ) {
             propertyName = propertyName.replaceFirst( "bioAssays.", "" );
             objectAlias = ObjectFilter.DAO_BIOASSAY_ALIAS;
         }
@@ -269,7 +306,22 @@ public abstract class FilterArg extends MalformableArg {
     private Object convertCollection( String value ) {
         value = value.replace( "(", "" );
         value = value.replace( ")", "" );
-        return Arrays.asList(value.split("\\s*,\\s*"));
+        return Arrays.asList( value.split( "\\s*,\\s*" ) );
+    }
+
+    static class Filter {
+
+        List<String[]> propertyNames;
+        List<String[]> propertyValues;
+        List<String[]> propertyOperators;
+        List<Class[]> propertyTypes;
+
+        public Filter( List<String[]> propertyNames, List<String[]> propertyValues, List<String[]> propertyOperators, List<Class[]> propertyTypes ) {
+            this.propertyNames = propertyNames;
+            this.propertyValues = propertyValues;
+            this.propertyOperators = propertyOperators;
+            this.propertyTypes = propertyTypes;
+        }
     }
 
 }

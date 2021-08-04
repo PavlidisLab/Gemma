@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Used to contain GEO summary information from the 'Browse' views.
  *
@@ -32,18 +34,34 @@ public class GeoRecord extends GeoData {
 
     private static final long serialVersionUID = 2060148205381855991L;
 
-    private int numSamples;
     private String contactName;
-    private String seriesType;
-    private Date releaseDate;
-    private Collection<String> organisms;
     private Collection<Long> correspondingExperiments;
-
+    private String meshHeadings = "";
+    private int numSamples;
+    private Collection<String> organisms;
+    private String platform; // can be more than one here, for mixed data type series
     /*
      * How many times a curator has already looked at the details. this helps us track data sets we've already examined
      * for usefulness.
      */
     private int previousClicks = 0;
+
+    private String pubMedIds = "";
+
+    private Date releaseDate;
+    private String sampleDetails = "";
+
+    private Collection<String> sampleGEOAccessions;
+
+    private String seriesType;
+
+    private boolean subSeries = false;
+
+    private String subSeriesOf = "";
+
+    private String summary;
+
+    private boolean superSeries = false;
 
     /*
      * Curator judgement about whether this is loadable. False indicates a problem.
@@ -60,60 +78,146 @@ public class GeoRecord extends GeoData {
         return contactName;
     }
 
-    public void setContactName( String contactName ) {
-        this.contactName = contactName;
-    }
-
     public Collection<Long> getCorrespondingExperiments() {
         return correspondingExperiments;
     }
 
-    public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
-        this.correspondingExperiments = correspondingExperiments;
+    public String getMeshHeadings() {
+        return meshHeadings;
     }
 
     public int getNumSamples() {
         return numSamples;
     }
 
-    public void setNumSamples( int numSamples ) {
-        this.numSamples = numSamples;
-    }
-
     public Collection<String> getOrganisms() {
         return organisms;
     }
 
-    public void setOrganisms( Collection<String> organisms ) {
-        this.organisms = organisms;
+    public String getPlatform() {
+        return platform;
     }
 
     public int getPreviousClicks() {
         return previousClicks;
     }
 
-    public void setPreviousClicks( int previousClicks ) {
-        this.previousClicks = previousClicks;
+    public String getPubMedIds() {
+        return this.pubMedIds;
     }
 
     public Date getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate( Date releaseDate ) {
-        this.releaseDate = releaseDate;
+    public String getSampleDetails() {
+        return sampleDetails;
+    }
+
+    public Collection<String> getSampleGEOAccessions() {
+        return sampleGEOAccessions;
     }
 
     public String getSeriesType() {
         return seriesType;
     }
 
-    public void setSeriesType( String seriesType ) {
-        this.seriesType = seriesType;
+    public String getSubSeriesOf() {
+        return subSeriesOf;
+    }
+
+    public String getSummary() {
+        return this.summary;
+    }
+
+    public boolean isSubSeries() {
+        return subSeries;
+    }
+
+    public boolean isSuperSeries() {
+        return this.superSeries;
     }
 
     public boolean isUsable() {
         return usable;
+    }
+
+    public void setContactName( String contactName ) {
+        this.contactName = contactName;
+    }
+
+    public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
+        this.correspondingExperiments = correspondingExperiments;
+    }
+
+    /**
+     * @param join
+     */
+    public void setMeshHeadings( String meshheadings ) {
+        this.meshHeadings = meshheadings;
+
+    }
+
+    public void setNumSamples( int numSamples ) {
+        this.numSamples = numSamples;
+    }
+
+    public void setOrganisms( Collection<String> organisms ) {
+        this.organisms = organisms;
+    }
+
+    public void setPlatform( String platform ) {
+        this.platform = platform;
+    }
+
+    public void setPreviousClicks( int previousClicks ) {
+        this.previousClicks = previousClicks;
+    }
+
+    public void setPubMedIds( String pubMedIds ) {
+        if ( StringUtils.isNotBlank( pubMedIds ) )
+            this.pubMedIds = pubMedIds;
+    }
+
+    public void setReleaseDate( Date releaseDate ) {
+        this.releaseDate = releaseDate;
+    }
+
+    public void setSampleDetails( String sampleDetails ) {
+        this.sampleDetails = sampleDetails;
+    }
+
+    public void setSampleGEOAccessions( Collection<String> sampleGEOAccessions ) {
+        this.sampleGEOAccessions = sampleGEOAccessions;
+    }
+
+    public void setSeriesType( String seriesType ) {
+        this.seriesType = seriesType;
+    }
+
+    /**
+     * @param b
+     */
+    public void setSubSeries( boolean b ) {
+        this.subSeries = b;
+    }
+
+    /**
+     * @param relTo
+     */
+    public void setSubSeriesOf( String relTo ) {
+        this.subSeriesOf = relTo;
+    }
+
+    public void setSummary( String summary ) {
+        this.summary = summary;
+    }
+
+    /**
+     * @param contains
+     */
+    public void setSuperSeries( boolean isSuperSeries ) {
+        this.superSeries = isSuperSeries;
     }
 
     public void setUsable( boolean usable ) {

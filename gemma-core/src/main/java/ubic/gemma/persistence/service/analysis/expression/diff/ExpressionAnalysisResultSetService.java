@@ -13,9 +13,11 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public interface ExpressionAnalysisResultSetService extends BaseService<ExpressionAnalysisResultSet>, BaseVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>, AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
+
+    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears );
 
     Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String field, boolean isAsc );
 }

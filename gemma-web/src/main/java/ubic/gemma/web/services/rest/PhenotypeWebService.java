@@ -14,21 +14,27 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
+import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.BoolArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.args.StringArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.Set;
 
 /**
  * RESTful interface for phenotypes.
@@ -37,9 +43,10 @@ import javax.ws.rs.core.MediaType;
  *
  * @author tesarst
  */
-@Component
+@Service
 @Path("/phenotypes")
-public class PhenotypeWebService extends WebService {
+public class PhenotypeWebService {
+
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**
@@ -57,17 +64,6 @@ public class PhenotypeWebService extends WebService {
     }
 
     /**
-     * Placeholder for root call
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
-    }
-
-    /**
      * Finds all evidence with the given external database name.
      *
      * @param database The name of external database to match.
@@ -79,15 +75,16 @@ public class PhenotypeWebService extends WebService {
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject evidence( // Params:
-            @QueryParam("database") String database, // required
+    @Operation(summary = "Retrieve all the evidence from a given external database name")
+    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
+            @QueryParam("database") StringArg database, // required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        super.checkReqArg( database, "database" );
-        return Responder.autoCode( this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( database, limit.getValue(), offset.getValue() ), sr );
+        ArgUtils.checkReqArg( database, "database" );
+        return Responder.respond( this.phenotypeAssociationManagerService
+                .loadEvidenceWithExternalDatabaseName( database.getValue(), limit.getValue(), offset.getValue() ) );
     }
 
     /**
@@ -100,10 +97,11 @@ public class PhenotypeWebService extends WebService {
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject dumps( // Params:
+    @Operation(summary = "Retrieve all phenotype data dumps")
+    public ResponseDataObject<Set<DumpsValueObject>> dumps( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        return Responder.autoCode( this.phenotypeAssociationManagerService.helpFindAllDumps(), sr );
+        return Responder.respond( this.phenotypeAssociationManagerService.helpFindAllDumps() );
     }
 
 }

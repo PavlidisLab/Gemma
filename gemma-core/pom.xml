@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.26.7</version>
+        <version>1.26.8</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -114,7 +114,6 @@
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-core</artifactId>
                         <version>${hibernate.version}</version>
-                        <type>jar</type>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -212,7 +211,6 @@
                                             <groupId>pavlab</groupId>
                                             <artifactId>gemma-gsec</artifactId>
                                             <version>${gsec.version}</version>
-                                            <type>jar</type>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/schema</outputDirectory>
                                             <includes>**/*.sql</includes>
@@ -221,7 +219,6 @@
                                             <groupId>gemma</groupId>
                                             <artifactId>gemma-model</artifactId>
                                             <version>1.10.1</version>
-                                            <type>jar</type>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/schema</outputDirectory>
                                             <includes>**/*.sql</includes>
@@ -240,7 +237,6 @@
                                 <groupId>mysql</groupId>
                                 <artifactId>mysql-connector-java</artifactId>
                                 <version>5.1.48</version>
-                                <type>jar</type>
                             </dependency>
                         </dependencies>
                         <!-- common configuration shared by all executions -->
@@ -304,7 +300,6 @@
             <groupId>com.googlecode.javaewah</groupId>
             <artifactId>JavaEWAH</artifactId>
             <version>0.7.9</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>ubc.chibi.compass-fork</groupId>
@@ -360,6 +355,16 @@
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
             <version>1.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
         </dependency>
         <dependency>
             <groupId>dom4j</groupId>
@@ -477,7 +482,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.8.4</version>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
     <dependencyManagement>

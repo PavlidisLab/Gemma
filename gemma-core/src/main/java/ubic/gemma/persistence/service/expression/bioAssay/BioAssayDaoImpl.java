@@ -36,10 +36,7 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.sql.Connection;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -180,8 +177,8 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
      */
     @Override
     //TODO remove when FactorValueValueObject usage is phased out
-    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
-        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
+        List<BioAssayValueObject> vos = new LinkedList<>();
         for ( BioAssay e : entities ) {
             vos.add( new BioAssayValueObject( e, basic ) );
         }
@@ -191,15 +188,6 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     @Override
     public BioAssayValueObject loadValueObject( BioAssay entity ) {
         return new BioAssayValueObject( entity, false );
-    }
-
-    @Override
-    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities ) {
-        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
-        for ( BioAssay e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
     }
 
 }

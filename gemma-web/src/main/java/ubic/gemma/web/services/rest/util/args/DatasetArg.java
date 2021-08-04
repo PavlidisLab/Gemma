@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -7,12 +8,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,8 +21,18 @@ import java.util.stream.Collectors;
  *
  * @author tesarst
  */
+@Schema(anyOf = { DatasetIdArg.class, DatasetStringArg.class })
 public abstract class DatasetArg<T>
-        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+        extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
+
+    DatasetArg( T value ) {
+        super( value );
+    }
+
+    @Override
+    public String getEntityName() {
+        return "Dataset";
+    }
 
     /**
      * Used by RS to parse value of request parameters.
@@ -46,9 +56,9 @@ public abstract class DatasetArg<T>
      * @param adService service to use to retrieve the ADs.
      * @return a collection of Platforms that the dataset represented by this argument is in.
      */
-    public Collection<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
+    public List<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
             ArrayDesignService adService ) {
-        ExpressionExperiment ee = this.getPersistentObject( service );
+        ExpressionExperiment ee = this.getEntity( service );
         return adService.loadValueObjectsForEE( ee.getId() );
     }
 
@@ -59,14 +69,14 @@ public abstract class DatasetArg<T>
      *                                corresponding predictedOutlier attribute.
      * @return a collection of BioAssays that represent the experiments samples.
      */
-    public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
+    public List<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
-        ExpressionExperiment ee = service.thawBioAssays( this.getPersistentObject( service ) );
+        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
                 .map( OutlierDetails::getBioAssay )
                 .map( BioAssay::getId )
                 .collect( Collectors.toSet() );
-        Collection<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
         for ( BioAssayValueObject vo : bioAssayValueObjects ) {
             vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
         }
@@ -77,8 +87,8 @@ public abstract class DatasetArg<T>
      * @param service service that will be used to retrieve the persistent EE object.
      * @return a collection of Annotations value objects that represent the experiments annotations.
      */
-    public Collection<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
-        ExpressionExperiment ee = this.getPersistentObject( service );
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
+        ExpressionExperiment ee = this.getEntity( service );
         return service.getAnnotations( ee.getId() );
     }
 }

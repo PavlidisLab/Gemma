@@ -41,6 +41,8 @@ public class GeoBrowserTest {
         GeoBrowser b = new GeoBrowser();
 
         try {
+            Thread.sleep( 200 );
+
             Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
             assertTrue( res.size() > 0 );
         } catch ( IOException e ) {
@@ -57,7 +59,10 @@ public class GeoBrowserTest {
         GeoBrowser b = new GeoBrowser();
 
         try {
-            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10 );
+
+            Thread.sleep( 200 );
+
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false, null );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
 
@@ -67,7 +72,42 @@ public class GeoBrowserTest {
                 System.out.println( "Title : " + record.getTitle() );
                 System.out.println( "Number of samples: " + record.getNumSamples() );
                 System.out.println( "Date: " + record.getReleaseDate() );
+                System.out.println( "Platform: " + record.getPlatform() );
                 assertTrue( record.getOrganisms().contains( "Homo sapiens" ) );
+            }
+
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Exercises getting details
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testGetGeoRecords() throws Exception {
+        GeoBrowser b = new GeoBrowser();
+
+        try {
+            Thread.sleep( 200 );
+
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null );
+            // Check that the search has returned at least one record
+            assertTrue( res.size() > 0 );
+
+            // Print out accession numbers etc.; check that the records returned match the search term
+            for ( GeoRecord record : res ) {
+                System.out.println( "Accession: " + record.getGeoAccession() );
+                System.out.println( "Title : " + record.getTitle() );
+                System.out.println( "Number of samples: " + record.getNumSamples() );
+                System.out.println( "Date: " + record.getReleaseDate() );
+                System.out.println( "Platforms: " + record.getPlatform() );
             }
 
         } catch ( IOException e ) {

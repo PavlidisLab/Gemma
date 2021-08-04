@@ -234,12 +234,12 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * @param  eeId the id of an expression experiment
      * @return      AD VOs
      */
-    Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+    List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     @Override
-    Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 
     /**

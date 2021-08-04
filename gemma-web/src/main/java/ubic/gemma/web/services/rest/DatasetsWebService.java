@@ -14,10 +14,10 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
@@ -25,7 +25,10 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -46,9 +49,10 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * RESTful interface for datasets.
@@ -57,12 +61,12 @@ import java.util.Map;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends
-        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+public class DatasetsWebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
+    private ExpressionExperimentService service;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
@@ -90,7 +94,7 @@ public class DatasetsWebService extends
             GeneService geneService, SVDService svdService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService, AuditEventService auditEventService,
             OutlierDetectionService outlierDetectionService ) {
-        super( expressionExperimentService );
+        this.service = expressionExperimentService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
@@ -103,20 +107,18 @@ public class DatasetsWebService extends
         this.outlierDetectionService = outlierDetectionService;
     }
 
-    /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject all( // Params:
+    @Operation(summary = "Retrieve all datasets")
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> all( // Params:
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.all( filter, offset, limit, sort, sr );
+        return Responder.respond( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
     }
 
     /**
@@ -131,22 +133,21 @@ public class DatasetsWebService extends
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see               WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg,
-     *                    HttpServletResponse)
      */
     @GET
-    @Path("/{datasetsArg: [^/]+}")
+    @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasets( // Params:
-            @PathParam("datasetsArg") ArrayDatasetArg datasetsArg, // Optional
+    @Operation(summary = "Retrieve datasets by their identifiers")
+    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
+            @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( datasetsArg, filter, offset, limit, sort, sr );
+        return Responder.respond( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), service ) ) );
     }
 
     /**
@@ -156,15 +157,16 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/platforms")
+    @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the platform of a dataset")
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
-    public ResponseDataObject datasetPlatforms( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+    public ResponseDataObject<List<ArrayDesignValueObject>> datasetPlatforms( // Params:
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
+        return Responder.respond( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ) );
     }
 
     /**
@@ -174,14 +176,16 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/samples")
+    @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetSamples( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+    @Operation(summary = "Retrieve the samples of a dataset")
+    public ResponseDataObject<List<BioAssayValueObject>> datasetSamples( // Params:
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("factorValues") FactorValueArrayArg factorValues,
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ), sr );
+        return Responder.respond( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ) );
     }
 
     /**
@@ -191,19 +195,20 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.\\-]+}/analyses/differential")
+    @Path("/{datasetArg}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetDiffAnalysis( // Params:
+    @Operation(summary = "Retrieve the main differential analysis of a dataset")
+    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode(
-                this.getDiffExVos( datasetArg.getPersistentObject( expressionExperimentService ).getId(),
-                        offset.getValue(), limit.getValue() ),
-                sr );
+        return Responder.respond(
+                this.getDiffExVos( datasetArg.getEntity( expressionExperimentService ).getId(),
+                        offset.getValue(), limit.getValue() )
+        );
     }
 
     /**
@@ -213,14 +218,15 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.-]+}/annotations")
+    @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetAnnotations( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+    @Operation(summary = "Retrieve the annotations analysis of a dataset")
+    public ResponseDataObject<Set<AnnotationValueObject>> datasetAnnotations( // Params:
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getAnnotations( expressionExperimentService ), sr );
+        return Responder.respond( datasetArg.getAnnotations( expressionExperimentService ) );
     }
 
     /**
@@ -231,15 +237,16 @@ public class DatasetsWebService extends
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [\\w\\.\\-]+}/data")
+    @Path("/{dataset}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the expression data of a dataset")
     public Response datasetData( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDataFile( ee, filterData.getValue() );
     }
 
@@ -250,14 +257,15 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/design")
+    @Path("/{dataset}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Operation(summary = "Retrieve the design of a dataset")
     public Response datasetDesign( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDesignFile( ee );
     }
 
@@ -269,15 +277,16 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/hasbatch")
+    @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetHasBatch( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+    @Operation(summary = "Indicate of a dataset has batch information")
+    public ResponseDataObject<Boolean> datasetHasBatch( // Params:
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        return Responder.autoCode( new Boolean( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) ), sr );
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        return Responder.respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
     }
 
     /**
@@ -287,16 +296,17 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.\\-_]+}/svd")
+    @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetSVD( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+    @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data")
+    public ResponseDataObject<SimpleSVDValueObject> datasetSVD( // Params:
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        SVDValueObject svd = svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() );
-        return Responder.autoCode( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ),
-                sr );
+        SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
+        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() )
+        );
     }
 
     /**
@@ -332,22 +342,23 @@ public class DatasetsWebService extends
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
+    @Path("/{datasets}/expressions/genes/{genes: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressions( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
-            @PathParam("genes") ArrayGeneArg genes, // Required
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressions( // Params:
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
             // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
-                                genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() ),
-                sr );
+        return Responder.respond( processedExpressionDataVectorService
+                        .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
+                                genes.getEntities( geneService ), keepNonSpecific.getValue(),
+                                consolidate == null ? null : consolidate.getValue() )
+        );
     }
 
     /**
@@ -374,23 +385,24 @@ public class DatasetsWebService extends
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/pca")
+    @Path("/{datasets}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressionsPca( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+    @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsPca( // Params:
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        this.checkReqArg( component, "component" );
-        return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
+        ArgUtils.checkReqArg( component, "component" );
+        return Responder.respond( processedExpressionDataVectorService
+                        .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValue(),
                                 component.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() ),
-                sr );
+                                consolidate == null ? null : consolidate.getValue() )
+        );
     }
 
     /**
@@ -418,11 +430,12 @@ public class DatasetsWebService extends
      *                        </ul>
      */
     @GET
-    @Path("/{datasets: [^/]+}/expressions/differential")
+    @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject datasetExpressionsDiffEx( // Params:
-            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+    @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
+    public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsDiffEx( // Params:
+            @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
@@ -431,12 +444,12 @@ public class DatasetsWebService extends
             // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        this.checkReqArg( diffExSet, "diffExSet" );
-        return Responder.autoCode( processedExpressionDataVectorService
-                        .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
+        ArgUtils.checkReqArg( diffExSet, "diffExSet" );
+        return Responder.respond( processedExpressionDataVectorService
+                        .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
                                 diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() ),
-                sr );
+                                consolidate == null ? null : consolidate.getValue() )
+        );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
@@ -454,27 +467,21 @@ public class DatasetsWebService extends
     private Response outputFile( File file, String error, String shortName ) {
         try {
             if ( file == null || !file.exists() ) {
-                WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                        String.format( error, shortName ) );
-                throw new GemmaApiException( errorBody );
+                throw new NotFoundException( String.format( error, shortName ) );
             }
 
             return Response.ok( Files.readAllBytes( file.toPath() ) )
                     .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
         } catch ( IOException e ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    String.format( error, shortName ) );
-            errorBody.addErrorsField( "error", e.getMessage() );
-
-            throw new GemmaApiException( errorBody );
+            throw new NotFoundException( String.format( error, shortName ), e );
         }
     }
 
-    private Collection getDiffExVos( Long eeId, int offset, int limit ) {
-        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
+    private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
+        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
         if ( map == null || map.size() < 1 ) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return map.get( map.keySet().iterator().next() );
     }
@@ -484,13 +491,13 @@ public class DatasetsWebService extends
         /**
          * Order same as the rows of the v matrix.
          */
-        private Long[] bioMaterialIds;
+        private final Long[] bioMaterialIds;
 
         /**
          * An array of values representing the fraction of the variance each component accounts for
          */
-        private Double[] variances;
-        private DoubleMatrix<Long, Integer> vMatrix;
+        private final Double[] variances;
+        private final DoubleMatrix<Long, Integer> vMatrix;
 
         SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
             this.bioMaterialIds = bioMaterialIds;

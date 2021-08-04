@@ -213,6 +213,11 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
                 '</span>';
         }
 
+        // include the DifferentialExpressionSuitabilityEvents
+        if (this.isExperiment() && !this.curatable.suitableForDEA) {
+            str += ' <span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>Unsuitable for DEA</span>';
+        }
+
         // Status details
         str += this.getEventDescriptionLine(this.curatable.lastTroubledEvent);
         return str;

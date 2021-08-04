@@ -1,7 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
@@ -9,8 +9,18 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
+@Schema(anyOf = { DatabaseEntryIdArg.class, DatabaseEntryStringArg.class })
 public abstract class DatabaseEntryArg<T>
-        extends MutableArg<T, DatabaseEntry, DatabaseEntryValueObject, DatabaseEntryService> {
+        extends AbstractEntityArg<T, DatabaseEntry, DatabaseEntryService> {
+
+    DatabaseEntryArg( T value ) {
+        super( value );
+    }
+
+    @Override
+    public String getEntityName() {
+        return "DatabaseEntry";
+    }
 
     /**
      * Used by RS to parse value of request parameters.

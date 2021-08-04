@@ -28,22 +28,31 @@ public interface GeoBrowserService {
     /**
      * Get details from GEO about an accession.
      *
-     * @param accession accession
-     * @return details
+     * @param  accession   accession
+     * @return             details
      * @throws IOException if there is a problem while manipulating the file
      */
     String getDetails( String accession ) throws IOException;
 
     /**
-     * @param start page number, not starting record
-     * @param count page size
-     * @return geo records
+     * @param  start          page number, not starting record
+     * @param  count          page size
+     * @return                geo records
      * @throws IOException    if there is a problem while manipulating the file
      * @throws ParseException if there is a problem with parsing
      */
     List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
 
-    List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException;
+    /**
+     * 
+     * @param  searchString can be null
+     * @param  start        first record to retrieve
+     * @param  count        how many records to retrieve
+     * @param  detailed     if true, more information is retrieved (slow)
+     * @return              collection of GeoRecords
+     * @throws IOException
+     */
+    List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException;
 
     boolean toggleUsability( String accession );
 

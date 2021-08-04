@@ -3,7 +3,6 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +31,7 @@ public class PlatformFilterArg extends FilterArg {
      *
      * @param s the request filter string.
      * @return an instance of DatasetFilterArg representing the filtering options in the given string.
-     * @throws GemmaApiException if the given string is not a well formed filter argument (E.g. is not CNF, or at least
+     * @throws javax.ws.rs.BadRequestException if the given string is not a well formed filter argument (E.g. is not CNF, or at least
      *                           one of the properties specified in the string does not exist in Array Designs.
      */
     @SuppressWarnings("unused")

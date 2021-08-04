@@ -15,9 +15,12 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 /**
- * Used to indicate a problem with the population of batch information for a given {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
+ * Used to indicate a problem with the population of batch information for a given
+ * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
  */
 public class BatchInfoPopulationException extends Exception {
+
+    private static final long serialVersionUID = -1770591991479420212L;
 
     public BatchInfoPopulationException( String message ) {
         super( message );

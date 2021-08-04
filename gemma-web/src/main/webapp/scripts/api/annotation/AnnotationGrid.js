@@ -53,6 +53,12 @@ Gemma.AnnotationDataView = Ext
             }, {
                 name: "termName"
             }, {
+				name: "termNameEsc",
+				mapping : "termName",
+				convert : function(v, rec) {
+					return encodeURI(v);
+				}
+			}, {
                 name: "evidenceCode"
             }, {
                 name: "objectClass"
@@ -82,7 +88,7 @@ Gemma.AnnotationDataView = Ext
                         '<span class="fromExperimentTag">',
                     '</tpl>',
                     '<a ext:qtip="{className} : {termUri} via {objectClass} " href="' + ctxBasePath +
-                    '/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">' +
+                    '/searcher.html?query={termNameEsc}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">' +
                     '{termName}</a></span></span>&nbsp;&nbsp;',
                 '</tpl>'),
 

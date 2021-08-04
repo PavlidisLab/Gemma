@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -8,23 +9,23 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
+@Schema(implementation = Long.class)
 public class DatasetIdArg extends DatasetArg<Long> {
 
     /**
      * @param l intentionally primitive type, so the value property can never be null.
      */
     public DatasetIdArg( long l ) {
-        this.value = l;
-        setNullCause( "ID", "Dataset" );
+        super( l );
     }
 
     @Override
-    public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return check( service.load( this.value ) );
+    public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
+        return checkEntity( service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( ExpressionExperimentService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

@@ -176,12 +176,4 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         return new BioAssayDimensionValueObject( entity );
     }
 
-    @Override
-    public Collection<BioAssayDimensionValueObject> loadValueObjects( Collection<BioAssayDimension> entities ) {
-        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<>();
-        for ( BioAssayDimension e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

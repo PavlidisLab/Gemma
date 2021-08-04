@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
@@ -8,20 +9,21 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
-        this.value = s;
-        setNullCause( "Accession ID", "Database Entry" );
+        super( s );
     }
 
     @Override
-    public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return check( this.value == null ? null : service.load( this.value ) );
+    public DatabaseEntry getEntity( DatabaseEntryService service ) {
+        String value = getValue();
+        return checkEntity( value == null ? null : service.load( value ) );
     }
 
     @Override
-    public String getPropertyName( DatabaseEntryService service ) {
+    public String getPropertyName() {
         return "accession";
     }
 }

@@ -81,18 +81,4 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
         return BlacklistedValueObject.fromEntity( this.load( entity.getId() ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.AbstractVoEnabledDao#loadValueObjects(java.util.Collection)
-     */
-    @Override
-    public Collection<BlacklistedValueObject> loadValueObjects( Collection<BlacklistedEntity> entities ) {
-        Collection<BlacklistedValueObject> vos = new LinkedHashSet<>();
-        for ( BlacklistedEntity e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
 }

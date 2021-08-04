@@ -44,7 +44,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     @Override
-    Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
@@ -75,9 +75,9 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
-    Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
+    List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+    List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
     Collection<CompositeSequence> loadCompositeSequences( Long id, int limit, int offset );
 

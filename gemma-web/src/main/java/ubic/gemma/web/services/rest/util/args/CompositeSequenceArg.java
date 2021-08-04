@@ -1,8 +1,8 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 /**
@@ -10,10 +10,20 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  *
  * @author tesarst
  */
+@Schema(anyOf = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
 public abstract class CompositeSequenceArg<T>
-        extends MutableArg<T, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> {
+        extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 
     protected ArrayDesign arrayDesign;
+
+    CompositeSequenceArg( T arg ) {
+        super( arg );
+    }
+
+    @Override
+    public String getEntityName() {
+        return "CompositeSequence";
+    }
 
     /**
      * Used by RS to parse value of request parameters.
@@ -36,7 +46,4 @@ public abstract class CompositeSequenceArg<T>
     public void setPlatform( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
-
-    @Override
-    public abstract CompositeSequence getPersistentObject( CompositeSequenceService service );
 }

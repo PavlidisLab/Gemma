@@ -1,5 +1,7 @@
 package ubic.gemma.web.services.rest.util;
 
+import ubic.gemma.web.services.rest.RootWebService;
+
 /**
  * Wrapper for an error response payload compliant with the
  * <a href="https://google.github.io/styleguide/jsoncstyleguide.xml?showone=error#error">Google JSON style-guide</a>
@@ -9,18 +11,20 @@ package ubic.gemma.web.services.rest.util;
 @SuppressWarnings("unused")
 // Some properties might show as unused, but they are still serialised to JSON and published through API for client consumption.
 public class ResponseErrorObject {
-    /**
-     * Adds the apiVersion property to the final JSON object
-     */
-    public final String apiVersion = WebService.API_VERSION;
 
-    private WellComposedErrorBody error;
+    private final String apiVersion = RootWebService.API_VERSION; //OpenApiUtils.getOpenApi().getInfo().getVersion();
+
+    private final WellComposedErrorBody error;
 
     /**
      * @param payload payload containing the error details.
      */
-    ResponseErrorObject( WellComposedErrorBody payload ) {
+    public ResponseErrorObject( WellComposedErrorBody payload ) {
         this.error = payload;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
     }
 
     /**

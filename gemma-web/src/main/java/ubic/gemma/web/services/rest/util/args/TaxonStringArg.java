@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -9,46 +10,35 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  *
  * @author tesarst
  */
+@Schema(implementation = String.class)
 public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
-        this.value = s;
-        setNullCause( "common or scientific name, ", "Taxon" );
+        super( s );
     }
 
     @Override
-    public Taxon getPersistentObject( TaxonService service ) {
-        return check( this.value == null ? null : this.tryAllNameProperties( service ) );
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( this.getValue() == null ? null : this.tryAllNameProperties( service ) );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
-        Taxon taxon = service.findByCommonName( this.value );
-
-        if ( taxon != null ) {
-            return "commonName";
-        }
-        taxon = service.findByScientificName( this.value );
-
-        if ( taxon != null ) {
-            return "scientificName";
-        }
-
-        return null;
+    public String getPropertyName() {
+        return "commonName or scientificName";
     }
 
     /**
      * Tries to retrieve a Taxon based on its names.
      *
      * @param  service the TaxonService that handles the search.
-     * @return         Taxon or null if no taxon with any property matching this#value was found.
+     * @return Taxon or null if no taxon with any property matching this#value was found.
      */
     private Taxon tryAllNameProperties( TaxonService service ) {
         // Most commonly used
-        Taxon taxon = service.findByCommonName( this.value );
+        Taxon taxon = service.findByCommonName( this.getValue() );
 
         if ( taxon == null ) {
-            taxon = service.findByScientificName( this.value );
+            taxon = service.findByScientificName( this.getValue() );
         }
 
         return taxon;

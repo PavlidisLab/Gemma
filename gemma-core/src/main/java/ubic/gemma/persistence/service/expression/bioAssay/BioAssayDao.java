@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see BioAssay
@@ -38,5 +39,5 @@ public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObj
 
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
-    Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
+    List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

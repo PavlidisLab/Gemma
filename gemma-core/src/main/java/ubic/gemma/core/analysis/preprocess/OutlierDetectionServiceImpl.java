@@ -105,14 +105,13 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
          */
         if ( numOutliers > 0 ) {
             OutlierDetectionServiceImpl.log
-                    .info( "Removing false positives; number of outliers before test: " + numOutliers );
+                    .debug( "Removing false positives; number of outliers before test: " + numOutliers );
             outliers = this.removeFalsePositives( allSamples, outliers, numOutliers );
 
             numOutliers = outliers.size();
-            OutlierDetectionServiceImpl.log.info( "Number of outliers after removing false positives: " + numOutliers );
+            OutlierDetectionServiceImpl.log.debug( "Number of outliers after removing false positives: " + numOutliers );
+            OutlierDetectionServiceImpl.log.info( "Found " + numOutliers + " outlier(s)" );
         }
-
-        OutlierDetectionServiceImpl.log.info( "Found " + numOutliers + " outlier(s)" );
 
         return outliers;
 

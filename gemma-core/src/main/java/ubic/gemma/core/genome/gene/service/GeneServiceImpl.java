@@ -240,7 +240,7 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene ) {
+    public List<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene ) {
         if ( gene == null ) {
             return Collections.emptyList();
         }
@@ -248,7 +248,7 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
         gene = this.thaw( gene );
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
-        Collection<PhysicalLocationValueObject> locations = new LinkedList<>();
+        List<PhysicalLocationValueObject> locations = new LinkedList<>();
 
         if ( gpCollection == null )
             return null;

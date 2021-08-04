@@ -3,17 +3,16 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 @Service
-public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
+public class ExpressionAnalysisResultSetServiceImpl extends AbstractService<ExpressionAnalysisResultSet> implements ExpressionAnalysisResultSetService {
 
     private final ExpressionAnalysisResultSetDao voDao;
 
@@ -26,6 +25,11 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledSer
     @Override
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e ) {
         return voDao.thaw( e );
+    }
+
+    @Override
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears ) {
+        return voDao.thawWithoutContrasts( ears );
     }
 
     @Override

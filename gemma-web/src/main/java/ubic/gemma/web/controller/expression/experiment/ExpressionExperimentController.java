@@ -291,7 +291,8 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * AJAX TODO --- include a search of subsets. NOTE: only used via DataSetSearchAndGrabToolbar -{@literal >} DatasetGroupEditor?
+     * AJAX TODO --- include a search of subsets. NOTE: only used via DataSetSearchAndGrabToolbar -{@literal >}
+     * DatasetGroupEditor?
      *
      * @param  query   search string
      * @param  taxonId (if null, all taxa are searched)
@@ -623,6 +624,8 @@ public class ExpressionExperimentController {
         if ( lastArrayDesignUpdate != null ) {
             finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
         }
+
+        finalResult.setSuitableForDEA( expressionExperimentService.isSuitableForDEA( ee ) );
 
         return finalResult;
     }
@@ -1199,7 +1202,8 @@ public class ExpressionExperimentController {
 
         }
 
-        ExpressionExperimentController.log.info( count + " outliers were removed." );
+        if ( count > 0 )
+            ExpressionExperimentController.log.info( count + " outliers were removed." );
 
         return count;
     }
@@ -1214,7 +1218,6 @@ public class ExpressionExperimentController {
     private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
         boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
-
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );

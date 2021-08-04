@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -8,23 +9,23 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  *
  * @author tesarst
  */
+@Schema(implementation = Long.class)
 public class TaxonIdArg extends TaxonArg<Long> {
 
     /**
      * @param l intentionally primitive type, so the value property can never be null.
      */
     TaxonIdArg( long l ) {
-        this.value = l;
-        setNullCause( "ID", "Taxon" );
+        super( l );
     }
 
     @Override
-    public Taxon getPersistentObject( TaxonService service ) {
-        return check( service.load( this.value ) );
+    public Taxon getEntity( TaxonService service ) {
+        return checkEntity( service.load( this.getValue() ) );
     }
 
     @Override
-    public String getPropertyName( TaxonService service ) {
+    public String getPropertyName() {
         return "id";
     }
 }

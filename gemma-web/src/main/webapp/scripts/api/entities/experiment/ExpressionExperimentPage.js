@@ -90,22 +90,34 @@ function getBatchInfoBadges(ee) {
     }
 
     if (ee.batchEffect !== null && ee.batchEffect !== "") {
-        if (ee.batchEffect === "Data has been batch-corrected") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
+		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
+			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
+  
+		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
+			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
+  
+	
+		} else if (ee.batchEffect === "BATCH_CORRECTED_SUCCESS") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
             result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffect)
-        }  else if (ee.batchEffect === "No batch effect was detected" ) {
+        }  else if (ee.batchEffect === "NO_BATCH_EFFECT_SUCCESS" ) {
             // if there is also a batch confound, don't show this.
             if (ee.batchConfound !== null && ee.batchConfound !== "") {
                 // no-op.
             } else {
                 result = result + getStatusBadge('cogs', 'green', 'no batch effect', "Batch information is present, but no substantial effect was detected, so the data are not corrected.")
             }
-        } else if (ee.batchEffect == "Samples were run in a single batch" ) {
+        } else if (ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
-        } else if (ee.batchEffect == "No batch information was available") { // redundant
-            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', "Information on sample batching was not available");
+        } else if (ee.batchEffect === "NO_BATCH_INFO") { // redundant
+            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo);
         } else {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
         }
+    }
+
+    if (!ee.suitableForDEA) {
+        result = result + getStatusBadge('exclamation-triangle', 'orange', 'Unsuitable for diff. ex.',
+            Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusUnsuitableForDEA);
     }
 
     return result;

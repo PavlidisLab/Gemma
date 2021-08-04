@@ -18,11 +18,11 @@
  */
 package ubic.gemma.web.services.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
-import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -31,13 +31,16 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +51,7 @@ import java.util.stream.Collectors;
  */
 @Service("analysisResultSetWebService")
 @Path("/resultSets")
-public class AnalysisResultSetsWebService extends WebService {
+public class AnalysisResultSetsWebService {
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -59,47 +62,87 @@ public class AnalysisResultSetsWebService extends WebService {
     @Autowired
     private DatabaseEntryService databaseEntryService;
 
+    @Autowired
+    private ExpressionAnalysisResultSetFileService expressionAnalysisResultSetFileService;
+
     /**
      * Retrieve all {@link AnalysisResultSet} matching a set of criteria.
      *
-     * @param datasetIds filter result sets that belong to any of the provided dataset identifiers, or null to ignore
-     * @param externalIds filter by associated datasets with given external identifiers, or null to ignore
-     * @param servlet
+     * @param datasets filter result sets that belong to any of the provided dataset identifiers, or null to ignore
+     * @param databaseEntries filter by associated datasets with given external identifiers, or null to ignore
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<?> findAll(
-            @QueryParam("datasets") ArrayDatasetArg datasets,
-            @QueryParam("databaseEntries") ArrayDatabaseEntryArg databaseEntries,
+    @Operation(summary = "Retrieve all result sets matching the provided criteria")
+    public ResponseDataObject<List<ExpressionAnalysisResultSetValueObject>> findAll(
+            @QueryParam("datasets") DatasetArrayArg datasets,
+            @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("offset") @DefaultValue("0") IntArg offset,
             @QueryParam("limit") @DefaultValue("20") IntArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort,
             @Context final HttpServletResponse servlet ) {
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                Optional.ofNullable( datasets ).map( d -> d.getPersistentObjects( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
-                Optional.ofNullable( databaseEntries ).map( de -> de.getPersistentObjects( databaseEntryService ) ).orElse( null ),
+                Optional.ofNullable( datasets ).map( d -> d.getEntities( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
+                Optional.ofNullable( databaseEntries ).map( de -> de.getEntities( databaseEntryService ) ).orElse( null ),
                 null,
                 offset.getValue(),
                 limit.getValue(),
                 sort.getField(),
                 sort.isAsc() );
-        return Responder.code200( expressionAnalysisResultSetService.loadValueObjects( resultSets ), servlet );
+        List<ExpressionAnalysisResultSetValueObject> resultSetVos = resultSets.stream()
+                .map( ExpressionAnalysisResultSetValueObject::new )
+                .collect( Collectors.toList() );
+        return Responder.respond( resultSetVos );
     }
 
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
-     *
-     * @param analysisResultSet
-     * @return
      */
     @GET
-    @Path("/{analysisResultSet:[^/]+}")
+    @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject<?> findById(
+    @Operation(summary = "Retrieve a single analysis result set by its identifier")
+    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getPersistentObject( expressionAnalysisResultSetService );
-        ears = expressionAnalysisResultSetService.thaw( ears );
-        return Responder.code200( new ExpressionAnalysisResultSetValueObject( ears ), servlet );
+        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+        if ( ears == null ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        }
+        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
+        return Responder.respond( new ExpressionAnalysisResultSetValueObject( ears ) );
     }
+
+    /**
+     * Retrieve an {@link AnalysisResultSet} in a tabular format.
+     */
+    @GET
+    @Path("/{analysisResultSet}")
+    @Produces("text/tab-separated-values; qs=0.9")
+    @Operation(summary = "Retrieve a single analysis result set by its identifier")
+    public StreamingOutput findByIdToTsv(
+            @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Context final HttpServletResponse servlet ) {
+        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+        // only thaw the related analysis and experimental factors without contrasts
+        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
+        return new ExpressionAnalysisResultSetTsvStreamingOutput( ears );
+    }
+
+    private class ExpressionAnalysisResultSetTsvStreamingOutput implements StreamingOutput {
+
+        private final ExpressionAnalysisResultSet resultSet;
+
+        public ExpressionAnalysisResultSetTsvStreamingOutput( ExpressionAnalysisResultSet resultSet ) {
+            this.resultSet = resultSet;
+        }
+
+        @Override
+        public void write( OutputStream outputStream ) throws IOException, WebApplicationException {
+            try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( resultSet, writer );
+            }
+        }
+    }
+
 }
