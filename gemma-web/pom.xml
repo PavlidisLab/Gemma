@@ -385,12 +385,12 @@
 		<dependency>
 			<groupId>net.jawr</groupId>
 			<artifactId>jawr-core</artifactId>
-			<version>3.5.2</version>
+			<version>${jawr.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.jawr.extensions</groupId>
 			<artifactId>jawr-dwr2.x-extension</artifactId>
-			<version>3.5.2</version>
+			<version>${jawr.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-el</groupId>
