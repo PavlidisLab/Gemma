@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
 import ubic.gemma.model.common.description.Characteristic;
