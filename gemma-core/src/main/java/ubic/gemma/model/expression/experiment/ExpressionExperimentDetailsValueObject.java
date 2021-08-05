@@ -56,10 +56,13 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Boolean hasBothIntensities = false;
     private Boolean hasCoexpressionAnalysis = false;
     private Boolean hasDifferentialExpressionAnalysis = false;
-
     private Boolean hasEitherIntensity = false;
+
     private Boolean hasMultiplePreferredQuantitationTypes = false;
+
     private Boolean hasMultipleTechnologyTypes = false;
+
+    private Boolean isRNASeq = false;
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
     private Double minPvalue;
@@ -78,9 +81,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Collection<AuditEventValueObject> sampleRemovedFlags;
     private String secondaryAccession;
     private String secondaryExternalDatabase;
-
     private String secondaryExternalUri;
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -131,14 +132,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return batchFetchEventType;
     }
 
-    //    public Integer getCoexpressionLinkCount() {
-    //        return this.coexpressionLinkCount;
-    //    }
-    //
-    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-    //        this.coexpressionLinkCount = coexpressionLinkCount;
-    //    }
-
     /**
      * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
      *         this
@@ -153,6 +146,14 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public Date getDateBatchFetch() {
         return dateBatchFetch;
     }
+
+    //    public Integer getCoexpressionLinkCount() {
+    //        return this.coexpressionLinkCount;
+    //    }
+    //
+    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+    //        this.coexpressionLinkCount = coexpressionLinkCount;
+    //    }
 
     /**
      * @return The date this object was generated.
@@ -222,6 +223,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public Boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
+    }
+
+    public Boolean getIsRNASeq() {
+        return isRNASeq;
     }
 
     public String getLastArrayDesignUpdateDate() {
@@ -490,6 +495,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setHasMultipleTechnologyTypes( Boolean hasMultipleTechnologyTypes ) {
         this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
+    }
+
+    public void setIsRNASeq( Boolean isRNASeq ) {
+        this.isRNASeq = isRNASeq;
     }
 
     public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {

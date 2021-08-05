@@ -52,6 +52,10 @@ Gemma.ExpressionExperimentDetails = Ext
                     if (i < arrayDesigns.length - 1) {
                         result = result + "<br/>";
                     }
+
+                    if (ee.isRNASeq) {
+	                    result = result + "&nbsp;(RNA-seq)"
+                    }
                 }
 
                 if (ee.lastArrayDesignUpdateDate) {

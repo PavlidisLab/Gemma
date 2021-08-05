@@ -658,6 +658,8 @@ public class ExpressionExperimentServiceImpl
                 result = "SINGLE_BATCH_SUCCESS";
             } else if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
+            } else if (beDetails.isFailedToGetBatchInformation()) {
+                result = "NO_BATCH_INFO"; // sort of generic
             } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
                 result = "This data set may have a batch artifact" + pc + ", p=" + String

@@ -83,12 +83,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         leftPanel.add(this.diagnosticsPanelRenderer(this.experimentDetails, manager));
         leftPanel.add(this.batchPanelRenderer(this.experimentDetails, manager));
 
-        var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
+       // var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
         var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
         var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
-        if (batchConfoundPanel !== null || batchEffectPanel !== null || batchInfoMissingPanel !== null) {
+        if (batchConfoundPanel !== null || batchEffectPanel !== null /*|| batchInfoMissingPanel !== null*/) {
             leftPanel.add({html: "<br/><h4>Batch info quality:</h4>"});
-            if (batchInfoMissingPanel !== null) leftPanel.add(batchInfoMissingPanel);
+           // if (batchInfoMissingPanel !== null) leftPanel.add(batchInfoMissingPanel);
             if (batchConfoundPanel !== null) leftPanel.add(batchConfoundPanel);
             if (batchEffectPanel !== null) leftPanel.add(batchEffectPanel);
         }
@@ -944,7 +944,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         }
     },
 
-    batchInfoMissingRenderer: function (ee, mgr) {
+   /* batchInfoMissingRenderer: function (ee, mgr) {
 
         var panelBC = new Ext.Panel({
             layout: 'hbox',
@@ -967,7 +967,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         panelBC.add(be);
 
         return panelBC;
-    },
+    },*/
 
     batchEffectRenderer: function (ee, mgr) {
 

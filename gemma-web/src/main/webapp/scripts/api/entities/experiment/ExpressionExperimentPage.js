@@ -103,7 +103,7 @@ function getBatchInfoBadges(ee) {
             }
         } else if (ee.batchEffect === "SINGLE_BATCH_SUCCESS" ) {
             result = result + getStatusBadge('cogs', 'green', 'single batch', "Samples were run in a single batch as far as we can tell");
-        } else if (ee.batchEffect === "NO_BATCH_INFO") { // redundant
+        } else if (ee.batchEffect === "NO_BATCH_INFO") { 
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo);
         } else {
             result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
@@ -250,6 +250,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
          * @param experimentDetails.geeq
          * @param experimentDetails.geeq.publicQualityScore
          * @param experimentDetails.geeq.publicSuitabilityScore
+         * @param experimentDetails.isRNASeq
          */
         this.experimentDetails = experimentDetails;
         this.editable = experimentDetails.currentUserHasWritePermission || isAdmin;

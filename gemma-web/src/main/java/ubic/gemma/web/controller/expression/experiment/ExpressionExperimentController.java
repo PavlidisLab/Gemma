@@ -615,7 +615,7 @@ public class ExpressionExperimentController {
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
         finalResult = this.setPreferredAndReprocessed( finalResult, ee );
-        finalResult = this.setMultipleTechTypes( finalResult, ee );
+        finalResult = this.setTechTypeInfo( finalResult, ee );
 
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
         finalResult = this.setBatchInfo( finalResult, ee );
@@ -1288,13 +1288,13 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Checks and sets multiple technology types
+     * Checks and sets multiple technology types and RNA-seq status
      *
      * @param  ee          ee
      * @param  finalResult result
      * @return             ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setMultipleTechTypes(
+    private ExpressionExperimentDetailsValueObject setTechTypeInfo(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
@@ -1302,6 +1302,8 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
+        
+        finalResult.setIsRNASeq( expressionExperimentService.isRNASeq( ee ) );
 
         return finalResult;
     }
