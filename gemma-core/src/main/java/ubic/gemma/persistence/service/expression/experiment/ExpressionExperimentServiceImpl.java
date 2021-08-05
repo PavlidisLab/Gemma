@@ -595,7 +595,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // address cases that were run prior to having the SingleBatchDeterminationEvent type.
-        if ( ev.getNote().startsWith( "1 batch" ) || ev.getNote().startsWith( "AffyScanDateExtractor; 0 batches" ) ) {
+        if ( ev.getNote() != null && ( ev.getNote().startsWith( "1 batch" ) || ev.getNote().startsWith( "AffyScanDateExtractor; 0 batches" ) ) ) {
             return true;
         }
 
@@ -641,7 +641,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public String getBatchEffectDescription( ExpressionExperiment ee ) {
+    public String getBatchStatusDescription( ExpressionExperiment ee ) {
         /*
          * WARNING: do not change these strings as they are used directly in ExpressionExperimentPage.js
          */
@@ -833,7 +833,7 @@ public class ExpressionExperimentServiceImpl
      *            the curation details of the object directly, as this method also checks all the array designs the
      *            given
      *            experiment belongs to.
-     * @return    true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
     public boolean isTroubled( ExpressionExperiment ee ) {
@@ -1122,7 +1122,7 @@ public class ExpressionExperimentServiceImpl
     /**
      * @param  ees  experiments
      * @param  type event type
-     * @return      a map of the expression experiment ids to the last audit event for the given audit event type the
+     * @return a map of the expression experiment ids to the last audit event for the given audit event type the
      *              map
      *              can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */

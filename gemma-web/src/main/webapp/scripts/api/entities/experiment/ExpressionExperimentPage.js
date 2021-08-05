@@ -83,12 +83,7 @@ function getBatchInfoBadges(ee) {
         return result;
     }
 
-    if (ee.hasBatchInformation === false) {
-        result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info',
-            Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo)
-        return result;
-    }
-
+    // batch status, shown whether we have batch information or not.
     if (ee.batchEffect !== null && ee.batchEffect !== "") {
 		if (ee.batchEffect === "SINGLETON_BATCHES_FAILURE") {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);

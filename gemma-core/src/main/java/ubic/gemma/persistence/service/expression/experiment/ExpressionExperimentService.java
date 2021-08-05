@@ -278,7 +278,7 @@ public interface ExpressionExperimentService
      * @param  ee the experiment to get the batch effect for.
      * @return    a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
-    String getBatchEffectDescription( ExpressionExperiment ee );
+    String getBatchStatusDescription( ExpressionExperiment ee );
 
     /**
      * @param  expressionExperiment experiment
