@@ -18,3 +18,7 @@ openAPI:
     termsOfService: https://pavlidislab.github.io/Gemma/terms.html
     contact:
       email: pavlab-support@msl.ubc.ca
+  security:
+    - basicAuth: []
+    - cookieAuth: []
+    - {} # this corresponds to anonymous authentication
