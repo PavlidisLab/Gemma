@@ -465,16 +465,12 @@ public class DatasetsWebService {
     }
 
     private Response outputFile( File file, String error, String shortName ) {
-        try {
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( error, shortName ) );
-            }
-
-            return Response.ok( Files.readAllBytes( file.toPath() ) )
-                    .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
-        } catch ( IOException e ) {
-            throw new NotFoundException( String.format( error, shortName ), e );
+        if ( file == null || !file.exists() ) {
+            throw new NotFoundException( String.format( error, shortName ) );
         }
+        return Response.ok( file )
+                .header( "Content-Disposition", "attachment; filename=" + file.getName() )
+                .build();
     }
 
     private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
