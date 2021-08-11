@@ -61,12 +61,17 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
         this.delete = commandLine.hasOption( "delete" );
     }
 
     @Override
     protected void doWork() throws Exception {
         BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
+
+        if ( this.getArrayDesignsToProcess().isEmpty() ) {
+            throw new IllegalArgumentException( "You must provide at least one platform to process" );
+        }
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
@@ -76,10 +81,10 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
                 bioSequenceService.remove( new HashSet<>( bioSequences.values() ) );
                 this.audit( arrayDesign, "Deleted " + bioSequences.size() + " associated sequences from the system" );
             } else {
-
                 this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
                 this.audit( arrayDesign, "Removed sequence associations with CLI" );
             }
+            this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         }
     }
 
