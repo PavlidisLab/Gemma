@@ -68,8 +68,10 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      */
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
-                + "additional columns: name, description of entity" ).argName( "file name" ).hasArg().build() );
+        options.addOption( Option.builder( "file" ).longOpt( null )
+                .desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
+                        + "additional columns: name, description of entity" )
+                .argName( "file name" ).hasArg().build() );
         options.addOption( "undo", "Remove items from blacklist instead of adding" );
     }
 
@@ -88,7 +90,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
 
-        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -109,11 +111,15 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
                 boolean alreadyBlacklisted = blacklistedEntityDao.isBlacklisted( accession );
                 if ( remove ) {
+                    if ( !alreadyBlacklisted ) {
+                        log.warn( "Attempting to de-blacklist " + accession + " but it is not blacklisted" );
+                        continue;
+                    }
                     blacklistedEntityDao.remove( blacklistedEntityDao.findByAccession( accession ) );
                     log.info( "De-blacklisted " + accession );
                     continue;
                 } else if ( alreadyBlacklisted ) {
-                    log.warn( accession + " is already blacklisted, skipping" );
+                    log.warn( accession + " is already blacklisted, skipping. To update the 'reason' please unblacklist it and blacklist again" );
                     continue;
                 }
 
