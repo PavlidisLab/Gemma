@@ -66,12 +66,13 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
      */
     @Override
     public String getCommandName() {
-         return "seqCleanup";
+        return "seqCleanup";
     }
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
+        super.buildOptions( options );
 
         OptionBuilder.withDescription( "Set to run without any database modifications" );
         Option justTestingOption = OptionBuilder
@@ -81,7 +82,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         OptionBuilder.hasArg();
         OptionBuilder.withArgName( "file" );
         OptionBuilder
-                .withDescription( "File with list of biosequence ids to check." );
+                .withDescription( "File with list of biosequence ids to check; default: check all on provided platforms" );
         Option sequenceNameList = OptionBuilder.create( 'b' );
         options.addOption( sequenceNameList );
     }
