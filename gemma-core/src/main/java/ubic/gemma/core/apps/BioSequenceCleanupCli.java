@@ -193,7 +193,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
-
+        super.processOptions( commandLine );
         if ( commandLine.hasOption( "dryrun" ) ) {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
@@ -207,6 +207,11 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         css = this.getBean( CompositeSequenceService.class );
         blatResultService = this.getBean( BlatResultService.class );
         blatAssociationService = this.getBean( BlatAssociationService.class );
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Examines biosequences for array designs in the database and removes duplicates.";
     }
 
     /**
@@ -245,47 +250,74 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         // ///////////////////////////////
         // First stage: fix biosequences that lack database entries, when there is one for another essentially
         // identical sequence (and the name is the same as the accession)
-
+        int i = 0;
+        int possdups = 0;
+        int skipped = 0;
         for ( BioSequence sequence : bioSequences ) {
 
             Collection<BioSequence> reps = bss.findByName( sequence.getName() );
+            i++;
 
-            if ( reps.size() == 1 ) continue;
+            if ( reps.size() == 1 ) continue; // no duplicates
 
-            bss.thaw( reps );
+            possdups++;
 
-            // pass 1: find an anchor.
+            if ( i % 500 == 0 ) {
+                log.info( "Examined " + i + " sequences, found " + possdups + " cases of possible duplicates so far; " + skipped
+                        + " cases were skipped" );
+            }
+
+            reps = bss.thaw( reps );
+
+            // pass 1: find an anchor. Ideally it has the actual sequence filled in
             BioSequence anchor = null;
             for ( BioSequence possibleAnchor : reps ) {
                 if ( possibleAnchor.getSequenceDatabaseEntry() != null
                         && possibleAnchor.getSequenceDatabaseEntry().getAccession().equals( possibleAnchor.getName() ) ) {
-                    anchor = possibleAnchor;
+
+                    if ( StringUtils.isNotBlank( possibleAnchor.getSequence() ) ) {
+                        anchor = possibleAnchor;
+                    } else if ( anchor == null ) {
+                        anchor = possibleAnchor;
+                    }
+
                 }
 
             }
 
-            if ( anchor == null ) continue;
+            if ( anchor == null ) {
+                log.warn( "\t No anchoring sequence was found for " + sequence + ", skipping" );
+                skipped++;
+                continue;
+            }
+
+            if ( StringUtils.isBlank( anchor.getSequence() ) ) {
+                log.warn( "\tNone of the possible duplicates have a sequence filled in, skipping" );
+                skipped++;
+                continue;
+            }
+
             reps.remove( anchor );
 
-            log.info( "Examining duplicates of " + anchor );
-
+            log.info( "*** Examining duplicates of " + anchor );
             for ( BioSequence rep : reps ) {
                 if ( rep.getSequenceDatabaseEntry() != null ) {
 
                     if ( rep.getSequenceDatabaseEntry().getAccession()
                             .equals( anchor.getSequenceDatabaseEntry().getAccession() ) ) {
-                        log.warn( anchor + " and " + rep + " have equivalent database entries for accession" );
+                        log.warn( "\t" + anchor + " and " + rep + " have equivalent database entries for accession" );
 
                         // they might have different names, but we don't care. One of them has to go.
 
                     } else {
-                        log.warn( anchor + " and " + rep + " have distinct database entries for accession: skipping" );
+                        log.warn( "\t" + anchor + " and " + rep + " have distinct database entries for accession: skipping" );
+                        skipped++;
                         continue;
                     }
 
                 }
 
-                log.info( sequence + " has a potential replica: " + rep );
+                log.info( "\t" + sequence + " has a potential duplicate: " + rep );
 
                 switchAndDeleteExtra( anchor, rep );
 
@@ -307,7 +339,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         for ( CompositeSequence sequence : usingDuplicatedSequence ) {
 
-            log.info( "Switching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from " + toRemove
+            log.info( "\tSwitching bioseq for " + sequence + " on " + sequence.getArrayDesign() + " from " + toRemove
                     + " to " + keeper );
             if ( !justTesting ) sequence.setBiologicalCharacteristic( keeper );
             if ( !justTesting ) css.update( sequence );
@@ -335,7 +367,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         /*
          * Remove the other sequence.
          */
-        log.info( "Deleting unused duplicate sequence " + toRemove );
+        log.info( "\tDeleting unused duplicate sequence " + toRemove );
         if ( !justTesting ) {
             bss.remove( toRemove );
         }
