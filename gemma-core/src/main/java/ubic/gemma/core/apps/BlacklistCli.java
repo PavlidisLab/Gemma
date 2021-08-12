@@ -70,9 +70,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "file" ).longOpt( null )
                 .desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
-                        + "additional columns: name, description of entity" )
+                        + "additional columns: name, description of entity; lines starting with '#' are ignored" )
                 .argName( "file name" ).hasArg().build() );
-        options.addOption( "undo", "Remove items from blacklist instead of adding" );
+        options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs" );
     }
 
     @Override
@@ -101,7 +101,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
                 String[] split = StringUtils.split( line, "\t" );
 
-                if ( split.length < 2 ) {
+                if ( split.length < 2 && !remove ) {
                     throw new IllegalArgumentException( "Not enough fields, expected at least 2 tab-delimited" );
                 }
 
