@@ -107,7 +107,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 }
 
                 Collection<BioSequence> bioSequences = bss.load( ids );
-                bss.thaw( bioSequences );
+                bioSequences = bss.thaw( bioSequences );
                 processSequences( bioSequences );
                 return;
             } catch ( Exception e ) {
@@ -223,8 +223,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
      */
     private boolean equals( BioSequence one, BioSequence that ) {
 
-        bss.thaw( one );
-        bss.thaw( that );
+        one = bss.thaw( one );
+        that = bss.thaw( that );
 
         if ( one.getSequenceDatabaseEntry() != null
                 && that.getSequenceDatabaseEntry() != null
