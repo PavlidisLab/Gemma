@@ -156,7 +156,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
                 seqs.remove( anchorSeq );
 
-                this.bss.thaw( seqs );
+                seqs = this.bss.thaw( seqs );
 
                 // ensure this group really does contain all duplicates.
                 if ( log.isDebugEnabled() )
