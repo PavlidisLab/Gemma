@@ -688,6 +688,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             template.setName( id );
             BioSequence seq = bioSequenceService.find( template );
             if ( seq != null ) {
+                seq = bioSequenceService.thaw( seq );
                 found.put( id, seq );
             }
         }
