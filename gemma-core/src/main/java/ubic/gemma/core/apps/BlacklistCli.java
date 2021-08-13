@@ -24,17 +24,26 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Add entries to the blacklist
@@ -43,8 +52,10 @@ import java.io.FileReader;
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
 
+    private static final int MAX_RETRIES = 3;
     String fileName = null;
     private boolean remove = false;
+    private boolean proactive = false;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -73,6 +84,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                         + "additional columns: name, description of entity; lines starting with '#' are ignored" )
                 .argName( "file name" ).hasArg().build() );
         options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs" );
+        options.addOption( "pp", "Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options)" );
     }
 
     @Override
@@ -89,6 +101,12 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
+
+        if ( proactive ) {
+            log.info( "Searching GEO for experiments to blacklist based on their use of blacklisted platforms" );
+            proactivelyBlacklistExperiments( geo );
+            return;
+        }
 
         try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
             while ( in.ready() ) {
@@ -169,8 +187,127 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         }
     }
 
+    /**
+     * 
+     */
+    private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
+        GeoBrowser gbs = new GeoBrowser();
+        BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
+
+        Collection<String> candidates = new ArrayList<>();
+        for ( BlacklistedEntity be : blacklistedEntityDao.loadAll() ) {
+            if ( be instanceof BlacklistedPlatform ) {
+                candidates.add( be.getExternalAccession().getAccession() );
+            }
+
+            if ( candidates.size() == 5 ) { // too many will break eutils query
+                log.info( "Looking for batch of candidates using: " + StringUtils.join( candidates, "," ) );
+                fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+                candidates.clear();
+            }
+        }
+
+        // finish the last batch
+        fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+
+    }
+
+    /**
+     * @param  geo
+     * @param  gbs
+     * @param  blacklistedEntityDao
+     * @param  candidates
+     * @throws InterruptedException
+     */
+    private void fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityDao blacklistedEntityDao, Collection<String> candidates )
+            throws InterruptedException {
+        int start = 0;
+
+        ExpressionExperimentService expressionExperimentService = this.getBean( ExpressionExperimentService.class );
+
+        boolean keepGoing = true;
+        while ( keepGoing ) {
+
+            // code copied from GeoGrabberCli
+            List<GeoRecord> recs = null;
+            int retries = 0;
+            try {
+                recs = gbs.getGeoRecordsBySearchTerm( null, start, 100, false /* details */, null, candidates );
+            } catch ( IOException e ) {
+                // this definitely can happen, occasional 500s from NCBI
+                retries++;
+                if ( retries <= MAX_RETRIES ) {
+                    log.warn( "Failure while fetching records, retrying " + e.getMessage() );
+                    Thread.sleep( 500 );
+                    continue; // try again
+                }
+                AbstractCLI.log.info( "Too many failures, giving up" );
+                keepGoing = false;
+
+            }
+
+            if ( recs == null || recs.isEmpty() ) {
+                keepGoing = false;
+                break;
+            }
+
+            for ( GeoRecord geoRecord : recs ) {
+                boolean skip = false;
+                String eeAcc = geoRecord.getGeoAccession();
+                if ( null != blacklistedEntityDao.findByAccession( eeAcc ) ) {
+                    log.info( "Already blacklisted: " + eeAcc );
+                    continue;
+                }
+
+                String[] platforms = geoRecord.getPlatform().split( ";" );
+                for ( String p : platforms ) {
+
+                    BlacklistedEntity bli = blacklistedEntityDao.findByAccession( p );
+
+                    if ( bli == null ) {
+                        // then at least one platform it uses isn't blacklisted, we won't blacklist the experiment
+                        skip = true;
+                        break;
+                    }
+
+                }
+
+                if ( skip ) {
+                    continue;
+                }
+
+                Collection<ExpressionExperiment> ee = expressionExperimentService.findByAccession( eeAcc );
+                if ( !ee.isEmpty() ) {
+                    log.warn( "Warning:  " + eeAcc + " is in Gemma but will be blacklisted" );
+                }
+
+                log.info( "Blacklisting: " + eeAcc + " " + geoRecord.getTitle() + " (" + geoRecord.getPlatform() + ")" );
+                BlacklistedEntity b = new BlacklistedExperiment();
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, null, null, geo );
+                b.setExternalAccession( d );
+                b.setDescription( geoRecord.getTitle() );
+                b.setReason( "Unsupported platform" );
+
+                //  blacklistedEntityDao.create( b );
+
+            }
+
+            start += 100;
+
+        }
+    }
+
     @Override
     protected void processOptions( CommandLine commandLine ) {
+
+        if ( commandLine.hasOption( "pp" ) ) {
+            if ( this.remove || this.fileName != null ) {
+                throw new IllegalArgumentException( "The pp option cannot be combined with others" );
+            }
+            this.proactive = true;
+            return;
+        }
+
         if ( commandLine.hasOption( "file" ) ) {
             this.fileName = commandLine.getOptionValue( "file" );
         } else {
@@ -180,6 +317,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( commandLine.hasOption( "undo" ) ) {
             this.remove = true;
         }
+
     }
 
 }
