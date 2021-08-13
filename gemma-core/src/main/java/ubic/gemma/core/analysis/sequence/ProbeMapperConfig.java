@@ -85,7 +85,7 @@ public class ProbeMapperConfig {
     private boolean useEnsembl = false;
     private boolean useEsts = false;
     private boolean useKnownGene = true; // as of rn6, cannot be used for rat genome
-    private boolean useMiRNA = true;
+    private boolean useMiRNA = false; // just confuses things.
     private boolean useMrnas = false; // doesn't add much.
     private boolean useRefGene = true;
 

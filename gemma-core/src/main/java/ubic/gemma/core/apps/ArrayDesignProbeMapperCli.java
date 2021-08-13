@@ -68,7 +68,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double blatScoreThreshold = null;
     private boolean usePred;
     private String configOption = null;
-    private boolean mirnaOnlyModeOption;
+    private boolean mirnaOnlyModeOption = false;
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
 
@@ -111,7 +111,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE
                         + " - search knownGene track for genes (best to leave on, but track may be missing for some organisms)\n"
 
-                        + ArrayDesignProbeMapperCli.OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
+                        + ArrayDesignProbeMapperCli.OPTION_MICRORNA + " - search miRNA track for genes (Default = false)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_EST + " - search EST track for transcripts (Default=false)\n"
 
