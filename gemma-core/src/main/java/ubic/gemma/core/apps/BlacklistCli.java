@@ -226,13 +226,16 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         ExpressionExperimentService expressionExperimentService = this.getBean( ExpressionExperimentService.class );
 
         boolean keepGoing = true;
+
+        int retries = 0;
         while ( keepGoing ) {
 
             // code copied from GeoGrabberCli
             List<GeoRecord> recs = null;
-            int retries = 0;
+
             try {
                 recs = gbs.getGeoRecordsBySearchTerm( null, start, 100, false /* details */, null, candidates );
+                retries = 0;
             } catch ( IOException e ) {
                 // this definitely can happen, occasional 500s from NCBI
                 retries++;
@@ -243,7 +246,6 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 }
                 AbstractCLI.log.info( "Too many failures, giving up" );
                 keepGoing = false;
-
             }
 
             if ( recs == null || recs.isEmpty() ) {
