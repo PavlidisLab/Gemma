@@ -56,6 +56,17 @@ Gemma.ExpressionExperimentDetails = Ext
                     if (ee.isRNASeq) {
 	                    result = result + "&nbsp;(RNA-seq)"
                     }
+
+                    if (ee.originalPlatforms.length > 0) {
+	                     result = result + "<br/>As originally submitted: ";
+	                     for (var j = 0; j < ee.originalPlatforms.length; j++) {
+	                         var op = ee.originalPlatforms[j];
+		                     result = result + '<a href="' + ctxBasePath + '/arrays/showArrayDesign.html?id=' + op.id + '"?">' + op.shortName + '</a> - ' + op.name;
+		                     if (j < ee.originalPlatforms.length - 1) {
+		                         result = result + ', '
+                             }
+	                     }
+                    }
                 }
 
                 if (ee.lastArrayDesignUpdateDate) {

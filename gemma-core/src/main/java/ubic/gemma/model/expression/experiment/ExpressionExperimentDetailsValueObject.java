@@ -69,10 +69,16 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String missingValueAnalysisEventType;
     private Integer numAnnotations;
     private Integer numPopulatedFactors;
+    // if it was switched
+    private Collection<ArrayDesignValueObject> originalPlatforms;
+    
     // if it was split.
     private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    
     private String pcaAnalysisEventType;
+
     private CitationValueObject primaryCitation;
+
     private String processedDataVectorComputationEventType;
     private Integer pubmedId;
     private String QChtml;
@@ -87,11 +93,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     public ExpressionExperimentDetailsValueObject() {
     }
-
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
         super( ee );
     }
-
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
         super( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
                 vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
@@ -147,14 +151,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return dateBatchFetch;
     }
 
-    //    public Integer getCoexpressionLinkCount() {
-    //        return this.coexpressionLinkCount;
-    //    }
-    //
-    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-    //        this.coexpressionLinkCount = coexpressionLinkCount;
-    //    }
-
     /**
      * @return The date this object was generated.
      */
@@ -165,6 +161,14 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public Date getDateDifferentialAnalysis() {
         return this.dateDifferentialAnalysis;
     }
+
+    //    public Integer getCoexpressionLinkCount() {
+    //        return this.coexpressionLinkCount;
+    //    }
+    //
+    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+    //        this.coexpressionLinkCount = coexpressionLinkCount;
+    //    }
 
     public Date getDateLinkAnalysis() {
         return this.dateLinkAnalysis;
@@ -258,6 +262,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
+    }
+
+    public Collection<ArrayDesignValueObject> getOriginalPlatforms() {
+        return originalPlatforms;
     }
 
     /**
@@ -523,6 +531,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
         this.numPopulatedFactors = numPopulatedFactors;
+    }
+
+    public void setOriginalPlatforms( Collection<ArrayDesignValueObject> originalPlatforms ) {
+        this.originalPlatforms = originalPlatforms;
     }
 
     public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
