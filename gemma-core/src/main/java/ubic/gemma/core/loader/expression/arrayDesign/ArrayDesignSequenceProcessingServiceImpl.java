@@ -358,8 +358,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                             + " composite sequences with no associated biological characteristic" );
 
         ArrayDesignSequenceProcessingServiceImpl.log.info( "Updating sequences on arrayDesign" );
-        
-        if (arrayDesign.getPrimaryTaxon() == null && taxon != null) {
+
+        if ( arrayDesign.getPrimaryTaxon() == null && taxon != null ) {
             arrayDesign.setPrimaryTaxon( taxon );
         }
         arrayDesignService.update( arrayDesign );
@@ -448,7 +448,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( taxon != null ) {
             arrayDesign.setPrimaryTaxon( taxon );
         }
-        
+
         arrayDesignService.update( arrayDesign );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
@@ -703,6 +703,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
+
+        retrievedSequences = bioSequenceService.thaw( retrievedSequences );
 
         Map<String, BioSequence> found = new HashMap<>();
         for ( BioSequence sequence : retrievedSequences ) {
