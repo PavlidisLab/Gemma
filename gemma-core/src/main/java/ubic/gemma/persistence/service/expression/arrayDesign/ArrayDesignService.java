@@ -203,7 +203,16 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * @return     map of IDs to events
      */
     Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
-
+    
+    /**
+     * Get the ids of experiments that "originally" used this platform, but which don't any more due to a platform
+     * switch. Note that for some old platforms we may not have recorded this information.
+     * 
+     * @param id id of the platform
+     * @return collection of EE ids
+     */
+    Collection<Long> getSwitchedExperiments(Long id);
+ 
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
      *         excluded.

@@ -140,8 +140,10 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
              * FIXME: the non-merged constraint might not be necessary. We should definitely not delete mergees even if
              * they have 0 experiments.
              */
-            return !(record.expressionExperimentCount === 0 && !record.isMerged && !record.isMergee);
+            return !(record.expressionExperimentCount === 0 && !record.isMerged && !record.isMergee && record.switchedExpressionExperimentCount === 0);
          }
+      }, {
+         name : 'switchedExpressionExperimentCount'
       } ]
    } )
 } );
@@ -359,9 +361,14 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                           + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
                                     }
                                     if (record.get('isAffymetrixAltCdf')) {
-                                        statusString += '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                                        statusString += '&nbsp;<i class="orange fa fa-exclamation-circle fa-lg" ext:qtip="'
                                             + "This platform is an alternative to a 'standard' gene-level Affymetrix probe layout. " +
                                             "Data sets using it will be switched to the canonical one when raw data are available." + '"></i>';
+                                    }
+                                    if (record.get('switchedExpressionExperimentCount') > 0) {
+                                       statusString += '&nbsp;<i style="color:#3366cc" class="fa fa-exclamation-circle fa-lg" ext:qtip="'
+                                       + "This platform was the original for " + record.get('switchedExpressionExperimentCount') + " experiments "
+                                       + "that were switched to another, these are not part of the experiment count column" + '"></i>';
                                     }
 
                                     return statusString;

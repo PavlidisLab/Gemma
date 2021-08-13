@@ -48,7 +48,7 @@ Gemma.PlatformDetails = Ext
                 var text = '';
 
                 if (pd.isAffymetrixAltCdf) {
-                    text = text + '<i class="orange fa fa-exclamation-triangle fa-lg" ></i>'
+                    text = text + '<i class="orange fa fa-exclamation-circle fa-lg" ></i>&nbsp;'
                         + "This platform is an alternative to a 'standard' " + "gene-level Affymetrix probe layout: "
                         + Gemma.arrayDesignLink(pd.alternative) + ". Data sets using it will be switched to the "
                         + "canonical one when raw data are available. We do not provide annotation files for this platform.";
@@ -83,8 +83,19 @@ Gemma.PlatformDetails = Ext
                     text = text + "<br />";
                 }
 
+                if (pd.switchedExpressionExperimentCount > 0 ) { //&& Ext.get("hasAdmin").getValue() == 'true'
+                    text = text + '<br/><i style="color:#3366cc" class="fa fa-exclamation-circle fa-lg"></i>&nbsp;'
+                        +  pd.switchedExpressionExperimentCount + " experiments "
+                        + " were switched from this platform" + '<br/>';
+                }
+
+                if (text === "") {
+                    text = "(None)";
+                }
+
                 return new Ext.Panel({
                     border: false,
+                    padding: 5,
                     html: text,
                     listeners: {
                         'afterrender': Gemma.helpTip("#mergedHelp",
@@ -93,7 +104,8 @@ Gemma.PlatformDetails = Ext
                             + " which different related platforms are used for different samples. "
                             + "Subsumption means that all the sequences contained on a platform "
                             + "are represented on another "
-                            + "(but is only computed for selected platforms as a precursor to merging)")
+                            + "(but is only computed for selected platforms as a precursor to merging)."
+                            + " In other cases experiments are switched to a different platform after loading.")
                     }
                 });
             },
