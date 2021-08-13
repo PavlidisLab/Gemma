@@ -288,7 +288,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 b.setDescription( geoRecord.getTitle() );
                 b.setReason( "Unsupported platform" );
 
-                //  blacklistedEntityDao.create( b );
+                blacklistedEntityDao.create( b );
 
             }
 
