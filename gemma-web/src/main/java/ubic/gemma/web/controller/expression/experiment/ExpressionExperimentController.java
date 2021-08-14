@@ -667,10 +667,24 @@ public class ExpressionExperimentController {
      * AJAX get experiments that used a given platform. Don't retrieve too much detail.
      *
      * @param id of platform
+     * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        return this.getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
-                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), 0, true );
+
+        Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
+                new ArrayList<>( arrayDesignService.getSwitchedExperiments( id ) ), 0, true );
+        for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
+            evo.setName( "[Switched to another platform] " + evo.getName() );
+        }
+
+        Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
+                ( List<Long> ) EntityUtils
+                        .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
+                0, true );
+
+        experiments.addAll( switchedExperiments );
+        return experiments;
+
     }
 
     /**
@@ -1302,7 +1316,7 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
-        
+
         finalResult.setIsRNASeq( expressionExperimentService.isRNASeq( ee ) );
 
         return finalResult;
