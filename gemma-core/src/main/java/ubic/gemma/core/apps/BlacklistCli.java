@@ -56,6 +56,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     String fileName = null;
     private boolean remove = false;
     private boolean proactive = false;
+    private String[] platformsToScreen;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -84,7 +85,9 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                         + "additional columns: name, description of entity; lines starting with '#' are ignored" )
                 .argName( "file name" ).hasArg().build() );
         options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs" );
-        options.addOption( "pp", "Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options)" );
+        options.addOption( "pp",
+                "Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options except -a)" );
+        options.addOption( "a", true, "A comma-delimited of GPL IDs to check. Combine with -pp, not relevant to any other option" );
     }
 
     @Override
@@ -195,6 +198,8 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
 
         Collection<String> candidates = new ArrayList<>();
+        int numChecked = 0;
+        int numBlacklisted = 0;
         for ( BlacklistedEntity be : blacklistedEntityDao.loadAll() ) {
             if ( be instanceof BlacklistedPlatform ) {
                 candidates.add( be.getExternalAccession().getAccession() );
@@ -202,13 +207,17 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
             if ( candidates.size() == 5 ) { // too many will break eutils query
                 log.info( "Looking for batch of candidates using: " + StringUtils.join( candidates, "," ) );
-                fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+                numBlacklisted += fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
                 candidates.clear();
             }
+            numChecked++;
+
         }
 
         // finish the last batch
         fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+
+        log.info( "Checked " + numChecked + " blacklisted platforms for experiment in GEO, blacklisted " + numBlacklisted + " GSEs" );
 
     }
 
@@ -217,16 +226,17 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      * @param  gbs
      * @param  blacklistedEntityDao
      * @param  candidates
+     * @return                      number of actually blacklisted experiments in this batch.
      * @throws InterruptedException
      */
-    private void fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityDao blacklistedEntityDao, Collection<String> candidates )
+    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityDao blacklistedEntityDao, Collection<String> candidates )
             throws InterruptedException {
         int start = 0;
 
         ExpressionExperimentService expressionExperimentService = this.getBean( ExpressionExperimentService.class );
 
         boolean keepGoing = true;
-
+        int numBlacklisted = 0;
         int retries = 0;
         while ( keepGoing ) {
 
@@ -291,12 +301,14 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 b.setReason( "Unsupported platform" );
 
                 blacklistedEntityDao.create( b );
+                numBlacklisted++;
 
             }
 
             start += 100;
 
         }
+        return numBlacklisted;
     }
 
     @Override
@@ -307,6 +319,11 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 throw new IllegalArgumentException( "The pp option cannot be combined with others" );
             }
             this.proactive = true;
+
+            if ( commandLine.hasOption( "a" ) ) {
+                this.platformsToScreen = StringUtils.split( commandLine.getOptionValue( "a" ) );
+            }
+
             return;
         }
 

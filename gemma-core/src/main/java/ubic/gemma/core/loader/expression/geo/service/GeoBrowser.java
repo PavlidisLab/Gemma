@@ -272,8 +272,9 @@ public class GeoBrowser {
      * @param  searchTerms    search terms in NCBI Entrez query format
      * @param  detailed       if true, additional information is fetched (slower)
      * @param  allowedTaxa    if not null, data sets not containing any of these taxa will be skipped
-     * @param  limitPlatforms not null or empty, platforms to limit the query to (combining with searchTerms not supported yet)
-     * @return                list of GeoRecords 
+     * @param  limitPlatforms not null or empty, platforms to limit the query to (combining with searchTerms not
+     *                        supported yet)
+     * @return                list of GeoRecords
      * @throws IOException    if there is a problem obtaining or manipulating the file (some exceptions are not thrown
      *                        and
      *                        just logged)
@@ -442,8 +443,11 @@ public class GeoBrowser {
 
                 records.add( record );
 
-                System.err.println(
-                        "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                if ( detailed ) {
+                    // without details this goes a lot quicker so feedback isn't very important
+                    System.err.println(
+                            "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                }
                 t.reset();
                 t.start();
             }
