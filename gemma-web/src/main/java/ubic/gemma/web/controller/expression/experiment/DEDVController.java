@@ -423,6 +423,7 @@ public class DEDVController {
 
         List<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService
                 .getDiffExVectors( resultSetId, threshold, MAX_RESULTS_TO_RETURN );
+        // at this point the dedvs are reduced down to the subset we need to visualize
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs );
