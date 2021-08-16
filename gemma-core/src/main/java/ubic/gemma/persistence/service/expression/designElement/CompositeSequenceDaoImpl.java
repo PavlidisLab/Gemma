@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 
 import java.util.*;
 
@@ -724,18 +725,18 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + ObjectFilter.DAO_PROBE_ALIAS + ".id as id, " // 0
                 + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
-                + ObjectFilter.DAO_AD_ALIAS + " " // 2
+                + "ad" + " " // 2
                 + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
-                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " "//ad
+                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + "ad" + " "//ad
                 + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, false );
         queryString += "group by " + ObjectFilter.DAO_PROBE_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

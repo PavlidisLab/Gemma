@@ -113,6 +113,15 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.taxon = ad.getPrimaryTaxon().getCommonName();
         this.taxonID = ad.getPrimaryTaxon().getId();
         this.technologyType = ad.getTechnologyType().toString();
+
+        TechnologyType c = ad.getTechnologyType();
+        if ( c != null ) {
+            this.technologyType = c.toString();
+            this.color = c.getValue();
+        }
+
+        this.isMergee = ad.getMergedInto() != null;
+        this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
     }
 
     /**
@@ -174,26 +183,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
-    }
-
-    public ArrayDesignValueObject( Object[] row, Integer totalInBatch ) {
-        super( ( Long ) row[0], ( Date ) row[6], ( Boolean ) row[7], ( AuditEvent ) row[13], ( Boolean ) row[8],
-                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11], totalInBatch );
-
-        this.name = ( String ) row[1];
-        this.shortName = ( String ) row[2];
-
-        TechnologyType c = ( TechnologyType ) row[3];
-        if ( c != null ) {
-            this.technologyType = c.toString();
-            this.color = c.getValue();
-        }
-
-        this.description = ( String ) row[4];
-        this.isMergee = row[5] != null;
-        this.isAffymetrixAltCdf = row[14] != null;
-
-        this.taxon = ( String ) row[10];
     }
 
     @Override

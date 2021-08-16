@@ -27,11 +27,11 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -176,13 +176,13 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, false );
         queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

@@ -62,12 +62,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.*;
 
 /**
  * @author pavlidis
@@ -1671,17 +1667,17 @@ public class ExpressionExperimentDaoImpl
      */
     private Query postProcessVoQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc,
             String queryString ) {
-        String aclClause = AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
+        String aclClause = AclQueryUtils.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
         queryString = queryString + aclClause;
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, true );
         //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1778,13 +1774,13 @@ public class ExpressionExperimentDaoImpl
         String thawQuery = "select distinct e from ExpressionExperiment e "
                 + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
 
-        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
+        List<ExpressionExperiment> res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
                 .setParameter( "eeId", ee.getId() ).list();
 
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
         }
-        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
+        ExpressionExperiment result = res.iterator().next();
         Hibernate.initialize( result.getMeanVarianceRelation() );
         Hibernate.initialize( result.getQuantitationTypes() );
         Hibernate.initialize( result.getCharacteristics() );

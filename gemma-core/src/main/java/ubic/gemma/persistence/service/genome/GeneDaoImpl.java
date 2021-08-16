@@ -597,13 +597,13 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
                 + "left join " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + "taxon" + " "// taxon
                 + "where " + ObjectFilter.DAO_GENE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, false );
         queryString += "group by " + ObjectFilter.DAO_GENE_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
