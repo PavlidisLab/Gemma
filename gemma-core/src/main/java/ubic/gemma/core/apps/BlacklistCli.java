@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
     String fileName = null;
     private boolean remove = false;
     private boolean proactive = false;
-    private String[] platformsToScreen;
+    private Collection<String> platformsToScreen;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -202,7 +203,12 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         int numBlacklisted = 0;
         for ( BlacklistedEntity be : blacklistedEntityDao.loadAll() ) {
             if ( be instanceof BlacklistedPlatform ) {
-                candidates.add( be.getExternalAccession().getAccession() );
+
+                if ( platformsToScreen == null || !platformsToScreen.isEmpty()
+                        || platformsToScreen.contains( be.getExternalAccession().getAccession() ) ) {
+                    candidates.add( be.getExternalAccession().getAccession() );
+                    numChecked++;
+                }
             }
 
             if ( candidates.size() == 5 ) { // too many will break eutils query
@@ -210,8 +216,6 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 numBlacklisted += fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
                 candidates.clear();
             }
-            numChecked++;
-
         }
 
         // finish the last batch
@@ -267,7 +271,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
                 boolean skip = false;
                 String eeAcc = geoRecord.getGeoAccession();
                 if ( null != blacklistedEntityDao.findByAccession( eeAcc ) ) {
-                    log.info( "Already blacklisted: " + eeAcc );
+                    log.debug( "Already blacklisted: " + eeAcc );
                     continue;
                 }
 
@@ -321,7 +325,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
             this.proactive = true;
 
             if ( commandLine.hasOption( "a" ) ) {
-                this.platformsToScreen = StringUtils.split( commandLine.getOptionValue( "a" ) );
+                this.platformsToScreen = Arrays.asList( StringUtils.split( commandLine.getOptionValue( "a" ) ) );
             }
 
             return;
