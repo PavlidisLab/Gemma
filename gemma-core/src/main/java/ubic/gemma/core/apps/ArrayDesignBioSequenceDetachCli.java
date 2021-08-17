@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -78,7 +79,11 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
             if ( this.delete ) {
                 Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
                 this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
-                bioSequenceService.remove( new HashSet<>( bioSequences.values() ) );
+                Collection<BioSequence> seqs = new HashSet<>( bioSequences.values() );
+                while(seqs.remove(null)) {
+                    //no-op
+                }
+                bioSequenceService.remove( seqs );
                 this.audit( arrayDesign, "Deleted " + bioSequences.size() + " associated sequences from the system" );
             } else {
                 this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
