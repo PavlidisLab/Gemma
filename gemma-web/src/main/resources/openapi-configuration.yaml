@@ -1,6 +1,8 @@
 resourcePackages:
   - ubic.gemma.web.services.rest
 openAPI:
+  servers:
+    - url: /rest/v2
   info:
     title: Gemma RESTful API
     version: 2.3.4
