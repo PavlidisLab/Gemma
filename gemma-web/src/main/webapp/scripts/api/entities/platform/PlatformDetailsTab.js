@@ -121,7 +121,7 @@ Gemma.PlatformDetails = Ext
                         + platformDetails.id + ')" />';
                 }
 
-                if (platformDetails.technologyType == 'SEQUENCING') {
+                if (platformDetails.technologyType == 'SEQUENCING' || platformDetails.alternative) {
                     text = "Not supported for this platform type";
                 } else {
                     text = {
