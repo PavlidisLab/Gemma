@@ -75,22 +75,35 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         }
 
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+            try {
+                if ( this.delete ) {
+                    log.info( "Detaching and deleting sequences for " + arrayDesign );
+                    Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
+                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    Collection<BioSequence> seqs = new HashSet<>( bioSequences.values() );
+                    while ( seqs.remove( null ) ) {
+                        //no-op
+                    }
+                    bioSequenceService.remove( seqs );
+                    this.audit( arrayDesign, "Deleted " + bioSequences.size() + " associated sequences from the system" );
+                    this.addSuccessObject( arrayDesign, "Sequences detached and deleted" );
 
-            if ( this.delete ) {
-                Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
-                this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
-                Collection<BioSequence> seqs = new HashSet<>( bioSequences.values() );
-                while(seqs.remove(null)) {
-                    //no-op
+                } else {
+                    log.info( "Detaching sequences for " + arrayDesign );
+
+                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    this.audit( arrayDesign, "Removed sequence associations with CLI" );
+                    this.addSuccessObject( arrayDesign, "Sequences detached" );
                 }
-                bioSequenceService.remove( seqs );
-                this.audit( arrayDesign, "Deleted " + bioSequences.size() + " associated sequences from the system" );
-            } else {
-                this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
-                this.audit( arrayDesign, "Removed sequence associations with CLI" );
+                this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+            } catch ( Exception e ) {
+                log.info( "Failure for " + arrayDesign + " " + e.getMessage() );
+                this.addErrorObject( arrayDesign, e.getMessage() );
             }
-            this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         }
+
+
+
     }
 
     @Override
