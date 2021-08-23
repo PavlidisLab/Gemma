@@ -20,9 +20,10 @@ public class AuthenticationExceptionMapper implements ExceptionMapper<Authentica
 
     @Override
     public Response toResponse( AuthenticationException e ) {
-        log.error( "Failed to authenticate user:", e );
-        return Response.status( Response.Status.FORBIDDEN )
-                .entity( new ResponseErrorObject( new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() ) ) )
+        log.error( "Failed to authenticate user: ", e );
+        // for security reasons, we don't include the error object in the response entity
+        return Response.status( Response.Status.FORBIDDEN ).entity(
+                        new ResponseErrorObject( new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() ) ) )
                 .build();
     }
 }
