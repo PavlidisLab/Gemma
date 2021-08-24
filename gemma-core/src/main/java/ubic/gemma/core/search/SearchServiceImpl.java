@@ -1211,6 +1211,22 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /*
+         * Search by bioseqence
+         */
+        if ( matchedCs.isEmpty() ) {
+            Collection<CompositeSequence> csViaBioSeq = compositeSequenceService.findByBioSequenceName( searchString );
+            if ( ad != null ) {
+                for ( CompositeSequence c : csViaBioSeq ) {
+                    if ( c.getArrayDesign().equals( ad ) ) {
+                        matchedCs.add( c );
+                    }
+                }
+            } else {
+                matchedCs.addAll( csViaBioSeq );
+            }
+        }
+
+        /*
          * In case the query _is_ a gene
          */
         Collection<SearchResult> rawGeneResults = this.databaseGeneSearch( settings );
