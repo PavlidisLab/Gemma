@@ -27,6 +27,7 @@ import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectH
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -96,8 +97,8 @@ public class ExpressionExperimentSetServiceImpl
         newSet.setName( eesvo.getName() );
         newSet.setDescription( eesvo.getDescription() );
 
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService
-                .load( eesvo.getExpressionExperimentIds() );
+        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.load(
+                eesvo.getExpressionExperimentIds() );
 
         newSet.getExperiments().addAll( datasetsAnalyzed );
 
@@ -222,8 +223,8 @@ public class ExpressionExperimentSetServiceImpl
     @Override
     @Transactional(readOnly = true)
     public boolean isAutomaticallyGenerated( String experimentSetDescription ) {
-        String regexDesc = String
-                .format( ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
+        String regexDesc = String.format(
+                ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
         return experimentSetDescription.matches( regexDesc );
     }
 
@@ -295,8 +296,8 @@ public class ExpressionExperimentSetServiceImpl
         }
         if ( newExperiments.size() < eeIds.size() ) {
             throw new IllegalArgumentException(
-                    "Some of the experiment ids were invalid: only found " + newExperiments.size() + " out of " + eeIds
-                            .size() + " provided)" );
+                    "Some of the experiment ids were invalid: only found " + newExperiments.size() + " out of "
+                            + eeIds.size() + " provided)" );
         }
 
         assert newExperiments.size() == eeIds.size();

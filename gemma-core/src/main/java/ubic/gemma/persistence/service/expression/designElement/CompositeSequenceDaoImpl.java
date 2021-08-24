@@ -736,7 +736,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, false );
 
         return query;
     }

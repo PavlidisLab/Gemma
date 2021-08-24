@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
@@ -23,7 +24,8 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
-public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject>,
+        FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     Map<Taxon, Long> getPerTaxonCount();
 

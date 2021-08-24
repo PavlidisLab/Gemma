@@ -38,8 +38,4 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
 
     @Deprecated
     List<VO> loadAllValueObjects();
-
-    @Deprecated
-    List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
 }

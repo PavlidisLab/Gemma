@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -44,11 +45,11 @@ import java.util.*;
 /**
  * @author keshav
  * @author pavlidis
- * @see    CompositeSequenceService
+ * @see CompositeSequenceService
  */
 @Service
 public class CompositeSequenceServiceImpl
-        extends AbstractVoEnabledService<CompositeSequence, CompositeSequenceValueObject>
+        extends AbstractFilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceService {
 
     private final BioSequenceService bioSequenceService;
@@ -256,8 +257,8 @@ public class CompositeSequenceServiceImpl
         List<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
         for ( CompositeSequenceValueObject vo : vos ) {
             // Not passing the vo since that would create data redundancy in the returned structure
-            vo.setGeneMappingSummaries( this.getGeneMappingSummary(
-                    this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
+            vo.setGeneMappingSummaries(
+                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
         }
         return vos;
     }

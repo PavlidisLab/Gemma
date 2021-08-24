@@ -41,10 +41,4 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
         return voDao.loadAllValueObjects();
     }
 
-    @Override
-    public List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        return voDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
-    }
-
 }

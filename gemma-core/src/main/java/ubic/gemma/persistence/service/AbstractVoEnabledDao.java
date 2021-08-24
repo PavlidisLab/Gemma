@@ -1,12 +1,18 @@
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.NotYetImplementedException;
 
+import org.openjena.atlas.lib.NotImplemented;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,24 +45,5 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     @Override
     public List<VO> loadAllValueObjects() {
         return this.loadValueObjects( this.loadAll() );
-    }
-
-    /**
-     * Should be overridden for any entity that is expected to have pre-filtered VOs available
-     *
-     * @param  filter  see this#formRestrictionClause(ArrayList)
-     * @param  limit   limit
-     * @param  asc     ordering asc? false for desc
-     * @param  offset  offset
-     * @param  orderBy order by property
-     * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters
-     *                 without the
-     *                 need to
-     *                 further be checked by ACLs.
-     */
-    @Override
-    public List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        throw new NotYetImplementedException( "This entity does not have pre-filtered VO retrieval implemented yet" );
     }
 }

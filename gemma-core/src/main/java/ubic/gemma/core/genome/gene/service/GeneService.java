@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +40,7 @@ import java.util.Map;
  * @author kelsey
  */
 @SuppressWarnings("unused") // Possible external use
-public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject> {
+public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueObject> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })

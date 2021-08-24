@@ -153,8 +153,8 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
 
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
-        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
@@ -216,9 +216,10 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     @Override
     public long getCompositeSequenceCountById( long id ) {
         //language=HQL
-        final String queryString = "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString =
+                "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List<?> r = this.getHibernateTemplate().findByNamedParam( queryString, "id", id );
         return ( Long ) r.iterator().next();
     }
@@ -227,10 +228,11 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq;
         //language=HQL
-        final String queryString = "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
+        final String queryString =
+                "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                        + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
             org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -253,9 +255,10 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     @Override
     public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
         //language=HQL
-        final String queryString = "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
-                + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString =
+                "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
+                        + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
+                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
@@ -288,9 +291,10 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     @Override
     public int getPlatformCountById( Long id ) {
         //language=HQL
-        final String queryString = "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString =
+                "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List r = this.getSession().createQuery( queryString ).setParameter( "id", id ).list();
         return ( ( Long ) r.iterator().next() ).intValue();
 
@@ -355,8 +359,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
                         + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                         + " left join fetch g.taxon t left join fetch t.externalDatabase "
                         + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
-                        + " where g.id=:gid",
-                "gid", gene.getId() );
+                        + " where g.id=:gid", "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();
     }
@@ -502,8 +505,8 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
 
             if ( !toDelete.isEmpty() ) {
                 assert toDelete.size() < results.size(); // it shouldn't be everything!
-                AbstractDao.log.warn( "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils
-                        .join( toDelete, " | " ) );
+                AbstractDao.log.warn(
+                        "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
                 this.remove( toDelete ); // WARNING this might fail due to constraints.
             }
             results.removeAll( toDelete );
@@ -574,17 +577,16 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     @Override
     protected void initDao() {
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        CacheUtils
-                .createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, terracottaEnabled, 500000, false, false,
-                        0, 0, false );
+        CacheUtils.createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, terracottaEnabled, 500000, false,
+                false, 0, 0, false );
     }
 
     /**
-     * @param  filters         see {@link this#formRestrictionClause(List)} filters argument for
-     *                         description.
-     * @param  orderByProperty the property to order by.
-     * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for TaxonVO retrieval.
+     * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
+     *                        description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for TaxonVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
@@ -603,7 +605,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, false );
 
         return query;
     }
@@ -613,8 +615,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
         return this.getHibernateTemplate().findByNamedParam(
                 "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
-                        + "where g.id in (:gIds)",
-                "gIds", ids );
+                        + "where g.id in (:gIds)", "gIds", ids );
     }
 
     private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
@@ -638,8 +639,8 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
                 + "(pl.nucleotide >= :start AND pl.nucleotide <= :end) "
                 + "OR  ((pl.nucleotide + pl.nucleotideLength) >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end )) "
-                + "and pl.chromosome = :chromosome and " + SequenceBinUtils
-                        .addBinToQuery( "pl", targetStart, targetEnd );
+                + "and pl.chromosome = :chromosome and " + SequenceBinUtils.addBinToQuery( "pl", targetStart,
+                targetEnd );
 
         String[] params;
         Object[] vals;

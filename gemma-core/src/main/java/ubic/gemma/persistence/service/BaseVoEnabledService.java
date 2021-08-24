@@ -44,18 +44,4 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      */
     @Deprecated
     List<VO> loadAllValueObjects();
-
-    /**
-     * Loads all value objects based on the given properties.
-     *
-     * @param  offset  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  limit   see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  orderBy see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  asc     see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  filter  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @return         collection of value objects.
-     */
-    @Deprecated
-    List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
 }

@@ -18,27 +18,26 @@
  */
 package ubic.gemma.persistence.service.association.phenotype;
 
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.List;
 
 @Repository
-public class ExperimentalEvidenceDaoImpl
-        extends AbstractVoEnabledDao<ExperimentalEvidence, ExperimentalEvidenceValueObject>
-        implements ExperimentalEvidenceDao {
+public class ExperimentalEvidenceDaoImpl extends AbstractDao<ExperimentalEvidence> implements ExperimentalEvidenceDao {
 
     @Autowired
     public ExperimentalEvidenceDaoImpl( SessionFactory sessionFactory ) {
         super( ExperimentalEvidence.class, sessionFactory );
     }
 
-    @Override
     public ExperimentalEvidenceValueObject loadValueObject( ExperimentalEvidence entity ) {
         return new ExperimentalEvidenceValueObject( entity );
     }

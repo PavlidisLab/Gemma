@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclPrincipalSid;
 import org.apache.commons.lang3.StringEscapeUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -82,6 +84,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String secondaryAccession;
     private String secondaryExternalDatabase;
     private String secondaryExternalUri;
+
     /**
      * Required when using the class as a spring bean.
      */
@@ -92,18 +95,16 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         super( ee );
     }
 
-    public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
-        super( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
-                vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
-                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), vo.getExperimentalDesign(),
-                vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(), vo.getBioMaterialCount(),
-                vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(), vo.getIsPublic(), vo.getIsShared(),
-                vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(), vo.getNeedsAttention(),
-                vo.getLastNeedsAttentionEvent(), vo.getCurationNote(), vo.getLastNoteUpdateEvent(), vo.getGeeq(), vo.getSuitableForDEA() );
+    /**
+     * {@inheritDoc}
+     */
+    public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
+            AclPrincipalSid sid ) {
+        super( ee, aoi, sid );
     }
 
-    public ExpressionExperimentDetailsValueObject( Object[] row ) {
-        super( row, null );
+    public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
+        super( vo );
     }
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
@@ -134,10 +135,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
-     *         this
-     *         should be the date of the most recent modification of any of them. This is used to help flag experiments
-     *         that
-     *         need re-analysis due to changes in the underlying array design(s)
+     * this should be the date of the most recent modification of any of them. This is used to help flag experiments
+     * that need re-analysis due to changes in the underlying array design(s)
      */
     public Date getDateArrayDesignLastUpdated() {
         return this.dateArrayDesignLastUpdated;
@@ -254,7 +253,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return The number of experimental factors the experiment has (counting those that are populated with
-     *         biomaterials)
+     * biomaterials)
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
@@ -273,7 +272,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
-     *         troubled.
+     * troubled.
      */
     @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
     public Boolean getPlatformTroubled() {
@@ -310,8 +309,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
-     *         of a
-     *         data set, so this is a collection of AuditEvents.
+     * of data set, so this is a collection of AuditEvents.
      */
     public Collection<AuditEventValueObject> getSampleRemovedFlags() {
         return this.sampleRemovedFlags;
@@ -319,8 +317,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
-     *         this might
-     *         be a link to the ArrayExpress version.
+     * this might be a link to the ArrayExpress version.
      */
     public String getSecondaryAccession() {
         return this.secondaryAccession;
@@ -351,7 +348,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * @return html-escaped string with trouble info.
-     * @see    #getTroubleDetails(boolean)
+     * @see #getTroubleDetails(boolean)
      */
     @Override
     public String getTroubleDetails() {
@@ -362,8 +359,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
      * MAKE SURE to fill the Array Design variable first!
      *
-     * @param  htmlEscape whether to escape the returned string for html
-     * @return            string with trouble info.
+     * @param htmlEscape whether to escape the returned string for html
+     * @return string with trouble info.
      */
     @Override
     public String getTroubleDetails( boolean htmlEscape ) {
@@ -405,7 +402,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     /**
      * As a side effect, sets the technology type and taxon of this based on the first arrayDesign.
-     * 
+     *
      * @param arrayDesigns arrayDesign value objects to associate
      */
     public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
