@@ -185,12 +185,12 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 allowedTaxa.add( t.getScientificName() );
             }
             log.info( allowedTaxa.size() + " Taxa considered usable" );
-
+            int retries = 0;
             while ( keepGoing ) {
 
                 log.debug( "Searching from " + start + ", seeking " + NCBI_CHUNK_SIZE + " records" );
                 List<GeoRecord> recs = null;
-                int retries = 0;
+
                 try {
                     recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa, limitPlatform );
                     if ( recs == null || recs.isEmpty() ) {
@@ -220,6 +220,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     throw new IOException( "Too many failures: " + e.getMessage() );
 
                 }
+
+                retries = 0;
 
                 log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
                 start += NCBI_CHUNK_SIZE; // this seems the best way to avoid hitting them more than once.
