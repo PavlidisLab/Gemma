@@ -89,7 +89,7 @@ function getBatchInfoBadges(ee) {
 			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesSingletons);
   
 		} else if (ee.batchEffect === "UNINFORMATIVE_HEADERS_FAILURE") {
-			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'unable to batch', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
+			result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info', Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchesBadHeaders);
   
 	
 		} else if (ee.batchEffect === "BATCH_CORRECTED_SUCCESS") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
