@@ -14,10 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 
 /**
  * provide some basic information about the properties and strength of a batch effect, if any.
@@ -50,6 +47,9 @@ public class BatchEffectDetails {
                 this.hasBatchInformation = false;
                 this.hadUninformativeHeaders = true;
             } else if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( infoEvent.getClass() ) ) {
+                this.hasBatchInformation = false;
+                this.failedToGetBatchInformation = true;
+            } else if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( (infoEvent.getClass()) ) ) {
                 this.hasBatchInformation = false;
                 this.failedToGetBatchInformation = true;
             } else {

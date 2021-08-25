@@ -47,13 +47,16 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return r;
     }
 
+    private Boolean blackListed = false;
     private String color; // FIXME redundant with technologyType
     private String dateCached;
     private String description;
     private Integer designElementCount;
     private Integer expressionExperimentCount;
     private Boolean hasBlatAssociations;
+
     private Boolean hasGeneAssociations;
+
     private Boolean hasSequenceAssociations;
     private Boolean isAffymetrixAltCdf = false;
     private Boolean isMerged;
@@ -70,36 +73,16 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String numProbeSequences;
     private String numProbesToGenes;
     private String shortName;
+    private Integer switchedExpressionExperimentCount = 0; // how many "hidden" assocations there are.
     private String taxon;
-
-
-
     private Long taxonID;
+
     private String technologyType;
-    private Boolean blackListed = false;
-
-    public Boolean getBlackListed() {
-        return blackListed;
-    }
-
-    public void setBlackListed( Boolean blackListed ) {
-        this.blackListed = blackListed;
-    }
-
-    public Long getTaxonID() {
-        return taxonID;
-    }
-
-    public void setTaxonID( Long taxonID ) {
-        this.taxonID = taxonID;
-    }
-
     /**
      * Required when using the class as a spring bean.
      */
     public ArrayDesignValueObject() {
     }
-
     /**
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      *
@@ -118,7 +101,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     /**
      * Copies constructor from other ArrayDesignValueObject
      *
-     * @param                       otherBean, cannot be <code>null</code>
+     * @param  otherBean,           cannot be <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
     public ArrayDesignValueObject( ArrayDesignValueObject otherBean ) {
@@ -130,7 +113,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
                 otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
                 otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
                 otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.taxonID, otherBean.technologyType, otherBean.isAffymetrixAltCdf, otherBean.blackListed );
+                otherBean.shortName, otherBean.taxon, otherBean.taxonID, otherBean.technologyType, otherBean.isAffymetrixAltCdf,
+                otherBean.blackListed );
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
@@ -140,7 +124,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id, Boolean isMerged, Boolean isMergee,
             Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping, Date lastRepeatMask,
             Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes, String numProbeAlignments,
-            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, Long taxonID, String technologyType, Boolean isAffymetrixAltCdf,
+            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, Long taxonID, String technologyType,
+            Boolean isAffymetrixAltCdf,
             Boolean blacklisted ) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
@@ -174,6 +159,20 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
+    }
+
+    /**
+     * Minimal constructor
+     * 
+     * @param id        the id
+     * @param shortName the shortName
+     * @param name      the name
+     */
+    public ArrayDesignValueObject( Long id, String shortName, String name ) {
+        super();
+        this.id = id;
+        this.shortName = shortName;
+        this.name = name;
     }
 
     public ArrayDesignValueObject( Object[] row, Integer totalInBatch ) {
@@ -215,6 +214,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             return other.shortName == null;
         }
         return shortName.equals( other.shortName );
+    }
+
+    public Boolean getBlackListed() {
+        return blackListed;
     }
 
     public String getColor() {
@@ -335,8 +338,16 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return this.shortName;
     }
 
+    public Integer getSwitchedExpressionExperimentCount() {
+        return switchedExpressionExperimentCount;
+    }
+
     public String getTaxon() {
         return this.taxon;
+    }
+
+    public Long getTaxonID() {
+        return taxonID;
     }
 
     public String getTechnologyType() {
@@ -352,6 +363,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             result = prime * result + ( ( shortName == null ) ? 0 : shortName.hashCode() );
         }
         return result;
+    }
+
+    public void setBlackListed( Boolean blackListed ) {
+        this.blackListed = blackListed;
     }
 
     public void setColor( String color ) {
@@ -446,8 +461,16 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.shortName = shortName;
     }
 
+    public void setSwitchedExpressionExperimentCount( Integer switchedExpressionExperimentCount ) {
+        this.switchedExpressionExperimentCount = switchedExpressionExperimentCount;
+    }
+
     public void setTaxon( String taxon ) {
         this.taxon = taxon;
+    }
+
+    public void setTaxonID( Long taxonID ) {
+        this.taxonID = taxonID;
     }
 
     public void setTechnologyType( String technologyType ) {

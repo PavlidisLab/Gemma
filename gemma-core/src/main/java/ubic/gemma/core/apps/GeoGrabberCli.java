@@ -14,11 +14,29 @@
  */
 package ubic.gemma.core.apps;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -29,21 +47,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
@@ -56,12 +59,13 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     /**
      * 
      */
-    private static final int NCBI_CHUNK_SIZE = 100;
+    private static final int NCBI_CHUNK_SIZE = 10;
     private static final int MAX_RETRIES = 5;
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
     private boolean getPlatforms = false;
+    private Collection<String> limitPlatform = new ArrayList<>();
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -81,6 +85,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         options.addOption(
                 Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
                         .build() );
+        options.addOption( Option.builder( "platformLimit" ).longOpt( null ).desc( "Limit to selected platforms" )
+                .argName( "comma-delimited list of GPLs" ).hasArg().build() );
 
         options.addOption( Option.builder( "output" ).desc( "File path for output (required)" ).argName( "path" ).hasArg().required().build() );
 
@@ -108,6 +114,12 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         if ( commandLine.hasOption( "platforms" ) ) {
             this.getPlatforms = true;
+        }
+
+        if ( commandLine.hasOption( "platformLimit" ) ) {
+            //      this.limitPlatform  = AbstractCLIContextCLI.readListFileToStrings( commandLine.getOptionValue( "platformLimit" ) );
+            String gpls = commandLine.getOptionValue( "platformLimit" );
+            this.limitPlatform = Arrays.asList( StringUtils.split( gpls, "," ) );
         }
 
         this.outputFileName = commandLine.getOptionValue( "output" );
@@ -160,7 +172,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         try (Writer os = new FileWriter( outputFile )) {
 
-
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
                     + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );
             os.flush();
@@ -181,7 +192,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 List<GeoRecord> recs = null;
                 int retries = 0;
                 try {
-                    recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa );
+                    recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa, limitPlatform );
                     if ( recs == null || recs.isEmpty() ) {
                         // this doesn't happen any more, in my experience
                         AbstractCLI.log.info( "No records received for start=" + start );

@@ -25,27 +25,7 @@ import java.util.Map;
 @Repository
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
 
-    Map<Taxon, Long> getPerTaxonCount();
-
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
-
-    Collection<ArrayDesign> findByManufacturer( String queryString );
-
-    Collection<ArrayDesign> findByTaxon( Taxon taxon );
-
-    Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
-
-    Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
-
-    int numExperiments( ArrayDesign arrayDesign );
-
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
-
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
-
-    @Override
-    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
@@ -59,11 +39,25 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Collection<ArrayDesign> findByAlternateName( String queryString );
 
+    Collection<ArrayDesign> findByManufacturer( String queryString );
+
+    Collection<ArrayDesign> findByTaxon( Taxon taxon );
+
     Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
+    Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
+
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
+
+    Map<Taxon, Long> getPerTaxonCount();
+
+    /**
+     * @param id
+     * @return
+     */
+    Collection<Long> getSwitchedExpressionExperiments( Long id );
 
     Collection<Taxon> getTaxa( Long id );
 
@@ -75,11 +69,17 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
+    Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
+
+    Collection<CompositeSequence> loadCompositeSequences( Long id, int limit, int offset );
+
     List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
-    Collection<CompositeSequence> loadCompositeSequences( Long id, int limit, int offset );
+    @Override
+    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            List<ObjectFilter[]> filter );
 
     long numAllCompositeSequenceWithBioSequences();
 
@@ -109,11 +109,17 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
+    int numExperiments( ArrayDesign arrayDesign );
+
     long numGenes( ArrayDesign arrayDesign );
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     ArrayDesign thaw( ArrayDesign arrayDesign );
+
+    ArrayDesign thawLite( ArrayDesign arrayDesign );
+
+    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 }

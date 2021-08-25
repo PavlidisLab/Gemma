@@ -18,19 +18,18 @@
  */
 package ubic.gemma.web.util;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Statistics;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.TerracottaClientConfiguration;
-import net.sf.ehcache.config.TerracottaConfiguration;
+import java.util.Arrays;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.util.Settings;
 
-import java.util.Arrays;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Statistics;
+import net.sf.ehcache.config.CacheConfiguration;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Get statistics about and manage caches.
@@ -82,6 +81,7 @@ public class CacheMonitorImpl implements CacheMonitor {
         String[] cacheNames = cacheManager.getCacheNames();
         Arrays.sort( cacheNames );
 
+        int stop = 0;
         for ( String cacheName : cacheNames ) {
             // Terracotta clustered?
             boolean isTerracottaClustered = cacheManager.getCache( cacheName ).getCacheConfiguration().isTerracottaClustered();
@@ -89,6 +89,10 @@ public class CacheMonitorImpl implements CacheMonitor {
             buf.append( isTerracottaClustered ? "enabled" : "disabled" );
             buf.append( " in the configuration file for " + cacheName );
             buf.append( ".<br/>" );
+            if (++stop > 10 ) {
+                buf.append( "[Additional caches ommitted]<br/>" );
+                break;
+            }
         }
 
         buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );

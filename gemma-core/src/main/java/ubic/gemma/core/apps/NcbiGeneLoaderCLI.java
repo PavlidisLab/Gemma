@@ -136,7 +136,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Load/update gene information";
+        return "Load/update gene information from NCBI";
     }
 
     @Override

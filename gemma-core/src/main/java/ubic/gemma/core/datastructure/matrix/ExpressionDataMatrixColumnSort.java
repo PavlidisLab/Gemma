@@ -465,23 +465,31 @@ public class ExpressionDataMatrixColumnSort {
         return result;
     }
 
+    /**
+     * Get all (non-constant) factors used by the passed biomaterials
+     * @param bms biomaterials
+     * @return factors relevant to these biomaterials, ignoring those which have constant values.
+     */
     private static Collection<ExperimentalFactor> getFactors( Collection<BioMaterial> bms ) {
-        Collection<ExperimentalFactor> efs = new HashSet<>();
+        Map<ExperimentalFactor, Collection<FactorValue>> usedFactorValues = new HashMap<>();
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> factorValues = bm.getFactorValues();
             for ( FactorValue fv : factorValues ) {
-                efs.add( fv.getExperimentalFactor() );
+                if ( !usedFactorValues.containsKey( fv.getExperimentalFactor() ) ) {
+                    usedFactorValues.put( fv.getExperimentalFactor(), new HashSet<>() );
+                }
+                usedFactorValues.get( fv.getExperimentalFactor() ).add( fv );
             }
         }
 
-        for ( java.util.Iterator<ExperimentalFactor> ei = efs.iterator(); ei.hasNext(); ) {
+        for ( java.util.Iterator<ExperimentalFactor> ei = usedFactorValues.keySet().iterator(); ei.hasNext(); ) {
             ExperimentalFactor ef = ei.next();
-            if ( ef.getFactorValues().size() < 2 ) {
+            if ( usedFactorValues.get( ef ).size() < 2 ) {
                 ei.remove();
             }
         }
-
-        return efs;
+        log.info( usedFactorValues.size() + " factors retained " );
+        return usedFactorValues.keySet();
     }
 
     /**

@@ -136,7 +136,9 @@ public class CompositeSequenceController extends BaseController {
             return new HashSet<>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
-        compositeSequenceService.thaw( Collections.singletonList( cs ) );
+
+        // unnecessary see https://github.com/PavlidisLab/Gemma/issues/176
+   //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
         return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(),

@@ -615,7 +615,7 @@ public class ExpressionExperimentController {
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
         finalResult = this.setPreferredAndReprocessed( finalResult, ee );
-        finalResult = this.setMultipleTechTypes( finalResult, ee );
+        finalResult = this.setTechTypeInfo( finalResult, ee );
 
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
         finalResult = this.setBatchInfo( finalResult, ee );
@@ -638,7 +638,7 @@ public class ExpressionExperimentController {
 
     public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        ee.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
+        ee.setBatchEffect( expressionExperimentService.getBatchStatusDescription( ee ) );
         expressionExperimentService.update( ee );
     }
 
@@ -667,10 +667,24 @@ public class ExpressionExperimentController {
      * AJAX get experiments that used a given platform. Don't retrieve too much detail.
      *
      * @param id of platform
+     * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        return this.getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
-                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), 0, true );
+
+        Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
+                new ArrayList<>( arrayDesignService.getSwitchedExperiments( id ) ), 0, true );
+        for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
+            evo.setName( "[Switched to another platform] " + evo.getName() );
+        }
+
+        Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
+                ( List<Long> ) EntityUtils
+                        .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
+                0, true );
+
+        experiments.addAll( switchedExperiments );
+        return experiments;
+
     }
 
     /**
@@ -1221,8 +1235,9 @@ public class ExpressionExperimentController {
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
-            finalResult.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
         }
+
+        finalResult.setBatchEffect( expressionExperimentService.getBatchStatusDescription( ee ) );
 
         return finalResult;
     }
@@ -1287,13 +1302,13 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Checks and sets multiple technology types
+     * Checks and sets multiple technology types and RNA-seq status
      *
      * @param  ee          ee
      * @param  finalResult result
      * @return             ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setMultipleTechTypes(
+    private ExpressionExperimentDetailsValueObject setTechTypeInfo(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
         Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
@@ -1301,6 +1316,8 @@ public class ExpressionExperimentController {
         }
 
         finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
+
+        finalResult.setIsRNASeq( expressionExperimentService.isRNASeq( ee ) );
 
         return finalResult;
     }

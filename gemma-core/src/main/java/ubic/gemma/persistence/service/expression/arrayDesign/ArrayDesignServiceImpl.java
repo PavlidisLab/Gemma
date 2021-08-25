@@ -204,6 +204,11 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
     }
 
     @Override
+    public Collection<Long> getSwitchedExperiments( Long id ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperiments( id );
+    }
+
+    @Override
     public Collection<Taxon> getTaxa( java.lang.Long id ) {
         return this.arrayDesignDao.getTaxa( id );
     }
@@ -211,6 +216,17 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
     @Override
     public Taxon getTaxon( java.lang.Long id ) {
         return this.arrayDesignDao.load( id ).getPrimaryTaxon();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
+     */
+    @Override
+    public boolean isBlackListed( String geoAccession ) {
+        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+
     }
 
     @Override
@@ -234,14 +250,14 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
     }
 
     @Override
-    public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
-        return this.arrayDesignDao.loadValueObjectsForEE( eeId );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
         return this.arrayDesignDao.loadValueObjectsByIds( ids );
+    }
+
+    @Override
+    public List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+        return this.arrayDesignDao.loadValueObjectsForEE( eeId );
     }
 
     @Override
@@ -389,16 +405,5 @@ public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign
             }
 
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
-     */
-    @Override
-    public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
-
     }
 }

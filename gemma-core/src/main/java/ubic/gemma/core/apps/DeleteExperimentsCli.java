@@ -14,9 +14,18 @@
  */
 package ubic.gemma.core.apps;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
  * Delete one or more experiments from the system.
@@ -25,14 +34,70 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
+    private List<String> platformAccs = null;
+
     @Override
     public String getCommandName() {
         return "deleteExperiments";
     }
 
     @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption(
+                Option.builder( "a" ).longOpt( "array" )
+                        .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
+                        .argName( "comma-delimited list of platform short names" ).hasArg().build() );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'a' ) ) {
+            this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );
+        }
+    }
+
+    @Override
     protected void doWork() throws Exception {
         this.force = true;
+
+        if ( platformAccs != null ) {
+            ArrayDesignService ads = this.getBean( ArrayDesignService.class );
+
+            for ( String p : platformAccs ) {
+
+                ArrayDesign a = ads.findByShortName( p );
+
+                if ( a == null ) {
+                    log.info( "No such platform " + p );
+                    addErrorObject( p, "No such platform " );
+                    continue;
+                }
+
+                if ( !ads.getExpressionExperiments( a ).isEmpty() ) {
+                    log.info( "Platform still has experiments that must be deleted first: " + p );
+                    addErrorObject( p, "Experiments still exist for platform" );
+                    continue;
+                }
+
+                if ( !ads.getSwitchedExperiments( a.getId() ).isEmpty() ) {
+                    log.info( "Platform still has experiments (switched to anther platform) that must be deleted first: " + p );
+                    addErrorObject( p, "Experiments  (switched to anther platform) still exist for platform" );
+                    continue;
+                }
+
+                try {
+                    log.info( "--------- Deleting " + a + " --------" );
+                    ads.remove( a );
+                    addSuccessObject( a, "Successfully deleted " + a );
+                } catch ( Exception e ) {
+                    addErrorObject( a, e.getMessage(), e );
+                }
+            }
+            return;
+        }
+
         for ( BioAssaySet bas : this.expressionExperiments ) {
             try {
                 log.info( "--------- Deleting " + bas + " --------" );
@@ -47,7 +112,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     public String getShortDesc() {
-        return "Delete experiment(s) from the system";
+        return "Delete experiments or platforms from the system";
     }
 
 }

@@ -19,8 +19,6 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.hibernate.SessionFactory;

@@ -56,20 +56,29 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Boolean hasBothIntensities = false;
     private Boolean hasCoexpressionAnalysis = false;
     private Boolean hasDifferentialExpressionAnalysis = false;
-
     private Boolean hasEitherIntensity = false;
+
     private Boolean hasMultiplePreferredQuantitationTypes = false;
+
     private Boolean hasMultipleTechnologyTypes = false;
+
+    private Boolean isRNASeq = false;
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
     private Double minPvalue;
     private String missingValueAnalysisEventType;
     private Integer numAnnotations;
     private Integer numPopulatedFactors;
+    // if it was switched
+    private Collection<ArrayDesignValueObject> originalPlatforms;
+    
     // if it was split.
     private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    
     private String pcaAnalysisEventType;
+
     private CitationValueObject primaryCitation;
+
     private String processedDataVectorComputationEventType;
     private Integer pubmedId;
     private String QChtml;
@@ -78,19 +87,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Collection<AuditEventValueObject> sampleRemovedFlags;
     private String secondaryAccession;
     private String secondaryExternalDatabase;
-
     private String secondaryExternalUri;
-
     /**
      * Required when using the class as a spring bean.
      */
     public ExpressionExperimentDetailsValueObject() {
     }
-
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
         super( ee );
     }
-
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
         super( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
                 vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
@@ -131,14 +136,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return batchFetchEventType;
     }
 
-    //    public Integer getCoexpressionLinkCount() {
-    //        return this.coexpressionLinkCount;
-    //    }
-    //
-    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-    //        this.coexpressionLinkCount = coexpressionLinkCount;
-    //    }
-
     /**
      * @return The date the platform associated with the experiment was last updated. If there are multiple platforms
      *         this
@@ -164,6 +161,14 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public Date getDateDifferentialAnalysis() {
         return this.dateDifferentialAnalysis;
     }
+
+    //    public Integer getCoexpressionLinkCount() {
+    //        return this.coexpressionLinkCount;
+    //    }
+    //
+    //    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+    //        this.coexpressionLinkCount = coexpressionLinkCount;
+    //    }
 
     public Date getDateLinkAnalysis() {
         return this.dateLinkAnalysis;
@@ -224,6 +229,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return hasMultipleTechnologyTypes;
     }
 
+    public Boolean getIsRNASeq() {
+        return isRNASeq;
+    }
+
     public String getLastArrayDesignUpdateDate() {
         return lastArrayDesignUpdateDate;
     }
@@ -253,6 +262,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
+    }
+
+    public Collection<ArrayDesignValueObject> getOriginalPlatforms() {
+        return originalPlatforms;
     }
 
     /**
@@ -492,6 +505,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
     }
 
+    public void setIsRNASeq( Boolean isRNASeq ) {
+        this.isRNASeq = isRNASeq;
+    }
+
     public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
         this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
     }
@@ -514,6 +531,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
         this.numPopulatedFactors = numPopulatedFactors;
+    }
+
+    public void setOriginalPlatforms( Collection<ArrayDesignValueObject> originalPlatforms ) {
+        this.originalPlatforms = originalPlatforms;
     }
 
     public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {

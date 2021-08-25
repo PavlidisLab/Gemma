@@ -1,6 +1,8 @@
 resourcePackages:
   - ubic.gemma.web.services.rest
 openAPI:
+  servers:
+    - url: /rest/v2
   info:
     title: Gemma RESTful API
     version: 2.3.4
@@ -18,3 +20,7 @@ openAPI:
     termsOfService: https://pavlidislab.github.io/Gemma/terms.html
     contact:
       email: pavlab-support@msl.ubc.ca
+  security:
+    - basicAuth: []
+    - cookieAuth: []
+    - {} # this corresponds to anonymous authentication

@@ -379,7 +379,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         String confound = expressionExperimentService.getBatchConfound( ee );
-        String effect = expressionExperimentService.getBatchEffectDescription( ee );
+        String effect = expressionExperimentService.getBatchStatusDescription( ee );
         boolean update = false;
 
         if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {

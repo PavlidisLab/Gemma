@@ -22,7 +22,7 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
 
     @Override
     public Response toResponse( JsonMappingException exception ) {
-        log.error( "Exception during JSON Mapping: ", exception );
+        log.error( "Exception during JSON mapping: ", exception );
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, exception.getMessage() );
         return Response.status( code ).entity( new ResponseErrorObject( errorBody ) ).build();

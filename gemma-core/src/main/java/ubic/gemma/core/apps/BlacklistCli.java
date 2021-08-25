@@ -24,17 +24,27 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Add entries to the blacklist
@@ -43,8 +53,11 @@ import java.io.FileReader;
  */
 public class BlacklistCli extends AbstractCLIContextCLI {
 
+    private static final int MAX_RETRIES = 3;
     String fileName = null;
     private boolean remove = false;
+    private boolean proactive = false;
+    private Collection<String> platformsToScreen;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -68,9 +81,14 @@ public class BlacklistCli extends AbstractCLIContextCLI {
      */
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
-                + "additional columns: name, description of entity" ).argName( "file name" ).hasArg().build() );
-        options.addOption( "undo", "Remove items from blacklist instead of adding" );
+        options.addOption( Option.builder( "file" ).longOpt( null )
+                .desc( "Tab-delimited file with blacklist. Format: first column is GEO accession; second column is reason for blacklist; optional "
+                        + "additional columns: name, description of entity; lines starting with '#' are ignored" )
+                .argName( "file name" ).hasArg().build() );
+        options.addOption( "undo", "Remove items from blacklist instead of adding. File can contain just one column of IDs" );
+        options.addOption( "pp",
+                "Special: proactively blacklist GEO datasets for blacklisted platforms (cannot be combined with other options except -a)" );
+        options.addOption( "a", true, "A comma-delimited of GPL IDs to check. Combine with -pp, not relevant to any other option" );
     }
 
     @Override
@@ -88,7 +106,13 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( geo == null )
             throw new IllegalStateException( "GEO not found as an external database in the system" );
 
-        try ( BufferedReader in = new BufferedReader( new FileReader( fileName ) ) ) {
+        if ( proactive ) {
+            log.info( "Searching GEO for experiments to blacklist based on their use of blacklisted platforms" );
+            proactivelyBlacklistExperiments( geo );
+            return;
+        }
+
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) {
@@ -99,7 +123,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
                 String[] split = StringUtils.split( line, "\t" );
 
-                if ( split.length < 2 ) {
+                if ( split.length < 2 && !remove ) {
                     throw new IllegalArgumentException( "Not enough fields, expected at least 2 tab-delimited" );
                 }
 
@@ -109,11 +133,15 @@ public class BlacklistCli extends AbstractCLIContextCLI {
 
                 boolean alreadyBlacklisted = blacklistedEntityDao.isBlacklisted( accession );
                 if ( remove ) {
+                    if ( !alreadyBlacklisted ) {
+                        log.warn( "Attempting to de-blacklist " + accession + " but it is not blacklisted" );
+                        continue;
+                    }
                     blacklistedEntityDao.remove( blacklistedEntityDao.findByAccession( accession ) );
                     log.info( "De-blacklisted " + accession );
                     continue;
                 } else if ( alreadyBlacklisted ) {
-                    log.warn( accession + " is already blacklisted, skipping" );
+                    log.warn( accession + " is already blacklisted, skipping. To update the 'reason' please unblacklist it and blacklist again" );
                     continue;
                 }
 
@@ -163,8 +191,146 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         }
     }
 
+    /**
+     * 
+     */
+    private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
+        GeoBrowser gbs = new GeoBrowser();
+        BlacklistedEntityDao blacklistedEntityDao = this.getBean( BlacklistedEntityDao.class );
+
+        Collection<String> candidates = new ArrayList<>();
+        int numChecked = 0;
+        int numBlacklisted = 0;
+        for ( BlacklistedEntity be : blacklistedEntityDao.loadAll() ) {
+            if ( be instanceof BlacklistedPlatform ) {
+
+                if ( platformsToScreen == null || !platformsToScreen.isEmpty()
+                        || platformsToScreen.contains( be.getExternalAccession().getAccession() ) ) {
+                    candidates.add( be.getExternalAccession().getAccession() );
+                    numChecked++;
+                }
+            }
+
+            if ( candidates.size() == 5 ) { // too many will break eutils query
+                log.info( "Looking for batch of candidates using: " + StringUtils.join( candidates, "," ) );
+                numBlacklisted += fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+                candidates.clear();
+            }
+        }
+
+        // finish the last batch
+        fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+
+        log.info( "Checked " + numChecked + " blacklisted platforms for experiment in GEO, blacklisted " + numBlacklisted + " GSEs" );
+
+    }
+
+    /**
+     * @param  geo
+     * @param  gbs
+     * @param  blacklistedEntityDao
+     * @param  candidates
+     * @return                      number of actually blacklisted experiments in this batch.
+     * @throws InterruptedException
+     */
+    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityDao blacklistedEntityDao, Collection<String> candidates )
+            throws InterruptedException {
+        int start = 0;
+
+        ExpressionExperimentService expressionExperimentService = this.getBean( ExpressionExperimentService.class );
+
+        boolean keepGoing = true;
+        int numBlacklisted = 0;
+        int retries = 0;
+        while ( keepGoing ) {
+
+            // code copied from GeoGrabberCli
+            List<GeoRecord> recs = null;
+
+            try {
+                recs = gbs.getGeoRecordsBySearchTerm( null, start, 100, false /* details */, null, candidates );
+                retries = 0;
+            } catch ( IOException e ) {
+                // this definitely can happen, occasional 500s from NCBI
+                retries++;
+                if ( retries <= MAX_RETRIES ) {
+                    log.warn( "Failure while fetching records, retrying " + e.getMessage() );
+                    Thread.sleep( 500 );
+                    continue; // try again
+                }
+                AbstractCLI.log.info( "Too many failures, giving up" );
+                keepGoing = false;
+            }
+
+            if ( recs == null || recs.isEmpty() ) {
+                keepGoing = false;
+                break;
+            }
+
+            for ( GeoRecord geoRecord : recs ) {
+                boolean skip = false;
+                String eeAcc = geoRecord.getGeoAccession();
+                if ( null != blacklistedEntityDao.findByAccession( eeAcc ) ) {
+                    log.debug( "Already blacklisted: " + eeAcc );
+                    continue;
+                }
+
+                String[] platforms = geoRecord.getPlatform().split( ";" );
+                for ( String p : platforms ) {
+
+                    BlacklistedEntity bli = blacklistedEntityDao.findByAccession( p );
+
+                    if ( bli == null ) {
+                        // then at least one platform it uses isn't blacklisted, we won't blacklist the experiment
+                        skip = true;
+                        break;
+                    }
+
+                }
+
+                if ( skip ) {
+                    continue;
+                }
+
+                Collection<ExpressionExperiment> ee = expressionExperimentService.findByAccession( eeAcc );
+                if ( !ee.isEmpty() ) {
+                    log.warn( "Warning:  " + eeAcc + " is in Gemma but will be blacklisted" );
+                }
+
+                log.info( "Blacklisting: " + eeAcc + " " + geoRecord.getTitle() + " (" + geoRecord.getPlatform() + ")" );
+                BlacklistedEntity b = new BlacklistedExperiment();
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, null, null, geo );
+                b.setExternalAccession( d );
+                b.setDescription( geoRecord.getTitle() );
+                b.setReason( "Unsupported platform" );
+
+                blacklistedEntityDao.create( b );
+                numBlacklisted++;
+
+            }
+
+            start += 100;
+
+        }
+        return numBlacklisted;
+    }
+
     @Override
     protected void processOptions( CommandLine commandLine ) {
+
+        if ( commandLine.hasOption( "pp" ) ) {
+            if ( this.remove || this.fileName != null ) {
+                throw new IllegalArgumentException( "The pp option cannot be combined with others" );
+            }
+            this.proactive = true;
+
+            if ( commandLine.hasOption( "a" ) ) {
+                this.platformsToScreen = Arrays.asList( StringUtils.split( commandLine.getOptionValue( "a" ) ) );
+            }
+
+            return;
+        }
+
         if ( commandLine.hasOption( "file" ) ) {
             this.fileName = commandLine.getOptionValue( "file" );
         } else {
@@ -174,6 +340,7 @@ public class BlacklistCli extends AbstractCLIContextCLI {
         if ( commandLine.hasOption( "undo" ) ) {
             this.remove = true;
         }
+
     }
 
 }

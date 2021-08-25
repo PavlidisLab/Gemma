@@ -80,7 +80,7 @@ public class GeoBrowser {
     private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
-    private static final String EPLATRETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
+    private static final String EPLATRETRIEVE = "https://eutls.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
     private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
     // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
@@ -129,17 +129,12 @@ public class GeoBrowser {
             xsummary = xpath.compile( "//DocSum/Item[@Name='summary']" );
             xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
             xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
-
             xChannel = xpath.compile( "//MINiML/Sample/Channel" );
             source = xpath.compile( "//Source" );
             characteristics = xpath.compile( "//Characteristics" );
-
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
-
             xPlataccession = xpath.compile( "//DocSum/Item[@Name='GPL']" );
-
             xPlatformTech = xpath.compile( "//DocSum/Item[@Name='ptechType']" );
-
             //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
         } catch ( Exception e ) {
             throw new RuntimeException( "Error setting up GEOBrowser xpaths: " + e.getMessage() );
@@ -237,7 +232,7 @@ public class GeoBrowser {
 
             Object dates = xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
             NodeList dateNodes = ( NodeList ) dates;
-            
+
             // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
             log.debug( "Got " + accNodes.getLength() + " XML records" );
@@ -272,25 +267,36 @@ public class GeoBrowser {
      * searchTerms (search terms can be ommitted). Returns at most pageSize records. Does some screening of results for
      * expression studies, and (optionally) taxa. This is used for identifying data sets for loading
      *
-     * @param  start       start an offset to retrieve batches
-     * @param  pageSize    page size how many to retrive
-     * @param  searchTerms search terms
-     * @param  detailed    if true, additional information is fetched (slower)
-     * @param  allowedTaxa if not null, data sets not containing any of these taxa will be skipped
-     * @return             list of GeoRecords
-     * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and
-     *                     just logged)
+     * @param  start          start an offset to retrieve batches
+     * @param  pageSize       page size how many to retrive
+     * @param  searchTerms    search terms in NCBI Entrez query format
+     * @param  detailed       if true, additional information is fetched (slower)
+     * @param  allowedTaxa    if not null, data sets not containing any of these taxa will be skipped
+     * @param  limitPlatforms not null or empty, platforms to limit the query to (combining with searchTerms not
+     *                        supported yet)
+     * @return                list of GeoRecords
+     * @throws IOException    if there is a problem obtaining or manipulating the file (some exceptions are not thrown
+     *                        and
+     *                        just logged)
      */
-    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed, Collection<String> allowedTaxa )
+    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed, Collection<String> allowedTaxa,
+            Collection<String> limitPlatforms )
             throws IOException {
 
         List<GeoRecord> records = new ArrayList<>();
 
+        String platformLimitClause = "";
+        if ( limitPlatforms != null && !limitPlatforms.isEmpty() ) {
+            platformLimitClause = "%20AND%20(" + StringUtils.join( limitPlatforms, "[ACCN]%20OR%20" ) + "[ACCN])";
+        }
+
         String searchUrlString;
         if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrlString = GeoBrowser.ERETRIEVE + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
+            searchUrlString = GeoBrowser.ERETRIEVE + platformLimitClause + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
         } else {
-            searchUrlString = GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
+            // FIXME: could allow merging in of platformLimitClause. Should really rewrite the way we form these urls to be more modular.
+            searchUrlString = GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize
+                    + "&usehistory=y";
         }
 
         if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
@@ -437,8 +443,11 @@ public class GeoBrowser {
 
                 records.add( record );
 
-                System.err.println(
-                        "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                if ( detailed ) {
+                    // without details this goes a lot quicker so feedback isn't very important
+                    System.err.println(
+                            "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                }
                 t.reset();
                 t.start();
             }

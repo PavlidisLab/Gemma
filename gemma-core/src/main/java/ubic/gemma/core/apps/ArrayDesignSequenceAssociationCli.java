@@ -90,11 +90,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );
             }
+        } else {
+            taxon = this.getArrayDesignService().getTaxon( arrayDesign.getId() );
+            // could still be null
         }
 
         if ( this.sequenceFile != null ) {
-            try ( InputStream sequenceFileIs = FileTools
-                    .getInputStreamFromPlainOrCompressedFile( sequenceFile ) ) {
+            try (InputStream sequenceFileIs = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
 
                 if ( sequenceFileIs == null ) {
                     throw new IllegalArgumentException( "No file " + sequenceFile + " was readable" );
@@ -108,7 +111,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 this.audit( arrayDesign, "Sequences read from file: " + sequenceFile );
             }
         } else if ( this.idFile != null ) {
-            try ( InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile ) ) {
+            try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile )) {
 
                 if ( idFileIs == null ) {
                     throw new IllegalArgumentException( "No file " + idFile + " was readable" );
@@ -116,17 +119,39 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                 AbstractCLI.log.info( "Processing ArrayDesign..." );
 
+                String[] databases = chooseBLASTdbs( taxon );
+
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
-                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
+                        databases, null, taxon, force );
 
                 this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             }
         } else {
             AbstractCLI.log.info( "Retrieving sequences from BLAST databases" );
+
+            String[] databases = chooseBLASTdbs( taxon );
+
             arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
-                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
+                    databases, null, force );
             this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
         }
+    }
+
+    /**
+     * @param  taxon
+     * @return
+     */
+    private String[] chooseBLASTdbs( Taxon taxon ) {
+        String[] databases = null;
+
+        if ( taxon != null && taxon.getCommonName().equals( "mouse" ) ) {
+            databases = new String[] { "est_mouse", "nt" };
+        } else if ( taxon != null && taxon.getCommonName().equals( "human" ) ) {
+            databases = new String[] { "est_human", "nt" };
+        } else {
+            databases = new String[] { "nt", "est_others", "est_human", "est_mouse" };
+        }
+        return databases;
     }
 
     @Override
