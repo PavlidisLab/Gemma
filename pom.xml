@@ -456,7 +456,7 @@
 		<jackson.version>2.12.3</jackson.version>
 		<swagger.version>2.1.10</swagger.version>
 		<jawr.version>3.9</jawr.version>
-		<tomcat.version>8.5.60</tomcat.version>
-		<jetty.version>9.4.40.v20210413</jetty.version>
+		<tomcat.version>8.5.70</tomcat.version>
+		<jetty.version>9.4.43.v20210629</jetty.version>
 	</properties>
 </project>
