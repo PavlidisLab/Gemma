@@ -142,7 +142,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all experiments within a given platform")
     public ResponseDataObject<List<ExpressionExperimentValueObject>> platformDatasets( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -168,7 +168,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the composite sequences for a given platform")
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElements( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -197,7 +197,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -237,7 +237,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
     public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -263,7 +263,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the annotations of a given platform")
     public Response platformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Optional, default null
+            @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );

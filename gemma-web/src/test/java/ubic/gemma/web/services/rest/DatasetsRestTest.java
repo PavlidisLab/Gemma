@@ -15,6 +15,7 @@ import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -42,28 +43,33 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Test
     public void testAll() {
-        ResponseDataObject response = datasetsWebService
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService
                 .all( DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "5" ), IntArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
 
         assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        assertEquals( 5, ( ( Collection ) response.getData() ).size() );
-        assertTrue(
-                ( ( Collection ) response.getData() ).iterator().next() instanceof ExpressionExperimentValueObject );
+        assertEquals( 5, response.getData().size() );
     }
 
     @Test
     public void testSome() {
-        ResponseDataObject response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
-                DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
-                        .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+                        DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
+                                .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
                 IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
 
         assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
         assertEquals( 2, ( ( Collection ) response.getData() ).size() );
-        assertTrue(
-                ( ( Collection ) response.getData() ).iterator().next() instanceof ExpressionExperimentValueObject );
+    }
+
+    @Test
+    public void testSomeWithFilter() {
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+                        DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
+                                .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
+                IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+
+        assertNotNull( response.getData() );
+        assertEquals( 2, response.getData().size() );
     }
 }
