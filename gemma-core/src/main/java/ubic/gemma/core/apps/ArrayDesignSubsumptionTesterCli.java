@@ -101,6 +101,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 for ( int j = 1; j < allToCompare.size(); j++ ) {
                     ArrayDesign b = allToCompare.get( j );
 
+                    if ( a.equals( b ) ) continue;
+
                     if ( done.contains( a ) || done.contains( b ) ) continue;
 
                     boolean subsumes = this.getArrayDesignService().updateSubsumingStatus( a, b );
