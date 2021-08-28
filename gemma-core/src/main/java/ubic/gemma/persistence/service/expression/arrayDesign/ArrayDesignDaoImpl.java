@@ -954,7 +954,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + " biosequences from the subsumee " + candidateSubsumee );
 
         if ( overlap != subsumeeSeqs.size() ) {
-            int n = 50;
+            int n = 5;
             System.err.println( "Up to " + n + " missing sequences will be listed." );
             for ( int i = 0; i < Math.min( n, missing.size() ); i++ ) {
                 System.err.println( missing.get( i ) );

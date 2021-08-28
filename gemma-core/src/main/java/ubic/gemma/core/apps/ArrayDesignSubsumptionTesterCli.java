@@ -27,9 +27,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Test two array designs to see if one subsumes the other, and if so update their information.
@@ -39,6 +38,7 @@ import java.util.HashSet;
 public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipulatingCli {
 
     private Collection<String> otherArrayDesignNames;
+    private boolean allWays = false;
 
     @Override
     public String getCommandName() {
@@ -59,16 +59,20 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                     "This tool is only for microarray platforms; " + arrayDesign.getShortName() + " is a sequencing platform" );
         }
 
+        List<ArrayDesign> allToCompare = new ArrayList<>();
+        allToCompare.add( arrayDesign );
+
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
             ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName, getArrayDesignService() );
+
+            if ( otherArrayDesign == null ) {
+                throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
+            }
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
             }
 
-            if ( otherArrayDesign == null ) {
-                throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
-            }
 
             otherArrayDesign = this.thaw( otherArrayDesign );
 
@@ -77,16 +81,39 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                         "This tool is only for microarray platforms; " + otherArrayDesign.getShortName() + " is a sequencing platform" );
             }
 
-            Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
-
-            if ( !aSubsumes ) {
-                // test other way around, but only if first way failed (to avoid cycles)
-                this.getArrayDesignService().updateSubsumingStatus( otherArrayDesign, arrayDesign );
+            if ( allWays ) {
+                allToCompare.add( otherArrayDesign );
+            } else {
+                Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
             }
-            this.audit( otherArrayDesign, "Tested to see if it is subsumed by " + arrayDesign );
+//            if ( !aSubsumes ) {
+//                // test other way around, but only if first way failed (to avoid cycles)
+//                this.getArrayDesignService().updateSubsumingStatus( otherArrayDesign, arrayDesign );
+//            }
+//            this.audit( otherArrayDesign, "Tested to see if it is subsumed by " + arrayDesign );
         }
 
-        this.audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
+
+        Collection<ArrayDesign> done = new HashSet<>();
+        if ( allWays ) {
+            for ( int i = 0; i < allToCompare.size(); i++ ) {
+                ArrayDesign a = allToCompare.get( i );
+                for ( int j = 1; j < allToCompare.size(); j++ ) {
+                    ArrayDesign b = allToCompare.get( j );
+
+                    if ( done.contains( a ) || done.contains( b ) ) continue;
+
+                    boolean subsumes = this.getArrayDesignService().updateSubsumingStatus( a, b );
+
+                    if ( subsumes ) {
+                        done.add( allToCompare.get( j ) );
+                    }
+
+                }
+            }
+        }
+
+//        this.audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
     }
 
     @Override
@@ -102,6 +129,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
                 .longOpt( "other" ).build();
+        Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
 
         options.addOption( otherArrayDesignOption );
     }
@@ -115,6 +143,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             this.otherArrayDesignNames = new HashSet<>();
             this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
         }
+        this.allWays = commandLine.hasOption( "all" );
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
