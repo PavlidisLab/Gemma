@@ -105,10 +105,12 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
                     if ( done.contains( a ) || done.contains( b ) ) continue;
 
+                    log.info( "--- comparing " + a.getShortName() + " to " + b.getShortName() );
+
                     boolean subsumes = this.getArrayDesignService().updateSubsumingStatus( a, b );
 
                     if ( subsumes ) {
-                        done.add( allToCompare.get( j ) );
+                        done.add( b );
                     }
 
                 }
