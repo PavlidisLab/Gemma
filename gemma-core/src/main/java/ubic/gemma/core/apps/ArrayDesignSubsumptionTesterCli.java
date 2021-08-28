@@ -132,6 +132,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
 
         options.addOption( otherArrayDesignOption );
+        options.addOption( allways );
     }
 
     @Override
