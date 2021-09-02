@@ -12,10 +12,10 @@
          </generator>
       </id>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <many-to-one name="biologicalCharacteristic" class="ubic.gemma.model.genome.biosequence.BioSequence"  lazy="proxy" fetch="select">
          <column name="BIOLOGICAL_CHARACTERISTIC_FK" not-null="false" sql-type="BIGINT"/>

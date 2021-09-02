@@ -22,7 +22,7 @@
 
 		<property access="field" name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
 			<column name="EVIDENCE_CODE" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 	</class>
 </hibernate-mapping>

@@ -13,33 +13,33 @@
       </id>
       <discriminator column="class"/>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="email" type="java.lang.String">
-         <column name="EMAIL" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="EMAIL" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <subclass name="ubic.gemma.model.common.auditAndSecurity.Person" discriminator-value="Person" abstract="false">
          <property name="lastName" type="java.lang.String">
-            <column name="LAST_NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+            <column name="LAST_NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
          </property>
          <subclass name="ubic.gemma.model.common.auditAndSecurity.User" discriminator-value="User" abstract="false">
             <property name="userName" type="java.lang.String">
-               <column name="USER_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+               <column name="USER_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
             </property>
             <property name="password" type="java.lang.String">
-               <column name="PASSWORD" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+               <column name="PASSWORD" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
             </property>
             <property name="passwordHint" type="java.lang.String">
-               <column name="PASSWORD_HINT" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+               <column name="PASSWORD_HINT" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
             </property>
             <property name="enabled" type="java.lang.Boolean">
                <column name="ENABLED" not-null="false" unique="false" sql-type="TINYINT"/>
             </property>
             <property name="signupToken" type="java.lang.String">
-               <column name="SIGNUP_TOKEN" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+               <column name="SIGNUP_TOKEN" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
             </property>
             <property name="signupTokenDatestamp" type="java.util.Date">
                <column name="SIGNUP_TOKEN_DATESTAMP" not-null="false" unique="false" sql-type="DATETIME"/>

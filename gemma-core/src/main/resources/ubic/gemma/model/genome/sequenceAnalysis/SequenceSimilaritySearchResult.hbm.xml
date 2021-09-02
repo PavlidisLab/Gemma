@@ -60,7 +60,7 @@
             </property>
             <property name="strand" type="java.lang.String">
                 <column name="STRAND" not-null="false" unique="false"
-                        sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                        sql-type="VARCHAR(255)"/>
             </property>
             <property name="queryStart" type="java.lang.Integer">
                 <column name="QUERY_START" not-null="false" unique="false" sql-type="INTEGER"/>
@@ -79,15 +79,15 @@
             </property>
             <property name="blockSizes" type="org.springframework.orm.hibernate3.support.ClobStringType">
                 <column name="BLOCK_SIZES" not-null="false" unique="false"
-                        sql-type="text character set latin1 collate latin1_swedish_ci"/>
+                        sql-type="text"/>
             </property>
             <property name="queryStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
                 <column name="QUERY_STARTS" not-null="false" unique="false"
-                        sql-type="text character set latin1 collate latin1_swedish_ci"/>
+                        sql-type="text"/>
             </property>
             <property name="targetStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
                 <column name="TARGET_STARTS" not-null="false" unique="false"
-                        sql-type="text character set latin1 collate latin1_swedish_ci"/>
+                        sql-type="text"/>
             </property>
         </subclass>
 

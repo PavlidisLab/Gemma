@@ -13,18 +13,18 @@
 		</id>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
-				sql-type="text character set latin1 collate latin1_swedish_ci" />
+				sql-type="text" />
 		</property>
 		<property name="length" type="java.lang.Long">
 			<column name="LENGTH" not-null="false" unique="false" sql-type="BIGINT" />
 		</property>
 		<property name="sequence" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="SEQUENCE" not-null="false" unique="false"
-				sql-type="text character set latin1 collate latin1_swedish_ci" />
+				sql-type="text" />
 		</property>
 		<property name="isApproximateLength" type="java.lang.Boolean">
 			<column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT" />
@@ -34,11 +34,11 @@
 		</property>
 		<property name="polymerType" type="ubic.gemma.model.genome.biosequence.PolymerTypeEnum">
 			<column name="POLYMER_TYPE" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 		<property name="type" type="ubic.gemma.model.genome.biosequence.SequenceTypeEnum">
 			<column name="TYPE" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 		<property name="fractionRepeats" type="java.lang.Double">
 			<column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE" />

@@ -12,19 +12,19 @@
          </generator>
       </id>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="replicateDescription" type="java.lang.String">
-         <column name="REPLICATE_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="REPLICATE_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="qualityControlDescription" type="java.lang.String">
-         <column name="QUALITY_CONTROL_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="QUALITY_CONTROL_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="normalizationDescription" type="java.lang.String">
-         <column name="NORMALIZATION_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NORMALIZATION_DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <set name="experimentalFactors"  lazy="false" fetch="select" inverse="true" cascade="all">
          <cache usage="read-write" />
