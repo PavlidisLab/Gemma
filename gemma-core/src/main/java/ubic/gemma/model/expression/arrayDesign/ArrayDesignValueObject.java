@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,7 +73,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String taxon;
 
 
-
     private Long taxonID;
     private String technologyType;
     private Boolean blackListed = false;
@@ -122,6 +121,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
         this.isMergee = ad.getMergedInto() != null;
         this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
+    }
+
+    public ArrayDesignValueObject( ArrayDesign ad, int totalInQuery ) {
+        this( ad );
+        set_totalInQuery( totalInQuery );
     }
 
     /**

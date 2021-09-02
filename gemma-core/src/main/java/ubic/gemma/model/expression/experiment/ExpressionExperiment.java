@@ -17,6 +17,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
 
 import gemma.gsec.model.SecuredNotChild;
@@ -198,7 +199,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Override
     public void setBioAssays( Collection<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
-        if ( bioAssays != null )
+        if ( bioAssays != null && Hibernate.isInitialized( bioAssays ) )
             this.numberOfSamples = bioAssays.size();
     }
 

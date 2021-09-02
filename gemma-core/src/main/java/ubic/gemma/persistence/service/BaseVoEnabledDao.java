@@ -15,7 +15,6 @@ import java.util.List;
  * satisfy all the possible usage context. For example, we might need a different VO for the RESTful API than the
  * JavaScript frontend. Instead, the VO should be defined and created where needed.
  */
-@Deprecated
 public interface BaseVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends BaseDao<O> {
 
     /**
@@ -24,7 +23,6 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @param entity the entity to turn into a value object
      * @return a value object
      */
-    @Deprecated
     VO loadValueObject( O entity );
 
     /**
@@ -33,9 +31,7 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @param entities the entities to turn into value objects
      * @return a collection of value objects
      */
-    @Deprecated
     List<VO> loadValueObjects( Collection<O> entities );
 
-    @Deprecated
     List<VO> loadAllValueObjects();
 }

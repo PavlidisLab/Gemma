@@ -56,7 +56,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         implements ArrayDesignDao {
 
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
-    private static final int NON_ADMIN_QUERY_FILTER_COUNT = 1;
 
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
@@ -509,9 +508,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
         ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, "ad" );
         Query queryObject = this.getLoadValueObjectsQuery( ObjectFilter.singleFilter( filter ), null, false );
-
-        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( eeCounts, queryObject, null, null,
-                null );
+        Query countQuery = this.getCountValueObjectsQuery( ObjectFilter.singleFilter( filter ) );
+        queryObject.setCacheable( true );
+        //noinspection unchecked
+        List<ArrayDesign> list = queryObject.list();
+        Long totalElements = ( Long ) countQuery.uniqueResult();
+        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( list, eeCounts, totalElements );
 
         populateBlacklisted( results );
         return results;
@@ -971,8 +973,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadAllValueObjects() {
         Query queryObject = this.getLoadValueObjectsQuery( null, null, false );
-        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults(
-                this.getExpressionExperimentCountMap(), queryObject, null, null, null );
+        Query countQuery = this.getCountValueObjectsQuery( null );
+        queryObject.setCacheable( true );
+        countQuery.setCacheable( true );
+        //noinspection unchecked
+        List<ArrayDesign> list = queryObject.list();
+        Long totalElements = ( Long ) countQuery.uniqueResult();
+        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( list, this.getExpressionExperimentCountMap(), totalElements );
         this.populateBlacklisted( results );
         return results;
     }
@@ -989,24 +996,37 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
+            List<ObjectFilter[]> filters ) {
+        if ( filters == null ) {
+            filters = new ArrayList<>();
+        }
+
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters );
+
         String orderByProperty = this.getOrderByProperty( orderBy );
 
         // Compose query
-        Query query = this.getLoadValueObjectsQuery( filter, orderByProperty, !asc );
+        Query query = this.getLoadValueObjectsQuery( filters, orderByProperty, !asc );
+        Query countQuery = this.getCountValueObjectsQuery( filters );
 
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
 
-        List<ObjectFilter[]> filters = filter;
-        boolean orderDesc = !asc;
-        // Restrict to non-troubled EEs for non-administrators
-        filters = getObjectFilters( filters );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        AclQueryUtils.addAclRestrictionParameters( countQuery );
+        ObjectFilterQueryUtils.addRestrictionParameters( countQuery, filters );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, true );
+        query.setCacheable( true );
+        countQuery.setCacheable( true );
 
-        return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), query,
-                new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit );
+        //noinspection unchecked
+        List<ArrayDesign> list = query.list();
+        Long totalElements = ( Long ) countQuery.uniqueResult();
+
+        return new Slice<>( this.processADValueObjectQueryResults( list, this.getExpressionExperimentCountMap(), totalElements ),
+                new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, totalElements );
     }
 
     /**
@@ -1051,14 +1071,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         Map<Long, Integer> eeCount = new HashMap<>();
         //noinspection unchecked
-        List<Long[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).list();
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).list();
 
         if ( list.size() < 2 )
             AbstractDao.log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
 
-        for ( Long[] o : list ) {
-            Long id = o[0];
-            Integer count = o[1].intValue();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Integer count = ( ( Long ) o[1] ).intValue();
             eeCount.put( id, count );
         }
 
@@ -1099,22 +1119,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return result;
     }
 
+    @Override
     protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
-
-        // Restrict to non-troubled EEs for non-administrators
-        filters = getObjectFilters( filters );
-
         // contain duplicated platforms
         String queryString =
-                "select ad, count(*) " + "from ArrayDesign as ad " + "left join fetch ad.curationDetails s "
-                        + "left join fetch ad.primaryTaxon t " + "left join fetch ad.mergedInto m "
+                "select ad from ArrayDesign as ad "
+                        + "left join fetch ad.curationDetails s "
+                        + "left join fetch ad.primaryTaxon t "
+                        + "left join fetch ad.mergedInto m "
                         + "left join fetch s.lastNeedsAttentionEvent as eAttn "
                         + "left join fetch s.lastNoteUpdateEvent as eNote "
-                        + "left join fetch s.lastTroubledEvent as eTrbl " + "left join fetch ad.alternativeTo alt";
+                        + "left join fetch s.lastTroubledEvent as eTrbl "
+                        + "left join fetch ad.alternativeTo alt";
 
         queryString += AclQueryUtils.formAclJoinClause( "ad", "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, true );
+        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
         queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
@@ -1123,37 +1144,46 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, true );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
 
-    protected List<ObjectFilter[]> getObjectFilters( List<ObjectFilter[]> filters ) {
-        if ( !SecurityUtil.isUserAdmin() ) {
-            if ( filters == null ) {
-                filters = new ArrayList<>( ArrayDesignDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            }
-            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.DAO_AD_ALIAS ) } );
-        }
-        return filters;
+    @Override
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        // contain duplicated platforms
+        String queryString =
+                "select count(distinct ad) from ArrayDesign as ad "
+                        + "left join ad.curationDetails s "
+                        + "left join ad.primaryTaxon t "
+                        + "left join ad.mergedInto m "
+                        + "left join s.lastNeedsAttentionEvent as eAttn "
+                        + "left join s.lastNoteUpdateEvent as eNote "
+                        + "left join s.lastTroubledEvent as eTrbl "
+                        + "left join ad.alternativeTo alt";
+
+        queryString += AclQueryUtils.formAclJoinClause( "ad", "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
+        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        return query;
     }
 
     /**
      * Process query results for LoadAllValueObjects or LoadValueObjects
      */
-    private Slice<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
-            final Query query, Sort sort, Integer offset, Integer limit ) {
-        query.setCacheable( true );
-
-        List<Object[]> list = query.list();
+    private List<ArrayDesignValueObject> processADValueObjectQueryResults( List<ArrayDesign> list, Map<Long, Integer> eeCounts, Long totalElements ) {
         List<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
 
-        Long adCount = 0L;
-        for ( Object[] row : list ) {
-            ArrayDesign ad = ( ArrayDesign ) row[0];
-            adCount = ( Long ) row[1];
-            ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
+        for ( ArrayDesign ad : list ) {
+            ArrayDesignValueObject vo = new ArrayDesignValueObject( ad, totalElements.intValue() );
 
             Long id = ad.getId();
             if ( eeCounts == null || !eeCounts.containsKey( id ) ) {
@@ -1164,7 +1194,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             vos.add( vo );
         }
 
-        return new Slice<>( vos, sort, offset, limit, adCount );
+        return vos;
     }
 
     private List<CompositeSequence> thawBatchOfProbes( Collection<CompositeSequence> batch ) {

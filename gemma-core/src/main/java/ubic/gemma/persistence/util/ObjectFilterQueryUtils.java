@@ -1,9 +1,8 @@
 package ubic.gemma.persistence.util;
 
 import com.google.common.base.Strings;
-import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Query;
-import org.springframework.web.servlet.tags.Param;
 
 import java.util.*;
 
@@ -62,19 +61,14 @@ public class ObjectFilterQueryUtils {
      *                Arrays will then be in a conjunction (AND) with each other.
      *                I.e. The filter will be in a conjunctive normal form.
      *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
-     * @param addAcl  whether the acl restriction clause should also be added.
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    public static String formRestrictionClause( List<ObjectFilter[]> filters, boolean addAcl ) {
+    public static String formRestrictionClause( List<ObjectFilter[]> filters ) {
         StringBuilder queryString = new StringBuilder();
-
-        if ( addAcl ) {
-            queryString.append( AclQueryUtils.formAclRestrictionClause() );
-        }
 
         if ( filters == null || filters.isEmpty() )
             return queryString.toString();
-        ParamNameGenerator generator = new ParamNameGenerator();
+        BindingParamNameGenerator generator = new BindingParamNameGenerator();
         StringBuilder conjunction = new StringBuilder();
         for ( ObjectFilter[] filterArray : filters ) {
             if ( filterArray == null || filterArray.length == 0 )
@@ -82,23 +76,20 @@ public class ObjectFilterQueryUtils {
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
             for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null && filter.getObjectAlias() != null )
+                if ( filter == null || filter.getObjectAlias() == null )
                     continue;
-                String paramName = generator.next( ObjectFilterQueryUtils.formParamName( filter ) );
+                String paramName = generator.nextParam( filter );
                 if ( !first )
                     disjunction.append( " or " );
-                disjunction.append( filter.getObjectAlias() ).append( "." );
-                disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() );
-                if ( filter.getOperator().equals( ObjectFilter.in ) ) {
-                    disjunction.append( " (:" ).append( paramName ).append( ")" );
-                } else {
-                    disjunction.append( " :" ).append( paramName );
-                }
+                disjunction
+                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " )
+                        .append( filter.getOperator() ).append( " " )
+                        .append( "(" ).append( ":" ).append( paramName ).append( ")" );
                 first = false;
             }
             String disjunctionString = disjunction.toString();
             if ( !disjunctionString.isEmpty() ) {
-                conjunction.append( " and ( " ).append( disjunctionString ).append( " )" );
+                conjunction.append( " and (" ).append( disjunctionString ).append( ")" );
             }
         }
 
@@ -108,28 +99,24 @@ public class ObjectFilterQueryUtils {
     /**
      * Adds all parameters contained in the filters argument to the Query by calling query.setParameter as needed.
      * <p>
-     * Use this if you've appended {@link #formRestrictionClause(List, boolean)} to the query so that the provided
-     * object filters will be binded.
+     * Use this if you've appended {@link #formRestrictionClause(List)} to the query so that the provided
+     * object filters will be bound.
      *
      * @param query   the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
      */
-    public static void addRestrictionParameters( Query query, List<ObjectFilter[]> filters, boolean addAcl ) {
-        if ( addAcl ) {
-            AclQueryUtils.addAclRestrictionParameters( query );
-        }
-
+    public static void addRestrictionParameters( Query query, List<ObjectFilter[]> filters ) {
         if ( filters == null || filters.isEmpty() )
             return;
 
-        ParamNameGenerator generator = new ParamNameGenerator();
+        BindingParamNameGenerator generator = new BindingParamNameGenerator();
         for ( ObjectFilter[] filterArray : filters ) {
             if ( filterArray == null || filterArray.length < 1 )
                 continue;
             for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null && filter.getObjectAlias() != null )
+                if ( filter == null || filter.getObjectAlias() == null )
                     continue;
-                String paramName = generator.next( formParamName( filter ) );
+                String paramName = generator.nextParam( filter );
                 if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
                     query.setParameterList( paramName, ( Collection<?> ) filter.getRequiredValue() );
                 } else {
@@ -140,38 +127,79 @@ public class ObjectFilterQueryUtils {
     }
 
     /**
-     * Forms a parameter name out of the filter object.
+     * Check if an alias is mentioned in a set of {@link ObjectFilter}.
      *
-     * @param filter the filter to create the parameter name out of.
-     * @return a name unique to the provided filter that can be used in a hql query. returned string does not
-     * contain the leading ":" character that denotes a parameter keyword in the hql query.
+     * This should be used to eliminate parts of an HQL query that are not mentioned in the filters.
+     *
+     * @param filters
+     * @param aliases
+     * @return true if any provided alias is mentioned anywhere in the set of filters
      */
-    private static String formParamName( ObjectFilter filter ) {
-        return filter.getObjectAlias().replaceAll( "\\.", "_" ) + filter.getPropertyName().replaceAll( "\\.", "_" );
+    public static boolean containsAlias( List<ObjectFilter[]> filters, String... aliases ) {
+        if ( filters == null )
+            return false;
+        for ( ObjectFilter[] filter : filters ) {
+            if ( filter == null )
+                continue;
+            for ( ObjectFilter f : filter ) {
+                if ( ArrayUtils.contains( aliases, f.getObjectAlias() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * Generates unique parameter names for binding a {@link Query}.
      */
-    private static class ParamNameGenerator {
+    private static class BindingParamNameGenerator {
 
-        private Map<String, Integer> counts;
+        private final Map<String, Integer> counts;
 
-        public ParamNameGenerator() {
+        /**
+         * Create a new parameter name generator.
+         */
+        public BindingParamNameGenerator() {
             this.counts = new HashMap<>();
         }
 
-        public ParamNameGenerator( Map<String, Integer> initialCounts ) {
-            this.counts = initialCounts;
+        /**
+         * Create a parameter name generator with initial counts, possibly from a previous parameter generator
+         * execution.
+         * @param initialCounts
+         */
+        public BindingParamNameGenerator( Map<String, Integer> initialCounts ) {
+            this.counts = new HashMap<>( initialCounts );
         }
 
-        public String next( String paramName ) {
+        /**
+         * Generate the next, uniquely named parameter.
+         *
+         * Note that the returned string does not contain the leading ":" character that denotes a parameter keyword in
+         * the HQL query.
+         */
+        public String nextParam( String paramName ) {
             if ( counts.containsKey( paramName ) ) {
                 counts.compute( paramName, ( k, v ) -> v + 1 );
             } else {
                 counts.put( paramName, 1 );
             }
             return paramName + counts.get( paramName );
+        }
+
+        /**
+         * Forms a parameter name out of the filter object.
+         *
+         * @param filter the filter to create the parameter name out of.
+         * @return a name unique to the provided filter that can be used in an HQL query.
+         */
+        public String nextParam( ObjectFilter filter ) {
+            return this.nextParam( filter.getObjectAlias().replaceAll( "\\.", "_" ) + filter.getPropertyName().replaceAll( "\\.", "_" ) );
+        }
+
+        public Map<String, Integer> getCounts() {
+            return counts;
         }
     }
 

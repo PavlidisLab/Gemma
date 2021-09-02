@@ -25,9 +25,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -135,7 +133,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public Slice<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
@@ -157,11 +155,11 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
             vos.add( vo );
         }
 
-        return vos;
+        return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
     }
 
     /**
-     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(List, boolean)} filters argument
+     * @param filters         see {@link #formRestrictionClause(List} filters argument
      *                        for description.
      * @param orderByProperty the property to order by.
      * @param orderDesc       whether the ordering is ascending or descending.
@@ -178,13 +176,13 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
         queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, false );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

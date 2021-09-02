@@ -18,28 +18,17 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.*;
-
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -55,20 +44,14 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
+
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -80,7 +63,6 @@ public class ExpressionExperimentDaoImpl
         implements ExpressionExperimentDao {
 
     private static final int BATCH_SIZE = 1000;
-    private static final int NON_ADMIN_QUERY_FILTER_COUNT = 2;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -290,7 +272,7 @@ public class ExpressionExperimentDaoImpl
 
             session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw super.getHibernateTemplate().convertHibernateAccessException( ex );
         }
 
         return this.load( eeIds );
@@ -676,8 +658,7 @@ public class ExpressionExperimentDaoImpl
         }
         // add in expression experiment ids that do not have events. Set
         // their values to null.
-        for ( Object object : ids ) {
-            Long id = ( Long ) object;
+        for ( Long id : ids ) {
             if ( !eventMap.containsKey( id ) ) {
                 eventMap.put( id, null );
             }
@@ -885,13 +866,13 @@ public class ExpressionExperimentDaoImpl
                 + "inner join ee.rawExpressionDataVectors as vectors "
                 + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
-        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
                 .list();
 
         Map<QuantitationType, Integer> qtCounts = new HashMap<>();
 
-        //noinspection unchecked
-        for ( Object[] tuple : ( List<Object[]> ) list ) {
+        for ( Object[] tuple : list ) {
             qtCounts.put( ( QuantitationType ) tuple[0], ( ( Long ) tuple[1] ).intValue() );
         }
 
@@ -945,7 +926,7 @@ public class ExpressionExperimentDaoImpl
             Object[] ol = ( Object[] ) o;
             ExpressionExperiment e = ( ExpressionExperiment ) ol[0];
             if ( !result.containsKey( e ) ) {
-                result.put( e, new HashSet<AuditEvent>() );
+                result.put( e, new HashSet<>() );
             }
             AuditEvent ae = ( AuditEvent ) ol[1];
             result.get( e ).add( ae );
@@ -1058,12 +1039,12 @@ public class ExpressionExperimentDaoImpl
      * Note that unlike loadValueObjectsPreFilter this returns ExpressionExperimentDetailsValueObject
      */
     @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
             Collection<Long> ids, Taxon taxon, int limit, int start ) {
         final ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
             if ( ids.isEmpty() )
-                return new ArrayList<>();
+                return new Slice<>();
             List<Long> idList = new ArrayList<>( ids );
             Collections.sort( idList );
             filters[0] = new ObjectFilter( "id", idList, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS );
@@ -1072,12 +1053,14 @@ public class ExpressionExperimentDaoImpl
             filters[1] = new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS );
         }
 
-        // Compose query
-        Query query = this.getLoadValueObjectsQuery( new ArrayList<ObjectFilter[]>() {
+        List<ObjectFilter[]> filtersList = new ArrayList<ObjectFilter[]>() {
             {
                 this.add( filters );
             }
-        }, this.getOrderByProperty( orderBy ), descending );
+        };
+
+        // Compose query
+        Query query = this.getLoadValueObjectsQuery( filtersList, this.getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
         if ( limit > 0 ) {
@@ -1085,19 +1068,20 @@ public class ExpressionExperimentDaoImpl
         }
         query.setFirstResult( start );
 
-        //noinspection unchecked
         StopWatch timer = new StopWatch();
         timer.start();
+        //noinspection unchecked
         List<Object[]> list = query.list();
         log.info( "EE details query: " + timer.getTime() + " ms for " + list.size() + " results" );
 
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
+        Long totalElements = ( Long ) this.getCountValueObjectsQuery( filtersList ).uniqueResult();
         for ( Object[] row : list ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
             AclPrincipalSid sid = ( AclPrincipalSid ) row[2];
 
-            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
+            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid, totalElements.intValue() );
 
             // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
             Collection<ArrayDesignValueObject> adVos = CommonQueries.getArrayDesignsUsedVOs( vo.getId(),
@@ -1113,7 +1097,7 @@ public class ExpressionExperimentDaoImpl
 
         this.populateAnalysisInformation( vos );
         log.info( "EE details VO query + postprocessing: " + timer.getTime() + " ms" );
-        return vos;
+        return new Slice<>( vos, new Sort( orderBy, descending ? Sort.Direction.DESC : Sort.Direction.ASC ), start, limit, totalElements );
     }
 
     @Override
@@ -1224,13 +1208,12 @@ public class ExpressionExperimentDaoImpl
         List<Object[]> list = query.list();
         List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
 
-        Long eeCount = 0L;
+        Long totalElements = ( Long ) this.getCountValueObjectsQuery( filter ).uniqueResult();
         for ( Object[] row : list ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
-            eeCount = ( Long ) row[1];
-            AclObjectIdentity aoi = ( AclObjectIdentity ) row[2];
-            AclSid sid = ( AclSid ) row[3];
-            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid );
+            AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
+            AclSid sid = ( AclSid ) row[2];
+            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, totalElements.intValue() );
 
             // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
             Collection<ArrayDesignValueObject> adVos = CommonQueries.getArrayDesignsUsedVOs( vo.getId(),
@@ -1248,7 +1231,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit,
-                eeCount );
+                totalElements );
     }
 
     @Override
@@ -1408,42 +1391,6 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    /**
-     * ??
-     *
-     * @param filters         filters
-     * @param orderByProperty orderByProperty
-     * @param orderDesc       orderDesc
-     * @return ?
-     */
-    private Query getCountVosQueryString( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
-
-        // Restrict to non-troubled EEs for non-administrators
-        filters = getObjectFilters( filters );
-
-        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id " // 0
-                + " from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS;
-
-        queryString = queryString + getFilterJoins( filters );
-
-        String queryString1 = queryString;
-        String aclClause = AclQueryUtils.formAclJoinClause( ObjectFilter.DAO_EE_ALIAS,
-                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-        queryString1 = queryString1 + aclClause;
-
-        queryString1 += ObjectFilterQueryUtils.formRestrictionClause( filters, true );
-        //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
-        queryString1 += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString1 );
-
-        AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, true );
-
-        return query;
-    }
-
     private <C extends ExpressionExperimentValueObject> Map<Long, C> getExpressionExperimentValueObjectMap(
             Collection<C> vos ) {
 
@@ -1456,86 +1403,91 @@ public class ExpressionExperimentDaoImpl
         return voMap;
     }
 
-    // add joins for additional filters (other than ACL)
-    private String getFilterJoins( List<ObjectFilter[]> filters ) {
-        if ( filters == null )
-            return "";
-        String filterJoins = "";
-        for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray == null || filterArray.length == 0 )
-                continue;
-            for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null )
-                    continue;
-
-                if ( filter.getObjectAlias().equals( ObjectFilter.DAO_AD_ALIAS ) ) {
-                    filterJoins += " join " + ObjectFilter.DAO_EE_ALIAS + ".bioAssays ba join ba.arrayDesignUsed "
-                            + ObjectFilter.DAO_AD_ALIAS;
-                } else if ( filter.getObjectAlias().equals( ObjectFilter.DAO_TAXON_ALIAS ) ) {
-                    filterJoins += " join " + ObjectFilter.DAO_EE_ALIAS + ".taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
-                }
-            }
-        }
-        return filterJoins;
-
-    }
-
     protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
-
-        String filterJoins = getFilterJoins( filters );
+        if ( filters == null ) {
+            filters = new ArrayList<>();
+        }
 
         // Restrict to non-troubled EEs for non-administrators
-        filters = getObjectFilters( filters );
+        addNonTroubledFilter( filters );
 
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String queryString =
-                "select " + ObjectFilter.DAO_EE_ALIAS + ", count(*), " + AclQueryUtils.formAclSelectClause() + " "
-                        + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " "
-                        + "left join fetch ee.accession acc " + "left join fetch acc.externalDatabase as ED "
+                "select ee, " + AclQueryUtils.formAclSelectClause() + " "
+                        + "from ExpressionExperiment as ee "
+                        + "left join fetch ee.accession acc "
+                        + "left join fetch acc.externalDatabase as ED "
                         + "left join fetch ee.experimentalDesign as EDES "
                         + "left join fetch ee.curationDetails as s " /* needed for trouble status */
-                        + "left join fetch s.lastNeedsAttentionEvent as eAttn " + "left join fetch ee.geeq as "
-                        + ObjectFilter.DAO_GEEQ_ALIAS + " " + "left join fetch s.lastNoteUpdateEvent as eNote "
-                        + "left join fetch s.lastTroubledEvent as eTrbl " + "left join fetch ee.taxon as "
-                        + ObjectFilter.DAO_TAXON_ALIAS;
-        // the join on taxon is only so we use the standard alias.
+                        + "left join fetch s.lastNeedsAttentionEvent as eAttn "
+                        + "left join fetch ee.geeq as geeq "
+                        + "left join fetch s.lastNoteUpdateEvent as eNote "
+                        + "left join fetch s.lastTroubledEvent as eTrbl "
+                        + "left join fetch ee.taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
 
-        queryString = queryString + filterJoins;
+        if ( ObjectFilterQueryUtils.containsAlias( filters, "ba", ObjectFilter.DAO_AD_ALIAS ) ) {
+            // fetching bioassays will trigger in-memory pagination, so we need to perform a regular join
+            queryString += " left join ee.bioAssays as ba "
+                    + "left join ba.arrayDesignUsed as " + ObjectFilter.DAO_AD_ALIAS;
+        }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-
-        String queryString1 = queryString;
-        String aclClause = AclQueryUtils.formAclJoinClause( ObjectFilter.DAO_EE_ALIAS,
+        queryString += AclQueryUtils.formAclJoinClause( "ee",
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-        queryString1 = queryString1 + aclClause;
 
-        queryString1 += ObjectFilterQueryUtils.formRestrictionClause( filters, true );
+        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+
+        // this is necessary because of the collection jointure with bio assays
+        queryString += " group by ee";
+
         //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
-        queryString1 += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString1 );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, true );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }
 
-    // add filters to skip troubled experiments
-    protected List<ObjectFilter[]> getObjectFilters( List<ObjectFilter[]> filters ) {
-        if ( !SecurityUtil.isUserAdmin() ) {
-            if ( filters == null ) {
-                filters = new ArrayList<>( ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
-            }
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
+        String queryString =
+                "select count(distinct ee) from ExpressionExperiment as ee "
+                        + "left join ee.accession acc "
+                        + "left join acc.externalDatabase as ED "
+                        + "left join ee.experimentalDesign as EDES "
+                        + "left join ee.curationDetails as s " /* needed for trouble status */
+                        + "left join s.lastNeedsAttentionEvent as eAttn "
+                        + "left join ee.geeq as geeq "
+                        + "left join s.lastNoteUpdateEvent as eNote "
+                        + "left join s.lastTroubledEvent as eTrbl "
+                        + "left join ee.taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
 
-            /*
-             * Add filters to skip troubled experiments (which includes ones with associated troubled arraydesigns)
-             */
-            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.DAO_EE_ALIAS ) } );
+        if ( ObjectFilterQueryUtils.containsAlias( filters, "ba", ObjectFilter.DAO_AD_ALIAS ) ) {
+            // FIXME: this jointure breaks the count of distinct EE
+            queryString += " left join ee.bioAssays as ba "
+                    + "left join ba.arrayDesignUsed as " + ObjectFilter.DAO_AD_ALIAS;
         }
-        return filters;
+
+        // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
+        queryString += AclQueryUtils.formAclJoinClause( "ee",
+                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+
+        queryString += AclQueryUtils.formAclRestrictionClause();
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        AclQueryUtils.addAclRestrictionParameters( query );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        return query;
     }
 
     /**
@@ -1547,7 +1499,7 @@ public class ExpressionExperimentDaoImpl
      *
      * @param propertyName the order field requested by front end or API.
      * @return a string that can be used as the orderByProperty param in
-     * {@link this#getLoadValueObjectsQuery(List, String, boolean)}.
+     * {@link #getLoadValueObjectsQuery(List, String, boolean)}.
      */
     protected String getOrderByProperty( String propertyName ) {
         if ( propertyName == null )
@@ -1765,6 +1717,7 @@ public class ExpressionExperimentDaoImpl
         String thawQuery = "select distinct e from ExpressionExperiment e "
                 + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
 
+        //noinspection unchecked
         List<ExpressionExperiment> res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
                 .setParameter( "eeId", ee.getId() ).list();
 

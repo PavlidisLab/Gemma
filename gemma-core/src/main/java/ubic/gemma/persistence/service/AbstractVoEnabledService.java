@@ -12,7 +12,6 @@ import java.util.List;
  * Created by tesarst on 01/06/17.
  * A special case of Service that also provides value object functionality.
  */
-@Deprecated
 public abstract class AbstractVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractService<O> implements BaseVoEnabledService<O,VO> {
 

@@ -60,7 +60,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
                 ee.getBioAssays().size() :
                 null;
-        if ( ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+        if ( ee.getAccession() != null ) {
             this.accession = ee.getAccession().toString();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
@@ -74,8 +74,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.metadata = ee.getMetadata();
         this.processedExpressionVectorCount = ee.getNumberOfDataVectors();
 
-        this.taxon = ee.getTaxon().getCommonName();
-        this.taxonId = ee.getTaxon().getId();
+        if ( ee.getTaxon() != null ) {
+            this.taxon = ee.getTaxon().getCommonName();
+            this.taxonId = ee.getTaxon().getId();
+        }
 
         // AD
         // FIXME: row[10] contains the taxon common name!
@@ -92,7 +94,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         //  this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
 
         // Other
-        this.experimentalDesign = ee.getExperimentalDesign().getId();
+        if ( ee.getExperimentalDesign() != null ) {
+            this.experimentalDesign = ee.getExperimentalDesign().getId();
+        }
 
         // Batch info
         batchEffect = ee.getBatchEffect();
@@ -110,8 +114,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // 29: other parts
     }
 
-    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid ) {
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid, int totalInQuery ) {
         this( ee );
+
+        set_totalInQuery( totalInQuery );
 
         // ACL
         boolean[] permissions = EntityUtils.getPermissions( aoi );

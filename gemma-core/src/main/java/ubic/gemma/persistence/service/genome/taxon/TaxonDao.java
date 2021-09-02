@@ -22,6 +22,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,6 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
     Taxon findByNcbiId( Long ncbiId );
 
     @Override
-    List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    Slice<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }

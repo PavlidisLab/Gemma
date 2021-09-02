@@ -1,17 +1,21 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
+import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.jdbc.Work;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,7 +25,7 @@ import java.util.Map;
  * @author tesarst
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends AbstractVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+        extends AbstractFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
     protected AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -84,4 +88,14 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         }
     }
 
+    /**
+     * Restrict results to non-troubled EEs for non-administrators
+     * @param filters set of {@link ObjectFilter} to which the non-troubled EEs filter will be added.
+     */
+    protected void addNonTroubledFilter( List<ObjectFilter[]> filters ) {
+        if ( !SecurityUtil.isUserAdmin() ) {
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.DAO_AD_ALIAS ) } );
+        }
+    }
 }

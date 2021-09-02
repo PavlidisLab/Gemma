@@ -15,6 +15,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.Date;
@@ -163,7 +164,7 @@ public interface ExpressionExperimentDao
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
-    List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );

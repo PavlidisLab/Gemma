@@ -44,6 +44,8 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.*;
 
@@ -101,7 +103,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public List<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
@@ -122,7 +124,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
             vos.add( vo );
         }
 
-        return vos;
+        return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
     }
 
     @Override
@@ -201,7 +203,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     @Override
     public CompositeSequence findByName( ArrayDesign arrayDesign, final String name ) {
         List<?> results = this.getSessionFactory().getCurrentSession().createQuery(
-                "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
+                        "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
                 .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name ).list();
 
         Object result = null;
@@ -467,7 +469,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
                     session.buildLockRequest( LockOptions.NONE ).lock( cs );
                     Hibernate.initialize( cs.getArrayDesign() );
-                    session.buildLockRequest( LockOptions.NONE ).lock( cs.getArrayDesign()  );
+                    session.buildLockRequest( LockOptions.NONE ).lock( cs.getArrayDesign() );
                     Hibernate.initialize( cs.getArrayDesign().getPrimaryTaxon() );
 
                     BioSequence bs = cs.getBiologicalCharacteristic();
@@ -717,7 +719,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
      *                         description.
      * @param  orderByProperty the property to order by.
      * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for CSVO retrieval.
+     * @return a hibernate Query object ready to be used for CSVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
@@ -730,13 +732,13 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
                 + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + "ad" + " "//ad
                 + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + ObjectFilter.DAO_PROBE_ALIAS + ".id ";
         queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters, false );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

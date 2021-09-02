@@ -3,7 +3,9 @@ package ubic.gemma.persistence.util;
 import com.google.common.base.Strings;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Query;
+import org.hibernate.QueryParameterException;
 import org.springframework.security.acls.domain.BasePermission;
 
 /**
@@ -59,7 +61,7 @@ public class AclQueryUtils {
      * to create a Query object.
      *
      * @return a string that can be appended to a query string that was created using
-     * {@link this#formAclJoinClause(String, String)}.
+     * {@link #formAclJoinClause(String, String)}}.
      */
     public static String formAclRestrictionClause() {
         String queryString = "";
@@ -85,7 +87,7 @@ public class AclQueryUtils {
                         + " or (ace.sid.id = 4 and ace.mask = :readMask))";
             } else {
                 // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
-                //  queryString += " and (ace.mask = " + BasePermission.READ.getMask()   + " and ace.sid.id = 3)"; // sid 3 = AGENT
+                //  queryString += " and (ace.mask = :readMask and ace.sid.id = 3)"; // sid 3 = AGENT
             }
         } else {
             // For anonymous users, only pick publicly readable data
@@ -96,12 +98,23 @@ public class AclQueryUtils {
         return queryString;
     }
 
-    public static void addAclRestrictionParameters( Query query ) {
-        if ( !SecurityUtil.isUserAnonymous() && !SecurityUtil.isUserAdmin() ) {
-            query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
-            query.setParameter( "writeMask", BasePermission.WRITE.getMask() );
+    /**
+     * Add ACL restriction parameters defined in {@link #formAclRestrictionClause()}.
+     * @param query
+     * @throws QueryParameterException if any defined parameters are missing, which is typically due to a missing {@link #formAclRestrictionClause()}.
+     */
+    public static void addAclRestrictionParameters( Query query ) throws QueryParameterException {
+        if ( !SecurityUtil.isUserAnonymous() ) {
+            if ( !SecurityUtil.isUserAdmin() ) {
+                query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
+                query.setParameter( "readMask", BasePermission.READ.getMask() );
+                query.setParameter( "writeMask", BasePermission.WRITE.getMask() );
+            } else {
+                // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
+                // query.setParameter( "readMask", BasePermission.READ.getMask() );
+            }
+        } else {
+            query.setParameter( "readMask", BasePermission.READ.getMask() );
         }
-        query.setParameter( "readMask", BasePermission.READ.getMask() );
     }
-
 }

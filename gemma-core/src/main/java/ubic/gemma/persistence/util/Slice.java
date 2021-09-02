@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.hibernate.Query;
 
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,6 +24,13 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
         this.offset = offset;
         this.limit = limit;
         this.totalElements = totalElements;
+    }
+
+    /**
+     * Creates an empty, unsorted slice.
+     */
+    public Slice() {
+        this( new ArrayList<>(), null, 0, 0, 0L );
     }
 
     @Override

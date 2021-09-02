@@ -99,8 +99,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * {@inheritDoc}
      */
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
-            AclPrincipalSid sid ) {
-        super( ee, aoi, sid );
+            AclPrincipalSid sid, int totalInQuery ) {
+        super( ee, aoi, sid, totalInQuery );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
