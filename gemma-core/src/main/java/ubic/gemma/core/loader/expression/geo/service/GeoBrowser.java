@@ -71,7 +71,7 @@ import ubic.gemma.persistence.util.Settings;
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
  * Gemma.
  *
- * See {@link https://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html} for some information
+ * See {@link <a href="http://www.ncbi.nlm.nih.gov/geo/info/geo_paccess.html">here</a>} for some information
  *
  * @author pavlidis
  */
@@ -434,7 +434,7 @@ public class GeoBrowser {
                 record.setPlatform( platformS );
 
                 record.setSummary( summaryNodes.item( i ).getTextContent() );
-                record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ) );
+                record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll("\\s*", "") );
                 record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
 
                 if ( detailed ) {

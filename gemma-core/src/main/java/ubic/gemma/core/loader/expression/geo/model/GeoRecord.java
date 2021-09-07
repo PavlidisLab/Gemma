@@ -151,7 +151,7 @@ public class GeoRecord extends GeoData {
     }
 
     /**
-     * @param join
+     * @param meshheadings
      */
     public void setMeshHeadings( String meshheadings ) {
         this.meshHeadings = meshheadings;
