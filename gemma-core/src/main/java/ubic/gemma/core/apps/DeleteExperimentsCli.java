@@ -48,6 +48,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                 Option.builder( "a" ).longOpt( "array" )
                         .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
                         .argName( "comma-delimited list of platform short names" ).hasArg().build() );
+        super.suppressAllOption();
     }
 
     @Override
@@ -55,6 +56,10 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         super.processOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );
+
+            if ( platformAccs.isEmpty() ) {
+                throw new IllegalArgumentException( "No platform accessions were obtained from the -a option" );
+            }
         }
     }
 
@@ -63,7 +68,10 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         this.force = true;
 
         if ( platformAccs != null ) {
+
             ArrayDesignService ads = this.getBean( ArrayDesignService.class );
+
+            log.info( "Deleting " + platformAccs.size() + " platform(s)" );
 
             for ( String p : platformAccs ) {
 
