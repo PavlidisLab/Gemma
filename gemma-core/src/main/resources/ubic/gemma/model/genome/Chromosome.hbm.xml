@@ -13,7 +13,7 @@
         </id>
         <property access="field" name="name" type="java.lang.String">
             <column name="NAME" not-null="true" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <many-to-one access="field" name="assemblyDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"
                      lazy="proxy" fetch="select">

@@ -22,7 +22,7 @@
         </property>
         <property name="strand" type="java.lang.String">
             <column name="STRAND" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="bin" type="java.lang.Integer">
             <column name="BIN" not-null="false" unique="false" sql-type="INTEGER"/>

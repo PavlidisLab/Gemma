@@ -12,49 +12,49 @@
          </generator>
       </id>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="authorList" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="title" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="TITLE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="TITLE" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="publisher" type="java.lang.String">
-         <column name="PUBLISHER" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="PUBLISHER" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="editor" type="java.lang.String">
-         <column name="EDITOR" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="EDITOR" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="volume" type="java.lang.String">
-         <column name="VOLUME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="VOLUME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="issue" type="java.lang.String">
-         <column name="ISSUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="ISSUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="pages" type="java.lang.String">
-         <column name="PAGES" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="PAGES" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="publication" type="java.lang.String">
-         <column name="PUBLICATION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="PUBLICATION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="fullTextUri" type="java.lang.String">
-         <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="abstractText" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="citation" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="CITATION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="CITATION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="publicationDate" type="java.util.Date">
          <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
       </property>
       <property name="annotatedAbstract" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="retracted" type="java.lang.Boolean">
          <column name="RETRACTED" not-null="false" unique="false" sql-type="TINYINT" />

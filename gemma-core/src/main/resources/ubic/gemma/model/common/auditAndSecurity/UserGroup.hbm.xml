@@ -15,10 +15,10 @@
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <set name="groupMembers" table="GROUP_MEMBERS" lazy="false" fetch="select">
          <key foreign-key="USER_USER_GROUPS_FKC">

@@ -4,7 +4,7 @@
 -- See http://blog.eyallupu.com/2011/01/hibernatejpa-identity-generators.html
 drop table if exists hibernate_sequences;
 create table hibernate_sequences (
-	sequence_name VARCHAR(255) character set latin1 not null,
+	sequence_name VARCHAR(255) not null,
 	sequence_next_hi_value BIGINT not null
 );
 
@@ -14,12 +14,12 @@ delete from EXTERNAL_DATABASE;
 delete from AUDIT_TRAIL;
 
 -- alter CHROMOSOME_FEATURE for case insensitive search
-ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) character set latin1 default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NAME varchar(255) character set latin1 default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GI varchar(255) character set latin1 default NULL;
+ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) default NULL;
+ALTER TABLE CHROMOSOME_FEATURE MODIFY NAME varchar(255) default NULL;
+ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GI varchar(255) default NULL;
 ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GENE_ID  int(11) UNIQUE;
 -- alter GENE_ALIAS for case insensitive search
-ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) character set latin1 default NULL;
+ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) default NULL;
 
 
 -- wider columns.

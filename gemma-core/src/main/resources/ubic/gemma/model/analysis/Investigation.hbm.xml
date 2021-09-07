@@ -17,11 +17,11 @@
 		</many-to-one>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
-				sql-type="text character set latin1 collate latin1_swedish_ci" />
+				sql-type="text" />
 		</property>
 		<set name="characteristics" lazy="true" fetch="select" cascade="all">
 			<!-- <cache usage="read-write" /> -->
@@ -52,11 +52,11 @@
 				discriminator-value="ExpressionExperiment" abstract="false">
 				<property name="source" type="java.lang.String">
 					<column name="SOURCE" not-null="false" unique="false"
-						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+						sql-type="VARCHAR(255)" />
 				</property>
 				<property name="shortName" type="java.lang.String">
 					<column name="SHORT_NAME" not-null="false" unique="true"
-						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+						sql-type="VARCHAR(255)" />
 				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
 					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER" />
@@ -66,15 +66,15 @@
 				</property>
 				<property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
 					<column name="METADATA" not-null="false" unique="false"
-						sql-type="text character set latin1 collate latin1_swedish_ci" />
+						sql-type="text" />
 				</property>
 				<property name="batchEffect" type="java.lang.String">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
-						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+						sql-type="VARCHAR(255)" />
 				</property>
 				<property name="batchConfound" type="java.lang.String">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
-						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+						sql-type="VARCHAR(255)" />
 				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.Geeq" cascade="all" lazy="proxy"
 					fetch="select">

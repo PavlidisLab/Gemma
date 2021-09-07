@@ -12,7 +12,7 @@
          </generator>
       </id>
       <property name="value" type="java.lang.String">
-         <column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="VALUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="isBaseline" type="java.lang.Boolean">
          <column name="IS_BASELINE" not-null="false" unique="false" sql-type="TINYINT"/>
