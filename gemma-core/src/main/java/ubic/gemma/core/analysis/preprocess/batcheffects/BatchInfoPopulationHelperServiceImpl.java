@@ -728,7 +728,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         /**
          * Only for use when we don't have a useable device:run etc.
          * 
-         * @param device e.g. GPLXXXX
+         * @param platform e.g. GPLXXXX
          */
         FastqHeaderData( String platform ) {
             this.device = platform;
