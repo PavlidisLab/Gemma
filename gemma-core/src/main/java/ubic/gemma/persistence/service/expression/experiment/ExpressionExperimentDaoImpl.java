@@ -1080,7 +1080,7 @@ public class ExpressionExperimentDaoImpl
         for ( Object[] row : list ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
-            AclPrincipalSid sid = ( AclPrincipalSid ) row[2];
+            AclSid sid = ( AclSid ) row[2];
 
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid, totalElements.intValue() );
 

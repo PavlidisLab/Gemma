@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.acl.domain.AclSid;
 import org.apache.commons.lang3.StringEscapeUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -105,7 +106,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * {@inheritDoc}
      */
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
-            AclPrincipalSid sid, int totalInQuery ) {
+            AclSid sid, int totalInQuery ) {
         super( ee, aoi, sid, totalInQuery );
     }
 

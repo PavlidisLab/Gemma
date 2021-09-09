@@ -142,6 +142,8 @@ public class ObjectFilterQueryUtils {
             if ( filter == null )
                 continue;
             for ( ObjectFilter f : filter ) {
+                if ( f == null )
+                    continue;
                 if ( ArrayUtils.contains( aliases, f.getObjectAlias() ) ) {
                     return true;
                 }
