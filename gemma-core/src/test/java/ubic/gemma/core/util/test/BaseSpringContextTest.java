@@ -18,6 +18,9 @@
  */
 package ubic.gemma.core.util.test;
 
+import org.junit.Rule;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -113,6 +116,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     private AuthenticationTestingUtil authenticationTestingUtil;
 
     private String sqlScriptEncoding;
+
+    /**
+     * This allows the usage of {@link org.mockito.Mock} annotation to create mocks.
+     */
+    @Rule
+    public MockitoRule rule = MockitoJUnit.rule();
 
     @Override
     final public void afterPropertiesSet() {

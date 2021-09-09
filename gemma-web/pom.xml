@@ -236,6 +236,13 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>gemma</groupId>
+			<artifactId>gemma-core</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>dom4j</groupId>
 			<artifactId>dom4j</artifactId>
 			<version>1.6.1</version>
