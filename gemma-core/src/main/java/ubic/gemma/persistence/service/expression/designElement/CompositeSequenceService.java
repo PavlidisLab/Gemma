@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface CompositeSequenceService
-        extends BaseVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
+        extends FilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
@@ -110,7 +110,8 @@ public interface CompositeSequenceService
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
 
-    Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic, CompositeSequenceValueObject cs );
+    Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
+            CompositeSequenceValueObject cs );
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 

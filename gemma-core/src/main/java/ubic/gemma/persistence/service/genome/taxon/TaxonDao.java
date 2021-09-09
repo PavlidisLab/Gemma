@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,8 +20,9 @@ package ubic.gemma.persistence.service.genome.taxon;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,15 +30,15 @@ import java.util.List;
 /**
  * @see ubic.gemma.model.genome.Taxon
  */
-public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
+public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject> {
 
     Taxon findByCommonName( String commonName );
 
     /**
      * Searches for a taxon by its scientific name, case insensitive.
      *
-     * @param  scientificName the scientific name to be matched
-     * @return                a Taxon whose scientific name matches the given string.
+     * @param scientificName the scientific name to be matched
+     * @return a Taxon whose scientific name matches the given string.
      */
     Taxon findByScientificName( String scientificName );
 
@@ -48,6 +49,6 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
     Taxon findByNcbiId( Long ncbiId );
 
     @Override
-    List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    Slice<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 }

@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -87,14 +88,14 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all platforms")
-    public ResponseDataObject<List<ArrayDesignValueObject>> all( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> all( // Params:
             @QueryParam("filter") @DefaultValue("") PlatformFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
+        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
     }
 
     /**
@@ -141,13 +142,13 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all experiments within a given platform")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> platformDatasets( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> platformDatasets( // Params:
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( platformArg
+        return Responder.paginate( platformArg
                 .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() )
         );
     }
@@ -167,13 +168,13 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the composite sequences for a given platform")
-    public ResponseDataObject<List<CompositeSequenceValueObject>> platformElements( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElements( // Params:
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( platformArg
+        return Responder.paginate( platformArg
                 .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ) );
     }
 
@@ -197,7 +198,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
     public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -237,7 +238,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
     public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Required
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
@@ -263,7 +264,7 @@ public class PlatformsWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the annotations of a given platform")
     public Response platformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<Object> platformArg, // Optional, default null
+            @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return outputAnnotationFile( platformArg.getEntity( arrayDesignService ) );

@@ -32,6 +32,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
      * A meta information about how many total results are available with the same filters as this
      * object.
      */
+    @Deprecated
     private int _totalInQuery;
 
     /**
@@ -178,10 +179,12 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
     }
 
+    @Deprecated
     public final int get_totalInQuery() {
         return _totalInQuery;
     }
 
+    @Deprecated
     protected final void set_totalInQuery( int _totalInQuery ) {
         this._totalInQuery = _totalInQuery;
     }

@@ -44,12 +44,6 @@
     <!-- Filters.  -->
 
     <!-- Security. -->
-    <!-- Rest servlet level exception handling-->
-    <filter>
-        <filter-name>exceptionHandlerFilter</filter-name>
-        <filter-class>ubic.gemma.web.services.rest.util.ExceptionHandlerFilter</filter-class>
-    </filter>
-
     <filter>
         <filter-name>springSecurityFilterChain</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
@@ -79,12 +73,6 @@
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
         <url-pattern>/*</url-pattern>
-    </filter-mapping>
-
-    <!-- Filter mappings -->
-    <filter-mapping>
-        <filter-name>exceptionHandlerFilter</filter-name>
-        <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
     <!-- enforce UTF-8 -->

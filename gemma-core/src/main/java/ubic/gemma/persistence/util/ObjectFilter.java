@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2019 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.util;
 
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +34,6 @@ public class ObjectFilter {
     public static final String DAO_TAXON_ALIAS = "taxon";
     public static final String DAO_PROBE_ALIAS = "probe";
     public static final String DAO_GENE_ALIAS = "gene";
-    public static final String DAO_GEEQ_ALIAS = "geeq";
     public static final String DAO_CHARACTERISTIC_ALIAS = "ch";
     public static final String DAO_BIOASSAY_ALIAS = "ba";
     public static final String DAO_DATABASE_ENTRY_ALIAS = "accession";
@@ -96,7 +97,7 @@ public class ObjectFilter {
      *                                  the alias in the query is. E.g for
      *                                  {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
      *                                  the alias is 'ee', as seen in
-     *                                  {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl#getLoadValueObjectsQueryString(List, String, boolean)}.
+     *                                  {@link ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao#getLoadValueObjectsQuery(List, String, boolean)}}.
      * @throws IllegalArgumentException if the given operator is the "in" operator but the
      *                                  given requiredValue is not an instance of Iterable.
      */
@@ -111,7 +112,7 @@ public class ObjectFilter {
 
     /**
      * @param  filter the filter to create the ArrayList with
-     * @return        an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of
+     * @return an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of
      *                the
      *                only array in the list.
      */
@@ -144,7 +145,7 @@ public class ObjectFilter {
      *
      * @param  rv the Object to be converted into the desired type.
      * @param  pt  the type that the given value should be converted to.
-     * @return               and Object of requested type, containing the given value converted to the new type.
+     * @return and Object of requested type, containing the given value converted to the new type.
      */
     private Object convertToParamType( Object rv, Class<?> pt ) {
         if ( Iterable.class.isAssignableFrom( rv.getClass() ) ) {
@@ -166,10 +167,10 @@ public class ObjectFilter {
     }
 
     /**
-     * 
+     *
      * @param  rv required value
      * @param  pt property type
-     * @return    converted object
+     * @return converted object
      */
     private Object convertItem( Object rv, Class<?> pt ) {
         // Assuming default is string
@@ -193,8 +194,8 @@ public class ObjectFilter {
 
     private void checkTypeCorrect() {
         if ( requiredValue == null && ( // Check null for disallowed operators
-        operator.equals( ObjectFilter.greaterThan ) || // gt
-                operator.equals( ObjectFilter.lessThan ) ) // lt
+                operator.equals( ObjectFilter.greaterThan ) || // gt
+                        operator.equals( ObjectFilter.lessThan ) ) // lt
         ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
         } else if ( operator.equals( ObjectFilter.in ) ) { // Check 'in' conditions
@@ -205,13 +206,13 @@ public class ObjectFilter {
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
                 .isAssignableFrom( propertyType )
                 || ( this
-                        .isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
+                .isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
         ) {
             throw new IllegalArgumentException(
                     "requiredValue for property " + propertyName + " has to be assignable from " + propertyType
                             .getName() + " or null, but the requiredValue class is  "
                             + requiredValue.getClass()
-                                    .getName()
+                            .getName()
                             + "." );
         } else if ( operator.equals( ObjectFilter.like ) && ( propertyType == null || !String.class
                 .isAssignableFrom( propertyType ) ) ) {
@@ -227,22 +228,22 @@ public class ObjectFilter {
      *
      * @param  cls1 the first class to compare
      * @param  cls2 the second class to compare
-     * @return      true, if the two given classes represent the same number type.
+     * @return true, if the two given classes represent the same number type.
      */
     private boolean isSameOrWrapperType( Class<?> cls1, Class<?> cls2 ) {
         return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) )
                 && ( Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
                 || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) )
-                        && ( Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) ) // integer
+                && ( Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) ) // integer
                 || ( ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) )
-                        && ( Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) ) // float
+                && ( Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) ) // float
                 || ( ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) )
-                        && ( Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) ) // long
+                && ( Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) ) // long
                 || ( ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) )
-                        && ( Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) ) // short
+                && ( Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) ) // short
                 || ( ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) )
-                        && ( Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
+                && ( Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
                 || ( ( Boolean.class.isAssignableFrom( cls1 ) || boolean.class.isAssignableFrom( cls1 ) )
-                        && ( Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
+                && ( Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
     }
 }

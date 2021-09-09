@@ -1,5 +1,8 @@
 package ubic.gemma.web.services.rest.util;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.util.Slice;
+
 import javax.ws.rs.NotFoundException;
 
 /**
@@ -27,4 +30,17 @@ public class Responder {
         }
     }
 
+    /**
+     * Produce a {@link PaginatedResponseDataObject} for a given {@link Slice}.
+     * @param payload
+     * @param <T>
+     * @return
+     */
+    public static <T> PaginatedResponseDataObject<T> paginate( Slice<T> payload ) throws NotFoundException {
+        if ( payload == null ) {
+            throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
+        } else {
+            return new PaginatedResponseDataObject<>( payload );
+        }
+    }
 }

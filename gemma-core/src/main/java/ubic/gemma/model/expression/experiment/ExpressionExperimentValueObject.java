@@ -2,11 +2,11 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -57,11 +57,79 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.name = ee.getName();
         this.source = ee.getSource();
         this.description = ee.getDescription();
-        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ? ee.getBioAssays().size() : null;
-        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ? ee.getAccession().toString() : null;
-        this.experimentalDesign = ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() )
-                ? ee.getExperimentalDesign().getId()
-                : null;
+        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
+                ee.getBioAssays().size() :
+                null;
+        if ( ee.getAccession() != null ) {
+            this.accession = ee.getAccession().toString();
+            this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
+            this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
+        }
+        this.experimentalDesign =
+                ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ?
+                        ee.getExperimentalDesign().getId() :
+                        null;
+
+        // EE
+        this.metadata = ee.getMetadata();
+        this.processedExpressionVectorCount = ee.getNumberOfDataVectors();
+
+        if ( ee.getTaxon() != null ) {
+            this.taxon = ee.getTaxon().getCommonName();
+            this.taxonId = ee.getTaxon().getId();
+        }
+
+        // AD
+        // FIXME: row[10] contains the taxon common name!
+        // Object technology = row[10];
+        // if ( technology != null ) {
+        //     this.technologyType = technology.toString();
+        // }
+
+        // 12-15 used in call to super
+
+        // Counts
+        this.bioAssayCount = ee.getNumberOfSamples();
+        //  this.arrayDesignCount = ( ( Long ) row[17] ).intValue();
+        //  this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
+
+        // Other
+        if ( ee.getExperimentalDesign() != null ) {
+            this.experimentalDesign = ee.getExperimentalDesign().getId();
+        }
+
+        // Batch info
+        batchEffect = ee.getBatchEffect();
+        batchConfound = ee.getBatchConfound();
+
+        // 24-25 used in call to super.
+
+        // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
+        geeq = ee.getGeeq() == null ?
+                null :
+                SecurityUtil.isUserAdmin() ?
+                        new GeeqAdminValueObject( ee.getGeeq() ) :
+                        new GeeqValueObject( ee.getGeeq() );
+
+        // 29: other parts
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid, int totalInQuery ) {
+        this( ee );
+
+        set_totalInQuery( totalInQuery );
+
+        // ACL
+        boolean[] permissions = EntityUtils.getPermissions( aoi );
+        this.setIsPublic( permissions[0] );
+        this.setUserCanWrite( permissions[1] );
+        this.setIsShared( permissions[2] );
+
+        if ( sid instanceof AclPrincipalSid ) {
+            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) sid ).getPrincipal(), SecurityUtil.getCurrentUsername() ) );
+        } else {
+            this.setUserOwned( false );
+        }
     }
 
     public ExpressionExperimentValueObject( Long id, String shortName, String name ) {
@@ -109,81 +177,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * Constructor for creating an EEVO from a database row retrieved in the DAO
-     *
-     * @param row          the database row to read the VO parameters from
-     * @param totalInBatch the number indicating how many VOs have been returned in the database query along with this
-     *                     one.
-     */
-    public ExpressionExperimentValueObject( Object[] row, Integer totalInBatch ) {
-        super( ( Long ) row[0], ( Date ) row[12], ( Boolean ) row[13], ( AuditEvent ) row[24], ( Boolean ) row[14],
-                ( AuditEvent ) row[23], ( String ) row[15], ( AuditEvent ) row[22], totalInBatch );
-
-        // EE
-        this.name = ( String ) row[1];
-        this.source = ( String ) row[2];
-        this.shortName = ( String ) row[3];
-        this.metadata = ( String ) row[4];
-        this.processedExpressionVectorCount = row[5] == null ? 0 : ( Integer ) row[5];
-        this.accession = ( String ) row[6];
-
-        // ED
-        this.externalDatabase = ( String ) row[7];
-        this.externalUri = ( String ) row[8];
-
-        // Description
-        this.description = ( String ) row[9];
-
-        // AD
-        Object technology = row[10];
-        if ( technology != null ) {
-            this.technologyType = technology.toString();
-        }
-
-        // Taxon
-        this.taxon = ( String ) row[10]; // common name
-        this.taxonId = ( Long ) row[11];
-
-        // 12-15 used in call to super
-
-        // Counts
-        this.bioAssayCount = ( Integer ) row[16];
-        //  this.arrayDesignCount = ( ( Long ) row[17] ).intValue();
-        //  this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
-
-        // Other
-        this.experimentalDesign = ( Long ) row[17];
-
-        // ACL
-        AclObjectIdentity aoi = ( AclObjectIdentity ) row[18];
-
-        boolean[] permissions = EntityUtils.getPermissions( aoi );
-        this.setIsPublic( permissions[0] );
-        this.setUserCanWrite( permissions[1] );
-        this.setIsShared( permissions[2] );
-
-        if ( row[19] instanceof AclPrincipalSid ) {
-            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[19] ).getPrincipal(),
-                    SecurityUtil.getCurrentUsername() ) );
-        } else {
-            this.setUserOwned( false );
-        }
-
-        // Batch info
-        batchEffect = ( String ) row[20];
-        batchConfound = ( String ) row[21];
-
-        // 24-25 used in call to super.
-
-        // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
-        geeq = row[25] == null ? null
-                : SecurityUtil.isUserAdmin() ? new GeeqAdminValueObject( ( Geeq ) row[25] ) : new GeeqValueObject( ( Geeq ) row[25] );
-
-        // 29: other parts
-
-    }
-
-    /**
      * Required when using the class as a spring bean.
      */
     protected ExpressionExperimentValueObject() {
@@ -191,6 +184,17 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     protected ExpressionExperimentValueObject( Long id ) {
         super( id );
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperimentValueObject vo ) {
+        this( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
+                vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
+                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), vo.getExperimentalDesign(),
+                vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(), vo.getBioMaterialCount(),
+                vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(), vo.getIsPublic(), vo.getIsShared(),
+                vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(), vo.getNeedsAttention(),
+                vo.getLastNeedsAttentionEvent(), vo.getCurationNote(), vo.getLastNoteUpdateEvent(), vo.getGeeq(),
+                vo.getSuitableForDEA() );
     }
 
     @Override

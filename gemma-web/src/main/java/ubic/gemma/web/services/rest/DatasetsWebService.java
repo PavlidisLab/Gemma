@@ -38,7 +38,10 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.ArgUtils;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -47,8 +50,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -111,14 +112,14 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all datasets")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> all( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> all( // Params:
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
+        return Responder.paginate( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
     }
 
     /**
@@ -355,9 +356,9 @@ public class DatasetsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
-                                genes.getEntities( geneService ), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
+                        genes.getEntities( geneService ), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 
@@ -399,9 +400,9 @@ public class DatasetsWebService {
     ) {
         ArgUtils.checkReqArg( component, "component" );
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValue(),
-                                component.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValue(),
+                        component.getValue(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 
@@ -446,9 +447,9 @@ public class DatasetsWebService {
     ) {
         ArgUtils.checkReqArg( diffExSet, "diffExSet" );
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
-                                diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
+                        diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 

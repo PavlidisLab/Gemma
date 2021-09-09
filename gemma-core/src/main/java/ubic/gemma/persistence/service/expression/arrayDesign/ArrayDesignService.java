@@ -28,37 +28,38 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Possible external use
-public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     /**
-     * @param  arrayDesign AD
-     * @return             all compositeSequences for the given arrayDesign that do not have any bioSequence
-     *                     associations.
+     * @param arrayDesign AD
+     * @return all compositeSequences for the given arrayDesign that do not have any bioSequence
+     * associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * @param  arrayDesign AD
-     * @return             all compositeSequences for the given arrayDesign that do not have BLAT result associations.
+     * @param arrayDesign AD
+     * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
 
     /**
-     * @param  arrayDesign AD
-     * @return             all compositeSequences for the given arrayDesign that do not have gene associations.
+     * @param arrayDesign AD
+     * @return all compositeSequences for the given arrayDesign that do not have gene associations.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
@@ -95,8 +96,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Given a collection of ID (longs) will return a collection of ArrayDesigns
      *
-     * @param  ids ids
-     * @return     ADs
+     * @param ids ids
+     * @return ADs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     @Override
@@ -133,8 +134,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Find by the primary taxon.
      *
-     * @param  taxon taxon
-     * @return       ADs
+     * @param taxon taxon
+     * @return ADs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
@@ -143,8 +144,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Retrieves alignments for the platform elements, limited to those which map to a gene product (so not all
      * blat results)
      *
-     * @param  arrayDesign AD
-     * @return             map of composite sequences to alignments, if available.
+     * @param arrayDesign AD
+     * @return map of composite sequences to alignments, if available.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
@@ -156,8 +157,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
      * sequences are also returned, so this can be used to do a thawRawAndProcessed, in effect.
      *
-     * @param  arrayDesign AD
-     * @return             map of composite seqs. to bio seqs.
+     * @param arrayDesign AD
+     * @return map of composite seqs. to bio seqs.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
@@ -179,8 +180,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * -&gt;
      * AuditEvent. If the events do not exist, the map entry will point to null.
      *
-     * @param  ids ids
-     * @return     map of IDs to events
+     * @param ids ids
+     * @return map of IDs to events
      */
     Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids );
 
@@ -190,8 +191,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
      * -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      *
-     * @param  ids ids
-     * @return     map of IDs to events
+     * @param ids ids
+     * @return map of IDs to events
      */
     Map<Long, AuditEvent> getLastSequenceAnalysis( Collection<Long> ids );
 
@@ -199,8 +200,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id
      * -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      *
-     * @param  ids ids
-     * @return     map of IDs to events
+     * @param ids ids
+     * @return map of IDs to events
      */
     Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
     
@@ -215,15 +216,15 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
  
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
-     *         excluded.
+     * excluded.
      */
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
      *
-     * @param  id The id of the array design
-     * @return    The Set of Taxons for array design.
+     * @param id The id of the array design
+     * @return The Set of Taxons for array design.
      */
     Collection<Taxon> getTaxa( Long id );
 
@@ -240,15 +241,15 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Loads the Value Objects for array designs used by expression experiment with the given ID
      *
-     * @param  eeId the id of an expression experiment
-     * @return      AD VOs
+     * @param eeId the id of an expression experiment
+     * @return AD VOs
      */
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     @Override
-    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter );
 
     /**
@@ -261,8 +262,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Function to return the count of all composite sequences with biosequences, given a list of array design Ids
      *
-     * @param  ids ids
-     * @return     count
+     * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithBioSequences( Collection<Long> ids );
 
@@ -276,8 +277,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Function to return the count of all composite sequences with blat results, given a list of array design Ids
      *
-     * @param  ids ids
-     * @return     count
+     * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithBlatResults( Collection<Long> ids );
 
@@ -291,8 +292,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Function to return the count of all composite sequences with genes, given a list of array design Ids
      *
-     * @param  ids ids
-     * @return     count
+     * @param ids ids
+     * @return count
      */
     long numAllCompositeSequenceWithGenes( Collection<Long> ids );
 
@@ -306,16 +307,16 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Returns the number of unique Genes associated with the collection of ArrayDesign ids.
      *
-     * @param  ids ids
-     * @return     count
+     * @param ids ids
+     * @return count
      */
     long numAllGenes( Collection<Long> ids );
 
     /**
      * returns the number of bioSequences associated with this ArrayDesign id
      *
-     * @param  arrayDesign AD
-     * @return             count
+     * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numBioSequences( ArrayDesign arrayDesign );
@@ -323,8 +324,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
      *
-     * @param  arrayDesign AD
-     * @return             count
+     * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numBlatResults( ArrayDesign arrayDesign );
@@ -339,16 +340,16 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
-     * @param  arrayDesign AD
-     * @return             how many experiments use this platform (not including experiment subsets) security filtered
+     * @param arrayDesign AD
+     * @return how many experiments use this platform (not including experiment subsets) security filtered
      */
     int numExperiments( ArrayDesign arrayDesign );
 
     /**
      * Returns the number of unique Genes associated with this ArrayDesign id
      *
-     * @param  arrayDesign AD
-     * @return             count
+     * @param arrayDesign AD
+     * @return count
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numGenes( ArrayDesign arrayDesign );
@@ -371,8 +372,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      *
-     * @param  arrayDesign AD
-     * @return             AD
+     * @param arrayDesign AD
+     * @return AD
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
@@ -384,15 +385,15 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
      *
-     * @param  candidateSubsumee candidate subsumee
-     * @param  candidateSubsumer candidate subsumer
-     * @return                   success
+     * @param candidateSubsumee candidate subsumee
+     * @param candidateSubsumer candidate subsumer
+     * @return success
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     /**
-     * @param  geoAccession for a GEO series or platform
+     * @param geoAccession for a GEO series or platform
      * @return
      */
     boolean isBlackListed( String geoAccession );

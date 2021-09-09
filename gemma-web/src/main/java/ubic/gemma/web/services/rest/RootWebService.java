@@ -2,12 +2,18 @@ package ubic.gemma.web.services.rest;
 
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.models.OpenAPI;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -32,6 +38,7 @@ import java.util.Collection;
 @Path("/")
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic", description = "Authenticate with your Gemma username and password")
 @SecurityScheme(name = "cookieAuth", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.COOKIE, paramName = "JSESSIONID", description = "Authenticate with your current Gemma session.")
+@CommonsLog
 public class RootWebService {
 
     public static final String API_VERSION = "2.3.4";
@@ -40,6 +47,9 @@ public class RootWebService {
     private static final String ERROR_MSG_USER_INFO_ACCESS = "Inappropriate privileges. Only your user info is available.";
 
     private UserManager userManager;
+
+    @Autowired
+    private OpenAPI openAPI;
 
     /**
      * Required by spring
@@ -62,6 +72,7 @@ public class RootWebService {
     public ResponseDataObject<ApiInfoValueObject> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        log.debug( openAPI );
         return Responder.respond( new ApiInfoValueObject() );
     }
 
@@ -108,9 +119,9 @@ public class RootWebService {
     }
 
     @SuppressWarnings("unused") // Getters used during RS serialization
-    private static class ApiInfoValueObject {
+    public class ApiInfoValueObject {
         private final String welcome = MSG_WELCOME;
-        private final String version = RootWebService.API_VERSION;
+        private final String version = openAPI.getInfo().getVersion();
         private final String docs = APIDOCS_URL;
 
         public String getWelcome() {
@@ -123,6 +134,18 @@ public class RootWebService {
 
         public String getDocs() {
             return docs;
+        }
+    }
+
+    /**
+     * Obtain the {@link OpenAPI} definition for this API.
+     */
+    @Bean
+    public OpenAPI openAPI() {
+        try {
+            return new JaxrsOpenApiContextBuilder().buildContext( true ).read();
+        } catch ( OpenApiConfigurationException e ) {
+            throw new RuntimeException( e.getMessage(), e );
         }
     }
 

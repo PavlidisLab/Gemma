@@ -11,8 +11,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +23,8 @@ import java.util.Map;
  * ArrayDesignDao interface
  */
 @Repository
-public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
+public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject>,
+        FilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
@@ -76,10 +77,6 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
-
-    @Override
-    List<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
 
     long numAllCompositeSequenceWithBioSequences();
 

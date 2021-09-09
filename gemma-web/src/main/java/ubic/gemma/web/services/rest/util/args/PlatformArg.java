@@ -8,6 +8,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +48,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      * @param  eeService service to use to retrieve the EEs.
      * @return a collection of Datasets that the platform represented by this argument contains.
      */
-    public List<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
+    public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
 
@@ -63,7 +64,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      * @param  service service that will be used to retrieve the persistent AD object.
      * @return a collection of Composite Sequence VOs that the platform represented by this argument contains.
      */
-    public List<CompositeSequenceValueObject> getElements( ArrayDesignService service,
+    public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
         ArrayList<ObjectFilter[]> filters = new ArrayList<ObjectFilter[]>() {

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -34,7 +35,7 @@ import java.util.*;
  * @author keshav
  */
 @Service
-public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
+public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
 
     private static final Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
         @Override

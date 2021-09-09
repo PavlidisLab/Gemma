@@ -25,18 +25,16 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
  * @author pavlidis
- * @see    Taxon
+ * @see Taxon
  */
 @Repository
 public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
@@ -91,13 +89,15 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
 
     @Override
     public Taxon findByCommonName( final String commonName ) {
-        if (StringUtils.isBlank( commonName )) throw new IllegalArgumentException("commonName cannot be empty");
+        if ( StringUtils.isBlank( commonName ) )
+            throw new IllegalArgumentException( "commonName cannot be empty" );
         return this.findOneByStringProperty( "commonName", commonName );
     }
 
     @Override
     public Taxon findByScientificName( final String scientificName ) {
-        if (StringUtils.isBlank( scientificName )) throw new IllegalArgumentException("scientificName cannot be empty");
+        if ( StringUtils.isBlank( scientificName ) )
+            throw new IllegalArgumentException( "scientificName cannot be empty" );
         return this.findOneByStringProperty( "scientificName", scientificName );
     }
 
@@ -105,7 +105,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     public Collection<Taxon> findTaxonUsedInEvidence() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
+                        "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
                 .list();
     }
 
@@ -133,7 +133,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+    public Slice<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
@@ -155,15 +155,15 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
             vos.add( vo );
         }
 
-        return vos;
+        return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
     }
 
     /**
-     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                         description.
-     * @param  orderByProperty the property to order by.
-     * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for TaxonVO retrieval.
+     * @param filters         see {@link #formRestrictionClause(List} filters argument
+     *                        for description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a Hibernate Query object ready to be used for TaxonVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
@@ -176,13 +176,13 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
     }

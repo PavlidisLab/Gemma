@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * @see CompositeSequence
  */
-public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence, CompositeSequenceValueObject> {
+public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject> {
 
     Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
 

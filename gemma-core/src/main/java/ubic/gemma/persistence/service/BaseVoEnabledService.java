@@ -15,7 +15,6 @@ import java.util.List;
  * satisfy all the possible usage context. For example, we might need a different VO for the RESTful API than the
  * JavaScript frontend. Instead, the VO should be defined and created where needed.
  */
-@Deprecated
 public interface BaseVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends BaseService<O> {
 
@@ -25,7 +24,6 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      * @param  entity the entity whose value object should be loaded.
      * @return        value object representing the entity with matching id.
      */
-    @Deprecated
     VO loadValueObject( O entity );
 
     /**
@@ -34,7 +32,6 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      * @param  entities the entities to be converted to value objects
      * @return          a collection of value objects representing he given entities.
      */
-    @Deprecated
     List<VO> loadValueObjects( Collection<O> entities );
 
     /**
@@ -42,20 +39,5 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
      *
      * @return a collection of value objects
      */
-    @Deprecated
     List<VO> loadAllValueObjects();
-
-    /**
-     * Loads all value objects based on the given properties.
-     *
-     * @param  offset  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  limit   see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  orderBy see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  asc     see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param  filter  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @return         collection of value objects.
-     */
-    @Deprecated
-    List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
 }
