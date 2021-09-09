@@ -236,12 +236,12 @@
                             <dependency>
                                 <groupId>mysql</groupId>
                                 <artifactId>mysql-connector-java</artifactId>
-                                <version>5.1.48</version>
+                                <version>${mysql.version}</version>
                             </dependency>
                         </dependencies>
                         <!-- common configuration shared by all executions -->
                         <configuration>
-                            <driver>com.mysql.jdbc.Driver</driver>
+                            <driver>com.mysql.cj.jdbc.Driver</driver>
                             <username>${gemma.db.build.user}</username>
                             <password>${gemma.db.build.password}</password>
                             <onError>continue</onError>

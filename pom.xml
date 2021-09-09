@@ -141,7 +141,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.26</version>
+			<version>${mysql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -475,5 +475,6 @@
 		<jawr.version>3.9</jawr.version>
 		<tomcat.version>8.5.70</tomcat.version>
 		<jetty.version>9.4.43.v20210629</jetty.version>
+		<mysql.version>8.0.26</mysql.version>
 	</properties>
 </project>
