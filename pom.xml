@@ -271,11 +271,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
 			<groupId>classmexer</groupId>
 			<artifactId>classmexer</artifactId>
 			<version>0.03</version>
