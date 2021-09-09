@@ -97,7 +97,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.description = ad.getDescription();
         this.taxon = ad.getPrimaryTaxon().getCommonName();
         this.taxonID = ad.getPrimaryTaxon().getId();
-        this.technologyType = ad.getTechnologyType().toString();
+        if ( ad.getTechnologyType() != null ) {
+            this.technologyType = ad.getTechnologyType().toString();
+        }
 
         TechnologyType c = ad.getTechnologyType();
         if ( c != null ) {

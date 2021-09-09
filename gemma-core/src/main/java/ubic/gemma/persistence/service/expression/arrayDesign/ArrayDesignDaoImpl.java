@@ -1056,7 +1056,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
 
         //noinspection unchecked
-        List<Long[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", arrayDesignIds ).list();
 
         // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
@@ -1066,10 +1066,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                             + " ids" );
         }
 
-        for ( Long[] o : list ) {
-            Long id = o[0];
-            Integer count = o[1].intValue();
-            result.put( id, count );
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Long count = ( Long ) o[1];
+            result.put( id, count.intValue() );
         }
 
         return result;
