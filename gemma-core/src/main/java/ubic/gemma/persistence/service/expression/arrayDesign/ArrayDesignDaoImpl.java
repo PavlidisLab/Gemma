@@ -473,8 +473,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public List<ArrayDesignValueObject> loadAllValueObjects() {
         Query queryObject = this.getLoadValueObjectsQuery( null, null, false );
         Query countQuery = this.getCountValueObjectsQuery( null );
-        queryObject.setCacheable( true );
-        countQuery.setCacheable( true );
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
         Long totalElements = ( Long ) countQuery.uniqueResult();
@@ -523,7 +521,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, "ad" );
         Query queryObject = this.getLoadValueObjectsQuery( ObjectFilter.singleFilter( filter ), null, false );
         Query countQuery = this.getCountValueObjectsQuery( ObjectFilter.singleFilter( filter ) );
-        queryObject.setCacheable( true );
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
         Long totalElements = ( Long ) countQuery.uniqueResult();
@@ -1106,6 +1103,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
+        query.setReadOnly( true );
+        query.setCacheable( true );
+
         return query;
     }
 
@@ -1131,6 +1131,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        query.setReadOnly( true );
+        query.setCacheable( true );
 
         return query;
     }

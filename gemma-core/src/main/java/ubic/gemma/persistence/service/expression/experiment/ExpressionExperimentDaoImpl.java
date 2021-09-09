@@ -1063,7 +1063,6 @@ public class ExpressionExperimentDaoImpl
         // Compose query
         Query query = this.getLoadValueObjectsQuery( filtersList, this.getOrderByProperty( orderBy ), descending );
 
-        query.setCacheable( true );
         if ( limit > 0 ) {
             query.setMaxResults( limit );
         }
@@ -1203,7 +1202,6 @@ public class ExpressionExperimentDaoImpl
         // Compose query
         Query query = this.getLoadValueObjectsQuery( filter, orderByProperty, !asc );
 
-        query.setCacheable( true );
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
         //noinspection unchecked
@@ -1453,6 +1451,9 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
+        query.setReadOnly( true );
+        query.setCacheable( true );
+
         return query;
     }
 
@@ -1488,6 +1489,9 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        query.setReadOnly( true );
+        query.setCacheable( true );
 
         return query;
     }

@@ -62,9 +62,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         Query query = this.getLoadValueObjectsQuery( filter, orderBy, !asc );
         Query totalElementsQuery = getCountValueObjectsQuery( filter );
 
-        query.setCacheable( true );
-        totalElementsQuery.setCacheable( true );
-
         // setup offset/limit
         if ( limit > 0 )
             query.setMaxResults( limit );
