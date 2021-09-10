@@ -23,6 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -115,7 +116,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException {
-        try (FileInputStream fis = new FileInputStream( fastaFile )) {
+        try ( FileInputStream fis = new FileInputStream( fastaFile ) ) {
             this.assignSequencesToDesignElements( designElements, fis );
         }
     }
@@ -194,15 +195,15 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             }
 
             if ( ++done % 1000 == 0 ) {
-                percent = this.updateProgress( total, done, percent );
+                percent = this.updateProgress( total, done, percent, null );
             }
         }
 
         this.flushBuffer( bioSequences, sequenceBuffer, csBuffer );
-        this.updateProgress( total, done, percent );
+        this.updateProgress( total, done, percent, null );
 
         /*
-         * 
+         *
          */
         if ( !wasOriginallyLackingCompositeSequences ) {
             // usual case.
@@ -230,7 +231,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 originalCompositeSequence.setArrayDesign( compositeSequenceFromParse.getArrayDesign() );
 
                 if ( ++done % 1000 == 0 ) {
-                    percent = this.updateProgress( total, done, percent );
+                    percent = this.updateProgress( total, done, percent, numWithNoSequence );
                 }
             }
             ArrayDesignSequenceProcessingServiceImpl.log
@@ -254,9 +255,19 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return this.processArrayDesign( arrayDesign, sequenceFile, sequenceType, null );
     }
 
+
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
+        return this.processArrayDesign( arrayDesign, sequenceFile, null, sequenceType, taxon );
+    }
+
+    /*
+     * When submitting a file of sequences
+     */
+    @Override
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
+            InputStream sequenceIdentifierFile, SequenceType sequenceType, Taxon taxon ) throws IOException {
 
         // arrayDesign = arrayDesignService.thawRawAndProcessed( arrayDesign );
 
@@ -273,6 +284,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         fastaParser.parse( sequenceFile );
         Collection<BioSequence> bioSequences = fastaParser.getResults();
 
+        Map<String, String> probe2acc = null;
+        if ( sequenceIdentifierFile != null ) {
+            probe2acc = this.parseAccessionFile( sequenceIdentifierFile );
+        }
+
         // make two maps: one for genbank ids, one for the sequence name.
         Map<String, BioSequence> gbIdMap = new HashMap<>();
         Map<String, BioSequence> nameMap = new HashMap<>();
@@ -281,6 +297,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         int done = 0;
         int percent = 0;
 
+        int i = 0;
         for ( BioSequence sequence : bioSequences ) {
 
             sequence.setType( sequenceType );
@@ -290,15 +307,21 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
             this.addToMaps( gbIdMap, nameMap, sequence );
 
+            if ( ++i % 1000 == 0 ) {
+                log.info( "Processed " + i + " sequences, last was " + sequence );
+            }
         }
 
-        ArrayDesignSequenceProcessingServiceImpl.log.info( "Sequences done, updating composite sequences" );
+        ArrayDesignSequenceProcessingServiceImpl.log.info( i + " sequences done, updating composite sequences" );
 
         int numWithNoSequence = 0;
         int numMatchedByAccession = 0;
         int numMatchedByProbeName = 0;
         String mungeRegex = ArrayDesignSequenceProcessingServiceImpl.DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR + ".+$";
 
+        /*
+         * Match the sequences to the probes
+         */
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             if ( ArrayDesignSequenceProcessingServiceImpl.log.isTraceEnabled() )
@@ -306,7 +329,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                         .trace( "Looking for sequence for: " + compositeSequence.getName() );
 
             BioSequence match = null;
-            if ( nameMap.containsKey( compositeSequence.getName() ) ) {
+            if ( probe2acc != null && probe2acc.containsKey( compositeSequence.getName() ) ) {
+
+                String seqAcc = probe2acc.get( compositeSequence.getName() );
+                if ( nameMap.containsKey( seqAcc ) ) {
+                    match = nameMap.get( seqAcc );
+                    numMatchedByAccession++;
+                }
+            } else if ( nameMap.containsKey( compositeSequence.getName() ) ) {
                 match = nameMap.get( compositeSequence.getName() );
                 numMatchedByProbeName++;
             } else if ( compositeSequence.getName().matches( mungeRegex ) ) {
@@ -341,7 +371,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             }
 
             if ( ++done % 1000 == 0 ) {
-                percent = this.updateProgress( total, done, percent );
+                percent = this.updateProgress( total, done, percent, numWithNoSequence );
             }
         }
 
@@ -369,6 +399,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     }
 
+
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
@@ -376,6 +407,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 null );
     }
 
+    /*
+     * When processing from a file of sequence IDs, retrieving missing sequences from blastdbs
+     */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException {
@@ -515,7 +549,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *
      * @param  force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *               information in the BioSequence will be overwritten.
-     * @return       persistent BioSequence.
+     * @return persistent BioSequence.
      */
     @Override
     public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
@@ -534,7 +568,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *
      * @param  taxon                    Taxon as passed in on the command line
      * @param  arrayDesign              Array design to process
-     * @return                          taxon Taxon to process
+     * @return taxon Taxon to process
      * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
      */
     @Override
@@ -569,6 +603,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 ArrayDesignSequenceProcessingServiceImpl.log
                         .debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
                 cs.setBiologicalCharacteristic( found.get( acc ) );
+            } else {
+                log.debug( "No sequence found for " + acc );
             }
         }
         return numSwitched;
@@ -602,7 +638,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *               information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if
      *               the
      *               actual sequence information was missing in our DB and 'found' has a sequence.
-     * @return       persistent BioSequence.
+     * @return persistent BioSequence.
      */
     private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
         assert found != null;
@@ -700,7 +736,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *
      * @param  force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *               information in the BioSequence will be overwritten.
-     * @return       Items that were found.
+     * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
@@ -729,7 +765,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      *                            sequence
      *                            information in the BioSequence will be overwritten.
      * @param  taxa               Representing taxa on array
-     * @return                    Items that were found.
+     * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Collection<Taxon> taxa, boolean force ) {
@@ -774,7 +810,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * for affymetrix processing
-     * 
+     *
      * @param bioSequences   bio sequences
      * @param sequenceBuffer sequence buffer
      * @param csBuffer       cs buffer
@@ -835,7 +871,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * @param  force if true, sequence will be replaced even if it is already there.
-     * @return       map of biosequence accessions to BioSequences (the existing ones)
+     * @return map of biosequence accessions to BioSequences (the existing ones)
      */
     private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, boolean force ) {
         Map<String, BioSequence> accessionsToFetch = new HashMap<>();
@@ -902,7 +938,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession.
      */
     private Map<String, String> parseAccessionFile( InputStream sequenceIdentifierFile ) throws IOException {
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) )) {
+        try ( BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) ) ) {
 
             String line;
 
@@ -989,7 +1025,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             }
 
             if ( ++done % 1000 == 0 ) {
-                percent = this.updateProgress( total, done, percent );
+                percent = this.updateProgress( total, done, percent, numWithNoSequence );
             }
         }
 
@@ -1084,11 +1120,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return existing;
     }
 
-    private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
+    private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked, Integer numWithNoSequence ) {
         int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
         if ( newPercent > percentDoneLastTimeWeChecked ) {
             ArrayDesignSequenceProcessingServiceImpl.log
-                    .info( howManyAreDone + " sequence+probes of " + totalThingsToDo + " processed." );
+                    .info( howManyAreDone + " sequence+probes of " + totalThingsToDo + " processed; "
+                            + ( numWithNoSequence == null ? "" : numWithNoSequence + " had no matching sequence." ) );
         }
 
         return newPercent;

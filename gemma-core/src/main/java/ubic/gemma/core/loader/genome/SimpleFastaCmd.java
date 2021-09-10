@@ -139,7 +139,7 @@ public class SimpleFastaCmd implements FastaCmd {
             throws IOException {
 
         if ( StringUtils.isBlank( SimpleFastaCmd.fastaCmdExecutable ) )
-            throw new IllegalStateException( "No fastacmd executable: You must set " + SimpleFastaCmd.FASTA_CMD_ENV_VAR
+            throw new IllegalStateException( "No blastdbcmd executable: You must set " + SimpleFastaCmd.FASTA_CMD_ENV_VAR
                     + " in your environment." );
 
         if ( blastHome == null ) {
