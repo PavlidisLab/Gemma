@@ -96,6 +96,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Integer countAll() {
         return ( ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( //language=none // Prevents unresolvable missing value warnings.
@@ -104,6 +105,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional
     public void remove( Collection<T> entities ) {
         for ( T e : entities ) {
             this.remove( e );
@@ -111,6 +113,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @Transactional
     public void remove( Long id ) {
         if ( id == null ) throw new IllegalArgumentException( "Id cannot be null" );
         this.remove( this.load( id ) );
@@ -176,6 +179,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return               a list of entities whose properties like-matched the given value.
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
+    @Transactional(readOnly = true)
     protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
@@ -191,6 +195,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return               a list of entities whose properties matched the given value.
      */
     @SuppressWarnings("unchecked")
+    @Transactional(readOnly = true)
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
 
         /*
@@ -217,6 +222,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @param  propertyValue the value to look for.
      * @return               an entity whose property first matched the given value.
      */
+    @Transactional(readOnly = true)
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.eq( propertyName, propertyValue ) );

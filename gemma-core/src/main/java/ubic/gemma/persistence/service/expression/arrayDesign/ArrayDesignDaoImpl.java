@@ -551,6 +551,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return list of value objects representing the ADs that matched the criteria.
      */
     @Override
+    @Transactional(readOnly = true)
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filters ) {
         if ( filters == null ) {

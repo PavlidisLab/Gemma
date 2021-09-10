@@ -29,6 +29,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -1194,6 +1195,7 @@ public class ExpressionExperimentDaoImpl
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
+    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
 
