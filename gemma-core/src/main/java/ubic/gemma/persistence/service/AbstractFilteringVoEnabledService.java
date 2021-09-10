@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -21,6 +22,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         return voDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );

@@ -1457,7 +1457,6 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        query.setReadOnly( true );
         query.setCacheable( true );
 
         return query;
@@ -1496,7 +1495,6 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        query.setReadOnly( true );
         query.setCacheable( true );
 
         return query;

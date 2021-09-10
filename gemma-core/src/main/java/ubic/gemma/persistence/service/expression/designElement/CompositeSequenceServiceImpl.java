@@ -253,6 +253,7 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, List<ObjectFilter[]> filter ) {
         Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
