@@ -60,8 +60,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
                 ee.getBioAssays().size() :
                 null;
-        if ( ee.getAccession() != null ) {
-            this.accession = ee.getAccession().toString();
+        if ( ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+            this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
         }

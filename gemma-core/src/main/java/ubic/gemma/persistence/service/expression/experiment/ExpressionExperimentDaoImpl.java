@@ -1215,6 +1215,10 @@ public class ExpressionExperimentDaoImpl
             ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
             AclSid sid = ( AclSid ) row[2];
+
+            // FIXME: this should not be necessary since we use a fetch-join on the accession
+            Hibernate.initialize( ee.getAccession() );
+
             ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, totalElements.intValue() );
 
             // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
