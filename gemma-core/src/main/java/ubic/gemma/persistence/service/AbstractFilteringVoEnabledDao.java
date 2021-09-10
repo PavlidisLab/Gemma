@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service;
 
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -58,7 +57,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @return a {@link Slice} of value objects
      */
     @Override
-    @Transactional(readOnly = true)
     public Slice<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             List<ObjectFilter[]> filter ) {
         Query query = this.getLoadValueObjectsQuery( filter, orderBy, !asc );

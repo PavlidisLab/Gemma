@@ -5,7 +5,6 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 
 import org.openjena.atlas.lib.NotImplemented;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -33,7 +32,6 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     public abstract VO loadValueObject( O entity );
 
     @Override
-    @Transactional(readOnly = true)
     public List<VO> loadValueObjects( Collection<O> entities ) {
         return entities.stream().map( this::loadValueObject ).collect( Collectors.toList() );
     }
@@ -44,7 +42,6 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      * @return VOs of all instances of the class this DAO manages.
      */
     @Override
-    @Transactional(readOnly = true)
     public List<VO> loadAllValueObjects() {
         return this.loadValueObjects( this.loadAll() );
     }
