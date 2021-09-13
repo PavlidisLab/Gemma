@@ -540,4 +540,11 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Boolean isSuitableForDEA( ExpressionExperiment ee );
+
+    /**
+     *
+     * @return collection of GEO experiments which lack an association with a publication (non-GEO experiments will be ignored)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

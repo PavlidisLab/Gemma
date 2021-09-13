@@ -619,6 +619,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
+        return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e where e.primaryPublication = null and e.shortName like 'GSE%'").list();
+    }
+
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
 
         ExpressionExperiment ee;
@@ -1568,9 +1573,9 @@ public class ExpressionExperimentDaoImpl
     private Set<ArrayDesignValueObject> getOriginalPlatforms( Long id ) {
         //noinspection unchecked
         List<ArrayDesign> o = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct o from ExpressionExperiment e inner join "
-                        + "e.bioAssays b inner join b.originalPlatform o "
-                        + "inner join e.bioAssays c inner join b.arrayDesignUsed a where e.id = :id and a <> o" )
+                        "select distinct o from ExpressionExperiment e inner join "
+                                + "e.bioAssays b inner join b.originalPlatform o "
+                                + "inner join e.bioAssays c inner join b.arrayDesignUsed a where e.id = :id and a <> o" )
                 .setLong( "id", id ).list();
         return o.stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() );
     }

@@ -178,4 +178,6 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
+
+    Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

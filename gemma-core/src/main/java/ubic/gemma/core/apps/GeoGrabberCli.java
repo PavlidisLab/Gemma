@@ -14,29 +14,11 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -48,6 +30,15 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
  * screening. See https://github.com/PavlidisLab/Gemma/issues/169
@@ -56,9 +47,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
-    /**
-     * 
-     */
     private static final int NCBI_CHUNK_SIZE = 10;
     private static final int MAX_RETRIES = 5;
     private Date dateLimit;
@@ -75,6 +63,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     @Override
     public String getCommandName() {
         return "listGEOData";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Grab information on GEO data sets not yet in the system";
     }
 
     @Override
@@ -97,6 +90,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws Exception {
+
+        if ( !commandLine.hasOption( "output" ) ) {
+            throw new IllegalArgumentException( "You must provide an output file name" );
+        }
+
         if ( commandLine.hasOption( "date" ) ) {
             try {
                 this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
@@ -108,9 +106,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
             this.gseLimit = commandLine.getOptionValue( "gselimit" );
         }
 
-        if ( !commandLine.hasOption( "output" ) ) {
-            throw new IllegalArgumentException( "You must provide an output file name" );
-        }
 
         if ( commandLine.hasOption( "platforms" ) ) {
             this.getPlatforms = true;
@@ -150,7 +145,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         if ( getPlatforms ) {
             Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms();
             log.info( "Fetched " + allGEOPlatforms.size() + " records" );
-            try (Writer os = new FileWriter( outputFile )) {
+            try ( Writer os = new FileWriter( outputFile ) ) {
                 os.append( "Acc\tRelaseDate\tTaxa\tTitle\tSummary\tTechType\n" );
                 for ( GeoRecord geoRecord : allGEOPlatforms ) {
 
@@ -170,7 +165,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         Map<Long, ArrayDesign> seenArrayDesigns = new HashMap<>();
 
-        try (Writer os = new FileWriter( outputFile )) {
+        try ( Writer os = new FileWriter( outputFile ) ) {
 
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
                     + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );
@@ -322,8 +317,4 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Grab information on GEO data sets not yet in the system";
-    }
 }

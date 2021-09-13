@@ -25,9 +25,12 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author pavlidis
@@ -119,6 +122,21 @@ public class GeoBrowserTest {
         }
     }
 
+
+    @Test
+    public void testGetGeoRecordsB() throws Exception {
+        GeoBrowser b = new GeoBrowser();
+        try {
+            Collection<GeoRecord> geoRecords = b.getGeoRecords( Arrays.asList( new String[] { "GSE1", "GSE2", "GSE3" } ) );
+            assertEquals( 3, geoRecords.size() );
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
+    }
 
     @Test
     public void testGetGeoRecordGSE93825() throws Exception {

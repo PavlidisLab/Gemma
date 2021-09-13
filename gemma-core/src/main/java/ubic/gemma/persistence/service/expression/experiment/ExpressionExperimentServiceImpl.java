@@ -1161,4 +1161,9 @@ public class ExpressionExperimentServiceImpl
         return true;
     }
 
+    @Override
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
+        return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
 }
