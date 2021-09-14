@@ -71,11 +71,15 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
         assertThat( response.getData() )
                 .isNotNull()
-                .asList().hasSize( 2 );
+                .asList().hasSize( 2 )
+                .first()
+                .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
+                .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
+                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() );
     }
 
     @Test
-    public void testWithFilterById() {
+    public void testAllFilterById() {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
                 DatasetFilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 IntArg.valueOf( "0" ),
