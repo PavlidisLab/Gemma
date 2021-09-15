@@ -13,14 +13,14 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-abstract class AbstractArg<T> implements Arg<T> {
+public abstract class AbstractArg<T> implements Arg<T> {
 
     private final T value;
 
     /* if this is malformed */
     private final boolean malformed;
     private String errorMessage;
-    private Throwable exception;
+    private Throwable cause;
 
     /**
      * Constructor for well-formed value.
@@ -30,7 +30,7 @@ abstract class AbstractArg<T> implements Arg<T> {
      *
      * @param value a well-formed value which cannot be null
      */
-    AbstractArg( @NonNull T value ) {
+    protected AbstractArg( @NonNull T value ) {
         this.value = value;
         this.malformed = false;
     }
@@ -42,13 +42,13 @@ abstract class AbstractArg<T> implements Arg<T> {
      * turn converted to a proper response as it inherits {@link javax.ws.rs.WebApplicationException}.
      *
      * @param errorMessage the error message to be displayed to the client.
-     * @param exception    the exception that the client should be informed about.
+     * @param cause        the exception that the client should be informed about.
      */
-    AbstractArg( String errorMessage, Throwable exception ) {
+    protected AbstractArg( String errorMessage, Throwable cause ) {
         this.value = null;
         this.malformed = true;
-        this.exception = exception;
         this.errorMessage = errorMessage;
+        this.cause = cause;
     }
 
     /**
@@ -68,7 +68,7 @@ abstract class AbstractArg<T> implements Arg<T> {
     @Override
     public final T getValue() throws MalformedArgException {
         if ( this.malformed ) {
-            throw new MalformedArgException( this.errorMessage, this.exception );
+            throw new MalformedArgException( this.errorMessage, this.cause );
         }
         return this.value;
     }
@@ -78,7 +78,7 @@ abstract class AbstractArg<T> implements Arg<T> {
         if ( this.malformed ) {
             return "This " + getClass().getName() + " is malformed because of the following error: " + errorMessage;
         } else {
-            return this.value == null ? "" : String.valueOf( this.value );
+            return String.valueOf( this.value );
         }
     }
 }
