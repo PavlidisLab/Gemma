@@ -8,6 +8,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.DatasetArrayArg;
@@ -91,5 +92,26 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .asList().hasSize( 1 )
                 .first()
                 .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() );
+    }
+
+    @Test
+    public void testAllFilterByShortName() {
+        DatasetFilterArg filterArg = DatasetFilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
+        assertThat( filterArg.getObjectFilters().get( 0 )[0] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
+                .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                filterArg,
+                IntArg.valueOf( "0" ),
+                IntArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
+                .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
     }
 }

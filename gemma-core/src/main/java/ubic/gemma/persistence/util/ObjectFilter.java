@@ -147,7 +147,7 @@ public class ObjectFilter {
      * @param  pt  the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
      */
-    private Object convertToParamType( Object rv, Class<?> pt ) {
+    private static Object convertToParamType( Object rv, Class<?> pt ) {
         if ( Iterable.class.isAssignableFrom( rv.getClass() ) ) {
             // We got a collection
             @SuppressWarnings("unchecked") // Assuming default is string
@@ -172,10 +172,10 @@ public class ObjectFilter {
      * @param  pt property type
      * @return converted object
      */
-    private Object convertItem( Object rv, Class<?> pt ) {
+    private static Object convertItem( Object rv, Class<?> pt ) {
         // Assuming default is string
         if ( String.class.isAssignableFrom( pt ) ) {
-            return requiredValue;
+            return rv;
         } else if ( Boolean.class.isAssignableFrom( pt ) || boolean.class.isAssignableFrom( pt ) ) {
             return Boolean.parseBoolean( ( String ) rv );
         } else if ( Integer.class.isAssignableFrom( pt ) || int.class.isAssignableFrom( pt ) ) {
@@ -230,7 +230,7 @@ public class ObjectFilter {
      * @param  cls2 the second class to compare
      * @return true, if the two given classes represent the same number type.
      */
-    private boolean isSameOrWrapperType( Class<?> cls1, Class<?> cls2 ) {
+    private static boolean isSameOrWrapperType( Class<?> cls1, Class<?> cls2 ) {
         return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) )
                 && ( Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
                 || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) )

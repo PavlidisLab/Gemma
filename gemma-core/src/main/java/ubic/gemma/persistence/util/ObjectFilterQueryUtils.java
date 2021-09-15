@@ -83,8 +83,14 @@ public class ObjectFilterQueryUtils {
                     disjunction.append( " or " );
                 disjunction
                         .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " )
-                        .append( filter.getOperator() ).append( " " )
-                        .append( "(" ).append( ":" ).append( paramName ).append( ")" );
+                        .append( filter.getOperator() ).append( " " );
+                if ( filter.getRequiredValue() instanceof Collection<?> ) {
+                    disjunction
+                            .append( "(" ).append( ":" ).append( paramName ).append( ")" );
+                } else {
+                    disjunction
+                            .append( ":" ).append( paramName );
+                }
                 first = false;
             }
             String disjunctionString = disjunction.toString();
@@ -117,7 +123,7 @@ public class ObjectFilterQueryUtils {
                 if ( filter == null || filter.getObjectAlias() == null )
                     continue;
                 String paramName = generator.nextParam( filter );
-                if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
+                if ( filter.getRequiredValue() instanceof Collection<?> ) {
                     query.setParameterList( paramName, ( Collection<?> ) filter.getRequiredValue() );
                 } else {
                     query.setParameter( paramName, filter.getRequiredValue() );
