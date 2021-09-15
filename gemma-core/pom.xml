@@ -272,7 +272,7 @@
                                     <sqlCommand>
 										<![CDATA[
                                         DROP DATABASE IF EXISTS ${gemma.testdb.name};
-                                        CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+                                        CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
                                         ]]>
 									</sqlCommand>
                                 </configuration>
