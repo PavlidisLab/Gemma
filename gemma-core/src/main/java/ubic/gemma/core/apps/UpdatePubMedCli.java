@@ -43,7 +43,7 @@ import java.util.Map;
 public class UpdatePubMedCli extends AbstractCLIContextCLI {
     @Override
     public String getCommandName() {
-        return "updatePublications";
+        return "findDatasetPubs";
     }
 
 
