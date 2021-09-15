@@ -10,10 +10,6 @@ import java.util.List;
 /**
  * Created by tesarst on 01/06/17.
  * Interface for services that provide value object functionality.
- *
- * @deprecated This interface is deprecated because providing generic DAOs makes little sense since once VO cannot
- * satisfy all the possible usage context. For example, we might need a different VO for the RESTful API than the
- * JavaScript frontend. Instead, the VO should be defined and created where needed.
  */
 public interface BaseVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends BaseService<O> {
