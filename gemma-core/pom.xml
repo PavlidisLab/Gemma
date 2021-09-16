@@ -136,6 +136,7 @@
                 <configuration>
                     <repositoryName>lib</repositoryName>
                     <repositoryLayout>flat</repositoryLayout>
+                    <extraJvmArguments>-Dlog4j.configurationFile=@BASEDIR@/etc/log4j.properties</extraJvmArguments>
                     <platforms>
                         <platform>unix</platform>
                     </platforms>
