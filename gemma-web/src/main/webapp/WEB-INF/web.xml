@@ -128,6 +128,11 @@
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.web.services.rest</param-value>
         </init-param>
+        <init-param>
+            <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->
+            <param-name>openApi.configuration.location</param-name>
+            <param-value>/WEB-INF/classes/openapi-configuration.yaml</param-value>
+        </init-param>
     </servlet>
 
     <servlet>
