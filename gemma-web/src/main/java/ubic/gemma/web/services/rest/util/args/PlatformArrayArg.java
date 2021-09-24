@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -43,11 +42,6 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<ArrayDesign, ArrayD
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new PlatformArrayArg( StringUtils.splitAndTrim( s ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_AD_ALIAS;
     }
 
 }

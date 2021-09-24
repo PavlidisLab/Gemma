@@ -2,11 +2,13 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * Class representing and API call argument that can represent various identifiers of different types.

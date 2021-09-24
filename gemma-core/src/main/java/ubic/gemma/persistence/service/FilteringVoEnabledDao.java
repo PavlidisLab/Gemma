@@ -14,8 +14,30 @@ import java.util.List;
  * @param <VO>
  */
 public interface FilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseVoEnabledDao<O, VO> {
+        extends FilteringDao<O>, BaseVoEnabledDao<O, VO> {
 
-    Slice<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
+    /**
+     * Load VOs with ordering, filtering and offset/limit.
+     *
+     * @param filter filters
+     * @param orderBy an object property to order by
+     * @param asc true if the sort is ascending, false otherwise
+     * @param offset an offset to which
+     * @param limit a limit on the number of returned results, or -1 to ignore
+     * @return a slice of the relevant data
+     */
+    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
+
+    /**
+     * Load VOs with minimal ordering and filtering.
+     *
+     * Use this as an alternative to {@link #loadValueObjectsPreFilter(List, String, boolean, int, int)} if you do not
+     * intend to provide pagination capabilities.
+     *
+     * @param filter  the filters that are applied
+     * @param orderBy a property to order by
+     * @param asc     true if the sort is ascending, false otherwise
+     * @returns
+     */
+    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc );
 }

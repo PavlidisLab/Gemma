@@ -22,13 +22,14 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface FactorValueService extends BaseVoEnabledService<FactorValue, FactorValueValueObject> {
+public interface FactorValueService extends FilteringVoEnabledService<FactorValue, FactorValueValueObject> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<FactorValue> findByValue( String valuePrefix );

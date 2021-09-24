@@ -16,6 +16,15 @@ public class AclQueryUtils {
     public static final String AOI_ALIAS = "aoi", SID_ALIAS = "sid";
 
     /**
+     * Select all the SIDs that belong to a given user (specified by a :userName parameter).
+     */
+    //language=HQL
+    static final String CURRENT_USER_SIDS_SQL =
+            "select sid.id from UserGroup as ug join ug.authorities as ga, AclGrantedAuthoritySid sid "
+                    + "where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
+                    + "and ug.name in (select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName)";
+
+    /**
      * Create an HQL select clause for all the alias mentioned in {@link #formAclJoinClause(String, String)}.
      * <p>
      * Use this if you need to retrieve the ACL OI and SID in the result set.
@@ -71,20 +80,13 @@ public class AclQueryUtils {
             if ( !SecurityUtil.isUserAdmin() ) {
                 // For non-admin users, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
                 //language=HQL
-                queryString += " and ( (sid.principal = :userName or (ace.sid.id in "
-                        // Subselect
-                        + "( select sid.id from UserGroup as ug join ug.authorities as ga "
-                        + ", AclGrantedAuthoritySid sid where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
-                        //  for specific permissions for this user
-                        + "and ug.name in (select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName ) "
-                        // Sub-subselect
-                        + " "
-                        // Sub-subselect end
-                        + ") and (ace.mask = :readMask or ace.mask = :writeMask)))"
-                        // not sure why WRITE is checked here.
-                        // or if publicly available (4= anonymous)
-                        // Subselect end
-                        + " or (ace.sid.id = 4 and ace.mask = :readMask))";
+                queryString += " and ("
+                        // user own the object
+                        + "sid.principal = :userName "
+                        // specific rights to the object
+                        + "or (ace.sid.id in (" + CURRENT_USER_SIDS_SQL + ") and (ace.mask = :readMask or ace.mask = :writeMask)) "
+                        // publicly available
+                        + "or (ace.sid.id = 4 and ace.mask = :readMask))";
             } else {
                 // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
                 //  queryString += " and (ace.mask = :readMask and ace.sid.id = 3)"; // sid 3 = AGENT

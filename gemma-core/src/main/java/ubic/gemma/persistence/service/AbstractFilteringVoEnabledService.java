@@ -6,6 +6,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -22,9 +23,30 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Slice<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        return voDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    public String getObjectAlias() {
+        return voDao.getObjectAlias();
     }
+
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
+        return voDao.getObjectFilter( property, operator, value );
+    }
+
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
+        return voDao.getObjectFilter( property, operator, values );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit ) {
+        return voDao.loadValueObjectsPreFilter( filter, orderBy, asc, offset, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc ) {
+        return voDao.loadValueObjectsPreFilter( filter, orderBy, asc );
+    }
+
 }

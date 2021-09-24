@@ -77,6 +77,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
@@ -99,7 +100,7 @@ import ubic.gemma.persistence.util.Slice;
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends AbstractVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -659,7 +660,7 @@ public class ExpressionExperimentServiceImpl
                 result = "SINGLE_BATCH_SUCCESS";
             } else if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-            } else if (beDetails.isFailedToGetBatchInformation()) {
+            } else if ( beDetails.isFailedToGetBatchInformation() ) {
                 result = "NO_BATCH_INFO"; // sort of generic
             } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
@@ -1091,17 +1092,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void update( ExpressionExperiment entity ) {
         super.update( entity );
-    }
-
-    /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
-     *      description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter ) {
-        return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {

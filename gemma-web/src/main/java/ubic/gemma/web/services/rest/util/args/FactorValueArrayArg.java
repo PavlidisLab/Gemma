@@ -20,11 +20,6 @@ public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, Fac
         return FactorValueArg.class;
     }
 
-    @Override
-    protected String getObjectDaoAlias() {
-        return null;
-    }
-
     public static FactorValueArrayArg valueOf( String s ) {
         return new FactorValueArrayArg( StringUtils.splitAndTrim( s ) );
     }

@@ -24,6 +24,10 @@ public class ObjectFilterQueryUtils {
         return alias == null ? propertyName : alias + "." + propertyName;
     }
 
+    public static String formPropertyName( ObjectFilter filter ) {
+        return formPropertyName( filter.getObjectAlias(), filter.getPropertyName() );
+    }
+
     /**
      * Forms an order by clause for a Hibernate query based on given arguments.
      *
@@ -83,7 +87,7 @@ public class ObjectFilterQueryUtils {
                     disjunction.append( " or " );
                 disjunction
                         .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " )
-                        .append( filter.getOperator() ).append( " " );
+                        .append( filter.getOperator().getSqlToken() ).append( " " );
                 if ( filter.getRequiredValue() instanceof Collection<?> ) {
                     disjunction
                             .append( "(" ).append( ":" ).append( paramName ).append( ")" );

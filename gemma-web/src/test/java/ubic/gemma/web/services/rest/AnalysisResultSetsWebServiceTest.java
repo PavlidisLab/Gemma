@@ -124,11 +124,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.findAll( null,
                 null,
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ),
+                null,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response );
         assertEquals( response.getStatus(), 200 );
+        //noinspection unchecked
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
@@ -142,11 +144,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         ResponseDataObject<?> result = service.findAll(
                 datasets,
                 null,
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ),
+                null,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response );
         assertEquals( response.getStatus(), 200 );
+        //noinspection unchecked
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
@@ -157,8 +161,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
                 DatasetArrayArg.valueOf( "GEO123124" ),
                 null,
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ),
+                null,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
@@ -169,11 +174,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.findAll( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ),
+                null,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response );
         assertEquals( response.getStatus(), 200 );
+        //noinspection unchecked
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
     }
@@ -184,8 +191,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
                 null,
                 DatabaseEntryArrayArg.valueOf( "GEO123124,GEO1213121" ),
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ),
+                null,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 response ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
@@ -204,11 +212,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
-        Long id = 123129L;
+        long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> {
-            service.findById( new ExpressionAnalysisResultSetArg( id ), response );
-        } );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( new ExpressionAnalysisResultSetArg( id ), response ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 

@@ -3,8 +3,10 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.SneakyThrows;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.StringUtils;
@@ -57,14 +59,10 @@ public class CompositeSequenceArrayArg
         this.arrayDesign = arrayDesign;
     }
 
+    @SneakyThrows(ObjectFilterException.class)
     public List<ObjectFilter[]> getPlatformFilter() {
-        ObjectFilter filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(),
-                ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS );
+        ObjectFilter filter = new ObjectFilter( ObjectFilter.DAO_PROBE_ALIAS, "arrayDesign.id", Long.class, ObjectFilter.Operator.is, this.arrayDesign.getId().toString() );
         return ObjectFilter.singleFilter( filter );
     }
 
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_PROBE_ALIAS;
-    }
 }

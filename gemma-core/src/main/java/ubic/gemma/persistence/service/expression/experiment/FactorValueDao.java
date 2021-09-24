@@ -21,13 +21,14 @@ package ubic.gemma.persistence.service.expression.experiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
  */
-public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValueValueObject> {
+public interface FactorValueDao extends FilteringVoEnabledDao<FactorValue, FactorValueValueObject> {
 
     /**
      * Locate based on string value of the value.

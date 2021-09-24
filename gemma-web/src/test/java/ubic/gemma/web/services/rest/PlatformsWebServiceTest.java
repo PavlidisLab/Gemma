@@ -13,10 +13,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.PlatformArg;
-import ubic.gemma.web.services.rest.util.args.PlatformFilterArg;
-import ubic.gemma.web.services.rest.util.args.SortArg;
+import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -51,9 +48,9 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testAll() {
         PaginatedResponseDataObject<ArrayDesignValueObject> response = platformsWebService.all(
-                PlatformFilterArg.valueOf( "" ),
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "20" ),
+                FilterArg.valueOf( "" ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "20" ),
                 SortArg.valueOf( "+id" ),
                 new MockHttpServletResponse() );
         assertThat( response )
@@ -65,8 +62,8 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
     public void testPlatformDatasets() {
         PaginatedResponseDataObject<ExpressionExperimentValueObject> response = platformsWebService.platformDatasets(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "20" ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "20" ),
                 new MockHttpServletResponse() );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
@@ -80,8 +77,8 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
     public void testPlatformElements() {
         PaginatedResponseDataObject<CompositeSequenceValueObject> response = platformsWebService.platformElements(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
-                IntArg.valueOf( "0" ),
-                IntArg.valueOf( "20" ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "20" ),
                 new MockHttpServletResponse() );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )

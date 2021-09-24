@@ -1,9 +1,11 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.SneakyThrows;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -11,7 +13,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -48,14 +49,14 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      * @param  eeService service to use to retrieve the EEs.
      * @return a collection of Datasets that the platform represented by this argument contains.
      */
+    @SneakyThrows(ObjectFilterException.class)
     public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
 
         List<ObjectFilter[]> filters = new ArrayList<>( 1 );
-        filters.add( new ObjectFilter[] {
-                new ObjectFilter( "id", ad.getId(), ObjectFilter.is, ObjectFilter.DAO_AD_ALIAS ) } );
-        return eeService.loadValueObjectsPreFilter( offset, limit, "id", true, filters );
+        filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.is, ad.getId().toString() ) } );
+        return eeService.loadValueObjectsPreFilter( filters, "id", true, offset, limit );
     }
 
     /**
@@ -70,10 +71,10 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
         ArrayList<ObjectFilter[]> filters = new ArrayList<ObjectFilter[]>() {
             {
                 add( new ObjectFilter[] {
-                        new ObjectFilter( "arrayDesign", ad, ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS ) } );
+                        new ObjectFilter( csService.getObjectAlias(), "arrayDesign", ArrayDesign.class, ObjectFilter.Operator.is, ad ) } );
             }
         };
-        return csService.loadValueObjectsPreFilter( offset, limit, "", true, filters );
+        return csService.loadValueObjectsPreFilter( filters, "", true, offset, limit );
 
     }
 

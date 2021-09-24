@@ -18,15 +18,20 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -35,7 +40,7 @@ import java.util.LinkedHashSet;
  * @see DatabaseEntry
  */
 @Repository
-public class DatabaseEntryDaoImpl extends AbstractVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
+public class DatabaseEntryDaoImpl extends AbstractFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 
     @Autowired
@@ -53,4 +58,13 @@ public class DatabaseEntryDaoImpl extends AbstractVoEnabledDao<DatabaseEntry, Da
         return new DatabaseEntryValueObject( entity );
     }
 
+    @Override
+    public String getObjectAlias() {
+        return ObjectFilter.DAO_DATABASE_ENTRY_ALIAS;
+    }
+
+    @Override
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+        throw new NotImplementedException( "This is not implemented yet!" );
+    }
 }

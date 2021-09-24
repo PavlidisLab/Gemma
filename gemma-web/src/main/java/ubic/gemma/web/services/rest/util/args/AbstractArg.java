@@ -44,7 +44,7 @@ public abstract class AbstractArg<T> implements Arg<T> {
      * @param errorMessage the error message to be displayed to the client.
      * @param cause        the exception that the client should be informed about.
      */
-    protected AbstractArg( String errorMessage, Throwable cause ) {
+    protected AbstractArg( @NonNull String errorMessage, Throwable cause ) {
         this.value = null;
         this.malformed = true;
         this.errorMessage = errorMessage;
@@ -66,7 +66,7 @@ public abstract class AbstractArg<T> implements Arg<T> {
      * @throws MalformedArgException if this arg is malformed
      */
     @Override
-    public final T getValue() throws MalformedArgException {
+    public T getValue() throws MalformedArgException {
         if ( this.malformed ) {
             throw new MalformedArgException( this.errorMessage, this.cause );
         }

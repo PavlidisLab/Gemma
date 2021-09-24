@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.*;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -33,19 +33,16 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.util.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -96,8 +93,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
     @Override
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select a from GeneDifferentialExpressionMetaAnalysis a"
-                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
+                        "select a from GeneDifferentialExpressionMetaAnalysis a"
+                                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
                 .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
     }
 
@@ -196,7 +193,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
     }
 
     @Override
-    public Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
+    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
                 .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
@@ -211,13 +208,37 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
             query.add( Restrictions.in( "e.accession", databaseEntries ) );
         }
 
-        // TODO: apply object filters
+        if ( objectFilters != null && objectFilters.size() > 0 ) {
+            query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
+        }
 
         query.setFirstResult( offset );
         query.setMaxResults( limit );
         query.addOrder( isAsc ? Order.asc( orderBy ) : Order.desc( orderBy ) );
+        query.setCacheable( true );
 
-        return ( List<ExpressionAnalysisResultSet> ) query.list();
+        //noinspection unchecked
+        return new Slice<>( super.loadValueObjects( ( List<ExpressionAnalysisResultSet> ) query.list() ),
+                new Sort( orderBy, isAsc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
     }
 
+    @Override
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+        throw new NotImplementedException( "This is not supported yet." );
+    }
+
+    @Override
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        throw new NotImplementedException( "This is not supported yet." );
+    }
+
+    @Override
+    public ExpressionAnalysisResultSetValueObject loadValueObject( ExpressionAnalysisResultSet entity ) {
+        return new ExpressionAnalysisResultSetValueObject( entity );
+    }
+
+    @Override
+    public String getObjectAlias() {
+        return "resultSet";
+    }
 }

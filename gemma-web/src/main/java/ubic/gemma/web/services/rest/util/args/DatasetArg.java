@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  * @author tesarst
  */
 @Schema(anyOf = { DatasetIdArg.class, DatasetStringArg.class })
+@CommonsLog
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
@@ -45,6 +47,7 @@ public abstract class DatasetArg<T>
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {
+            log.info( "Nope", e );
             return new DatasetStringArg( s );
         }
     }

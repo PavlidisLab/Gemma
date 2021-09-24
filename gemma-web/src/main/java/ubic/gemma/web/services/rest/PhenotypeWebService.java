@@ -25,10 +25,7 @@ import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociation
 import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.args.BoolArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.StringArg;
-import ubic.gemma.web.services.rest.util.args.TaxonArg;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -78,13 +75,13 @@ public class PhenotypeWebService {
     @Operation(summary = "Retrieve all the evidence from a given external database name")
     public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
             @QueryParam("database") StringArg database, // required
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") LimitArg limit, // Opt.
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        ArgUtils.checkReqArg( database, "database" );
+        ArgUtils.requiredArg( database, "database" );
         return Responder.respond( this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( database.getValue(), limit.getValue(), offset.getValue() ) );
+                .loadEvidenceWithExternalDatabaseName( database.getValue(), limit.getValueNoMaximum(), offset.getValue() ) );
     }
 
     /**

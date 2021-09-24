@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -43,11 +42,6 @@ public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
                     new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new GeneArrayArg( StringUtils.splitAndTrim( s ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_GENE_ALIAS;
     }
 
 }

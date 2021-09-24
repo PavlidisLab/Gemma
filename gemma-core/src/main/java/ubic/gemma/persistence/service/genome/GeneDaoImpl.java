@@ -569,14 +569,14 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
             boolean orderDesc ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + ObjectFilter.DAO_GENE_ALIAS + " "
-                + "from Gene as " + ObjectFilter.DAO_GENE_ALIAS + " " // gene
-                + "left join fetch " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + "taxon" + " "// taxon
-                + "where " + ObjectFilter.DAO_GENE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+        String queryString = "select " + getObjectAlias() + " "
+                + "from Gene as " + getObjectAlias() + " " // gene
+                + "left join fetch " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + ObjectFilter.DAO_GENE_ALIAS + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( ObjectFilterQueryUtils.formPropertyName( ObjectFilter.DAO_GENE_ALIAS, orderByProperty ), orderDesc );
+        queryString += "group by " + getObjectAlias() + ".id ";
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), orderByProperty ), orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -588,12 +588,12 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
     @Override
     protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(*) from Gene as " + ObjectFilter.DAO_GENE_ALIAS + " " // gene
-                + "left join " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + "taxon" + " "// taxon
-                + "where " + ObjectFilter.DAO_GENE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+        String queryString = "select count(*) from Gene as " + getObjectAlias() + " " // gene
+                + "left join " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + ObjectFilter.DAO_GENE_ALIAS + ".id ";
+        queryString += "group by " + getObjectAlias() + ".id ";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -659,4 +659,8 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
 
     }
 
+    @Override
+    public String getObjectAlias() {
+        return ObjectFilter.DAO_GENE_ALIAS;
+    }
 }

@@ -18,7 +18,9 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -27,8 +29,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -41,7 +45,7 @@ import java.util.List;
  * </p>
  */
 @Repository
-public class FactorValueDaoImpl extends AbstractVoEnabledDao<FactorValue, FactorValueValueObject>
+public class FactorValueDaoImpl extends AbstractFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 
     @Autowired
@@ -143,5 +147,15 @@ public class FactorValueDaoImpl extends AbstractVoEnabledDao<FactorValue, Factor
             sb.append( object ).append( "\n" );
         }
         AbstractDao.log.error( sb.toString() );
+    }
+
+    @Override
+    public String getObjectAlias() {
+        return "fv";
+    }
+
+    @Override
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+        throw new NotImplementedException( "This is ont implemented yet!" );
     }
 }

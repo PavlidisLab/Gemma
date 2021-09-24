@@ -49,6 +49,5 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
     Taxon findByNcbiId( Long ncbiId );
 
     @Override
-    Slice<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
+    Slice<TaxonValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
 }

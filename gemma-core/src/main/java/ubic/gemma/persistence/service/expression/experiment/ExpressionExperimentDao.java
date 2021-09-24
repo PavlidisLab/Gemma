@@ -154,18 +154,17 @@ public interface ExpressionExperimentDao
             Collection<Long> ids );
 
     /**
-     * @param offset  offset
-     * @param limit   limit
-     * @param asc     order ascending
      * @param filter  filters
      * @param orderBy order by property
+     * @param asc     order ascending
+     * @param offset  offset
+     * @param limit   limit
      * @return collection of value objects
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int) for
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
+    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 

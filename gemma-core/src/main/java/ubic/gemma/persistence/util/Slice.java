@@ -1,10 +1,13 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Query;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Represents a slice of {@link List}.
@@ -70,5 +73,9 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
      */
     public Long getTotalElements() {
         return this.totalElements;
+    }
+
+    public <S> Slice<S> map( Function<? super O, ? extends S> converter ) {
+        return new Slice( this.stream().map( converter ).collect( Collectors.toList() ), sort, offset, limit, totalElements );
     }
 }

@@ -14,18 +14,15 @@ import java.util.List;
  * @param <VO>
  */
 public interface FilteringVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends BaseVoEnabledService<O, VO> {
+        extends FilteringService<O>, BaseVoEnabledService<O, VO> {
 
     /**
-     * Loads all value objects based on the given properties.
-     *
-     * @param offset  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param limit   see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param orderBy see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param asc     see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @param filter  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
-     * @return collection of value objects.
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int)
      */
-    Slice<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter );
+    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
+
+    /**
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean)
+     */
+    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc );
 }

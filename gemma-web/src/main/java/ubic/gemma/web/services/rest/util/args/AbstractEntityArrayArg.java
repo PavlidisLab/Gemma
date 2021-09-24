@@ -5,7 +5,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.FilteringService;
+import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import javax.ws.rs.BadRequestException;
@@ -14,15 +15,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends BaseService<O>> extends AbstractArrayArg<String> {
+public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<String> {
 
     private static Log log = LogFactory.getLog( AbstractEntityArrayArg.class.getClass() );
 
-    protected Class<?> argValueClass = null;
     protected String argValueName = null;
 
     AbstractEntityArrayArg( List<String> values ) {
@@ -57,10 +58,13 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
-        ObjectFilter filter = new ObjectFilter( this.getPropertyName( service ), this.getPropertyType( service ),
-                this.getValue(), ObjectFilter.in, this.getObjectDaoAlias() );
 
-        filters.add( new ObjectFilter[] { filter } );
+        try {
+            filters.add( new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, this.getValue() ) } );
+        } catch ( ObjectFilterException e ) {
+            throw new RuntimeException( e.getMessage(), e );
+        }
+
         return filters;
     }
 
@@ -84,23 +88,6 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
     }
 
     /**
-     * @return the DAO alias of the object class that the identifiers in this array represents.
-     */
-    protected abstract String getObjectDaoAlias();
-
-    /**
-     * The implementation should set the {@link #argValueClass} and {@link #argValueName} properties.
-     *
-     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     */
-    protected void setPropertyNameAndType( S service ) {
-        String value = this.getValue().get( 0 );
-        AbstractEntityArg<?, O, S> arg = this.entityArgValueOf( value );
-        this.argValueName = this.checkPropertyNameString( arg, value, service );
-        this.argValueClass = arg.getValue().getClass();
-    }
-
-    /**
      * Reads the given MutableArgs property name and checks whether it is null or empty.
      *
      * @param  arg     the MutableArg to retrieve the property name from.
@@ -121,22 +108,18 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends B
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @return the name of the property that the values in this array represent.
      */
-    private String getPropertyName( S service ) {
+    protected String getPropertyName( S service ) {
         if ( this.argValueName == null ) {
-            this.setPropertyNameAndType( service );
+            Optional<String> value = this.getValue().stream().findFirst();
+            if ( value.isPresent() ) {
+                AbstractEntityArg<?, O, S> arg = this.entityArgValueOf( value.get() );
+                this.argValueName = this.checkPropertyNameString( arg, value.get(), service );
+            } else {
+                /* assumed since {@link O} is identifiable */
+                this.argValueName = "id";
+            }
         }
         return this.argValueName;
-    }
-
-    /**
-     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @return the type of the property that the values in this array represent.
-     */
-    private Class<?> getPropertyType( S service ) {
-        if ( this.argValueClass == null ) {
-            this.setPropertyNameAndType( service );
-        }
-        return argValueClass;
     }
 
     /**

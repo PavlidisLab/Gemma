@@ -3,9 +3,12 @@ package ubic.gemma.web.services.rest.providers;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
+import javax.servlet.ServletConfig;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -20,11 +23,14 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
 
     private static Log log = LogFactory.getLog( JsonMappingExceptionMapper.class.getName() );
 
+    @Context
+    private ServletConfig servletConfig;
+
     @Override
     public Response toResponse( JsonMappingException exception ) {
         log.error( "Exception during JSON mapping: ", exception );
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, exception.getMessage() );
-        return Response.status( code ).entity( new ResponseErrorObject( errorBody ) ).build();
+        return Response.status( code ).entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
     }
 }

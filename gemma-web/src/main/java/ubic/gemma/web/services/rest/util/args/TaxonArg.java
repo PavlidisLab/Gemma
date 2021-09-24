@@ -11,6 +11,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
@@ -48,8 +49,8 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
     @SuppressWarnings("unused")
     public static TaxonArg<?> valueOf( final String s ) {
         try {
-            Long id = Long.parseLong( s.trim() );
-            return id < TaxonArg.MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );
+            long id = Long.parseLong( s.trim() );
+            return id > TaxonArg.MIN_NCBI_ID ? new TaxonNcbiIdArg( id ) : new TaxonIdArg( id );
         } catch ( NumberFormatException e ) {
             return new TaxonStringArg( s );
         }
@@ -67,17 +68,17 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @return a collection of EEVOs matching the input parameters.
      */
-    public List<ExpressionExperimentValueObject> getTaxonDatasets(
+    public Slice<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
             List<ObjectFilter[]> filters, int offset, int limit, String sort, boolean sortAsc ) {
         if ( filters == null ) {
             filters = new ArrayList<>( 1 );
         }
         filters.add( new ObjectFilter[] {
-                new ObjectFilter( "id", this.getEntity( taxonService ).getId(), ObjectFilter.is,
-                        ObjectFilter.DAO_TAXON_ALIAS ) } );
+                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, this.getEntity( taxonService ).getId()
+                ) } );
 
-        return expressionExperimentService.loadValueObjectsPreFilter( offset, limit, sort, sortAsc, filters );
+        return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, sortAsc, offset, limit );
     }
 
     /**

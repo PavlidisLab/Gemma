@@ -1,18 +1,9 @@
 package ubic.gemma.persistence.service;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-
-import org.openjena.atlas.lib.NotImplemented;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;

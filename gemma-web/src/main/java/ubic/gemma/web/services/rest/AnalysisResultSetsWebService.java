@@ -25,10 +25,13 @@ import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -42,8 +45,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -74,25 +75,27 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public ResponseDataObject<List<ExpressionAnalysisResultSetValueObject>> findAll(
+    public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> findAll(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
-            @QueryParam("offset") @DefaultValue("0") IntArg offset,
-            @QueryParam("limit") @DefaultValue("20") IntArg limit,
+            @QueryParam("filter") FilterArg filters,
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort,
             @Context final HttpServletResponse servlet ) {
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                Optional.ofNullable( datasets ).map( d -> d.getEntities( expressionExperimentService ).stream().map( BioAssaySet.class::cast ).collect( Collectors.toSet() ) ).orElse( null ),
-                Optional.ofNullable( databaseEntries ).map( de -> de.getEntities( databaseEntryService ) ).orElse( null ),
-                null,
-                offset.getValue(),
-                limit.getValue(),
-                sort.getField(),
-                sort.isAsc() );
-        List<ExpressionAnalysisResultSetValueObject> resultSetVos = resultSets.stream()
-                .map( ExpressionAnalysisResultSetValueObject::new )
-                .collect( Collectors.toList() );
-        return Responder.respond( resultSetVos );
+        Collection<BioAssaySet> ees = null;
+        if ( datasets != null ) {
+            ees = datasets.getEntities( expressionExperimentService ).stream()
+                    .map( BioAssaySet.class::cast )
+                    .collect( Collectors.toList() );
+        }
+        Collection<DatabaseEntry> des = null;
+        if ( databaseEntries != null ) {
+            des = databaseEntries.getEntities( databaseEntryService );
+        }
+        return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
+                ees, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getFieldForClass( ExpressionAnalysisResultSet.class ),
+                sort.isAsc() ) );
     }
 
     /**
@@ -110,7 +113,7 @@ public class AnalysisResultSetsWebService {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return Responder.respond( new ExpressionAnalysisResultSetValueObject( ears ) );
+        return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
     }
 
     /**

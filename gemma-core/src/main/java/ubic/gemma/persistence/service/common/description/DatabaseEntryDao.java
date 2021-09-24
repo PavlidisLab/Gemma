@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,11 +21,12 @@ package ubic.gemma.persistence.service.common.description;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 /**
  * @see DatabaseEntry
  */
-public interface DatabaseEntryDao extends BaseVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject> {
+public interface DatabaseEntryDao extends FilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject> {
 
     DatabaseEntry findByAccession( String accession );
 

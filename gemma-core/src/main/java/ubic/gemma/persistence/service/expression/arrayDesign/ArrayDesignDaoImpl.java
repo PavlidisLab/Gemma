@@ -42,6 +42,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractC
 import ubic.gemma.persistence.util.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -476,7 +477,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
         Long totalElements = ( Long ) countQuery.uniqueResult();
-        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( list, this.getExpressionExperimentCountMap(), totalElements );
+        List<ArrayDesignValueObject> results = list.stream()
+                .map( ad -> this.processADValueObjectQueryResult( ad, this.getExpressionExperimentCountMap(), totalElements ) )
+                .collect( Collectors.toList() );
         this.populateBlacklisted( results );
         return results;
     }
@@ -518,13 +521,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
-        ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, "ad" );
+        ObjectFilter filter = new ObjectFilter( "ad", "id", Long.class, ObjectFilter.Operator.in, ids );
         Query queryObject = this.getLoadValueObjectsQuery( ObjectFilter.singleFilter( filter ), null, false );
         Query countQuery = this.getCountValueObjectsQuery( ObjectFilter.singleFilter( filter ) );
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
         Long totalElements = ( Long ) countQuery.uniqueResult();
-        List<ArrayDesignValueObject> results = this.processADValueObjectQueryResults( list, eeCounts, totalElements );
+
+        List<ArrayDesignValueObject> results = list.stream()
+                .map( ad -> this.processADValueObjectQueryResult( ad, eeCounts, totalElements ) )
+                .collect( Collectors.toList() );
 
         populateBlacklisted( results );
         return results;
@@ -540,49 +546,48 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return this.loadValueObjectsByIds( ids );
     }
 
+    private final ThreadLocal<Map<Long, Integer>> expressionExperimentCountMap = new ThreadLocal<>();
+    // TODO: remove this when _totalInQuery is removed
+    private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
+
+    @Override
+    protected ArrayDesignValueObject processLoadValueObjectsQueryResult( Object result ) {
+        ArrayDesign ad = ( ArrayDesign ) result;
+        return this.processADValueObjectQueryResult( ad, expressionExperimentCountMap.get(), totalElements.get() );
+    }
+
+    @Override
+    public String getObjectAlias() {
+        return ObjectFilter.DAO_AD_ALIAS;
+    }
+
     /**
      * Queries the database to retrieve all array designs, based on the given parameters, and then
      * converts them to value objects.
      *
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
      * @param orderBy the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
      * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param offset  amount of ADs to skip.
+     * @param limit   maximum amount of ADs to retrieve.
      * @return list of value objects representing the ADs that matched the criteria.
      */
     @Override
-    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filters ) {
+    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc, int offset, int limit ) {
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
 
         // Restrict to non-troubled EEs for non-administrators
-        addNonTroubledFilter( filters );
+        addNonTroubledFilter( filters, ObjectFilter.DAO_AD_ALIAS );
 
-        String orderByProperty = this.getOrderByProperty( orderBy );
+        this.expressionExperimentCountMap.set( this.getExpressionExperimentCountMap() );
 
-        // Compose query
-        Query query = this.getLoadValueObjectsQuery( filters, orderByProperty, !asc );
+        // TODO: remove this when _totalInQuery is removed
         Query countQuery = this.getCountValueObjectsQuery( filters );
-
-        query.setMaxResults( limit > 0 ? limit : -1 );
-        query.setFirstResult( offset );
-
-        AclQueryUtils.addAclRestrictionParameters( query );
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-        AclQueryUtils.addAclRestrictionParameters( countQuery );
-        ObjectFilterQueryUtils.addRestrictionParameters( countQuery, filters );
-
-        query.setCacheable( true );
-        countQuery.setCacheable( true );
-
-        //noinspection unchecked
-        List<ArrayDesign> list = query.list();
         Long totalElements = ( Long ) countQuery.uniqueResult();
+        this.totalElements.set( totalElements );
 
-        return new Slice<>( this.processADValueObjectQueryResults( list, this.getExpressionExperimentCountMap(), totalElements ),
-                new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, totalElements );
+        return super.loadValueObjectsPreFilter( filters, orderBy, asc, offset, limit );
     }
 
     @Override
@@ -1093,9 +1098,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
-
-        log.info( queryString );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( orderByProperty ), orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1142,10 +1145,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @param propertyName the property to order by, if null, default ordering is used.
      * @return and order by parameter. Default ordering is id.
      */
-    protected String getOrderByProperty( String propertyName ) {
+    private String getOrderByProperty( String propertyName ) {
         if ( propertyName == null )
-            return ObjectFilterQueryUtils.formPropertyName( ObjectFilter.DAO_EE_ALIAS, "id" );
-        return ObjectFilterQueryUtils.formPropertyName( ObjectFilter.DAO_AD_ALIAS, propertyName );
+            return ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), "id" );
+        return ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), propertyName );
     }
 
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
@@ -1170,26 +1173,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     /**
      * Process query results for LoadAllValueObjects or LoadValueObjects
      */
-    private List<ArrayDesignValueObject> processADValueObjectQueryResults( List<ArrayDesign> list, Map<Long, Integer> eeCounts, Long totalElements ) {
-        List<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
+    private ArrayDesignValueObject processADValueObjectQueryResult( ArrayDesign ad, Map<Long, Integer> eeCounts, Long totalElements ) {
+        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad, totalElements.intValue() );
 
-        for ( ArrayDesign ad : list ) {
-            ArrayDesignValueObject vo = new ArrayDesignValueObject( ad, totalElements.intValue() );
-
-            Long id = ad.getId();
-            if ( eeCounts == null || !eeCounts.containsKey( id ) ) {
-                vo.setExpressionExperimentCount( 0 );
-            } else {
-                vo.setExpressionExperimentCount( eeCounts.get( id ) );
-            }
-
-            // FIXME if this is slow for large queries, we should batch
-            vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperiments( vo.getId() ).size() );
-
-            vos.add( vo );
+        Long id = ad.getId();
+        if ( eeCounts == null || !eeCounts.containsKey( id ) ) {
+            vo.setExpressionExperimentCount( 0 );
+        } else {
+            vo.setExpressionExperimentCount( eeCounts.get( id ) );
         }
 
-        return vos;
+        // FIXME if this is slow for large queries, we should batch
+        vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperiments( vo.getId() ).size() );
+
+        return vo;
     }
 
     private void putIdsInList( Map<Long, Boolean> eventMap, List<Object[]> list ) {

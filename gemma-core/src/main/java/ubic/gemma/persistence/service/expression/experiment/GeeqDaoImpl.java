@@ -69,13 +69,6 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
         return this.createVosFromRows( rows );
     }
 
-    @Override
-    public Slice<GeeqValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        throw new NotYetImplementedException(
-                "filtering not implemented for Geeq VOs, as they should come with EEs (filter the EEs instead)." );
-    }
-
     private List<GeeqValueObject> createVosFromRows( List<Object[]> rows ) {
         ArrayList<GeeqValueObject> vos = new ArrayList<>( rows.size() );
         for ( Object[] row : rows ) {

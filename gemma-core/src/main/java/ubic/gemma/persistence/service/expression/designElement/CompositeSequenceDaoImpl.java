@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
@@ -53,7 +54,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
+public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
@@ -103,28 +104,49 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     }
 
     @Override
-    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter ) {
-        // Compose query
-        Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select " + getObjectAlias() + ".id as id, " // 0
+                + getObjectAlias() + ", " // 1
+                + "ad" + " " // 2
+                + "from CompositeSequence as " + getObjectAlias() + " " // probe
+                + "left join " + getObjectAlias() + ".arrayDesign as " + "ad" + " "//ad
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
-        query.setCacheable( true );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-        query.setFirstResult( offset );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        queryString += "group by " + getObjectAlias() + ".id ";
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
 
-        //noinspection unchecked
-        List<Object[]> list = query.list();
-        List<CompositeSequenceValueObject> vos = new ArrayList<>( list.size() );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        for ( Object[] row : list ) {
-            CompositeSequence cs = ( CompositeSequence ) row[1];
-            cs.setArrayDesign( ( ArrayDesign ) row[2] );
-            CompositeSequenceValueObject vo = new CompositeSequenceValueObject( cs );
-            vos.add( vo );
-        }
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
+        return query;
+    }
+
+    @Override
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        String queryString = "select count(distinct " + getObjectAlias() + ".id) " // 0
+                + "from CompositeSequence as " + getObjectAlias() + " " // probe
+                + "left join " + getObjectAlias() + ".arrayDesign as " + "ad" + " "//ad
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        queryString += "group by " + getObjectAlias() + ".id ";
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        return query;
+    }
+
+    @Override
+    protected CompositeSequenceValueObject processLoadValueObjectsQueryResult( Object result ) {
+        Object[] row = ( Object[] ) result;
+        CompositeSequence cs = ( CompositeSequence ) row[1];
+        cs.setArrayDesign( ( ArrayDesign ) row[2] );
+        return this.loadValueObject( cs );
     }
 
     @Override
@@ -714,32 +736,8 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
     }
 
-    /**
-     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                         description.
-     * @param  orderByProperty the property to order by.
-     * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return a hibernate Query object ready to be used for CSVO retrieval.
-     */
-    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
-
-        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + ObjectFilter.DAO_PROBE_ALIAS + ".id as id, " // 0
-                + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
-                + "ad" + " " // 2
-                + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
-                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + "ad" + " "//ad
-                + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
-
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + ObjectFilter.DAO_PROBE_ALIAS + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-
-        return query;
+    @Override
+    public String getObjectAlias() {
+        return ObjectFilter.DAO_PROBE_ALIAS;
     }
 }

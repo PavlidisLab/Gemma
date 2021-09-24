@@ -21,7 +21,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-public interface GeeqDao extends FilteringVoEnabledDao<Geeq, GeeqValueObject> {
+public interface GeeqDao extends BaseVoEnabledDao<Geeq, GeeqValueObject> {
 }

@@ -23,6 +23,7 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -99,7 +100,7 @@ public class GeneWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
-        return Responder.respond( geneService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), genes.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), geneService ) ) );
+        return Responder.respond( geneService.loadValueObjectsPreFilter( genes.combineFilters( null, geneService ), sort.getFieldForClass( Gene.class ), sort.isAsc(), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
     /**
@@ -152,8 +153,8 @@ public class GeneWebService {
     @Operation(summary = "Retrieve the probes associated to a genes")
     public ResponseDataObject<List<CompositeSequenceValueObject>> geneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.respond( compositeSequenceService
@@ -195,16 +196,16 @@ public class GeneWebService {
     public ResponseDataObject<List<CoexpressionValueObjectExt>> geneCoexpression( // Params:
             @PathParam("gene") final GeneArg<Object> geneArg, // Required
             @QueryParam("with") final GeneArg<Object> with, // Required
-            @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ArgUtils.checkReqArg( with, "with" );
+        ArgUtils.requiredArg( with, "with" );
         return Responder
                 .respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
                     this.add( geneArg.getEntity( geneService ).getId() );
                     this.add( with.getEntity( geneService ).getId() );
-                }}, 1, limit.getValue(), false ).getResults() );
+                }}, 1, limit.getValueNoMaximum(), false ).getResults() );
     }
 
 }
