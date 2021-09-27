@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -23,11 +24,8 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO> {
 
-    private Class<O> elementClass;
-
     protected AbstractFilteringVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
-        this.elementClass = elementClass;
     }
 
     @Override
@@ -58,7 +56,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
-    protected abstract Query getCountValueObjectsQuery( List<ObjectFilter[]> filters );
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
+    }
 
     /**
      * Process a result from {@link #getLoadValueObjectsQuery(List, String, boolean)}.
@@ -85,9 +85,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @return a {@link Slice} of value objects
      */
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit ) {
-        Query query = this.getLoadValueObjectsQuery( filter, orderBy, !asc );
-        Query totalElementsQuery = getCountValueObjectsQuery( filter );
+    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc, int offset, int limit ) {
+        Query query = this.getLoadValueObjectsQuery( filters, orderBy, !asc );
+        Query totalElementsQuery = getCountValueObjectsQuery( filters );
 
         // setup offset/limit
         if ( offset > 0 )
@@ -110,6 +110,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Override
     public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc ) {
-        return loadValueObjectsPreFilter( filters, orderBy, asc, 0, -1 );
+        Query query = this.getLoadValueObjectsQuery( filters, orderBy, !asc );
+
+        //noinspection unchecked
+        List<?> list = query.list();
+
+        return list.stream()
+                .map( this::processLoadValueObjectsQueryResult )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
     }
 }
