@@ -8,18 +8,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
-	<properties>
-		<failOnMissingWebXml>false</failOnMissingWebXml>
-	</properties>
 	<name>Gemma Web</name>
 	<description>Gemma web application</description>
 	<build>
-		<directory>target</directory>
 		<finalName>Gemma</finalName>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<outputDirectory>target/classes</outputDirectory>
-		<testSourceDirectory>src/test/java</testSourceDirectory>
-		<testOutputDirectory>target/test-classes</testOutputDirectory>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
