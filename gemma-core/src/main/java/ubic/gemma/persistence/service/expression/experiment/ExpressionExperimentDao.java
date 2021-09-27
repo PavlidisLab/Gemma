@@ -153,19 +153,6 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids );
 
-    /**
-     * @param filter  filters
-     * @param orderBy order by property
-     * @param asc     order ascending
-     * @param offset  offset
-     * @param limit   limit
-     * @return collection of value objects
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int) for
-     * description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
-
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );

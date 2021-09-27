@@ -248,9 +248,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    @Override
-    Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
-
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
      *
