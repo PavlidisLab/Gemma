@@ -42,17 +42,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.
      *
      * Note that if your implementation does not produce a {@link List<O>} when {@link Query#list()} is invoked, you
-     * must override {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int)}.
+     * must override {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)}.
      *
-     * @param filters
-     * @param orderByProperty
-     * @param orderDesc
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc );
+    protected abstract Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort );
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(List, String, boolean)}.
+     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(List, Sort)}.
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
@@ -61,12 +58,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Process a result from {@link #getLoadValueObjectsQuery(List, String, boolean)}.
+     * Process a result from {@link #getLoadValueObjectsQuery(List, Sort)}.
      *
      * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
      * obtain a value object.
      *
-     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int)}
+     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)}
      */
     protected VO processLoadValueObjectsQueryResult( Object result ) {
         return loadValueObject( ( O ) result );
@@ -85,8 +82,8 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @return a {@link Slice} of value objects
      */
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc, int offset, int limit ) {
-        Query query = this.getLoadValueObjectsQuery( filters, orderBy, !asc );
+    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort, int offset, int limit ) {
+        Query query = this.getLoadValueObjectsQuery( filters, sort );
         Query totalElementsQuery = getCountValueObjectsQuery( filters );
 
         // setup offset/limit
@@ -105,12 +102,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
 
-        return new Slice<>( vos, new Sort( orderBy, asc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, totalElements );
+        return new Slice<>( vos, sort, offset, limit, totalElements );
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc ) {
-        Query query = this.getLoadValueObjectsQuery( filters, orderBy, !asc );
+    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort ) {
+        Query query = this.getLoadValueObjectsQuery( filters, sort );
 
         //noinspection unchecked
         List<?> list = query.list();

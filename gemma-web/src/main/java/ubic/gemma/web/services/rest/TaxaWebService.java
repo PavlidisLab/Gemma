@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -118,7 +119,7 @@ public class TaxaWebService {
             @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), "id", true ) );
+        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), Sort.by( "id", null ) ) );
     }
 
     /**
@@ -235,7 +236,7 @@ public class TaxaWebService {
     ) {
         return Responder.paginate(
                 taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters( expressionExperimentService ),
-                        offset.getValue(), limit.getValue(), sort.getFieldForClass( Taxon.class ), sort.isAsc() ) );
+                        offset.getValue(), limit.getValue(), sort.getValueForClass( Taxon.class ) ) );
     }
 
     /**

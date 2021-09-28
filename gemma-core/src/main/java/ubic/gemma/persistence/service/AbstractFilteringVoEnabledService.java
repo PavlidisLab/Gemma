@@ -5,6 +5,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.List;
@@ -39,14 +40,14 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit ) {
-        return voDao.loadValueObjectsPreFilter( filter, orderBy, asc, offset, limit );
+    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
+        return voDao.loadValueObjectsPreFilter( filter, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc ) {
-        return voDao.loadValueObjectsPreFilter( filter, orderBy, asc );
+    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort ) {
+        return voDao.loadValueObjectsPreFilter( filter, sort );
     }
 
 }

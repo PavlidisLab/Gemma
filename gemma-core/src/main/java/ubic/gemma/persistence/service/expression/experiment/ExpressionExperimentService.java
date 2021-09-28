@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
 import java.util.*;
@@ -430,16 +431,16 @@ public interface ExpressionExperimentService
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
+    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
             Taxon taxon );
 
     /**
@@ -454,7 +455,7 @@ public interface ExpressionExperimentService
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
@@ -472,7 +473,7 @@ public interface ExpressionExperimentService
     List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+    List<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
             Collection<Long> ids );
 
     /**

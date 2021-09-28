@@ -4,6 +4,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.List;
 
@@ -26,18 +27,17 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
      * @param limit a limit on the number of returned results, or -1 to ignore
      * @return a slice of the relevant data
      */
-    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
+    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit );
 
     /**
      * Load VOs with minimal ordering and filtering.
      *
-     * Use this as an alternative to {@link #loadValueObjectsPreFilter(List, String, boolean, int, int)} if you do not
+     * Use this as an alternative to {@link ##loadValueObjectsPreFilter(List, Sort, int, int)} if you do not
      * intend to provide pagination capabilities.
      *
      * @param filter  the filters that are applied
-     * @param orderBy a property to order by
-     * @param asc     true if the sort is ascending, false otherwise
+     * @param sort
      * @returns
      */
-    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc );
+    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort );
 }

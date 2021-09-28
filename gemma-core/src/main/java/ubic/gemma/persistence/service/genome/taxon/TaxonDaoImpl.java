@@ -142,8 +142,7 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + ".id as id, " // 0
@@ -155,7 +154,7 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + getObjectAlias() + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( sort.getOrderBy(), sort.getDirection() );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 

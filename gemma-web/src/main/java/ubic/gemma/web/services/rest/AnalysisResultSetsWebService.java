@@ -94,8 +94,7 @@ public class AnalysisResultSetsWebService {
             des = databaseEntries.getEntities( databaseEntryService );
         }
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                ees, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getFieldForClass( ExpressionAnalysisResultSet.class ),
-                sort.isAsc() ) );
+                ees, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getValueForClass( ExpressionAnalysisResultSet.class ) ) );
     }
 
     /**

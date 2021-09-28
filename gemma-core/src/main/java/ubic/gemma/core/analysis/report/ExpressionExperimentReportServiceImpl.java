@@ -126,7 +126,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public void generateSummaryObjects() {
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
+                .loadDetailsValueObjects( null, ids, null, 0, 0 );
         this.getStats( vos );
     }
 
@@ -405,7 +405,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {
 
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
+                .loadDetailsValueObjects( null, ids, null, 0, 0 );
         this.getStats( vos );
 
         for ( ExpressionExperimentValueObject vo : vos ) {

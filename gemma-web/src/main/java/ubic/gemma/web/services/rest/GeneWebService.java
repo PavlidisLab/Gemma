@@ -100,7 +100,7 @@ public class GeneWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
-        return Responder.respond( geneService.loadValueObjectsPreFilter( genes.combineFilters( null, geneService ), sort.getFieldForClass( Gene.class ), sort.isAsc(), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
+        return Responder.respond( geneService.loadValueObjectsPreFilter( genes.combineFilters( null, geneService ), sort.getValueForClass( Gene.class ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
     /**

@@ -472,7 +472,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     public List<ArrayDesignValueObject> loadAllValueObjects() {
-        Query queryObject = this.getLoadValueObjectsQuery( null, null, false );
+        Query queryObject = this.getLoadValueObjectsQuery( null, null );
         Query countQuery = this.getCountValueObjectsQuery( null );
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
@@ -522,7 +522,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
         ObjectFilter filter = new ObjectFilter( "ad", "id", Long.class, ObjectFilter.Operator.in, ids );
-        Query queryObject = this.getLoadValueObjectsQuery( ObjectFilter.singleFilter( filter ), null, false );
+        Query queryObject = this.getLoadValueObjectsQuery( ObjectFilter.singleFilter( filter ), null );
         Query countQuery = this.getCountValueObjectsQuery( ObjectFilter.singleFilter( filter ) );
         //noinspection unchecked
         List<ArrayDesign> list = queryObject.list();
@@ -572,7 +572,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return list of value objects representing the ADs that matched the criteria.
      */
     @Override
-    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, String orderBy, boolean asc, int offset, int limit ) {
+    public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort, int offset, int limit ) {
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
@@ -587,7 +587,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Long totalElements = ( Long ) countQuery.uniqueResult();
         this.totalElements.set( totalElements );
 
-        return super.loadValueObjectsPreFilter( filters, orderBy, asc, offset, limit );
+        return super.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 
     @Override
@@ -1081,8 +1081,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
         // contain duplicated platforms
         String queryString =
                 "select ad from ArrayDesign as ad "
@@ -1098,7 +1097,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         //   queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id "; // should not need this.
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( orderByProperty ), orderDesc );
+        if ( sort != null ) {
+            queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( sort.getOrderBy() ), sort.getDirection() );
+        }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 

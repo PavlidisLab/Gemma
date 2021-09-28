@@ -35,22 +35,26 @@ public class ObjectFilterQueryUtils {
      * @param orderDesc       whether the ordering should be descending or ascending.
      * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
-    public static String formOrderByProperty( String orderByProperty, boolean orderDesc ) {
-        if ( Strings.isNullOrEmpty( orderByProperty ) )
+    public static String formOrderByProperty( String orderBy, Sort.Direction direction ) {
+        if ( Strings.isNullOrEmpty( orderBy ) )
             return "";
         StringBuilder ret = new StringBuilder();
 
         ret.append( " order by" );
 
-        if ( orderByProperty.endsWith( ".size" ) ) {
+        if ( orderBy.endsWith( ".size" ) ) {
             // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( " count( distinct " + orderByProperty.split( "\\." )[1] + ")" );
+            ret.append( " count( distinct " + orderBy.split( "\\." )[1] + ")" );
         } else {
             ret.append( " " );
-            ret.append( orderByProperty );
+            ret.append( orderBy );
         }
 
-        if ( orderDesc ) {
+        if ( direction == null ) {
+            // use default direction
+        } else if ( direction.equals( Sort.Direction.ASC ) ) {
+            ret.append( " asc" );
+        } else if ( direction.equals( Sort.Direction.DESC ) ) {
             ret.append( " desc" );
         }
 

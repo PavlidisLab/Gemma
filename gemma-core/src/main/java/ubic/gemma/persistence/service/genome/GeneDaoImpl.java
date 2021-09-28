@@ -558,15 +558,12 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
     }
 
     /**
-     * @param filters         see {@link this#formRestrictionClause(List)} filters argument for
+     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(List)} filters argument for
      *                        description.
-     * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
-     * @return a hibernate Query object ready to be used for TaxonVO retrieval.
+     * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "
@@ -576,7 +573,9 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + getObjectAlias() + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), orderByProperty ), orderDesc );
+        if ( sort != null ) {
+            queryString += ObjectFilterQueryUtils.formOrderByProperty( ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), sort.getOrderBy() ), sort.getDirection() );
+        }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 

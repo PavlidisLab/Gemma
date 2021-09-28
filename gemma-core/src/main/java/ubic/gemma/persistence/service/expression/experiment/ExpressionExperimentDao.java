@@ -16,6 +16,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.Date;
@@ -120,11 +121,11 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
 
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
             Taxon taxon );
 
     /**
@@ -139,7 +140,7 @@ public interface ExpressionExperimentDao
      * @param start      offset
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     Collection<ExpressionExperiment> loadLackingFactors();
@@ -150,7 +151,7 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
-    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
             Collection<Long> ids );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );

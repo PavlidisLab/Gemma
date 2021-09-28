@@ -103,7 +103,7 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id ) {
         //noinspection unchecked
-        return expressionExperimentDao.loadDetailsValueObjects( null, false, this.getSessionFactory().getCurrentSession().createQuery(
+        return expressionExperimentDao.loadDetailsValueObjects( null, this.getSessionFactory().getCurrentSession().createQuery(
                 "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
                 .setParameter( "id", id ).list(), null, 0, 0 );
     }

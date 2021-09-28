@@ -74,6 +74,15 @@ public class SortArg extends AbstractArg<Sort> {
         return getValue().getDirection() == Sort.Direction.ASC;
     }
 
+    public Sort getValueForClass( Class<?> cls ) {
+        try {
+            checkFieldExists( cls, getValue().getOrderBy() );
+            return getValue();
+        } catch ( NoSuchFieldException e ) {
+            throw new MalformedArgException( e.getMessage(), e );
+        }
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -85,7 +94,7 @@ public class SortArg extends AbstractArg<Sort> {
     public static SortArg valueOf( final String s ) {
         try {
             //noinspection ConstantConditions // Handled by the try catch
-            return new SortArg( s.substring( 1 ), parseDirection( s.charAt( 0 ) ) );
+            return new SortArg( parseDirection( s.charAt( 0 ) ) == null ? s : s.substring( 1 ), parseDirection( s.charAt( 0 ) ) );
         } catch ( NullPointerException | StringIndexOutOfBoundsException e ) {
             return new SortArg( String.format( ERROR_MSG, s ), e );
         }
@@ -100,11 +109,11 @@ public class SortArg extends AbstractArg<Sort> {
     private static Sort.Direction parseDirection( char c ) {
         if ( c == '+' ) {
             return Sort.Direction.ASC;
-        }
-        if ( c == '-' ) {
+        } else if ( c == '-' ) {
             return Sort.Direction.DESC;
+        } else {
+            return null;
         }
-        return null;
     }
 
     private static Field checkFieldExists( Class<?> cls, String field ) throws NoSuchFieldException {

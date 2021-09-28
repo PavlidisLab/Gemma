@@ -193,7 +193,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     }
 
     @Override
-    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc ) {
+    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
                 .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
@@ -212,18 +212,27 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
             query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
         }
 
+        if ( sort != null ) {
+            if ( sort.getDirection() == Sort.Direction.ASC ) {
+                query.addOrder( Order.asc( sort.getOrderBy() ) );
+            } else if ( sort.getDirection() == Sort.Direction.DESC ) {
+                query.addOrder( Order.desc( sort.getOrderBy() ) );
+            } else {
+                // defaulting to ASC
+                query.addOrder( Order.asc( sort.getOrderBy() ) );
+            }
+        }
+
         query.setFirstResult( offset );
         query.setMaxResults( limit );
-        query.addOrder( isAsc ? Order.asc( orderBy ) : Order.desc( orderBy ) );
         query.setCacheable( true );
 
         //noinspection unchecked
-        return new Slice<>( super.loadValueObjects( ( List<ExpressionAnalysisResultSet> ) query.list() ),
-                new Sort( orderBy, isAsc ? Sort.Direction.ASC : Sort.Direction.DESC ), offset, limit, null );
+        return new Slice<>( super.loadValueObjects( ( List<ExpressionAnalysisResultSet> ) query.list() ), sort, offset, limit, null );
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
         throw new NotImplementedException( "This is not supported yet." );
     }
 

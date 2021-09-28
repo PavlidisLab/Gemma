@@ -4,6 +4,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.List;
 
@@ -17,12 +18,12 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
         extends FilteringService<O>, BaseVoEnabledService<O, VO> {
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int)
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)
      */
-    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit );
+    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit );
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean)
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort)
      */
-    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc );
+    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort );
 }

@@ -122,7 +122,7 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.paginate( service.loadValueObjectsPreFilter( filter.getObjectFilters( expressionExperimentService ), sort.getFieldForClass( ExpressionExperiment.class ), sort.isAsc(), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( service.loadValueObjectsPreFilter( filter.getObjectFilters( expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -153,7 +153,7 @@ public class DatasetsWebService {
     ) {
         List<ObjectFilter[]> filters = datasetsArg.combineFilters( filter.getObjectFilters( expressionExperimentService ), service );
         log.info( filters.get( 0 )[0] );
-        return Responder.respond( service.loadValueObjectsPreFilter( filters, sort.getFieldForClass( ExpressionExperiment.class ), sort.isAsc(), offset.getValue(), limit.getValue() ) );
+        return Responder.respond( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**

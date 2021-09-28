@@ -10,6 +10,10 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class Sort {
 
+    public static Sort by( String orderBy, Direction direction ) {
+        return new Sort( orderBy, direction );
+    }
+
     public enum Direction {
         ASC, DESC
     }

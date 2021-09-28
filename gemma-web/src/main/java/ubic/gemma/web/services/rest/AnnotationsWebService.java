@@ -138,7 +138,7 @@ public class AnnotationsWebService {
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
-            return Responder.respond( expressionExperimentService.loadValueObjectsPreFilter( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), sort.getFieldForClass( ExpressionExperiment.class ), sort.isAsc(), offset.getValue(), limit.getValue() ) );
+            return Responder.respond( expressionExperimentService.loadValueObjectsPreFilter( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
@@ -174,7 +174,7 @@ public class AnnotationsWebService {
         return Responder.respond( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) )
                         .combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), offset.getValue(),
-                limit.getValue(), sort.getFieldForClass( ExpressionExperiment.class ), sort.isAsc() ) );
+                limit.getValue(), sort.getValueForClass( ExpressionExperiment.class ) ) );
     }
 
     /**

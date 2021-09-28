@@ -11,6 +11,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
 
         List<ObjectFilter[]> filters = new ArrayList<>( 1 );
         filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.is, ad.getId().toString() ) } );
-        return eeService.loadValueObjectsPreFilter( filters, "id", true, offset, limit );
+        return eeService.loadValueObjectsPreFilter( filters, Sort.by( "id", null ), offset, limit );
     }
 
     /**
@@ -74,7 +75,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
                         new ObjectFilter( csService.getObjectAlias(), "arrayDesign", ArrayDesign.class, ObjectFilter.Operator.is, ad ) } );
             }
         };
-        return csService.loadValueObjectsPreFilter( filters, "", true, offset, limit );
+        return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
 
     }
 

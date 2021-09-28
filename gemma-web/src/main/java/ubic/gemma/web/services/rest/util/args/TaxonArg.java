@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      */
     public Slice<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
-            List<ObjectFilter[]> filters, int offset, int limit, String sort, boolean sortAsc ) {
+            List<ObjectFilter[]> filters, int offset, int limit, Sort sort ) {
         if ( filters == null ) {
             filters = new ArrayList<>( 1 );
         }
@@ -78,7 +79,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
                 new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, this.getEntity( taxonService ).getId()
                 ) } );
 
-        return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, sortAsc, offset, limit );
+        return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 
     /**

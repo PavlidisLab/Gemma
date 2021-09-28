@@ -33,6 +33,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -155,7 +156,7 @@ public class FactorValueDaoImpl extends AbstractFilteringVoEnabledDao<FactorValu
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty, boolean orderDesc ) {
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
         throw new NotImplementedException( "This is ont implemented yet!" );
     }
 }

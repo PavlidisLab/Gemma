@@ -1020,12 +1020,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return this.loadValueObjectsPreFilter( null, null, true, 0, -1 );
+        return this.loadValueObjectsPreFilter( null, null, 0, -1 );
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
-        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, null, true );
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort ) {
+        return this.loadValueObjectsPreFilter( 0, -1, sort, null, true );
     }
 
     @Override
@@ -1033,24 +1033,23 @@ public class ExpressionExperimentDaoImpl
         ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, taxon.getId() ) };
 
-        return this.loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, null, filter, true );
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
-            Taxon taxon ) {
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort, Taxon taxon ) {
 
         final ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, taxon.getId() ) };
 
-        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
     }
 
     /*
      * Note that unlike loadValueObjectsPreFilter this returns ExpressionExperimentDetailsValueObject
      */
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start ) {
         final ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
@@ -1071,7 +1070,7 @@ public class ExpressionExperimentDaoImpl
         };
 
         // Compose query
-        Query query = this.getLoadValueObjectsQuery( filtersList, orderBy, descending );
+        Query query = this.getLoadValueObjectsQuery( filtersList, sort );
 
         if ( limit > 0 ) {
             query.setMaxResults( limit );
@@ -1108,7 +1107,7 @@ public class ExpressionExperimentDaoImpl
 
         this.populateAnalysisInformation( vos );
         log.info( "EE details VO query + postprocessing: " + timer.getTime() + " ms" );
-        return new Slice<>( vos, new Sort( orderBy, descending ? Sort.Direction.DESC : Sort.Direction.ASC ), start, limit, totalElements );
+        return new Slice<>( vos, sort, start, limit, totalElements );
     }
 
     @Override
@@ -1156,7 +1155,7 @@ public class ExpressionExperimentDaoImpl
         final ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idl ) };
 
-        List<ExpressionExperimentValueObject> vos = this.loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
+        List<ExpressionExperimentValueObject> vos = this.loadValueObjectsPreFilter( 0, -1, Sort.by( "id", Sort.Direction.ASC ), filter, true );
 
         List<ExpressionExperimentValueObject> finalValues = new ArrayList<>( vos.size() );
         if ( maintainOrder ) {
@@ -1178,7 +1177,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
             Collection<Long> ids ) {
         if ( ids.isEmpty() )
             return Collections.emptyList();
@@ -1186,7 +1185,7 @@ public class ExpressionExperimentDaoImpl
         ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) };
 
-        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
     }
 
     /**
@@ -1270,10 +1269,10 @@ public class ExpressionExperimentDaoImpl
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, String orderBy, boolean asc, int offset, int limit ) {
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
         // TODO: remove this line when we get rid of _totalInQuery
         this.totalElements.set( ( Long ) getCountValueObjectsQuery( filter ).uniqueResult() );
-        return super.loadValueObjectsPreFilter( filter, orderBy, asc, offset, limit );
+        return super.loadValueObjectsPreFilter( filter, sort, offset, limit );
     }
 
     @Override
@@ -1445,8 +1444,8 @@ public class ExpressionExperimentDaoImpl
         return voMap;
     }
 
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
+    @Override
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
@@ -1489,7 +1488,9 @@ public class ExpressionExperimentDaoImpl
         queryString += " group by ee";
 
         //   queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( orderByProperty ), orderDesc );
+        if ( sort != null ) {
+            queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( sort.getOrderBy() ), sort.getDirection() );
+        }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -1502,6 +1503,7 @@ public class ExpressionExperimentDaoImpl
         return query;
     }
 
+    @Override
     protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String queryString =
@@ -1633,10 +1635,10 @@ public class ExpressionExperimentDaoImpl
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     @SuppressWarnings("SameParameterValue") // Better reusability
-    private List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ObjectFilter[] filters, boolean disjunction ) {
+    private List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, Sort sort,
+            ObjectFilter[] filters, boolean disjunction ) {
         if ( filters == null ) {
-            return this.loadValueObjectsPreFilter( null, orderBy, asc, offset, limit );
+            return this.loadValueObjectsPreFilter( null, sort, offset, limit );
         }
 
         ArrayList<ObjectFilter[]> filterList = new ArrayList<>( disjunction ? filters.length : 1 );
@@ -1653,7 +1655,7 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
-        return this.loadValueObjectsPreFilter( filterList, orderBy, asc, offset, limit );
+        return this.loadValueObjectsPreFilter( filterList, sort, offset, limit );
     }
 
     /**

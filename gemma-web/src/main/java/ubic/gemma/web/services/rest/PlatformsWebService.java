@@ -94,7 +94,7 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getObjectFilters( arrayDesignService ), sort.getFieldForClass( ArrayDesign.class ), sort.isAsc(), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filter.getObjectFilters( arrayDesignService ), sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -123,7 +123,7 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( datasetsArg.combineFilters( filter.getObjectFilters( arrayDesignService ), arrayDesignService ), sort.getFieldForClass( ArrayDesign.class ), sort.isAsc(), offset.getValue(), limit.getValue() ) );
+        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( datasetsArg.combineFilters( filter.getObjectFilters( arrayDesignService ), arrayDesignService ), sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -205,10 +205,7 @@ public class PlatformsWebService {
     ) {
         try {
             probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-            return Responder.respond( compositeSequenceService
-                    .loadValueObjectsPreFilter( probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ), null, true, offset.getValue(), limit.getValue()
-                    )
-            );
+            return Responder.respond( compositeSequenceService.loadValueObjectsPreFilter( probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ), null, offset.getValue(), limit.getValue() ) );
         } catch ( QueryException e ) {
             if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
