@@ -47,7 +47,6 @@ public abstract class DatasetArg<T>
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {
-            log.info( "Nope", e );
             return new DatasetStringArg( s );
         }
     }
