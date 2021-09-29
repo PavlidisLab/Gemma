@@ -461,7 +461,7 @@
 	</reporting>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gsec.version>0.0.4</gsec.version>
+		<gsec.version>0.0.5</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<hibernate.version>3.6.10.Final</hibernate.version>
