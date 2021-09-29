@@ -1,11 +1,10 @@
 package ubic.gemma.persistence.util;
 
+import com.google.common.base.Strings;
+import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Conjunction;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.*;
 import org.hibernate.type.StringType;
 import org.springframework.security.acls.domain.BasePermission;
 
@@ -19,6 +18,7 @@ public class ObjectFilterCriteriaUtils {
 
     /**
      * Form a restriction clause using a {@link Criterion}.
+     * @see ObjectFilterQueryUtils#formRestrictionClause(List)
      * @param objectFilters the filters to use to create the clause
      * @return a restriction clause that can be appended to a {@link Criteria} using {@link Criteria#add(Criterion)}
      */
@@ -61,13 +61,31 @@ public class ObjectFilterCriteriaUtils {
         }
     }
 
-    public static Criterion formAclRestrictionClause() {
+    /**
+     * Form a restriction clause for ACL.
+     *
+     * @see AclQueryUtils#formAclRestrictionClause()
+     */
+    public static Criterion formAclRestrictionClause( String alias, String aoiType ) {
+        if ( Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType ) )
+            throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
+
+        DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
+                .setProjection( Projections.property( "aoi.identifier" ) )
+                .add( Restrictions.eqProperty( "aoi.identifier", alias + ".id" ) )
+                .add( Restrictions.eq( "aoi.type", aoiType ) );
+        if ( SecurityUtil.isUserAdmin() ) {
+            dc.createAlias( "aoi.ownerSid", "sid", Criteria.INNER_JOIN );
+        } else {
+            dc.createAlias( "aoi.entries", "ace", Criteria.INNER_JOIN );
+        }
+
         String userName = SecurityUtil.getCurrentUsername();
         int readMask = BasePermission.READ.getMask();
         int writeMask = BasePermission.WRITE.getMask();
         if ( !SecurityUtil.isUserAnonymous() ) {
             if ( !SecurityUtil.isUserAdmin() ) {
-                return Restrictions.disjunction()
+                dc.add( Restrictions.disjunction()
                         // user own the object
                         .add( Restrictions.eq( "sid.principal", userName ) )
                         // user has specific rights to the object
@@ -76,16 +94,18 @@ public class ObjectFilterCriteriaUtils {
                                 .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
                         // the object is public
                         .add( Restrictions.conjunction()
-                                .add( Restrictions.eq( "ace.sid.id", 4 ) )
-                                .add( Restrictions.eq( "ace.mask", readMask ) ) );
+                                .add( Restrictions.eq( "ace.sid.id", 4L ) )
+                                .add( Restrictions.eq( "ace.mask", readMask ) ) ) );
             } else {
-                return Restrictions.conjunction();
+                //
             }
         } else {
             // the object is public
-            return Restrictions.conjunction()
-                    .add( Restrictions.eq( "ace.sid.id", 4 ) )
-                    .add( Restrictions.eq( "ace.mask", readMask ) );
+            dc.add( Restrictions.conjunction()
+                    .add( Restrictions.eq( "ace.sid.id", 4L ) )
+                    .add( Restrictions.eq( "ace.mask", readMask ) ) );
         }
+
+        return Subqueries.propertyIn( alias + ".id", dc );
     }
 }

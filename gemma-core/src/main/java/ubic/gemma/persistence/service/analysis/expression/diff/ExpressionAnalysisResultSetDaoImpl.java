@@ -212,6 +212,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
             query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
         }
 
+        // apply the ACL on the associated EE
+        query.add( ObjectFilterCriteriaUtils.formAclRestrictionClause( "e", "ubic.gemma.model.expression.experiment.ExpressionExperiment" ) );
+
         if ( sort != null ) {
             if ( sort.getDirection() == Sort.Direction.ASC ) {
                 query.addOrder( Order.asc( sort.getOrderBy() ) );
@@ -248,6 +251,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
 
     @Override
     public String getObjectAlias() {
-        return "resultSet";
+        return null;
     }
 }

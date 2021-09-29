@@ -27,6 +27,7 @@ import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -124,7 +125,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.findAll( null,
                 null,
-                null,
+                FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
@@ -138,13 +139,61 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     }
 
     @Test
+    public void testFindAllWithFilters() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        ResponseDataObject<?> result = service.findAll( null,
+                null,
+                FilterArg.valueOf( "id = " + this.dears.getId() ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                response );
+        assertEquals( response.getStatus(), 200 );
+        //noinspection unchecked
+        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        assertEquals( results.size(), 1 );
+        // individual analysis results are not exposed from this endpoint
+        assertNull( results.get( 0 ).getAnalysisResults() );
+    }
+
+    @Test
+    public void testFindAllWithFiltersAndCollections() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        ResponseDataObject<?> result = service.findAll( null,
+                null,
+                FilterArg.valueOf( "id in (" + this.dears.getId() + ")" ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                response );
+        assertEquals( response.getStatus(), 200 );
+        //noinspection unchecked
+        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
+        assertEquals( results.size(), 1 );
+        // individual analysis results are not exposed from this endpoint
+        assertNull( results.get( 0 ).getAnalysisResults() );
+    }
+
+    @Test
+    public void testFindAllWithInvalidFilters() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        assertThrows( BadRequestException.class, () -> service.findAll( null,
+                null,
+                FilterArg.valueOf( "id2 = " + this.dears.getId() ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                response ) );
+    }
+
+    @Test
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
         DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
         ResponseDataObject<?> result = service.findAll(
                 datasets,
                 null,
-                null,
+                FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
@@ -174,7 +223,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.findAll( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
-                null,
+                FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),

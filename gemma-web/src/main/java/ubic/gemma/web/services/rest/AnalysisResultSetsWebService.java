@@ -78,7 +78,7 @@ public class AnalysisResultSetsWebService {
     public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> findAll(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
-            @QueryParam("filter") FilterArg filters,
+            @QueryParam("filter") @DefaultValue("") FilterArg filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort,
