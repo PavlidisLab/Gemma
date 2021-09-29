@@ -1635,7 +1635,7 @@ public class ExpressionExperimentDaoImpl
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     @SuppressWarnings("SameParameterValue") // Better reusability
-    private List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, Sort sort,
+    private Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, Sort sort,
             ObjectFilter[] filters, boolean disjunction ) {
         if ( filters == null ) {
             return this.loadValueObjectsPreFilter( null, sort, offset, limit );

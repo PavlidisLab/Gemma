@@ -27,9 +27,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,7 +72,7 @@ public interface CompositeSequenceService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
 
-    List<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
+    Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
@@ -97,7 +97,7 @@ public interface CompositeSequenceService
 
     Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
-    Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
     /**
      * @param compositeSequences sequences

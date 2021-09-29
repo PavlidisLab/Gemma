@@ -85,8 +85,8 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public List<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
-        return this.loadValueObjects( this.compositeSequenceDao.findByGene( gene, start, limit ) );
+    public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
+        return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
     }
 
     @Override
@@ -144,7 +144,7 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit );
     }
 

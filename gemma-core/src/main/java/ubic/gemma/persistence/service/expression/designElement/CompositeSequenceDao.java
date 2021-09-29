@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.Map;
@@ -40,7 +41,7 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
 
     Collection<CompositeSequence> findByGene( Gene gene );
 
-    Collection<CompositeSequence> findByGene( Gene gene, int start, int limit );
+    Slice<CompositeSequence> findByGene( Gene gene, int start, int limit );
 
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
@@ -59,12 +60,12 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     /**
      * given a composite sequence returns a collection of genes
      *
-     * @param limit             limit
      * @param compositeSequence sequence
      * @param offset            offset
+     * @param limit             limit
      * @return collection of genes
      */
-    Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+    Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
     /**
      * @param compositeSequences sequences

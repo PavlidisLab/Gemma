@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import org.hibernate.Query;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -13,6 +14,10 @@ import java.util.stream.Collectors;
  * Represents a slice of {@link List}.
  */
 public class Slice<O> extends AbstractList<O> implements List<O> {
+
+    public static <O> Slice<O> fromList( List<O> list ) {
+        return new Slice<>( list, null, null, null, ( long ) list.size() );
+    }
 
     private final List<O> data;
 
