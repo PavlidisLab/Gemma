@@ -119,7 +119,7 @@ public class TaxaWebService {
             @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), Sort.by( "id", null ) ) );
+        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), Sort.by( "id" ) ) );
     }
 
     /**

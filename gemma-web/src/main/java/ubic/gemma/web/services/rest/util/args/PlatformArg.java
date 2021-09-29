@@ -57,7 +57,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
 
         List<ObjectFilter[]> filters = new ArrayList<>( 1 );
         filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.is, ad.getId().toString() ) } );
-        return eeService.loadValueObjectsPreFilter( filters, Sort.by( "id", null ), offset, limit );
+        return eeService.loadValueObjectsPreFilter( filters, Sort.by( "id" ), offset, limit );
     }
 
     /**
