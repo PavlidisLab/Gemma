@@ -194,9 +194,27 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
 
     @Override
     public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort ) {
+        Criteria query = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
+
+        //noinspection unchecked
+        List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .setCacheable( true )
+                .list();
+
+        Long totalElements = ( Long ) totalElementsQuery
+                .setProjection( Projections.countDistinct( "id" ) )
+                .uniqueResult();
+
+        //noinspection unchecked
+        return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
+    }
+
+    private Criteria getLoadValueObjectsCriteria( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, Sort sort ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
-                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" );
 
@@ -226,12 +244,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
             }
         }
 
-        query.setFirstResult( offset );
-        query.setMaxResults( limit );
-        query.setCacheable( true );
-
-        //noinspection unchecked
-        return new Slice<>( super.loadValueObjects( ( List<ExpressionAnalysisResultSet> ) query.list() ), sort, offset, limit, null );
+        return query;
     }
 
     @Override
