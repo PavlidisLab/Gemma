@@ -89,7 +89,7 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
 
     @Override
     @Transactional(readOnly = true)
-    public Taxon findByNcbiId( final Long ncbiId ) {
+    public Taxon findByNcbiId( final Integer ncbiId ) {
         return this.taxonDao.findByNcbiId( ncbiId );
     }
 

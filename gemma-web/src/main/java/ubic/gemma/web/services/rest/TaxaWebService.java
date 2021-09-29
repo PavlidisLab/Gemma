@@ -227,7 +227,7 @@ public class TaxaWebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the datasets for a given taxon")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20

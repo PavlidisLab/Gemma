@@ -35,7 +35,7 @@ public interface TaxonService extends FilteringVoEnabledService<Taxon, TaxonValu
 
     Taxon findByScientificName( String scientificName );
 
-    Taxon findByNcbiId( Long ncbiId );
+    Taxon findByNcbiId( Integer ncbiId );
 
     @Override
     @Secured({ "GROUP_USER" })
