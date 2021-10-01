@@ -9,15 +9,10 @@ import ubic.gemma.web.services.rest.util.StringUtils;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = FactorValueArg.class))
-public class FactorValueArrayArg extends AbstractEntityArrayArg<FactorValue, FactorValueService> {
+public class FactorValueArrayArg extends AbstractEntityArrayArg<String, FactorValue, FactorValueService> {
 
     public FactorValueArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return FactorValueArg.class;
+        super( FactorValueArg.class, values );
     }
 
     public static FactorValueArrayArg valueOf( String s ) {

@@ -15,7 +15,7 @@ import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = CompositeSequenceArg.class))
 public class CompositeSequenceArrayArg
-        extends AbstractEntityArrayArg<CompositeSequence, CompositeSequenceService> {
+        extends AbstractEntityArrayArg<String, CompositeSequence, CompositeSequenceService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "element ID or name, or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine IDs and names in one query.";
@@ -24,16 +24,11 @@ public class CompositeSequenceArrayArg
     private ArrayDesign arrayDesign;
 
     private CompositeSequenceArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return CompositeSequenceArg.class;
+        super( CompositeSequenceArg.class, values );
     }
 
     private CompositeSequenceArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
+        super( CompositeSequenceArg.class, errorMessage, exception );
     }
 
     /**

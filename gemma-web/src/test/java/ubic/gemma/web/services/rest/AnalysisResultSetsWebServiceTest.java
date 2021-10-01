@@ -22,6 +22,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
@@ -251,7 +252,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdThenReturn200Success() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( new ExpressionAnalysisResultSetArg( dears.getId() ), response );
+        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
         assertEquals( response.getStatus(), 200 );
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
@@ -260,17 +261,23 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     }
 
     @Test
+    public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), response ) );
+    }
+
+    @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( new ExpressionAnalysisResultSetArg( id ), response ) );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), response ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindByIdToTsv() throws IOException {
         HttpServletResponse response = new MockHttpServletResponse();
-        StreamingOutput result = service.findByIdToTsv( new ExpressionAnalysisResultSetArg( dears.getId() ), response );
+        StreamingOutput result = service.findByIdToTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         result.write( byteArrayOutputStream );
         byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );

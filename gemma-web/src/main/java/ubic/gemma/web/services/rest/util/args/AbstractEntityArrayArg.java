@@ -16,28 +16,45 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Array of identifiers of an Identifiable entity
+ * @param <A> the type of the value used to retrieve the entity, which is typically a {@link String}
+ * @param <O> the type of the resulting entity
+ * @param <S> the type of the filtering service providing the entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<String> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<A> {
 
-    private static Log log = LogFactory.getLog( AbstractEntityArrayArg.class.getClass() );
+    private final Class<? extends AbstractEntityArg> entityArgClass;
+    private String argValueName = null;
 
-    protected String argValueName = null;
-
-    AbstractEntityArrayArg( List<String> values ) {
+    protected AbstractEntityArrayArg( Class<? extends AbstractEntityArg> entityArgClass, List<A> values ) {
         super( values );
+        this.entityArgClass = entityArgClass;
     }
 
-    AbstractEntityArrayArg( String errorMessage, Exception exception ) {
+    protected AbstractEntityArrayArg( Class<? extends AbstractEntityArg> entityArgClass, String errorMessage, Exception exception ) {
         super( errorMessage, exception );
+        this.entityArgClass = entityArgClass;
     }
 
     /**
-     * Obtain the class for the argument used to wrap individual entities.
+     * Obtain an {@link ObjectFilter} for this entity.
+     *
+     * By applying this to a query, only the entities defined in this argument will be retrieved.
+     *
+     * @param service a service which provide the
+     * @return
+     * @throws ObjectFilterException
      */
-    protected abstract Class<? extends AbstractEntityArg> getEntityArgClass();
+    public ObjectFilter getObjectFilter( S service ) throws ObjectFilterException {
+        try {
+            return service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() );
+        } catch ( ClassCastException e ) {
+            throw new NotImplementedException( "Filtering with non-string values is not supported." );
+        }
+    }
 
     /**
      * Combines the given filters with the properties in this array to create a final filter to be used for VO
@@ -53,14 +70,16 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      * @return the same array list as given, with a new added element, or a new ArrayList, in case the given
      *                 filters
      *                 was null.
+     * @deprecated if possible, use {@link #getObjectFilter(FilteringService)} since this is poor coding practice
      */
+    @Deprecated
     public List<ObjectFilter[]> combineFilters( List<ObjectFilter[]> filters, S service ) {
         if ( filters == null ) {
             filters = new ArrayList<>();
         }
 
         try {
-            filters.add( new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, this.getValue() ) } );
+            filters.add( new ObjectFilter[] { this.getObjectFilter( service ) } );
         } catch ( ObjectFilterException e ) {
             throw new RuntimeException( e.getMessage(), e );
         }
@@ -79,9 +98,13 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      */
     public Collection<O> getEntities( S service ) throws NotFoundException {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
-        for ( String s : this.getValue() ) {
+        for ( A s : this.getValue() ) {
             AbstractEntityArg<?, O, S> arg;
-            arg = this.entityArgValueOf( s );
+            if ( s instanceof String ) {
+                arg = this.entityArgValueOf( ( String ) s );
+            } else {
+                throw new NotImplementedException( "Obtaining entities is only supported for string values." );
+            }
             objects.add( arg.checkEntity( arg.getEntity( service ) ) );
         }
         return objects;
@@ -96,7 +119,7 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      * @param          <T> type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
+    protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
         String identifier = arg.getPropertyName();
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new BadRequestException( "Identifier " + value + " not recognized." );
@@ -110,9 +133,14 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      */
     protected String getPropertyName( S service ) {
         if ( this.argValueName == null ) {
-            Optional<String> value = this.getValue().stream().findFirst();
+            Optional<A> value = this.getValue().stream().findFirst();
             if ( value.isPresent() ) {
-                AbstractEntityArg<?, O, S> arg = this.entityArgValueOf( value.get() );
+                AbstractEntityArg<?, O, S> arg;
+                if ( value.get() instanceof String ) {
+                    arg = this.entityArgValueOf( ( String ) value.get() );
+                } else {
+                    throw new NotImplementedException( "Inferring the property name is only supported for string values." );
+                }
                 this.argValueName = this.checkPropertyNameString( arg, value.get(), service );
             } else {
                 /* assumed since {@link O} is identifiable */
@@ -128,9 +156,9 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
     private AbstractEntityArg<?, O, S> entityArgValueOf( String s ) {
         try {
             // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
-            return ( AbstractEntityArg<?, O, S> ) getEntityArgClass().getMethod( "valueOf", String.class ).invoke( null, s );
+            return ( AbstractEntityArg<?, O, S> ) entityArgClass.getMethod( "valueOf", String.class ).invoke( null, s );
         } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-            throw new NotImplementedException( "Could not call 'valueOf' for " + getEntityArgClass().getName(), e );
+            throw new NotImplementedException( "Could not call 'valueOf' for " + entityArgClass.getName(), e );
         }
     }
 

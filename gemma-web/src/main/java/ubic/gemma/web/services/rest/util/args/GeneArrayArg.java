@@ -10,21 +10,16 @@ import ubic.gemma.web.services.rest.util.StringUtils;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = GeneArg.class))
-public class GeneArrayArg extends AbstractEntityArrayArg<Gene, GeneService> {
+public class GeneArrayArg extends AbstractEntityArrayArg<String, Gene, GeneService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one Ncbi ID, Ensembl ID or official symbol, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine Ensembl and Ncbi IDs.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Gene identifiers";
 
     private GeneArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return GeneArg.class;
+        super( GeneArg.class, values );
     }
 
     private GeneArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
+        super( GeneArg.class, errorMessage, exception );
     }
 
     /**

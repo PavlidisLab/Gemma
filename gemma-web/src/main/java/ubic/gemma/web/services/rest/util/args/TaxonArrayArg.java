@@ -11,23 +11,18 @@ import ubic.gemma.web.services.rest.util.StringUtils;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = TaxonArg.class))
-public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
+public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name or common name or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Taxon identifiers";
 
     private TaxonArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return TaxonArg.class;
+        super( TaxonArg.class, values );
     }
 
     private TaxonArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
+        super( TaxonArg.class, errorMessage, exception );
     }
 
     /**
