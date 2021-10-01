@@ -46,5 +46,5 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
 
     void thaw( Taxon taxon );
 
-    Taxon findByNcbiId( Long ncbiId );
+    Taxon findByNcbiId( Integer ncbiId );
 }

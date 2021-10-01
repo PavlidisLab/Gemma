@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class, type = "string", example = "+id")
+@Schema(implementation = String.class, type = "string")
 public class SortArg extends AbstractArg<Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "

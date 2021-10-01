@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.web.services.rest.util.ArgUtils;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -151,13 +152,13 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the probes associated to a genes")
-    public ResponseDataObject<List<CompositeSequenceValueObject>> geneProbes( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> geneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( compositeSequenceService
+        return Responder.paginate( compositeSequenceService
                 .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
                         limit.getValue() ) );
     }

@@ -143,7 +143,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -152,8 +152,7 @@ public class DatasetsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         List<ObjectFilter[]> filters = datasetsArg.combineFilters( filter.getObjectFilters( expressionExperimentService ), service );
-        log.info( filters.get( 0 )[0] );
-        return Responder.respond( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**

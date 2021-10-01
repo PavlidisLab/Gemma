@@ -42,7 +42,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
@@ -197,13 +196,14 @@ public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<Comp
     }
 
     @Override
-    public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
+    public Slice<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
         //language=HQL
         final String queryString = "select distinct cs from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
+        List<CompositeSequence> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
                 .setMaxResults( limit ).setParameter( "gene", gene ).list();
+        return new Slice<>( list, null, start, limit, null );
     }
 
     @Override
@@ -371,16 +371,17 @@ public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<Comp
     }
 
     @Override
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         // gets all kinds of associations, not just blat.
         //language=HQL
         final String queryString = "select distinct gene from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
                 + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
                 + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        List<Gene> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "cs", compositeSequence ).setFirstResult( offset )
                 .setMaxResults( limit > 0 ? limit : -1 ).list();
+        return new Slice<>( list, null, offset, limit, null );
 
     }
 

@@ -115,7 +115,7 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public ResponseDataObject<List<ArrayDesignValueObject>> platforms( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> platforms( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -123,7 +123,7 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( arrayDesignService.loadValueObjectsPreFilter( datasetsArg.combineFilters( filter.getObjectFilters( arrayDesignService ), arrayDesignService ), sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( datasetsArg.combineFilters( filter.getObjectFilters( arrayDesignService ), arrayDesignService ), sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -196,7 +196,7 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
-    public ResponseDataObject<List<CompositeSequenceValueObject>> platformElement( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -205,7 +205,7 @@ public class PlatformsWebService {
     ) {
         try {
             probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-            return Responder.respond( compositeSequenceService.loadValueObjectsPreFilter( probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ), null, offset.getValue(), limit.getValue() ) );
+            return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ), null, offset.getValue(), limit.getValue() ) );
         } catch ( QueryException e ) {
             if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
@@ -233,7 +233,7 @@ public class PlatformsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public ResponseDataObject<List<GeneValueObject>> platformElementGenes( // Params:
+    public PaginatedResponseDataObject<GeneValueObject> platformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -241,10 +241,10 @@ public class PlatformsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probeArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        return Responder.respond( geneService.loadValueObjects( compositeSequenceService
+        return Responder.paginate( compositeSequenceService
                 .getGenes( probeArg.getEntity( compositeSequenceService ), offset.getValue(),
-                        limit.getValue() ) )
-        );
+                        limit.getValue() )
+                .map( geneService::loadValueObject ) );
     }
 
     /**

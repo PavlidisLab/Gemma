@@ -105,11 +105,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // 24-25 used in call to super.
 
         // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
-        geeq = ee.getGeeq() == null ?
-                null :
-                SecurityUtil.isUserAdmin() ?
-                        new GeeqAdminValueObject( ee.getGeeq() ) :
-                        new GeeqValueObject( ee.getGeeq() );
+        if ( ee.getGeeq() != null && Hibernate.isInitialized( ee.getGeeq() ) ) {
+            geeq = SecurityUtil.isUserAdmin() ?
+                    new GeeqAdminValueObject( ee.getGeeq() ) :
+                    new GeeqValueObject( ee.getGeeq() );
+        } else {
+            geeq = null;
+        }
 
         // 29: other parts
     }

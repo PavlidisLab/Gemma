@@ -24,12 +24,12 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  * @author tesarst
  */
 @Schema(implementation = Long.class)
-public class TaxonNcbiIdArg extends TaxonArg<Long> {
+public class TaxonNcbiIdArg extends TaxonArg<Integer> {
 
     /**
      * @param l intentionally primitive type, so the value property can never be null.
      */
-    TaxonNcbiIdArg( long l ) {
+    TaxonNcbiIdArg( int l ) {
         super( l );
     }
 

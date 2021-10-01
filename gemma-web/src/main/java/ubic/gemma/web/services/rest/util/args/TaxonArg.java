@@ -51,7 +51,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
     public static TaxonArg<?> valueOf( final String s ) {
         try {
             long id = Long.parseLong( s.trim() );
-            return id > TaxonArg.MIN_NCBI_ID ? new TaxonNcbiIdArg( id ) : new TaxonIdArg( id );
+            return id > TaxonArg.MIN_NCBI_ID ? new TaxonNcbiIdArg( ( int ) id ) : new TaxonIdArg( id );
         } catch ( NumberFormatException e ) {
             return new TaxonStringArg( s );
         }

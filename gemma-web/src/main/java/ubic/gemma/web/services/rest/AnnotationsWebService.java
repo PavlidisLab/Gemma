@@ -37,6 +37,8 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -119,7 +121,7 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -130,7 +132,7 @@ public class AnnotationsWebService {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.respond( Collections.emptyList() );
+            return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
         }
 
         // If there are filters other than the search query, intersect the results.
@@ -138,11 +140,11 @@ public class AnnotationsWebService {
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
-            return Responder.respond( expressionExperimentService.loadValueObjectsPreFilter( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
+            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.respond( expressionExperimentService.loadValueObjects( foundIds, false ) );
+        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjects( foundIds, false ) ) );
     }
 
     /**
@@ -155,7 +157,7 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
@@ -167,11 +169,11 @@ public class AnnotationsWebService {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
         if ( foundIds.isEmpty() ) {
-            return Responder.respond( Collections.emptyList() );
+            return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
-        return Responder.respond( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
+        return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) )
                         .combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), offset.getValue(),
                 limit.getValue(), sort.getValueForClass( ExpressionExperiment.class ) ) );

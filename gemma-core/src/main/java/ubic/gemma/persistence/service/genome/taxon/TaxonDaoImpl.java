@@ -121,8 +121,8 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
     }
 
     @Override
-    public Taxon findByNcbiId( Long ncbiId ) {
-        return ( Taxon ) this.findByProperty( "ncbiId", ncbiId );
+    public Taxon findByNcbiId( Integer ncbiId ) {
+        return this.findOneByProperty( "ncbiId", ncbiId );
     }
 
     @Override
