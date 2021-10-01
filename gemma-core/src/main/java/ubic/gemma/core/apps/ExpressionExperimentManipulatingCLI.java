@@ -71,6 +71,7 @@ import java.util.stream.Collectors;
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
     ExpressionExperimentService eeService;
     Set<BioAssaySet> expressionExperiments = new HashSet<>();
+    private boolean allowProcessingAll = true;
 
     public Set<BioAssaySet> getExpressionExperiments() {
         return expressionExperiments;
@@ -111,14 +112,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     @Override
     protected void buildOptions( Options options ) {
         Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
-                "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
-                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
+                        "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
+                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
                 .longOpt( "experiment" ).build();
 
         options.addOption( expOption );
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
-                "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
+                        "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .longOpt( "eeListfile" ).build();
         options.addOption( eeFileListOption );
 
@@ -190,7 +191,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.findByTaxon( taxon ) );
             }
         } else {
-            if ( !commandLine.hasOption( "dataFile" ) ) {
+            if ( !commandLine.hasOption( "dataFile" ) && allowProcessingAll ) {
                 AbstractCLI.log.info( "Processing all experiments (further filtering may modify)" );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
             }
@@ -228,12 +229,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         if ( expressionExperiments != null && expressionExperiments.size() > 1 ) {
             AbstractCLI.log.info( "Final list: " + this.expressionExperiments.size()
                     + " expressionExperiments (futher filtering may modify)" );
-        } else if ( ( expressionExperiments != null && expressionExperiments.size() == 0 )
-                || expressionExperiments == null ) {
+        } else if ( expressionExperiments == null || expressionExperiments.size() == 0 ) {
             if ( commandLine.hasOption( "dataFile" ) ) {
-                AbstractCLI.log.info( "Expression matrix from data file selected" );
+                //    AbstractCLI.log.info( "Expression matrix from data file selected" );
             } else {
-                AbstractCLI.log.info( "No experiments selected" );
+                //   AbstractCLI.log.info( "No experiments selected" );
             }
         }
 
@@ -397,4 +397,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 .collect( Collectors.toSet() );
     }
 
+    /**
+     * Disable the ability for this CLI to process all experiments when no other specification is given.
+     * The user must explicitly define the experiments to be processed.
+     */
+    protected void suppressAllOption() {
+        this.allowProcessingAll = false;
+    }
 }

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.odmg.Database;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.*;
@@ -28,6 +29,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.PersonDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
@@ -71,6 +73,9 @@ abstract public class CommonPersister extends AbstractPersister {
     @Autowired
     private UnitDao unitDao;
 
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
+
     @Override
     public Object persist( Object entity ) {
 
@@ -97,9 +102,12 @@ abstract public class CommonPersister extends AbstractPersister {
             return super.persist( ( Collection<?> ) entity );
         } else if ( entity instanceof BibliographicReference ) {
             return this.persistBibliographicReference( ( BibliographicReference ) entity );
+        } else if ( entity instanceof DatabaseEntry ) {
+            return this.persistDatabaseEntry( ( DatabaseEntry ) entity );
         }
         throw new UnsupportedOperationException( "Don't know how to persist a " + entity.getClass().getName() );
     }
+
 
     @Override
     public Object persistOrUpdate( Object entity ) {
@@ -176,6 +184,14 @@ abstract public class CommonPersister extends AbstractPersister {
         seenDatabases.put( database.getName(), database );
         return database;
     }
+
+    private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity ) {
+        if (isTransient(  entity.getExternalDatabase())) {
+            entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase() ) );
+        }
+        return databaseEntryDao.create( entity );
+    }
+
 
     Protocol persistProtocol( Protocol protocol ) {
         if ( protocol == null )

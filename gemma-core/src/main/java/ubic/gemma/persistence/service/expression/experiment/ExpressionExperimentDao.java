@@ -12,8 +12,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.Date;
@@ -27,7 +30,8 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject> {
+        extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
+        FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
@@ -117,26 +121,26 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
 
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
             Taxon taxon );
 
     /**
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param  orderField the field to order the results by.
-     * @param  descending whether the ordering by the orderField should be descending.
-     * @param  ids        only list specific ids.
-     * @param  taxon      only list experiments within specific taxon.
-     * @param  limit      max to return
-     * @param  start      offset
-     * @return            a list of EE details VOs representing experiments matching the given arguments.
+     * @param orderField the field to order the results by.
+     * @param descending whether the ordering by the orderField should be descending.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
+     * @param limit      max to return
+     * @param start      offset
+     * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     Collection<ExpressionExperiment> loadLackingFactors();
@@ -147,22 +151,8 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
 
-    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
             Collection<Long> ids );
-
-    /**
-     * @param  offset  offset
-     * @param  limit   limit
-     * @param  asc     order ascending
-     * @param  filter  filters
-     * @param  orderBy order by property
-     * @return         collection of value objects
-     * @see            ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
-     *                 description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
@@ -175,4 +165,6 @@ public interface ExpressionExperimentDao
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByFactorvalues( Long eeId );
+
+    Collection<ExpressionExperiment> getExperimentsLackingPublications();
 }

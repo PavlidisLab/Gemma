@@ -45,8 +45,7 @@ import java.util.*;
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
 @Repository
-public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEventValueObject>
-        implements AuditEventDao {
+public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditEventDao {
 
     /**
      * Classes that we track for 'updated since'. This is used for "What's new" functionality.
@@ -58,11 +57,6 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
     @Autowired
     public AuditEventDaoImpl( SessionFactory sessionFactory ) {
         super( AuditEvent.class, sessionFactory );
-    }
-
-    @Override
-    public AuditEventValueObject loadValueObject( AuditEvent entity ) {
-        return new AuditEventValueObject( entity );
     }
 
     @Override
@@ -144,8 +138,8 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
-                    .info( "Last events retrieved for  " + types.size() + " different types for " + auditables.size()
+            AbstractDao.log.info(
+                    "Last events retrieved for  " + types.size() + " different types for " + auditables.size()
                             + " items in " + timer.getTime() + "ms" );
         }
 
@@ -285,8 +279,9 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
         timer.stop();
         if ( timer.getTime() > 500 ) {
-            AbstractDao.log.info( "Last event of type " + type.getSimpleName() + " retrieved for " + auditables.size()
-                    + " items in " + timer.getTime() + "ms" );
+            AbstractDao.log.info(
+                    "Last event of type " + type.getSimpleName() + " retrieved for " + auditables.size() + " items in "
+                            + timer.getTime() + "ms" );
         }
 
         return result;
@@ -336,8 +331,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
         //language=HQL
         final String queryString = "select event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
-                + "fetch all properties where trail = :trail and et.class in (:classes) "
-                + "order by event.date desc ";
+                + "fetch all properties where trail = :trail and et.class in (:classes) " + "order by event.date desc ";
 
         org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
@@ -410,9 +404,9 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log
-                        .info( "Audit trails retrieved for " + auditables.size() + " " + clazz + " items in " + timer
-                                .getTime() + "ms" );
+                AbstractDao.log.info(
+                        "Audit trails retrieved for " + auditables.size() + " " + clazz + " items in " + timer.getTime()
+                                + "ms" );
             }
             timer.reset();
             timer.start();
@@ -443,6 +437,7 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
 
     /**
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given classes)
+     *
      * @param types types
      * @return list of types
      */

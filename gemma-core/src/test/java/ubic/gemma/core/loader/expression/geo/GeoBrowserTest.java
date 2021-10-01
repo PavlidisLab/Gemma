@@ -25,9 +25,12 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author pavlidis
@@ -87,7 +90,7 @@ public class GeoBrowserTest {
 
     /**
      * Exercises getting details
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -118,6 +121,55 @@ public class GeoBrowserTest {
             throw e;
         }
     }
+
+
+    @Test
+    public void testGetGeoRecordsB() throws Exception {
+        GeoBrowser b = new GeoBrowser();
+        try {
+            Collection<GeoRecord> geoRecords = b.getGeoRecords( Arrays.asList( new String[] { "GSE1", "GSE2", "GSE3" } ) );
+            assertEquals( 3, geoRecords.size() );
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
+    }
+
+    @Test
+    public void testGetGeoRecordGSE93825() throws Exception {
+        GeoBrowser b = new GeoBrowser();
+
+        try {
+
+            Thread.sleep( 200 );
+
+            Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "GSE93825[acc]", 0, 10, false, null, null );
+            // Check that the search has returned at least one record
+            assertTrue( res.size() > 0 );
+
+            // Print out accession numbers etc.; check that the records returned match the search term
+            for ( GeoRecord record : res ) {
+                System.out.println( "Accession: " + record.getGeoAccession() );
+                System.out.println( "Title : " + record.getTitle() );
+                System.out.println( "Number of samples: " + record.getNumSamples() );
+                System.out.println( "Date: " + record.getReleaseDate() );
+                System.out.println( "Platform: " + record.getPlatform() );
+                System.out.println( "Pubmed: " + record.getPubMedIds() );
+                assertTrue( record.getOrganisms().contains( "Homo sapiens" ) );
+            }
+
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
+    }
+
 
     /* Make the method public to run this test */
     //    @Test

@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.26.9</version>
+	<version>1.27.0</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -141,7 +141,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.48</version>
+			<version>${mysql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -193,6 +193,7 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<version>${spring.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -226,9 +227,14 @@
 			<version>13.0.1</version>
 		</dependency>
 		<dependency>
+			<groupId>commons-net</groupId>
+			<artifactId>commons-net</artifactId>
+			<version>3.8.0</version>
+		</dependency>
+		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<version>1.1.1</version>
+			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
@@ -243,7 +249,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -254,14 +260,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
+			<artifactId>mockito-core</artifactId>
+			<version>3.12.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-			<version>2.2.2</version>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.20.2</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>classmexer</groupId>
@@ -271,7 +278,13 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.30</version>
+			<version>1.0.31</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.20</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -448,7 +461,7 @@
 	</reporting>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gsec.version>0.0.4</gsec.version>
+		<gsec.version>0.0.5</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<hibernate.version>3.6.10.Final</hibernate.version>
@@ -456,7 +469,8 @@
 		<jackson.version>2.12.3</jackson.version>
 		<swagger.version>2.1.10</swagger.version>
 		<jawr.version>3.9</jawr.version>
-		<tomcat.version>8.5.60</tomcat.version>
-		<jetty.version>9.4.40.v20210413</jetty.version>
+		<tomcat.version>8.5.70</tomcat.version>
+		<jetty.version>9.4.43.v20210629</jetty.version>
+		<mysql.version>8.0.26</mysql.version>
 	</properties>
 </project>

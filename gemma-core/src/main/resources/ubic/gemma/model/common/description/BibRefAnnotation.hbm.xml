@@ -13,7 +13,7 @@
       </id>
       <discriminator column="class"/>
       <property name="term" type="java.lang.String">
-         <column name="TERM" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="TERM" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="isMajorTopic" type="java.lang.Boolean">
          <column name="IS_MAJOR_TOPIC" not-null="false" unique="false" sql-type="TINYINT"/>

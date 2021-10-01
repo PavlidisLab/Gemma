@@ -15,6 +15,7 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -38,7 +39,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.ArgUtils;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -47,8 +52,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +64,7 @@ import java.util.Set;
  */
 @Service
 @Path("/datasets")
+@CommonsLog
 public class DatasetsWebService {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
@@ -111,14 +115,14 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all datasets")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> all( // Params:
-            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> all( // Params:
+            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), filter.getObjectFilters() ) );
+        return Responder.paginate( service.loadValueObjectsPreFilter( filter.getObjectFilters( expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -139,15 +143,16 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets by their identifiers")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> datasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
-            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( service.loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), datasetsArg.combineFilters( filter.getObjectFilters(), service ) ) );
+        List<ObjectFilter[]> filters = datasetsArg.combineFilters( filter.getObjectFilters( expressionExperimentService ), service );
+        return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -201,8 +206,8 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the main differential analysis of a dataset")
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.respond(
@@ -355,9 +360,9 @@ public class DatasetsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
-                                genes.getEntities( geneService ), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevels( datasets.getEntities( expressionExperimentService ),
+                        genes.getEntities( geneService ), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 
@@ -391,17 +396,17 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @QueryParam("component") IntArg component, // Required, default 1
-            @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("component") @DefaultValue("1") IntArg component, // Required, default 1
+            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ArgUtils.checkReqArg( component, "component" );
+        ArgUtils.requiredArg( component, "component" );
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValue(),
-                                component.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevelsPca( datasets.getEntities( expressionExperimentService ), limit.getValueNoMaximum(),
+                        component.getValue(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 
@@ -438,17 +443,17 @@ public class DatasetsWebService {
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("1.0") DoubleArg threshold, // Optional, default 1.0
-            @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
             // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ArgUtils.checkReqArg( diffExSet, "diffExSet" );
+        ArgUtils.requiredArg( diffExSet, "diffExSet" );
         return Responder.respond( processedExpressionDataVectorService
-                        .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
-                                diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
-                                consolidate == null ? null : consolidate.getValue() )
+                .getExpressionLevelsDiffEx( datasets.getEntities( expressionExperimentService ),
+                        diffExSet.getValue(), threshold.getValue(), limit.getValueNoMaximum(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() )
         );
     }
 

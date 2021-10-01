@@ -96,8 +96,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         }
 
         if ( this.sequenceFile != null ) {
-            try (InputStream sequenceFileIs = FileTools
-                    .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
+            try ( InputStream sequenceFileIs = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( sequenceFile ) ) {
 
                 if ( sequenceFileIs == null ) {
                     throw new IllegalArgumentException( "No file " + sequenceFile + " was readable" );
@@ -105,13 +105,25 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                 AbstractCLI.log.info( "Processing ArrayDesign..." );
 
-                arrayDesignSequenceProcessingService
-                        .processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn, taxon );
+                if ( idFile != null ) {
+                    try ( InputStream idFileIs = FileTools
+                            .getInputStreamFromPlainOrCompressedFile( idFile ) ) {
+
+                        arrayDesignSequenceProcessingService
+                                .processArrayDesign( arrayDesign, sequenceFileIs, idFileIs, sequenceTypeEn, taxon );
+
+
+                    }
+                } else {
+                    // sequence file has to have a way to identify the probes they go with
+                    arrayDesignSequenceProcessingService
+                            .processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn, taxon );
+                }
 
                 this.audit( arrayDesign, "Sequences read from file: " + sequenceFile );
             }
         } else if ( this.idFile != null ) {
-            try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile )) {
+            try ( InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile ) ) {
 
                 if ( idFileIs == null ) {
                     throw new IllegalArgumentException( "No file " + idFile + " was readable" );
@@ -165,12 +177,13 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         super.buildOptions( options );
 
         Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
-                .desc( "Path to file (FASTA)" ).longOpt( "file" ).build();
+                .desc( "Path to file (FASTA). If the FASTA file doesn't have " +
+                        "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
 
         options.addOption( fileOption );
 
         Option sequenceIdentifierOption = Option.builder( "i" ).argName( "Input identifier file" ).hasArg()
-                .desc( "Path to file (two columns with probe ids and sequence accessions)" )
+                .desc( "Path to file (two columns with probe ids and sequence accessions); can use in combination with -file" )
                 .longOpt( "ids" ).build();
 
         options.addOption( sequenceIdentifierOption );
@@ -201,7 +214,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         options.addOption( forceOption );
 
         Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
+                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .build();
 
         options.addOption( taxonOption );

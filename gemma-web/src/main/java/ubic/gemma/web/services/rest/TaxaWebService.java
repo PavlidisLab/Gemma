@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2011 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,10 +27,12 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -24,9 +40,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static ubic.gemma.web.services.rest.util.ArgUtils.requiredArg;
 
 /**
  * RESTful interface for taxa.
@@ -100,8 +119,7 @@ public class TaxaWebService {
             @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        SortArg sort = SortArg.valueOf( "+id" );
-        return Responder.respond( taxonService.loadValueObjectsPreFilter( IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue(), sort.getField(), sort.isAsc(), taxaArg.combineFilters( FilterArg.EMPTY_FILTER.getObjectFilters(), taxonService ) ) );
+        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), Sort.by( "id" ) ) );
     }
 
     /**
@@ -126,11 +144,9 @@ public class TaxaWebService {
             @QueryParam("start") LongArg start, // Required
             @QueryParam("size") IntArg size, // Required
             @Context final HttpServletResponse sr ) {
-        ArgUtils.checkReqArg( start, "start" );
-        ArgUtils.checkReqArg( size, "size" );
         return Responder.respond(
                 taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName,
-                        start.getValue(), size.getValue() ) );
+                        requiredArg( start, "start" ).getValue(), requiredArg( size, "size" ).getValue() ) );
     }
 
     /**
@@ -200,7 +216,7 @@ public class TaxaWebService {
     }
 
     /**
-     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}
+     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(FilterArg, OffsetArg, LimitArg, SortArg, HttpServletResponse)}.
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name. It is recommended to use the ID for efficiency.
@@ -210,17 +226,17 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the datasets for a given taxon")
-    public ResponseDataObject<List<ExpressionExperimentValueObject>> taxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
-            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond(
-                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters(),
-                        offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ) );
+        return Responder.paginate(
+                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters( expressionExperimentService ),
+                        offset.getValue(), limit.getValue(), sort.getValueForClass( Taxon.class ) ) );
     }
 
     /**
@@ -243,7 +259,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the phenotypes for a given taxon")
-    public ResponseDataObject<?> taxonPhenotypes( // Params:
+    public ResponseDataObject<Collection<?>> taxonPhenotypes( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @QueryParam("tree") @DefaultValue("false") BoolArg tree, // Optional, default false
@@ -277,7 +293,7 @@ public class TaxaWebService {
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting)
     ) {
-        ArgUtils.checkReqArg( phenotypes, "phenotypes" );
+        requiredArg( phenotypes, "phenotypes" );
         return this.getCandidateGenes( taxonArg, editableOnly, phenotypes, sr );
     }
 

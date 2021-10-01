@@ -12,10 +12,10 @@
          </generator>
       </id>
       <property name="scientificName" type="java.lang.String">
-         <column name="SCIENTIFIC_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="SCIENTIFIC_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
       </property>
       <property name="commonName" type="java.lang.String">
-         <column name="COMMON_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="COMMON_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
       </property> 
       <property name="ncbiId" type="java.lang.Integer">
          <column name="NCBI_ID" not-null="false" unique="true" sql-type="INTEGER"/>

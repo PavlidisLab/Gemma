@@ -17,16 +17,16 @@
 
 		<property name="shortName" type="java.lang.String">
 			<column name="SHORT_NAME" not-null="false" unique="true"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
-				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				sql-type="VARCHAR(255)" />
 		</property>
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
-				sql-type="text character set latin1 collate latin1_swedish_ci" />
+				sql-type="text" />
 		</property>
 
 		<many-to-one name="externalAccession" class="ubic.gemma.model.common.description.DatabaseEntry"
@@ -36,7 +36,7 @@
 
 		<property name="reason" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="REASON" not-null="false" unique="false"
-				sql-type="text character set latin1 collate latin1_swedish_ci" />
+				sql-type="text" />
 		</property>
 
 		<subclass name="ubic.gemma.model.expression.experiment.BlacklistedExperiment"

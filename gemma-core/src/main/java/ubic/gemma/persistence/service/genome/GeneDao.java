@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * @see Gene
  */
-public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
+public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a

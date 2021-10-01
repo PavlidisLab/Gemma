@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
@@ -34,7 +35,7 @@ import java.util.Collection;
  * @see FactorValueService
  */
 @Service
-public class FactorValueServiceImpl extends AbstractVoEnabledService<FactorValue, FactorValueValueObject>
+public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<FactorValue, FactorValueValueObject>
         implements FactorValueService {
 
     private final FactorValueDao factorValueDao;

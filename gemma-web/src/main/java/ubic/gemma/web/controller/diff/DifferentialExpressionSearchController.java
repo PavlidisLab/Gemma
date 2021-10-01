@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -306,7 +306,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
-                .loadDetailsValueObjects(null, false, ids, null, 0,0 );
+                .loadDetailsValueObjects( null, ids, null, 0, 0 );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

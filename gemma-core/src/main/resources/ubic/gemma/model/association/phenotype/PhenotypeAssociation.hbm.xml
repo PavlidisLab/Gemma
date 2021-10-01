@@ -18,34 +18,34 @@
         </many-to-one>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="DESCRIPTION" not-null="false" unique="false"
-                    sql-type="text character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="text"/>
         </property>
         <property name="relationship" type="java.lang.String">
             <column name="RELATIONSHIP" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
             <column name="EVIDENCE_CODE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="mappingType" type="ubic.gemma.model.association.phenotype.PhenotypeMappingType">
             <column name="MAPPING_TYPE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="originalPhenotype" type="java.lang.String">
             <column name="ORIGINAL_PHENOTYPE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="isNegativeEvidence" type="java.lang.Boolean">
             <column name="IS_NEGATIVE_EVIDENCE" not-null="false" unique="false" sql-type="TINYINT"/>
         </property>
         <property name="score" type="java.lang.String">
             <column name="SCORE" not-null="false" unique="false"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property name="strength" type="java.lang.Double">
             <column name="STRENGTH" not-null="false" unique="false" sql-type="DOUBLE"/>

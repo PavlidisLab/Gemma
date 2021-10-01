@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,11 +78,13 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private Long taxonID;
 
     private String technologyType;
+
     /**
      * Required when using the class as a spring bean.
      */
     public ArrayDesignValueObject() {
     }
+
     /**
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      *
@@ -95,7 +97,23 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.description = ad.getDescription();
         this.taxon = ad.getPrimaryTaxon().getCommonName();
         this.taxonID = ad.getPrimaryTaxon().getId();
-        this.technologyType = ad.getTechnologyType().toString();
+        if ( ad.getTechnologyType() != null ) {
+            this.technologyType = ad.getTechnologyType().toString();
+        }
+
+        TechnologyType c = ad.getTechnologyType();
+        if ( c != null ) {
+            this.technologyType = c.toString();
+            this.color = c.getValue();
+        }
+
+        this.isMergee = ad.getMergedInto() != null;
+        this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
+    }
+
+    public ArrayDesignValueObject( ArrayDesign ad, int totalInQuery ) {
+        this( ad );
+        set_totalInQuery( totalInQuery );
     }
 
     /**
@@ -159,40 +177,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
-    }
-
-    /**
-     * Minimal constructor
-     * 
-     * @param id        the id
-     * @param shortName the shortName
-     * @param name      the name
-     */
-    public ArrayDesignValueObject( Long id, String shortName, String name ) {
-        super();
-        this.id = id;
-        this.shortName = shortName;
-        this.name = name;
-    }
-
-    public ArrayDesignValueObject( Object[] row, Integer totalInBatch ) {
-        super( ( Long ) row[0], ( Date ) row[6], ( Boolean ) row[7], ( AuditEvent ) row[13], ( Boolean ) row[8],
-                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11], totalInBatch );
-
-        this.name = ( String ) row[1];
-        this.shortName = ( String ) row[2];
-
-        TechnologyType c = ( TechnologyType ) row[3];
-        if ( c != null ) {
-            this.technologyType = c.toString();
-            this.color = c.getValue();
-        }
-
-        this.description = ( String ) row[4];
-        this.isMergee = row[5] != null;
-        this.isAffymetrixAltCdf = row[14] != null;
-
-        this.taxon = ( String ) row[10];
     }
 
     @Override

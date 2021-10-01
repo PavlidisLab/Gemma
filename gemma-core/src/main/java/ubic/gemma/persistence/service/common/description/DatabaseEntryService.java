@@ -22,11 +22,12 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 /**
  * @author kelsey
  */
-public interface DatabaseEntryService extends BaseVoEnabledService<DatabaseEntry, DatabaseEntryValueObject> {
+public interface DatabaseEntryService extends FilteringVoEnabledService<DatabaseEntry, DatabaseEntryValueObject> {
 
     DatabaseEntry load( String accession );
 

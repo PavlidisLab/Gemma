@@ -15,15 +15,15 @@
         <property access="field" name="action"
                   type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum">
             <column name="ACTION" not-null="true"
-                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+                    sql-type="VARCHAR(255)"/>
         </property>
         <property access="field" name="note"
                   type="org.springframework.orm.hibernate3.support.ClobStringType">
-            <column name="NOTE" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+            <column name="NOTE" not-null="false" sql-type="text"/>
         </property>
         <property access="field" name="detail"
                   type="org.springframework.orm.hibernate3.support.ClobStringType">
-            <column name="DETAIL" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+            <column name="DETAIL" not-null="false" sql-type="text"/>
         </property>
         <many-to-one access="field"
                      class="ubic.gemma.model.common.auditAndSecurity.User"

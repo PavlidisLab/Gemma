@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 /**
@@ -32,7 +33,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
  * @see DatabaseEntryService
  */
 @Service
-public class DatabaseEntryServiceImpl extends AbstractVoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
+public class DatabaseEntryServiceImpl extends AbstractFilteringVoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryService {
 
     private final DatabaseEntryDao databaseEntryDao;

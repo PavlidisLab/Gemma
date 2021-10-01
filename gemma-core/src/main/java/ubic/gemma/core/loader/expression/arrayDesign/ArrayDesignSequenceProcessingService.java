@@ -135,6 +135,20 @@ public interface ArrayDesignSequenceProcessingService {
             SequenceType sequenceType, Taxon taxon ) throws IOException;
 
     /**
+     * Read from FASTA file when the sequence file lacks any way to link the sequences back to the probes. Provide the idFile to do so.
+     *
+     * @param arrayDesign platform
+     * @param sequenceFile FASTA
+     * @param sequenceIdentifierFile two columns of probe ids and sequence IDs (the same ones in the sequenceFile)
+     * @param taxon - if null, attempt to determine it from the array design
+     * @return biosequences
+     * @throws IOException
+     */
+    Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile, InputStream sequenceIdentifierFile,
+            SequenceType sequenceType, Taxon taxon ) throws IOException;
+
+
+    /**
      * Intended for use with array designs that use sequences that are in genbank, but the accessions need to be
      * assigned after the array is already in the system. This happens when only partial or incorrect information is in
      * GEO, for example, when Refseq ids are provided instead of the EST clone that was arrayed.

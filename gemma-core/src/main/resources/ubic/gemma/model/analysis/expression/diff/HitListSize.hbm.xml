@@ -18,7 +18,7 @@
          <column name="NUMBER_OF_PROBES" not-null="true" unique="false" sql-type="INTEGER"/>
       </property>
       <property name="direction" type="ubic.gemma.model.analysis.expression.diff.DirectionEnum">
-         <column name="DIRECTION" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="DIRECTION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="numberOfGenes" type="java.lang.Integer">
          <column name="NUMBER_OF_GENES" not-null="false" unique="false" sql-type="INTEGER"/>

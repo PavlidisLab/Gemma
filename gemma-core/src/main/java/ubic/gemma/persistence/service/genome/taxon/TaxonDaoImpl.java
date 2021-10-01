@@ -24,22 +24,19 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.*;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author pavlidis
- * @see    Taxon
+ * @see Taxon
  */
 @Repository
-public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
+public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
@@ -91,13 +88,15 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
 
     @Override
     public Taxon findByCommonName( final String commonName ) {
-        if (StringUtils.isBlank( commonName )) throw new IllegalArgumentException("commonName cannot be empty");
+        if ( StringUtils.isBlank( commonName ) )
+            throw new IllegalArgumentException( "commonName cannot be empty" );
         return this.findOneByStringProperty( "commonName", commonName );
     }
 
     @Override
     public Taxon findByScientificName( final String scientificName ) {
-        if (StringUtils.isBlank( scientificName )) throw new IllegalArgumentException("scientificName cannot be empty");
+        if ( StringUtils.isBlank( scientificName ) )
+            throw new IllegalArgumentException( "scientificName cannot be empty" );
         return this.findOneByStringProperty( "scientificName", scientificName );
     }
 
@@ -105,7 +104,7 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     public Collection<Taxon> findTaxonUsedInEvidence() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
+                        "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
                 .list();
     }
 
@@ -122,8 +121,8 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public Taxon findByNcbiId( Long ncbiId ) {
-        return ( Taxon ) this.findByProperty( "ncbiId", ncbiId );
+    public Taxon findByNcbiId( Integer ncbiId ) {
+        return this.findOneByProperty( "ncbiId", ncbiId );
     }
 
     @Override
@@ -133,57 +132,56 @@ public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> 
     }
 
     @Override
-    public List<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        // Compose query
-        Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
-
-        query.setCacheable( true );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-        query.setFirstResult( offset );
-
-        //noinspection unchecked
-        List<Object[]> list = query.list();
-        List<TaxonValueObject> vos = new ArrayList<>( list.size() );
-
-        for ( Object[] row : list ) {
-            TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
-            if ( row[2] != null ) {
-                vo.setExternalDatabase( new ExternalDatabaseValueObject( ( ExternalDatabase ) row[2] ) );
-            }
-            vos.add( vo );
+    protected TaxonValueObject processLoadValueObjectsQueryResult( Object result ) {
+        Object[] row = ( Object[] ) result;
+        TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
+        if ( row[2] != null ) {
+            vo.setExternalDatabase( new ExternalDatabaseValueObject( ( ExternalDatabase ) row[2] ) );
         }
-
-        return vos;
+        return vo;
     }
 
-    /**
-     * @param  filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                         description.
-     * @param  orderByProperty the property to order by.
-     * @param  orderDesc       whether the ordering is ascending or descending.
-     * @return                 a hibernate Query object ready to be used for TaxonVO retrieval.
-     */
-    private Query getLoadValueObjectsQueryString( List<ObjectFilter[]> filters, String orderByProperty,
-            boolean orderDesc ) {
+    @Override
+    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + ObjectFilter.DAO_TAXON_ALIAS + ".id as id, " // 0
-                + ObjectFilter.DAO_TAXON_ALIAS + ", " // 1
+        String queryString = "select " + getObjectAlias() + ".id as id, " // 0
+                + getObjectAlias() + ", " // 1
                 + "ED " // 2
-                + "from Taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " " // taxon
-                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
-                + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+                + "from Taxon as " + getObjectAlias() + " " // taxon
+                + "left join " + getObjectAlias() + ".externalDatabase as ED " // external db
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
-        queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
-        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        queryString += "group by " + getObjectAlias() + ".id ";
+        queryString += ObjectFilterQueryUtils.formOrderByProperty( sort.getOrderBy(), sort.getDirection() );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
+    }
+
+    @Override
+    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select count(distinct " + getObjectAlias() + ".id) "
+                + "from Taxon as " + getObjectAlias() + " " // taxon
+                + "left join " + getObjectAlias() + ".externalDatabase as ED " // external db
+                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+
+        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+
+        return query;
+    }
+
+    @Override
+    public String getObjectAlias() {
+        return ObjectFilter.DAO_TAXON_ALIAS;
     }
 }

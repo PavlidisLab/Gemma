@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.GeeqValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,13 +67,6 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
                 .list();
 
         return this.createVosFromRows( rows );
-    }
-
-    @Override
-    public List<GeeqValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        throw new NotYetImplementedException(
-                "filtering not implemented for Geeq VOs, as they should come with EEs (filter the EEs instead)." );
     }
 
     private List<GeeqValueObject> createVosFromRows( List<Object[]> rows ) {

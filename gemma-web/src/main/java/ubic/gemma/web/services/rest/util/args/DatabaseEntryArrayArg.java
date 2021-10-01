@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -27,11 +26,6 @@ public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry,
 
     public DatabaseEntryArrayArg( String format, IllegalArgumentException e ) {
         super( format, e );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_DATABASE_ENTRY_ALIAS;
     }
 
     public static DatabaseEntryArrayArg valueOf( final String s ) {

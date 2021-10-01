@@ -77,6 +77,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
@@ -89,6 +90,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 /**
  * @author pavlidis
@@ -98,7 +101,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends AbstractVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -658,7 +661,7 @@ public class ExpressionExperimentServiceImpl
                 result = "SINGLE_BATCH_SUCCESS";
             } else if ( beDetails.getDataWasBatchCorrected() ) {
                 result = "BATCH_CORRECTED_SUCCESS"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
-            } else if (beDetails.isFailedToGetBatchInformation()) {
+            } else if ( beDetails.isFailedToGetBatchInformation() ) {
                 result = "NO_BATCH_INFO"; // sort of generic
             } else if ( beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
@@ -851,9 +854,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
-            boolean descending ) {
-        return this.expressionExperimentDao.loadAllValueObjectsOrdered( orderField, descending );
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort ) {
+        return this.expressionExperimentDao.loadAllValueObjectsOrdered( sort );
     }
 
     @Override
@@ -864,15 +866,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
-            boolean descending, Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort, Taxon taxon ) {
+        return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( sort, taxon );
     }
 
     @Override
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
-            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
+            Collection<Long> ids, Taxon taxon, int limit, int start ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( sort, ids, taxon, limit, start );
     }
 
     @Override
@@ -896,9 +897,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
+    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
             Collection<Long> ids ) {
-        return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
+        return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( sort, ids ) );
     }
 
     @Override
@@ -1092,17 +1093,6 @@ public class ExpressionExperimentServiceImpl
         super.update( entity );
     }
 
-    /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, List) for
-     *      description (no but seriously do look it might not work as you would expect).
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter ) {
-        return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
-    }
-
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
         return this.expressionExperimentDao.getAnnotationsByFactorvalues( eeId );
     }
@@ -1158,6 +1148,11 @@ public class ExpressionExperimentServiceImpl
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
+        return this.expressionExperimentDao.getExperimentsLackingPublications();
     }
 
 }

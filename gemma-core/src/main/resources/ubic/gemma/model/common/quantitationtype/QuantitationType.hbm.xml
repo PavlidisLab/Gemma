@@ -12,25 +12,25 @@
          </generator>
       </id>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="isBackground" type="java.lang.Boolean">
          <column name="IS_BACKGROUND" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="representation" type="ubic.gemma.model.common.quantitationtype.PrimitiveTypeEnum">
-         <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="generalType" type="ubic.gemma.model.common.quantitationtype.GeneralTypeEnum">
-         <column name="GENERAL_TYPE" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="GENERAL_TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="type" type="ubic.gemma.model.common.quantitationtype.StandardQuantitationTypeEnum">
-         <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="scale" type="ubic.gemma.model.common.quantitationtype.ScaleTypeEnum">
-         <column name="SCALE" not-null="true" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="SCALE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="isPreferred" type="java.lang.Boolean">
          <column name="IS_PREFERRED" not-null="false" unique="false" sql-type="TINYINT"/>

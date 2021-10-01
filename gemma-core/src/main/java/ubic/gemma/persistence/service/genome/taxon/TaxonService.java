@@ -22,19 +22,20 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObject> {
+public interface TaxonService extends FilteringVoEnabledService<Taxon, TaxonValueObject> {
 
     Taxon findByCommonName( String commonName );
 
     Taxon findByScientificName( String scientificName );
 
-    Taxon findByNcbiId( Long ncbiId );
+    Taxon findByNcbiId( Integer ncbiId );
 
     @Override
     @Secured({ "GROUP_USER" })

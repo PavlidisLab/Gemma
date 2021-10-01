@@ -32,23 +32,25 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.*;
 
 /**
  * @author keshav
  * @author pavlidis
- * @see    CompositeSequenceService
+ * @see CompositeSequenceService
  */
 @Service
 public class CompositeSequenceServiceImpl
-        extends AbstractVoEnabledService<CompositeSequence, CompositeSequenceValueObject>
+        extends AbstractFilteringVoEnabledService<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceService {
 
     private final BioSequenceService bioSequenceService;
@@ -83,8 +85,8 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public List<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
-        return this.loadValueObjects( this.compositeSequenceDao.findByGene( gene, start, limit ) );
+    public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
+        return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
     }
 
     @Override
@@ -142,7 +144,7 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit );
     }
 
@@ -251,13 +253,13 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public List<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, List<ObjectFilter[]> filter ) {
-        List<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    @Transactional(readOnly = true)
+    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
+        Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( filter, sort, offset, limit );
         for ( CompositeSequenceValueObject vo : vos ) {
             // Not passing the vo since that would create data redundancy in the returned structure
-            vo.setGeneMappingSummaries( this.getGeneMappingSummary(
-                    this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
+            vo.setGeneMappingSummaries(
+                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
         }
         return vos;
     }

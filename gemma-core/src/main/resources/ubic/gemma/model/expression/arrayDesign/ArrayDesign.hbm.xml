@@ -18,19 +18,19 @@
          <column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="advertisedNumberOfDesignElements" type="java.lang.Integer">
          <column name="ADVERTISED_NUMBER_OF_DESIGN_ELEMENTS" not-null="false" unique="false" sql-type="INTEGER"/>
       </property>
       <property name="shortName" type="java.lang.String">
-         <column name="SHORT_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="SHORT_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
       </property>
       <property name="technologyType" type="ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum">
-         <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
       <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">

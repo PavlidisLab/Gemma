@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -44,11 +43,6 @@ public class DatasetArrayArg
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new DatasetArrayArg( StringUtils.splitAndTrim( s ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_EE_ALIAS;
     }
 
 }

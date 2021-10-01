@@ -12,7 +12,6 @@ import java.util.List;
  * Created by tesarst on 01/06/17.
  * A special case of Service that also provides value object functionality.
  */
-@Deprecated
 public abstract class AbstractVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractService<O> implements BaseVoEnabledService<O,VO> {
 
@@ -39,12 +38,6 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
     @Transactional(readOnly = true)
     public List<VO> loadAllValueObjects() {
         return voDao.loadAllValueObjects();
-    }
-
-    @Override
-    public List<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            List<ObjectFilter[]> filter ) {
-        return voDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
 }

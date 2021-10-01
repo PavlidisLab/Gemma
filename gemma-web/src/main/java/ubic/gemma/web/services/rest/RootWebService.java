@@ -2,20 +2,25 @@ package ubic.gemma.web.services.rest;
 
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.OpenAPI;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
+import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -32,9 +37,9 @@ import java.util.Collection;
 @Path("/")
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic", description = "Authenticate with your Gemma username and password")
 @SecurityScheme(name = "cookieAuth", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.COOKIE, paramName = "JSESSIONID", description = "Authenticate with your current Gemma session.")
+@CommonsLog
 public class RootWebService {
 
-    public static final String API_VERSION = "2.3.4";
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
     private static final String APIDOCS_URL = Settings.getBaseUrl() + "resources/restapidocs/";
     private static final String ERROR_MSG_USER_INFO_ACCESS = "Inappropriate privileges. Only your user info is available.";
@@ -60,9 +65,9 @@ public class RootWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an object with basic API information")
     public ResponseDataObject<ApiInfoValueObject> all( // Params:
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.respond( new ApiInfoValueObject() );
+            @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
+            @Context final ServletConfig servletConfig ) {
+        return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), APIDOCS_URL ) );
     }
 
     /**
@@ -108,21 +113,20 @@ public class RootWebService {
     }
 
     @SuppressWarnings("unused") // Getters used during RS serialization
-    private static class ApiInfoValueObject {
-        private final String welcome = MSG_WELCOME;
-        private final String version = RootWebService.API_VERSION;
-        private final String docs = APIDOCS_URL;
+    @Getter
+    public static class ApiInfoValueObject {
+        private final String welcome;
+        private final String version;
+        private final String docs;
 
-        public String getWelcome() {
-            return welcome;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public String getDocs() {
-            return docs;
+        public ApiInfoValueObject( String msgWelcome, OpenAPI openApi, String apidocsUrl ) {
+            this.welcome = msgWelcome;
+            if ( openApi.getInfo() != null ) {
+                this.version = openApi.getInfo().getVersion();
+            } else {
+                this.version = null;
+            }
+            this.docs = apidocsUrl;
         }
     }
 

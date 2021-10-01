@@ -50,7 +50,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociat
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * Creates an array design based on the current set of transcripts for a taxon.
+ * Create (or update) an array design based on the current set of transcripts for a taxon.
  * This is used to create a 'platform' for linking non-array based data to the system, or data for which we have only
  * gene or transcript-level information.
  * See also: To generate annotation files for all genes in a taxon, this can also accomplished by
@@ -294,6 +294,12 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                         changed = true;
                     }
 
+                    if ( csForGene.getBiologicalCharacteristic() == null ) {
+                        log.warn( csForGene + " had no sequence, setting to " + bioSequence );
+                        csForGene.setBiologicalCharacteristic( bioSequence );
+                        changed = true;
+                    }
+
                     if ( !csForGene.getBiologicalCharacteristic().equals( bioSequence ) ) {
                         // does this happen?
                         csForGene.setBiologicalCharacteristic( bioSequence );
@@ -342,6 +348,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 + " 'elements' associated with genes." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+
+        log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
+
         auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),
                 count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                         + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );

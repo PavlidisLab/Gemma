@@ -1,69 +1,214 @@
 package ubic.gemma.web.services.rest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.args.DatasetArrayArg;
-import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.SortArg;
+import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author tesarst
  */
 public class DatasetsRestTest extends BaseSpringWebTest {
 
-    private static boolean loaded = false;
-    private static ArrayList<ExpressionExperiment> ees = new ArrayList<>( 20 );
-
     @Autowired
     private DatasetsWebService datasetsWebService;
 
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    /* fixtures */
+    private ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
+
     @Before
     public void setUp() {
-        if ( DatasetsRestTest.loaded ) {
-            return;
-        }
+        // FIXME: this should not be necessary, but other tests are not cleaning up their fixtures
+        expressionExperimentService.remove( expressionExperimentService.loadAll() );
         for ( int i = 0; i < 10; i++ ) {
-            DatasetsRestTest.ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
+            ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
         }
-        DatasetsRestTest.loaded = true;
+    }
+
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( ees );
     }
 
     @Test
     public void testAll() {
-        ResponseDataObject response = datasetsWebService
-                .all( DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "5" ), IntArg.valueOf( "5" ),
+        PaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
+                .all( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
-
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        assertEquals( 5, ( ( Collection ) response.getData() ).size() );
-        assertTrue(
-                ( ( Collection ) response.getData() ).iterator().next() instanceof ExpressionExperimentValueObject );
+        assertThat( response )
+                .hasFieldOrPropertyWithValue( "offset", 5 )
+                .hasFieldOrPropertyWithValue( "limit", 5 )
+                .hasFieldOrPropertyWithValue( "totalElements", 10L );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 5 );
     }
 
     @Test
     public void testSome() {
-        ResponseDataObject response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
-                DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
-                        .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
-                IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+                        ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
+                                .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 2 )
+                .first()
+                .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
+                .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
+                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() );
+    }
 
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        assertEquals( 2, ( ( Collection ) response.getData() ).size() );
-        assertTrue(
-                ( ( Collection ) response.getData() ).iterator().next() instanceof ExpressionExperimentValueObject );
+    @Test
+    public void testSomeById() {
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+                        ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
+                                .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 2 )
+                .first()
+                .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
+                .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
+                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() );
+    }
+
+    @Test
+    public void testAllFilterById() {
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() );
+    }
+
+    @Test
+    public void testAllFilterByIdIn() {
+        FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                filterArg,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
+                .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
+    }
+
+    @Test
+    public void testAllFilterByShortName() {
+        FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
+                .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                filterArg,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
+                .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
+    }
+
+    @Test
+    public void testAllFilterByShortNameIn() {
+        FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
+                .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                filterArg,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 1 )
+                .first()
+                .hasFieldOrPropertyWithValue( "id", ees.get( 0 ).getId() )
+                .hasFieldOrPropertyWithValue( "shortName", ees.get( 0 ).getShortName() );
+    }
+
+    @Test
+    public void testAllFilterByIdInOrShortNameIn() {
+        FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+                .hasSize( 1 );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 ) )
+                .hasSize( 2 );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[1] )
+                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
+                .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+                filterArg,
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
+        assertThat( response.getData() )
+                .isNotNull()
+                .asList().hasSize( 2 );
+        assertThat( response.getData() )
+                .extracting( "id" )
+                .containsExactlyInAnyOrder( ees.get( 0 ).getId(), ees.get( 1 ).getId() );
+    }
+
+    @Test
+    public void testAllWithTooLargeLimit() {
+        assertThatThrownBy( () -> {
+            datasetsWebService.all( FilterArg.valueOf( "" ),
+                    OffsetArg.valueOf( "0" ),
+                    LimitArg.valueOf( "101" ),
+                    SortArg.valueOf( "+id" ),
+                    new MockHttpServletResponse() );
+        } ).isInstanceOf( MalformedArgException.class );
     }
 }

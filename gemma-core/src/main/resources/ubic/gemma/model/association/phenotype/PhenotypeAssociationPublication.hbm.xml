@@ -15,7 +15,7 @@
 				<column name="CITATION_FK" not-null="false" sql-type="BIGINT" />
 	  </many-to-one>
 	  <property name="type" type="java.lang.String">
-         <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
    </class>
 </hibernate-mapping>

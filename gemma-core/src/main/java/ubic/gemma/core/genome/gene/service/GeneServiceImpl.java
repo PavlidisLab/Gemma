@@ -44,6 +44,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -61,7 +62,7 @@ import java.util.Map.Entry;
  * @see    GeneService
  */
 @Service
-public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObject> implements GeneService {
+public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, GeneValueObject> implements GeneService {
 
     private final GeneDao geneDao;
 

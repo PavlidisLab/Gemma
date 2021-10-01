@@ -26382,7 +26382,7 @@ Ext.extend(Ext.data.XmlWriter, Ext.data.DataWriter, {
     
     xmlVersion : '1.0',
     
-    xmlEncoding: 'ISO-8859-15',
+    xmlEncoding: 'UTF-8',
     
     
     tpl: '<tpl for="."><\u003fxml version="{version}" encoding="{encoding}"\u003f><tpl if="documentRoot"><{documentRoot}><tpl for="baseParams"><tpl for="."><{name}>{value}</{name}></tpl></tpl></tpl><tpl if="records.length&gt;1"><{root}></tpl><tpl for="records"><{parent.record}><tpl for="."><{name}>{value}</{name}></tpl></{parent.record}></tpl><tpl if="records.length&gt;1"></{root}></tpl><tpl if="documentRoot"></{documentRoot}></tpl></tpl>',

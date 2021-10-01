@@ -18,21 +18,25 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
@@ -66,10 +70,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param bioAssaySets related {@link BioAssaySet}, or any if null
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
      * @param objectFilters list of object filters
+     * @param limit maximum number of results to return
      * @param orderBy field by which the collection is sorted
      * @param isAsc whether the sort should be ascending or descending
-     * @param limit maximum number of results to return
      * @return
      */
-    Collection<ExpressionAnalysisResultSet> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, ArrayList<ObjectFilter[]> objectFilters, int offset, int limit, String orderBy, boolean isAsc );
+    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort );
 }

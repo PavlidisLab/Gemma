@@ -15,7 +15,7 @@
          <column name="RUNNING_STATUS" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
       <property name="failedMessage" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="FAILED_MESSAGE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="FAILED_MESSAGE" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="startTime" type="java.util.Date">
          <column name="START_TIME" not-null="true" unique="false" sql-type="DATETIME"/>
@@ -27,13 +27,13 @@
          <column name="PHASES" not-null="true" unique="false" sql-type="INTEGER"/>
       </property>
       <property name="description" type="java.lang.String">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="messages" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="MESSAGES" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+         <column name="MESSAGES" not-null="false" unique="false" sql-type="text"/>
       </property>
       <property name="taskId" type="java.lang.String">
-         <column name="TASK_ID" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+         <column name="TASK_ID" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <many-to-one name="user" class="ubic.gemma.model.common.auditAndSecurity.User"  lazy="proxy" fetch="select">
          <column name="USER_FK" not-null="false" sql-type="BIGINT"/>

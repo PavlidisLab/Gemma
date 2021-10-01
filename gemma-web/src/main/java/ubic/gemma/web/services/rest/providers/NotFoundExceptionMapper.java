@@ -1,11 +1,12 @@
 package ubic.gemma.web.services.rest.providers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
+import javax.servlet.ServletConfig;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -22,6 +23,9 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
 
+    @Context
+    private ServletConfig servletConfig;
+
     @Override
     public Response toResponse( NotFoundException e ) {
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND, e.getMessage() );
@@ -29,7 +33,7 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
             WellComposedErrorBody.addExceptionFields( errorBody, e.getCause() );
         }
         return Response.fromResponse( e.getResponse() )
-                .entity( new ResponseErrorObject( errorBody ) )
+                .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }
 }

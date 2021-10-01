@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
@@ -32,6 +31,31 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
     }
 
     /**
+     * The taxon implementation is different from the others, because the taxon checks the property name by attempting
+     * to retrieve a taxon with the given identifier (no other entity allows multiple unconstrained free text identifiers).
+     * Therefore, if the first identifier does not exist, we can not
+     * determine the name of the property. This is why we iterate over the array before we encounter the first identifier
+     * that exists. if none of the identifiers exist, null will be returned, which will in turn cause a 400 error.
+     *
+     * @param service see the parent class
+     */
+    @Override
+    protected String getPropertyName( TaxonService service ) {
+        for ( int i = 0; i < this.getValue().size(); i++ ) {
+            try {
+                String value = this.getValue().get( i );
+                AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
+                return this.checkPropertyNameString( arg, value, service );
+            } catch ( MalformedArgException e ) {
+                if ( i == this.getValue().size() - 1 ) {
+                    throw e;
+                }
+            }
+        }
+        return "id";
+    }
+
+    /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request arrayTaxon argument
@@ -47,35 +71,4 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<Taxon, TaxonService> {
         }
         return new TaxonArrayArg( StringUtils.splitAndTrim( s ) );
     }
-
-    /**
-     * The taxon implementation is different from the others, because the taxon checks the property name by attempting
-     * to retrieve a taxon with the given identifier (no other entity allows multiple unconstrained free text identifiers).
-     * Therefore, if the first identifier does not exist, we can not
-     * determine the name of the property. This is why we iterate over the array before we encounter the first identifier
-     * that exists. if none of the identifiers exist, null will be returned, which will in turn cause a 400 error.
-     *
-     * @param service see the parent class
-     */
-    @Override
-    protected void setPropertyNameAndType( TaxonService service ) {
-        for ( int i = 0; i < this.getValue().size(); i++ ) {
-            try {
-                String value = this.getValue().get( i );
-                AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
-                this.argValueName = this.checkPropertyNameString( arg, value, service );
-                this.argValueClass = arg.getValue().getClass();
-            } catch ( MalformedArgException e ) {
-                if ( i == this.getValue().size() - 1 ) {
-                    throw e;
-                }
-            }
-        }
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_TAXON_ALIAS;
-    }
-
 }
