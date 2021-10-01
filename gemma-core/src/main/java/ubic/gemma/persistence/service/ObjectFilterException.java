@@ -6,7 +6,7 @@ public class ObjectFilterException extends Exception {
         super( message );
     }
 
-    public ObjectFilterException( String message, IllegalArgumentException e ) {
-        super( message, e );
+    public ObjectFilterException( String message, Throwable cause ) {
+        super( message, cause );
     }
 }

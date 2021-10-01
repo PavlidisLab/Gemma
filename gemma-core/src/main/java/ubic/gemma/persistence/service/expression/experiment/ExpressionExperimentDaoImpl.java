@@ -50,8 +50,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.service.common.description.CharacteristicDao;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.util.*;
 
 import java.text.MessageFormat;
@@ -1242,13 +1240,21 @@ public class ExpressionExperimentDaoImpl
         // Allow characteristics property filtering
         if ( propertyName.startsWith( "characteristics." ) ) {
             propertyName = propertyName.replaceFirst( "characteristics.", "" );
-            return new ObjectFilter( ObjectFilter.DAO_CHARACTERISTIC_ALIAS, propertyName, ObjectFilter.getPropertyType( propertyName, Characteristic.class ), operator, requiredValue );
+            try {
+                return new ObjectFilter( ObjectFilter.DAO_CHARACTERISTIC_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, Characteristic.class ), operator, requiredValue );
+            } catch ( NoSuchFieldException e ) {
+                throw new ObjectFilterException( "Could not create a characteristic object filter for " + propertyName, e );
+            }
         }
 
         // Allow bioAssays property filtering
         if ( propertyName.startsWith( "bioAssays." ) ) {
             propertyName = propertyName.replaceFirst( "bioAssays.", "" );
-            return new ObjectFilter( ObjectFilter.DAO_BIOASSAY_ALIAS, propertyName, ObjectFilter.getPropertyType( propertyName, BioAssay.class ), operator, requiredValue );
+            try {
+                return new ObjectFilter( ObjectFilter.DAO_BIOASSAY_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, BioAssay.class ), operator, requiredValue );
+            } catch ( NoSuchFieldException e ) {
+                throw new ObjectFilterException( "Could not create a bioassay object filter for " + propertyName, e );
+            }
         }
 
         return super.getObjectFilter( propertyName, operator, requiredValue );
