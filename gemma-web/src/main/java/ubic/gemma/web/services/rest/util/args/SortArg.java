@@ -15,15 +15,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
-
-import javax.ws.rs.BadRequestException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Class representing an API argument that should be an integer.
@@ -56,10 +50,12 @@ public class SortArg extends AbstractArg<Sort> {
      * @return the field to sort by.
      * @throws MalformedArgException if the original argument was not well-composed or the class does not contain the
      * expected field
+     * @deprecated use {@link #getValueForClass(Class)} instead
      */
+    @Deprecated
     public String getFieldForClass( Class<?> cls ) throws MalformedArgException {
         try {
-            checkFieldExists( cls, getValue().getOrderBy() );
+            EntityUtils.getDeclaredField( cls, getValue().getOrderBy() );
             return getValue().getOrderBy();
         } catch ( NoSuchFieldException e ) {
             throw new MalformedArgException( e.getMessage(), e );
@@ -68,15 +64,24 @@ public class SortArg extends AbstractArg<Sort> {
 
     /**
      * @return the direction of sort.
-     * @throws BadRequestException if the original argument was not well-composed
+     * @throws MalformedArgException if the original argument was not well-composed
+     * @deprecated use {@link #getValueForClass(Class)} instead to obtain the sorting direction
      */
-    public boolean isAsc() throws BadRequestException {
+    @Deprecated
+    public boolean isAsc() throws MalformedArgException {
         return getValue().getDirection() == Sort.Direction.ASC;
     }
 
-    public Sort getValueForClass( Class<?> cls ) {
+    /**
+     * Obtain the {@link Sort} underlying this argument.
+     * @param cls check against the given class if the orderBy property is valid
+     * @return the sorting object in question
+     * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
+     *                               argument was malformed in the first place
+     */
+    public Sort getValueForClass( Class<?> cls ) throws MalformedArgException {
         try {
-            checkFieldExists( cls, getValue().getOrderBy() );
+            EntityUtils.getDeclaredField( cls, getValue().getOrderBy() );
             return getValue();
         } catch ( NoSuchFieldException e ) {
             throw new MalformedArgException( e.getMessage(), e );
@@ -93,9 +98,9 @@ public class SortArg extends AbstractArg<Sort> {
     @SuppressWarnings("unused")
     public static SortArg valueOf( final String s ) {
         try {
-            //noinspection ConstantConditions // Handled by the try catch
-            return new SortArg( parseDirection( s.charAt( 0 ) ) == null ? s : s.substring( 1 ), parseDirection( s.charAt( 0 ) ) );
-        } catch ( NullPointerException | StringIndexOutOfBoundsException e ) {
+            Sort.Direction direction = parseDirection( s.charAt( 0 ) );
+            return new SortArg( direction == null ? s : s.substring( 1 ), direction );
+        } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
             return new SortArg( String.format( ERROR_MSG, s ), e );
         }
     }
@@ -114,18 +119,5 @@ public class SortArg extends AbstractArg<Sort> {
         } else {
             return null;
         }
-    }
-
-    private static Field checkFieldExists( Class<?> cls, String field ) throws NoSuchFieldException {
-        List<Field> fields = new ArrayList<>();
-        for ( Class<?> c = cls; c != null; c = c.getSuperclass() ) {
-            fields.addAll( Arrays.asList( c.getDeclaredFields() ) );
-        }
-
-        for ( Field f : fields ) {
-            if ( f.getName().equals( field ) )
-                return f;
-        }
-        throw new NoSuchFieldException( "Class " + cls + " does not contain field '" + field + "'." );
     }
 }
