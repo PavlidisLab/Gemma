@@ -32,7 +32,7 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     /**
      * Load VOs with minimal ordering and filtering.
      *
-     * Use this as an alternative to {@link ##loadValueObjectsPreFilter(List, Sort, int, int)} if you do not
+     * Use this as an alternative to {@link #loadValueObjectsPreFilter(List, Sort, int, int)} if you do not
      * intend to provide pagination capabilities.
      *
      * @param filter  the filters that are applied
