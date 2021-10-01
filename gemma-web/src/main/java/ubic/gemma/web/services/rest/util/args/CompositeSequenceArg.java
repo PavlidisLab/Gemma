@@ -16,13 +16,8 @@ public abstract class CompositeSequenceArg<T>
 
     protected ArrayDesign arrayDesign;
 
-    CompositeSequenceArg( T arg ) {
-        super( arg );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "CompositeSequence";
+    protected CompositeSequenceArg( T arg ) {
+        super( CompositeSequence.class, arg );
     }
 
     /**

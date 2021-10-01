@@ -24,8 +24,8 @@ import java.util.List;
 @Schema(anyOf = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
-    PlatformArg( T value ) {
-        super( value );
+    protected PlatformArg( T value ) {
+        super( ArrayDesign.class, value );
     }
 
     /**
@@ -77,10 +77,5 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
         };
         return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
 
-    }
-
-    @Override
-    public String getEntityName() {
-        return "Platform";
     }
 }

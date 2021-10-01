@@ -34,8 +34,8 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
             + "ENSEEU|ENSTTR|ENSOGA|ENSMLU|ENSSTO|ENSCIN|MGP_WSBEiJ_|ENSMEU|ENSPVA|ENSPMA|ENSPTR|ENSFCA|"
             + "ENSPPY|ENSMGA|ENSOAR|ENSCJA|ENSETE|ENSTGU|MGP_AKRJ_|ENSONI|ENSGAL).*";
 
-    GeneArg( T value ) {
-        super( value );
+    protected GeneArg( T value ) {
+        super( Gene.class, value );
     }
 
     /**
@@ -141,10 +141,5 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
         return this.getValueObjects( service ).stream()
                 .filter( vo -> Objects.equals( vo.getTaxonId(), taxon.getId() ) )
                 .collect( Collectors.toList() );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "Gene";
     }
 }

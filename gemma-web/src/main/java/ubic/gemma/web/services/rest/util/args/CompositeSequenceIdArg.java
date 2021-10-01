@@ -26,15 +26,4 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
         }
         return checkEntity( this.getValue() == null ? null : cs );
     }
-
-    @Override
-    public String getPropertyName() {
-        return "id";
-    }
-
-    @Override
-    public String getEntityName() {
-        return "CompositeSequence";
-    }
-
 }

@@ -32,13 +32,8 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      */
     private static final Long MIN_NCBI_ID = 999L;
 
-    TaxonArg( T arg ) {
-        super( arg );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "Taxon";
+    protected TaxonArg( T arg ) {
+        super( Taxon.class, arg );
     }
 
     /**
