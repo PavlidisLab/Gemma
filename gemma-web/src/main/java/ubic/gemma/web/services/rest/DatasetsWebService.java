@@ -52,10 +52,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * RESTful interface for datasets.
@@ -151,7 +148,11 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        List<ObjectFilter[]> filters = datasetsArg.combineFilters( filter.getObjectFilters( expressionExperimentService ), service );
+        List<ObjectFilter[]> filters = filter.getObjectFilters( expressionExperimentService );
+        if ( filters == null ) {
+            filters = new ArrayList<>();
+        }
+        filters.add( datasetsArg.getObjectFilters( service ) );
         return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
     }
 

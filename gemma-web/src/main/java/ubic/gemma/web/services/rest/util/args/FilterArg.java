@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.ArrayList;
@@ -177,15 +178,14 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * retrieval. If there is an "in" operator, the required value will be converted into a collection of strings.
      *
      * @param service a VO service that can resolve the properties types and relevant object alias to use subsequently
-     *                in {@link FilteringVoEnabledService#loadValueObjectsPreFilter(List, String, boolean, int, int)}
-     *                for example.
+     *                in {@link FilteringVoEnabledService#loadValueObjectsPreFilter(List, Sort, int, int)} for example.
      *
      * @return a List of {@link ObjectFilter} arrays, each array represents a disjunction (OR) of filters. Arrays
-     * then represent a conjunction (AND) with other arrays in the list.
+     * then represent a conjunction (AND) with other arrays in the list, or null if this filter is empty.
      */
     public List<ObjectFilter[]> getObjectFilters( FilteringVoEnabledService service ) throws MalformedArgException {
         Filter filter = getValue();
-        if ( filter.propertyNames == null || filter.propertyNames.isEmpty() )
+        if ( filter.propertyNames == null )
             return null;
         ArrayList<ObjectFilter[]> filterList = new ArrayList<>( filter.propertyNames.size() );
 
