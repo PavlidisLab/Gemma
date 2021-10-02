@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -40,10 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static ubic.gemma.web.services.rest.util.ArgUtils.requiredArg;
 
@@ -119,7 +117,7 @@ public class TaxaWebService {
             @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.respond( taxonService.loadValueObjectsPreFilter( taxaArg.combineFilters( null, taxonService ), Sort.by( "id" ) ) );
+        return Responder.respond( taxonService.loadValueObjectsPreFilter( Collections.singletonList( taxaArg.getObjectFilters( taxonService ) ), Sort.by( "id" ) ) );
     }
 
     /**

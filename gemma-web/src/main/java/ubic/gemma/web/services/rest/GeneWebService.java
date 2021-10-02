@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
@@ -40,6 +41,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -101,7 +103,7 @@ public class GeneWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
-        return Responder.respond( geneService.loadValueObjectsPreFilter( genes.combineFilters( null, geneService ), sort.getValueForClass( Gene.class ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
+        return Responder.respond( geneService.loadValueObjectsPreFilter( Collections.singletonList( genes.getObjectFilters( geneService ) ), sort.getValueForClass( Gene.class ), IntArg.valueOf( "0" ).getValue(), IntArg.valueOf( "-1" ).getValue() ) );
     }
 
     /**

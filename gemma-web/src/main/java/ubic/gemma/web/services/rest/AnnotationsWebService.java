@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
@@ -140,7 +141,9 @@ public class AnnotationsWebService {
                 .equals( "id" ) || !sort.isAsc() ) {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
-            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
+            List<ObjectFilter[]> filters = filter.getObjectFilters( expressionExperimentService );
+            filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
@@ -173,9 +176,15 @@ public class AnnotationsWebService {
         }
 
         // We always have to do filtering, because we always have at least the taxon argument (otherwise this#datasets method is used)
+        List<ObjectFilter[]> filters = filter.getObjectFilters( expressionExperimentService );
+        if ( filters == null ) {
+            filters = new ArrayList<>();
+        }
+
+        filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+
         return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
-                DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) )
-                        .combineFilters( filter.getObjectFilters( expressionExperimentService ), expressionExperimentService ), offset.getValue(),
+                filters, offset.getValue(),
                 limit.getValue(), sort.getValueForClass( ExpressionExperiment.class ) ) );
     }
 

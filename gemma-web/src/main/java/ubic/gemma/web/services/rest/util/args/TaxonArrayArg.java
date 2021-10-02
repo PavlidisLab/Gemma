@@ -4,7 +4,9 @@ import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
@@ -25,29 +27,19 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
         super( TaxonArg.class, errorMessage, exception );
     }
 
-    /**
-     * The taxon implementation is different from the others, because the taxon checks the property name by attempting
-     * to retrieve a taxon with the given identifier (no other entity allows multiple unconstrained free text identifiers).
-     * Therefore, if the first identifier does not exist, we can not
-     * determine the name of the property. This is why we iterate over the array before we encounter the first identifier
-     * that exists. if none of the identifiers exist, null will be returned, which will in turn cause a 400 error.
-     *
-     * @param service see the parent class
-     */
     @Override
-    protected String getPropertyName( TaxonService service ) {
-        for ( int i = 0; i < this.getValue().size(); i++ ) {
+    public ObjectFilter[] getObjectFilters( TaxonService service ) throws MalformedArgException {
+        if ( getPropertyName( service ).equals( "commonName" ) ) {
             try {
-                String value = this.getValue().get( i );
-                AbstractEntityArg<?, Taxon, TaxonService> arg = TaxonArg.valueOf( value );
-                return this.checkPropertyNameString( arg, value, service );
-            } catch ( MalformedArgException e ) {
-                if ( i == this.getValue().size() - 1 ) {
-                    throw e;
-                }
+                return new ObjectFilter[] {
+                        service.getObjectFilter( "commonName", ObjectFilter.Operator.in, this.getValue() ),
+                        service.getObjectFilter( "scientificName", ObjectFilter.Operator.in, this.getValue() ) };
+            } catch ( ObjectFilterException e ) {
+                throw new MalformedArgException( "Could not produce a filter for the provided list of taxa.", e );
             }
+        } else {
+            return super.getObjectFilters( service );
         }
-        return "id";
     }
 
     /**

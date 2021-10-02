@@ -8,6 +8,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -40,51 +41,24 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     }
 
     /**
-     * Obtain an {@link ObjectFilter} for this entity.
+     * Obtain an {@link ObjectFilter} disjunction clause for this entity.
      *
      * By applying this to a query, only the entities defined in this argument will be retrieved.
      *
+     * By default, this is constructing a single,
+     *
      * @param service a service which provide the
      * @return
-     * @throws ObjectFilterException
+     * @throws MalformedArgException
      */
-    public ObjectFilter getObjectFilter( S service ) throws ObjectFilterException {
+    public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         try {
-            return service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() );
+            return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() ) };
+        } catch ( ObjectFilterException e ) {
+            throw new MalformedArgException( "", e );
         } catch ( ClassCastException e ) {
             throw new NotImplementedException( "Filtering with non-string values is not supported." );
         }
-    }
-
-    /**
-     * Combines the given filters with the properties in this array to create a final filter to be used for VO
-     * retrieval.
-     * Note that this does not check whether objects with identifiers in this array arg do actually exist. This merely
-     * creates
-     * a set of filters that should be used to impose restrictions in the database query.
-     * You can call this#getPersistentObjects which does try to retrieve the corresponding objects, and consequently
-     * does yield a 404 error if an object for any of the identifiers in this array arg does not exist.
-     *
-     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @param  filters the filters list to add the new filter to. Can be null.
-     * @return the same array list as given, with a new added element, or a new ArrayList, in case the given
-     *                 filters
-     *                 was null.
-     * @deprecated if possible, use {@link #getObjectFilter(FilteringService)} since this is poor coding practice
-     */
-    @Deprecated
-    public List<ObjectFilter[]> combineFilters( List<ObjectFilter[]> filters, S service ) {
-        if ( filters == null ) {
-            filters = new ArrayList<>();
-        }
-
-        try {
-            filters.add( new ObjectFilter[] { this.getObjectFilter( service ) } );
-        } catch ( ObjectFilterException e ) {
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return filters;
     }
 
     /**
@@ -119,7 +93,7 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      * @param          <T> type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
+    private <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
         String identifier = arg.getPropertyName();
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new BadRequestException( "Identifier " + value + " not recognized." );
@@ -128,6 +102,12 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
     }
 
     /**
+     * Guess the property name for this array of entities by testing the valueOf of the first entity.
+     *
+     * If no entity is specified, defaults on 'id'.
+     *
+     * This routine only works if the type of this array is {@link String}.
+     *
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @return the name of the property that the values in this array represent.
      */

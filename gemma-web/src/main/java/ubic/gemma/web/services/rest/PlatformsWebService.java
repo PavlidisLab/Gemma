@@ -30,9 +30,9 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -123,7 +124,14 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( datasetsArg.combineFilters( filter.getObjectFilters( arrayDesignService ), arrayDesignService ), sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
+        List<ObjectFilter[]> filters = filter.getObjectFilters( arrayDesignService );
+        if ( filters == null ) {
+            filters = new ArrayList<>();
+        }
+
+        filters.add( datasetsArg.getObjectFilters( arrayDesignService ) );
+
+        return Responder.paginate( arrayDesignService.loadValueObjectsPreFilter( filters, sort.getValueForClass( ArrayDesign.class ), offset.getValue(), limit.getValue() ) );
     }
 
     /**
@@ -203,15 +211,10 @@ public class PlatformsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        try {
-            probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-            return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( probesArg.combineFilters( probesArg.getPlatformFilter(), compositeSequenceService ), null, offset.getValue(), limit.getValue() ) );
-        } catch ( QueryException e ) {
-            if ( log.isDebugEnabled() ) {
-                e.printStackTrace();
-            }
-            throw new BadRequestException( FilterArg.ERROR_MSG_MALFORMED_REQUEST );
-        }
+        probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
+        List<ObjectFilter[]> filters = probesArg.getPlatformFilter();
+        filters.add( probesArg.getObjectFilters( compositeSequenceService ) );
+        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( filters, null, offset.getValue(), limit.getValue() ) );
     }
 
     /**
