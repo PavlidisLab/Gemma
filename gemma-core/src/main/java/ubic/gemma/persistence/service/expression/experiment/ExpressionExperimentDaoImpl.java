@@ -1208,6 +1208,8 @@ public class ExpressionExperimentDaoImpl
 
         // FIXME: this should not be necessary since we use a fetch-join on the accession
         Hibernate.initialize( ee.getAccession() );
+        Hibernate.initialize( ee.getTaxon() );
+        Hibernate.initialize( ee.getGeeq() );
 
         ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, this.totalElements.get().intValue() );
 
