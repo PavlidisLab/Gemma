@@ -53,11 +53,12 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      */
     public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         try {
+            //noinspection unchecked
             return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() ) };
         } catch ( ObjectFilterException e ) {
-            throw new MalformedArgException( "", e );
+            throw new MalformedArgException( "Could not generate filters for this entity array.", e );
         } catch ( ClassCastException e ) {
-            throw new NotImplementedException( "Filtering with non-string values is not supported." );
+            throw new NotImplementedException( "Filtering with non-string values is not supported.", e );
         }
     }
 
