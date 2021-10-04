@@ -27,13 +27,8 @@ import java.util.stream.Collectors;
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 
-    DatasetArg( T value ) {
-        super( value );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "Dataset";
+    protected DatasetArg( T value ) {
+        super( ExpressionExperiment.class, value );
     }
 
     /**

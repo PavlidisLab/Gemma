@@ -11,21 +11,16 @@ import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = DatasetArg.class))
 public class DatasetArrayArg
-        extends AbstractEntityArrayArg<ExpressionExperiment, ExpressionExperimentService> {
+        extends AbstractEntityArrayArg<String, ExpressionExperiment, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Dataset identifiers";
 
     private DatasetArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return DatasetArg.class;
+        super( DatasetArg.class, values );
     }
 
     private DatasetArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
+        super( DatasetArg.class, errorMessage, exception );
     }
 
     /**

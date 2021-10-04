@@ -1,11 +1,14 @@
 package ubic.gemma.persistence.util;
 
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represents a directed sort by a property.
  */
-@Data
+@Getter
+@EqualsAndHashCode
+@ToString
 public class Sort {
 
     /**
@@ -30,7 +33,14 @@ public class Sort {
         ASC, DESC
     }
 
-    @NonNull
     private final String orderBy;
     private final Direction direction;
+
+    public Sort( String orderBy, Direction direction ) {
+        if ( StringUtils.isBlank( orderBy ) ) {
+            throw new IllegalArgumentException( "The 'orderBy' property cannot be null or empty." );
+        }
+        this.orderBy = orderBy;
+        this.direction = direction;
+    }
 }

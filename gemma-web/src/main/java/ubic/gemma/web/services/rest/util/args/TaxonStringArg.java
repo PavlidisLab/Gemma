@@ -16,7 +16,10 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
  * String argument type for taxon API, referencing the Taxon scientific name or common name. Can also be
@@ -40,6 +43,18 @@ public class TaxonStringArg extends TaxonArg<String> {
     public String getPropertyName() {
         // FIXME: this should also return scientificName
         return "commonName";
+    }
+
+    @Override
+    public ObjectFilter[] getObjectFilters( TaxonService taxonService ) throws MalformedArgException {
+        try {
+            ObjectFilter commonNameFilter = taxonService.getObjectFilter( "commonName", ObjectFilter.Operator.is, getValue() );
+            ObjectFilter scientificNameFilter = taxonService.getObjectFilter( "scientificName", ObjectFilter.Operator.is, getValue() );
+            // this creates a disjunction clause in the HQL query
+            return new ObjectFilter[] { commonNameFilter, scientificNameFilter };
+        } catch ( ObjectFilterException e ) {
+            throw new MalformedArgException( "Could not create an object filter from this taxon.", e );
+        }
     }
 
     /**

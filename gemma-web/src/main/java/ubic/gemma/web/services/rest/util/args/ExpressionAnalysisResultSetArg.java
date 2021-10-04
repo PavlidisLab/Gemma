@@ -12,8 +12,12 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
         implementation = Integer.class)
 public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
 
-    public ExpressionAnalysisResultSetArg( long value ) {
-        super( value );
+    private ExpressionAnalysisResultSetArg( long value ) {
+        super( ExpressionAnalysisResultSet.class, value );
+    }
+
+    public ExpressionAnalysisResultSetArg( String message, Throwable cause ) {
+        super( ExpressionAnalysisResultSet.class, message, cause );
     }
 
     @Override
@@ -21,18 +25,11 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
         return service.load( getValue() );
     }
 
-    @Override
-    public String getPropertyName() {
-        return null;
-    }
-
-    @Override
-    public String getEntityName() {
-        return "ExpressionAnalysisResultSet";
-    }
-
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {
-        return new ExpressionAnalysisResultSetArg( Long.parseLong( s ) );
+        try {
+            return new ExpressionAnalysisResultSetArg( Long.parseLong( s ) );
+        } catch ( NumberFormatException e ) {
+            return new ExpressionAnalysisResultSetArg( "Could not parse expression analysis result set identifier.", e );
+        }
     }
-
 }

@@ -10,7 +10,7 @@ import java.util.List;
 public abstract class AbstractArrayArg<T> extends AbstractArg<List<T>> {
     static final String ERROR_MSG = "Value '%s' can not converted to an array of ";
 
-    AbstractArrayArg( List<T> values ) {
+    protected AbstractArrayArg( List<T> values ) {
         super( values );
     }
 

@@ -11,13 +11,8 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 @Schema(anyOf = { FactorValueIdArg.class, FactorValueValueArg.class })
 public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue, FactorValueService> {
 
-    FactorValueArg( A value ) {
-        super( value );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "FactorValue";
+    protected FactorValueArg( A value ) {
+        super( FactorValue.class, value );
     }
 
     public static FactorValueArg<?> valueOf( String value ) {

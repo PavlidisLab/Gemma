@@ -57,7 +57,6 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
     }
 
     @Test
-    @Ignore("Filtering by scientific name is not yet supported.")
     public void testTaxonByScientificName() {
         ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.taxa( TaxonArrayArg.valueOf( taxon.getScientificName() ), new MockHttpServletResponse() );
         assertThat( response.getData() ).hasSize( 1 );

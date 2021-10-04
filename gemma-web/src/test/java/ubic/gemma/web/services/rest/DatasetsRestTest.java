@@ -91,7 +91,9 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .first()
                 .hasFieldOrPropertyWithValue( "accession", ees.get( 0 ).getAccession().getAccession() )
                 .hasFieldOrPropertyWithValue( "externalDatabase", ees.get( 0 ).getAccession().getExternalDatabase().getName() )
-                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() );
+                .hasFieldOrPropertyWithValue( "externalUri", ees.get( 0 ).getAccession().getExternalDatabase().getWebUri() )
+                .hasFieldOrPropertyWithValue( "taxon", ees.get( 0 ).getTaxon().getCommonName() )
+                .hasFieldOrPropertyWithValue( "taxonId", ees.get( 0 ).getTaxon().getId() );
     }
 
     @Test

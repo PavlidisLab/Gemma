@@ -5,13 +5,11 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,12 +28,20 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
-        return new ObjectFilter( getObjectAlias(), property, ObjectFilter.getPropertyType( property, elementClass ), operator, value );
+        try {
+            return new ObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, value );
+        } catch ( NoSuchFieldException e ) {
+            throw new ObjectFilterException( "Could not create an object filter for " + property + ".", e );
+        }
     }
 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
-        return new ObjectFilter( getObjectAlias(), property, ObjectFilter.getPropertyType( property, elementClass ), operator, values );
+        try {
+            return new ObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, values );
+        } catch ( NoSuchFieldException e ) {
+            throw new ObjectFilterException( "Could not create an object filter for " + property + " using a collection.", e );
+        }
     }
 
     /**
@@ -69,18 +75,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return loadValueObject( ( O ) result );
     }
 
-    /**
-     * Load value objects according to a set of filters, ordering and offset/limit constraints.
-     *
-     * Note that {@link #loadValueObject} is used to create the actual value object from the result set.
-     *
-     * @param filter
-     * @param orderBy
-     * @param asc
-     * @param offset
-     * @param limit
-     * @return a {@link Slice} of value objects
-     */
     @Override
     public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort, int offset, int limit ) {
         Query query = this.getLoadValueObjectsQuery( filters, sort );

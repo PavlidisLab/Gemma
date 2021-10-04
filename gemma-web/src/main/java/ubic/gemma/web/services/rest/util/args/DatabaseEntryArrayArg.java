@@ -10,22 +10,17 @@ import ubic.gemma.web.services.rest.util.StringUtils;
 import java.util.List;
 
 @ArraySchema(schema = @Schema(implementation = DatabaseEntryArg.class))
-public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<DatabaseEntry, DatabaseEntryService> {
+public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<String, DatabaseEntry, DatabaseEntryService> {
 
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = AbstractArrayArg.ERROR_MSG + " Database entry identifiers";
 
     private DatabaseEntryArrayArg( List<String> values ) {
-        super( values );
-    }
-
-    @Override
-    protected Class<? extends AbstractEntityArg> getEntityArgClass() {
-        return DatabaseEntryArg.class;
+        super( DatabaseEntryArg.class, values );
     }
 
     public DatabaseEntryArrayArg( String format, IllegalArgumentException e ) {
-        super( format, e );
+        super( DatabaseEntryArg.class, format, e );
     }
 
     public static DatabaseEntryArrayArg valueOf( final String s ) {

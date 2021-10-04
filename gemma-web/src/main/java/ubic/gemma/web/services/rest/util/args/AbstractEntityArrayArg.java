@@ -8,6 +8,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -16,56 +17,48 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Array of identifiers of an Identifiable entity
+ * @param <A> the type of the value used to retrieve the entity, which is typically a {@link String}
+ * @param <O> the type of the resulting entity
+ * @param <S> the type of the filtering service providing the entity
  */
-public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<String> {
+public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArrayArg<A> {
 
-    private static Log log = LogFactory.getLog( AbstractEntityArrayArg.class.getClass() );
+    private final Class<? extends AbstractEntityArg> entityArgClass;
+    private String argValueName = null;
 
-    protected String argValueName = null;
-
-    AbstractEntityArrayArg( List<String> values ) {
+    protected AbstractEntityArrayArg( Class<? extends AbstractEntityArg> entityArgClass, List<A> values ) {
         super( values );
+        this.entityArgClass = entityArgClass;
     }
 
-    AbstractEntityArrayArg( String errorMessage, Exception exception ) {
+    protected AbstractEntityArrayArg( Class<? extends AbstractEntityArg> entityArgClass, String errorMessage, Exception exception ) {
         super( errorMessage, exception );
+        this.entityArgClass = entityArgClass;
     }
 
     /**
-     * Obtain the class for the argument used to wrap individual entities.
-     */
-    protected abstract Class<? extends AbstractEntityArg> getEntityArgClass();
-
-    /**
-     * Combines the given filters with the properties in this array to create a final filter to be used for VO
-     * retrieval.
-     * Note that this does not check whether objects with identifiers in this array arg do actually exist. This merely
-     * creates
-     * a set of filters that should be used to impose restrictions in the database query.
-     * You can call this#getPersistentObjects which does try to retrieve the corresponding objects, and consequently
-     * does yield a 404 error if an object for any of the identifiers in this array arg does not exist.
+     * Obtain an {@link ObjectFilter} disjunction clause for this entity.
      *
-     * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
-     * @param  filters the filters list to add the new filter to. Can be null.
-     * @return the same array list as given, with a new added element, or a new ArrayList, in case the given
-     *                 filters
-     *                 was null.
+     * By applying this to a query, only the entities defined in this argument will be retrieved.
+     *
+     * By default, this is constructing a single,
+     *
+     * @param service a service which provide the
+     * @return
+     * @throws MalformedArgException
      */
-    public List<ObjectFilter[]> combineFilters( List<ObjectFilter[]> filters, S service ) {
-        if ( filters == null ) {
-            filters = new ArrayList<>();
-        }
-
+    public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         try {
-            filters.add( new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, this.getValue() ) } );
+            return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() ) };
         } catch ( ObjectFilterException e ) {
-            throw new RuntimeException( e.getMessage(), e );
+            throw new MalformedArgException( "", e );
+        } catch ( ClassCastException e ) {
+            throw new NotImplementedException( "Filtering with non-string values is not supported." );
         }
-
-        return filters;
     }
 
     /**
@@ -79,9 +72,13 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      */
     public Collection<O> getEntities( S service ) throws NotFoundException {
         Collection<O> objects = new ArrayList<>( this.getValue().size() );
-        for ( String s : this.getValue() ) {
+        for ( A s : this.getValue() ) {
             AbstractEntityArg<?, O, S> arg;
-            arg = this.entityArgValueOf( s );
+            if ( s instanceof String ) {
+                arg = this.entityArgValueOf( ( String ) s );
+            } else {
+                throw new NotImplementedException( "Obtaining entities is only supported for string values." );
+            }
             objects.add( arg.checkEntity( arg.getEntity( service ) ) );
         }
         return objects;
@@ -96,7 +93,7 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
      * @param          <T> type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    protected <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, String value, S service ) {
+    private <T extends AbstractEntityArg<?, O, S>> String checkPropertyNameString( T arg, A value, S service ) {
         String identifier = arg.getPropertyName();
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new BadRequestException( "Identifier " + value + " not recognized." );
@@ -105,14 +102,25 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
     }
 
     /**
+     * Guess the property name for this array of entities by testing the valueOf of the first entity.
+     *
+     * If no entity is specified, defaults on 'id'.
+     *
+     * This routine only works if the type of this array is {@link String}.
+     *
      * @param  service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @return the name of the property that the values in this array represent.
      */
     protected String getPropertyName( S service ) {
         if ( this.argValueName == null ) {
-            Optional<String> value = this.getValue().stream().findFirst();
+            Optional<A> value = this.getValue().stream().findFirst();
             if ( value.isPresent() ) {
-                AbstractEntityArg<?, O, S> arg = this.entityArgValueOf( value.get() );
+                AbstractEntityArg<?, O, S> arg;
+                if ( value.get() instanceof String ) {
+                    arg = this.entityArgValueOf( ( String ) value.get() );
+                } else {
+                    throw new NotImplementedException( "Inferring the property name is only supported for string values." );
+                }
                 this.argValueName = this.checkPropertyNameString( arg, value.get(), service );
             } else {
                 /* assumed since {@link O} is identifiable */
@@ -128,9 +136,9 @@ public abstract class AbstractEntityArrayArg<O extends Identifiable, S extends F
     private AbstractEntityArg<?, O, S> entityArgValueOf( String s ) {
         try {
             // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
-            return ( AbstractEntityArg<?, O, S> ) getEntityArgClass().getMethod( "valueOf", String.class ).invoke( null, s );
+            return ( AbstractEntityArg<?, O, S> ) entityArgClass.getMethod( "valueOf", String.class ).invoke( null, s );
         } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-            throw new NotImplementedException( "Could not call 'valueOf' for " + getEntityArgClass().getName(), e );
+            throw new NotImplementedException( "Could not call 'valueOf' for " + entityArgClass.getName(), e );
         }
     }
 

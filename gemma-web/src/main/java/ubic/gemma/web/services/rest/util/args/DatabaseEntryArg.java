@@ -13,13 +13,8 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 public abstract class DatabaseEntryArg<T>
         extends AbstractEntityArg<T, DatabaseEntry, DatabaseEntryService> {
 
-    DatabaseEntryArg( T value ) {
-        super( value );
-    }
-
-    @Override
-    public String getEntityName() {
-        return "DatabaseEntry";
+    protected DatabaseEntryArg( T value ) {
+        super( DatabaseEntry.class, value );
     }
 
     /**

@@ -6,6 +6,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import java.util.Collection;
 
 /**
+ * @see FilteringDao
  * @author poirigui
  */
 public interface FilteringService<O extends Identifiable> extends BaseService<O> {
