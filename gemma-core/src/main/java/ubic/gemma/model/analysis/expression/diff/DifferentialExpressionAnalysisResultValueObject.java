@@ -14,40 +14,34 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Getter;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Unlike {@link DiffExResultSetSummaryValueObject}, this value object is meant for the public API.
  */
+@Getter
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
-    private final CompositeSequenceValueObject probe;
+    private final Long probeId;
+    private final String probeName;
+    private final List<GeneValueObject> genes;
     private final Double pValue;
     private final Double correctedPvalue;
     private final Double rank;
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result ) {
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
         super( result );
-        this.probe = new CompositeSequenceValueObject( result.getProbe() );
+        this.probeId = result.getProbe().getId();
+        this.probeName = result.getProbe().getName();
+        this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
         this.pValue = result.getPvalue();
         this.correctedPvalue = result.getCorrectedPvalue();
         this.rank = result.getRank();
-    }
-
-    public CompositeSequenceValueObject getProbe() {
-        return probe;
-    }
-
-    public Double getPvalue() {
-        return pValue;
-    }
-
-    public Double getCorrectedPvalue() {
-        return correctedPvalue;
-    }
-
-    public Double getRank() {
-        return rank;
     }
 }

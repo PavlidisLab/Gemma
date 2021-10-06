@@ -45,5 +45,5 @@ public abstract class AnalysisResultSetValueObject<K extends AnalysisResult, R e
      * Obtain the VO of the associated analysis result to this result set.
      * @return
      */
-    public abstract Collection<? extends AnalysisResultValueObject<K>> getAnalysisResults();
+    public abstract Collection<? extends AnalysisResultValueObject<K>> getResults();
 }

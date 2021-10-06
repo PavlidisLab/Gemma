@@ -21,7 +21,9 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.*;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -32,11 +34,19 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValu
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.ObjectFilterCriteriaUtils;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
@@ -260,6 +270,35 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     @Override
     public ExpressionAnalysisResultSetValueObject loadValueObject( ExpressionAnalysisResultSet entity ) {
         return new ExpressionAnalysisResultSetValueObject( entity );
+    }
+
+    @Override
+    public ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity ) {
+        return new ExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+    }
+
+    @Override
+    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
+                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                        + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
+                        + "where {result}.RESULT_SET_FK = :rsid" )
+                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                .addEntity( "gene", Gene.class )
+                .setParameter( "rsid", resultSet.getId() );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+
+        // YAY! my brain was almost fried writing that collector
+        return list.stream()
+                .collect( Collectors.groupingBy(
+                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        Collectors.collectingAndThen( Collectors.toList(),
+                                elem -> elem.stream()
+                                        .map( l -> ( Gene ) l[1] )
+                                        .collect( Collectors.toList() ) ) ) );
     }
 
     @Override

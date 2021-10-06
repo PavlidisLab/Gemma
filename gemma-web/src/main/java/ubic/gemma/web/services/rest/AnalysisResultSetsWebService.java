@@ -23,14 +23,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -41,10 +42,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -112,7 +113,7 @@ public class AnalysisResultSetsWebService {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
         ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
+        return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
     }
 
     /**
@@ -125,26 +126,14 @@ public class AnalysisResultSetsWebService {
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+        final ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
         // only thaw the related analysis and experimental factors without contrasts
-        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return new ExpressionAnalysisResultSetTsvStreamingOutput( ears );
-    }
-
-    private class ExpressionAnalysisResultSetTsvStreamingOutput implements StreamingOutput {
-
-        private final ExpressionAnalysisResultSet resultSet;
-
-        public ExpressionAnalysisResultSetTsvStreamingOutput( ExpressionAnalysisResultSet resultSet ) {
-            this.resultSet = resultSet;
-        }
-
-        @Override
-        public void write( OutputStream outputStream ) throws IOException, WebApplicationException {
+        final ExpressionAnalysisResultSet thawedEars = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
+        final Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes = expressionAnalysisResultSetService.loadResultToGenesMap( thawedEars );
+        return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsvToAppendable( resultSet, writer );
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( thawedEars, result2Genes, writer );
             }
-        }
+        };
     }
-
 }

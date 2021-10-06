@@ -3,19 +3,21 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
@@ -38,6 +40,18 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears ) {
         return voDao.thawWithoutContrasts( ears );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears ) {
+        return voDao.loadValueObjectWithResults( ears );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+        return voDao.loadResultToGenesMap( resultSet );
     }
 
     @Override

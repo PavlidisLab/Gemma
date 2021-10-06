@@ -1,6 +1,7 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -27,15 +28,24 @@ public abstract class AbstractTsvFileService<T> implements TsvFileService<T> {
     }
 
     /**
-     * Preconfigure a {@link CSVFormat} with desirable defaults.
+     * Preconfigure a {@link CSVFormat.Builder} with desirable defaults.
+     * @param extraHeaderComments additional header comments that will be included at the top of the TSV file.
      * @return
      */
-    protected CSVFormat getCSVFormat() {
-        return CSVFormat.TDF
-                .withCommentMarker( '#' )
-                .withHeaderComments( " If you use this file for your research, please cite:" )
-                .withHeaderComments( " Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse." )
-                .withHeaderComments( " Database, baab006 (doi:10.1093/database/baab006)." );
+    protected CSVFormat.Builder getTsvFormatBuilder( String... extraHeaderComments ) {
+        return CSVFormat.Builder.create( CSVFormat.TDF )
+                .setCommentMarker( '#' )
+                .setHeaderComments( ArrayUtils.addAll( new String[] {
+                        "If you use this file for your research, please cite:",
+                        "Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse.",
+                        "Database, baab006 (doi:10.1093/database/baab006)." }, extraHeaderComments ) );
+    }
+
+    /**
+     * Get the delimiter used within column.
+     */
+    protected String getSubDelimiter() {
+        return "|";
     }
 
     /**

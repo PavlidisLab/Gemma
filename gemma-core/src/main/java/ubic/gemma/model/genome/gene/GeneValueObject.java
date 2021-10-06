@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -99,8 +100,10 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
-        this.taxonScientificName = gene.getTaxon().getScientificName();
-        this.setTaxonCommonName( gene.getTaxon().getCommonName() );
+        if ( Hibernate.isInitialized( gene.getTaxon() ) ) {
+            this.taxonScientificName = gene.getTaxon().getScientificName();
+            this.setTaxonCommonName( gene.getTaxon().getCommonName() );
+        }
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
