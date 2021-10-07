@@ -14,7 +14,8 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import lombok.Getter;
+import lombok.Data;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * Unlike {@link DiffExResultSetSummaryValueObject}, this value object is meant for the public API.
  */
-@Getter
+@Data
 public class DifferentialExpressionAnalysisResultValueObject extends AnalysisResultValueObject<DifferentialExpressionAnalysisResult> {
 
     private final Long probeId;
@@ -34,14 +35,21 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
     private final Double pValue;
     private final Double correctedPvalue;
     private final Double rank;
+    private final List<ContrastResultValueObject> contrasts;
 
     public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, List<Gene> genes ) {
-        super( result );
         this.probeId = result.getProbe().getId();
         this.probeName = result.getProbe().getName();
         this.genes = genes.stream().map( GeneValueObject::new ).collect( Collectors.toList() );
         this.pValue = result.getPvalue();
         this.correctedPvalue = result.getCorrectedPvalue();
         this.rank = result.getRank();
+        if ( Hibernate.isInitialized( result.getContrasts() ) ) {
+            this.contrasts = result.getContrasts().stream()
+                    .map( ContrastResultValueObject::new )
+                    .collect( Collectors.toList() );
+        } else {
+            this.contrasts = null;
+        }
     }
 }

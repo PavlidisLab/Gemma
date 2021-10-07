@@ -14,8 +14,6 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;

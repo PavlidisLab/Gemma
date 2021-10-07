@@ -17,7 +17,6 @@ import ubic.gemma.persistence.util.Sort;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
@@ -32,14 +31,14 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e ) {
-        return voDao.thaw( e );
+    public ExpressionAnalysisResultSet thawWithResultsAndContrasts( Long value ) {
+        return voDao.loadWithResultsAndContrasts( value );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears ) {
-        return voDao.thawWithoutContrasts( ears );
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e ) {
+        return voDao.thaw( e );
     }
 
     @Override

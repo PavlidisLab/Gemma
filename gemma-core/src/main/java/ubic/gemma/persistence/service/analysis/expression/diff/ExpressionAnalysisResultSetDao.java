@@ -42,6 +42,8 @@ import java.util.Map;
  */
 public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
 
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
+
     ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
     /**

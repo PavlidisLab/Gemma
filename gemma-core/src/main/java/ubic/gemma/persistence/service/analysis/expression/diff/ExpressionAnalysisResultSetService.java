@@ -19,9 +19,9 @@ import java.util.Map;
 
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
 
-    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
+    ExpressionAnalysisResultSet thawWithResultsAndContrasts( Long value );
 
-    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet ears );
+    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
 
     ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
 

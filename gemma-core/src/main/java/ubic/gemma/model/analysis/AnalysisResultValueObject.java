@@ -18,16 +18,11 @@
  */
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.IdentifiableValueObject;
-
 /**
  * Wraps an {@link AnalysisResult} to expose it on the public API.
  *
  * @param <A> type of {@link AnalysisResult} being wrapped by this value object
  */
-public abstract class AnalysisResultValueObject<A extends AnalysisResult> extends IdentifiableValueObject<A> {
+public abstract class AnalysisResultValueObject<A extends AnalysisResult> {
 
-    public AnalysisResultValueObject( AnalysisResult analysisResult ) {
-        super( analysisResult.getId() );
-    }
 }

@@ -60,6 +60,24 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         super( ExpressionAnalysisResultSet.class, sessionFactory );
     }
 
+    @Override
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
+        //noinspection unchecked
+        return ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select r from ExpressionAnalysisResultSet r "
+                                + "left join fetch r.analysis a "
+                                + "left join fetch a.experimentAnalyzed "
+                                + "left join fetch r.results res "
+                                + "left join fetch res.probe p "
+                                + "left join fetch r.experimentalFactors ef "
+                                + "left join fetch res.contrasts c "
+                                + "left join fetch c.factorValue "
+                                + "left join fetch c.secondFactorValue "
+                                + "where r.id = :rs " )
+                .setParameter( "rs", id )
+                .uniqueResult();
+    }
+
     /**
      * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */

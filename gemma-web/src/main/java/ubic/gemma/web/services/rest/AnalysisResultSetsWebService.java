@@ -108,11 +108,10 @@ public class AnalysisResultSetsWebService {
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+        ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
-        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
         return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
     }
 
@@ -126,13 +125,14 @@ public class AnalysisResultSetsWebService {
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        final ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
-        // only thaw the related analysis and experimental factors without contrasts
-        final ExpressionAnalysisResultSet thawedEars = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        final Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes = expressionAnalysisResultSetService.loadResultToGenesMap( thawedEars );
+        final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
+        if ( ears == null ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+        }
+        final Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes = expressionAnalysisResultSetService.loadResultToGenesMap( ears );
         return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsvToAppendable( thawedEars, result2Genes, writer );
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, result2Genes, writer );
             }
         };
     }
