@@ -70,6 +70,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
                                 + "left join fetch r.results res "
                                 + "left join fetch res.probe p "
                                 + "left join fetch r.experimentalFactors ef "
+                                + "left join fetch ef.factorValues "
                                 + "left join fetch res.contrasts c "
                                 + "left join fetch c.factorValue "
                                 + "left join fetch c.secondFactorValue "
