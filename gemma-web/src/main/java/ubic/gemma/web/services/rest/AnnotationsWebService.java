@@ -142,6 +142,9 @@ public class AnnotationsWebService {
             // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
             // this without cluttering the code.
             List<ObjectFilter[]> filters = filter.getObjectFilters( expressionExperimentService );
+            if ( filters == null ) {
+                filters = new ArrayList<>();
+            }
             filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
             return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
         }

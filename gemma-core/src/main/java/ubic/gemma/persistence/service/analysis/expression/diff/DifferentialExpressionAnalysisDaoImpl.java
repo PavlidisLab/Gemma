@@ -569,43 +569,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
             }
 
             for ( ExpressionAnalysisResultSet resultSet : results ) {
-
-                DiffExResultSetSummaryValueObject desvo = new DiffExResultSetSummaryValueObject();
-                desvo.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
-                for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
-                    desvo.getExperimentalFactors().add( new ExperimentalFactorValueObject( ef ) );
-                }
+                DiffExResultSetSummaryValueObject desvo = new DiffExResultSetSummaryValueObject( resultSet );
                 desvo.setArrayDesignsUsed( avo.getArrayDesignsUsed() );
                 desvo.setBioAssaySetAnalyzedId( bioAssaySet.getId() ); // might be a subset.
-                desvo.setResultSetId( resultSet.getId() );
                 desvo.setAnalysisId( analysis.getId() );
-                desvo.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
-                desvo.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
-                desvo.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
-
-                for ( HitListSize hitList : resultSet.getHitListSizes() ) {
-                    if ( hitList.getThresholdQvalue()
-                            .equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
-                        if ( hitList.getDirection().equals( Direction.UP ) ) {
-                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
-                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
-                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
-                        }
-
-                    }
-                }
-
-                if ( resultSet.getBaselineGroup() != null ) {
-                    desvo.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
-                }
-
                 avo.getResultSets().add( desvo );
-
                 assert ee2fv.containsKey( bioAssaySet.getId() );
                 this.populateWhichFactorValuesUsed( avo, ee2fv.get( bioAssaySet.getId() ) );
-
             }
 
             summaries.add( avo );

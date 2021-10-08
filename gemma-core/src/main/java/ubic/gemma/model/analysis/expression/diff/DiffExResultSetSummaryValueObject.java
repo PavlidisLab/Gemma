@@ -18,8 +18,11 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import org.hibernate.Hibernate;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -57,6 +60,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private Double qValue;
 
+    @Deprecated
     private Long resultSetId;
 
     private Double threshold;
@@ -65,8 +69,35 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private Long bioAssaySetAnalyzedId;
 
-    public DiffExResultSetSummaryValueObject() {
-        super();
+    public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
+        this.setId( resultSet.getId() );
+        this.setResultSetId( resultSet.getId() );
+        this.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
+        this.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
+        this.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
+
+        this.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
+        for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
+            this.getExperimentalFactors().add( new ExperimentalFactorValueObject( ef ) );
+        }
+
+        for ( HitListSize hitList : resultSet.getHitListSizes() ) {
+            if ( hitList.getThresholdQvalue()
+                    .equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+                if ( hitList.getDirection().equals( Direction.UP ) ) {
+                    this.setUpregulatedCount( hitList.getNumberOfProbes() );
+                } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
+                    this.setDownregulatedCount( hitList.getNumberOfProbes() );
+                } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
+                    this.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
+                }
+
+            }
+        }
+
+        if ( resultSet.getBaselineGroup() != null ) {
+            this.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
+        }
     }
 
     public Long getId() {
@@ -173,10 +204,18 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         qValue = value;
     }
 
+    /**
+     * @deprecated use {@link #getId} instead
+     */
+    @Deprecated
     public Long getResultSetId() {
         return resultSetId;
     }
 
+    /**
+     * @deprecated use {@link #setId} instead
+     */
+    @Deprecated
     public void setResultSetId( Long resultSetId ) {
         this.resultSetId = resultSetId;
     }

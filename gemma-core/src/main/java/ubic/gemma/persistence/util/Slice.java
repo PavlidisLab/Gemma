@@ -51,6 +51,11 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
         return data.size();
     }
 
+    @Override
+    public boolean remove( Object elem ) {
+        return data.remove( elem );
+    }
+
     /**
      * @return a sort, or null if unspecified
      */
