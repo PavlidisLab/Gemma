@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -101,6 +102,7 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
+    @GZIP
     @GET
     @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -118,6 +120,7 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
      */
+    @GZIP
     @GET
     @Path("/{analysisResultSet}")
     @Produces("text/tab-separated-values; qs=0.9")
