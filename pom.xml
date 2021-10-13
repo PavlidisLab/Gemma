@@ -128,6 +128,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
 			<version>${hibernate.version}</version>
 		</dependency>
@@ -450,7 +455,7 @@
 						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
 						<link>http://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
-						<link>http://docs.jboss.org/hibernate/orm/3.5/api/</link>
+						<link>https://docs.jboss.org/hibernate/orm/3.6/javadocs/</link>
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
