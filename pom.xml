@@ -445,16 +445,9 @@
 					<source>8</source>
 					<doclint>none</doclint>
 					<links>
-						<link>http://chibi.ubc.ca/faculty/pavlidis/basecode/apidocs/</link>
-						<link>http://docs.oracle.com/javase/8/docs/api/</link>
-						<link>http://commons.apache.org/proper/commons-dbcp/apidocs/</link>
-						<link>http://commons.apache.org/proper/commons-dbcp/apidocs/</link>
-						<link>http://commons.apache.org/proper/commons-fileupload/apidocs/</link>
-						<link>http://hc.apache.org/httpclient-3.x/apidocs/</link>
-						<link>http://commons.apache.org/proper/commons-logging/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
+						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>http://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
+						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
 						<link>https://docs.jboss.org/hibernate/orm/3.6/javadocs/</link>
 					</links>
 					<additionalJOptions>
