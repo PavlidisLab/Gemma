@@ -62,21 +62,33 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
 
     @Override
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         //noinspection unchecked
-        return ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select r from ExpressionAnalysisResultSet r "
-                                + "left join fetch r.analysis a "
-                                + "left join fetch a.experimentAnalyzed "
                                 + "left join fetch r.results res "
                                 + "left join fetch res.probe p "
-                                + "left join fetch r.experimentalFactors ef "
-                                + "left join fetch ef.factorValues "
                                 + "left join fetch res.contrasts c "
                                 + "left join fetch c.factorValue "
                                 + "left join fetch c.secondFactorValue "
                                 + "where r.id = :rs " )
                 .setParameter( "rs", id )
+                .setReadOnly( true )
                 .uniqueResult();
+        // this drastically reduces the number of columns fetched which would anyway be repeated
+        Hibernate.initialize( ears.getAnalysis() );
+        Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
+        // it is faster to query those separately because there's a large number of rows fetched via the results &
+        // contrasts and only a handful of factors
+        Hibernate.initialize( ears.getExperimentalFactors() );
+        for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
+            Hibernate.initialize( ef.getFactorValues() );
+        }
+        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 10 ) {
+            log.info( "Loaded [" + elementClass.getName() + " id=" + ears.getId() + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        }
+        return ears;
     }
 
     /**
