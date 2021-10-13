@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {

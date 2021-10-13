@@ -79,7 +79,6 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     /**

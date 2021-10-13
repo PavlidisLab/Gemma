@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Composite Sequence argument for CS ID.
  */
-@Schema(implementation = Long.class)
+@Schema(type = "integer", format = "int64")
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {

@@ -9,7 +9,7 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class ExpLevelConsolidationArg extends AbstractArg<String> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 

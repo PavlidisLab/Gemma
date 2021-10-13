@@ -24,7 +24,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class, type = "string")
+@Schema(type = "string")
 public class SortArg extends AbstractArg<Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "

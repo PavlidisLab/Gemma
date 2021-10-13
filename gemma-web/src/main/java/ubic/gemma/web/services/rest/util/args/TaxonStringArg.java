@@ -27,7 +27,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author tesarst
  */
-@Schema(implementation = Long.class)
+@Schema(type = "integer", format = "int64")
 public class LongArg extends AbstractArg<Long> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a long number";
 

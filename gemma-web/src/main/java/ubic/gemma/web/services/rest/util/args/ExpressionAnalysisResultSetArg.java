@@ -1,6 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -8,8 +7,8 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 /**
  * Represents an expression analysis result set identifier.
  */
-@Schema(description = "Represents an expression analysis result set identifier",
-        implementation = Integer.class)
+@Schema(type = "integer",
+        description = "Represents an expression analysis result set identifier")
 public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
 
     private ExpressionAnalysisResultSetArg( long value ) {

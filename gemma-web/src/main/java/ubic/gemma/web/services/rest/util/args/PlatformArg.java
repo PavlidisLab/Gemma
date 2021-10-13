@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(anyOf = { PlatformIdArg.class, PlatformStringArg.class })
+@Schema(subTypes = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
     protected PlatformArg( T value ) {

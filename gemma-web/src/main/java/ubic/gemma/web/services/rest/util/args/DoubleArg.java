@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author tesarst
  */
-@Schema(implementation = Double.class)
+@Schema(type = "number", format = "double")
 public class DoubleArg extends AbstractArg<Double> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a double number";
 

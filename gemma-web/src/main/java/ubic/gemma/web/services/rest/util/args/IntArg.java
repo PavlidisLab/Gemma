@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author tesarst
  */
-@Schema(implementation = Integer.class)
+@Schema(type = "integer")
 public class IntArg extends AbstractArg<Integer> {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 

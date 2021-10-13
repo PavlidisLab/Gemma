@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {

@@ -9,7 +9,7 @@ import javax.ws.rs.BadRequestException;
 /**
  * Argument used to represent a limit.
  */
-@Schema(implementation = Integer.class, minimum = "1", maximum = "100")
+@Schema(type = "integer", minimum = "1", maximum = "100")
 public class LimitArg extends AbstractArg<Integer> {
 
     /**

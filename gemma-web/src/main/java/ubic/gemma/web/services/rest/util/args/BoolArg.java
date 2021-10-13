@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author tesarst
  */
-@Schema(implementation = Boolean.class)
+@Schema(type = "boolean")
 public class BoolArg extends AbstractArg<Boolean> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 

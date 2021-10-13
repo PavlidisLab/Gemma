@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(anyOf = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonStringArg.class })
+@Schema(subTypes = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonStringArg.class })
 public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonService> {
 
     /**

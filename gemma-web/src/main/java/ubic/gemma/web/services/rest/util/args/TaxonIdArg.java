@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  *
  * @author tesarst
  */
-@Schema(implementation = Long.class)
+@Schema(type = "integer", format = "int64")
 public class TaxonIdArg extends TaxonArg<Long> {
 
     /**
