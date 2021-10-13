@@ -77,6 +77,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
                 .setParameter( "rs", id )
                 .setReadOnly( true )
                 .uniqueResult();
+        if ( ears == null ) {
+            return null;
+        }
         // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( ears.getAnalysis() );
         Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
