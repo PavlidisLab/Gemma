@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -97,5 +97,5 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param sort field and direction by which the collection is ordered
      * @return
      */
-    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort );
+    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
 }

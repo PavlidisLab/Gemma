@@ -114,7 +114,9 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testAllFilterByIdIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+                .extracting( of -> of[0] )
+                .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
@@ -135,7 +137,9 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testAllFilterByShortName() {
         FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+                .extracting( of -> of[0] )
+                .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
@@ -156,7 +160,9 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testAllFilterByShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
-        assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
+        assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
+                .extracting( of -> of[0] )
+                .first()
                 .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
@@ -179,6 +185,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
                 .hasSize( 1 );
+        /*
         assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 ) )
                 .hasSize( 2 );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
@@ -189,6 +196,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
+         */
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
                 filterArg,
                 OffsetArg.valueOf( "0" ),

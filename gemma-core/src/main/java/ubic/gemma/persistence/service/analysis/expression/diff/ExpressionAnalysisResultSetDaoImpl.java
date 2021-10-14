@@ -257,7 +257,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
-    private Criteria getLoadValueObjectsCriteria( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, Sort sort ) {
+    private Criteria getLoadValueObjectsCriteria( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, Sort sort ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
                 .createAlias( "analysis", "a" )
@@ -271,7 +271,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
             query.add( Restrictions.in( "e.accession", databaseEntries ) );
         }
 
-        if ( objectFilters != null && objectFilters.size() > 0 ) {
+        if ( objectFilters != null && !objectFilters.isEmpty() ) {
             query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
         }
 

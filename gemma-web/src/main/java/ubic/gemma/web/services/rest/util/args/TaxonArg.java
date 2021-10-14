@@ -10,12 +10,12 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.ws.rs.NotFoundException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,20 +55,20 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
     /**
      * Lists datasets on the taxon that this TaxonArg represents.
      *
+     * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  expressionExperimentService the service that will be used to retrieve the EEVOs.
      * @param  taxonService                the service that will be used to retrieve the persistent Taxon object.
      * @param  filters                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  offset                      see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  limit                       see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @param  sort                        see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
-     * @param  sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
      * @return a collection of EEVOs matching the input parameters.
      */
     public Slice<ExpressionExperimentValueObject> getTaxonDatasets(
             ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
-            List<ObjectFilter[]> filters, int offset, int limit, Sort sort ) {
+            Filters filters, int offset, int limit, Sort sort ) {
         if ( filters == null ) {
-            filters = new ArrayList<>( 1 );
+            filters = new Filters();
         }
         filters.add( new ObjectFilter[] {
                 new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, this.getEntity( taxonService ).getId()

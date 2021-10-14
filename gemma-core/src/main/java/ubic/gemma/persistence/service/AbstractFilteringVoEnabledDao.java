@@ -48,35 +48,35 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * Produce a query for retrieving value objects after applying a set of filters and a given ordering.
      *
      * Note that if your implementation does not produce a {@link List<O>} when {@link Query#list()} is invoked, you
-     * must override {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)}.
+     * must override {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}.
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort );
+    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort );
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(List, Sort)}.
+     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort)}.
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+    protected Query getCountValueObjectsQuery( Filters filters ) {
         throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
     }
 
     /**
-     * Process a result from {@link #getLoadValueObjectsQuery(List, Sort)}.
+     * Process a result from {@link #getLoadValueObjectsQuery(Filters, Sort)}.
      *
      * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
      * obtain a value object.
      *
-     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)}
+     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
      */
     protected VO processLoadValueObjectsQueryResult( Object result ) {
         return loadValueObject( ( O ) result );
     }
 
     @Override
-    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort, int offset, int limit ) {
+    public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         Query query = this.getLoadValueObjectsQuery( filters, sort );
         Query totalElementsQuery = getCountValueObjectsQuery( filters );
 
@@ -100,7 +100,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filters, Sort sort ) {
+    public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
         Query query = this.getLoadValueObjectsQuery( filters, sort );
 
         //noinspection unchecked

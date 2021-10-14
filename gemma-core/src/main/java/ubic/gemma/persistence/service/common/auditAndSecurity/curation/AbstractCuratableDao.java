@@ -10,6 +10,7 @@ import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
@@ -89,7 +90,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * @param filters set of {@link ObjectFilter} to which the non-troubled EEs filter will be added.
      */
     @SneakyThrows(ObjectFilterException.class)
-    protected void addNonTroubledFilter( List<ObjectFilter[]> filters, String objectAlias ) {
+    protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.add( new ObjectFilter[] { new ObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.is, "false" ) } );
         }

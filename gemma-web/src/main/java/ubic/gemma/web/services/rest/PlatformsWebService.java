@@ -124,9 +124,9 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        List<ObjectFilter[]> filters = filter.getObjectFilters( arrayDesignService );
+        Filters filters = filter.getObjectFilters( arrayDesignService );
         if ( filters == null ) {
-            filters = new ArrayList<>();
+            filters = new Filters();
         }
 
         filters.add( datasetsArg.getObjectFilters( arrayDesignService ) );
@@ -212,9 +212,7 @@ public class PlatformsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        List<ObjectFilter[]> filters = probesArg.getPlatformFilter();
-        filters.add( probesArg.getObjectFilters( compositeSequenceService ) );
-        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( filters, null, offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.singleFilter( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
     }
 
     /**

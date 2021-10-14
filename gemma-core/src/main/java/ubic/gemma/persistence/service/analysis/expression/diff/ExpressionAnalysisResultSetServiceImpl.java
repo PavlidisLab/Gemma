@@ -55,7 +55,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort ) {
+    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> externalIds, Filters objectFilters, int offset, int limit, Sort sort ) {
         return voDao.findByBioAssaySetInAndDatabaseEntryInLimit( bioAssaySets, externalIds,
                 objectFilters,
                 offset,

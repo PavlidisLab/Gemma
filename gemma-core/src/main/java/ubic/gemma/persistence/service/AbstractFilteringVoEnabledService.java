@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -40,14 +41,14 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
-        return voDao.loadValueObjectsPreFilter( filter, sort, offset, limit );
+    public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+        return voDao.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort ) {
-        return voDao.loadValueObjectsPreFilter( filter, sort );
+    public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+        return voDao.loadValueObjectsPreFilter( filters, sort );
     }
 
 }

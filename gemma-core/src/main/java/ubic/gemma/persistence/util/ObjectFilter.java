@@ -21,10 +21,8 @@ package ubic.gemma.persistence.util;
 import lombok.ToString;
 import ubic.gemma.persistence.service.ObjectFilterException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -129,18 +127,6 @@ public class ObjectFilter {
      */
     public ObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws ObjectFilterException {
         this( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
-    }
-
-    /**
-     * @param  filter the filter to create the ArrayList with
-     * @return an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of
-     *                the
-     *                only array in the list.
-     */
-    public static List<ObjectFilter[]> singleFilter( ObjectFilter filter ) {
-        List<ObjectFilter[]> filters = new ArrayList<>();
-        filters.add( new ObjectFilter[] { filter } );
-        return filters;
     }
 
     public String getPropertyName() {
