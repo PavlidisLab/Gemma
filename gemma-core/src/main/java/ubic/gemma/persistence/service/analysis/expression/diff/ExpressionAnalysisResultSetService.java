@@ -6,8 +6,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValu
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -17,11 +17,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, BaseVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>, FilteringService<ExpressionAnalysisResultSet> {
 
-    ExpressionAnalysisResultSet thawWithResultsAndContrasts( Long value );
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
-    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet e );
+    void thaw( ExpressionAnalysisResultSet e );
 
     ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
 

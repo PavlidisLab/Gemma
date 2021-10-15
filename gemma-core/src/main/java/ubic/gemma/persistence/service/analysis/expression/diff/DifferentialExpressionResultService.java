@@ -158,22 +158,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     void thaw( DifferentialExpressionAnalysisResult result );
 
-    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
-
-    /**
-     * Thaws the ExpressionAnalysisResultSet without including contrasts.
-     *
-     * @param resultSet result set
-     * @return exp analysis set
-     */
-    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
-
-    /**
-     * Does not thaw the collection of probes (just the factor information)
-     *
-     * @param resultSet result set
-     */
-    void thawLite( ExpressionAnalysisResultSet resultSet );
+    void thaw( ExpressionAnalysisResultSet resultSet );
 
     @Secured({ "GROUP_ADMIN" })
     void update( ExpressionAnalysisResultSet resultSet );

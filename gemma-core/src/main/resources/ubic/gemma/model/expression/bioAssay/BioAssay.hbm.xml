@@ -38,7 +38,7 @@
       <property name="fastqHeaders" type="org.springframework.orm.hibernate3.support.ClobStringType">
       	<column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
       </property>
-      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
+      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="false" fetch="join">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" lazy="proxy" fetch="select">

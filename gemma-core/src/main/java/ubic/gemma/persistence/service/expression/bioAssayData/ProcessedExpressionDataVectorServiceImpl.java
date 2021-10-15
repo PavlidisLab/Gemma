@@ -244,7 +244,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             return null;
         }
 
-        differentialExpressionResultService.thawLite( ar );
+        differentialExpressionResultService.thaw( ar );
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 

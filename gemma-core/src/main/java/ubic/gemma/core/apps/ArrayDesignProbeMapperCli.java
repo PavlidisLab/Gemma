@@ -594,7 +594,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( taxon != null && !getArrayDesignService().getTaxa( design.getId() ).contains( taxon ) ) {
+        if ( taxon != null && !getArrayDesignService().getTaxa( design ).contains( taxon ) ) {
             return;
         }
 

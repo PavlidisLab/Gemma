@@ -166,20 +166,8 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet ) {
-        return this.EARDao.thaw( resultSet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
-        return this.EARDao.thawWithoutContrasts( resultSet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thawLite( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.thawLite( resultSet );
+    public void thaw( ExpressionAnalysisResultSet resultSet ) {
+        this.EARDao.thaw( resultSet );
     }
 
     @Override

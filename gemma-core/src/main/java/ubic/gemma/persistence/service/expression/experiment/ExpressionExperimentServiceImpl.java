@@ -871,7 +871,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao.loadDetailsValueObjects( sort, ids, taxon, limit, start );
     }

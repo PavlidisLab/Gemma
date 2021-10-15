@@ -26,7 +26,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringDao;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.persistence.util.Filters;
@@ -40,35 +41,21 @@ import java.util.Map;
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, BaseVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>, FilteringDao<ExpressionAnalysisResultSet> {
 
-    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
-
-    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
 
     /**
-     * @param resultSet Only thaws the factor not the probe information
+     * Thaw a result set's analysis, experiment analyzed and experimental factors.
+     *
+     * If you need to load the probe, contrasts, etc. use {@link #loadWithResultsAndContrasts(Long)} instead which is
+     * optimized for that purpose.
      */
-    void thawLite( ExpressionAnalysisResultSet resultSet );
-
-    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thaw( ExpressionAnalysisResultSet resultSet );
 
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
-    /**
-     * Thaw everything but contrasts.
-     *
-     *  - results
-     *  - probe
-     *  - probe.biologicalCharacteristic
-     *  - probe.biologicalCharacteristic.sequenceDatabaseEntry
-     *  - experimentalFactors
-     *  - experimentalFactors.factorValues
-     *
-     * @param resultSet
-     * @return
-     */
-    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
+    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
      * Load an analysis result set with its all of its associated results.

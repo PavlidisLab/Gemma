@@ -33,6 +33,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
 
         // add all the contrasts present among the results
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            // FIXME: some of the factor are singular, but seem to have multiple values
             for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
                 header.addAll( Arrays.asList(
                         "contrast_" + experimentalFactor.getName() + "_" + fv.getValue() + "_log2fc",

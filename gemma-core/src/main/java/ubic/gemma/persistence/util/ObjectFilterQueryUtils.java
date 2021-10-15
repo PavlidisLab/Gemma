@@ -90,8 +90,18 @@ public class ObjectFilterQueryUtils {
                 if ( !first )
                     disjunction.append( " or " );
                 disjunction
-                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " )
-                        .append( filter.getOperator().getSqlToken() ).append( " " );
+                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
+
+                // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
+                if ( filter.getOperator().equals( ObjectFilter.Operator.eq ) && filter.getRequiredValue() == null ) {
+                    disjunction.append( "is" );
+                } else if ( filter.getOperator().equals( ObjectFilter.Operator.notEq ) && filter.getRequiredValue() == null ) {
+                    disjunction.append( "is not" );
+                } else {
+                    disjunction.append( filter.getOperator().getSqlToken() );
+                }
+
+                disjunction.append( " " );
                 if ( filter.getRequiredValue() instanceof Collection<?> ) {
                     disjunction
                             .append( "(" ).append( ":" ).append( paramName ).append( ")" );
@@ -131,8 +141,10 @@ public class ObjectFilterQueryUtils {
                 if ( filter == null || filter.getObjectAlias() == null )
                     continue;
                 String paramName = generator.nextParam( filter );
-                if ( filter.getRequiredValue() instanceof Collection<?> ) {
+                if ( filter.getOperator().equals( ObjectFilter.Operator.in ) ) {
                     query.setParameterList( paramName, ( Collection<?> ) filter.getRequiredValue() );
+                } else if ( filter.getOperator().equals( ObjectFilter.Operator.like ) ) {
+                    query.setParameter( paramName, "%" + filter.getRequiredValue() + "%" );
                 } else {
                     query.setParameter( paramName, filter.getRequiredValue() );
                 }

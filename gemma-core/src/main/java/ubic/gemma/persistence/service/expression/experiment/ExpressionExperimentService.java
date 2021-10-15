@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
@@ -430,8 +430,8 @@ public interface ExpressionExperimentService
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
@@ -455,7 +455,7 @@ public interface ExpressionExperimentService
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })

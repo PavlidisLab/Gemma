@@ -15,7 +15,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -92,7 +91,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     @SneakyThrows(ObjectFilterException.class)
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
-            filters.add( new ObjectFilter[] { new ObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.is, "false" ) } );
+            filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
         }
     }
 }

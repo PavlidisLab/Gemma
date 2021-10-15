@@ -164,7 +164,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // check that no EE depend on the arraydesign we want to remove
         // Do this by checking if there are any bioassays that depend this AD
-        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
+        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( assays.size() != 0 ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
@@ -390,7 +390,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
-        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExperiments( id ).size() );
+        result.setSwitchedExpressionExperimentCount( arrayDesignService.getSwitchedExperimentIds( arrayDesign ).size() );
 
         populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
@@ -531,7 +531,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( ed.getId() + " not found" );
         }
-        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
+        Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( assays.size() != 0 ) {
             throw new IllegalArgumentException(
                     "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );

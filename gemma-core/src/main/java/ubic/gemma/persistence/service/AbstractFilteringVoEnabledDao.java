@@ -1,16 +1,15 @@
 package ubic.gemma.persistence.service;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +76,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     @Override
     public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
         Query query = this.getLoadValueObjectsQuery( filters, sort );
         Query totalElementsQuery = getCountValueObjectsQuery( filters );
 
@@ -96,19 +98,35 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
 
+        stopWatch.stop();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+            log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
+        }
+
         return new Slice<>( vos, sort, offset, limit, totalElements );
     }
 
     @Override
     public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
         Query query = this.getLoadValueObjectsQuery( filters, sort );
 
         //noinspection unchecked
         List<?> list = query.list();
 
-        return list.stream()
-                .map( this::processLoadValueObjectsQueryResult )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toList() );
+        try {
+            return list.stream()
+                    .map( this::processLoadValueObjectsQueryResult )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toList() );
+        } finally {
+            stopWatch.stop();
+            if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+                log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
+            }
+        }
     }
 }

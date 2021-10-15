@@ -25,7 +25,7 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
     }
 
     public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetService service ) {
-        return service.thawWithResultsAndContrasts( getValue() );
+        return service.loadWithResultsAndContrasts( getValue() );
     }
 
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {

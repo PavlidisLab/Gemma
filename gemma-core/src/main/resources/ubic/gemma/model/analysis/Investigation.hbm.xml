@@ -12,8 +12,8 @@
 		</id>
 		<discriminator column="class" />
 		<many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"
-			cascade="all" lazy="proxy" fetch="select">
-			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
+					 cascade="all" lazy="proxy" fetch="join">
+			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 		</many-to-one>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
@@ -111,8 +111,9 @@
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
 				<many-to-one name="curationDetails"
-					class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="select">
-					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true" />
+							 class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all"
+							 lazy="false" fetch="join">
+					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all,delete-orphan">
 					<cache usage="read-write" />
@@ -143,8 +144,8 @@
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet"
 				discriminator-value="ExpressionExperimentSubSet" abstract="false">
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-					cascade="none" lazy="false" fetch="select">
-					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />
+							 cascade="none" lazy="false" fetch="join">
+					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select">
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC">

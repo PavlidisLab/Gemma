@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Order;
@@ -33,14 +32,12 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.ObjectFilterCriteriaUtils;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.service.ObjectFilterException;
+import ubic.gemma.persistence.util.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,7 +50,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -75,72 +72,28 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
                                 + "left join fetch c.secondFactorValue "
                                 + "where r.id = :rs " )
                 .setParameter( "rs", id )
-                .setReadOnly( true )
                 .uniqueResult();
         if ( ears == null ) {
             return null;
         }
-        // this drastically reduces the number of columns fetched which would anyway be repeated
-        Hibernate.initialize( ears.getAnalysis() );
-        Hibernate.initialize( ears.getAnalysis().getExperimentAnalyzed() );
-        // it is faster to query those separately because there's a large number of rows fetched via the results &
-        // contrasts and only a handful of factors
-        Hibernate.initialize( ears.getExperimentalFactors() );
-        for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-            Hibernate.initialize( ef.getFactorValues() );
-        }
-        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 10 ) {
-            log.info( "Loaded [" + elementClass.getName() + " id=" + ears.getId() + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        this.thaw( ears );
+        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
+            log.info( "Loaded [" + elementClass.getName() + " id=" + id + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
         }
         return ears;
     }
 
-    /**
-     * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
-     */
     @Override
-    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        this.thawLite( resultSet );
-
-        //noinspection unchecked
-        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
-                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + "left join fetch res.probe left join fetch res.contrasts "
-                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
-                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
-
-        // FIXME: this check should be unnecessary since we're using outer jointures, unless the result set was
-        //  nonexistent in the first place
-        assert !res.isEmpty();
-
-        if ( timer.getTime() > 1000 ) {
-            Log.info( this.getClass(), "Thaw resultSet " + res.get( 0 ).getId() + " took " + timer.getTime() + "ms" );
-        }
-
-        return res.get( 0 );
-    }
-
-    @Override
-    public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-            Hibernate.initialize( factor );
-        }
-
+    public void thaw( final ExpressionAnalysisResultSet resultSet ) {
+        // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( resultSet.getAnalysis() );
         Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
-    }
-
-    @Override
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select a from GeneDifferentialExpressionMetaAnalysis a"
-                                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
-                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
+        // it is faster to query those separately because there's a large number of rows fetched via the results &
+        // contrasts and only a handful of factors
+        Hibernate.initialize( resultSet.getExperimentalFactors() );
+        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
+        // I still think it's neat to use stream API for that though in case we ever make them lazy:
+        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
     }
 
     @Override
@@ -155,7 +108,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         int size = rss.size();
         int cnt = 0;
         for ( ExpressionAnalysisResultSet rs : rss ) {
-            thawed.add( this.thaw( rs ) );
+            thawed.add( loadWithResultsAndContrasts( rs.getId() ) );
             cnt++;
             Log.info( this.getClass(), "Thawed " + cnt + "/" + size + " resultSets" );
         }
@@ -164,38 +117,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         return differentialExpressionAnalysis;
     }
 
-    /**
-     * @see ExpressionAnalysisResultSetDao#thawWithoutContrasts(ExpressionAnalysisResultSet)
-     */
     @Override
-    public ExpressionAnalysisResultSet thawWithoutContrasts( final ExpressionAnalysisResultSet resultSet ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        this.thawLite( resultSet );
-
-        //noinspection unchecked
-        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
-                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + "left join fetch res.probe p left join fetch p.biologicalCharacteristic bc "
-                        + "left join fetch bc.sequenceDatabaseEntry "
-                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
-                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
-
-        if ( timer.getTime() > 1000 ) {
-            Log.info( this.getClass(), "Thaw resultset: " + timer.getTime() + "ms" );
-        }
-
-        assert !res.isEmpty();
-
-        return res.get( 0 );
-
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select a from GeneDifferentialExpressionMetaAnalysis a"
+                                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
+                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
     }
 
     @Override
     public void remove( ExpressionAnalysisResultSet resultSet ) {
 
         // Wipe references
-        resultSet.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
+        resultSet.setResults( new HashSet<>() );
         this.update( resultSet );
 
         // Clear session
@@ -238,7 +172,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     }
 
     @Override
-    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort ) {
+    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
         Criteria query = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
         Criteria totalElementsQuery = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
 
@@ -276,7 +210,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         }
 
         // apply the ACL on the associated EE
-        query.add( ObjectFilterCriteriaUtils.formAclRestrictionClause( "e", "ubic.gemma.model.expression.experiment.ExpressionExperiment" ) );
+        query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );
 
         if ( sort != null ) {
             if ( sort.getDirection() == Sort.Direction.ASC ) {
@@ -290,16 +224,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         }
 
         return query;
-    }
-
-    @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
-        throw new NotImplementedException( "This is not supported yet." );
-    }
-
-    @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
-        throw new NotImplementedException( "This is not supported yet." );
     }
 
     @Override
@@ -339,5 +263,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     @Override
     public String getObjectAlias() {
         return null;
+    }
+
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
+        try {
+            return ObjectFilter.parseObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, value );
+        } catch ( NoSuchFieldException e ) {
+            throw new ObjectFilterException( "Could not create an object filter for " + elementClass.getName() + ".", e );
+        }
+    }
+
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
+        try {
+            return ObjectFilter.parseObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, values );
+        } catch ( NoSuchFieldException e ) {
+            throw new ObjectFilterException( "Could not create an object filter for " + elementClass.getName() + ".", e );
+        }
     }
 }

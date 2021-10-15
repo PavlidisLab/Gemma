@@ -74,6 +74,7 @@ import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.persistence.SessionListManager;
@@ -671,16 +672,16 @@ public class ExpressionExperimentController {
      * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-
+        ArrayDesign ad = arrayDesignService.load(id);
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                new ArrayList<>( arrayDesignService.getSwitchedExperiments( id ) ), 0, true );
+                new ArrayList<>( arrayDesignService.getSwitchedExperimentIds( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
                 ( List<Long> ) EntityUtils
-                        .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
+                        .getIds( arrayDesignService.getExpressionExperiments( ad ) ),
                 0, true );
 
         experiments.addAll( switchedExperiments );
@@ -1583,7 +1584,7 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             List<Long> eeIds, Integer limit, boolean showPublic ) {
 
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+        Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( Sort.by( "curationDetails.lastUpdated", Sort.Direction.DESC ), eeIds, taxon, Math.abs( limit ),
                         0 );
         // Hide public data sets if desired.

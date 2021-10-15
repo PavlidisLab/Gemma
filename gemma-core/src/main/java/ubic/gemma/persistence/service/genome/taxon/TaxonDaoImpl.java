@@ -25,8 +25,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
 
 import java.sql.Connection;
 import java.util.*;
@@ -142,7 +142,7 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + ".id as id, " // 0
@@ -164,7 +164,7 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+    protected Query getCountValueObjectsQuery( Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(distinct " + getObjectAlias() + ".id) "
                 + "from Taxon as " + getObjectAlias() + " " // taxon

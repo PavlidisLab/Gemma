@@ -1,9 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import org.hibernate.Query;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +47,24 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
         return data.size();
     }
 
+    /**
+     * This is unfortunately necessary because it it blindly casted.
+     * This is necessary
+     * @param elem
+     * @return
+     */
     @Override
+    @Deprecated
+    public boolean add( O elem ) {
+        return data.add( elem );
+    }
+
+    /**
+     * Unfortunately, we need to implement this because gsec explicitly remove items that are not accessible by the
+     * current user in {@link gemma.gsec.acl.afterinvocation.AclAfterFilterValueObjectCollectionProvider}.
+     */
+    @Override
+    @Deprecated
     public boolean remove( Object elem ) {
         return data.remove( elem );
     }

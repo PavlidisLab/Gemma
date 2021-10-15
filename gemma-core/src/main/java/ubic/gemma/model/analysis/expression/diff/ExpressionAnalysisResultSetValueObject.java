@@ -1,7 +1,6 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.genome.Gene;
 
