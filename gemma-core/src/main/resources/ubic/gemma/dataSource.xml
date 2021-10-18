@@ -4,16 +4,16 @@
    http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
 
     <!-- Database connection information -->
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
         <property name="driverClassName" value="${gemma.db.driver}"/>
         <property name="username" value="${gemma.db.user}"/>
         <property name="password" value="${gemma.db.password}"/>
         <property name="url" value="${gemma.db.url}"/>
         <property name="defaultReadOnly" value="false"/>
         <property name="initialSize" value="${gemma.db.initpoolsize}"/>
-        <property name="maxActive" value="${gemma.db.maxactive}"/>
+        <property name="maxTotal" value="${gemma.db.maxactive}"/>
         <property name="maxIdle" value="${gemma.db.maxpoolidle}"/>
-        <property name="maxWait" value="100000"/>
+        <property name="maxWaitMillis" value="100000"/>
         <property name="testOnBorrow" value="true"/>
         <property name="validationQuery" value="SELECT 1"/>
     </bean>
