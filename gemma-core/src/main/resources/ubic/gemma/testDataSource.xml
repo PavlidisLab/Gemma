@@ -13,7 +13,7 @@
     <context:component-scan base-package="ubic.gemma.core.testing"/>
 
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="driverClassName" value="${gemma.testdb.driver}"/>
         <property name="username" value="${gemma.testdb.user}"/>
         <property name="password" value="${gemma.testdb.password}"/>
         <property name="url" value="${gemma.testdb.url}"/>
