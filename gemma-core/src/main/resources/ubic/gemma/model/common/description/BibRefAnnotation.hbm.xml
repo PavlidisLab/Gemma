@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.common.description.BibRefAnnotationImpl" table="BIB_REF_ANNOTATION">
-      <cache usage="read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <discriminator column="class"/>
-      <property name="term" type="java.lang.String">
-         <column name="TERM" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="isMajorTopic" type="java.lang.Boolean">
-         <column name="IS_MAJOR_TOPIC" not-null="false" unique="false" sql-type="TINYINT"/>
-      </property>
-      <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeading" discriminator-value="MedicalSubjectHeading"
-                abstract="false">
-         <set name="qualifiers" lazy="false" fetch="select" cascade="all">
-            <cache usage="read-write" />
-            <key foreign-key="MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC">
-               <column name="QUALIFIES_FK" sql-type="BIGINT"/>
-            </key>
-            <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
-         </set>
-      </subclass>
-      <subclass name="ubic.gemma.model.common.description.Keyword" discriminator-value="Keyword" abstract="false">
-      </subclass>
-   </class>
+    <class name="ubic.gemma.model.common.description.BibRefAnnotationImpl" table="BIB_REF_ANNOTATION">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <discriminator column="class"/>
+        <property name="term" type="java.lang.String">
+            <column name="TERM" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="isMajorTopic" type="java.lang.Boolean">
+            <column name="IS_MAJOR_TOPIC" not-null="false" unique="false" sql-type="TINYINT"/>
+        </property>
+        <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeading"
+                  discriminator-value="MedicalSubjectHeading"
+                  abstract="false">
+            <set name="qualifiers" lazy="false" fetch="select" cascade="all">
+                <cache usage="read-write"/>
+                <key foreign-key="MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC">
+                    <column name="QUALIFIES_FK" sql-type="BIGINT"/>
+                </key>
+                <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
+            </set>
+        </subclass>
+        <subclass name="ubic.gemma.model.common.description.Keyword" discriminator-value="Keyword" abstract="false">
+        </subclass>
+    </class>
 </hibernate-mapping>
