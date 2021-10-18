@@ -71,7 +71,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
             filters = new Filters();
         }
         filters.add( new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, this.getEntity( taxonService ).getId()
+                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId()
                 ) } );
 
         return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
