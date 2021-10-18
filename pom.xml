@@ -187,9 +187,9 @@
 		</dependency>
 		<dependency>
 			<!-- required by hibernate, explicitly import so we get it at runtime. -->
-			<groupId>javassist</groupId>
+			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.4.GA</version>
+			<version>3.28.0-GA</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
