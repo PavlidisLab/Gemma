@@ -7,6 +7,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
@@ -24,7 +25,7 @@ import java.util.Map;
  * @author tesarst
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends AbstractFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+        extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
     protected AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );

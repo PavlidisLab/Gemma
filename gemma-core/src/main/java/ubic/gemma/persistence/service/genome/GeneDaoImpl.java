@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import java.util.*;
@@ -47,7 +48,7 @@ import java.util.*;
  * @see Gene
  */
 @Repository
-public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
+public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;

@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -44,7 +45,7 @@ import java.util.List;
  * </p>
  */
 @Repository
-public class FactorValueDaoImpl extends AbstractFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
+public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 
     @Autowired

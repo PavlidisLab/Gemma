@@ -34,9 +34,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.*;
 
 import java.util.Collection;
@@ -50,7 +49,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -173,8 +172,18 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
 
     @Override
     public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
+        Criteria query = getLoadValueObjectsCriteria( objectFilters, sort );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters, sort );
+
+        if ( bioAssaySets != null ) {
+            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+            totalElementsQuery.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+        }
+
+        if ( databaseEntries != null ) {
+            query.add( Restrictions.in( "e.accession", databaseEntries ) );
+            totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
+        }
 
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
@@ -191,37 +200,17 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
         return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
-    private Criteria getLoadValueObjectsCriteria( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, Sort sort ) {
+    @Override
+    protected Criteria getLoadValueObjectsCriteria( Filters objectFilters, Sort sort ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class )
                 .createAlias( "analysis", "a" )
-                .createAlias( "analysis.experimentAnalyzed", "e" );
-
-        if ( bioAssaySets != null ) {
-            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
-        }
-
-        if ( databaseEntries != null ) {
-            query.add( Restrictions.in( "e.accession", databaseEntries ) );
-        }
-
-        if ( objectFilters != null && !objectFilters.isEmpty() ) {
-            query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
-        }
+                .createAlias( "analysis.experimentAnalyzed", "e" )
+                .createAlias( "experimentalFactors", "ef" )
+                .createAlias( "ef.factorValues", "fv" );
 
         // apply the ACL on the associated EE
         query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );
-
-        if ( sort != null ) {
-            if ( sort.getDirection() == Sort.Direction.ASC ) {
-                query.addOrder( Order.asc( sort.getOrderBy() ) );
-            } else if ( sort.getDirection() == Sort.Direction.DESC ) {
-                query.addOrder( Order.desc( sort.getOrderBy() ) );
-            } else {
-                // defaulting to ASC
-                query.addOrder( Order.asc( sort.getOrderBy() ) );
-            }
-        }
 
         return query;
     }
@@ -258,28 +247,5 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractVoEnabledDao<Exp
                                 elem -> elem.stream()
                                         .map( l -> ( Gene ) l[1] )
                                         .collect( Collectors.toList() ) ) ) );
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return null;
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
-        try {
-            return ObjectFilter.parseObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, value );
-        } catch ( NoSuchFieldException e ) {
-            throw new ObjectFilterException( "Could not create an object filter for " + elementClass.getName() + ".", e );
-        }
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
-        try {
-            return ObjectFilter.parseObjectFilter( getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, elementClass ), operator, values );
-        } catch ( NoSuchFieldException e ) {
-            throw new ObjectFilterException( "Could not create an object filter for " + elementClass.getName() + ".", e );
-        }
     }
 }

@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
 
@@ -36,7 +37,7 @@ import java.util.*;
  * @see Taxon
  */
 @Repository
-public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
+public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
@@ -132,7 +133,7 @@ public class TaxonDaoImpl extends AbstractFilteringVoEnabledDao<Taxon, TaxonValu
     }
 
     @Override
-    protected TaxonValueObject processLoadValueObjectsQueryResult( Object result ) {
+    protected TaxonValueObject processLoadValueObjectsHibernateResult( Object result ) {
         Object[] row = ( Object[] ) result;
         TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
         if ( row[2] != null ) {

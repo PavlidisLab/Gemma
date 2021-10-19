@@ -36,6 +36,9 @@ public class ContrastResult implements Identifiable, Serializable {
     private Double pvalue;
     private Double tStat;
     private Double coefficient;
+    /**
+     * TODO: rename this to log2FoldChange to avoid confusion with the logarithm base used.
+     */
     private Double logFoldChange;
     private Long id;
     private FactorValue factorValue;

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
@@ -37,7 +38,7 @@ import ubic.gemma.persistence.util.Sort;
  * @see DatabaseEntry
  */
 @Repository
-public class DatabaseEntryDaoImpl extends AbstractFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
+public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 
     @Autowired

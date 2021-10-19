@@ -1202,7 +1202,7 @@ public class ExpressionExperimentDaoImpl
     private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
 
     @Override
-    protected ExpressionExperimentValueObject processLoadValueObjectsQueryResult( Object result ) {
+    protected ExpressionExperimentValueObject processLoadValueObjectsHibernateResult( Object result ) {
         Object[] row = ( Object[] ) result;
 
         ExpressionExperiment ee = ( ExpressionExperiment ) row[0];

@@ -2,6 +2,8 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetValueObject<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet> {
 
     private final DifferentialExpressionAnalysisValueObject analysis;
+    private final Collection<ExperimentalFactorValueObject> experimentalFactors;
 
     /**
      * Related analysis results.
@@ -32,6 +35,9 @@ public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetVal
     public ExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
         this.analysis = new DifferentialExpressionAnalysisValueObject( analysisResultSet.getAnalysis() );
+        this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
+                .map( ExperimentalFactorValueObject::new )
+                .collect( Collectors.toList() );
     }
 
     /**
@@ -49,9 +55,12 @@ public class ExpressionAnalysisResultSetValueObject extends AnalysisResultSetVal
                 .collect( Collectors.toList() );
     }
 
-    @Override
     public DifferentialExpressionAnalysisValueObject getAnalysis() {
         return analysis;
+    }
+
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
+        return experimentalFactors;
     }
 
     @Override

@@ -17,6 +17,7 @@
       <property name="isBaseline" type="java.lang.Boolean">
          <column name="IS_BASELINE" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
+      <!-- FIXME: this should be set to lazy="proxy" and fetch="select" since a FactorValue is almost always retrieved in the context of an ExperimentalFactor -->
       <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactor"
                    cascade="none" lazy="false" fetch="join">
          <column name="EXPERIMENTAL_FACTOR_FK" not-null="true" sql-type="BIGINT"/>

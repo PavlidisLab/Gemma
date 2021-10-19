@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
@@ -54,7 +55,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
+public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
@@ -144,7 +145,7 @@ public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<Comp
     }
 
     @Override
-    protected CompositeSequenceValueObject processLoadValueObjectsQueryResult( Object result ) {
+    protected CompositeSequenceValueObject processLoadValueObjectsHibernateResult( Object result ) {
         Object[] row = ( Object[] ) result;
         CompositeSequence cs = ( CompositeSequence ) row[1];
         cs.setArrayDesign( ( ArrayDesign ) row[2] );
