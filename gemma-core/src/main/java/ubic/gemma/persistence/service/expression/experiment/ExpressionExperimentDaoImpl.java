@@ -1068,13 +1068,20 @@ public class ExpressionExperimentDaoImpl
             }
         };
 
-        // Compose query
-        Query query = this.getLoadValueObjectsQuery( filtersList, sort );
+        Set<QueryHint> hints = new HashSet<>();
 
+        if ( start <= 0 && limit <= 0 )
+            hints.add( QueryHint.FETCH_ALL );
+
+        // Compose query
+        Query query = this.getLoadValueObjectsQuery( filtersList, sort, hints );
+
+        if ( start > 0 ) {
+            query.setFirstResult( start );
+        }
         if ( limit > 0 ) {
             query.setMaxResults( limit );
         }
-        query.setFirstResult( start );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1474,7 +1481,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();
         }
@@ -1497,13 +1504,22 @@ public class ExpressionExperimentDaoImpl
                         + "left join fetch ee.taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
 
         if ( ObjectFilterQueryUtils.containsAnyAlias( filters, ObjectFilter.DAO_CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+            if ( hints.contains( QueryHint.FETCH_ALL ) ) {
+                queryString += " left join fetch ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+            } else {
+                queryString += " left join ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+            }
         }
 
         if ( ObjectFilterQueryUtils.containsAnyAlias( filters, "ba", ObjectFilter.DAO_AD_ALIAS ) ) {
             // fetching bioassays will trigger in-memory pagination, so we need to perform a regular join
-            queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
-                    ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            if ( hints.contains( QueryHint.FETCH_ALL ) ) {
+                queryString += MessageFormat.format( " left join fetch ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
+                        ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            } else {
+                queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
+                        ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            }
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more

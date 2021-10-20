@@ -38,6 +38,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
@@ -1047,7 +1048,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
         // contain duplicated platforms
         String queryString =
                 "select ad from ArrayDesign as ad "

@@ -25,11 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
+
+import java.util.Set;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -62,7 +63,7 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
         throw new NotImplementedException( "This is not implemented yet!" );
     }
 }

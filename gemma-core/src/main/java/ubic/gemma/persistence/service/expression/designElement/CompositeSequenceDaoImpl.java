@@ -41,7 +41,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -105,7 +104,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + ".id as id, " // 0
                 + getObjectAlias() + ", " // 1

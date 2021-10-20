@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
@@ -561,10 +560,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     /**
      * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(Filters)} filters argument for
      *                        description.
+     * @param hints
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "

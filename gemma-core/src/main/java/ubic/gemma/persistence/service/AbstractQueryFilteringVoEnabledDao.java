@@ -11,8 +11,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -26,6 +25,18 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
+    /**
+     * Enumeration of hints that can be used to tune HQL queries.
+     */
+    protected enum QueryHint {
+        /**
+         * Indicate that all elements are fetched (i.e. no offset/limit will be applied on the query).
+         *
+         * This is useful to queries that want to use 'join fetch' on one-to-many or many-to-many relationships.
+         */
+        FETCH_ALL,
+    }
+
     protected AbstractQueryFilteringVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }
@@ -38,10 +49,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort );
+    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints );
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort)}.
+     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, Set)}.
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
@@ -54,7 +65,13 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort );
+        Set<QueryHint> hints = new HashSet<>();
+
+        if ( offset <= 0 && limit <= 0 ) {
+            hints.add( QueryHint.FETCH_ALL );
+        }
+
+        Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
         Query totalElementsQuery = getCountValueObjectsQuery( filters );
 
         // setup offset/limit
@@ -87,7 +104,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort );
+        Query query = this.getLoadValueObjectsQuery( filters, sort, Collections.singleton( QueryHint.FETCH_ALL ) );
 
         //noinspection unchecked
         List<?> list = query.list();

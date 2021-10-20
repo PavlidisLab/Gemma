@@ -24,7 +24,6 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
@@ -143,7 +142,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + ".id as id, " // 0
