@@ -29,6 +29,8 @@ import ubic.gemma.core.job.EmailNotificationContext;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.util.MailUtils;
 
+import java.util.concurrent.Executor;
+
 /**
  * author: anton date: 10/02/13
  */
@@ -40,10 +42,10 @@ public class TaskPostProcessingImpl implements TaskPostProcessing {
     private MailUtils mailUtils;
 
     @Override
-    public void addEmailNotification( ListenableFuture<TaskResult> future, EmailNotificationContext context ) {
+    public void addEmailNotification( ListenableFuture<TaskResult> future, EmailNotificationContext context, Executor executor ) {
         FutureCallback<TaskResult> emailNotificationCallback = this.createEmailNotificationFutureCallback( context );
         // This will be called when future with our running task is done.
-        Futures.addCallback( future, emailNotificationCallback );
+        Futures.addCallback( future, emailNotificationCallback, executor );
     }
 
     private FutureCallback<TaskResult> createEmailNotificationFutureCallback( final EmailNotificationContext context ) {

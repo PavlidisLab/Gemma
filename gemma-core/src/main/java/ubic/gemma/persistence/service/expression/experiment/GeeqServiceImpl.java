@@ -19,11 +19,9 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import com.google.common.base.Stopwatch;
-
 import cern.colt.list.DoubleArrayList;
-
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.stat.StatUtils;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -212,7 +210,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.ensureEeHasGeeq( ee );
         Geeq gq = ee.getGeeq();
 
-        Stopwatch stopwatch = new Stopwatch();
+        StopWatch stopwatch = new StopWatch();
         stopwatch.start();
 
         try {
@@ -264,12 +262,12 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         stopwatch.stop();
         this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
-                "Took " + stopwatch.elapsedMillis() + "ms.\nUnexpected problems encountered: \n" + gq
-                        .getOtherIssues() )  ;
+                "Took " + stopwatch.getTime() + "ms.\nUnexpected problems encountered: \n" + gq
+                        .getOtherIssues() );
 
         this.update( gq );
         Log.info( this.getClass(),
-                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60.0 )
+                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
                         + " minutes to process ee id " + eeId );
 
     }

@@ -106,7 +106,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             TaskRunningServiceImpl.log.debug( "Submitting local task with id: " + taskId );
         }
 
-        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing );
+        final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing, executorService );
 
         final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand );
 

@@ -122,7 +122,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         submittedTask.setFuture( future );
 
         // These are run on task completion.
-        Futures.addCallback( future, sendTaskResultCallback );
+        Futures.addCallback( future, sendTaskResultCallback, executorService );
 
         if ( taskCommand.isEmailAlert() ) {
             submittedTask.addEmailAlertNotificationAfterCompletion();
@@ -171,6 +171,6 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         MessageSender<String> progressUpdateReceiver = new JmsMessageSender<>( jmsHelper, progressQueueName );
 
         return new SubmittedTaskRemote( taskCommand, progressUpdates, resultSender, statusUpdateSender,
-                progressUpdateReceiver, taskPostProcessing );
+                progressUpdateReceiver, taskPostProcessing, executorService );
     }
 }
