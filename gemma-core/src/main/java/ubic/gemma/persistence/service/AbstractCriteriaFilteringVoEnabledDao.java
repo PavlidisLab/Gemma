@@ -2,12 +2,9 @@ package ubic.gemma.persistence.service;
 
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.*;
 
 import java.util.List;
@@ -28,6 +25,9 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
     /**
      * For the Criterion API, NULL refers to the root entity.
+     *
+     * Override this if you use a custom alias for the root entity.
+     *
      * @return
      */
     @Override
@@ -35,12 +35,18 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         return null;
     }
 
-    protected abstract Criteria getLoadValueObjectsCriteria( Filters objectFilters, Sort sort );
+    /**
+     * Obtain a {@link Criteria}.
+     *
+     * @see ObjectFilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
+     * from a set of filter clauses.
+     */
+    protected abstract Criteria getLoadValueObjectsCriteria( Filters objectFilters );
 
     @Override
     public Slice<VO> loadValueObjectsPreFilter( Filters objectFilters, Sort sort, int offset, int limit ) {
-        Criteria query = getLoadValueObjectsCriteria( objectFilters, sort );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters, sort );
+        Criteria query = getLoadValueObjectsCriteria( objectFilters );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
 
         // setup offset/limit
         if ( offset > 0 )
@@ -48,10 +54,10 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
         if ( limit > 0 )
             query.setMaxResults( limit );
 
+        log.info( "Query: " + query );
+
         //noinspection unchecked
-        List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .setCacheable( true )
-                .list();
+        List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).list();
 
         Long totalElements = ( Long ) totalElementsQuery
                 .setProjection( Projections.countDistinct( "id" ) )
@@ -63,12 +69,10 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
 
     @Override
     public List<VO> loadValueObjectsPreFilter( Filters objectFilters, Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( objectFilters, sort );
+        Criteria query = getLoadValueObjectsCriteria( objectFilters );
 
         //noinspection unchecked
-        List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .setCacheable( true )
-                .list();
+        List<O> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).list();
 
         //noinspection unchecked
         return super.loadValueObjects( data );

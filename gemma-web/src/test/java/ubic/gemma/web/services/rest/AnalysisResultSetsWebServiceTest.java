@@ -252,7 +252,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdThenReturn200Success() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
+        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
         assertEquals( response.getStatus(), 200 );
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
@@ -261,16 +261,27 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     }
 
     @Test
+    public void testFindByIdWhenExcludeResultsThenReturn200Success() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
+        assertEquals( response.getStatus(), 200 );
+        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        assertEquals( dearsVo.getId(), dears.getId() );
+        assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
+        assertNull( dearsVo.getResults() );
+    }
+
+    @Test
     public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
         HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), response ) );
+        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
     }
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), response ) );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 

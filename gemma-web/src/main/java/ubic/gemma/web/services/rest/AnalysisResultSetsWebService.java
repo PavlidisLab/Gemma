@@ -109,12 +109,20 @@ public class AnalysisResultSetsWebService {
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
-        if ( ears == null ) {
-            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
+        if ( excludeResults ) {
+            ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+            if ( ears == null ) {
+                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            }
+            return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
+        } else {
+            ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
+            if ( ears == null ) {
+                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            }
+            return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
         }
-        return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
     }
 
     /**
@@ -123,7 +131,7 @@ public class AnalysisResultSetsWebService {
     @GZIP
     @GET
     @Path("/{analysisResultSet}")
-    @Produces("text/tab-separated-values; qs=0.9")
+    @Produces("text/tab-separated-values; charset=UTF-8; qs=0.9")
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,

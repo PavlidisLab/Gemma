@@ -132,7 +132,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected TaxonValueObject processLoadValueObjectsHibernateResult( Object result ) {
+    protected TaxonValueObject processLoadValueObjectsQueryResult( Object result ) {
         Object[] row = ( Object[] ) result;
         TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
         if ( row[2] != null ) {

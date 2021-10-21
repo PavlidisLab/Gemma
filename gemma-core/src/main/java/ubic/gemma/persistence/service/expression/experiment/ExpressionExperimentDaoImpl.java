@@ -1209,7 +1209,7 @@ public class ExpressionExperimentDaoImpl
     private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
 
     @Override
-    protected ExpressionExperimentValueObject processLoadValueObjectsHibernateResult( Object result ) {
+    protected ExpressionExperimentValueObject processLoadValueObjectsQueryResult( Object result ) {
         Object[] row = ( Object[] ) result;
 
         ExpressionExperiment ee = ( ExpressionExperiment ) row[0];

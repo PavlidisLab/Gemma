@@ -39,18 +39,4 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             throw new ObjectFilterException( "Could not create an object filter for " + property + " using a collection.", e );
         }
     }
-
-    /**
-     * Process a result from Hibernate into a value object.
-     *
-     * The result is obtained from either {@link Criteria#list()} or {@link Query#list()}.
-     *
-     * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
-     * obtain a value object.
-     *
-     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)}
-     */
-    protected VO processLoadValueObjectsHibernateResult( Object result ) {
-        return loadValueObject( ( O ) result );
-    }
 }

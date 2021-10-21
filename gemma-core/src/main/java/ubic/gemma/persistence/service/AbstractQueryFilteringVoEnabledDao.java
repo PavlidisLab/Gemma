@@ -60,6 +60,20 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
     }
 
+    /**
+     * Process a result from Hibernate into a value object.
+     *
+     * The result is obtained from {@link Query#list()}.
+     *
+     * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
+     * obtain a value object.
+     *
+     * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)}
+     */
+    protected VO processLoadValueObjectsQueryResult( Object result ) {
+        return loadValueObject( ( O ) result );
+    }
+
     @Override
     public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         StopWatch stopWatch = new StopWatch();
@@ -84,7 +98,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         List<?> list = query.list();
 
         List<VO> vos = list.stream()
-                .map( this::processLoadValueObjectsHibernateResult )
+                .map( this::processLoadValueObjectsQueryResult )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
 
@@ -111,7 +125,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         try {
             return list.stream()
-                    .map( this::processLoadValueObjectsHibernateResult )
+                    .map( this::processLoadValueObjectsQueryResult )
                     .filter( Objects::nonNull )
                     .collect( Collectors.toList() );
         } finally {

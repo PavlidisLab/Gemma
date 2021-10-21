@@ -21,7 +21,7 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
 
     @Override
     public ExpressionAnalysisResultSet getEntity( ExpressionAnalysisResultSetService service ) {
-        return service.load( getValue() );
+        return service.loadWithExperimentAnalyzed( getValue() );
     }
 
     public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetService service ) {

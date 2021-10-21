@@ -23,6 +23,8 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     void thaw( ExpressionAnalysisResultSet e );
 
+    ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id );
+
     ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears );
 
     Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet ears );

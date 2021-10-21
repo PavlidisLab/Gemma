@@ -144,7 +144,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected CompositeSequenceValueObject processLoadValueObjectsHibernateResult( Object result ) {
+    protected CompositeSequenceValueObject processLoadValueObjectsQueryResult( Object result ) {
         Object[] row = ( Object[] ) result;
         CompositeSequence cs = ( CompositeSequence ) row[1];
         cs.setArrayDesign( ( ArrayDesign ) row[2] );

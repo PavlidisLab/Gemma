@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
@@ -172,8 +171,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( objectFilters, sort );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters, sort );
+        Criteria query = getLoadValueObjectsCriteria( objectFilters );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
 
         if ( bioAssaySets != null ) {
             query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
@@ -185,11 +184,12 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
         }
 
+        log.info( "Filters: " + objectFilters );
+
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
                 .setFirstResult( offset )
                 .setMaxResults( limit )
-                .setCacheable( true )
                 .list();
 
         Long totalElements = ( Long ) totalElementsQuery
@@ -201,16 +201,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    protected Criteria getLoadValueObjectsCriteria( Filters objectFilters, Sort sort ) {
+    protected Criteria getLoadValueObjectsCriteria( Filters objectFilters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class )
+                .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
+                // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
                 .createAlias( "analysis.experimentAnalyzed", "e" )
-                .createAlias( "experimentalFactors", "ef" )
-                .createAlias( "ef.factorValues", "fv" );
+                .createAlias( "experimentalFactors", "ef", Criteria.LEFT_JOIN )
+                .createAlias( "ef.factorValues", "fv", Criteria.LEFT_JOIN );
+
+        // apply filtering
+        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
 
         // apply the ACL on the associated EE
         query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );
+
+        // make this cacheable
+        query.setCacheable( true );
 
         return query;
     }
@@ -234,7 +241,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                         + "where {result}.RESULT_SET_FK = :rsid" )
                 .addEntity( "result", DifferentialExpressionAnalysisResult.class )
                 .addEntity( "gene", Gene.class )
-                .setParameter( "rsid", resultSet.getId() );
+                .setParameter( "rsid", resultSet.getId() )
+                .setCacheable( true );
 
         //noinspection unchecked
         List<Object[]> list = query.list();
