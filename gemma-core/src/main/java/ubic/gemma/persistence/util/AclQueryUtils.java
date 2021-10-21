@@ -46,11 +46,13 @@ public class AclQueryUtils {
         if ( Strings.isNullOrEmpty( alias ) )
             throw new IllegalArgumentException( "Alias cannot be null or empty." );
         if ( SecurityUtil.isUserAdmin() ) {
-            return ", AclObjectIdentity as aoi inner join aoi.ownerSid sid " + "where aoi.identifier = " + alias
-                    + ".id and aoi.type = :aoiType";
+            return ", AclObjectIdentity as aoi inner join aoi.ownerSid sid "
+                    + "where aoi.identifier = " + ObjectFilterQueryUtils.formPropertyName( alias, "id" ) + " "
+                    + "and aoi.type = :aoiType";
         } else {
             return ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                    + "where aoi.identifier = " + alias + ".id and aoi.type = :aoiType";
+                    + "where aoi.identifier = " + ObjectFilterQueryUtils.formPropertyName( alias, "id" ) + " "
+                    + "and aoi.type = :aoiType";
         }
     }
 
