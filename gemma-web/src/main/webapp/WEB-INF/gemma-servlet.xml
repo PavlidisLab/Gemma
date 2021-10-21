@@ -465,7 +465,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="progressStatusService" class="ubic.gemma.core.job.progress.ProgressStatusServiceImpl">
+    <bean id="progressStatusService" class="ubic.gemma.web.job.progress.ProgressStatusServiceImpl">
         <aop:scoped-proxy/>
         <dwr:remote javascript="ProgressStatusService">
             <dwr:include method="getProgressStatus"/>

@@ -12,10 +12,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.core.job.progress;
+package ubic.gemma.web.job.progress;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.job.progress.ProgressData;
+import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 
 import java.util.Collection;
 import java.util.List;

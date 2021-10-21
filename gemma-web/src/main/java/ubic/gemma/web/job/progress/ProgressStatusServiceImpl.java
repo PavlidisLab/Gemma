@@ -13,7 +13,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.job.progress;
+package ubic.gemma.web.job.progress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +25,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.progress.ProgressData;
+import ubic.gemma.core.job.progress.SubmittedTaskValueObject;
 
 import java.util.Collection;
 import java.util.List;
