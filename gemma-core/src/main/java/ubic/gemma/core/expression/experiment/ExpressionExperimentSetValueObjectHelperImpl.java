@@ -37,7 +37,7 @@
 
 package ubic.gemma.core.expression.experiment;
 
-import org.jfree.util.Log;
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -60,6 +60,7 @@ import java.util.HashSet;
  *
  */
 @Component
+@CommonsLog
 public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionExperimentSetValueObjectHelper {
 
     @Autowired
@@ -106,7 +107,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             Taxon tax = taxonService.load( setVO.getTaxonId() );
             entity.setTaxon( tax );
         } else {
-            Log.debug( "Trying to convert DatabaseBackedExpressionExperimentSetValueObject with id =" + setVO.getId()
+            log.debug( "Trying to convert DatabaseBackedExpressionExperimentSetValueObject with id =" + setVO.getId()
                     + " to ExpressionExperimentSet entity. Unmatched ValueObject.getTaxonId() was :" + setVO
                     .getTaxonId() );
         }

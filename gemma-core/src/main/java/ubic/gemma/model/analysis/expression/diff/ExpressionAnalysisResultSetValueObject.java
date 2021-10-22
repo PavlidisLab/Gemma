@@ -3,7 +3,6 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;

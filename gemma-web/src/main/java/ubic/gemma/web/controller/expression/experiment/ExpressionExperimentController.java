@@ -20,11 +20,12 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -482,7 +483,7 @@ public class ExpressionExperimentController {
     public JSONObject loadCountsForDataSummaryTable() {
 
         JSONObject summary = new JSONObject();
-        net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
+        JSONArray taxonEntries = new JSONArray();
 
         long bioMaterialCount = bioMaterialService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
@@ -544,10 +545,10 @@ public class ExpressionExperimentController {
                     taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
                     taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
                 }
-                taxonEntries.add( taxLine );
+                taxonEntries.put( taxLine );
             }
 
-            summary.element( "sortedCountsPerTaxon", taxonEntries );
+            summary.put( "sortedCountsPerTaxon", taxonEntries );
 
             // Get count for new and updated array designs
             Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
@@ -561,30 +562,30 @@ public class ExpressionExperimentController {
             String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
 
-            summary.element( "updateDate", date );
-            summary.element( "drawNewColumn", drawNewColumn );
-            summary.element( "drawUpdatedColumn", drawUpdatedColumn );
+            summary.put( "updateDate", date );
+            summary.put( "drawNewColumn", drawNewColumn );
+            summary.put( "drawUpdatedColumn", drawUpdatedColumn );
             if ( newBioMaterialCount != 0 )
-                summary.element( "newBioMaterialCount", new Long( newBioMaterialCount ) );
+                summary.put( "newBioMaterialCount", new Long( newBioMaterialCount ) );
             if ( newArrayCount != 0 )
-                summary.element( "newArrayDesignCount", new Long( newArrayCount ) );
+                summary.put( "newArrayDesignCount", new Long( newArrayCount ) );
             if ( updatedArrayCount != 0 )
-                summary.element( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
+                summary.put( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
             if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentCount", newExpressionExperimentCount );
+                summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
             if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+                summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
             if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentIds", newExpressionExperimentIds );
+                summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
             if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
+                summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
 
         }
 
-        summary.element( "bioMaterialCount", bioMaterialCount );
-        summary.element( "arrayDesignCount", arrayDesignCount );
+        summary.put( "bioMaterialCount", bioMaterialCount );
+        summary.put( "arrayDesignCount", arrayDesignCount );
 
-        summary.element( "expressionExperimentCount", expressionExperimentCount );
+        summary.put( "expressionExperimentCount", expressionExperimentCount );
 
         return summary;
     }
@@ -725,15 +726,15 @@ public class ExpressionExperimentController {
         for ( ExpressionExperiment ee : ees ) {
             //noinspection MismatchedQueryAndUpdateOfCollection
             JSONObject record = new JSONObject();
-            record.element( "id", ee.getId() );
-            record.element( "shortName", ee.getShortName() );
-            record.element( "name", ee.getName() );
+            record.put( "id", ee.getId() );
+            record.put( "shortName", ee.getShortName() );
+            record.put( "name", ee.getName() );
 
             if ( outlierEEs.contains( ee ) ) {
-                record.element( "sampleRemoved", true );
+                record.put( "sampleRemoved", true );
             }
 
-            // record.element( "batchEffect", batchEffectEEs.contains( ee ) );
+            // record.put( "batchEffect", batchEffectEEs.contains( ee ) );
             jsonRecords.add( record );
         }
 

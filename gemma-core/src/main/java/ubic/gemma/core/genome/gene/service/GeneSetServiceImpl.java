@@ -19,8 +19,8 @@
 package ubic.gemma.core.genome.gene.service;
 
 import gemma.gsec.SecurityService;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -45,6 +45,7 @@ import java.util.HashSet;
  * @author kelsey
  */
 @Service
+@CommonsLog
 public class GeneSetServiceImpl implements GeneSetService {
 
     private static final Double DEFAULT_SCORE = 0.0;
@@ -225,7 +226,7 @@ public class GeneSetServiceImpl implements GeneSetService {
             Collection<Gene> genes = geneService.load( geneIds );
 
             if ( geneIds.size() != genes.size() ) {
-                Log.warn( "Not all genes were found by id: " + geneIds.size() + " ids, " + genes.size()
+                log.warn( "Not all genes were found by id: " + geneIds.size() + " ids, " + genes.size()
                         + " genes fetched" );
             }
 

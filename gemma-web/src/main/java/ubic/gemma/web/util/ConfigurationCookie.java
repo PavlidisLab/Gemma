@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.util;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.io.FileHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.io.FileHandler;
 
 import javax.servlet.http.Cookie;
 import java.io.StringReader;

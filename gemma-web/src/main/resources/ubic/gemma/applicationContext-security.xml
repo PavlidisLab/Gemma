@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:s="http://www.springframework.org/schema/security"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/security
+            http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+	<bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
+		<property name="alwaysUseDefaultTargetUrl" value="false"/>
+	</bean>
+
+	<bean id="ajaxAuthenticationFailureHandler" class="gemma.gsec.authentication.AjaxAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/login.jsp"/>
+	</bean>
+
+	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
+		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
+	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma" pattern="/**">
+		<s:http-basic/>
+
+		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
+
+		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/monitoring" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"
+						 access="GROUP_USER"/>
+		<s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER"/>
+		<s:intercept-url pattern="/manageGroups.html" access="GROUP_USER"/>
+		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN"/>
+		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER"/>
+		<s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER"/>
+		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+
+		<s:logout logout-success-url="/login.jsp"/>
+		<s:form-login login-page="/login.jsp" default-target-url="/"
+					  authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
+					  authentication-failure-handler-ref="ajaxAuthenticationFailureHandler"/>
+		<s:remember-me key="gemma_rm" user-service-ref="userManager"/>
+
+		<!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions
+			galore. -->
+		<s:session-management session-fixation-protection="none">
+			<!-- We define the session registry ourselves so we can use it to count users -->
+			<s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry"/>
+		</s:session-management>
+
+	</s:http>
+</beans>

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.ftp.FTP;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;

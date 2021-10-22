@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.util;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.Properties;
  * Currently values in the configuration overrides any in the properties files.
  *
  * @author pavlidis
- * @see org.apache.commons.configuration.Configuration
+ * @see org.apache.commons.configuration2.Configuration
  * @see org.springframework.beans.factory.config.PropertyPlaceholderConfigurer
  */
 public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {

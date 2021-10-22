@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.view;
 
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,9 +52,9 @@ public class JSONView implements View {
     @Override
     public void render( Map<String, ?> map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
 
-        JSONObject jso = JSONObject.fromObject( map );
+        JSONObject jso = new JSONObject( map );
         response.setContentType( this.docType );
-        try (Writer writer = response.getWriter()) {
+        try ( Writer writer = response.getWriter() ) {
 
             // Need to wrap json in html tags or the proxy server will wrap in <p></p> tags.
             // will work in test enviroment (with or without wrapping json)
@@ -62,7 +62,7 @@ public class JSONView implements View {
             // This is specifically for extjs and uploading a file.
             // Other frameworks might not like this.
 
-            writer.write( "<html><body>" + jso.toString() + "</body></html>" );
+            writer.write( "<html><body>" + jso + "</body></html>" );
         }
     }
 
