@@ -26,7 +26,9 @@ import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -170,7 +172,7 @@ public class GeoBrowser {
 
         }
 
-        if (!chunk.isEmpty()) {
+        if ( !chunk.isEmpty() ) {
             String searchUrlString = GeoBrowser.ESEARCH + "(" + StringUtils.join( chunk, "[accn]+OR+" ) + "[accn])&usehistory=y";
 
             if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
@@ -519,9 +521,12 @@ public class GeoBrowser {
                         + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
 
         StopWatch t = new StopWatch();
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" ); // for logging
+
         t.start();
         conn = fetchUrl.openConnection();
         conn.connect();
+        int rawRecords = 0;
 
         Document summaryDocument;
         try ( InputStream is = conn.getInputStream() ) {
@@ -564,6 +569,8 @@ public class GeoBrowser {
             for ( int i = 0; i < accNodes.getLength(); i++ ) {
 
                 GeoRecord record = new GeoRecord();
+
+                rawRecords++; // prior to any filtering.
 
                 record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
@@ -617,7 +624,7 @@ public class GeoBrowser {
                 if ( detailed ) {
                     // without details this goes a lot quicker so feedback isn't very important
                     System.err.println(
-                            "Processed: " + record.getGeoAccession() + ", " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
+                            "Processed: " + record.getGeoAccession() + " (" + dateFormat.format( record.getReleaseDate() ) + "), " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
                 }
                 t.reset();
                 t.start();
@@ -627,10 +634,12 @@ public class GeoBrowser {
             log.error( "Could not parse data: " + searchUrl, e );
         }
 
-        if ( records.isEmpty() ) {
+        if ( records.isEmpty() && rawRecords == 0 ) {
             GeoBrowser.log.warn( "No records obtained" );
+            log.warn( "Query was " + searchUrl );
+            log.warn( "Fetch was " + fetchUrl );
         } else {
-            log.debug( "Parsed " + records.size() + " records" );
+            log.debug( "Parsed " + rawRecords + " records, " + records.size() + " retained at this stage" );
         }
 
         return records;

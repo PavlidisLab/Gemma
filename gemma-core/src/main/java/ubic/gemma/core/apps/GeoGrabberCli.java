@@ -47,13 +47,15 @@ import java.util.*;
  */
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
-    private static final int NCBI_CHUNK_SIZE = 10;
+    private static final int NCBI_CHUNK_SIZE = 100;
     private static final int MAX_RETRIES = 5;
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
     private boolean getPlatforms = false;
     private Collection<String> limitPlatform = new ArrayList<>();
+    private String startFrom = null;
+    private Date startDate = null;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -67,7 +69,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     @Override
     public String getShortDesc() {
-        return "Grab information on GEO data sets not yet in the system";
+        return "Grab information on GEO data sets not yet in the system, working backwards in time";
     }
 
     @Override
@@ -86,6 +88,13 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         options.addOption(
                 Option.builder( "platforms" ).desc( "Fetch a list of all platforms instead of experiments (date and gselimit ignored)" ).build() );
 
+        options.addOption(
+                Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retreiving from there " ).build() );
+
+
+        options.addOption(
+                Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date (yyyy.MM.dd) " +
+                        "and continue retreiving from there " ).build() );
     }
 
     @Override
@@ -117,7 +126,23 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
             this.limitPlatform = Arrays.asList( StringUtils.split( gpls, "," ) );
         }
 
+        if ( commandLine.hasOption( "startat" ) ) {
+            this.startFrom = commandLine.getOptionValue( "startat" );
+            if ( !startFrom.startsWith( "GSE" ) ) {
+                throw new IllegalArgumentException( "Must provide a valid GSE for the startat option" );
+            }
+        }
+
+        if ( commandLine.hasOption( "startdate" ) ) {
+            try {
+                this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), new String[] { "yyyy.MM.dd" } );
+            } catch ( ParseException e ) {
+                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
+            }
+        }
+
         this.outputFileName = commandLine.getOptionValue( "output" );
+
     }
 
     @Override
@@ -132,8 +157,8 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         int start = 0;
 
         assert outputFileName != null;
-        log.info( "Writing output to " + outputFileName );
         File outputFile = new File( outputFileName );
+        log.info( "Writing output to " + outputFile.getPath() );
 
         if ( outputFile.exists() ) {
             log.warn( "Overwriting existing file ..." );
@@ -181,13 +206,28 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
             }
             log.info( allowedTaxa.size() + " Taxa considered usable" );
             int retries = 0;
+
+            boolean reachedRewindPoint = ( startDate == null && startFrom == null );
+
             while ( keepGoing ) {
 
                 log.debug( "Searching from " + start + ", seeking " + NCBI_CHUNK_SIZE + " records" );
                 List<GeoRecord> recs = null;
 
                 try {
-                    recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa, limitPlatform );
+
+                    if ( !reachedRewindPoint ) {
+                        // skip details in queries to go faster
+                        if ( startDate != null ) {
+                            log.info( "Seeking rewind point " + startDate + " from record " + start + " ..." );
+                        } else if ( startFrom != null ) {
+                            log.info( "Seeking rewind point " + startFrom + " from record " + start + " ..." );
+                        }
+                        recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, false /* details */, allowedTaxa, limitPlatform );
+                    } else {
+                        recs = gbs.getGeoRecordsBySearchTerm( null, start, NCBI_CHUNK_SIZE, true /* details */, allowedTaxa, limitPlatform );
+                    }
+
                     if ( recs == null || recs.isEmpty() ) {
                         // this doesn't happen any more, in my experience
                         AbstractCLI.log.info( "No records received for start=" + start );
@@ -222,6 +262,25 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 start += NCBI_CHUNK_SIZE; // this seems the best way to avoid hitting them more than once.
 
                 for ( GeoRecord geoRecord : recs ) {
+
+                    /*
+                    If we are trying to fast-rewind, we need to reset and redo the last query while fetching details.
+                     */
+                    if ( !reachedRewindPoint ) {
+                        if ( geoRecord.getGeoAccession().equals( startFrom ) ) {
+                            log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries" );
+                            reachedRewindPoint = true;
+                            start = Math.max( 0, start - NCBI_CHUNK_SIZE );
+                            break;
+                        } else if ( geoRecord.getReleaseDate().before( startDate ) ) {
+                            log.info( "Located requested starting date of " + startDate + ", resuming detailed queries" );
+                            reachedRewindPoint = true;
+                            start = Math.max( 0, start - NCBI_CHUNK_SIZE );
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
 
                     numProcessed++;
 
