@@ -91,7 +91,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         options.addOption(
                 Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retreiving from there " ).build() );
 
-
         options.addOption(
                 Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date (yyyy.MM.dd) " +
                         "and continue retreiving from there " ).build() );
@@ -138,6 +137,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), new String[] { "yyyy.MM.dd" } );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
+            }
+            if ( dateLimit != null ) {
+                if ( dateLimit.after( startDate ) ) {
+                    throw new IllegalArgumentException( "startdate has to be later than the -date option" );
+                }
             }
         }
 
