@@ -24,8 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -480,10 +478,10 @@ public class ExpressionExperimentController {
      *
      * @return json
      */
-    public JSONObject loadCountsForDataSummaryTable() {
+    public Map<String, Object> loadCountsForDataSummaryTable() {
 
-        JSONObject summary = new JSONObject();
-        JSONArray taxonEntries = new JSONArray();
+        Map<String, Object> summary = new HashMap<>();
+        List<Map<String, Object>> taxonEntries = new ArrayList();
 
         long bioMaterialCount = bioMaterialService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
@@ -492,12 +490,7 @@ public class ExpressionExperimentController {
         /*
          * Sort taxa by name.
          */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                return o1.getScientificName().compareTo( o2.getScientificName() );
-            }
-        } );
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( Comparator.comparing( Taxon::getScientificName ) );
 
         long expressionExperimentCount = 0; // expressionExperimentService.countAll();
         for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
@@ -519,11 +512,11 @@ public class ExpressionExperimentController {
 
             Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
             Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
-                    : new ArrayList<Long>();
+                    : new ArrayList<>();
             Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
             Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
                     ? EntityUtils.getIds( updatedExpressionExperiments )
-                    : new ArrayList<Long>();
+                    : new ArrayList<>();
 
             int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
             int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
@@ -533,7 +526,7 @@ public class ExpressionExperimentController {
             Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
 
             for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
-                JSONObject taxLine = new JSONObject();
+                Map<String, Object> taxLine = new HashMap<>();
                 taxLine.put( "taxonId", t.getId() );
                 taxLine.put( "taxonName", t.getScientificName() );
                 taxLine.put( "totalCount", eesPerTaxon.get( t ) );
@@ -545,7 +538,7 @@ public class ExpressionExperimentController {
                     taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
                     taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
                 }
-                taxonEntries.put( taxLine );
+                taxonEntries.add( taxLine );
             }
 
             summary.put( "sortedCountsPerTaxon", taxonEntries );
@@ -566,11 +559,11 @@ public class ExpressionExperimentController {
             summary.put( "drawNewColumn", drawNewColumn );
             summary.put( "drawUpdatedColumn", drawUpdatedColumn );
             if ( newBioMaterialCount != 0 )
-                summary.put( "newBioMaterialCount", new Long( newBioMaterialCount ) );
+                summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
             if ( newArrayCount != 0 )
-                summary.put( "newArrayDesignCount", new Long( newArrayCount ) );
+                summary.put( "newArrayDesignCount", ( long ) newArrayCount );
             if ( updatedArrayCount != 0 )
-                summary.put( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
+                summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
             if ( newExpressionExperimentCount != 0 )
                 summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
             if ( updatedExpressionExperimentCount != 0 )
@@ -673,7 +666,7 @@ public class ExpressionExperimentController {
      * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        ArrayDesign ad = arrayDesignService.load(id);
+        ArrayDesign ad = arrayDesignService.load( id );
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
                 new ArrayList<>( arrayDesignService.getSwitchedExperimentIds( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
@@ -713,7 +706,7 @@ public class ExpressionExperimentController {
      *
      * @return json reader response
      */
-    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
+    public JsonReaderResponse<Map<String, Object>> loadExpressionExperimentsWithQcIssues() {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
 
@@ -721,11 +714,11 @@ public class ExpressionExperimentController {
         ees.addAll( outlierEEs );
         // ees.addAll( batchEffectEEs );
 
-        List<JSONObject> jsonRecords = new ArrayList<>();
+        List<Map<String, Object>> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
             //noinspection MismatchedQueryAndUpdateOfCollection
-            JSONObject record = new JSONObject();
+            Map<String, Object> record = new HashMap();
             record.put( "id", ee.getId() );
             record.put( "shortName", ee.getShortName() );
             record.put( "name", ee.getName() );
