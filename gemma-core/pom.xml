@@ -294,11 +294,6 @@
             <artifactId>JavaEWAH</artifactId>
             <version>1.1.13</version>
         </dependency>
-        <dependency>
-            <groupId>ubc.chibi.compass-fork</groupId>
-            <artifactId>compass-fork</artifactId>
-            <version>1.0</version>
-        </dependency>
 
         <!-- Spring -->
         <dependency>
@@ -330,6 +325,35 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers</artifactId>
             <version>${lucene.version}</version>
+        </dependency>
+
+        <!-- Compass (fork compatible with Lucene 3.6.2) -->
+        <dependency>
+            <groupId>ubc.chibi.compass-fork</groupId>
+            <artifactId>compass-fork</artifactId>
+            <version>1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>cglib</groupId>
+                    <artifactId>cglib-nodep</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.jms</groupId>
+                    <artifactId>jms-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-dbcp</groupId>
+                    <artifactId>commons-dbcp</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javassist</groupId>
+                    <artifactId>javassist</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>jsp-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Apache Commons -->
