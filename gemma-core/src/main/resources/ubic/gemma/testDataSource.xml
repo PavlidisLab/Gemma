@@ -18,6 +18,8 @@
         <property name="password" value="${gemma.testdb.password}"/>
         <property name="url" value="${gemma.testdb.url}"/>
         <property name="maxTotal" value="20"/>
+        <!-- no need to define MySQL's sql_mode twice for testing -->
+        <property name="connectionProperties" value="sessionVariables=sql_mode='${gemma.db.sqlMode}'"/>
     </bean>
 
 
