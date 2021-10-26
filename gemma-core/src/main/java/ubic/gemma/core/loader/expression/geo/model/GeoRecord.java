@@ -53,13 +53,15 @@ public class GeoRecord extends GeoData {
 
     private Collection<String> sampleGEOAccessions;
 
-    private String seriesType;
+    private String seriesType = "";
 
     private boolean subSeries = false;
 
     private String subSeriesOf = "";
 
-    private String summary;
+    private String summary = "";
+
+    private String overallDesign = "";
 
     private boolean superSeries = false;
 
@@ -222,6 +224,15 @@ public class GeoRecord extends GeoData {
 
     public void setUsable( boolean usable ) {
         this.usable = usable;
+    }
+
+
+    public String getOverallDesign() {
+        return overallDesign;
+    }
+
+    public void setOverallDesign( String overallDesign ) {
+        this.overallDesign = overallDesign;
     }
 
     @Override

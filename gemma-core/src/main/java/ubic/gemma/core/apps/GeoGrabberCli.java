@@ -197,7 +197,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         try ( Writer os = new FileWriter( outputFile ) ) {
 
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\n" );
+                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tOverallDesign\n" );
             os.flush();
 
             int numProcessed = 0;
@@ -267,16 +267,21 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
                 for ( GeoRecord geoRecord : recs ) {
 
+                    if ( geoRecord.getGeoAccession().equals( "GSE174409" ) ) {
+                        log.info( "foo" );
+                    }
+                    log.debug( geoRecord.getGeoAccession() );
+
                     /*
                     If we are trying to fast-rewind, we need to reset and redo the last query while fetching details.
                      */
                     if ( !reachedRewindPoint ) {
-                        if ( geoRecord.getGeoAccession().equals( startFrom ) ) {
+                        if ( startFrom != null && geoRecord.getGeoAccession().equals( startFrom ) ) {
                             log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries" );
                             reachedRewindPoint = true;
                             start = Math.max( 0, start - NCBI_CHUNK_SIZE );
                             break;
-                        } else if ( geoRecord.getReleaseDate().before( startDate ) ) {
+                        } else if ( startDate != null && geoRecord.getReleaseDate().before( startDate ) ) {
                             log.info( "Located requested starting date of " + startDate + ", resuming detailed queries" );
                             reachedRewindPoint = true;
                             start = Math.max( 0, start - NCBI_CHUNK_SIZE );
@@ -367,9 +372,12 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                     + "\t" + geoRecord.getTitle()
                                     + "\t" + geoRecord.getSummary()
                                     + "\t" + geoRecord.getMeshHeadings()
-                                    + "\t" + geoRecord.getSampleDetails() + "\n" );
+                                    + "\t" + geoRecord.getSampleDetails()
+                                    + "\t" + geoRecord.getOverallDesign() + "\n" );
 
                     seen.add( geoRecord.getGeoAccession() );
+
+                    os.flush();
 
                     numUsed++;
                 }

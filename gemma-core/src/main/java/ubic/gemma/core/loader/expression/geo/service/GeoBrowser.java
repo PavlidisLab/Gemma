@@ -108,6 +108,7 @@ public class GeoBrowser {
     XPathExpression xPlatformTech;
     XPathExpression xpubmed;
     XPathExpression xRelationType;
+    XPathExpression xOverallDesign;
     XPathExpression xreleaseDate;
     XPathExpression xsummary;
     XPathExpression xtitle;
@@ -135,6 +136,7 @@ public class GeoBrowser {
             source = xpath.compile( "//Source" );
             characteristics = xpath.compile( "//Characteristics" );
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
+            xOverallDesign = xpath.compile( "//MINiML/Series/Overall-Design" );
             xPlataccession = xpath.compile( "//DocSum/Item[@Name='GPL']" );
             xPlatformTech = xpath.compile( "//DocSum/Item[@Name='ptechType']" );
             //   XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
@@ -574,6 +576,8 @@ public class GeoBrowser {
 
                 record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
 
+                log.debug( record.getGeoAccession() );
+
                 record.setSeriesType( typeNodes.item( i ).getTextContent() );
                 if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
                     continue;
@@ -761,8 +765,12 @@ public class GeoBrowser {
                     record.setSubSeries( true );
                     record.setSubSeriesOf( relTo );
                 }
-
             }
+
+            String overallDesign = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
+            if ( overallDesign != null )
+                record.setOverallDesign( StringUtils.remove( overallDesign, '\n' ) );
+
         } catch ( IOException | ParserConfigurationException | SAXException | XPathExpressionException e ) {
             log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                     + ", subseries status will not be determined." );
