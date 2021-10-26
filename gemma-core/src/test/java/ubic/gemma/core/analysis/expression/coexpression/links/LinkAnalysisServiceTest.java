@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
