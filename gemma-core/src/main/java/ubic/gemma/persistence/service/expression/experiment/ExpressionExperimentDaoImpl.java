@@ -1488,8 +1488,10 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
 
         // the constants for aliases are messing with the inspector
+        //language=HQL
         String queryString =
                 "select ee, " + AclQueryUtils.formAclSelectClause() + " "
                         + "from ExpressionExperiment as ee "
@@ -1549,6 +1551,14 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected Query getCountValueObjectsQuery( Filters filters ) {
+        if ( filters == null ) {
+            filters = new Filters();
+        }
+
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
+
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String queryString =
                 "select count(distinct ee) from ExpressionExperiment as ee "
@@ -1571,6 +1581,10 @@ public class ExpressionExperimentDaoImpl
             queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
                     ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
         }
+
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
         queryString += AclQueryUtils.formAclJoinClause( "ee" );
