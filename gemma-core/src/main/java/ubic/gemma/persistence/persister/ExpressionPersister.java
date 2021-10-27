@@ -92,7 +92,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         try {
 
-            AbstractPersister.log.info( ">>>>>>>>>> Persisting " + ee );
+            AbstractPersister.log.debug( ">>>>>>>>>> Persisting " + ee );
 
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
@@ -129,7 +129,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
 
         this.clearCache();
-        AbstractPersister.log.info( "<<<<<< FINISHED Persisting " + ee );
+        AbstractPersister.log.debug( "<<<<<< FINISHED Persisting " + ee );
         return ee;
     }
 
@@ -189,7 +189,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( efs.size() == 0 )
             return;
 
-        AbstractPersister.log.info( "Checking experimental design for valid setup" );
+        AbstractPersister.log.debug( "Checking experimental design for valid setup" );
 
         Collection<BioAssay> bioAssays = expExp.getBioAssays();
 
@@ -332,7 +332,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
             ArrayDesignsForExperimentCache c ) {
-        AbstractPersister.log.info( "Filling in DesignElementDataVectors..." );
+        AbstractPersister.log.debug( "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<>();
         StopWatch timer = new StopWatch();
@@ -343,7 +343,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             if ( timer.getTime() > 5000 ) {
                 if ( count == 0 ) {
-                    AbstractPersister.log.info( "Setup: " + timer.getTime() );
+                    AbstractPersister.log.debug( "Setup: " + timer.getTime() );
                 } else {
                     AbstractPersister.log
                             .info( "Filled in " + ( count ) + " DesignElementDataVectors (" + timer.getTime()
@@ -358,12 +358,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             ++count;
 
             if ( Thread.interrupted() ) {
-                AbstractPersister.log.info( "Cancelled" );
+                AbstractPersister.log.debug( "Cancelled" );
                 return null;
             }
         }
 
-        AbstractPersister.log.info( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size()
+        AbstractPersister.log.debug( "Filled in total of " + count + " DesignElementDataVectors, " + bioAssays.size()
                 + " bioassays" );
         return bioAssays;
     }
@@ -439,7 +439,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             bioAssay.setId( null ); // in case of retry.
             persistedBioAssays.add( this.persistBioAssay( bioAssay, c ) );
             if ( persistedBioAssays.size() % 10 == 0 ) {
-                AbstractPersister.log.info( "Persisted: " + persistedBioAssays.size() + " bioassays" );
+                AbstractPersister.log.debug( "Persisted: " + persistedBioAssays.size() + " bioassays" );
             }
         }
         AbstractPersister.log.debug( "Done persisting " + persistedBioAssays.size() + " bioassays" );
@@ -536,13 +536,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         Collection<BioAssay> alreadyFilled = new HashSet<>();
 
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
-            AbstractPersister.log.info( "Filling in bioassays" );
+            AbstractPersister.log.debug( "Filling in bioassays" );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 this.fillInBioAssayAssociations( bioAssay, c );
                 alreadyFilled.add( bioAssay );
             }
         } else {
-            AbstractPersister.log.info( "Filling in bioassays via data vectors" ); // usual case.
+            AbstractPersister.log.debug( "Filling in bioassays via data vectors" ); // usual case.
             alreadyFilled = this.fillInExpressionExperimentDataVectorAssociations( expressionExperiment, c );
             expressionExperiment.setBioAssays( alreadyFilled );
         }

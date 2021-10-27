@@ -142,7 +142,7 @@ abstract public class GenomePersister extends CommonPersister {
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
                             + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
-                                    .getPreviousNcbiId()
+                            .getPreviousNcbiId()
                             + ") doesn't match." );
                 }
             }
@@ -222,7 +222,7 @@ abstract public class GenomePersister extends CommonPersister {
                     // it is, in fact, new, so far as we can tell.
                     newGeneProductInfo.setGene( existingGene );
                     this.fillInGeneProductAssociations( newGeneProductInfo );
-                    AbstractPersister.log.info( "New product for " + existingGene + ": " + newGeneProductInfo );
+                    AbstractPersister.log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
                     /*
@@ -247,7 +247,7 @@ abstract public class GenomePersister extends CommonPersister {
                             // Here we just remove its old association.
                             oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
-                            log.info( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
+                            log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
                                     + existingGeneProduct.getNcbiGi() );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -270,7 +270,7 @@ abstract public class GenomePersister extends CommonPersister {
 
                         assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
                     } else {
-                        AbstractPersister.log.info( "Attaching orphaned gene product to " + existingGene + " : "
+                        AbstractPersister.log.debug( "Attaching orphaned gene product to " + existingGene + " : "
                                 + existingGeneProduct );
                     }
 
@@ -463,8 +463,8 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setTaxon( this.persistTaxon( gene.getTaxon() ) );
         this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
 
-        if ( AbstractPersister.log.isInfoEnabled() )
-            AbstractPersister.log.info( "New gene: " + gene );
+        if ( AbstractPersister.log.isDebugEnabled() )
+            AbstractPersister.log.debug( "New gene: " + gene );
         gene = geneDao.create( gene );
 
         Collection<GeneProduct> geneProductsForNewGene = new HashSet<>();
