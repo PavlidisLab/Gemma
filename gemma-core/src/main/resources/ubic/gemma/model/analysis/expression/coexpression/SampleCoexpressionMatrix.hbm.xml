@@ -16,7 +16,7 @@
             <column name="COEXPRESSION_MATRIX" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="join">
             <column name="BIO_ASSAY_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>

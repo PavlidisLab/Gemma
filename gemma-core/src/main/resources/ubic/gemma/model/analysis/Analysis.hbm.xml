@@ -81,12 +81,12 @@
                           abstract="false">
                     <many-to-one name="fullCoexpressionMatrix"
                                  class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-                                 cascade="all" lazy="false" fetch="select">
+                                 cascade="all" lazy="false" fetch="join">
                         <column name="SAMPLE_COEXPRESSION_MATRIX_RAW_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                     </many-to-one>
                     <many-to-one name="regressedCoexpressionMatrix"
                                  class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix"
-                                 cascade="all" lazy="false" fetch="select">
+                                 cascade="all" lazy="false" fetch="join">
                         <column name="SAMPLE_COEXPRESSION_MATRIX_REG_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                     </many-to-one>
                 </subclass>
@@ -116,7 +116,7 @@
                     </property>
                     <many-to-one name="bioAssayDimension"
                                  class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
-                                 lazy="false" fetch="select">
+                                 lazy="false" fetch="join">
                         <column name="BIO_ASSAY_DIMENSION_FK" not-null="false" sql-type="BIGINT"/>
                     </many-to-one>
                     <set name="probeLoadings" lazy="true" fetch="select" cascade="all">

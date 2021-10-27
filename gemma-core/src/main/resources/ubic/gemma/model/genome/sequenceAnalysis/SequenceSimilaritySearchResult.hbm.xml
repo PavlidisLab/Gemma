@@ -29,7 +29,7 @@
             <column name="SEARCHED_DATABASE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="targetAlignedRegion" class="ubic.gemma.model.genome.PhysicalLocation" cascade="all"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="join">
             <column name="TARGET_ALIGNED_REGION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" discriminator-value="BlatResultImpl"
