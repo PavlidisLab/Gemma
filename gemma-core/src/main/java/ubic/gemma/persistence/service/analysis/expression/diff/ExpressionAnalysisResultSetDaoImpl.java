@@ -184,8 +184,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
         }
 
-        log.info( "Filters: " + objectFilters );
-
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
                 .setFirstResult( offset )
