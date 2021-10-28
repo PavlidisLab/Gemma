@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.jfree.util.Log;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.Gene2GeneIdAssociation;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -32,6 +32,7 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@CommonsLog
 public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
         implements Comparable<Gene2GeneCoexpression> {
 
@@ -52,7 +53,7 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
             FieldUtils.writeField( entity, "positiveCorrelation", effect > 0, true );
             FieldUtils.writeField( entity, "numDataSetsSupporting", 1, true );
         } catch ( IllegalAccessException e ) {
-            Log.error( e );
+            log.error( e.getMessage(), e );
         }
     }
 

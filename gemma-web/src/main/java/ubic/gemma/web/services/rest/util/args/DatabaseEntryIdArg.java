@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
-@Schema(implementation = Long.class)
+@Schema(type = "integer", format = "int64")
 public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {

@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {

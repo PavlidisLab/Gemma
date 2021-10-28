@@ -143,9 +143,8 @@ public class GemmaCLI {
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
         System.err.println( "============ Gemma command line tools ============" );
 
-        System.err.print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} "
-                + "GemmaCLI <commandName> [options]\n\n"
-                + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
+        System.err.print( "To operate Gemma tools, run a command like:\n\n"
+                + "gemma-cli <commandName> [options]\n\n"
                 + "Here is a list of available commands, grouped by category:\n" );
 
         for ( CommandGroup commandGroup : CommandGroup.values() ) {
@@ -164,7 +163,7 @@ public class GemmaCLI {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
         }
-        System.err.println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <commandName> --help" );
+        System.err.println( "\nTo get help for a specific tool, use \n\ngemma-cli <commandName> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
         System.exit( 0 );
     }

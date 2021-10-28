@@ -55,9 +55,7 @@ public class CompositeSequenceArrayArg
     }
 
     @SneakyThrows(ObjectFilterException.class)
-    public List<ObjectFilter[]> getPlatformFilter() {
-        ObjectFilter filter = new ObjectFilter( ObjectFilter.DAO_PROBE_ALIAS, "arrayDesign.id", Long.class, ObjectFilter.Operator.is, this.arrayDesign.getId().toString() );
-        return ObjectFilter.singleFilter( filter );
+    public ObjectFilter getPlatformFilter() {
+        return ObjectFilter.parseObjectFilter( ObjectFilter.DAO_PROBE_ALIAS, "arrayDesign.id", Long.class, ObjectFilter.Operator.eq, this.arrayDesign.getId().toString() );
     }
-
 }

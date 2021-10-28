@@ -41,7 +41,8 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
@@ -53,7 +54,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
+public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
@@ -103,7 +104,7 @@ public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<Comp
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + ".id as id, " // 0
                 + getObjectAlias() + ", " // 1
@@ -126,7 +127,7 @@ public class CompositeSequenceDaoImpl extends AbstractFilteringVoEnabledDao<Comp
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+    protected Query getCountValueObjectsQuery( Filters filters ) {
         String queryString = "select count(distinct " + getObjectAlias() + ".id) " // 0
                 + "from CompositeSequence as " + getObjectAlias() + " " // probe
                 + "left join " + getObjectAlias() + ".arrayDesign as " + "ad" + " "//ad

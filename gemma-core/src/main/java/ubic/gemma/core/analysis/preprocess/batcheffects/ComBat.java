@@ -28,7 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -357,11 +357,11 @@ public class ComBat<R, C> {
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
 
         try {
             int size = 500;
-            ChartUtilities.writeChartAsPNG( os, chart, 500, size );
+            ChartUtils.writeChartAsPNG( os, chart, 500, size );
             os.close();
         } catch ( IOException e ) {
             throw new RuntimeException( e );

@@ -38,16 +38,16 @@
       <property name="fastqHeaders" type="org.springframework.orm.hibernate3.support.ClobStringType">
       	<column name="FASTQ_HEADERS" not-null="false" unique="false" sql-type="text"/>
       </property>
-      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
+      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="false" fetch="join">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" lazy="proxy" fetch="select">
+      <many-to-one name="originalPlatform" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign" lazy="false" fetch="join">
          <column name="ORIGINAL_PLATFORM_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="join">
          <column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="select">
+      <many-to-one name="sampleUsed" class="ubic.gemma.model.expression.biomaterial.BioMaterial"  lazy="false" fetch="join">
          <column name="SAMPLE_USED_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
    </class>

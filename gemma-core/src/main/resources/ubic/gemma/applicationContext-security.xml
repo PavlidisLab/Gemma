@@ -17,50 +17,6 @@
 
     <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
-    <!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
-        so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
-    <s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma" pattern="/**">
-        <s:http-basic/>
-
-        <s:anonymous granted-authority="GROUP_ANONYMOUS"/>
-
-        <s:intercept-url pattern="/admin/**" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/monitoring" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"
-                         access="GROUP_USER"/>
-        <s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/userProfile.html" access="GROUP_USER"/>
-        <s:intercept-url pattern="/manageGroups.html" access="GROUP_USER"/>
-        <s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN"/>
-        <s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER"/>
-        <s:intercept-url pattern="/phenotypeAssociationManager.html" access="GROUP_USER"/>
-        <s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
-
-        <s:logout logout-success-url="/login.jsp"/>
-        <s:form-login login-page="/login.jsp" default-target-url="/"
-                      authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
-                      authentication-failure-handler-ref="ajaxAuthenticationFailureHandler"/>
-        <s:remember-me key="gemma_rm" user-service-ref="userManager"/>
-
-        <!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions
-            galore. -->
-        <s:session-management session-fixation-protection="none">
-            <!-- We define the session registry ourselves so we can use it to count users -->
-            <s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry"/>
-        </s:session-management>
-
-    </s:http>
-
-    <bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
-        <property name="alwaysUseDefaultTargetUrl" value="false"/>
-    </bean>
-
-    <bean id="ajaxAuthenticationFailureHandler" class="gemma.gsec.authentication.AjaxAuthenticationFailureHandler">
-        <property name="defaultFailureUrl" value="/login.jsp"/>
-    </bean>
-
     <!-- For use with access tags -->
     <bean id="defaultWebSecurityExpressionHandler"
           class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"/>
@@ -110,7 +66,7 @@
                               order="1">
         <s:expression-handler ref="securityExpressionHandler"/>
 
-        <!-- these filters are declared here or in the security-bean-baseconfig.xml -->
+        <!-- these filters are declared here or in gsec's applicationContext-acl.xml -->
         <s:after-invocation-provider ref="afterAclReadQuiet"/>
         <s:after-invocation-provider ref="afterAclRead"/>
         <s:after-invocation-provider ref="afterAclCollectionRead"/>

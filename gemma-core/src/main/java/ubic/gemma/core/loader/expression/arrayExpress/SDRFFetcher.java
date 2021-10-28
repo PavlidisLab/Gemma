@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import ubic.gemma.core.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.persistence.util.Settings;

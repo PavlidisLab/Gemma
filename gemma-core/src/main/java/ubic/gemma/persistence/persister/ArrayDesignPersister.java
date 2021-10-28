@@ -92,7 +92,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
 
             if ( existing == null ) {
-                AbstractPersister.log.info( arrayDesign + " is new, processing..." );
+                AbstractPersister.log.debug( arrayDesign + " is new, processing..." );
                 return this.persistNewArrayDesign( arrayDesign );
             }
 
@@ -101,7 +101,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                             + "; returning" );
 
         } else {
-            AbstractPersister.log.info( "Platform " + arrayDesign + " already exists, returning..." );
+            AbstractPersister.log.debug( "Platform " + arrayDesign + " already exists, returning..." );
         }
 
         return existing;
@@ -116,7 +116,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( arrayDesign == null )
             return null;
 
-        AbstractPersister.log.info( "Persisting new platform " + arrayDesign.getName() );
+        AbstractPersister.log.debug( "Persisting new platform " + arrayDesign.getName() );
 
         try {
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
@@ -134,7 +134,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase() ) );
             }
 
-            AbstractPersister.log.info( "Persisting " + arrayDesign );
+            AbstractPersister.log.debug( "Persisting " + arrayDesign );
 
             if ( arrayDesign.getAuditTrail() != null && this.isTransient( arrayDesign.getAuditTrail() ) )
                 arrayDesign.getAuditTrail().setId( null );
@@ -156,7 +156,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int numElements = arrayDesign.getCompositeSequences().size();
         if ( numElements == 0 )
             return arrayDesign;
-        AbstractPersister.log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
+        AbstractPersister.log.debug( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
         int numElementsPerUpdate = this.numElementsPerUpdate( arrayDesign.getCompositeSequences() );

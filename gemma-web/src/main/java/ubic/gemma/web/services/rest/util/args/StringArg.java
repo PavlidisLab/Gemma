@@ -2,7 +2,7 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class StringArg extends AbstractArg<String> {
 
     public StringArg( String s ) {

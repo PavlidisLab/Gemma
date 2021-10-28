@@ -32,6 +32,7 @@ import ubic.gemma.core.job.executor.common.TaskStatusUpdate;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 /**
  * @author anton
@@ -44,6 +45,7 @@ public class SubmittedTaskRemote {
     final MessageSender<String> progressUpdateSender;
     private final TaskCommand taskCommand;
     private final TaskPostProcessing taskPostProcessing;
+    private final Executor executor;
     @SuppressWarnings({ "FieldCanBeLocal", "unused" })
     // TODO: keep local copy of task log messages, to be used in email notification.
     private List<String> progressUpdates;
@@ -51,19 +53,20 @@ public class SubmittedTaskRemote {
 
     public SubmittedTaskRemote( TaskCommand taskCommand, List<String> progressUpdates,
             MessageSender<TaskResult> resultSender, MessageSender<TaskStatusUpdate> statusUpdateSender,
-            MessageSender<String> progressUpdateSender, TaskPostProcessing taskPostProcessing ) {
+            MessageSender<String> progressUpdateSender, TaskPostProcessing taskPostProcessing, Executor executor ) {
         this.taskCommand = taskCommand;
         this.progressUpdates = progressUpdates;
         this.resultSender = resultSender;
         this.statusUpdateSender = statusUpdateSender;
         this.progressUpdateSender = progressUpdateSender;
         this.taskPostProcessing = taskPostProcessing;
+        this.executor = executor;
     }
 
     public void addEmailAlertNotificationAfterCompletion() {
         taskPostProcessing.addEmailNotification( future,
                 new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
-                        taskCommand.getTaskClass().getSimpleName() ) );
+                        taskCommand.getTaskClass().getSimpleName() ), executor );
     }
 
     public void addProgressUpdate( String message ) {

@@ -37,7 +37,7 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -254,8 +254,8 @@ public class CompositeSequenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
-        Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( filter, sort, offset, limit );
+    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+        Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
         for ( CompositeSequenceValueObject vo : vos ) {
             // Not passing the vo since that would create data redundancy in the returned structure
             vo.setGeneMappingSummaries(

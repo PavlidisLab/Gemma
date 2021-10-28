@@ -71,7 +71,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
                 count = this.iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
 
                 if ( Thread.interrupted() ) {
-                    AbstractPersister.log.info( "Cancelled" );
+                    AbstractPersister.log.debug( "Cancelled" );
                     break;
                 }
 
@@ -133,7 +133,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
          */
         String bestGuessEntityName = ( ( SessionImplementor ) session ).bestGuessEntityName( entity );
         if ( ForeignKeys.isNotTransient( bestGuessEntityName, entity, null, ( SessionImplementor ) session ) ) {
-            AbstractPersister.log.info( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
+            AbstractPersister.log.debug( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
             return false;
         }
 

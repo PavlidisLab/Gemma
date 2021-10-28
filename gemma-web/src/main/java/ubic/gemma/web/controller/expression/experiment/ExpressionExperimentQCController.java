@@ -26,7 +26,7 @@ import cern.jet.stat.Descriptive;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
@@ -574,7 +574,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        try (BufferedReader in = new BufferedReader( new FileReader( file ) )) {
+        try ( BufferedReader in = new BufferedReader( new FileReader( file ) ) ) {
             XYSeries series = new XYSeries( ee.getId(), true, true );
             DoubleArrayList counts = new DoubleArrayList();
 
@@ -878,7 +878,7 @@ public class ExpressionExperimentQCController extends BaseController {
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         renderer.setUseOutlinePaint( false );
                         renderer.setUseFillPaint( true );
-                        renderer.setBaseFillPaint( Color.white );
+                        renderer.setDefaultFillPaint( Color.white );
                         CategoryAxis domainAxis = plot.getDomainAxis();
                         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
                     } else {
@@ -901,7 +901,7 @@ public class ExpressionExperimentQCController extends BaseController {
                         plot.setDomainGridlinesVisible( false );
 
                         XYItemRenderer renderer = plot.getRenderer();
-                        renderer.setBasePaint( Color.white );
+                        renderer.setDefaultPaint( Color.white );
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                         renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
@@ -962,7 +962,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                 // standard renderer makes lines.
                 XYDotRenderer renderer = new XYDotRenderer();
-                renderer.setBaseFillPaint( Color.white );
+                renderer.setDefaultFillPaint( Color.white );
                 renderer.setDotHeight( 3 );
                 renderer.setDotWidth( 3 );
                 renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) ); // has no effect, need dotheight.
@@ -1000,7 +1000,7 @@ public class ExpressionExperimentQCController extends BaseController {
             }
         }
 
-        os.write( ChartUtilities.encodeAsPNG( image ) );
+        os.write( ChartUtils.encodeAsPNG( image ) );
         return true;
     }
 
@@ -1039,7 +1039,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // adjust colors and shapes
         XYRegressionRenderer renderer = new XYRegressionRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
         XYSeries series = collection.getSeries( 0 );
         int alpha = series.getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
         renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
@@ -1080,7 +1080,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
                 size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
 
-        ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
+        ChartUtils.writeChartAsPNG( os, chart, finalSize, finalSize );
 
         return true;
     }
@@ -1116,7 +1116,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
                 + zscoreMax + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive
-                        .max( filteredVars )
+                .max( filteredVars )
                 + ")." );
 
         ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
@@ -1197,11 +1197,11 @@ public class ExpressionExperimentQCController extends BaseController {
 
         chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
         renderer.setShadowVisible( false );
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
-        ChartUtilities.applyCurrentTheme( chart );
+        ChartUtils.applyCurrentTheme( chart );
 
         CategoryAxis domainAxis = chart.getCategoryPlot().getDomainAxis();
         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
@@ -1223,7 +1223,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         int MAX_QC_IMAGE_SIZE_PX = 500;
         width = Math.min( width, MAX_QC_IMAGE_SIZE_PX );
-        ChartUtilities.writeChartAsPNG( os, chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( os, chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     private boolean writePCAScree( OutputStream os, SVDValueObject svdo ) throws Exception {
@@ -1242,11 +1242,11 @@ public class ExpressionExperimentQCController extends BaseController {
                         PlotOrientation.VERTICAL, false, false, false );
 
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
         renderer.setShadowVisible( false );
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
-        ChartUtilities.writeChartAsPNG( os, chart, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
+        ChartUtils.writeChartAsPNG( os, chart, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
                 ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
@@ -1302,10 +1302,10 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
 
         int size = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
-        ChartUtilities.writeChartAsPNG( os, chart, size, size );
+        ChartUtils.writeChartAsPNG( os, chart, size, size );
 
         return true;
     }
@@ -1331,9 +1331,9 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setBasePaint( Color.white );
+        renderer.setDefaultPaint( Color.white );
 
-        ChartUtilities.writeChartAsPNG( os, chart,
+        ChartUtils.writeChartAsPNG( os, chart,
                 ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
                 ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
@@ -1373,7 +1373,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // Make the chart a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        ChartUtilities.writeChartAsPNG( os, chart, size + 16, size + 9 );
+        ChartUtils.writeChartAsPNG( os, chart, size + 16, size + 9 );
 
         return true;
     }

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
-import net.sf.json.JSONObject;
+import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,7 +45,7 @@ public class ReCaptcha {
     public ReCaptchaResponse validateRequest( HttpServletRequest request ) {
         String response = SimpleHttp.get( URL, createUrlParameters( request.getParameter( "g-recaptcha-response" ), request.getRemoteAddr() ) );
 
-        JSONObject responseJSON = JSONObject.fromObject( response );
+        JSONObject responseJSON = new JSONObject( response );
 
         if ( responseJSON.getBoolean( "success" ) ) {
             return new ReCaptchaResponse( true, "" );

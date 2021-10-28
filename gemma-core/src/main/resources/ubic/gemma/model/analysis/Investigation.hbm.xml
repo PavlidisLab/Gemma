@@ -1,163 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+		"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
 	<class name="ubic.gemma.model.analysis.Investigation" table="INVESTIGATION">
-		<cache usage="read-write" />
+		<cache usage="read-write"/>
 		<id name="id" type="java.lang.Long" unsaved-value="null">
-			<column name="ID" sql-type="BIGINT" />
+			<column name="ID" sql-type="BIGINT"/>
 			<generator class="native">
 			</generator>
 		</id>
-		<discriminator column="class" />
+		<discriminator column="class"/>
 		<many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"
-			cascade="all" lazy="proxy" fetch="select">
-			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
+					 cascade="all" lazy="proxy" fetch="join">
+			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 		</many-to-one>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false"
-				sql-type="VARCHAR(255)" />
+					sql-type="VARCHAR(255)"/>
 		</property>
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false"
-				sql-type="text" />
+					sql-type="text"/>
 		</property>
 		<set name="characteristics" lazy="true" fetch="select" cascade="all">
 			<!-- <cache usage="read-write" /> -->
 			<key foreign-key="CHARACTERISTIC_INVESTIGATION_FKC">
-				<column name="INVESTIGATION_FK" sql-type="BIGINT" />
+				<column name="INVESTIGATION_FK" sql-type="BIGINT"/>
 			</key>
-			<one-to-many class="ubic.gemma.model.common.description.Characteristic" />
+			<one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
 		</set>
 		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.Contact" lazy="proxy"
-			fetch="select">
-			<column name="OWNER_FK" not-null="false" sql-type="BIGINT" />
+					 fetch="select">
+			<column name="OWNER_FK" not-null="false" sql-type="BIGINT"/>
 		</many-to-one>
 		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReference"
-			lazy="proxy" fetch="select">
-			<column name="PRIMARY_PUBLICATION_FK" not-null="false" sql-type="BIGINT" />
+					 lazy="proxy" fetch="select">
+			<column name="PRIMARY_PUBLICATION_FK" not-null="false" sql-type="BIGINT"/>
 		</many-to-one>
 		<set name="otherRelevantPublications" table="RELEVANT_PUBLICATIONS" lazy="true" fetch="select">
 			<key foreign-key="BIBLIOGRAPHIC_REFERENCE_INVESTIGATIONS_FKC">
-				<column name="INVESTIGATIONS_FK" sql-type="BIGINT" />
+				<column name="INVESTIGATIONS_FK" sql-type="BIGINT"/>
 			</key>
 			<many-to-many class="ubic.gemma.model.common.description.BibliographicReference">
-				<column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT" />
+				<column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT"/>
 			</many-to-many>
 		</set>
 
 		<subclass name="ubic.gemma.model.expression.experiment.BioAssaySet" abstract="true">
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-				discriminator-value="ExpressionExperiment" abstract="false">
+					  discriminator-value="ExpressionExperiment" abstract="false">
 				<property name="source" type="java.lang.String">
 					<column name="SOURCE" not-null="false" unique="false"
-						sql-type="VARCHAR(255)" />
+							sql-type="VARCHAR(255)"/>
 				</property>
 				<property name="shortName" type="java.lang.String">
 					<column name="SHORT_NAME" not-null="false" unique="true"
-						sql-type="VARCHAR(255)" />
+							sql-type="VARCHAR(255)"/>
 				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
-					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER" />
+					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER"/>
 				</property>
 				<property name="numberOfSamples" type="java.lang.Integer">
-					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER" />
+					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER"/>
 				</property>
 				<property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
 					<column name="METADATA" not-null="false" unique="false"
-						sql-type="text" />
+							sql-type="text"/>
 				</property>
 				<property name="batchEffect" type="java.lang.String">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
-						sql-type="VARCHAR(255)" />
+							sql-type="VARCHAR(255)"/>
 				</property>
 				<property name="batchConfound" type="java.lang.String">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
-						sql-type="VARCHAR(255)" />
+							sql-type="VARCHAR(255)"/>
 				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.Geeq" cascade="all" lazy="proxy"
-					fetch="select">
-					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true" />
+							 fetch="select">
+					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="quantitationTypes" lazy="true" fetch="select">
-					<cache usage="read-write" />
+					<cache usage="read-write"/>
 					<key foreign-key="QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC">
-						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
-					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" />
+					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl"/>
 				</set>
 				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
-					lazy="proxy" fetch="select">
+							 lazy="proxy" fetch="select">
 					<!-- FIXME better to make non-unique to allow easier tracking of split experiments? -->
-					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true" />
+					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign"
-					cascade="all" lazy="proxy" fetch="select">
-					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true" />
+							 cascade="all" lazy="proxy" fetch="select">
+					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="bioAssays" lazy="true" fetch="select" cascade="all">
-					<cache usage="read-write" />
+					<cache usage="read-write"/>
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC">
-						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
-					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" />
+					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
 				</set>
 				<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
 					<column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<many-to-one name="meanVarianceRelation"
-					class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation" cascade="all" lazy="proxy" fetch="select">
-					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
+							 class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation" cascade="all"
+							 lazy="proxy" fetch="select">
+					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<many-to-one name="curationDetails"
-					class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="select">
-					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true" />
+							 class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all"
+							 lazy="false" fetch="join">
+					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
-				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all,delete-orphan">
-					<cache usage="read-write" />
+				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true"
+					 cascade="all,delete-orphan">
+					<cache usage="read-write"/>
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
-						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
-					<one-to-many class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector" />
+					<one-to-many class="ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector"/>
 				</set>
-				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all,delete-orphan">
-					<cache usage="read-write" />
+				<set name="processedExpressionDataVectors" lazy="true" fetch="select" inverse="true"
+					 cascade="all,delete-orphan">
+					<cache usage="read-write"/>
 					<key foreign-key="PROCESSED_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
-						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
-					<one-to-many class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector" />
+					<one-to-many class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector"/>
 				</set>
 
-				<set name="otherParts" table="EXPRESSION_EXPERIMENT_SPLIT_RELATION" lazy="true" fetch="select" cascade="none">
-					<cache usage="read-write" />
+				<set name="otherParts" table="EXPRESSION_EXPERIMENT_SPLIT_RELATION" lazy="true" fetch="select"
+					 cascade="none">
+					<cache usage="read-write"/>
 					<key foreign-key="EXPRESSION_EXPERIMENT_OTHER_PART_FKC">
-						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT"/>
 					</key>
 					<many-to-many class="ubic.gemma.model.expression.experiment.ExpressionExperiment">
-						<column name="OTHER_PART_FK" sql-type="BIGINT" />
+						<column name="OTHER_PART_FK" sql-type="BIGINT"/>
 					</many-to-many>
 				</set>
 
 			</subclass>
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet"
-				discriminator-value="ExpressionExperimentSubSet" abstract="false">
+					  discriminator-value="ExpressionExperimentSubSet" abstract="false">
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-					cascade="none" lazy="false" fetch="select">
-					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />
+							 cascade="none" lazy="false" fetch="join">
+					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>
 				</many-to-one>
 				<set name="bioAssays" table="BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET" lazy="true" fetch="select">
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC">
-						<column name="EXPRESSION_EXPERIMENT_SUB_SET_FK" sql-type="BIGINT" />
+						<column name="EXPRESSION_EXPERIMENT_SUB_SET_FK" sql-type="BIGINT"/>
 					</key>
 					<many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
-						<column name="BIO_ASSAYS_FK" sql-type="BIGINT" />
+						<column name="BIO_ASSAYS_FK" sql-type="BIGINT"/>
 					</many-to-many>
 				</set>
 			</subclass>
 		</subclass>
 		<subclass name="ubic.gemma.model.association.phenotype.GenericExperiment"
-			discriminator-value="GenericExperiment" abstract="false">
+				  discriminator-value="GenericExperiment" abstract="false">
 		</subclass>
 	</class>
 </hibernate-mapping>

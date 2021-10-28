@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.*;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -31,18 +31,24 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
     @Autowired
@@ -50,52 +56,42 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         super( ExpressionAnalysisResultSet.class, sessionFactory );
     }
 
-    /**
-     * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
-     */
     @Override
-    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        this.thawLite( resultSet );
-
+    public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id ) {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         //noinspection unchecked
-        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
-                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + "left join fetch res.probe left join fetch res.contrasts "
-                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
-                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
-
-        // FIXME: this check should be unnecessary since we're using outer jointures, unless the result set was
-        //  nonexistent in the first place
-        assert !res.isEmpty();
-
-        if ( timer.getTime() > 1000 ) {
-            Log.info( this.getClass(), "Thaw resultSet " + res.get( 0 ).getId() + " took " + timer.getTime() + "ms" );
+        ExpressionAnalysisResultSet ears = ( ExpressionAnalysisResultSet ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select r from ExpressionAnalysisResultSet r "
+                                + "left join fetch r.results res "
+                                + "left join fetch res.probe p "
+                                + "left join fetch res.contrasts c "
+                                + "left join fetch c.factorValue "
+                                + "left join fetch c.secondFactorValue "
+                                + "where r.id = :rs " )
+                .setParameter( "rs", id )
+                .uniqueResult();
+        if ( ears == null ) {
+            return null;
         }
-
-        return res.get( 0 );
+        this.thaw( ears );
+        if ( stopWatch.getTime( TimeUnit.SECONDS ) > 1 ) {
+            log.info( "Loaded [" + elementClass.getName() + " id=" + id + "] with results and contrasts in " + stopWatch.getTime() + "ms." );
+        }
+        return ears;
     }
 
     @Override
-    public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-            Hibernate.initialize( factor );
-        }
-
+    public void thaw( final ExpressionAnalysisResultSet resultSet ) {
+        // this drastically reduces the number of columns fetched which would anyway be repeated
         Hibernate.initialize( resultSet.getAnalysis() );
         Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
-    }
-
-    @Override
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select a from GeneDifferentialExpressionMetaAnalysis a"
-                                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
-                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
+        // it is faster to query those separately because there's a large number of rows fetched via the results &
+        // contrasts and only a handful of factors
+        Hibernate.initialize( resultSet.getExperimentalFactors() );
+        // factor values are always eagerly fetched (see ExperimentalFactor.hbm.xml), so we don't need to initialize.
+        // I still think it's neat to use stream API for that though in case we ever make them lazy:
+        // resultSet.getExperimentalFactors().stream().forEach( Hibernate::initialize );
     }
 
     @Override
@@ -110,7 +106,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         int size = rss.size();
         int cnt = 0;
         for ( ExpressionAnalysisResultSet rs : rss ) {
-            thawed.add( this.thaw( rs ) );
+            thawed.add( loadWithResultsAndContrasts( rs.getId() ) );
             cnt++;
             Log.info( this.getClass(), "Thawed " + cnt + "/" + size + " resultSets" );
         }
@@ -119,38 +115,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         return differentialExpressionAnalysis;
     }
 
-    /**
-     * @see ExpressionAnalysisResultSetDao#thawWithoutContrasts(ExpressionAnalysisResultSet)
-     */
     @Override
-    public ExpressionAnalysisResultSet thawWithoutContrasts( final ExpressionAnalysisResultSet resultSet ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        this.thawLite( resultSet );
-
-        //noinspection unchecked
-        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
-                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
-                        + "left join fetch res.probe p left join fetch p.biologicalCharacteristic bc "
-                        + "left join fetch bc.sequenceDatabaseEntry "
-                        + "left join fetch r.experimentalFactors ef left join fetch ef.factorValues "
-                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
-
-        if ( timer.getTime() > 1000 ) {
-            Log.info( this.getClass(), "Thaw resultset: " + timer.getTime() + "ms" );
-        }
-
-        assert !res.isEmpty();
-
-        return res.get( 0 );
-
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select a from GeneDifferentialExpressionMetaAnalysis a"
+                                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
+                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
     }
 
     @Override
     public void remove( ExpressionAnalysisResultSet resultSet ) {
 
         // Wipe references
-        resultSet.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
+        resultSet.setResults( new HashSet<>() );
         this.update( resultSet );
 
         // Clear session
@@ -193,15 +170,24 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     }
 
     @Override
-    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort ) {
-        Criteria query = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
-        Criteria totalElementsQuery = getLoadValueObjectsCriteria( bioAssaySets, databaseEntries, objectFilters, sort );
+    public Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
+        Criteria query = getLoadValueObjectsCriteria( objectFilters );
+        Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
+
+        if ( bioAssaySets != null ) {
+            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+            totalElementsQuery.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+        }
+
+        if ( databaseEntries != null ) {
+            query.add( Restrictions.in( "e.accession", databaseEntries ) );
+            totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
+        }
 
         //noinspection unchecked
         List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
                 .setFirstResult( offset )
                 .setMaxResults( limit )
-                .setCacheable( true )
                 .list();
 
         Long totalElements = ( Long ) totalElementsQuery
@@ -212,49 +198,26 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
         return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
-    private Criteria getLoadValueObjectsCriteria( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, Sort sort ) {
+    @Override
+    protected Criteria getLoadValueObjectsCriteria( Filters objectFilters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class )
+                .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
+                // these two are necessary for ACL filtering, so we must use a (default) inner jointure
                 .createAlias( "analysis", "a" )
-                .createAlias( "analysis.experimentAnalyzed", "e" );
+                .createAlias( "analysis.experimentAnalyzed", "e" )
+                .createAlias( "experimentalFactors", "ef", Criteria.LEFT_JOIN )
+                .createAlias( "ef.factorValues", "fv", Criteria.LEFT_JOIN );
 
-        if ( bioAssaySets != null ) {
-            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
-        }
-
-        if ( databaseEntries != null ) {
-            query.add( Restrictions.in( "e.accession", databaseEntries ) );
-        }
-
-        if ( objectFilters != null && objectFilters.size() > 0 ) {
-            query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
-        }
+        // apply filtering
+        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
 
         // apply the ACL on the associated EE
-        query.add( ObjectFilterCriteriaUtils.formAclRestrictionClause( "e", "ubic.gemma.model.expression.experiment.ExpressionExperiment" ) );
+        query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );
 
-        if ( sort != null ) {
-            if ( sort.getDirection() == Sort.Direction.ASC ) {
-                query.addOrder( Order.asc( sort.getOrderBy() ) );
-            } else if ( sort.getDirection() == Sort.Direction.DESC ) {
-                query.addOrder( Order.desc( sort.getOrderBy() ) );
-            } else {
-                // defaulting to ASC
-                query.addOrder( Order.asc( sort.getOrderBy() ) );
-            }
-        }
+        // make this cacheable
+        query.setCacheable( true );
 
         return query;
-    }
-
-    @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
-        throw new NotImplementedException( "This is not supported yet." );
-    }
-
-    @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
-        throw new NotImplementedException( "This is not supported yet." );
     }
 
     @Override
@@ -263,7 +226,32 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractFilteringVoEnabl
     }
 
     @Override
-    public String getObjectAlias() {
-        return null;
+    public ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet entity ) {
+        return new ExpressionAnalysisResultSetValueObject( entity, loadResultToGenesMap( entity ) );
+    }
+
+    @Override
+    public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
+                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                        + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
+                        + "where {result}.RESULT_SET_FK = :rsid" )
+                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+                .addEntity( "gene", Gene.class )
+                .setParameter( "rsid", resultSet.getId() )
+                .setCacheable( true );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+
+        // YAY! my brain was almost fried writing that collector
+        return list.stream()
+                .collect( Collectors.groupingBy(
+                        l -> ( DifferentialExpressionAnalysisResult ) l[0],
+                        Collectors.collectingAndThen( Collectors.toList(),
+                                elem -> elem.stream()
+                                        .map( l -> ( Gene ) l[1] )
+                                        .collect( Collectors.toList() ) ) ) );
     }
 }

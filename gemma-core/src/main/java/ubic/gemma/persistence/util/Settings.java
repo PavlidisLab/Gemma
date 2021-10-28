@@ -18,7 +18,8 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.apache.commons.configuration.*;
+import org.apache.commons.configuration2.*;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,7 +35,7 @@ import java.util.*;
  * project.properties, build.properties and in the system properties.
  *
  * @author pavlidis
- * @see org.apache.commons.configuration.CompositeConfiguration
+ * @see org.apache.commons.configuration2.CompositeConfiguration
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class Settings {

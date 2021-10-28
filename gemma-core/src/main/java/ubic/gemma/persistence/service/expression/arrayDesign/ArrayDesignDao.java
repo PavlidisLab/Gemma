@@ -44,7 +44,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
-    Collection<BioAssay> getAllAssociatedBioAssays( Long id );
+    Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign );
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
@@ -55,12 +55,19 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     Map<Taxon, Long> getPerTaxonCount();
 
     /**
-     * @param id
-     * @return
+     * Obtain a collection of {@link ExpressionExperiment} identifiers that have been switched from a given platform.
+     *
+     * If you only need to count them, consider using the more performant {@link #getSwitchedExpressionExperimentsCount(ArrayDesign)}
+     * instead.
      */
-    Collection<Long> getSwitchedExpressionExperiments( Long id );
+    Collection<Long> getSwitchedExpressionExperimentIds( ArrayDesign arrayDesign );
 
-    Collection<Taxon> getTaxa( Long id );
+    /**
+     * Count the number of switched {@link ExpressionExperiment} from a given platform.
+     */
+    Long getSwitchedExpressionExperimentsCount( ArrayDesign arrayDesign );
+
+    Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
 
     Map<Long, Boolean> isMerged( Collection<Long> ids );
 
@@ -72,7 +79,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
 
-    Collection<CompositeSequence> loadCompositeSequences( Long id, int limit, int offset );
+    Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
 
     List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
@@ -98,7 +105,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     long numBlatResults( ArrayDesign arrayDesign );
 
-    long numCompositeSequences( Long id );
+    long numCompositeSequences( ArrayDesign id );
 
     long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
 

@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  *
  * @author tesarst
  */
-@Schema(anyOf = { DatabaseEntryIdArg.class, DatabaseEntryStringArg.class })
+@Schema(subTypes = { DatabaseEntryIdArg.class, DatabaseEntryStringArg.class })
 public abstract class DatabaseEntryArg<T>
         extends AbstractEntityArg<T, DatabaseEntry, DatabaseEntryService> {
 

@@ -29,8 +29,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
 import java.util.List;
@@ -151,7 +149,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> getAllAssociatedBioAssays( Long id );
+    Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign );
 
     /**
      * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
@@ -204,16 +202,16 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @return map of IDs to events
      */
     Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
-    
+
     /**
      * Get the ids of experiments that "originally" used this platform, but which don't any more due to a platform
      * switch. Note that for some old platforms we may not have recorded this information.
-     * 
+     *
      * @param id id of the platform
      * @return collection of EE ids
      */
-    Collection<Long> getSwitchedExperiments(Long id);
- 
+    Collection<Long> getSwitchedExperimentIds( ArrayDesign id );
+
     /**
      * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
      * excluded.
@@ -223,10 +221,10 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
      *
-     * @param id The id of the array design
+     * @param arrayDesign The id of the array design
      * @return The Set of Taxons for array design.
      */
-    Collection<Taxon> getTaxa( Long id );
+    Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
 
     Taxon getTaxon( Long id );
 

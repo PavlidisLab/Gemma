@@ -9,7 +9,7 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
     private static final String ID_NAME = "Ensembl ID";

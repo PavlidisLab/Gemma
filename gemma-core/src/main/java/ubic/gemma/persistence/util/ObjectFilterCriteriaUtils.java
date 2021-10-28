@@ -1,28 +1,23 @@
 package ubic.gemma.persistence.util;
 
-import com.google.common.base.Strings;
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.*;
-import org.hibernate.type.StringType;
-import org.springframework.security.acls.domain.BasePermission;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Utilities for integrating {@link ObjectFilter} with Hibernate {@link Criteria} API.
+ * @author poirigui
  */
 public class ObjectFilterCriteriaUtils {
 
     /**
      * Form a restriction clause using a {@link Criterion}.
-     * @see ObjectFilterQueryUtils#formRestrictionClause(List)
+     * @see ObjectFilterQueryUtils#formRestrictionClause(Filters)
      * @param objectFilters the filters to use to create the clause
      * @return a restriction clause that can be appended to a {@link Criteria} using {@link Criteria#add(Criterion)}
      */
-    public static Criterion formRestrictionClause( List<ObjectFilter[]> objectFilters ) {
+    public static Criterion formRestrictionClause( Filters objectFilters ) {
         Conjunction c = Restrictions.conjunction();
         if ( objectFilters == null || objectFilters.isEmpty() )
             return c;
@@ -40,12 +35,20 @@ public class ObjectFilterCriteriaUtils {
 
     private static Criterion formRestrictionClause( ObjectFilter filter ) {
         switch ( filter.getOperator() ) {
-            case is:
-                return Restrictions.eq( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
-            case isNot:
-                return Restrictions.ne( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+            case eq:
+                if ( filter.getRequiredValue() == null ) {
+                    return Restrictions.isNull( ObjectFilterQueryUtils.formPropertyName( filter ) );
+                } else {
+                    return Restrictions.eq( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                }
+            case notEq:
+                if ( filter.getRequiredValue() == null ) {
+                    return Restrictions.isNotNull( ObjectFilterQueryUtils.formPropertyName( filter ) );
+                } else {
+                    return Restrictions.ne( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                }
             case like:
-                return Restrictions.like( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                return Restrictions.like( ObjectFilterQueryUtils.formPropertyName( filter ), ( String ) filter.getRequiredValue(), MatchMode.ANYWHERE );
             case lessThan:
                 return Restrictions.lt( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
             case greaterThan:
@@ -59,53 +62,5 @@ public class ObjectFilterCriteriaUtils {
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }
-    }
-
-    /**
-     * Form a restriction clause for ACL.
-     *
-     * @see AclQueryUtils#formAclRestrictionClause()
-     */
-    public static Criterion formAclRestrictionClause( String alias, String aoiType ) {
-        if ( Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType ) )
-            throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
-
-        DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )
-                .setProjection( Projections.property( "aoi.identifier" ) )
-                .add( Restrictions.eqProperty( "aoi.identifier", alias + ".id" ) )
-                .add( Restrictions.eq( "aoi.type", aoiType ) );
-        if ( SecurityUtil.isUserAdmin() ) {
-            dc.createAlias( "aoi.ownerSid", "sid", Criteria.INNER_JOIN );
-        } else {
-            dc.createAlias( "aoi.entries", "ace", Criteria.INNER_JOIN );
-        }
-
-        String userName = SecurityUtil.getCurrentUsername();
-        int readMask = BasePermission.READ.getMask();
-        int writeMask = BasePermission.WRITE.getMask();
-        if ( !SecurityUtil.isUserAnonymous() ) {
-            if ( !SecurityUtil.isUserAdmin() ) {
-                dc.add( Restrictions.disjunction()
-                        // user own the object
-                        .add( Restrictions.eq( "sid.principal", userName ) )
-                        // user has specific rights to the object
-                        .add( Restrictions.conjunction()
-                                .add( Restrictions.sqlRestriction( "ace.sid.id in (" + AclQueryUtils.CURRENT_USER_SIDS_SQL + ")", userName, StringType.INSTANCE ) )
-                                .add( Restrictions.in( "ace.mask", new Object[] { readMask, writeMask } ) ) )
-                        // the object is public
-                        .add( Restrictions.conjunction()
-                                .add( Restrictions.eq( "ace.sid.id", 4L ) )
-                                .add( Restrictions.eq( "ace.mask", readMask ) ) ) );
-            } else {
-                //
-            }
-        } else {
-            // the object is public
-            dc.add( Restrictions.conjunction()
-                    .add( Restrictions.eq( "ace.sid.id", 4L ) )
-                    .add( Restrictions.eq( "ace.mask", readMask ) ) );
-        }
-
-        return Subqueries.propertyIn( alias + ".id", dc );
     }
 }

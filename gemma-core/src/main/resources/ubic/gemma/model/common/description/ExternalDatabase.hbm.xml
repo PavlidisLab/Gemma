@@ -1,36 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.common.description.ExternalDatabase" table="EXTERNAL_DATABASE">
-      <cache usage="read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="localInstallDbName" type="java.lang.String">
-         <column name="LOCAL_INSTALL_DB_NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="webUri" type="java.lang.String">
-         <column name="WEB_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="ftpUri" type="java.lang.String">
-         <column name="FTP_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="type" type="ubic.gemma.model.common.description.DatabaseTypeEnum">
-         <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"  lazy="proxy" fetch="select">
-         <column name="DATABASE_SUPPLIER_FK" not-null="false" sql-type="BIGINT"/>
-      </many-to-one>
-   </class>
+    <class name="ubic.gemma.model.common.description.ExternalDatabase" table="EXTERNAL_DATABASE">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="localInstallDbName" type="java.lang.String">
+            <column name="LOCAL_INSTALL_DB_NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="webUri" type="java.lang.String">
+            <column name="WEB_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="ftpUri" type="java.lang.String">
+            <column name="FTP_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="type" type="ubic.gemma.model.common.description.DatabaseTypeEnum">
+            <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"
+                     lazy="proxy" fetch="select">
+            <column name="DATABASE_SUPPLIER_FK" not-null="false" sql-type="BIGINT"/>
+        </many-to-one>
+    </class>
 </hibernate-mapping>

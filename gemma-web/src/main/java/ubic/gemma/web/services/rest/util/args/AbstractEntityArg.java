@@ -62,7 +62,7 @@ public abstract class AbstractEntityArg<A, O extends Identifiable, S extends Fil
     public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         if ( this.getValue() instanceof String ) {
             try {
-                return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName(), ObjectFilter.Operator.is, ( String ) this.getValue() ) };
+                return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName(), ObjectFilter.Operator.eq, ( String ) this.getValue() ) };
             } catch ( ObjectFilterException e ) {
                 throw new MalformedArgException( "", e );
             }

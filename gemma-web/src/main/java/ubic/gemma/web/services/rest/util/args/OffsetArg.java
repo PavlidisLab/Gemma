@@ -6,7 +6,7 @@ import lombok.NonNull;
 /**
  * Argument used to represent an offset.
  */
-@Schema(implementation = Integer.class, minimum = "0")
+@Schema(type = "integer", minimum = "0")
 public class OffsetArg extends AbstractArg<Integer> {
 
     private OffsetArg( @NonNull Integer value ) {

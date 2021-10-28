@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -71,14 +72,14 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService = null;
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     private ExpressionExperiment ee;
 
     @Before
     public void setup() throws IOException {
-        try (InputStream io = this.getClass()
-                .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" )) {
+        try ( InputStream io = this.getClass()
+                .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
             metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -158,7 +159,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            differentialExpressionResultService.thaw( ears );
+            expressionAnalysisResultSetService.thaw( ears );
         }
 
         this.checkResults( refetched );

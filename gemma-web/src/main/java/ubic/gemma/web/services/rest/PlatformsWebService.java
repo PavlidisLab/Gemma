@@ -17,7 +17,6 @@ package ubic.gemma.web.services.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
@@ -30,7 +29,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -42,8 +41,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -124,9 +121,9 @@ public class PlatformsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        List<ObjectFilter[]> filters = filter.getObjectFilters( arrayDesignService );
+        Filters filters = filter.getObjectFilters( arrayDesignService );
         if ( filters == null ) {
-            filters = new ArrayList<>();
+            filters = new Filters();
         }
 
         filters.add( datasetsArg.getObjectFilters( arrayDesignService ) );
@@ -212,9 +209,7 @@ public class PlatformsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probesArg.setPlatform( platformArg.getEntity( arrayDesignService ) );
-        List<ObjectFilter[]> filters = probesArg.getPlatformFilter();
-        filters.add( probesArg.getObjectFilters( compositeSequenceService ) );
-        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( filters, null, offset.getValue(), limit.getValue() ) );
+        return Responder.paginate( compositeSequenceService.loadValueObjectsPreFilter( Filters.singleFilter( probesArg.getPlatformFilter() ), null, offset.getValue(), limit.getValue() ) );
     }
 
     /**

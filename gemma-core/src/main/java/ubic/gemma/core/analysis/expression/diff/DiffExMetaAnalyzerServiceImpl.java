@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -35,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
@@ -59,12 +61,13 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Autowired
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
-
-    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
     @Override
+    @Transactional
     public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
         /*
@@ -103,7 +106,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Override
     public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
         for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
-            differentialExpressionResultService.update( r );
+            expressionAnalysisResultSetService.update( r );
         }
 
         return analysisService.create( analysis );
@@ -409,14 +412,13 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 
         for ( Long analysisResultSetId : analysisResultSetIds ) {
-            ExpressionAnalysisResultSet expressionAnalysisResultSet = this.differentialExpressionResultService
-                    .loadAnalysisResultSet( analysisResultSetId );
+            ExpressionAnalysisResultSet expressionAnalysisResultSet = expressionAnalysisResultSetService.loadWithResultsAndContrasts( analysisResultSetId );
 
             if ( expressionAnalysisResultSet == null ) {
                 DiffExMetaAnalyzerServiceImpl.log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-            differentialExpressionResultService.thaw( expressionAnalysisResultSet );
+            expressionAnalysisResultSetService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;

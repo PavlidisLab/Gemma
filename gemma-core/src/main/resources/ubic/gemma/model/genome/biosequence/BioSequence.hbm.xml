@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
@@ -48,7 +48,7 @@
 			cascade="all" lazy="proxy" fetch="select">
 			<column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
-		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
+		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
 			<column name="TAXON_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>
 		<set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">

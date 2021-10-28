@@ -28,7 +28,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 
@@ -122,8 +121,8 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id ) {
-        return this.arrayDesignDao.getAllAssociatedBioAssays( id );
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getAllAssociatedBioAssays( arrayDesign );
 
     }
 
@@ -137,17 +136,17 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Array design cannot be null" );
-        return this.arrayDesignDao.numCompositeSequences( arrayDesign.getId() );
+        return this.arrayDesignDao.numCompositeSequences( arrayDesign );
     }
 
     @Override
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), -1, 0 );
+        return this.arrayDesignDao.loadCompositeSequences( arrayDesign, -1, 0 );
     }
 
     @Override
     public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
-        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), limit, offset );
+        return this.arrayDesignDao.loadCompositeSequences( arrayDesign, limit, offset );
     }
 
     @Override
@@ -205,13 +204,13 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
-    public Collection<Long> getSwitchedExperiments( Long id ) {
-        return this.arrayDesignDao.getSwitchedExpressionExperiments( id );
+    public Collection<Long> getSwitchedExperimentIds( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getSwitchedExpressionExperimentIds( arrayDesign );
     }
 
     @Override
-    public Collection<Taxon> getTaxa( java.lang.Long id ) {
-        return this.arrayDesignDao.getTaxa( id );
+    public Collection<Taxon> getTaxa( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getTaxa( arrayDesign );
     }
 
     @Override
@@ -221,7 +220,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService#isBlackListed(java.lang.String)
      */
     @Override

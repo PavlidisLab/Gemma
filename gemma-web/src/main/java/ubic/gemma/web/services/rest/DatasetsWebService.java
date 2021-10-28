@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.ArgUtils;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
@@ -148,9 +149,9 @@ public class DatasetsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        List<ObjectFilter[]> filters = filter.getObjectFilters( expressionExperimentService );
+        Filters filters = filter.getObjectFilters( expressionExperimentService );
         if ( filters == null ) {
-            filters = new ArrayList<>();
+            filters = new Filters();
         }
         filters.add( datasetsArg.getObjectFilters( service ) );
         return Responder.paginate( service.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );

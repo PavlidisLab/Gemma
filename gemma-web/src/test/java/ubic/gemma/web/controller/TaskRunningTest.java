@@ -24,7 +24,7 @@ import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
-import ubic.gemma.core.job.progress.ProgressStatusService;
+import ubic.gemma.web.job.progress.ProgressStatusService;
 import ubic.gemma.web.util.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
 

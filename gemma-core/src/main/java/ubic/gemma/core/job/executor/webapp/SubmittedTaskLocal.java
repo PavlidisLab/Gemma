@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -37,11 +38,13 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
 
     private final TaskPostProcessing taskPostProcessing;
     private final Deque<String> progressUpdates = new LinkedBlockingDeque<>();
+    private final Executor executor;
     private ListenableFuture<T> future;
 
-    public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing ) {
+    public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
         super( taskCommand );
         this.taskPostProcessing = taskPostProcessing;
+        this.executor = executor;
     }
 
     @Override
@@ -97,7 +100,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         assert taskPostProcessing != null : "Task postprocessing was null";
         taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future,
                 new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
-                        taskCommand.getTaskClass().getSimpleName() ) );
+                        taskCommand.getTaskClass().getSimpleName() ), executor );
     }
 
     @Override

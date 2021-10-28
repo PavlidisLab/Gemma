@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -74,6 +73,7 @@ import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.persistence.SessionListManager;
@@ -478,10 +478,10 @@ public class ExpressionExperimentController {
      *
      * @return json
      */
-    public JSONObject loadCountsForDataSummaryTable() {
+    public Map<String, Object> loadCountsForDataSummaryTable() {
 
-        JSONObject summary = new JSONObject();
-        net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
+        Map<String, Object> summary = new HashMap<>();
+        List<Map<String, Object>> taxonEntries = new ArrayList();
 
         long bioMaterialCount = bioMaterialService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
@@ -490,12 +490,7 @@ public class ExpressionExperimentController {
         /*
          * Sort taxa by name.
          */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                return o1.getScientificName().compareTo( o2.getScientificName() );
-            }
-        } );
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( Comparator.comparing( Taxon::getScientificName ) );
 
         long expressionExperimentCount = 0; // expressionExperimentService.countAll();
         for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
@@ -517,11 +512,11 @@ public class ExpressionExperimentController {
 
             Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
             Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
-                    : new ArrayList<Long>();
+                    : new ArrayList<>();
             Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
             Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
                     ? EntityUtils.getIds( updatedExpressionExperiments )
-                    : new ArrayList<Long>();
+                    : new ArrayList<>();
 
             int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
             int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
@@ -531,7 +526,7 @@ public class ExpressionExperimentController {
             Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
 
             for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
-                JSONObject taxLine = new JSONObject();
+                Map<String, Object> taxLine = new HashMap<>();
                 taxLine.put( "taxonId", t.getId() );
                 taxLine.put( "taxonName", t.getScientificName() );
                 taxLine.put( "totalCount", eesPerTaxon.get( t ) );
@@ -546,7 +541,7 @@ public class ExpressionExperimentController {
                 taxonEntries.add( taxLine );
             }
 
-            summary.element( "sortedCountsPerTaxon", taxonEntries );
+            summary.put( "sortedCountsPerTaxon", taxonEntries );
 
             // Get count for new and updated array designs
             Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
@@ -560,30 +555,30 @@ public class ExpressionExperimentController {
             String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
 
-            summary.element( "updateDate", date );
-            summary.element( "drawNewColumn", drawNewColumn );
-            summary.element( "drawUpdatedColumn", drawUpdatedColumn );
+            summary.put( "updateDate", date );
+            summary.put( "drawNewColumn", drawNewColumn );
+            summary.put( "drawUpdatedColumn", drawUpdatedColumn );
             if ( newBioMaterialCount != 0 )
-                summary.element( "newBioMaterialCount", new Long( newBioMaterialCount ) );
+                summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
             if ( newArrayCount != 0 )
-                summary.element( "newArrayDesignCount", new Long( newArrayCount ) );
+                summary.put( "newArrayDesignCount", ( long ) newArrayCount );
             if ( updatedArrayCount != 0 )
-                summary.element( "updatedArrayDesignCount", new Long( updatedArrayCount ) );
+                summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
             if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentCount", newExpressionExperimentCount );
+                summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
             if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+                summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
             if ( newExpressionExperimentCount != 0 )
-                summary.element( "newExpressionExperimentIds", newExpressionExperimentIds );
+                summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
             if ( updatedExpressionExperimentCount != 0 )
-                summary.element( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
+                summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
 
         }
 
-        summary.element( "bioMaterialCount", bioMaterialCount );
-        summary.element( "arrayDesignCount", arrayDesignCount );
+        summary.put( "bioMaterialCount", bioMaterialCount );
+        summary.put( "arrayDesignCount", arrayDesignCount );
 
-        summary.element( "expressionExperimentCount", expressionExperimentCount );
+        summary.put( "expressionExperimentCount", expressionExperimentCount );
 
         return summary;
     }
@@ -671,16 +666,16 @@ public class ExpressionExperimentController {
      * @return collection of experiments that use this platform -- including those that were switched
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-
+        ArrayDesign ad = arrayDesignService.load( id );
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                new ArrayList<>( arrayDesignService.getSwitchedExperiments( id ) ), 0, true );
+                new ArrayList<>( arrayDesignService.getSwitchedExperimentIds( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
                 ( List<Long> ) EntityUtils
-                        .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
+                        .getIds( arrayDesignService.getExpressionExperiments( ad ) ),
                 0, true );
 
         experiments.addAll( switchedExperiments );
@@ -711,7 +706,7 @@ public class ExpressionExperimentController {
      *
      * @return json reader response
      */
-    public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
+    public JsonReaderResponse<Map<String, Object>> loadExpressionExperimentsWithQcIssues() {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
 
@@ -719,20 +714,20 @@ public class ExpressionExperimentController {
         ees.addAll( outlierEEs );
         // ees.addAll( batchEffectEEs );
 
-        List<JSONObject> jsonRecords = new ArrayList<>();
+        List<Map<String, Object>> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
             //noinspection MismatchedQueryAndUpdateOfCollection
-            JSONObject record = new JSONObject();
-            record.element( "id", ee.getId() );
-            record.element( "shortName", ee.getShortName() );
-            record.element( "name", ee.getName() );
+            Map<String, Object> record = new HashMap();
+            record.put( "id", ee.getId() );
+            record.put( "shortName", ee.getShortName() );
+            record.put( "name", ee.getName() );
 
             if ( outlierEEs.contains( ee ) ) {
-                record.element( "sampleRemoved", true );
+                record.put( "sampleRemoved", true );
             }
 
-            // record.element( "batchEffect", batchEffectEEs.contains( ee ) );
+            // record.put( "batchEffect", batchEffectEEs.contains( ee ) );
             jsonRecords.add( record );
         }
 
@@ -1583,7 +1578,7 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             List<Long> eeIds, Integer limit, boolean showPublic ) {
 
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+        Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( Sort.by( "curationDetails.lastUpdated", Sort.Direction.DESC ), eeIds, taxon, Math.abs( limit ),
                         0 );
         // Hide public data sets if desired.

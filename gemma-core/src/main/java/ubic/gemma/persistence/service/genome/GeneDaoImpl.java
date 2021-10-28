@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
 import java.util.*;
@@ -47,7 +47,7 @@ import java.util.*;
  * @see Gene
  */
 @Repository
-public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
+public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;
@@ -558,12 +558,13 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
     }
 
     /**
-     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(List)} filters argument for
+     * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(Filters)} filters argument for
      *                        description.
+     * @param hints
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "
@@ -585,7 +586,7 @@ public class GeneDaoImpl extends AbstractFilteringVoEnabledDao<Gene, GeneValueOb
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+    protected Query getCountValueObjectsQuery( Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(*) from Gene as " + getObjectAlias() + " " // gene
                 + "left join " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon

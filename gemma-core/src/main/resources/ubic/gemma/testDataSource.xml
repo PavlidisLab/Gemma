@@ -12,12 +12,14 @@
 
     <context:component-scan base-package="ubic.gemma.core.testing"/>
 
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+    <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${gemma.testdb.driver}"/>
         <property name="username" value="${gemma.testdb.user}"/>
         <property name="password" value="${gemma.testdb.password}"/>
         <property name="url" value="${gemma.testdb.url}"/>
-        <property name="maxActive" value="20"/>
+        <property name="maxTotal" value="20"/>
+        <!-- no need to define MySQL's sql_mode twice for testing -->
+        <property name="connectionProperties" value="sessionVariables=sql_mode='${gemma.db.sqlMode}'"/>
     </bean>
 
 

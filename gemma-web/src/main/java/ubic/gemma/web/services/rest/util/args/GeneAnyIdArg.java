@@ -16,7 +16,7 @@ import java.util.List;
  * @param <T> the type of the Gene Identifier.
  * @author tesarst
  */
-@Schema(anyOf = { GeneEnsemblIdArg.class, GeneNcbiIdArg.class, GeneSymbolArg.class })
+@Schema(subTypes = { GeneEnsemblIdArg.class, GeneNcbiIdArg.class, GeneSymbolArg.class })
 public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
     GeneAnyIdArg( T value ) {

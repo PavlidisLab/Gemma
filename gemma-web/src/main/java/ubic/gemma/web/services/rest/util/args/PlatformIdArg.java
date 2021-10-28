@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
-@Schema(implementation = Long.class)
+@Schema(type = "integer", format = "int64")
 public class PlatformIdArg extends PlatformArg<Long> {
 
     /**

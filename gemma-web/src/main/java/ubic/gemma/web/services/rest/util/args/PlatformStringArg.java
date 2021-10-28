@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {

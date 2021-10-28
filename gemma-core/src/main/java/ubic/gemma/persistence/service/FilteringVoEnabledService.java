@@ -2,7 +2,7 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -18,12 +18,12 @@ public interface FilteringVoEnabledService<O extends Identifiable, VO extends Id
         extends FilteringService<O>, BaseVoEnabledService<O, VO> {
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort, int, int)
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int)
      */
-    Slice<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit );
+    Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, Sort)
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort)
      */
-    List<VO> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort );
+    List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort );
 }

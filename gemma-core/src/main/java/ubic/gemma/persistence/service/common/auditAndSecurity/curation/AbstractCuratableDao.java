@@ -7,14 +7,15 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ import java.util.Map;
  * @author tesarst
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends AbstractFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+        extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
     protected AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
@@ -85,13 +86,12 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Restrict results to non-troubled EEs for non-administrators
-     * @param filters set of {@link ObjectFilter} to which the non-troubled EEs filter will be added.
+     * Restrict results to non-troubled curatable entities for non-administrators
      */
     @SneakyThrows(ObjectFilterException.class)
-    protected void addNonTroubledFilter( List<ObjectFilter[]> filters, String objectAlias ) {
+    protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
-            filters.add( new ObjectFilter[] { new ObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.is, "false" ) } );
+            filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );
         }
     }
 }

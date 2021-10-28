@@ -22,47 +22,57 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.FilteringDao;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
-import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, BaseVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>, FilteringDao<ExpressionAnalysisResultSet> {
 
-    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
+    ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
 
     /**
-     * @param resultSet Only thaws the factor not the probe information
+     * Thaw a result set's analysis, experiment analyzed and experimental factors.
+     *
+     * If you need to load the probe, contrasts, etc. use {@link #loadWithResultsAndContrasts(Long)} instead which is
+     * optimized for that purpose.
      */
-    void thawLite( ExpressionAnalysisResultSet resultSet );
-
-    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thaw( ExpressionAnalysisResultSet resultSet );
 
     DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
     /**
-     * Thaw everything but contrasts.
-     *
-     *  - results
-     *  - probe
-     *  - probe.biologicalCharacteristic
-     *  - probe.biologicalCharacteristic.sequenceDatabaseEntry
-     *  - experimentalFactors
-     *  - experimentalFactors.factorValues
-     *
-     * @param resultSet
-     * @return
+     * Load an analysis result set with its all of its associated results.
+     * @see #loadValueObject(Identifiable)
      */
-    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
+    ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
+
+    /**
+     * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.
+     *
+     * This is much faster than navigating through the probe's alignments, transcripts and then genes as it uses the
+     * internal GENE2CS table described in {@link TableMaintenanceUtil#updateGene2CsEntries()}.
+     *
+     * Note: Not all probes have associated genes, so you should use {@link Map#getOrDefault(Object, Object)} with an
+     * empty collection to handle this case.
+     */
+    Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.
@@ -71,9 +81,8 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param databaseEntries related external identifier associated to the {@link BioAssaySet}, or any if null
      * @param objectFilters list of object filters
      * @param limit maximum number of results to return
-     * @param orderBy field by which the collection is sorted
-     * @param isAsc whether the sort should be ascending or descending
+     * @param sort field and direction by which the collection is ordered
      * @return
      */
-    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, List<ObjectFilter[]> objectFilters, int offset, int limit, Sort sort );
+    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
 }

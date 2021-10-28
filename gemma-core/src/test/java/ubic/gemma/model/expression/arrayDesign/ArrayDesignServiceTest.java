@@ -264,7 +264,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
+        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad );
         assertEquals( 2, taxa.size() );
 
         Collection<String> list = new ArrayList<>();
@@ -283,7 +283,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testGetTaxaOneTaxonForArray() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
+        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad );
         assertEquals( 1, taxa.size() );
         Taxon tax = taxa.iterator().next();
         assertEquals( ArrayDesignServiceTest.DEFAULT_TAXON, tax.getScientificName() );
@@ -296,7 +296,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testGetTaxon() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Taxon tax = arrayDesignService.getTaxa( ad.getId() ).iterator().next();
+        Taxon tax = arrayDesignService.getTaxa( ad ).iterator().next();
         assertEquals( ArrayDesignServiceTest.DEFAULT_TAXON, tax.getScientificName() );
     }
 

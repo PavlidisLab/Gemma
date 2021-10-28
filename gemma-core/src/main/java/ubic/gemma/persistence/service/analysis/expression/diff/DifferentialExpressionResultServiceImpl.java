@@ -42,14 +42,11 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         implements DifferentialExpressionResultService {
 
     private final DifferentialExpressionResultDao DERDao;
-    private final ExpressionAnalysisResultSetDao EARDao;
 
     @Autowired
-    public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao,
-            ExpressionAnalysisResultSetDao EARDao ) {
+    public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao ) {
         super( DERDao );
         this.DERDao = DERDao;
-        this.EARDao = EARDao;
     }
 
     @Override
@@ -136,12 +133,6 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet loadAnalysisResultSet( Long analysisResultSetId ) {
-        return this.EARDao.load( analysisResultSetId );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
         return this.DERDao.loadContrastDetailsForResults( ids );
     }
@@ -162,30 +153,6 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     @Transactional(readOnly = true)
     public void thaw( DifferentialExpressionAnalysisResult result ) {
         this.DERDao.thaw( result );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet ) {
-        return this.EARDao.thaw( resultSet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
-        return this.EARDao.thawWithoutContrasts( resultSet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thawLite( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.thawLite( resultSet );
-    }
-
-    @Override
-    @Transactional
-    public void update( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.update( resultSet );
     }
 
     @SuppressWarnings("unchecked")

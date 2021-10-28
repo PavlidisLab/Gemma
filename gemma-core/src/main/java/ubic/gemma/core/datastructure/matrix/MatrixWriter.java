@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.jfree.util.Log;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -36,6 +36,7 @@ import java.util.Map;
 /**
  * @author pavlidis
  */
+@CommonsLog
 public class MatrixWriter {
 
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,
@@ -115,7 +116,7 @@ public class MatrixWriter {
         }
         writer.write( buf.toString() );
         writer.flush();
-        Log.debug( "Done writing" );
+        log.debug( "Done writing" );
     }
 
     /**
@@ -174,7 +175,7 @@ public class MatrixWriter {
         }
         writer.write( buf.toString() );
         writer.flush();
-        Log.debug( "Done writing" );
+        log.debug( "Done writing" );
     }
 
     public void writeJSON( Writer writer, ExpressionDataMatrix<?> matrix ) throws IOException {

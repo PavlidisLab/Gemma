@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  *
  * @author tesarst
  */
-@Schema(anyOf = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
+@Schema(subTypes = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
 public abstract class CompositeSequenceArg<T>
         extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 

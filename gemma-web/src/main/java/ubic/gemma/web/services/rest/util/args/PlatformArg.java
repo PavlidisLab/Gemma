@@ -9,19 +9,17 @@ import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.
  *
  * @author tesarst
  */
-@Schema(anyOf = { PlatformIdArg.class, PlatformStringArg.class })
+@Schema(subTypes = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
     protected PlatformArg( T value ) {
@@ -55,8 +53,8 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
 
-        List<ObjectFilter[]> filters = new ArrayList<>( 1 );
-        filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.is, ad.getId().toString() ) } );
+        Filters filters = new Filters();
+        filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) } );
         return eeService.loadValueObjectsPreFilter( filters, Sort.by( "id" ), offset, limit );
     }
 
@@ -69,10 +67,10 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
-        ArrayList<ObjectFilter[]> filters = new ArrayList<ObjectFilter[]>() {
+        Filters filters = new Filters() {
             {
                 add( new ObjectFilter[] {
-                        new ObjectFilter( csService.getObjectAlias(), "arrayDesign", ArrayDesign.class, ObjectFilter.Operator.is, ad ) } );
+                        new ObjectFilter( csService.getObjectAlias(), "arrayDesign", ArrayDesign.class, ObjectFilter.Operator.eq, ad ) } );
             }
         };
         return csService.loadValueObjectsPreFilter( filters, null, offset, limit );

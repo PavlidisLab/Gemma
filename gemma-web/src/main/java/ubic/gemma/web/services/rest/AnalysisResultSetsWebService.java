@@ -23,14 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -41,10 +43,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -100,51 +102,49 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
+    @GZIP
     @GET
     @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
-        if ( ears == null ) {
-            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
+        if ( excludeResults ) {
+            ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
+            if ( ears == null ) {
+                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            }
+            return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
+        } else {
+            ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
+            if ( ears == null ) {
+                throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
+            }
+            return Responder.respond( expressionAnalysisResultSetService.loadValueObjectWithResults( ears ) );
         }
-        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return Responder.respond( expressionAnalysisResultSetService.loadValueObject( ears ) );
     }
 
     /**
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
      */
+    @GZIP
     @GET
     @Path("/{analysisResultSet}")
-    @Produces("text/tab-separated-values; qs=0.9")
+    @Produces("text/tab-separated-values; charset=UTF-8; qs=0.9")
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
     public StreamingOutput findByIdToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
-        ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
-        // only thaw the related analysis and experimental factors without contrasts
-        ears = expressionAnalysisResultSetService.thawWithoutContrasts( ears );
-        return new ExpressionAnalysisResultSetTsvStreamingOutput( ears );
-    }
-
-    private class ExpressionAnalysisResultSetTsvStreamingOutput implements StreamingOutput {
-
-        private final ExpressionAnalysisResultSet resultSet;
-
-        public ExpressionAnalysisResultSetTsvStreamingOutput( ExpressionAnalysisResultSet resultSet ) {
-            this.resultSet = resultSet;
+        final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
+        if ( ears == null ) {
+            throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
         }
-
-        @Override
-        public void write( OutputStream outputStream ) throws IOException, WebApplicationException {
+        final Map<DifferentialExpressionAnalysisResult, List<Gene>> result2Genes = expressionAnalysisResultSetService.loadResultToGenesMap( ears );
+        return outputStream -> {
             try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsvToAppendable( resultSet, writer );
+                expressionAnalysisResultSetFileService.writeTsvToAppendable( ears, result2Genes, writer );
             }
-        }
+        };
     }
-
 }

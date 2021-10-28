@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
+@Schema(type = "string")
 public class GeneSymbolArg extends GeneArg<String> {
 
     private static final String ID_NAME = "Official Symbol";

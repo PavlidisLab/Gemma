@@ -71,7 +71,7 @@ public class ObjectFilterQueryUtils {
      *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    public static String formRestrictionClause( List<ObjectFilter[]> filters ) {
+    public static String formRestrictionClause( Filters filters ) {
         StringBuilder queryString = new StringBuilder();
 
         if ( filters == null || filters.isEmpty() )
@@ -90,8 +90,18 @@ public class ObjectFilterQueryUtils {
                 if ( !first )
                     disjunction.append( " or " );
                 disjunction
-                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " )
-                        .append( filter.getOperator().getSqlToken() ).append( " " );
+                        .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
+
+                // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
+                if ( filter.getOperator().equals( ObjectFilter.Operator.eq ) && filter.getRequiredValue() == null ) {
+                    disjunction.append( "is" );
+                } else if ( filter.getOperator().equals( ObjectFilter.Operator.notEq ) && filter.getRequiredValue() == null ) {
+                    disjunction.append( "is not" );
+                } else {
+                    disjunction.append( filter.getOperator().getSqlToken() );
+                }
+
+                disjunction.append( " " );
                 if ( filter.getRequiredValue() instanceof Collection<?> ) {
                     disjunction
                             .append( "(" ).append( ":" ).append( paramName ).append( ")" );
@@ -113,13 +123,13 @@ public class ObjectFilterQueryUtils {
     /**
      * Adds all parameters contained in the filters argument to the Query by calling query.setParameter as needed.
      * <p>
-     * Use this if you've appended {@link #formRestrictionClause(List)} to the query so that the provided
+     * Use this if you've appended {@link #formRestrictionClause(Filters)} to the query so that the provided
      * object filters will be bound.
      *
      * @param query   the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
      */
-    public static void addRestrictionParameters( Query query, List<ObjectFilter[]> filters ) {
+    public static void addRestrictionParameters( Query query, Filters filters ) {
         if ( filters == null || filters.isEmpty() )
             return;
 
@@ -131,8 +141,10 @@ public class ObjectFilterQueryUtils {
                 if ( filter == null || filter.getObjectAlias() == null )
                     continue;
                 String paramName = generator.nextParam( filter );
-                if ( filter.getRequiredValue() instanceof Collection<?> ) {
+                if ( filter.getOperator().equals( ObjectFilter.Operator.in ) ) {
                     query.setParameterList( paramName, ( Collection<?> ) filter.getRequiredValue() );
+                } else if ( filter.getOperator().equals( ObjectFilter.Operator.like ) ) {
+                    query.setParameter( paramName, "%" + filter.getRequiredValue() + "%" );
                 } else {
                     query.setParameter( paramName, filter.getRequiredValue() );
                 }
@@ -149,7 +161,7 @@ public class ObjectFilterQueryUtils {
      * @param aliases
      * @return true if any provided alias is mentioned anywhere in the set of filters
      */
-    public static boolean containsAlias( List<ObjectFilter[]> filters, String... aliases ) {
+    public static boolean containsAnyAlias( Filters filters, String... aliases ) {
         if ( filters == null )
             return false;
         for ( ObjectFilter[] filter : filters ) {

@@ -82,7 +82,7 @@ import java.util.List;
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-component-scan.xml",
         "classpath*:ubic/gemma/testDataSource.xml", "classpath*:ubic/gemma/applicationContext-hibernate.xml",
-        "classpath*:gemma/gsec/acl/security-bean-baseconfig.xml",
+        "classpath*:gemma/gsec/applicationContext-*.xml",
         "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
         "classpath*:ubic/gemma/testContext-jms.xml", "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
         "classpath*:ubic/gemma/applicationContext-schedule.xml" })

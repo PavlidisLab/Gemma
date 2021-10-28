@@ -8,7 +8,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
  * Represents an API arguments that maps to a {@link FactorValue} by its ID or name.
  * @author poirigui
  */
-@Schema(anyOf = { FactorValueIdArg.class, FactorValueValueArg.class })
+@Schema(subTypes = { FactorValueIdArg.class, FactorValueValueArg.class })
 public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue, FactorValueService> {
 
     protected FactorValueArg( A value ) {

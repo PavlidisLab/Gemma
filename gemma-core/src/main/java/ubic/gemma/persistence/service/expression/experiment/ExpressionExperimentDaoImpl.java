@@ -51,6 +51,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -1029,7 +1030,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
         ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, taxon.getId() ) };
+                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() ) };
 
         return this.loadValueObjectsPreFilter( 0, -1, null, filter, true );
     }
@@ -1038,7 +1039,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort, Taxon taxon ) {
 
         final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.is, taxon.getId() ) };
+                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() ) };
 
         return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
     }
@@ -1058,22 +1059,29 @@ public class ExpressionExperimentDaoImpl
             filters[0] = new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList );
         }
         if ( taxon != null ) {
-            filters[1] = new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.is, taxon.getId() );
+            filters[1] = new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() );
         }
 
-        List<ObjectFilter[]> filtersList = new ArrayList<ObjectFilter[]>() {
+        Filters filtersList = new Filters() {
             {
                 this.add( filters );
             }
         };
 
-        // Compose query
-        Query query = this.getLoadValueObjectsQuery( filtersList, sort );
+        Set<QueryHint> hints = new HashSet<>();
 
+        if ( start <= 0 && limit <= 0 )
+            hints.add( QueryHint.FETCH_ALL );
+
+        // Compose query
+        Query query = this.getLoadValueObjectsQuery( filtersList, sort, hints );
+
+        if ( start > 0 ) {
+            query.setFirstResult( start );
+        }
         if ( limit > 0 ) {
             query.setMaxResults( limit );
         }
-        query.setFirstResult( start );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1091,16 +1099,18 @@ public class ExpressionExperimentDaoImpl
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid, totalElements.intValue() );
 
             // FIXME Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
-            Collection<ArrayDesignValueObject> adVos = CommonQueries
-                    .getArrayDesignsUsedVOs( vo.getId(), this.getSessionFactory().getCurrentSession() );
+            Collection<ArrayDesignValueObject> adVos = ee.getBioAssays().stream()
+                    .map( BioAssay::getArrayDesignUsed )
+                    .map( ArrayDesignValueObject::new )
+                    .collect( Collectors.toSet() );
             vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
 
             // FIXME watch out: this may be a performance drain for long lists (if so, could batch)
-            vo.getOtherParts().addAll( this.getOtherParts( vo.getId() ) );
+            vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
+            // TODO: optimize this with a join-fetch
             vo.setOriginalPlatforms( this.getOriginalPlatforms( vo.getId() ) );
 
             vos.add( vo );
-
         }
 
         this.populateAnalysisInformation( vos );
@@ -1211,19 +1221,22 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getTaxon() );
         Hibernate.initialize( ee.getGeeq() );
 
-        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, this.totalElements.get().intValue() );
+        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, this.totalElements.get() == null ? 1 : this.totalElements.get().intValue() );
 
         // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
-        Collection<ArrayDesignValueObject> adVos = CommonQueries.getArrayDesignsUsedVOs( vo.getId(),
-                this.getSessionFactory().getCurrentSession() );
+        // TODO: if slow, preload with join fetch
+        // TODO: this could be optimized out since we only need the count and technology type
+        Set<ArrayDesign> arrayDesignsUsed = ee.getBioAssays()
+                .stream()
+                .map( BioAssay::getArrayDesignUsed )
+                .collect( Collectors.toSet() );
 
-        if ( adVos.isEmpty() ) {
+        if ( arrayDesignsUsed.isEmpty() ) {
             log.debug( "Missing array design information for " + vo );
             return null;
         }
-        ArrayDesignValueObject ad = adVos.iterator().next();
-        vo.setTechnologyType( ad.getTechnologyType() );
-        vo.setArrayDesignCount( adVos.size() );
+        vo.setTechnologyType( arrayDesignsUsed.iterator().next().getTechnologyType().toString() );
+        vo.setArrayDesignCount( arrayDesignsUsed.size() );
 
         return vo;
     }
@@ -1243,7 +1256,7 @@ public class ExpressionExperimentDaoImpl
         if ( propertyName.startsWith( "characteristics." ) ) {
             propertyName = propertyName.replaceFirst( "characteristics.", "" );
             try {
-                return new ObjectFilter( ObjectFilter.DAO_CHARACTERISTIC_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, Characteristic.class ), operator, requiredValue );
+                return ObjectFilter.parseObjectFilter( ObjectFilter.DAO_CHARACTERISTIC_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, Characteristic.class ), operator, requiredValue );
             } catch ( NoSuchFieldException e ) {
                 throw new ObjectFilterException( "Could not create a characteristic object filter for " + propertyName, e );
             }
@@ -1253,7 +1266,7 @@ public class ExpressionExperimentDaoImpl
         if ( propertyName.startsWith( "bioAssays." ) ) {
             propertyName = propertyName.replaceFirst( "bioAssays.", "" );
             try {
-                return new ObjectFilter( ObjectFilter.DAO_BIOASSAY_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, BioAssay.class ), operator, requiredValue );
+                return ObjectFilter.parseObjectFilter( ObjectFilter.DAO_BIOASSAY_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, BioAssay.class ), operator, requiredValue );
             } catch ( NoSuchFieldException e ) {
                 throw new ObjectFilterException( "Could not create a bioassay object filter for " + propertyName, e );
             }
@@ -1267,20 +1280,35 @@ public class ExpressionExperimentDaoImpl
      * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
      * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
-     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
      * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
      *                be a property of EE itself, or any nested property that hibernate can reach.
      *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
      * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filters  see this#formRestrictionClause(ArrayList) filters argument for description.
      * @param offset  amount of EEs to skip when ordered by the orderBy param in the order defined byt the 'asc' param.
      * @param limit   maximum amount of EEs to retrieve.
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( List<ObjectFilter[]> filter, Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         // TODO: remove this line when we get rid of _totalInQuery
-        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filter ).uniqueResult() );
-        return super.loadValueObjectsPreFilter( filter, sort, offset, limit );
+        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
+        try {
+            return super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        } finally {
+            this.totalElements.remove();
+        }
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+        // TODO: remove this line when we get rid of _totalInQuery
+        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
+        try {
+            return super.loadValueObjectsPreFilter( filters, sort );
+        } finally {
+            this.totalElements.remove();
+        }
     }
 
     @Override
@@ -1453,15 +1481,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( List<ObjectFilter[]> filters, Sort sort ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints ) {
         if ( filters == null ) {
-            filters = new ArrayList<>();
+            filters = new Filters();
         }
 
         // Restrict to non-troubled EEs for non-administrators
         addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
 
-        //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
+        // the constants for aliases are messing with the inspector
+        //language=HQL
         String queryString =
                 "select ee, " + AclQueryUtils.formAclSelectClause() + " "
                         + "from ExpressionExperiment as ee "
@@ -1475,19 +1505,27 @@ public class ExpressionExperimentDaoImpl
                         + "left join fetch s.lastTroubledEvent as eTrbl "
                         + "left join fetch ee.taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
 
-        if ( ObjectFilterQueryUtils.containsAlias( filters, ObjectFilter.DAO_CHARACTERISTIC_ALIAS ) ) {
-            queryString += " left join ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+        if ( ObjectFilterQueryUtils.containsAnyAlias( filters, ObjectFilter.DAO_CHARACTERISTIC_ALIAS ) ) {
+            if ( hints.contains( QueryHint.FETCH_ALL ) ) {
+                queryString += " left join fetch ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+            } else {
+                queryString += " left join ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
+            }
         }
 
-        if ( ObjectFilterQueryUtils.containsAlias( filters, "ba", ObjectFilter.DAO_AD_ALIAS ) ) {
+        if ( ObjectFilterQueryUtils.containsAnyAlias( filters, "ba", ObjectFilter.DAO_AD_ALIAS ) ) {
             // fetching bioassays will trigger in-memory pagination, so we need to perform a regular join
-            queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
-                    ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            if ( hints.contains( QueryHint.FETCH_ALL ) ) {
+                queryString += MessageFormat.format( " left join fetch ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
+                        ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            } else {
+                queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
+                        ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
+            }
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( "ee",
-                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        queryString += AclQueryUtils.formAclJoinClause( "ee" );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
@@ -1502,7 +1540,7 @@ public class ExpressionExperimentDaoImpl
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
@@ -1512,7 +1550,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( List<ObjectFilter[]> filters ) {
+    protected Query getCountValueObjectsQuery( Filters filters ) {
+        if ( filters == null ) {
+            filters = new Filters();
+        }
+
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
+
         //noinspection JpaQlInspection // the constants for aliases are messing with the inspector
         String queryString =
                 "select count(distinct ee) from ExpressionExperiment as ee "
@@ -1526,26 +1572,29 @@ public class ExpressionExperimentDaoImpl
                         + "left join s.lastTroubledEvent as eTrbl "
                         + "left join ee.taxon as " + ObjectFilter.DAO_TAXON_ALIAS;
 
-        if ( ObjectFilterQueryUtils.containsAlias( filters, ObjectFilter.DAO_CHARACTERISTIC_ALIAS ) ) {
+        if ( ObjectFilterQueryUtils.containsAnyAlias( filters, ObjectFilter.DAO_CHARACTERISTIC_ALIAS ) ) {
             queryString += " left join ee.characteristics as " + ObjectFilter.DAO_CHARACTERISTIC_ALIAS;
         }
 
-        if ( ObjectFilterQueryUtils.containsAlias( filters, ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS ) ) {
+        if ( ObjectFilterQueryUtils.containsAnyAlias( filters, ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS ) ) {
             // FIXME: this jointure breaks the count of distinct EE
             queryString += MessageFormat.format( " left join ee.bioAssays as {0} left join {0}.arrayDesignUsed as {1}",
                     ObjectFilter.DAO_BIOASSAY_ALIAS, ObjectFilter.DAO_AD_ALIAS );
         }
 
+        // Restrict to non-troubled EEs for non-administrators
+        addNonTroubledFilter( filters, getObjectAlias() );
+        addNonTroubledFilter( filters, "ad" );
+
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more
-        queryString += AclQueryUtils.formAclJoinClause( "ee",
-                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        queryString += AclQueryUtils.formAclJoinClause( "ee" );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        AclQueryUtils.addAclJoinParameters( query, "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
@@ -1649,7 +1698,7 @@ public class ExpressionExperimentDaoImpl
             return this.loadValueObjectsPreFilter( null, sort, offset, limit );
         }
 
-        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( disjunction ? filters.length : 1 );
+        Filters filterList = new Filters();
         if ( disjunction ) {
             ObjectFilter[] filterArray = new ObjectFilter[filters.length];
             int i = 0;
@@ -1659,7 +1708,7 @@ public class ExpressionExperimentDaoImpl
             filterList.add( filterArray );
         } else {
             for ( ObjectFilter filter : filters ) {
-                filterList.add( new ObjectFilter[] { filter } );
+                filterList.add( filter );
             }
         }
 

@@ -53,7 +53,7 @@
         <property name="lastUpdated" type="java.util.Date">
             <column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME"/>
         </property>
-        <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="select">
+        <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="join">
             <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <set name="phenotypes" lazy="false" fetch="select" cascade="all">
@@ -71,7 +71,7 @@
             <one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublicationImpl"/>
         </set>
         <many-to-one name="associationType" class="ubic.gemma.model.common.description.Characteristic"
-                     cascade="all" lazy="false" fetch="select">
+                     cascade="all" lazy="false" fetch="join">
             <column name="ASSOCIATION_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
         <many-to-one name="evidenceSource" class="ubic.gemma.model.common.description.DatabaseEntry" lazy="proxy"

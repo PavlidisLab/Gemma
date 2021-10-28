@@ -18,10 +18,12 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.odmg.Database;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.*;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -186,7 +188,7 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity ) {
-        if (isTransient(  entity.getExternalDatabase())) {
+        if ( isTransient( entity.getExternalDatabase() ) ) {
             entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase() ) );
         }
         return databaseEntryDao.create( entity );

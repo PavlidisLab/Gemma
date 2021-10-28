@@ -18,19 +18,21 @@
  */
 package ubic.gemma.persistence.util;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import ubic.gemma.persistence.service.ObjectFilterException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Created by tesarst on 14/07/17.
  * Provides necessary information to filter a database query by a value of a specific object property.
  */
+@Getter
+@EqualsAndHashCode
 @ToString
 public class ObjectFilter {
 
@@ -43,23 +45,90 @@ public class ObjectFilter {
     public static final String DAO_BIOASSAY_ALIAS = "ba";
     public static final String DAO_DATABASE_ENTRY_ALIAS = "accession";
 
+    /**
+     * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
+     *
+     * @param objectAlias   alias of the relevant object to use in the final HQL query
+     * @param propertyName  property name of the object
+     * @param propertyType  the type of the property that will be checked, you can use the {@link EntityUtils#getDeclaredFieldType(String, Class)}
+     *                      utility to obtain that type conveniently
+     * @param operator      operator for this filter, see {@link Operator} for more details about available operations
+     * @param requiredValue required value
+     */
+    public static ObjectFilter parseObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws ObjectFilterException {
+        return new ObjectFilter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
+    }
+
+
+    /**
+     * Creates a new ObjectFilter with a value of type that the given requiredValue object is.
+     *
+     * @param  objectAlias              The alias of the object in the query. See the DAO for the filtered object to see
+     *                                  what
+     *                                  the alias in the query is. E.g for
+     *                                  {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
+     *                                  the alias is 'ee'
+     * @param  propertyName             the name of a property that will be checked.
+     * @param  operator                 the operator that will be used to compare the value of the object. The
+     *                                  requiredValue will be the right operand of the given operator.
+     *                                  Demonstration in pseudo-code: if( object.value lessThan requiredValue) return
+     *                                  object.
+     *                                  The {@link Operator#in} operator means that the given requiredValue is
+     *                                  expected to be a {@link Collection}, and the checked property has to be equal to
+     *                                  at least one of the values contained within that <i>List</i>.
+     *                                  The {@link Operator#like} operator must be provided a {@link String} as
+     *                                  requiredValue
+     * @param  requiredValues           the value that the property will be checked for. Null objects are not allowed
+     *                                  for operators "lessThan", "greaterThan" and "in".
+     * @throws IllegalArgumentException if the given operator is the "in" operator but the
+     *                                  given requiredValue is not an instance of Iterable.
+     */
+    public static ObjectFilter parseObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws ObjectFilterException {
+        return new ObjectFilter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
+    }
+
     public enum Operator {
-        is( "=" ),
-        isNot( "!=" ),
-        like( "like" ),
-        lessThan( "<" ),
-        greaterThan( ">" ),
-        lessOrEq( "<=" ),
-        greaterOrEq( ">=" ),
-        in( "in" );
+        /**
+         * Note that in the case of a null requiredValue, the {@link #sqlToken} of this operator must be ignored and 'is'
+         * must be used instead.
+         */
+        eq( "=", false, null ),
+        /**
+         * Same remark for {@link #eq} applies, but with the 'is not' operator.
+         */
+        notEq( "!=", false, null ),
+        like( "like", true, String.class ),
+        lessThan( "<", true, null ),
+        greaterThan( ">=", true, null ),
+        lessOrEq( "<=", true, null ),
+        greaterOrEq( ">=", true, null ),
+        in( "in", true, Collection.class );
 
         /**
          * Token used when parsing object filter input.
          */
         private final String token;
 
-        Operator( String operator ) {
+        /**
+         * Token used in SQL/HQL query.
+         */
+        private final String sqlToken;
+
+        /**
+         * THe required value must not be null.
+         */
+        private final boolean nonNullRequired;
+
+        /**
+         * The required value must satisfy this type.
+         */
+        private final Class<?> requiredType;
+
+        Operator( String operator, boolean isNonNullRequired, Class<?> requiredType ) {
             this.token = operator;
+            this.sqlToken = operator;
+            this.nonNullRequired = isNonNullRequired;
+            this.requiredType = requiredType;
         }
 
         public String getToken() {
@@ -67,10 +136,18 @@ public class ObjectFilter {
         }
 
         /**
-         * SQL token representing this operator.
+         * This is package-private on purpose and is only meant for{@link ObjectFilterQueryUtils#formRestrictionClause(Filters)}.
          */
-        public String getSqlToken() {
+        String getSqlToken() {
             return token;
+        }
+
+        public boolean isNonNullRequired() {
+            return nonNullRequired;
+        }
+
+        public Class<?> getRequiredType() {
+            return requiredType;
         }
     }
 
@@ -86,106 +163,28 @@ public class ObjectFilter {
         this.propertyType = propertyType;
         this.operator = operator;
         this.requiredValue = requiredValue;
-        this.checkTypeCorrect( propertyType );
+        this.checkTypeCorrect();
     }
 
-    /**
-     * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
-     *
-     * @param objectAlias   alias of the relevant object to use in the final HQL query
-     * @param propertyName  property name of the object
-     * @param propertyType  the type of the property that will be checked, you can use the {@link EntityUtils#getDeclaredFieldType(String, Class)}
-     *                      utility to obtain that type conveniently
-     * @param operator      operator for this filter, see {@link Operator} for more details about available operations
-     * @param requiredValue required value
-     */
-    public ObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws ObjectFilterException {
-        this( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
-    }
+    private void checkTypeCorrect() throws IllegalArgumentException {
+        if ( operator.isNonNullRequired() && requiredValue == null ) {
+            throw new IllegalArgumentException( "requiredValue for operator " + operator + " cannot be null." );
+        }
 
-    /**
-     * Creates a new ObjectFilter with a value of type that the given requiredValue object is.
-     *
-     * @param  objectAlias              The alias of the object in the query. See the DAO for the filtered object to see
-     *                                  what
-     *                                  the alias in the query is. E.g for
-     *                                  {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
-     *                                  the alias is 'ee'
-     * @param  propertyName             the name of a property that will be checked.
-     * @param  operator                 the operator that will be used to compare the value of the object. The
-     *                                  requiredValue will
-     *                                  be the right operand of the given operator.
-     *                                  Demonstration in pseudo-code: if( object.value lessThan requiredValue) return
-     *                                  object.
-     *                                  The {@link Operator#in} operator means that the given requiredValue is
-     *                                  expected to be a
-     *                                  {@link Collection}, and the checked property has to be equal to at
-     *                                  least one of the
-     *                                  values contained within that <i>List</i>.
-     * @param  requiredValues           the value that the property will be checked for. Null objects are not allowed
-     *                                  for operators "lessThan", "greaterThan" and "in".
-     * @throws IllegalArgumentException if the given operator is the "in" operator but the
-     *                                  given requiredValue is not an instance of Iterable.
-     */
-    public ObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws ObjectFilterException {
-        this( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
-    }
+        // if the operator does not have a specific type requirement, then consider that the propertyType is the type requirement
+        Class<?> requiredType = operator.getRequiredType() != null ? operator.getRequiredType() : propertyType;
 
-    /**
-     * @param  filter the filter to create the ArrayList with
-     * @return an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of
-     *                the
-     *                only array in the list.
-     */
-    public static List<ObjectFilter[]> singleFilter( ObjectFilter filter ) {
-        List<ObjectFilter[]> filters = new ArrayList<>();
-        filters.add( new ObjectFilter[] { filter } );
-        return filters;
-    }
+        if ( requiredValue != null && !requiredType.isAssignableFrom( requiredValue.getClass() ) ) {
+            throw new IllegalArgumentException( "requiredValue " + requiredValue + " of type " + requiredValue.getClass().getName() + " for operator " + operator + " must be assignable from " + requiredType.getName() + "." );
+        }
 
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    public Object getRequiredValue() {
-        if ( this.operator.equals( ObjectFilter.Operator.like ) )
-            return "%" + requiredValue + "%";
-        return requiredValue;
-    }
-
-    public Operator getOperator() {
-        return operator;
-    }
-
-    public String getObjectAlias() {
-        return objectAlias;
-    }
-
-    private void checkTypeCorrect( Class<?> propertyType ) throws IllegalArgumentException {
-        if ( requiredValue == null && ( // Check null for disallowed operators
-                operator.equals( ObjectFilter.Operator.greaterThan ) || // gt
-                        operator.equals( ObjectFilter.Operator.lessThan ) ) // lt
-        ) {
-            throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
-        } else if ( operator.equals( ObjectFilter.Operator.in ) ) { // Check 'in' conditions
-            if ( !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
-                throw new IllegalArgumentException(
-                        "requiredValue for operator " + operator + " has to be an Collection." );
+        // if an operator expects a collection as RHS, then the type of the elements in that collection must absolutely
+        // match the propertyType
+        // for example, ad.id in ("a", 1, NULL) must be invalid if id is of type Long
+        if ( operator.getRequiredType() != null && Collection.class.isAssignableFrom( operator.getRequiredType() ) ) {
+            if ( !( ( Collection<?> ) requiredValue ).stream().allMatch( rv -> rv.getClass().isAssignableFrom( propertyType ) ) ) {
+                throw new IllegalArgumentException( "All elements in requiredValue " + requiredType + " must be assignable from " + propertyType.getName() + "." );
             }
-        } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
-                .isAssignableFrom( propertyType )
-                || ( isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
-        ) {
-            throw new IllegalArgumentException(
-                    "requiredValue for property " + propertyName + " has to be assignable from " + propertyType
-                            .getName() + " or null, but the requiredValue class is  "
-                            + requiredValue.getClass()
-                            .getName()
-                            + "." );
-        } else if ( operator.equals( ObjectFilter.Operator.like ) && ( propertyType == null || !String.class
-                .isAssignableFrom( propertyType ) ) ) {
-            throw new IllegalArgumentException(
-                    "requiredValue for operator " + operator + " has to be a non null String." );
         }
     }
 
@@ -271,31 +270,5 @@ public class ObjectFilter {
             return Byte.valueOf( rv );
 
         throw new IllegalArgumentException( "Property type not supported (" + pt + ")." );
-    }
-
-    /**
-     * Checks whether the two given classes are representing the same data type, regardless of whether it is a Wrapper
-     * class or a primitive type.
-     * The types checked are double, integer, float, long, short, boolean and byte.
-     *
-     * @param  cls1 the first class to compare
-     * @param  cls2 the second class to compare
-     * @return true, if the two given classes represent the same number type.
-     */
-    private static boolean isSameOrWrapperType( Class<?> cls1, Class<?> cls2 ) {
-        return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) )
-                && ( Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
-                || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) )
-                && ( Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) ) // integer
-                || ( ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) )
-                && ( Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) ) // float
-                || ( ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) )
-                && ( Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) ) // long
-                || ( ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) )
-                && ( Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) ) // short
-                || ( ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) )
-                && ( Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
-                || ( ( Boolean.class.isAssignableFrom( cls1 ) || boolean.class.isAssignableFrom( cls1 ) )
-                && ( Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
     }
 }

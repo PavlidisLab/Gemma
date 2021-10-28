@@ -140,7 +140,7 @@ public interface ExpressionExperimentDao
      * @param start      offset
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     Collection<ExpressionExperiment> loadLackingFactors();

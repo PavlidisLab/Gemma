@@ -89,7 +89,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
 
-                if ( !ads.getSwitchedExperiments( a.getId() ).isEmpty() ) {
+                if ( !ads.getSwitchedExperimentIds( a ).isEmpty() ) {
                     log.info( "Platform still has experiments (switched to anther platform) that must be deleted first: " + p );
                     addErrorObject( p, "Experiments  (switched to anther platform) still exist for platform" );
                     continue;

@@ -1,97 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
+
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-   <class name="ubic.gemma.model.common.description.BibliographicReference" table="BIBLIOGRAPHIC_REFERENCE">
-      <cache usage="read-write" />
-      <id name="id" type="java.lang.Long" unsaved-value="null">
-         <column name="ID" sql-type="BIGINT"/>
-         <generator class="native">
-         </generator>
-      </id>
-      <property name="name" type="java.lang.String">
-         <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="authorList" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="title" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="TITLE" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="publisher" type="java.lang.String">
-         <column name="PUBLISHER" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="editor" type="java.lang.String">
-         <column name="EDITOR" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="volume" type="java.lang.String">
-         <column name="VOLUME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="issue" type="java.lang.String">
-         <column name="ISSUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="pages" type="java.lang.String">
-         <column name="PAGES" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="publication" type="java.lang.String">
-         <column name="PUBLICATION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="fullTextUri" type="java.lang.String">
-         <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
-      </property>
-      <property name="abstractText" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="citation" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="CITATION" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="publicationDate" type="java.util.Date">
-         <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
-      </property>
-      <property name="annotatedAbstract" type="org.springframework.orm.hibernate3.support.ClobStringType">
-         <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text"/>
-      </property>
-      <property name="retracted" type="java.lang.Boolean">
-         <column name="RETRACTED" not-null="false" unique="false" sql-type="TINYINT" />
-      </property>
-      <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
-         <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
+    <class name="ubic.gemma.model.common.description.BibliographicReference" table="BIBLIOGRAPHIC_REFERENCE">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="authorList" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="title" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="TITLE" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="publisher" type="java.lang.String">
+            <column name="PUBLISHER" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="editor" type="java.lang.String">
+            <column name="EDITOR" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="volume" type="java.lang.String">
+            <column name="VOLUME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="issue" type="java.lang.String">
+            <column name="ISSUE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="pages" type="java.lang.String">
+            <column name="PAGES" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="publication" type="java.lang.String">
+            <column name="PUBLICATION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="fullTextUri" type="java.lang.String">
+            <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
+        </property>
+        <property name="abstractText" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="citation" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="CITATION" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="publicationDate" type="java.util.Date">
+            <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
+        </property>
+        <property name="annotatedAbstract" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text"/>
+        </property>
+        <property name="retracted" type="java.lang.Boolean">
+            <column name="RETRACTED" not-null="false" unique="false" sql-type="TINYINT"/>
+        </property>
+        <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
+                     lazy="proxy" fetch="select">
+            <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
 
-      <!-- NEVER USED -->
-      <set name="annotations" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
-         <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
-            <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
-      </set>
+        <!-- NEVER USED -->
+        <set name="annotations" lazy="true" fetch="select" cascade="all">
+            <cache usage="read-write"/>
+            <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
+                <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+        </set>
 
-      <set name="meshTerms" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
-         <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">
-            <column name="MESH_BIB_REF_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
-      </set>
-      <set name="keywords" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
-         <key foreign-key="KEYWORD_KEYWORD_BIB_REF_FKC">
-            <column name="KEYWORD_BIB_REF_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.common.description.Keyword"/>
-      </set>
-      <set name="chemicals" lazy="true" fetch="select" cascade="all">
-         <cache usage="read-write" />
-         <key foreign-key="COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC">
-            <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
-         </key>
-         <one-to-many class="ubic.gemma.model.expression.biomaterial.Compound"/>
-      </set>
-   </class>
+        <set name="meshTerms" lazy="true" fetch="select" cascade="all">
+            <cache usage="read-write"/>
+            <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">
+                <column name="MESH_BIB_REF_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
+        </set>
+        <set name="keywords" lazy="true" fetch="select" cascade="all">
+            <cache usage="read-write"/>
+            <key foreign-key="KEYWORD_KEYWORD_BIB_REF_FKC">
+                <column name="KEYWORD_BIB_REF_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.common.description.Keyword"/>
+        </set>
+        <set name="chemicals" lazy="true" fetch="select" cascade="all">
+            <cache usage="read-write"/>
+            <key foreign-key="COMPOUND_BIBLIOGRAPHIC_REFERENCE_FKC">
+                <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.expression.biomaterial.Compound"/>
+        </set>
+    </class>
 </hibernate-mapping>

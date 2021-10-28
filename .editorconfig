@@ -5,3 +5,15 @@ indent_style=tab
 
 [/gemma-web/pom.xml]
 indent_style=tab
+
+[Investigation.hbm.xml]
+indent_style=tab
+
+[ExperimentalFactor.hbm.xml]
+indent_size=3
+
+[FactorValue.hbm.xml]
+indent_size=3
+
+[CompositeSequence.hbm.xml]
+indent_size=3

@@ -20,7 +20,7 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.job.progress.ProgressStatusService;
+import ubic.gemma.web.job.progress.ProgressStatusService;
 
 /**
  * Exposes progress status service check result to the front end.

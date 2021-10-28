@@ -136,7 +136,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
-        assertNull( results.get( 0 ).getAnalysisResults() );
+        assertNull( results.get( 0 ).getResults() );
     }
 
     @Test
@@ -154,7 +154,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
-        assertNull( results.get( 0 ).getAnalysisResults() );
+        assertNull( results.get( 0 ).getResults() );
     }
 
     @Test
@@ -172,7 +172,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
         // individual analysis results are not exposed from this endpoint
-        assertNull( results.get( 0 ).getAnalysisResults() );
+        assertNull( results.get( 0 ).getResults() );
     }
 
     @Test
@@ -252,25 +252,36 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdThenReturn200Success() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
+        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
         assertEquals( response.getStatus(), 200 );
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
         assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
-        assertNotNull( dearsVo.getAnalysisResults() );
+        assertNotNull( dearsVo.getResults() );
+    }
+
+    @Test
+    public void testFindByIdWhenExcludeResultsThenReturn200Success() {
+        HttpServletResponse response = new MockHttpServletResponse();
+        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
+        assertEquals( response.getStatus(), 200 );
+        ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
+        assertEquals( dearsVo.getId(), dears.getId() );
+        assertEquals( dearsVo.getAnalysis().getId(), dea.getId() );
+        assertNull( dearsVo.getResults() );
     }
 
     @Test
     public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
         HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), response ) );
+        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
     }
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), response ) );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
@@ -281,11 +292,12 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         result.write( byteArrayOutputStream );
         byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );
-        CSVParser reader = CSVFormat.TDF
-                .withCommentMarker( '#' )
-                .withFirstRecordAsHeader()
+        // FIXME: I could not find the equivalent of withFirstRecordAsHeader() in the builder API
+        CSVParser reader = CSVFormat.Builder.create( CSVFormat.TDF.withFirstRecordAsHeader() )
+                .setSkipHeaderRecord( false )
+                .setCommentMarker( '#' ).build()
                 .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
-        assertTrue( reader.getHeaderNames().containsAll( Arrays.asList( "id", "probe_name", "probe_biological_characteristic_name", "probe_biological_characteristic_sequence_database_entry_accession", "pvalue", "corrected_pvalue", "rank" ) ) );
+        assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "pvalue", "corrected_pvalue", "rank" ) );
         CSVRecord record = reader.iterator().next();
         assertEquals( record.get( "pvalue" ), "1E0" );
         assertEquals( record.get( "corrected_pvalue" ), "1E-4" );

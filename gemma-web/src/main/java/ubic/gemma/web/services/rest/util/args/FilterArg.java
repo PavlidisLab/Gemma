@@ -15,9 +15,10 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
-import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.ObjectFilterException;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -79,7 +80,6 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(implementation = String.class)
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     /**
@@ -178,16 +178,16 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      * retrieval. If there is an "in" operator, the required value will be converted into a collection of strings.
      *
      * @param service a VO service that can resolve the properties types and relevant object alias to use subsequently
-     *                in {@link FilteringVoEnabledService#loadValueObjectsPreFilter(List, Sort, int, int)} for example.
+     *                in {@link FilteringVoEnabledService#loadValueObjectsPreFilter(Filters, Sort, int, int)} for example.
      *
      * @return a List of {@link ObjectFilter} arrays, each array represents a disjunction (OR) of filters. Arrays
      * then represent a conjunction (AND) with other arrays in the list, or null if this filter is empty.
      */
-    public List<ObjectFilter[]> getObjectFilters( FilteringVoEnabledService service ) throws MalformedArgException {
+    public Filters getObjectFilters( FilteringService service ) throws MalformedArgException {
         Filter filter = getValue();
         if ( filter.propertyNames == null )
             return null;
-        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( filter.propertyNames.size() );
+        Filters filterList = new Filters();
 
         for ( int i = 0; i < filter.propertyNames.size(); i++ ) {
             try {

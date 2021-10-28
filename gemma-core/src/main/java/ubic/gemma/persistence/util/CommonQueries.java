@@ -160,17 +160,6 @@ public class CommonQueries {
         return ( Collection<ArrayDesign> ) list;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Collection<ArrayDesignValueObject> getArrayDesignsUsedVOs( Long eeId, Session session ) {
-        List<?> list = CommonQueries.createGetADsUsedQueryObject( eeId, session ).list();
-        Collection<ArrayDesignValueObject> vos = new LinkedList<>();
-        //noinspection unchecked
-        for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
-            vos.add( new ArrayDesignValueObject( ad ) );
-        }
-        return vos;
-    }
-
     /**
      * @param session session
      * @param eeId    experiment id
