@@ -267,9 +267,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
                 for ( GeoRecord geoRecord : recs ) {
 
-                    if ( geoRecord.getGeoAccession().equals( "GSE174409" ) ) {
-                        log.info( "foo" );
-                    }
                     log.debug( geoRecord.getGeoAccession() );
 
                     /*
