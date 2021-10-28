@@ -1543,7 +1543,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if (string.equalsIgnoreCase( "ChIA-PET" )) {
             sample.setLibSource( "ChIA-PET" );
         } else if (string.equalsIgnoreCase( "ncRNA-Seq" )) {
-            sample.setLibStrategy( "ncRNA-seq" );
+            sample.setLibStrategy( "ncRNA-Seq" );
         } else {
             throw new IllegalArgumentException( "Unknown library source: " + string );
         }
