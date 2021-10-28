@@ -275,12 +275,6 @@
 			<artifactId>json</artifactId>
 			<version>20210307</version>
 		</dependency>
-		<!-- DEPRECATED: please use org.json or POJOs with Jackson, this is only used in ExpressionExperimentFormController -->
-		<dependency>
-			<groupId>com.sdicons.jsontools</groupId>
-			<artifactId>jsontools-core</artifactId>
-			<version>1.7</version>
-		</dependency>
 
 		<!-- AJAX -->
 		<dependency>

@@ -18,15 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import antlr.ANTLRException;
-import com.sdicons.json.model.JSONInteger;
-import com.sdicons.json.model.JSONObject;
-import com.sdicons.json.model.JSONString;
-import com.sdicons.json.model.JSONValue;
-import com.sdicons.json.parser.JSONParser;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.tools.ant.filters.StringInputStream;
+import org.json.JSONObject;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
@@ -54,7 +48,6 @@ import ubic.gemma.web.controller.BaseFormController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -271,41 +264,30 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     private boolean updateBioMaterialMap( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
         // parse JSON-serialized map
-        String jsonSerialization = request.getParameter( "assayToMaterialMap" );
-        // convert back to a map
-
-        Map<String, JSONValue> bioAssayMap;
-        try (StringInputStream aStream = new StringInputStream( jsonSerialization )) {
-            JSONParser parser = new JSONParser( aStream );
-            bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
-        } catch ( IOException | ANTLRException e ) {
-            throw new RuntimeException( e );
-        }
+        JSONObject bioAssay2BioMaterialMap = new JSONObject( request.getParameter( "assayToMaterialMap" ) );
 
         Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<>();
-        Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
-
         boolean anyChanges = false;
 
         int newBioMaterialCount = 0;
 
         // Map<Long, BioAssay> baMap = EntityUtils.getIdMap( expressionExperiment.getBioAssays() );
 
-        for ( Entry<String, JSONValue> entry : bioAssays ) {
+        for ( String bioAssayKey : bioAssay2BioMaterialMap.keySet() ) {
             // check if the bioAssayId is a nullElement
             // if it is, skip over this entry
-            if ( entry.getKey().equalsIgnoreCase( "nullElement" ) ) {
+            if ( bioAssayKey.equalsIgnoreCase( "nullElement" ) ) {
                 continue;
             }
-            Long bioAssayId = Long.parseLong( entry.getKey() );
 
-            JSONValue value = entry.getValue();
+            Long bioAssayId = Long.parseLong( bioAssayKey );
 
             Long newMaterialId;
-            if ( value.isString() ) {
-                newMaterialId = Long.parseLong( ( ( JSONString ) value ).getValue() );
+            Object value = bioAssay2BioMaterialMap.get( bioAssayKey );
+            if ( value instanceof String ) {
+                newMaterialId = Long.parseLong( bioAssay2BioMaterialMap.getString( bioAssayKey ) );
             } else {
-                newMaterialId = ( ( JSONInteger ) value ).getValue().longValue();
+                newMaterialId = bioAssay2BioMaterialMap.getLong( bioAssayKey );
             }
 
             BioAssay bioAssay = bioAssayService.load( bioAssayId ); // maybe we need to do

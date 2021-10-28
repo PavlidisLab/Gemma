@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,12 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import com.sdicons.json.mapper.JSONMapper;
-import com.sdicons.json.mapper.MapperException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -36,6 +39,7 @@ import java.util.*;
  *
  * @author joseph
  */
+@CommonsLog
 public class AssayViewTag extends TagSupport {
     private static final long serialVersionUID = 8754490187937841260L;
     /**
@@ -44,6 +48,11 @@ public class AssayViewTag extends TagSupport {
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
     private boolean edit = false;
     private Collection<BioAssayValueObject> bioAssays;
+
+    /**
+     * Jackson serializer to map objects to JSON.
+     */
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public int doEndTag() {
@@ -200,11 +209,11 @@ public class AssayViewTag extends TagSupport {
         if ( edit ) {
             // append JSON serialization
             try {
-                String jsonSerialization = JSONMapper.toJSON( assayToMaterial ).render( false );
+                String jsonSerialization = objectMapper.writeValueAsString( assayToMaterial );
                 buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
-                        + jsonSerialization + "'/>" );
-            } catch ( MapperException e ) {
-                // cannot serialize
+                        + StringEscapeUtils.escapeHtml4( jsonSerialization ) + "'/>" );
+            } catch ( JsonProcessingException e ) {
+                log.error( "Failed to serialize assayToMaterial to JSON.", e );
             }
 
         }
