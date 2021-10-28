@@ -86,8 +86,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Restrict results to non-troubled EEs for non-administrators
-     * @param filters set of {@link ObjectFilter} to which the non-troubled EEs filter will be added.
+     * Restrict results to non-troubled curatable entities for non-administrators
      */
     @SneakyThrows(ObjectFilterException.class)
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {

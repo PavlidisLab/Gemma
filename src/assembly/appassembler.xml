@@ -19,5 +19,9 @@
         <exclude>maven-metadata-appassembler.xml</exclude>
       </excludes>
     </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/appassembler/etc</directory>
+      <outputDirectory>etc</outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>

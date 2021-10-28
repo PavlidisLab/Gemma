@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.27.3-SNAPSHOT</version>
+	<version>1.27.3</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -243,6 +243,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Caching (version is dictated by hibernate-ehcache) -->
+		<dependency>
+			<groupId>net.sf.ehcache</groupId>
+			<artifactId>ehcache-core</artifactId>
+			<version>2.4.3</version>
+		</dependency>
+
 		<!-- Distributed tasks (Spring JMS + ActiveMQ) -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -255,9 +262,9 @@
 			<version>5.7.0</version>
 		</dependency>
 		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>javax.jms-api</artifactId>
-			<version>2.0.1</version>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-jms_1.1_spec</artifactId>
+			<version>1.1.1</version>
 		</dependency>
 
 		<!-- Scheduling -->
@@ -284,21 +291,17 @@
 			<artifactId>guava</artifactId>
 			<version>31.0.1-jre</version>
 		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.2</version>
-		</dependency>
-		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
-			<version>1.4.01</version>
-		</dependency>
 		<!-- needed for Java 11 -->
 		<dependency>
 			<groupId>javax.resource</groupId>
 			<artifactId>javax.resource-api</artifactId>
 			<version>1.7.1</version>
+		</dependency>
+		<!-- used for tar, a few others -->
+		<dependency>
+			<groupId>org.apache.ant</groupId>
+			<artifactId>ant</artifactId>
+			<version>1.10.12</version>
 		</dependency>
 
 		<!-- Plotting -->
@@ -348,6 +351,11 @@
 		<!-- Jackson, for JSON serialization -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
@@ -355,6 +363,23 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
+		</dependency>
+
+		<!-- XML and XSLT -->
+		<dependency>
+			<groupId>xml-apis</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>1.4.01</version>
+		</dependency>
+		<dependency>
+			<groupId>xerces</groupId>
+			<artifactId>xercesImpl</artifactId>
+			<version>2.12.1</version>
+		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+			<version>2.7.2</version>
 		</dependency>
 
 		<!-- Logging -->
@@ -424,7 +449,7 @@
 			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
-				<version>1.6.0</version>
+				<version>1.16.0</version>
 				<configuration>
 					<!-- Do not push to remote -->
 					<pushRemote>false</pushRemote>

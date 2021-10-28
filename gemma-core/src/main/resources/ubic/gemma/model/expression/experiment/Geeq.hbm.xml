@@ -130,11 +130,11 @@
             <column name="LAST_MANUAL_OVERRIDE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="lastBatchEffectChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="join">
             <column name="LAST_BATCH_EFFECT_CHANGE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="lastBatchConfoundChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="join">
             <column name="LAST_BATCH_CONFOUND_CHANGE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one> -->   
     </class>

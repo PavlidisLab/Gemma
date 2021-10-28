@@ -17,13 +17,13 @@
         <property name="ignoreResourceNotFound" value="false"/>
     </bean>
 
-    <bean id="buildPropertiesFileHandler" class="org.apache.commons.configuration.io.FileHandler" init-method="load">
+    <bean id="buildPropertiesFileHandler" class="org.apache.commons.configuration2.io.FileHandler" init-method="load">
         <constructor-arg index="0">
             <ref local="buildProperties"/>
         </constructor-arg>
         <property name="fileName" value="default.properties"/>
     </bean>
 
-    <bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration"/>
+    <bean id="buildProperties" class="org.apache.commons.configuration2.PropertiesConfiguration"/>
 
 </beans>

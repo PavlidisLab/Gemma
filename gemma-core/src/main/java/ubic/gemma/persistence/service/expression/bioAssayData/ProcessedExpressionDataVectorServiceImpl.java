@@ -19,6 +19,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -47,6 +48,8 @@ public class ProcessedExpressionDataVectorServiceImpl
     private ProcessedExpressionDataVectorCreateHelperService helperService;
     @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -238,13 +241,13 @@ public class ProcessedExpressionDataVectorServiceImpl
     public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
             int maxNumberOfResults ) {
 
-        ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResultSet( resultSetId );
+        ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
         if ( ar == null ) {
             Log.warn( this.getClass(), "No diff ex result set with ID=" + resultSetId );
             return null;
         }
 
-        differentialExpressionResultService.thaw( ar );
+        expressionAnalysisResultSetService.thaw( ar );
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 

@@ -126,7 +126,7 @@ public class WhatsNew {
      *
      * @param objs the objects to add
      */
-    public void addNewObjects( Collection<Auditable> objs ) {
+    public void addNewObjects( Collection<? extends Auditable> objs ) {
         this.newObjects.addAll( objs );
     }
 
@@ -144,7 +144,7 @@ public class WhatsNew {
      *
      * @param objs the objects that have been updated
      */
-    public void addUpdatedObjects( Collection<Auditable> objs ) {
+    public void addUpdatedObjects( Collection<? extends Auditable> objs ) {
         this.updatedObjects.addAll( objs );
     }
 

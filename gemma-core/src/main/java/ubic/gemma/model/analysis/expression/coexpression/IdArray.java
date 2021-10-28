@@ -31,8 +31,9 @@ import java.util.*;
 public abstract class IdArray implements Serializable {
 
     private static final long serialVersionUID = -7563304392793946778L;
+
     // keep visible to subclasses.
-    EWAHCompressedBitmap data = new EWAHCompressedBitmap();
+    protected EWAHCompressedBitmap data = new EWAHCompressedBitmap();
 
     private static byte[] pack( EWAHCompressedBitmap bitmap ) {
         ByteArrayDataOutput os = ByteStreams.newDataOutput();

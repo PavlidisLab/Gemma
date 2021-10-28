@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.27.3-SNAPSHOT</version>
+        <version>1.27.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -122,6 +122,7 @@
                     <repositoryLayout>flat</repositoryLayout>
                     <!--suppress UnresolvedMavenProperty -->
                     <extraJvmArguments>-Dlog4j.configurationFile=@BASEDIR@/etc/log4j.properties</extraJvmArguments>
+                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
                     <platforms>
                         <platform>unix</platform>
                     </platforms>
@@ -289,12 +290,6 @@
         </profile>
     </profiles>
     <dependencies>
-        <dependency>
-            <groupId>com.googlecode.javaewah</groupId>
-            <artifactId>JavaEWAH</artifactId>
-            <version>1.1.13</version>
-        </dependency>
-
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework.retry</groupId>
@@ -325,6 +320,23 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers</artifactId>
             <version>${lucene.version}</version>
+        </dependency>
+
+        <!-- Jena -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-core</artifactId>
+            <version>2.7.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-arq</artifactId>
+            <version>2.9.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-larq</artifactId>
+            <version>1.0.0-incubating</version>
         </dependency>
 
         <!-- Compass (fork compatible with Lucene 3.6.2) -->
@@ -399,12 +411,17 @@
             <artifactId>aspectjweaver</artifactId>
             <version>1.7.4</version>
         </dependency>
-
-        <!-- used for tar, a few others -->
+        <!-- bit array -->
+        <!-- it can't be updated though because the binary format has changed and we store those in the database -->
         <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>1.10.12</version>
+            <groupId>com.googlecode.javaewah</groupId>
+            <artifactId>JavaEWAH</artifactId>
+            <version>0.7.9</version>
+        </dependency>
+        <dependency>
+            <groupId>jboss</groupId>
+            <artifactId>jboss-ejb3x</artifactId>
+            <version>4.2.2.GA</version>
         </dependency>
     </dependencies>
 </project>

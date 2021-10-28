@@ -188,7 +188,7 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     private DatabaseEntry persistDatabaseEntry( DatabaseEntry entity ) {
-        if (isTransient(  entity.getExternalDatabase())) {
+        if ( isTransient( entity.getExternalDatabase() ) ) {
             entity.setExternalDatabase( this.persistExternalDatabase( entity.getExternalDatabase() ) );
         }
         return databaseEntryDao.create( entity );

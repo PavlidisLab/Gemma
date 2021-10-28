@@ -18,9 +18,8 @@
  */
 package ubic.gemma.web.view;
 
-import com.sdicons.json.mapper.JSONMapper;
-import com.sdicons.json.mapper.MapperException;
-import com.sdicons.json.model.JSONValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -29,16 +28,16 @@ import java.util.List;
  */
 public class JSONTableRenderer {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public String render( List<Object> tableObjects ) {
         try {
             StringBuilder b = new StringBuilder();
             for ( Object o : tableObjects ) {
-                JSONValue v;
-                v = JSONMapper.toJSON( o );
-                b.append( v.render( true ) );
+                b.append( objectMapper.writeValueAsString( o ) );
             }
             return b.toString();
-        } catch ( MapperException e ) {
+        } catch ( JsonProcessingException e ) {
             throw new RuntimeException( e );
         }
     }

@@ -38,6 +38,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -64,13 +65,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
-    @Autowired
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -442,7 +443,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             for ( ExpressionAnalysisResultSet oldrs : toUpdateResultSets ) {
 
                 assert oldrs.getId() != null;
-                this.differentialExpressionResultService.thaw( oldrs );
+                expressionAnalysisResultSetService.thaw( oldrs );
 
                 for ( ExpressionAnalysisResultSet temprs : a.getResultSets() ) {
                     /*

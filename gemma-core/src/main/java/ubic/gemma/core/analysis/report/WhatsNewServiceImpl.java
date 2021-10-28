@@ -19,16 +19,10 @@
 package ubic.gemma.core.analysis.report;
 
 import gemma.gsec.SecurityService;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
@@ -42,6 +36,7 @@ import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service to collect data on object that are new in the system.
@@ -50,9 +45,8 @@ import java.util.*;
  */
 @Component
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
+public class WhatsNewServiceImpl implements WhatsNewService {
 
-    private static final String WHATS_NEW_CACHE = "WhatsNew";
     private static final String WHATS_NEW_DIR = "WhatsNew";
     private static final String WHATS_NEW_FILE = "WhatsNew";
     private static final Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
@@ -65,27 +59,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private ExpressionExperimentService expressionExperimentService = null;
     @Autowired
     private SecurityService securityService = null;
-    @Autowired
-    private CacheManager cacheManager = null;
-    private Cache whatsNewCache;
-
-    @Override
-    public void afterPropertiesSet() {
-        try {
-
-            if ( cacheManager.cacheExists( WhatsNewServiceImpl.WHATS_NEW_CACHE ) ) {
-                return;
-            }
-            whatsNewCache = new Cache( WhatsNewServiceImpl.WHATS_NEW_CACHE, 1500, false, false, 12 * 3600, 12 * 3600 );
-
-            cacheManager.addCache( whatsNewCache );
-            whatsNewCache = cacheManager.getCache( WhatsNewServiceImpl.WHATS_NEW_CACHE );
-
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
 
     @Override
     public void generateWeeklyReport() {
@@ -165,25 +138,23 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             // load up all new objects
             if ( newObjects.exists() ) {
                 Collection<AuditableObject> aos = this.loadAuditableObjects( newObjects );
-
-                for ( AuditableObject object : aos ) {
-                    Auditable auditable = this.fetch( object );
-
-                    if ( auditable == null )
-                        continue;
-
-                    wn.addNewObjects( auditable );
-                    this.updateDate( wn, object );
+                Map<String, List<AuditableObject>> aosByType = aos.stream()
+                        .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
+                for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
+                    Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
+                    for ( AuditableObject ao : entry.getValue() ) {
+                        this.updateDate( wn, ao );
+                    }
+                    wn.addNewObjects( objects );
                 }
-
             }
 
             // load up all updated objects
             if ( updatedObjects.exists() ) {
-
                 Collection<AuditableObject> aos = this.loadAuditableObjects( updatedObjects );
-                for ( AuditableObject object : aos ) {
-
+                Map<String, List<AuditableObject>> aosByType = aos.stream()
+                        .collect( Collectors.groupingBy( AuditableObject::getType, Collectors.toList() ) );
+                for ( Map.Entry<String, List<AuditableObject>> entry : aosByType.entrySet() ) {
                     /*
                      * This call takes ~ 15-20 ms but it can be called many times if there are a lot of updated
                      * experiments, meaning this loop can take >8500 ms (over tunnel for ~450 experiments).
@@ -195,16 +166,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
                      * This is probably not necessary because usually the number of updated or new experiments will be
                      * much lower than 450.
                      */
-
-                    Auditable auditable = this.fetch( object );
-
-                    if ( auditable == null )
-                        continue;
-
-                    wn.addUpdatedObjects( auditable );
-
-                    this.updateDate( wn, object );
-
+                    Collection<? extends Auditable> objects = this.fetchAllByType( entry.getValue(), entry.getKey() );
+                    for ( AuditableObject ao : entry.getValue() ) {
+                        this.updateDate( wn, ao );
+                    }
+                    wn.addUpdatedObjects( objects );
                 }
             }
             // build total, new and updated counts by taxon to display in data summary widget on front page
@@ -231,13 +197,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     }
 
     /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
-
-    /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -251,47 +210,18 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         this.securityService = securityService;
     }
 
-    private Auditable fetch( AuditableObject object ) {
-
+    private Collection<? extends Auditable> fetchAllByType( List<AuditableObject> object, String type ) {
         if ( object == null )
             return null;
-
-        Auditable auditable = null;
-        Element element = this.whatsNewCache.get( object );
-        if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
-            if ( element != null ) {
-                auditable = ( Auditable ) element.getObjectValue();
-            } else {
-
-                try {
-                    auditable = arrayDesignService.load( object.getId() );
-                } catch ( AccessDeniedException e ) {
-                    return null;
-                }
-
-                whatsNewCache.put( new Element( object, auditable ) );
-            }
-
-        } else if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
-            if ( element != null ) {
-                auditable = ( Auditable ) element.getObjectValue();
-            } else {
-                // this is slower than loading them all at once but the cache saves even more time.
-
-                try {
-                    auditable = expressionExperimentService.load( object.getId() );
-                } catch ( AccessDeniedException e ) {
-                    return null;
-                }
-
-                if ( auditable == null ) {
-                    return null;
-                }
-
-                whatsNewCache.put( new Element( object, auditable ) );
-            }
+        List<Long> objectIds = object.stream().map( AuditableObject::getId ).collect( Collectors.toList() );
+        if ( type.equalsIgnoreCase( "ArrayDesign" ) ) {
+            return arrayDesignService.load( objectIds );
+        } else if ( type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
+            // this is slower than loading them all at once but the cache saves even more time.
+            return expressionExperimentService.load( objectIds );
+        } else {
+            throw new IllegalArgumentException( "Unsupported auditable " + type + "." );
         }
-        return auditable;
     }
 
     /**
@@ -396,8 +326,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     private Collection<AuditableObject> loadAuditableObjects( File newObjects )
             throws IOException, ClassNotFoundException {
-        try (FileInputStream fis = new FileInputStream( newObjects );
-                ObjectInputStream ois = new ObjectInputStream( fis )) {
+        try ( FileInputStream fis = new FileInputStream( newObjects );
+                ObjectInputStream ois = new ObjectInputStream( fis ) ) {
             @SuppressWarnings("unchecked")
             Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
                     .readObject();
@@ -441,18 +371,18 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             Collection<AuditableObject> updatedObjects = new ArrayList<>();
             this.addAllADs( date, ads, updatedObjects );
             this.addAllEEs( date, ees, updatedObjects );
-            try (FileOutputStream fos = new FileOutputStream( newOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+            try ( FileOutputStream fos = new FileOutputStream( newOutput );
+                    ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
                 oos.writeObject( newObjects );
             }
 
-            try (FileOutputStream fos = new FileOutputStream( updatedOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+            try ( FileOutputStream fos = new FileOutputStream( updatedOutput );
+                    ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
                 oos.writeObject( updatedObjects );
             }
 
         } catch ( Throwable e ) {
-            e.printStackTrace();
+            log.error( "Error while saving the what's new file.", e );
         }
     }
 
