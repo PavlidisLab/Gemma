@@ -8,6 +8,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
@@ -220,5 +221,14 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                     SortArg.valueOf( "+id" ),
                     new MockHttpServletResponse() );
         } ).isInstanceOf( MalformedArgException.class );
+    }
+
+    @Test
+    public void testFilterByGeeqPublicationScore() {
+        datasetsWebService.all( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
+                OffsetArg.valueOf( "0" ),
+                LimitArg.valueOf( "10" ),
+                SortArg.valueOf( "+id" ),
+                new MockHttpServletResponse() );
     }
 }
