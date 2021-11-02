@@ -77,8 +77,7 @@ public class ObjectFilterTest {
     @Test
     public void testParseUnsupportedType() {
         assertThatThrownBy( () -> ObjectFilter.parseObjectFilter( "ee", "id", Object.class, ObjectFilter.Operator.in, "unsupported type" ) )
-                .isInstanceOf( ObjectFilterException.class )
-                .hasCauseInstanceOf( ConversionFailedException.class );
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test
