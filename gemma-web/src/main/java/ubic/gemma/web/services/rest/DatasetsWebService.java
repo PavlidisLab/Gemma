@@ -111,7 +111,6 @@ public class DatasetsWebService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all datasets")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> all( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
@@ -139,7 +138,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets by their identifiers")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
@@ -166,7 +164,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the platform of a dataset")
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject<List<ArrayDesignValueObject>> datasetPlatforms( // Params:
@@ -185,7 +182,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the samples of a dataset")
     public ResponseDataObject<List<BioAssayValueObject>> datasetSamples( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -204,7 +200,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasetArg}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the main differential analysis of a dataset")
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
@@ -227,7 +222,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the annotations analysis of a dataset")
     public ResponseDataObject<Set<AnnotationValueObject>> datasetAnnotations( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -246,7 +240,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/data")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the expression data of a dataset")
     public Response datasetData( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -266,7 +259,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/design")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the design of a dataset")
     public Response datasetDesign( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -286,7 +278,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Indicate of a dataset has batch information")
     public ResponseDataObject<Boolean> datasetHasBatch( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -305,7 +296,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data")
     public ResponseDataObject<SimpleSVDValueObject> datasetSVD( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -351,7 +341,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasets}/expressions/genes/{genes: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressions( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
@@ -394,7 +383,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasets}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
@@ -439,7 +427,6 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasets}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> datasetExpressionsDiffEx( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required

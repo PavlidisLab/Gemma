@@ -15,57 +15,41 @@
 package ubic.gemma.web.services.rest.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.models.OpenAPI;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
+/**
+ * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication failure.
+ */
 @SecurityScheme(name = "restBasicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
-public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint implements ServletConfigAware {
-
-    private static Log log = LogFactory.getLog( RestAuthEntryPoint.class );
+public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConfigAware {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private ServletConfig servletConfig;
 
     @Override
-    public void afterPropertiesSet() {
-        setRealmName( "Gemma rest api" );
-    }
-
-    @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
-            final AuthenticationException authException ) {
-
-        response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
-        // using 'xBasic' instead of 'basic' to prevent default browser login popup
-        response.addHeader( "WWW-Authenticate", "xBasic realm=" + getRealmName() + "" );
-        response.addHeader( "Access-Control-Allow-Headers", "**Authorization**,authorization" ); // necessary for vue gembrow access
-        response.setContentType( "application/json" );
-
+            final AuthenticationException authException ) throws IOException {
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );
         ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) );
-        ObjectMapper mapperObj = new ObjectMapper();
-
-        try {
-            String jsonStr = mapperObj.writeValueAsString( errorObject );
-            response.getWriter().println( jsonStr );
-        } catch ( IOException e ) {
-            log.error( e );
-        }
+        response.setContentType( MediaType.APPLICATION_JSON );
+        // using 'xBasic' instead of 'basic' to prevent default browser login popup
+        response.addHeader( "WWW-Authenticate", "xBasic realm=Gemma RESTful API" );
+        response.sendError( HttpServletResponse.SC_UNAUTHORIZED, objectMapper.writeValueAsString( errorObject ) );
     }
 
     @Override

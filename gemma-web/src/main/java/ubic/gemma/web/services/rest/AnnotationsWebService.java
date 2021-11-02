@@ -121,7 +121,6 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
@@ -162,7 +161,6 @@ public class AnnotationsWebService {
     @GET
     @Path("/{taxonArg}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required

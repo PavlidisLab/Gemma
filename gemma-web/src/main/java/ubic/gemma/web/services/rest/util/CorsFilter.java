@@ -14,6 +14,7 @@
  */
 package ubic.gemma.web.services.rest.util;
 
+import org.apache.tools.ant.taskdefs.condition.Http;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
@@ -21,10 +22,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * Filter for adding CORS headers to the RESTful API responses.
+ */
 @Component
-public class CORSFilter implements Filter {
+public class CorsFilter implements Filter {
 
-    public CORSFilter() {
+    public CorsFilter() {
+
     }
 
     @Override
@@ -34,13 +39,11 @@ public class CORSFilter implements Filter {
     @Override
     public void doFilter( ServletRequest req, ServletResponse res, FilterChain chain )
             throws IOException, ServletException {
+        final HttpServletRequest request = ( HttpServletRequest ) req;
         final HttpServletResponse response = ( HttpServletResponse ) res;
-        if ( "OPTIONS".equalsIgnoreCase( ( ( HttpServletRequest ) req ).getMethod() ) ) {
-            response.setStatus( HttpServletResponse.SC_OK );
-            response.addHeader( "Access-Control-Allow-Headers", "**Authorization**,authorization" ); // necessary for vue gembrow access
-        } else {
-            chain.doFilter( req, res );
-        }
+        response.addHeader( "Access-Control-Allow-Origin", "*" );
+        response.addHeader( "Access-Control-Allow-Headers", "Authorization" );
+        chain.doFilter( req, res );
     }
 
     @Override

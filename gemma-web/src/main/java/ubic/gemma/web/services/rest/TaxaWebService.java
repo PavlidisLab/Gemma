@@ -89,7 +89,6 @@ public class TaxaWebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all available taxa")
     public ResponseDataObject<List<TaxonValueObject>> all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -112,7 +111,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxa}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve taxa by their identifiers")
     public ResponseDataObject<List<TaxonValueObject>> taxa( // Params:
             @PathParam("taxa") TaxonArrayArg taxaArg, // Optional
@@ -161,7 +159,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Find genes overlapping a given region in a taxon")
     public ResponseDataObject<List<GeneValueObject>> genes( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
@@ -182,7 +179,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve evidences for a given gene and taxon")
     public ResponseDataObject<List<GeneEvidenceValueObject>> genesEvidence( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
@@ -205,7 +201,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve physical locations for a given gene and taxon")
     public ResponseDataObject<List<PhysicalLocationValueObject>> genesLocation( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
@@ -225,7 +220,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the datasets for a given taxon")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
@@ -258,7 +252,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the phenotypes for a given taxon")
     public ResponseDataObject<Collection<?>> taxonPhenotypes( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
@@ -286,7 +279,6 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/phenotypes/candidates")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon")
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenes( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required

@@ -83,7 +83,6 @@ public class PlatformsWebService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all platforms")
     public PaginatedResponseDataObject<ArrayDesignValueObject> all( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
@@ -111,7 +110,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
     public PaginatedResponseDataObject<ArrayDesignValueObject> platforms( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
@@ -144,7 +142,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all experiments within a given platform")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> platformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
@@ -170,7 +167,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the composite sequences for a given platform")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElements( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
@@ -199,7 +195,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
@@ -229,7 +224,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
     public PaginatedResponseDataObject<GeneValueObject> platformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
@@ -255,7 +249,6 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the annotations of a given platform")
     public Response platformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
