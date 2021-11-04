@@ -248,7 +248,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
             Collection<ProcessedExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.isEmpty() ) {
-            SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
+            SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
         }
 
@@ -256,7 +256,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         if ( useRegression ) {
             if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
                 SampleCoexpressionAnalysisServiceImpl.log
-                        .error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
+                        .warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             }
             mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false ) );
