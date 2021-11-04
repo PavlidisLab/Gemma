@@ -26,6 +26,7 @@ import org.apache.commons.math3.stat.StatUtils;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
@@ -118,11 +119,13 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
     @Override
+    @Transactional
     public void calculateScore( Long eeId, String mode ) {
         this.doScoring( eeId, mode );
     }
 
     @Override
+    @Transactional
     public void setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         ee = expressionExperimentService.thawLiter( ee );
