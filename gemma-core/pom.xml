@@ -121,7 +121,7 @@
                     <repositoryName>lib</repositoryName>
                     <repositoryLayout>flat</repositoryLayout>
                     <!--suppress UnresolvedMavenProperty -->
-                    <extraJvmArguments>-Dlog4j.configurationFile=@BASEDIR@/etc/log4j.properties</extraJvmArguments>
+                    <extraJvmArguments>-Dlog4j.configuration=file:@BASEDIR@/etc/log4j.properties</extraJvmArguments>
                     <copyConfigurationDirectory>true</copyConfigurationDirectory>
                     <platforms>
                         <platform>unix</platform>
