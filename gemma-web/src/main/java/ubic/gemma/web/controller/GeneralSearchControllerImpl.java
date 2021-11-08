@@ -198,8 +198,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        return SearchSettings.builder().build();
+    protected SearchSettings.SearchSettingsBuilder formBackingObject( HttpServletRequest request ) {
+        return SearchSettings.builder();
     }
 
     @Override
@@ -215,12 +215,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
-            SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
-            csc.setQuery( request.getParameter( "query" ) );
-            csc.setTermUri( request.getParameter( "termUri" ) );
+            SearchSettings.SearchSettingsBuilder csc = this.formBackingObject( request );
+            csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
             String taxon = request.getParameter( "taxon" );
             if ( taxon != null )
-                csc.setTaxon( taxonService.findByScientificName( taxon ) );
+                csc.taxon( taxonService.findByScientificName( taxon ) );
 
             String scope = request.getParameter( "scope" );
             if ( StringUtils.isNotBlank( scope ) ) {
@@ -228,25 +227,25 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 for ( char scope1 : scopes ) {
                     switch ( scope1 ) {
                         case 'G':
-                            csc.addResultType( Gene.class );
+                            csc.resultType( Gene.class );
                             break;
                         case 'E':
-                            csc.addResultType( ExpressionExperiment.class );
+                            csc.resultType( ExpressionExperiment.class );
                             break;
                         case 'S':
-                            csc.addResultType( BioSequence.class );
+                            csc.resultType( BioSequence.class );
                             break;
                         case 'P':
-                            csc.addResultType( CompositeSequence.class );
+                            csc.resultType( CompositeSequence.class );
                             break;
                         case 'A':
-                            csc.addResultType( ArrayDesign.class );
+                            csc.resultType( ArrayDesign.class );
                             break;
                         case 'M':
-                            csc.addResultType( GeneSet.class );
+                            csc.resultType( GeneSet.class );
                             break;
                         case 'N':
-                            csc.addResultType( ExpressionExperimentSet.class );
+                            csc.resultType( ExpressionExperimentSet.class );
                             break;
                         default:
                             // TODO: 400 Bad Request error?
@@ -256,7 +255,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 }
             }
 
-            return this.doSearch( request, response, csc, errors );
+            return this.doSearch( request, response, csc.build(), errors );
         }
 
         return new ModelAndView( "generalSearch" );
