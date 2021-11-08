@@ -40,6 +40,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    public Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException {
+        return voDao.getSort( property, direction );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         return voDao.loadValueObjectsPreFilter( filters, sort, offset, limit );

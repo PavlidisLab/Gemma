@@ -553,17 +553,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return ObjectFilter.DAO_AD_ALIAS;
     }
 
-    /**
-     * Queries the database to retrieve all array designs, based on the given parameters, and then
-     * converts them to value objects.
-     *
-     *
-     * @param filters
-     * @param sort the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
-     * @return list of value objects representing the ADs that matched the criteria.
-     */
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         // TODO: remove this when _totalInQuery is removed

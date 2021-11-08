@@ -49,4 +49,6 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      * Similar to {@link #getObjectFilter(String, ObjectFilter.Operator, String)}, but with a collection of values.
      */
     ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException;
+
+    Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException;
 }

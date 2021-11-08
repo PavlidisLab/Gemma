@@ -39,4 +39,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             throw new ObjectFilterException( "Could not create an object filter for " + property + " using a collection.", e );
         }
     }
+
+    @Override
+    public Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException {
+        // this only serves as a pre-condition to ensure that the property exists
+        EntityUtils.getDeclaredField( elementClass, property );
+        return Sort.by( ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), property ), direction );
+    }
 }
