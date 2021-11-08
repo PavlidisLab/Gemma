@@ -844,7 +844,7 @@ public class OntologyServiceImpl implements OntologyService {
             OntologyServiceImpl.log
                     .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
-                                    .size() );
+                            .size() );
 
     }
 
@@ -924,7 +924,7 @@ public class OntologyServiceImpl implements OntologyService {
 
         URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
         OntologyServiceImpl.categoryTerms = new ConcurrentHashSet<>();
-        try (BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) )) {
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) ) ) {
             String line;
             boolean warned = false;
             while ( ( line = reader.readLine() ) != null ) {
@@ -998,11 +998,11 @@ public class OntologyServiceImpl implements OntologyService {
     private void searchForGenes( String queryString, Taxon taxon,
             Collection<CharacteristicValueObject> searchResults ) {
 
-        SearchSettings ss = SearchSettings.Factory.newInstance();
-        ss.setQuery( queryString );
-        ss.noSearches();
-        ss.setTaxon( taxon );
-        ss.setSearchGenes( true );
+        SearchSettings ss = SearchSettings.builder()
+                .query( queryString )
+                .taxon( taxon )
+                .resultType( Gene.class )
+                .build();
         Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, false, false );
 
         if ( geneResults.containsKey( Gene.class ) ) {

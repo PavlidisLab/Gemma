@@ -18,10 +18,15 @@
  */
 package ubic.gemma.model.common.search;
 
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * author: anton date: 18/03/13
@@ -53,26 +58,41 @@ public class SearchSettingsValueObject implements Serializable {
     }
 
     public static SearchSettings toEntity( SearchSettingsValueObject valueObject ) {
-        final SearchSettings entity = new SearchSettingsImpl();
-        entity.setQuery( valueObject.getQuery() );
-        entity.setPlatformConstraint( valueObject.getPlatformConstraint() );
-        entity.setTermUri( valueObject.getTermUri() );
-        entity.setTaxon( valueObject.getTaxon() );
-        entity.setMaxResults( valueObject.getMaxResults() );
-        entity.setSearchExperiments( valueObject.getSearchExperiments() );
-        entity.setSearchGenes( valueObject.getSearchGenes() );
-        entity.setSearchPlatforms( valueObject.getSearchPlatforms() );
-        entity.setSearchExperimentSets( valueObject.getSearchExperimentSets() );
-        entity.setSearchPhenotypes( valueObject.getSearchPhenotypes() );
-        entity.setSearchProbes( valueObject.getSearchProbes() );
-        entity.setSearchGeneSets( valueObject.getSearchGeneSets() );
-        entity.setSearchBioSequences( valueObject.getSearchBioSequences() );
-        entity.setSearchBibrefs( valueObject.getSearchBibrefs() );
-        entity.setUseIndices( valueObject.getUseIndices() );
-        entity.setUseDatabase( valueObject.getUseDatabase() );
-        entity.setUseCharacteristics( valueObject.getUseCharacteristics() );
-        entity.setUseGo( valueObject.getUseGo() );
-        return entity;
+        return SearchSettings.builder()
+                .query( !StringUtils.isBlank( valueObject.getQuery() ) ? valueObject.getQuery() : valueObject.getTermUri() )
+                .platformConstraint( valueObject.getPlatformConstraint() )
+                .taxon( valueObject.getTaxon() )
+                .maxResults( valueObject.getMaxResults() )
+                .resultTypes( resultTypesFromVo( valueObject ) )
+                .useIndices( valueObject.getUseIndices() )
+                .useDatabase( valueObject.getUseDatabase() )
+                .useCharacteristics( valueObject.getUseCharacteristics() )
+                .useGo( valueObject.getUseGo() )
+                .build();
+    }
+
+    /**
+     * This is silly, but the frontend relies on this.
+     * @param valueObject
+     * @return
+     */
+    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
+        Set<Class<?>> ret = new HashSet<>();
+        if ( valueObject.getSearchExperiments() ) {
+            ret.add( ExpressionExperiment.class );
+        }
+        if ( valueObject.getSearchGenes() ) {
+            ret.add( Gene.class );
+        }
+        // TODO
+        // .searchPlatforms( valueObject.getSearchPlatforms() )
+        // .searchExperimentSets( valueObject.getSearchExperimentSets() )
+        // .searchPhenotypes( valueObject.getSearchPhenotypes() )
+        // .searchProbes( valueObject.getSearchProbes() )
+        // .searchGeneSets( valueObject.getSearchGeneSets() )
+        // .searchBioSequences( valueObject.getSearchBioSequences() )
+        // .searchBibrefs( valueObject.getSearchBibrefs() )
+        return ret;
     }
 
     public Integer getMaxResults() {

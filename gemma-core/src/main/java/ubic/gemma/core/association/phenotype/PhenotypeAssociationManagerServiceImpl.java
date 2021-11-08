@@ -46,7 +46,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.association.phenotype.*;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -421,7 +420,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettingsImpl.geneSearch( newQuery, taxon );
+        SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();

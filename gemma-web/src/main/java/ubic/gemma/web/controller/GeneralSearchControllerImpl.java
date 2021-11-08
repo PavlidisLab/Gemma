@@ -39,7 +39,6 @@ import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -51,6 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -112,7 +112,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
         StopWatch watch = new StopWatch();
         watch.start();
-        ( ( SearchSettingsImpl ) settings ).setDoHighlighting( true );
+        ( ( SearchSettings ) settings ).setDoHighlighting( true );
         Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
         watch.stop();
 
@@ -199,10 +199,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
-        SearchSettingsImpl searchSettings = new SearchSettingsImpl();
-        // Reset default settings.
-        searchSettings.noSearches();
-        return searchSettings;
+        return SearchSettings.builder().build();
     }
 
     @Override
@@ -231,27 +228,29 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 for ( char scope1 : scopes ) {
                     switch ( scope1 ) {
                         case 'G':
-                            csc.setSearchGenes( true );
+                            csc.addResultType( Gene.class );
                             break;
                         case 'E':
-                            csc.setSearchExperiments( true );
+                            csc.addResultType( ExpressionExperiment.class );
                             break;
                         case 'S':
-                            csc.setSearchBioSequences( true );
+                            csc.addResultType( BioSequence.class );
                             break;
                         case 'P':
-                            csc.setSearchProbes( true );
+                            csc.addResultType( CompositeSequence.class );
                             break;
                         case 'A':
-                            csc.setSearchPlatforms( true );
+                            csc.addResultType( ArrayDesign.class );
                             break;
                         case 'M':
-                            csc.setSearchGeneSets( true );
+                            csc.addResultType( GeneSet.class );
                             break;
                         case 'N':
-                            csc.setSearchExperimentSets( true );
+                            csc.addResultType( ExpressionExperimentSet.class );
                             break;
                         default:
+                            // TODO: 400 Bad Request error?
+                            log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
                             break;
                     }
                 }
@@ -276,7 +275,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     * 
+     *
      * @param entityClass
      * @param results
      * @param settings

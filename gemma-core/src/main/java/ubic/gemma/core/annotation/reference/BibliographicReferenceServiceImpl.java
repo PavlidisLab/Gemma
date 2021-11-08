@@ -25,7 +25,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -229,7 +228,7 @@ public class BibliographicReferenceServiceImpl
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
-        SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
+        SearchSettings ss = SearchSettings.bibliographicReferenceSearch( settings.getQuery() );
 
         //noinspection unchecked
         List<BibliographicReference> resultEntities = searchService
@@ -269,7 +268,7 @@ public class BibliographicReferenceServiceImpl
     public List<BibliographicReferenceValueObject> search( String query ) {
         //noinspection unchecked
         List<BibliographicReference> resultEntities = searchService
-                .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
+                .search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
