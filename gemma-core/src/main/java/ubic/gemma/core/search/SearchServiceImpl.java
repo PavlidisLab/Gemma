@@ -19,36 +19,17 @@
 
 package ubic.gemma.core.search;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-
+import gemma.gsec.util.SecurityUtil;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.core.Compass;
-import org.compass.core.CompassCallback;
-import org.compass.core.CompassException;
-import org.compass.core.CompassHighlightedText;
-import org.compass.core.CompassHits;
-import org.compass.core.CompassQuery;
-import org.compass.core.CompassSession;
-import org.compass.core.CompassTemplate;
+import org.compass.core.*;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -58,12 +39,6 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
-import gemma.gsec.util.SecurityUtil;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.BatchIterator;
@@ -102,6 +77,13 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
+
+import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -283,6 +265,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) {
+        if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
+            throw new IllegalArgumentException( "The search settings contains unsupported result types." );
+        }
 
         //        Element element = searchResultCache.get( settings );
         //        if ( element != null ) {
@@ -341,10 +326,6 @@ public class SearchServiceImpl implements SearchService {
     @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> search( SearchSettings settings, Class<T> resultClass ) {
-        if ( !supportedResultTypes.contains( resultClass ) ) {
-            throw new IllegalArgumentException( String.format( "Unsupported result type %s.", resultClass ) );
-        }
-
         // only search for the requested class
         settings = settings.withResultTypes( Collections.singleton( resultClass ) );
 
@@ -380,6 +361,7 @@ public class SearchServiceImpl implements SearchService {
 
     private void initializeSupportedResultTypes() {
         supportedResultTypes = new HashSet<>();
+        supportedResultTypes.add( Gene.class );
         supportedResultTypes.add( ExpressionExperiment.class );
         supportedResultTypes.add( CompositeSequence.class );
         supportedResultTypes.add( ArrayDesign.class );
