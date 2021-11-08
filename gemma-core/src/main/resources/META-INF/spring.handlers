@@ -1,6 +1,4 @@
 http\://www.springframework.org/schema/security=org.springframework.security.config.SecurityNamespaceHandler
-http\://www.directwebremoting.org/schema/dwr=org.directwebremoting.spring.DwrNamespaceHandler
-http\://www.springframework.org/schema/web-services=org.springframework.ws.config.WebServicesNamespaceHandler
 http\://www.springframework.org/schema/tx=org.springframework.transaction.config.TxNamespaceHandler
 http\://www.springframework.org/schema/aop=org.springframework.aop.config.AopNamespaceHandler
 http\://www.springframework.org/schema/context=org.springframework.context.config.ContextNamespaceHandler
@@ -10,5 +8,3 @@ http\://www.springframework.org/schema/task=org.springframework.scheduling.confi
 http\://www.springframework.org/schema/jdbc=org.springframework.jdbc.config.JdbcNamespaceHandler
 http\://www.springframework.org/schema/p=org.springframework.beans.factory.xml.SimplePropertyNamespaceHandler
 http\://www.springframework.org/schema/util=org.springframework.beans.factory.xml.UtilNamespaceHandler
-http\://www.springframework.org/schema/mvc=org.springframework.web.servlet.config.MvcNamespaceHandler
-
