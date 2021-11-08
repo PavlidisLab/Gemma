@@ -1068,7 +1068,7 @@ public class ExpressionExperimentDaoImpl
             }
         };
 
-        Set<QueryHint> hints = new HashSet<>();
+        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( start <= 0 && limit <= 0 )
             hints.add( QueryHint.FETCH_ALL );
@@ -1467,7 +1467,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();
         }

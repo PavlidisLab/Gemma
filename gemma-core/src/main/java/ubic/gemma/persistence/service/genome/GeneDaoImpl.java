@@ -564,7 +564,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "

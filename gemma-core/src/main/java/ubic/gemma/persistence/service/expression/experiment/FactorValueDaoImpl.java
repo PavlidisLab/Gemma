@@ -35,8 +35,8 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>
@@ -155,7 +155,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         throw new NotImplementedException( "This is ont implemented yet!" );
     }
 }
