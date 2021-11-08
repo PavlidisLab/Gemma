@@ -163,7 +163,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         if ( f.exists() ) {
             if ( !f.canWrite() || !f.delete() ) {
                 ArrayDesignReportServiceImpl.log
-                        .error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
+                        .warn( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
                 return;
             }
         }
