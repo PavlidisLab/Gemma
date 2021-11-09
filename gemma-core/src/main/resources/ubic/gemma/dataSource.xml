@@ -9,7 +9,6 @@
         <property name="username" value="${gemma.db.user}"/>
         <property name="password" value="${gemma.db.password}"/>
         <property name="url" value="${gemma.db.url}"/>
-        <property name="defaultReadOnly" value="false"/>
         <property name="initialSize" value="${gemma.db.initpoolsize}"/>
         <property name="maxTotal" value="${gemma.db.maxactive}"/>
         <property name="maxIdle" value="${gemma.db.maxpoolidle}"/>
