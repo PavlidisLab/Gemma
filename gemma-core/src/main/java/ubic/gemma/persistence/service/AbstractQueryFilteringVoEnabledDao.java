@@ -49,10 +49,10 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * @return a {@link Query} that produce a list of {@link O}
      */
-    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints );
+    protected abstract Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints );
 
     /**
-     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, Set)}.
+     * Produce a query that will be used to retrieve the size of {@link #getLoadValueObjectsQuery(Filters, Sort, EnumSet)}.
      * @param filters
      * @return a {@link Query} which must return a single {@link Long} value
      */
@@ -79,8 +79,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Set<QueryHint> hints = new HashSet<>();
-
+        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
         if ( offset <= 0 && limit <= 0 ) {
             hints.add( QueryHint.FETCH_ALL );
         }
@@ -118,7 +117,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort, Collections.singleton( QueryHint.FETCH_ALL ) );
+        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.of( QueryHint.FETCH_ALL ) );
 
         //noinspection unchecked
         List<?> list = query.list();

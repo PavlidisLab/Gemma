@@ -90,4 +90,9 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledSer
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
         return voDao.getObjectFilter( property, operator, values );
     }
+
+    @Override
+    public Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException {
+        return voDao.getSort( property, direction );
+    }
 }

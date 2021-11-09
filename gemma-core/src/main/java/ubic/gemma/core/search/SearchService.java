@@ -16,10 +16,9 @@ package ubic.gemma.core.search;
 
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
+import ubic.gemma.model.genome.Gene;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author paul
@@ -40,7 +39,7 @@ public interface SearchService {
      * </ul>
      *
      * @param  settings settings
-     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     @SuppressWarnings("unused")
     //Used in JS through DWR i.e. in search.js - the main search method.
@@ -60,7 +59,7 @@ public interface SearchService {
      * </ul>
      *
      * @param  settings settings
-     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
 
@@ -70,7 +69,7 @@ public interface SearchService {
      * because we probably want to use something like this on the general search page
      *
      * @param  settings settings
-     * @return          Map of Class to SearchResults. The results are already filtered for security considerations.
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
      */
     Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings );
@@ -92,7 +91,7 @@ public interface SearchService {
      *                        false.
      *                        Set to true for frontend combo boxes like the gene combo
      * @param  settings       settings
-     * @return                Map of Class to SearchResults. The results are already filtered for security
+     * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
@@ -103,19 +102,25 @@ public interface SearchService {
      * @param  query   if non-blank, used to search for experiments; filters and limits may be applied.
      * @param  taxonId can be null; if non-null, used to filter results. If query is blank, all experiments for the
      *                 taxon are returned.
-     * @return         Collection of ids.
+     * @return Collection of ids.
      */
     Collection<Long> searchExpressionExperiments( String query, Long taxonId );
 
     /**
      * convenience method to return only search results from one class
-     * 
+     *
      * @param  <T>
      *
      * @param  settings    settings
      * @param  resultClass class
-     * @return             only search results from one class
+     * @return only search results from one class
      */
     <T> List<T> search( SearchSettings settings, Class<T> resultClass );
 
+    /**
+     * Returns a set of supported result types.
+     *
+     * This is mainly used to perform a search for everything via {@link SearchSettings#getResultTypes()}.
+     */
+    Set<Class<?>> getSupportedResultTypes();
 }

@@ -19,37 +19,17 @@
 
 package ubic.gemma.core.search;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-
+import gemma.gsec.util.SecurityUtil;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.compass.core.Compass;
-import org.compass.core.CompassCallback;
-import org.compass.core.CompassException;
-import org.compass.core.CompassHighlightedText;
-import org.compass.core.CompassHits;
-import org.compass.core.CompassQuery;
-import org.compass.core.CompassSession;
-import org.compass.core.CompassTemplate;
+import org.compass.core.*;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -59,13 +39,6 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.BatchIterator;
@@ -76,11 +49,9 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -106,6 +77,13 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
+
+import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -234,6 +212,8 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private TaxonDao taxonDao;
 
+    private Set<Class<?>> supportedResultTypes;
+
     @Override
     public Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
         SearchSettings settings = SearchSettingsValueObject.toEntity( settingsValueObject );
@@ -285,6 +265,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) {
+        if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
+            throw new IllegalArgumentException( "The search settings contains unsupported result types." );
+        }
 
         //        Element element = searchResultCache.get( settings );
         //        if ( element != null ) {
@@ -293,13 +276,12 @@ public class SearchServiceImpl implements SearchService {
 
         Map<Class<?>, List<SearchResult>> results;
 
-        if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
-            results = this.generalSearch( settings, fillObjects, webSpeedSearch );
-
-        } else {
-
+        if ( settings.isTermQuery() ) {
             // we only attempt an ontology search if the uri looks remotely like a url.
             results = this.ontologyUriSearch( settings );
+        } else {
+            results = this.generalSearch( settings, fillObjects, webSpeedSearch );
+
         }
 
         searchResultCache.put( new Element( settings, results ) );
@@ -325,7 +307,7 @@ public class SearchServiceImpl implements SearchService {
 
             // Initial list
             List<SearchResult> results = this
-                    .search( SearchSettingsImpl.expressionExperimentSearch( query, taxon ), false /* no fill */, false /*
+                    .search( SearchSettings.expressionExperimentSearch( query, taxon ), false /* no fill */, false /*
                      * speed
                      * search,
                      * irrelevant
@@ -344,6 +326,9 @@ public class SearchServiceImpl implements SearchService {
     @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> search( SearchSettings settings, Class<T> resultClass ) {
+        // only search for the requested class
+        settings = settings.withResultTypes( Collections.singleton( resultClass ) );
+
         Map<Class<?>, List<SearchResult>> searchResults = this.search( settings );
         List<T> resultObjects = new ArrayList<>();
 
@@ -358,27 +343,50 @@ public class SearchServiceImpl implements SearchService {
         return resultObjects;
     }
 
+    @Override
+    public Set<Class<?>> getSupportedResultTypes() {
+        return supportedResultTypes;
+    }
+
     @PostConstruct
     void initializeSearchService() {
+        initializeSupportedResultTypes();
         try {
-            boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-            this.childTermCache = CacheUtils
-                    .createOrLoadCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME, terracottaEnabled,
-                            SearchServiceImpl.ONTOLOGY_INFO_CACHE_SIZE, false, false,
-                            SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE,
-                            false );
-
-            // TODO: refactor the configuration.
-            this.searchResultCache = CacheUtils
-                    .createOrLoadCache( cacheManager, "searchResultsCache", terracottaEnabled,
-                            200, false, false,
-                            100, 100,
-                            false );
-
+            this.initializeCache();
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
         this.initializeNameToTaxonMap();
+    }
+
+    private void initializeSupportedResultTypes() {
+        supportedResultTypes = new HashSet<>();
+        supportedResultTypes.add( Gene.class );
+        supportedResultTypes.add( ExpressionExperiment.class );
+        supportedResultTypes.add( CompositeSequence.class );
+        supportedResultTypes.add( ArrayDesign.class );
+        supportedResultTypes.add( BioSequence.class );
+        supportedResultTypes.add( BibliographicReference.class );
+        supportedResultTypes.add( GeneSet.class );
+        supportedResultTypes.add( ExpressionExperimentSet.class );
+        supportedResultTypes.add( PhenotypeAssociation.class );
+    }
+
+    private void initializeCache() throws CacheException {
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
+        this.childTermCache = CacheUtils
+                .createOrLoadCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME, terracottaEnabled,
+                        SearchServiceImpl.ONTOLOGY_INFO_CACHE_SIZE, false, false,
+                        SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE,
+                        false );
+
+        // TODO: refactor the configuration.
+        this.searchResultCache = CacheUtils
+                .createOrLoadCache( cacheManager, "searchResultsCache", terracottaEnabled,
+                        200, false, false,
+                        100, 100,
+                        false );
+
     }
 
     private Collection<SearchResult> filterExperimentHitsByTaxon( Collection<SearchResult> unfilteredResults,
@@ -425,7 +433,7 @@ public class SearchServiceImpl implements SearchService {
      * @param results the results to which should any new results be accreted.
      */
     private void accreteResultsGenes( List<SearchResult> results, SearchSettings settings, boolean webSpeedSearch ) {
-        if ( settings.getSearchGenes() ) {
+        if ( settings.hasResultType( Gene.class ) ) {
             Collection<SearchResult> genes = this.getGenesFromSettings( settings, webSpeedSearch );
             this.accreteResults( results, genes );
         }
@@ -443,23 +451,23 @@ public class SearchServiceImpl implements SearchService {
     private List<SearchResult> accreteResultsOthers( List<SearchResult> results, SearchSettings settings,
             boolean webSpeedSearch ) {
 
-        if ( settings.getSearchExperiments() ) {
+        if ( settings.hasResultType( ExpressionExperiment.class ) ) {
             Collection<SearchResult> foundEEs = this.expressionExperimentSearch( settings );
             results.addAll( foundEEs );
         }
 
         Collection<SearchResult> compositeSequences = null;
-        if ( settings.getSearchProbes() ) {
+        if ( settings.hasResultType( CompositeSequence.class ) ) {
             compositeSequences = this.compositeSequenceSearch( settings );
             this.accreteResults( results, compositeSequences );
         }
 
-        if ( settings.getSearchPlatforms() ) {
+        if ( settings.hasResultType( ArrayDesign.class ) ) {
             Collection<SearchResult> foundADs = this.arrayDesignSearch( settings, compositeSequences );
             this.accreteResults( results, foundADs );
         }
 
-        if ( settings.getSearchBioSequences() ) {
+        if ( settings.hasResultType( BioSequence.class ) ) {
             Collection<SearchResult> genes = this.getGenesFromSettings( settings, webSpeedSearch );
 
             Collection<SearchResult> bioSequences = this.bioSequenceSearch( settings, genes );
@@ -472,22 +480,22 @@ public class SearchServiceImpl implements SearchService {
             this.accreteResults( results, ontologyGenes );
         }
 
-        if ( settings.getSearchBibrefs() ) {
+        if ( settings.hasResultType( BibliographicReference.class ) ) {
             Collection<SearchResult> bibliographicReferences = this.compassBibliographicReferenceSearch( settings );
             this.accreteResults( results, bibliographicReferences );
         }
 
-        if ( settings.getSearchGeneSets() ) {
+        if ( settings.hasResultType( GeneSet.class ) ) {
             Collection<SearchResult> geneSets = this.geneSetSearch( settings );
             this.accreteResults( results, geneSets );
         }
 
-        if ( settings.getSearchExperimentSets() ) {
+        if ( settings.hasResultType( ExpressionExperimentSet.class ) ) {
             Collection<SearchResult> experimentSets = this.experimentSetSearch( settings );
             this.accreteResults( results, experimentSets );
         }
 
-        if ( settings.getSearchPhenotypes() ) {
+        if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
             Collection<SearchResult> phenotypes = this.phenotypeSearch( settings );
             this.accreteResults( results, phenotypes );
         }
@@ -1344,9 +1352,9 @@ public class SearchServiceImpl implements SearchService {
         StopWatch watch = this.startTiming();
 
         String searchString = null;
-        if ( settings.getTermUri() != null ) {
+        if ( settings.isTermQuery() ) {
             // then we can get the NCBI ID, maybe.
-            searchString = StringUtils.substringAfterLast( settings.getTermUri(), "/" );
+            searchString = StringUtils.substringAfterLast( settings.getQuery(), "/" );
         } else {
             searchString = StringEscapeUtils.unescapeJava( settings.getQuery() );
         }
@@ -1604,11 +1612,11 @@ public class SearchServiceImpl implements SearchService {
             for ( SearchResult gh : genehits ) {
                 Gene g = ( Gene ) gh.getResultObject();
                 Integer ncbiGeneId = g.getNcbiGeneId();
-                String geneuri = "http://" + NCBI_GENE + "/" + ncbiGeneId; // this is just enough to fool the search into looking by NCBI ID, but check working as expected
-                SearchSettings gss = SearchSettingsImpl.expressionExperimentSearch( geneuri );
+                String geneUri = "http://" + NCBI_GENE + "/" + ncbiGeneId; // this is just enough to fool the search into looking by NCBI ID, but check working as expected
+                SearchSettings gss = SearchSettings.expressionExperimentSearch( geneUri );
                 gss.setMaxResults( settings.getMaxResults() );
                 gss.setTaxon( settings.getTaxon() );
-                gss.setTermUri( geneuri );
+                gss.setTermUri( geneUri );
                 Map<Class<?>, List<SearchResult>> eehits = ontologyUriSearch( gss );
                 if ( eehits != null && eehits.containsKey( ExpressionExperiment.class ) ) {
                     results.addAll( eehits.get( ExpressionExperiment.class ) );
@@ -2076,7 +2084,7 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> getGenesFromSettings( SearchSettings settings, boolean webSpeedSearch ) {
         Collection<SearchResult> genes = null;
-        if ( settings.getSearchGenes() ) {
+        if ( settings.hasResultType( Gene.class ) ) {
             genes = this.geneSearch( settings, webSpeedSearch );
         }
         return genes;
@@ -2280,11 +2288,7 @@ public class SearchServiceImpl implements SearchService {
         // 1st check to see if the query is a URI (from an ontology).
         // Do this by seeing if we can find it in the loaded ontologies.
         // Escape with general utilities because might not be doing a lucene backed search. (just a hibernate one).
-        String termUri = settings.getTermUri();
-
-        if ( StringUtils.isBlank( termUri ) ) {
-            termUri = settings.getQuery();
-        }
+        String termUri = settings.getQuery();
 
         if ( !termUri.startsWith( "http://" ) ) {
             return results;
@@ -2310,7 +2314,7 @@ public class SearchServiceImpl implements SearchService {
             if ( g != null ) {
 
                 // 1st get objects tagged with the given gene identifier
-                if ( settings.getSearchExperiments() ) { // FIXME maybe we always want this?
+                if ( settings.hasResultType( ExpressionExperiment.class ) ) { // FIXME maybe we always want this?
                     Collection<SearchResult> eeHits = new HashSet<>();
                     Map<String, String> uri2value = new HashMap<>();
                     uri2value.put( termUri, g.getOfficialSymbol() );
@@ -2323,7 +2327,7 @@ public class SearchServiceImpl implements SearchService {
                 }
 
                 ////
-                if ( settings.getSearchGenes() ) {
+                if ( settings.hasResultType( Gene.class ) ) {
                     results.put( Gene.class, new ArrayList<SearchResult>() );
                     results.get( Gene.class ).add( new SearchResult( g ) );
 
@@ -2335,7 +2339,7 @@ public class SearchServiceImpl implements SearchService {
         /*
          * Not searching for a gene. Only other option is a direct URI search for experiments.
          */
-        if ( settings.getSearchExperiments() ) {
+        if ( settings.hasResultType( ExpressionExperiment.class ) ) {
             Collection<SearchResult> hits = this.characteristicEESearchTerm( uriString, settings.getTaxon(), settings.getMaxResults() );
             results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
             results.get( ExpressionExperiment.class ).addAll( hits );
@@ -2363,7 +2367,7 @@ public class SearchServiceImpl implements SearchService {
         CompassHits hits = compassQuery.hits();
 
         // highlighting.
-        if ( ( ( SearchSettingsImpl ) settings ).getDoHighlighting() ) {
+        if ( settings.isDoHighlighting() ) {
             if ( session instanceof InternalCompassSession ) { // always ...
                 CompassMapping mapping = ( ( InternalCompassSession ) session ).getMapping();
                 ResourceMapping[] rootMappings = mapping.getRootMappings();

@@ -37,7 +37,7 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFe
             try {
                 batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true );
             } catch ( BatchInfoPopulationException e ) {
-                log.error( "Could not fill batch information for " + taskCommand.getExpressionExperiment() + ".", e );
+                log.warn( "Could not fill batch information for " + taskCommand.getExpressionExperiment() + ".", e );
             }
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );

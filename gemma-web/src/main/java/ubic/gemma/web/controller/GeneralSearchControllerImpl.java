@@ -39,7 +39,6 @@ import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -51,6 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -112,7 +112,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
         StopWatch watch = new StopWatch();
         watch.start();
-        ( ( SearchSettingsImpl ) settings ).setDoHighlighting( true );
+        ( ( SearchSettings ) settings ).setDoHighlighting( true );
         Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
         watch.stop();
 
@@ -198,11 +198,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        SearchSettingsImpl searchSettings = new SearchSettingsImpl();
-        // Reset default settings.
-        searchSettings.noSearches();
-        return searchSettings;
+    protected SearchSettings.SearchSettingsBuilder formBackingObject( HttpServletRequest request ) {
+        return SearchSettings.builder();
     }
 
     @Override
@@ -218,12 +215,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
-            SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
-            csc.setQuery( request.getParameter( "query" ) );
-            csc.setTermUri( request.getParameter( "termUri" ) );
+            SearchSettings.SearchSettingsBuilder csc = this.formBackingObject( request );
+            csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
             String taxon = request.getParameter( "taxon" );
             if ( taxon != null )
-                csc.setTaxon( taxonService.findByScientificName( taxon ) );
+                csc.taxon( taxonService.findByScientificName( taxon ) );
 
             String scope = request.getParameter( "scope" );
             if ( StringUtils.isNotBlank( scope ) ) {
@@ -231,33 +227,35 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 for ( char scope1 : scopes ) {
                     switch ( scope1 ) {
                         case 'G':
-                            csc.setSearchGenes( true );
+                            csc.resultType( Gene.class );
                             break;
                         case 'E':
-                            csc.setSearchExperiments( true );
+                            csc.resultType( ExpressionExperiment.class );
                             break;
                         case 'S':
-                            csc.setSearchBioSequences( true );
+                            csc.resultType( BioSequence.class );
                             break;
                         case 'P':
-                            csc.setSearchProbes( true );
+                            csc.resultType( CompositeSequence.class );
                             break;
                         case 'A':
-                            csc.setSearchPlatforms( true );
+                            csc.resultType( ArrayDesign.class );
                             break;
                         case 'M':
-                            csc.setSearchGeneSets( true );
+                            csc.resultType( GeneSet.class );
                             break;
                         case 'N':
-                            csc.setSearchExperimentSets( true );
+                            csc.resultType( ExpressionExperimentSet.class );
                             break;
                         default:
+                            // TODO: 400 Bad Request error?
+                            log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
                             break;
                     }
                 }
             }
 
-            return this.doSearch( request, response, csc, errors );
+            return this.doSearch( request, response, csc.build(), errors );
         }
 
         return new ModelAndView( "generalSearch" );
@@ -276,7 +274,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     * 
+     *
      * @param entityClass
      * @param results
      * @param settings

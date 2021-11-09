@@ -44,7 +44,7 @@ import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -263,7 +263,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult> searchResults = searchService.search( SearchSettingsImpl.arrayDesignSearch( filter ) )
+        Collection<SearchResult> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {

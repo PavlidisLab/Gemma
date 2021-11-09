@@ -397,5 +397,12 @@
 			<version>1.0.1</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Gemma Slack Bot -->
+		<dependency>
+			<groupId>com.slack.api</groupId>
+			<artifactId>slack-api-client</artifactId>
+			<version>1.13.0</version>
+		</dependency>
 	</dependencies>
 </project>

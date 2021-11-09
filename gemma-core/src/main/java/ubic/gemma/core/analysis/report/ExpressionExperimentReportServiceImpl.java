@@ -361,8 +361,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
                 recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
-                log.error( "Batch effect recalculation failed for experiment id " + ee.getId() );
-                e.printStackTrace();
+                log.warn( "Batch effect recalculation failed for experiment id " + ee.getId(), e );
                 failed.put( ee.getId(), e );
             }
         }

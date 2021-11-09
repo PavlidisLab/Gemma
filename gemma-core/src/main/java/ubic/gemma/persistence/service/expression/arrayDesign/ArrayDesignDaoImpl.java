@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
@@ -553,17 +552,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return ObjectFilter.DAO_AD_ALIAS;
     }
 
-    /**
-     * Queries the database to retrieve all array designs, based on the given parameters, and then
-     * converts them to value objects.
-     *
-     *
-     * @param filters
-     * @param sort the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
-     * @return list of value objects representing the ADs that matched the criteria.
-     */
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         // TODO: remove this when _totalInQuery is removed
@@ -1048,7 +1036,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         // contain duplicated platforms
         String queryString =
                 "select ad from ArrayDesign as ad "

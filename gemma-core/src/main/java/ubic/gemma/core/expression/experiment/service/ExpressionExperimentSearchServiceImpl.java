@@ -30,7 +30,6 @@ import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -82,7 +81,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     @Override
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
+        SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
         List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
@@ -218,7 +217,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                     .info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
                             + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName()
                             + " valueObject:" + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] )
-                                    .getResultValueObject().toString() );
+                            .getResultValueObject().toString() );
         }
         return displayResults;
     }
@@ -293,8 +292,11 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private Map<Class<?>, List<SearchResult>> initialSearch( String query, Long taxonId ) {
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
-        settings.setSearchExperimentSets( true ); // add searching for experimentSets
+        SearchSettings settings = SearchSettings.builder()
+                .query( query )
+                .resultType( ExpressionExperiment.class )
+                .resultType( ExpressionExperimentSet.class ) // add searching for experimentSets
+                .build();
         Taxon taxonParam;
         if ( taxonId != null ) {
             taxonParam = taxonService.load( taxonId );

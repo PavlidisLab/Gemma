@@ -29,7 +29,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -320,7 +320,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         }
 
         Collection<SearchResult> eeSearchResults = searchService
-                .search( SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+                .search( SearchSettings.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult sr : eeSearchResults ) {

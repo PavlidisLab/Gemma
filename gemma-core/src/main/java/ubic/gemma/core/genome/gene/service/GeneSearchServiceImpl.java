@@ -34,7 +34,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
@@ -161,14 +160,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
          * GET GENES AND GENE SETS
          */
         // SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( query );
-        settings.noSearches();
-        settings.setSearchGenes( true ); // add searching for genes
-        settings.setSearchGeneSets( true ); // add searching for geneSets
-        settings.setMaxResults( maxGeneralSearchResults );
-        if ( taxon != null )
-            settings.setTaxon( taxon ); // this doesn't work yet
+        SearchSettings settings = SearchSettings.builder()
+                .query( query )
+                .resultType( Gene.class )
+                .resultType( GeneSet.class )
+                .maxResults( maxGeneralSearchResults )
+                .taxon( taxon ) // FIXME: this doesn't work yet
+                .build();
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
@@ -357,7 +355,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
-            SearchSettings settings = SearchSettingsImpl.geneSearch( line, taxon );
+            SearchSettings settings = SearchSettings.geneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
 
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

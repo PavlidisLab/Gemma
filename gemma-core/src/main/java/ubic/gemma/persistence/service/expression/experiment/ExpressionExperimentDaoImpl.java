@@ -1068,7 +1068,7 @@ public class ExpressionExperimentDaoImpl
             }
         };
 
-        Set<QueryHint> hints = new HashSet<>();
+        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( start <= 0 && limit <= 0 )
             hints.add( QueryHint.FETCH_ALL );
@@ -1275,20 +1275,6 @@ public class ExpressionExperimentDaoImpl
         return super.getObjectFilter( propertyName, operator, requiredValue );
     }
 
-    /**
-     * Loads value objects of experiments matching the given criteria using a query that pre-filters for EEs
-     * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
-     * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
-     *
-     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                be a property of EE itself, or any nested property that hibernate can reach.
-     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filters  see this#formRestrictionClause(ArrayList) filters argument for description.
-     * @param offset  amount of EEs to skip when ordered by the orderBy param in the order defined byt the 'asc' param.
-     * @param limit   maximum amount of EEs to retrieve.
-     * @return list of value objects representing the EEs that matched the criteria.
-     */
     @Override
     public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         // TODO: remove this line when we get rid of _totalInQuery
@@ -1481,7 +1467,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();
         }
