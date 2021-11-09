@@ -244,8 +244,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             try {
                 this.batchCorrect( ee, true );
             } catch ( PreprocessingException e ) {
-                log.error( e.getMessage() );
-                log.warn( "Batch correction skipped, proceeding with experiment preprocessing..." );
+                log.warn( "Batch correction skipped, proceeding with experiment preprocessing...", e );
             }
         }
 
@@ -263,7 +262,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                     this.analyzerService.redoAnalysis( ee, copyMe, true );
                 } catch ( Exception e ) {
                     PreprocessorServiceImpl.log
-                            .error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
+                            .error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage(), e );
                 }
             }
         }
@@ -294,7 +293,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             meanVarianceService.create( ee, true );
         } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "Could not compute mean-variance relation: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "Could not compute mean-variance relation: " + e.getMessage(), e );
         }
     }
 
@@ -321,7 +320,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             svdService.svd( ee );
         } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "SVD could not be performed: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "SVD could not be performed: " + e.getMessage(), e );
         }
     }
 
@@ -332,7 +331,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             sampleCoexpressionAnalysisService.compute( ee );
         } catch ( Exception e ) {
-            PreprocessorServiceImpl.log.error( "SampleCorrelation could not be computed: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "SampleCorrelation could not be computed: " + e.getMessage(), e );
         }
     }
 
