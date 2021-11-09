@@ -24,9 +24,9 @@ import ubic.gemma.persistence.util.ReflectionUtil;
 /**
  * @author paul
  */
-public class SearchResult implements Comparable<SearchResult> {
+public class SearchResult<T> implements Comparable<SearchResult<T>> {
 
-    private Class<?> resultClass;
+    private Class<T> resultClass;
 
     private Long objectId;
 
@@ -34,32 +34,32 @@ public class SearchResult implements Comparable<SearchResult> {
 
     private Double score = 0.0;
 
-    private Object resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
+    private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
 
     /**
-     * 
+     *
      * @param searchResult
      */
-    public SearchResult( Object searchResult ) {
+    public SearchResult( T searchResult ) {
         if ( searchResult == null )
             throw new IllegalArgumentException( "Search result cannot be null" );
         this.resultObject = searchResult; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        this.resultClass = ReflectionUtil.getBaseForImpl( searchResult.getClass() );
+        this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( searchResult.getClass() );
         this.objectId = EntityUtils.getId( resultObject );
     }
 
-    public SearchResult( Object searchResult, double score ) {
+    public SearchResult( T searchResult, double score ) {
         this( searchResult );
         this.score = score;
     }
 
-    public SearchResult( Object searchResult, double score, String matchingText ) {
+    public SearchResult( T searchResult, double score, String matchingText ) {
         this( searchResult );
         this.score = score;
         this.highlightedText = matchingText;
     }
 
-    public SearchResult( Class<?> entityClass, Long entityId, double score, String matchingText ) {
+    public SearchResult( Class<T> entityClass, Long entityId, double score, String matchingText ) {
         this.resultClass = entityClass;
         this.objectId = entityId;
         this.score = score;
@@ -67,7 +67,7 @@ public class SearchResult implements Comparable<SearchResult> {
     }
 
     @Override
-    public int compareTo( SearchResult o ) {
+    public int compareTo( SearchResult<T> o ) {
         return -this.score.compareTo( o.getScore() );
     }
 
@@ -86,11 +86,11 @@ public class SearchResult implements Comparable<SearchResult> {
         return objectId;
     }
 
-    public Class<?> getResultClass() {
+    public Class<T> getResultClass() {
         return resultClass;
     }
 
-    public Object getResultObject() {
+    public T getResultObject() {
         return this.resultObject;
     }
 
@@ -98,10 +98,10 @@ public class SearchResult implements Comparable<SearchResult> {
      * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
      *                     overwritten.
      */
-    public void setResultObject( Object resultObject ) {
+    public void setResultObject( T resultObject ) {
         this.resultObject = resultObject;
         if ( resultObject != null ) {
-            this.resultClass = ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+            this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
             this.objectId = EntityUtils.getId( resultObject );
         }
     }
@@ -131,7 +131,7 @@ public class SearchResult implements Comparable<SearchResult> {
             return false;
         if ( this.getClass() != obj.getClass() )
             return false;
-        final SearchResult other = ( SearchResult ) obj;
+        final SearchResult<T> other = ( SearchResult<T> ) obj;
         if ( objectId == null ) {
             if ( other.objectId != null )
                 return false;
