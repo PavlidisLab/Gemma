@@ -129,7 +129,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.32</version>
+			<version>1.0.33-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
