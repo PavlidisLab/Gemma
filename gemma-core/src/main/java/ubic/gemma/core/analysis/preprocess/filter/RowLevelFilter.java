@@ -194,6 +194,8 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
      * by DISTINCTVALUE filter.
      *
+     * @implNote Changed to ignore NAs in distinct value counting mode. All the other methods already did that.
+     *
      * @param tolerance tolerance
      */
     public void setTolerance( Double tolerance ) {
@@ -243,7 +245,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             }
             case DISTINCTVALUES: {
                 criteria.set( i,
-                        Stats.numberofDistinctValues( rowAsList, this.tolerance ) / ( double ) rowAsList.size() );
+                        Stats.fractionDistinctValuesNonNA( rowAsList, this.tolerance ) );
                 break;
             }
             default: {
@@ -252,6 +254,12 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         }
     }
 
+    /**
+     *
+     * @param data to be inspected
+     * @param criteria will contain the computed criteria on return
+     * @return as a side-product, the number of rows having all negative values
+     */
     private int computeCriteria( ExpressionDataDoubleMatrix data, DoubleArrayList criteria ) {
         int numRows = data.rows();
         int numCols = data.columns();
@@ -279,6 +287,11 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             if ( numNeg == numCols ) {
                 numAllNeg++;
             }
+
+//            String elementName = data.getRowNames().get( i ).getName();
+//            if ( elementName.equals( "102636238" ) ) {
+//                log.info( "foo" );
+//            }
 
             this.addCriterion( criteria, rowAsList, data.getDesignElementForRow( i ), i );
         }

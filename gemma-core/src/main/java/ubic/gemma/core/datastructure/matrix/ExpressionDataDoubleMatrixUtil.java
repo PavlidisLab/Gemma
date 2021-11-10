@@ -22,6 +22,7 @@ import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.Constants;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.UnknownLogScaleException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -43,7 +44,7 @@ public class ExpressionDataDoubleMatrixUtil {
 
     private static final double LOGARITHM_BASE = 2.0;
     private static final int COLUMNS_LIMIT = 4;
-    private static final double VALUES_LIMIT = 0.5;
+    private static final double VALUES_LIMIT = 0.7;
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
 
@@ -64,8 +65,10 @@ public class ExpressionDataDoubleMatrixUtil {
          * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
          * really track this down).
          *
-         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero. This
-         * happens when data is "clipped" (e.g., all values under 10 set to 10).
+         * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero.
+         * Filtering out rows that have many identical values helps avoid p-values that clump around specific values in the data.
+         * This happens especially for lowly-expressed genes in RNA-seq but can be observed in microarray
+         * data that has been manipulated by the submitter e.g. when data is "clipped" (e.g., all values under 10 set to 10).
          */
         int r = dmatrix.rows();
         dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
@@ -75,8 +78,12 @@ public class ExpressionDataDoubleMatrixUtil {
         r = dmatrix.rows();
 
         if ( dmatrix.columns() > ExpressionDataDoubleMatrixUtil.COLUMNS_LIMIT ) {
+            /* This threshold had been 10^-5, but it's probably too stringent. Also remember
+             * the data are log transformed the threshold should be transformed as well (it's not that simple),
+             * but that's a minor effect.
+             * To somewhat counter the effect of lowering this stringency, increasing the stringency on VALUES_LIMIT may help */
             dmatrix = ExpressionExperimentFilter
-                    .tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT );
+                    .tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT, 0.001 );
             if ( dmatrix.rows() < r ) {
                 ExpressionDataDoubleMatrixUtil.log
                         .info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
