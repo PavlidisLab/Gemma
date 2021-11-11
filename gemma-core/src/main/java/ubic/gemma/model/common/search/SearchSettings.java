@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.With;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -167,7 +168,7 @@ public class SearchSettings implements Serializable {
      * Get this query, trimmed.
      */
     public String getQuery() {
-        return query.trim();
+        return query == null ? null : query.trim();
     }
 
     /**
@@ -185,7 +186,7 @@ public class SearchSettings implements Serializable {
      * in the future.
      */
     public boolean isTermQuery() {
-        return getQuery().startsWith( "http://" );
+        return getQuery() != null && getQuery().startsWith( "http://" );
     }
 
     /**
@@ -205,11 +206,11 @@ public class SearchSettings implements Serializable {
      *
      * @deprecated URI can be set with {@link #setQuery(String)} instead.
      *
-     * @param termUri
+     * @param termUri a valid term URI, or null or a blank string
      */
     @Deprecated
     public void setTermUri( String termUri ) {
-        if ( !termUri.startsWith( "http://" ) ) {
+        if ( StringUtils.isNotBlank( termUri ) && !termUri.startsWith( "http://" ) ) {
             throw new IllegalArgumentException( "The term URI must be a valid URI." );
         }
         setQuery( termUri );
