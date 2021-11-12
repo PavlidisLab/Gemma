@@ -198,8 +198,47 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      */
     @Override
-    protected SearchSettings.SearchSettingsBuilder formBackingObject( HttpServletRequest request ) {
-        return SearchSettings.builder();
+    protected SearchSettings formBackingObject( HttpServletRequest request ) {
+        SearchSettings.SearchSettingsBuilder csc = SearchSettings.builder();
+        csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
+        String taxon = request.getParameter( "taxon" );
+        if ( taxon != null )
+            csc.taxon( taxonService.findByScientificName( taxon ) );
+
+        String scope = request.getParameter( "scope" );
+        if ( StringUtils.isNotBlank( scope ) ) {
+            char[] scopes = scope.toCharArray();
+            for ( char scope1 : scopes ) {
+                switch ( scope1 ) {
+                    case 'G':
+                        csc.resultType( Gene.class );
+                        break;
+                    case 'E':
+                        csc.resultType( ExpressionExperiment.class );
+                        break;
+                    case 'S':
+                        csc.resultType( BioSequence.class );
+                        break;
+                    case 'P':
+                        csc.resultType( CompositeSequence.class );
+                        break;
+                    case 'A':
+                        csc.resultType( ArrayDesign.class );
+                        break;
+                    case 'M':
+                        csc.resultType( GeneSet.class );
+                        break;
+                    case 'N':
+                        csc.resultType( ExpressionExperimentSet.class );
+                        break;
+                    default:
+                        // TODO: 400 Bad Request error?
+                        log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
+                        break;
+                }
+            }
+        }
+        return csc.build();
     }
 
     @Override
@@ -215,47 +254,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
-            SearchSettings.SearchSettingsBuilder csc = this.formBackingObject( request );
-            csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
-            String taxon = request.getParameter( "taxon" );
-            if ( taxon != null )
-                csc.taxon( taxonService.findByScientificName( taxon ) );
-
-            String scope = request.getParameter( "scope" );
-            if ( StringUtils.isNotBlank( scope ) ) {
-                char[] scopes = scope.toCharArray();
-                for ( char scope1 : scopes ) {
-                    switch ( scope1 ) {
-                        case 'G':
-                            csc.resultType( Gene.class );
-                            break;
-                        case 'E':
-                            csc.resultType( ExpressionExperiment.class );
-                            break;
-                        case 'S':
-                            csc.resultType( BioSequence.class );
-                            break;
-                        case 'P':
-                            csc.resultType( CompositeSequence.class );
-                            break;
-                        case 'A':
-                            csc.resultType( ArrayDesign.class );
-                            break;
-                        case 'M':
-                            csc.resultType( GeneSet.class );
-                            break;
-                        case 'N':
-                            csc.resultType( ExpressionExperimentSet.class );
-                            break;
-                        default:
-                            // TODO: 400 Bad Request error?
-                            log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
-                            break;
-                    }
-                }
-            }
-
-            return this.doSearch( request, response, csc.build(), errors );
+            SearchSettings searchSettings = this.formBackingObject( request );
+            return this.doSearch( request, response, searchSettings, errors );
         }
 
         return new ModelAndView( "generalSearch" );
