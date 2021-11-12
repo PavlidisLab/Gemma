@@ -495,18 +495,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
     }
 
-    // TODO: remove this when _totalInQuery is removed
-    private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
-
     /**
      * Loads a single value objects for the given array design.
      *
-     * @param  e the array design to be converted to a value object
+     * @param ad the array design to be converted to a value object
      * @return a value object with properties of the given array design.
      */
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
-        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad, totalElements.get() == null ? 1 : totalElements.get().intValue() );
+        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
 
         vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
         vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
@@ -516,14 +513,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
-        this.totalElements.set( ( long ) entities.size() );
-        try {
-            List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override
@@ -554,30 +546,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        // TODO: remove this when _totalInQuery is removed
         Query countQuery = this.getCountValueObjectsQuery( filters );
-        this.totalElements.set( ( Long ) countQuery.uniqueResult() );
-        try {
-            Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        // TODO: remove this when _totalInQuery is removed
         Query countQuery = this.getCountValueObjectsQuery( filters );
-        this.totalElements.set( ( Long ) countQuery.uniqueResult() );
-        try {
-            List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override

@@ -29,13 +29,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     protected AuditEventValueObject lastNoteUpdateEvent;
 
     /**
-     * A meta information about how many total results are available with the same filters as this
-     * object.
-     */
-    @Deprecated
-    private int _totalInQuery;
-
-    /**
      * Required when using the implementing classes as a spring beans.
      */
     public AbstractCuratableValueObject() {
@@ -96,8 +89,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         this( id, lastUpdated, troubled, troubleEvent == null ? null : new AuditEventValueObject( troubleEvent ),
                 needsAttention, attentionEvent == null ? null : new AuditEventValueObject( attentionEvent ),
                 curationNote, noteEvent == null ? null : new AuditEventValueObject( noteEvent ) );
-        // meta info
-        this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
     }
 
     public Date getLastUpdated() {
@@ -177,16 +168,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         }
 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
-    }
-
-    @Deprecated
-    public final int get_totalInQuery() {
-        return _totalInQuery;
-    }
-
-    @Deprecated
-    protected final void set_totalInQuery( int _totalInQuery ) {
-        this._totalInQuery = _totalInQuery;
     }
 
     @Override

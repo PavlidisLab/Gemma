@@ -116,10 +116,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // 29: other parts
     }
 
-    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid, int totalInQuery ) {
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid ) {
         this( ee );
-
-        set_totalInQuery( totalInQuery );
 
         // ACL
         boolean[] permissions = EntityUtils.getPermissions( aoi );

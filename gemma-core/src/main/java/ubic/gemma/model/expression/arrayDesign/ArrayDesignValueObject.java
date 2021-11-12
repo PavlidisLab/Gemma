@@ -111,11 +111,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
     }
 
-    public ArrayDesignValueObject( ArrayDesign ad, int totalInQuery ) {
-        this( ad );
-        set_totalInQuery( totalInQuery );
-    }
-
     /**
      * Copies constructor from other ArrayDesignValueObject
      *

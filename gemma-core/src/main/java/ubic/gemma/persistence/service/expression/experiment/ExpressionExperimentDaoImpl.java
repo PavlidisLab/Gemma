@@ -31,7 +31,6 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -1096,7 +1095,7 @@ public class ExpressionExperimentDaoImpl
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
             AclSid sid = ( AclSid ) row[2];
 
-            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid, totalElements.intValue() );
+            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
 
             // FIXME Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
             Collection<ArrayDesignValueObject> adVos = ee.getBioAssays().stream()
@@ -1196,18 +1195,6 @@ public class ExpressionExperimentDaoImpl
         return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
     }
 
-    /**
-     * This is only to make {@link ExpressionExperimentValueObject#get_totalInQuery()} work without redefining the
-     * {@link ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao} interface to account for this special case.
-     *
-     * We're using a {@link ThreadLocal} here to ensure that other threads cannot overwrite this value while the VO
-     * slice is being generated.
-     *
-     * TODO: simply get rid of {@link AbstractCuratableValueObject#get_totalInQuery()} since we now have properly
-     * paginated results.
-     */
-    private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
-
     @Override
     protected ExpressionExperimentValueObject processLoadValueObjectsQueryResult( Object result ) {
         Object[] row = ( Object[] ) result;
@@ -1221,7 +1208,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getTaxon() );
         Hibernate.initialize( ee.getGeeq() );
 
-        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, this.totalElements.get() == null ? 1 : this.totalElements.get().intValue() );
+        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid );
 
         // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
         // TODO: if slow, preload with join fetch
@@ -1273,28 +1260,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         return super.getObjectFilter( propertyName, operator, requiredValue );
-    }
-
-    @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        // TODO: remove this line when we get rid of _totalInQuery
-        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
-        try {
-            return super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        } finally {
-            this.totalElements.remove();
-        }
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        // TODO: remove this line when we get rid of _totalInQuery
-        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
-        try {
-            return super.loadValueObjectsPreFilter( filters, sort );
-        } finally {
-            this.totalElements.remove();
-        }
     }
 
     @Override
