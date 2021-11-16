@@ -4,7 +4,6 @@ import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.openjena.atlas.logging.Log;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
@@ -39,56 +38,35 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     }
 
     protected AbstractCuratableValueObject( C curatable ) {
-        this( curatable.getId(), curatable.getCurationDetails().getLastUpdated(),
-                curatable.getCurationDetails().getTroubled(),
-                curatable.getCurationDetails().getLastTroubledEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) :
-                        null, curatable.getCurationDetails().getNeedsAttention(),
-                curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) :
-                        null, curatable.getCurationDetails().getCurationNote(),
-                curatable.getCurationDetails().getLastNoteUpdateEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) :
-                        null );
-    }
-
-    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,
-            AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
-            AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
-            AuditEventValueObject lastNoteUpdateEvent ) {
-        super( id );
-        this.lastUpdated = lastUpdated;
-        this.troubled = troubled;
-        this.lastTroubledEvent = lastTroubledEvent;
-        this.needsAttention = needsAttention;
-        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
-        if ( SecurityUtil.isUserAdmin() ) {
-            this.curationNote = curationNote;
-            this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+        super( curatable );
+        if ( curatable.getCurationDetails() != null ) {
+            this.lastUpdated = curatable.getCurationDetails().getLastUpdated();
+            this.troubled = curatable.getCurationDetails().getTroubled();
+            this.lastTroubledEvent = curatable.getCurationDetails().getLastTroubledEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) : null;
+            this.needsAttention = curatable.getCurationDetails().getNeedsAttention();
+            this.lastNeedsAttentionEvent = curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) : null;
+            if ( SecurityUtil.isUserAdmin() ) {
+                this.curationNote = curatable.getCurationDetails().getCurationNote();
+                this.lastNoteUpdateEvent = curatable.getCurationDetails().getLastNoteUpdateEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) : null;
+            }
         }
     }
 
     /**
-     * Creates a VO with the given curatable properties
-     * Note that the events can still be null, as the value-change events they represent might have not occurred since
-     * the curatable object was created, and they are not initialised with a creation event.
-     *
-     * @param id             the id of the curatable object this VO represents
-     * @param curationNote   the curation note attached to the curation details
-     * @param lastUpdated    the date the curatable object was last updated
-     * @param needsAttention whether the object requires curators attention
-     * @param troubled       whether the object is troubled
-     * @param troubleEvent   the last event that updated the troubled property
-     * @param attentionEvent the last event that updated the needs attention property
-     * @param noteEvent      the last event that updated the curation note property
-     * @param totalInBatch   the number indicating how many VOs have been returned in the database query along with this one
+     * Copy constructor.
+     * @param curatable
      */
-    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent troubleEvent,
-            Boolean needsAttention, AuditEvent attentionEvent, String curationNote, AuditEvent noteEvent,
-            Integer totalInBatch ) {
-        this( id, lastUpdated, troubled, troubleEvent == null ? null : new AuditEventValueObject( troubleEvent ),
-                needsAttention, attentionEvent == null ? null : new AuditEventValueObject( attentionEvent ),
-                curationNote, noteEvent == null ? null : new AuditEventValueObject( noteEvent ) );
+    protected AbstractCuratableValueObject( AbstractCuratableValueObject curatable ) {
+        super( curatable );
+        this.lastUpdated = curatable.getLastUpdated();
+        this.troubled = curatable.getTroubled();
+        this.lastTroubledEvent = curatable.getLastTroubledEvent();
+        this.needsAttention = curatable.getNeedsAttention();
+        this.lastNeedsAttentionEvent = curatable.getLastNeedsAttentionEvent();
+        if ( SecurityUtil.isUserAdmin() ) {
+            this.curationNote = curatable.getCurationNote();
+            this.lastNoteUpdateEvent = curatable.getLastNoteUpdateEvent();
+        }
     }
 
     public Date getLastUpdated() {

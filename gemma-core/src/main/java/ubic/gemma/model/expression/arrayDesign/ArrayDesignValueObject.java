@@ -18,13 +18,10 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 /**
@@ -85,6 +82,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     public ArrayDesignValueObject() {
     }
 
+    public ArrayDesignValueObject( Long id ) {
+        super( id );
+    }
+
     /**
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      *
@@ -113,65 +114,36 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     /**
      * Copies constructor from other ArrayDesignValueObject
-     *
-     * @param  otherBean,           cannot be <code>null</code>
-     * @throws NullPointerException if the argument is <code>null</code>
      */
-    public ArrayDesignValueObject( ArrayDesignValueObject otherBean ) {
-        this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
-                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
-                otherBean.color, otherBean.dateCached, otherBean.description, otherBean.designElementCount,
-                otherBean.expressionExperimentCount, otherBean.hasBlatAssociations, otherBean.hasGeneAssociations,
-                otherBean.hasSequenceAssociations, otherBean.id, otherBean.isMerged, otherBean.isMergee,
-                otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
-                otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
-                otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.taxonID, otherBean.technologyType, otherBean.isAffymetrixAltCdf,
-                otherBean.blackListed );
-    }
-
-    public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
-            Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
-            AuditEventValueObject noteEvent, String color, String dateCached, String description,
-            Integer designElementCount, Integer expressionExperimentCount, Boolean hasBlatAssociations,
-            Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id, Boolean isMerged, Boolean isMergee,
-            Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping, Date lastRepeatMask,
-            Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes, String numProbeAlignments,
-            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, Long taxonID, String technologyType,
-            Boolean isAffymetrixAltCdf,
-            Boolean blacklisted ) {
-        super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
-        this.color = color;
-        this.dateCached = dateCached;
-        this.description = description;
-        this.designElementCount = designElementCount;
-        this.expressionExperimentCount = expressionExperimentCount;
-        this.hasBlatAssociations = hasBlatAssociations;
-        this.hasGeneAssociations = hasGeneAssociations;
-        this.hasSequenceAssociations = hasSequenceAssociations;
-        this.isMerged = isMerged;
-        this.isMergee = isMergee;
-        this.isSubsumed = isSubsumed;
-        this.isSubsumer = isSubsumer;
-        this.lastGeneMapping = lastGeneMapping;
-        this.lastRepeatMask = lastRepeatMask;
-        this.lastSequenceAnalysis = lastSequenceAnalysis;
-        this.lastSequenceUpdate = lastSequenceUpdate;
-        this.name = name;
-        this.numGenes = numGenes;
-        this.numProbeAlignments = numProbeAlignments;
-        this.numProbeSequences = numProbeSequences;
-        this.numProbesToGenes = numProbesToGenes;
-        this.shortName = shortName;
-        this.taxon = taxon;
-        this.taxonID = taxonID;
-        this.technologyType = technologyType;
-        this.isAffymetrixAltCdf = isAffymetrixAltCdf;
-        this.blackListed = blacklisted;
-    }
-
-    public ArrayDesignValueObject( Long id ) {
-        super( id );
+    protected ArrayDesignValueObject( ArrayDesignValueObject arrayDesignValueObject ) {
+        super( arrayDesignValueObject );
+        this.color = arrayDesignValueObject.color;
+        this.dateCached = arrayDesignValueObject.dateCached;
+        this.description = arrayDesignValueObject.description;
+        this.designElementCount = arrayDesignValueObject.designElementCount;
+        this.expressionExperimentCount = arrayDesignValueObject.expressionExperimentCount;
+        this.hasBlatAssociations = arrayDesignValueObject.hasBlatAssociations;
+        this.hasGeneAssociations = arrayDesignValueObject.hasGeneAssociations;
+        this.hasSequenceAssociations = arrayDesignValueObject.hasSequenceAssociations;
+        this.isMerged = arrayDesignValueObject.isMerged;
+        this.isMergee = arrayDesignValueObject.isMergee;
+        this.isSubsumed = arrayDesignValueObject.isSubsumed;
+        this.isSubsumer = arrayDesignValueObject.isSubsumer;
+        this.lastGeneMapping = arrayDesignValueObject.lastGeneMapping;
+        this.lastRepeatMask = arrayDesignValueObject.lastRepeatMask;
+        this.lastSequenceAnalysis = arrayDesignValueObject.lastSequenceAnalysis;
+        this.lastSequenceUpdate = arrayDesignValueObject.lastSequenceUpdate;
+        this.name = arrayDesignValueObject.name;
+        this.numGenes = arrayDesignValueObject.numGenes;
+        this.numProbeAlignments = arrayDesignValueObject.numProbeAlignments;
+        this.numProbeSequences = arrayDesignValueObject.numProbeSequences;
+        this.numProbesToGenes = arrayDesignValueObject.numProbesToGenes;
+        this.shortName = arrayDesignValueObject.shortName;
+        this.taxon = arrayDesignValueObject.taxon;
+        this.taxonID = arrayDesignValueObject.taxonID;
+        this.technologyType = arrayDesignValueObject.technologyType;
+        this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
+        this.blackListed = arrayDesignValueObject.blackListed;
     }
 
     @Override

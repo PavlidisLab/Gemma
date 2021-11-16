@@ -22,8 +22,16 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
      *
      * @param id the id of the original object.
      */
-    public IdentifiableValueObject( Long id ) {
+    protected IdentifiableValueObject( Long id ) {
         this.id = id;
+    }
+
+    protected IdentifiableValueObject( O identifiable ) {
+        this( identifiable.getId() );
+    }
+
+    protected IdentifiableValueObject( IdentifiableValueObject vo ) {
+        this( vo.getId() );
     }
 
     @Override
