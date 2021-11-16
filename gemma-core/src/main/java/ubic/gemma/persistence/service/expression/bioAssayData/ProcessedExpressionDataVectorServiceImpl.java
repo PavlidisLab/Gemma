@@ -238,6 +238,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
             int maxNumberOfResults ) {
 
