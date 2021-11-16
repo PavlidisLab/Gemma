@@ -1,8 +1,8 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.openjena.atlas.logging.Log;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
@@ -14,6 +14,7 @@ import java.util.Date;
  * curatable objects.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@CommonsLog
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C>
         implements Comparable<AbstractCuratableValueObject<C>> {
 
@@ -139,7 +140,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         String details = AbstractCuratableValueObject.TROUBLE_DETAILS_NONE;
         if ( this.getTroubled() ) {
             if ( this.getLastTroubledEvent() == null ) {
-                Log.warn( this, "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );
+                log.warn( "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );
             } else {
                 details = this.getLastTroubledEvent().toString();
             }
