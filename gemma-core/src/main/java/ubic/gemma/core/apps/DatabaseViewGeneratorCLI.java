@@ -20,8 +20,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -53,34 +51,32 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        super.buildStandardOptions( options );
+        Option datasetSummary = Option.builder( "d" )
+                .longOpt( "dataset" )
+                .desc( "Will generate a zip file containing a summary of all accessible datasets in gemma" )
+                .build();
 
-        OptionBuilder
-                .withDescription( "Will generate a zip file containing a summary of all accessible datasets in gemma" );
-        OptionBuilder.withLongOpt( "dataset" );
-        Option datasetSummary = OptionBuilder.create( 'd' );
+        Option datasetTissueSummary = Option.builder( "t" )
+                .longOpt( "tissue" )
+                .desc( "Will generate a zip file containing a summary of all the tissues in accessible datasets" )
+                .build();
 
-        OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all the tissues in accessible datasets" );
-        OptionBuilder.withLongOpt( "tissue" );
-        Option datasetTissueSummary = OptionBuilder.create( 't' );
+        Option diffExpSummary = Option.builder( "x" )
+                .longOpt( "diffexpression" )
+                .desc( "Will generate a zip file containing a summary of all the differential expressed genes in accessible datasets" )
+                .build();
 
-        OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all the differential expressed genes in accessible datasets" );
-        OptionBuilder.withLongOpt( "diffexpression" );
-        Option diffExpSummary = OptionBuilder.create( 'x' );
-
-        OptionBuilder.hasArg();
-        OptionBuilder.withArgName( "Limit number of datasets" );
-        OptionBuilder.withDescription( "will impose a limit on how many datasets to process" );
-        OptionBuilder.withLongOpt( "limit" );
-        Option limitOpt = OptionBuilder.create( 'l' );
+        Option limitOpt = Option.builder( "l" )
+                .longOpt( "limit" )
+                .hasArg()
+                .argName( "Limit number of datasets" )
+                .desc( "will impose a limit on how many datasets to process" )
+                .build();
 
         options.addOption( datasetSummary );
         options.addOption( datasetTissueSummary );
         options.addOption( diffExpSummary );
         options.addOption( limitOpt );
-
     }
 
     @Override

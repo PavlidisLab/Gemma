@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import cern.colt.list.DoubleArrayList;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.math3.stat.StatUtils;
 import org.springframework.beans.factory.annotation.Autowired;

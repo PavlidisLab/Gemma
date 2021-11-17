@@ -20,7 +20,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -60,12 +59,14 @@ public class MeshTermFetcherCli extends AbstractCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
-        Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "Id file" )
-                .withDescription( "List of pubmed ids" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = Option.builder( "f" )
+                .longOpt( "file" )
+                .required()
+                .hasArg()
+                .argName( "Id file" )
+                .build();
         options.addOption( fileOption );
-
-        options.addOption( OptionBuilder.withDescription( "Use major subjects only" ).create( 'm' ) );
-
+        options.addOption( "m", "Use major subjects only" );
     }
 
     @Override

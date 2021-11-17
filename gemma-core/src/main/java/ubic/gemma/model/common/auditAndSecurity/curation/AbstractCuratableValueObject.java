@@ -2,7 +2,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 

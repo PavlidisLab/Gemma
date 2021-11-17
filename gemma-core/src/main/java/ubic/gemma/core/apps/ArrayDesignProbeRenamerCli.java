@@ -19,7 +19,7 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
@@ -45,6 +45,8 @@ import static ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceP
 @Deprecated
 public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingCli {
 
+    private static String FILE_OPT = "f";
+
     private String fileName;
 
     @Override
@@ -56,15 +58,18 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         //noinspection AccessStaticViaInstance
-        options.addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" )
-                .withDescription( "Two-column file with old and new identifiers (additional columns ignored)" )
-                .create( 'f' ) );
+        options.addOption( Option.builder( FILE_OPT )
+                .longOpt( "file" )
+                .required()
+                .hasArg()
+                .desc( "Two-column file with old and new identifiers (additional columns ignored)" )
+                .build() );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
         super.processOptions( commandLine );
-        this.fileName = commandLine.getOptionValue( 'f' );
+        this.fileName = commandLine.getOptionValue( FILE_OPT );
     }
 
     @Override
