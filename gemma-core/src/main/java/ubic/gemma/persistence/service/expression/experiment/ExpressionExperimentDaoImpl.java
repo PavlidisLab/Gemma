@@ -1107,7 +1107,7 @@ public class ExpressionExperimentDaoImpl
             // FIXME watch out: this may be a performance drain for long lists (if so, could batch)
             vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
             // TODO: optimize this with a join-fetch
-            vo.setOriginalPlatforms( this.getOriginalPlatforms( vo.getId() ) );
+            vo.setOriginalPlatforms( this.getOriginalPlatforms( ee ).stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() ) );
 
             vos.add( vo );
         }
