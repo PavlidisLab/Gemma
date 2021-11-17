@@ -1616,19 +1616,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Retrieve platforms that were originally assigned to this data set, if they are different from the current platform
-     *
-     * @param  id {@link ExpressionExperiment} identifier
-     * @return a set of ArrayDesignValueObject (minimally populated)
+     * Retrieve platforms that were originally assigned to this data set, if they are different from the current
+     * platform.
      */
-    private Set<ArrayDesignValueObject> getOriginalPlatforms( Long id ) {
-        //noinspection unchecked
-        List<ArrayDesign> o = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct o from ExpressionExperiment e inner join "
-                                + "e.bioAssays b inner join b.originalPlatform o "
-                                + "inner join e.bioAssays c inner join b.arrayDesignUsed a where e.id = :id and a <> o" )
-                .setLong( "id", id ).list();
-        return o.stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() );
+    private Set<ArrayDesign> getOriginalPlatforms( ExpressionExperiment ee ) {
+        Set<ArrayDesign> currentPlatforms = ee.getBioAssays().stream()
+                .map( BioAssay::getArrayDesignUsed )
+                .collect( Collectors.toSet() );
+        return ee.getBioAssays().stream()
+                .map( BioAssay::getOriginalPlatform )
+                .filter( Objects::nonNull ) // some EE can have never had their platform changing
+                .filter( op -> !currentPlatforms.contains( op ) )
+                .collect( Collectors.toSet() );
     }
 
     /**
