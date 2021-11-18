@@ -41,6 +41,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -86,7 +87,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<>();
+        Set<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
         cs1.setArrayDesign( arrayDesign );

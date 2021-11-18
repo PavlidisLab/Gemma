@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 
@@ -63,45 +64,33 @@ public class BlatResultValueObject extends IdentifiableValueObject<BlatResult> {
     }
 
     public BlatResultValueObject( BlatResult br ) {
-        this( br.getId(), TaxonValueObject.fromEntity( br.getTargetChromosome().getTaxon() ), br.getBlockCount(),
-                br.getBlockSizes(), br.getMatches(), br.getMismatches(), br.getNs(), br.getQueryEnd(),
-                br.getQueryGapBases(), br.getQueryGapCount(),
-                BioSequenceValueObject.fromEntity( br.getQuerySequence() ), br.getQueryStart(), br.getQueryStarts(),
-                br.getRepMatches(), br.score(), br.identity(), br.getStrand(), br.getTargetChromosome().getName(),
-                br.getSearchedDatabase().getName(), br.getTargetEnd(), br.getTargetGapBases(), br.getTargetGapCount(),
-                br.getTargetStart(), br.getTargetStarts() );
-    }
-
-    public BlatResultValueObject( Long id, TaxonValueObject taxon, Integer blockCount, String blockSizes,
-            Integer matches, Integer mismatches, Integer ns, Integer queryEnd, Integer queryGapBases,
-            Integer queryGapCount, BioSequenceValueObject querySequence, Integer queryStart, String queryStarts,
-            Integer repMatches, Double score, Double identity, String strand, String targetChromosomeName,
-            String targetDatabase, Long targetEnd, Integer targetGapBases, Integer targetGapCount, Long targetStart,
-            String targetStarts ) {
-        super( id );
-        this.setTaxon( taxon );
-        this.blockCount = blockCount;
-        this.blockSizes = blockSizes;
-        this.matches = matches;
-        this.mismatches = mismatches;
-        this.ns = ns;
-        this.queryEnd = queryEnd;
-        this.queryGapBases = queryGapBases;
-        this.queryGapCount = queryGapCount;
-        this.querySequence = querySequence;
-        this.queryStart = queryStart;
-        this.queryStarts = queryStarts;
-        this.repMatches = repMatches;
-        this.score = score;
-        this.identity = identity;
-        this.strand = strand;
-        this.targetChromosomeName = targetChromosomeName;
-        this.targetDatabase = targetDatabase;
-        this.targetEnd = targetEnd;
-        this.targetGapBases = targetGapBases;
-        this.targetGapCount = targetGapCount;
-        this.targetStart = targetStart;
-        this.targetStarts = targetStarts;
+        super( br.getId() );
+        this.setTaxon( TaxonValueObject.fromEntity( br.getTargetChromosome().getTaxon() ) );
+        this.blockCount = br.getBlockCount();
+        this.blockSizes = br.getBlockSizes();
+        this.matches = br.getMatches();
+        this.mismatches = br.getMismatches();
+        this.ns = br.getNs();
+        this.queryEnd = br.getQueryEnd();
+        this.queryGapBases = br.getQueryGapBases();
+        this.queryGapCount = br.getQueryGapCount();
+        this.querySequence = BioSequenceValueObject.fromEntity( br.getQuerySequence() );
+        this.queryStart = br.getQueryStart();
+        this.queryStarts = br.getQueryStarts();
+        this.repMatches = br.getRepMatches();
+        this.score = br.score();
+        this.identity = br.identity();
+        this.strand = br.getStrand();
+        this.targetChromosomeName = br.getTargetChromosome().getName();
+        // FIXME: this is supposed to be initialized in BlatResultDaoImpl#thaw(Collection), but it's not always the case
+        if ( Hibernate.isInitialized( br.getSearchedDatabase() ) ) {
+            this.targetDatabase = br.getSearchedDatabase().getName();
+        }
+        this.targetEnd = br.getTargetEnd();
+        this.targetGapBases = br.getTargetGapBases();
+        this.targetGapCount = br.getTargetGapCount();
+        this.targetStart = br.getTargetStart();
+        this.targetStarts = br.getTargetStarts();
     }
 
     @Override

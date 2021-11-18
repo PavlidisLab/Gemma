@@ -30,9 +30,7 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.sql.Connection;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * @author paul
@@ -133,61 +131,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b from AnnotationAssociation b join b.geneProduct gp where gp in (:gps)" )
                 .setParameterList( "gps", gps ).list();
-    }
-
-    @Override
-    public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( AnnotationAssociation entity : entities ) {
-                    AnnotationAssociationDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
-    }
-
-    @Override
-    public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-        int BATCH_SIZE = 2000;
-
-        //language=HQL
-        final String queryString = "select a from AnnotationAssociation a where a.id in (:ids)";
-        Collection<Long> batch = new HashSet<>();
-        Collection<AnnotationAssociation> results = new HashSet<>();
-
-        for ( Long id : ids ) {
-            batch.add( id );
-            if ( batch.size() == BATCH_SIZE ) {
-                //noinspection unchecked
-                results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "ids", batch ).list() );
-                batch.clear();
-            }
-        }
-        if ( batch.size() > 0 ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ids", batch ).list() );
-        }
-
-        return results;
-    }
-
-    @Override
-    public void update( final Collection<AnnotationAssociation> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( AnnotationAssociation entity : entities ) {
-                    AnnotationAssociationDaoImpl.this.update( entity );
-                }
-            }
-        } );
     }
 
     private void thawAssociation( org.hibernate.Session session, AnnotationAssociation association ) {

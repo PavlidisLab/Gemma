@@ -122,11 +122,11 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
-    ArrayDesign thaw( ArrayDesign arrayDesign );
+    void thaw( ArrayDesign arrayDesign );
 
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
+    void thawLite( ArrayDesign arrayDesign );
 
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
+    void thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 }

@@ -166,7 +166,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         }
 
         @Bean
-        public BlacklistedEntityDao blackListDao() {
+        public BlacklistedEntityDao blacklistedEntityDao() {
             return mock( BlacklistedEntityDao.class );
         }
 

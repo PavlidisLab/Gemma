@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -47,7 +48,7 @@ import java.util.*;
  * @see DifferentialExpressionAnalysisService
  */
 @Service
-public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
+public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
@@ -59,6 +60,11 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     private ExpressionExperimentDao expressionExperimentDao;
     @Autowired
     private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
+
+    @Autowired
+    public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao ) {
+        super( mainDao );
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -133,21 +139,21 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        this.differentialExpressionAnalysisDao.thaw( expressionAnalyses );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        this.differentialExpressionAnalysisDao.thaw( differentialExpressionAnalysis );
-        return this.expressionAnalysisResultSetDao.thawFully( differentialExpressionAnalysis );
+        DifferentialExpressionAnalysis result = differentialExpressionAnalysisDao.load( differentialExpressionAnalysis.getId() );
+        differentialExpressionAnalysisDao.thaw( result );
+        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
+        Collection<ExpressionAnalysisResultSet> rss = result.getResultSets();
+        int size = rss.size();
+        int cnt = 0;
+        for ( ExpressionAnalysisResultSet rs : rss ) {
+            thawed.add( expressionAnalysisResultSetDao.loadWithResultsAndContrasts( rs.getId() ) );
+            cnt++;
+            log.info( "Thawed " + cnt + "/" + size + " resultSets" );
+        }
+        boolean changed = result.getResultSets().addAll( thawed );
+        assert !changed; // they are the same objects, just updated.
+        return result;
     }
 
     @Override
@@ -171,22 +177,22 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    public Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids ) {
         return this.getAnalysesByExperiment( ids, 0, -1 );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    public Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit ) {
-        Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
+        Map<Long, Set<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
                 .getAnalysesByExperimentIds( ids, offset, limit );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
 
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
+        Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 
         for ( Long id : analysesByExperimentIds.keySet() ) {
             if ( !idMap.containsKey( id ) )
@@ -213,6 +219,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
                 .findByInvestigation( ee );
@@ -277,7 +284,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> loadAll() {
+    public List<DifferentialExpressionAnalysis> loadAll() {
         return this.differentialExpressionAnalysisDao.loadAll();
     }
 

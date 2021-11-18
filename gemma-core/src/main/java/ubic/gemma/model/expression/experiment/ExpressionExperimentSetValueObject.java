@@ -25,6 +25,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author tvrossum
@@ -36,7 +37,7 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
     private static final long serialVersionUID = -6852364688337216390L;
 
     private String description = "";
-    private Collection<Long> expressionExperimentIds = new HashSet<>();
+    private Set<Long> expressionExperimentIds = new HashSet<>();
     private boolean isPublic = false;
     /**
      * If modifying the set is constrained by existing analyses.
@@ -93,11 +94,11 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
         this.description = description;
     }
 
-    public Collection<Long> getExpressionExperimentIds() {
+    public Set<Long> getExpressionExperimentIds() {
         return expressionExperimentIds;
     }
 
-    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
+    public void setExpressionExperimentIds( Set<Long> expressionExperimentIds ) {
         this.expressionExperimentIds = expressionExperimentIds;
     }
 

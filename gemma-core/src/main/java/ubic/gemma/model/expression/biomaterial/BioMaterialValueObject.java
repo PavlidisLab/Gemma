@@ -40,11 +40,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     private static final String CHARACTERISTIC_DELIMITER = "::::";
     private static final long serialVersionUID = -145137827948521045L;
-    private final Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
+    private final Set<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
     private String assayDescription;
     private String assayName;
-    private Collection<Long> bioAssays = new HashSet<>();
-    private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+    private Set<Long> bioAssays = new HashSet<>();
+    private Set<CharacteristicValueObject> characteristics = new HashSet<>();
     private String description;
     /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
@@ -54,7 +54,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
     private Map<String, String> factors;
-    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
+    private Set<FactorValueValueObject> factorValueObjects = new HashSet<>();
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
@@ -195,11 +195,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayName = assayName;
     }
 
-    public Collection<Long> getBioAssays() {
+    public Set<Long> getBioAssays() {
         return bioAssays;
     }
 
-    public void setBioAssays( Collection<Long> bioAssays ) {
+    public void setBioAssays( Set<Long> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 
@@ -227,7 +227,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.factors = factors;
     }
 
-    public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
+    public Set<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
 
@@ -240,7 +240,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.characteristicValues = characteristicValues;
     }
 
-    public void setFactorValueObjects( Collection<FactorValueValueObject> factorValueObjects ) {
+    public void setFactorValueObjects( Set<FactorValueValueObject> factorValueObjects ) {
         this.factorValueObjects = factorValueObjects;
     }
 
@@ -260,11 +260,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.name = name;
     }
 
-    public Collection<CharacteristicValueObject> getCharacteristics() {
+    public Set<CharacteristicValueObject> getCharacteristics() {
         return characteristics;
     }
 
-    public void setCharacteristics( Collection<CharacteristicValueObject> characteristicsDetails ) {
+    public void setCharacteristics( Set<CharacteristicValueObject> characteristicsDetails ) {
         this.characteristics = characteristicsDetails;
     }
 

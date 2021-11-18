@@ -156,6 +156,11 @@ public class ObjectFilterTest {
     }
 
     @Test
+    public void testCollection() {
+        new ObjectFilter( "ee", "id", Integer.class, ObjectFilter.Operator.in, Arrays.asList( 1, 2, 3 ) );
+    }
+
+    @Test
     public void testInvalidCollectionTypeConversion() {
         assertThatThrownBy( () -> new ObjectFilter( "ee", "id", String.class, ObjectFilter.Operator.in, Arrays.asList( 1, 2, 3 ) ) )
                 .isInstanceOf( IllegalArgumentException.class );

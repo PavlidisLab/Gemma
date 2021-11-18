@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -45,22 +46,14 @@ public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation>
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
         return this.blatAssociationDao.find( bioSequence );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( Gene gene ) {
         return this.blatAssociationDao.find( gene );
-    }
-
-    @Override
-    public void thaw( Collection<BlatAssociation> blatAssociations ) {
-        this.blatAssociationDao.thaw( blatAssociations );
-    }
-
-    @Override
-    public void thaw( BlatAssociation blatAssociation ) {
-        this.blatAssociationDao.thaw( blatAssociation );
     }
 }

@@ -28,19 +28,26 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author Paul
  */
 @Service
-public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysisService {
+public class GeneDiffExMetaAnalysisServiceImpl extends AbstractService<GeneDifferentialExpressionMetaAnalysis> implements GeneDiffExMetaAnalysisService {
 
     @Autowired
     private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
+
+    @Autowired
+    public GeneDiffExMetaAnalysisServiceImpl( GeneDiffExMetaAnalysisDao mainDao ) {
+        super( mainDao );
+    }
 
     @Override
     @Transactional
@@ -116,8 +123,8 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
 
     @Override
     @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ){
-        this.geneDiffExMetaAnalysisDao.removeForExperiment(ee);
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.geneDiffExMetaAnalysisDao.removeForExperiment( ee );
     }
 
     @Override
@@ -180,7 +187,7 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneDifferentialExpressionMetaAnalysis> loadAll() {
+    public List<GeneDifferentialExpressionMetaAnalysis> loadAll() {
         return geneDiffExMetaAnalysisDao.loadAll();
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
@@ -32,7 +33,7 @@ import java.util.HashSet;
 public class GeoChannel {
 
     String sourceName = "";
-    Collection<String> characteristics = new HashSet<>();
+    Set<String> characteristics = new HashSet<>();
     String bioMaterialProvider = "";
     String growthProtocol = "";
     String treatmentProtocol = "";
@@ -97,14 +98,14 @@ public class GeoChannel {
     /**
      * @return Returns the characteristic.
      */
-    public Collection<String> getCharacteristic() {
+    public Set<String> getCharacteristic() {
         return this.characteristics;
     }
 
     /**
      * @param characteristics The characteristics to set.
      */
-    public void setCharacteristic( Collection<String> characteristics ) {
+    public void setCharacteristic( Set<String> characteristics ) {
         this.characteristics = characteristics;
     }
 
@@ -271,14 +272,14 @@ public class GeoChannel {
     /**
      * @return Returns the characteristics.
      */
-    public Collection<String> getCharacteristics() {
+    public Set<String> getCharacteristics() {
         return this.characteristics;
     }
 
     /**
      * @param characteristics The characteristics to set.
      */
-    public void setCharacteristics( Collection<String> characteristics ) {
+    public void setCharacteristics( Set<String> characteristics ) {
         this.characteristics = characteristics;
     }
 

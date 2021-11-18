@@ -254,11 +254,13 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
      * @return expression ranks based on computed intensities
      */
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment updateRanks( ExpressionExperiment ee ) {
 
-        ee = expressionExperimentDao.thaw( ee );
+        ee = expressionExperimentDao.load( ee.getId() );
+        expressionExperimentDao.thaw( ee );
         Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
-        processedExpressionDataVectorService.thaw( processedVectors );
+        processedVectors = processedExpressionDataVectorService.thaw( processedVectors );
         StopWatch timer = new StopWatch();
         timer.start();
         ExpressionDataDoubleMatrix intensities = this.loadIntensities( ee, processedVectors );

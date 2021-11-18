@@ -330,11 +330,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.persistCollectionElements( annotations );
     }
 
-    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
+    private Set<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
             ArrayDesignsForExperimentCache c ) {
         AbstractPersister.log.debug( "Filling in DesignElementDataVectors..." );
 
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Set<BioAssay> bioAssays = new HashSet<>();
         StopWatch timer = new StopWatch();
         timer.start();
         int count = 0;
@@ -533,7 +533,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment, ArrayDesignsForExperimentCache c ) {
 
-        Collection<BioAssay> alreadyFilled = new HashSet<>();
+        Set<BioAssay> alreadyFilled = new HashSet<>();
 
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             AbstractPersister.log.debug( "Filling in bioassays" );
@@ -553,7 +553,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.persistCollectionElements( experimentalDesign.getTypes() );
 
         // Withhold to avoid premature cascade.
-        Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
+        Set<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
         if ( factors == null ) {
             factors = new HashSet<>();
         }
@@ -574,7 +574,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             experimentalFactor.setExperimentalDesign( experimentalDesign );
 
             // Override cascade like above.
-            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+            Set<FactorValue> factorValues = experimentalFactor.getFactorValues();
             experimentalFactor.setFactorValues( null );
             experimentalFactor = this.persistExperimentalFactor( experimentalFactor );
 

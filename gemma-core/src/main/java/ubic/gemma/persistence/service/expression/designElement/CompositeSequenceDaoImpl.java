@@ -476,7 +476,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public void thaw( final Collection<CompositeSequence> compositeSequences ) {
+    public void thaw( final List<CompositeSequence> compositeSequences ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -544,9 +544,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public CompositeSequence thaw( final CompositeSequence compositeSequence ) {
-        this.thaw( Collections.singleton( compositeSequence ) );
-        return compositeSequence;
+    public void thaw( final CompositeSequence compositeSequence ) {
+        this.thaw( Collections.singletonList( compositeSequence ) );
     }
 
     //    @Override
@@ -593,39 +592,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     //        } );
     //
     //    }
-
-    @Override
-    public Collection<CompositeSequence> load( Collection<Long> ids ) {
-
-        if ( ids == null || ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-
-        //language=HQL
-        final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        int batchSize = 2000;
-        Collection<Long> batch = new HashSet<>();
-        Collection<CompositeSequence> results = new HashSet<>();
-        for ( Long id : ids ) {
-            batch.add( id );
-
-            if ( batch.size() == batchSize ) {
-                queryObject.setParameterList( "ids", batch );
-                //noinspection unchecked
-                results.addAll( queryObject.list() );
-                batch.clear();
-            }
-        }
-
-        // tail end.
-        if ( batch.size() > 0 ) {
-            queryObject.setParameterList( "ids", batch );
-            //noinspection unchecked
-            results.addAll( queryObject.list() );
-        }
-        return results;
-    }
 
     @Override
     public CompositeSequence find( CompositeSequence compositeSequence ) {

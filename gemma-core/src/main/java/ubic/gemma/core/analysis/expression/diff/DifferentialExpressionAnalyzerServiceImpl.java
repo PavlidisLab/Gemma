@@ -23,7 +23,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
@@ -37,7 +38,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpr
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -54,7 +54,7 @@ import java.util.*;
  *
  * @author keshav
  */
-@Component
+@Service
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
@@ -74,6 +74,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Override
+    @Transactional
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -101,6 +102,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
         DifferentialExpressionAnalyzerServiceImpl.log
@@ -113,6 +115,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public Collection<ExpressionAnalysisResultSet> extendAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis toUpdate ) {
 
@@ -135,6 +138,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( expressionExperiment );
@@ -143,6 +147,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, boolean persist ) {
 
@@ -167,6 +172,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
         try {
@@ -207,6 +213,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * @return DEA
      */
     @Override
+    @Transactional
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
 
@@ -279,8 +286,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * @param ee       the experiment
      * @param analysis analysis
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
+    private void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
 
         File f = this.prepareDirectoryForDistributions( ee );
 
@@ -443,7 +449,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             for ( ExpressionAnalysisResultSet oldrs : toUpdateResultSets ) {
 
                 assert oldrs.getId() != null;
-                expressionAnalysisResultSetService.thaw( oldrs );
+                oldrs = expressionAnalysisResultSetService.thaw( oldrs );
 
                 for ( ExpressionAnalysisResultSet temprs : a.getResultSets() ) {
                     /*

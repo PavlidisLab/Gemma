@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -46,7 +47,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      */
     private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
 
-    private final Collection<NCBIGene2Accession> results = new HashSet<>();
+    private final Set<NCBIGene2Accession> results = new HashSet<>();
     Map<String, NCBIGeneInfo> geneInfo = null;
     private BlockingQueue<NcbiGeneData> queue = null;
     private String lastGeneId = null;

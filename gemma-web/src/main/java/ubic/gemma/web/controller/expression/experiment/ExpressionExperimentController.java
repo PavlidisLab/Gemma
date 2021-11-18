@@ -911,8 +911,9 @@ public class ExpressionExperimentController {
             throw new EntityNotFoundException( id + " not found" );
         }
         request.setAttribute( "id", id );
+        expressionExperiment.setBioAssays( new HashSet<>( bioAssayService.thaw( expressionExperiment.getBioAssays() ) ) );
         ModelAndView mv = new ModelAndView( "bioAssays" )
-                .addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
+                .addObject( "bioAssays", expressionExperiment.getBioAssays() );
 
         this.addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
@@ -952,7 +953,8 @@ public class ExpressionExperimentController {
 
         Integer numBioMaterials = bioMaterials.size();
         mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
+        bioMaterials = bioMaterialService.thaw( bioMaterials );
+        mav.addObject( "bioMaterials", bioMaterials );
 
         this.addQCInfo( expressionExperiment, mav );
 
@@ -1009,17 +1011,17 @@ public class ExpressionExperimentController {
      * @param eeId ee id
      */
     public void unmatchAllBioAssays( Long eeId ) {
-        ExpressionExperiment ee = this.expressionExperimentService.load( eeId );
+        ExpressionExperiment ee = this.expressionExperimentService.loadAndThawLite( eeId );
+
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
         }
-        ee = expressionExperimentService.thawLite( ee );
 
         Collection<BioMaterial> needToProcess = new HashSet<>();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            this.bioMaterialService.thaw( bm );
+            bm = this.bioMaterialService.thaw( bm );
             Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             if ( bioAssaysUsedIn.size() > 1 ) {
                 needToProcess.add( bm );
@@ -1032,7 +1034,7 @@ public class ExpressionExperimentController {
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
                 if ( i > 0 ) {
                     BioMaterial newMaterial = bioMaterialService.copy( bm );
-                    this.bioMaterialService.thaw( newMaterial );
+                    newMaterial = this.bioMaterialService.thaw( newMaterial );
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );
@@ -1165,9 +1167,9 @@ public class ExpressionExperimentController {
         Collection<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        int count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
+        Long count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
 
-        return new JsonReaderResponse<>( records, count );
+        return new JsonReaderResponse<>( records, count.intValue() );
     }
 
     /**

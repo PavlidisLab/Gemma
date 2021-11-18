@@ -119,11 +119,9 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null )
-            return null;
-        if ( bioAssayDimension.getId() == null )
-            return bioAssayDimension;
+    public void thawLite( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null || bioAssayDimension.getId() == null )
+            return;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -134,15 +132,12 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
                 return null;
             }
         } );
-        return bioAssayDimension;
     }
 
     @Override
-    public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null )
-            return null;
-        if ( bioAssayDimension.getId() == null )
-            return bioAssayDimension;
+    public void thaw( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null || bioAssayDimension.getId() == null )
+            return;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -168,7 +163,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
                 return null;
             }
         } );
-        return bioAssayDimension;
     }
 
     @Override

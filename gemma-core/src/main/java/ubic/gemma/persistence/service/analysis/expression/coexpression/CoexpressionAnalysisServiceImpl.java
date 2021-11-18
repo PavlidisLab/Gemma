@@ -26,23 +26,30 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author paul
  */
 @Service
-public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisService {
+public class CoexpressionAnalysisServiceImpl extends AbstractService<CoexpressionAnalysis> implements CoexpressionAnalysisService {
 
     @Autowired
     private CoexpressionAnalysisDao coexpressionAnalysisDao;
 
     @Autowired
     private CoexpressionService geneCoexpressionService;
+
+    @Autowired
+    public CoexpressionAnalysisServiceImpl( CoexpressionAnalysisDao mainDao ) {
+        super( mainDao );
+    }
 
     @Override
     @Transactional
@@ -154,14 +161,14 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Collection<CoexpressionAnalysis> loadAll() {
+    public List<CoexpressionAnalysis> loadAll() {
         return this.coexpressionAnalysisDao.loadAll();
     }
 
     @Override
     @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ){
-        this.coexpressionAnalysisDao.removeForExperiment(ee);
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.coexpressionAnalysisDao.removeForExperiment( ee );
     }
 
 }

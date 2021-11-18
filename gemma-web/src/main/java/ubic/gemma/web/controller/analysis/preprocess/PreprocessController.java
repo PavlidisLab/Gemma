@@ -47,17 +47,15 @@ public class PreprocessController {
      * Update the processed data vectors as well as diagnostics
      *
      * @param  id of the experiment
-     * @return    status
+     * @return status
      */
     public String run( Long id ) {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThaw( id );
         if ( ee == null )
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-
-        ee = expressionExperimentService.thawLite( ee );
 
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         experimentReportService.evictFromCache( id );
@@ -68,17 +66,15 @@ public class PreprocessController {
      * Only update the daignostics
      *
      * @param  id of experiment
-     * @return    status
+     * @return status
      */
     public String diagnostics( Long id ) {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         if ( ee == null )
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-
-        ee = expressionExperimentService.thawLite( ee );
 
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         cmd.setDiagnosticsOnly( true );

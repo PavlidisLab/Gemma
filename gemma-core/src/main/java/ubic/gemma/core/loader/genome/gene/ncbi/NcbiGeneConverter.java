@@ -40,6 +40,7 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 
@@ -226,7 +227,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // grab all accessions and fill in GeneProduct/DatabaseEntry
         // and associate with Gene
         Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
-        Collection<GeneProduct> geneProducts = new HashSet<>();
+        Set<GeneProduct> geneProducts = new HashSet<>();
 
         for ( NCBIGene2Accession acc : gene2accession ) {
             geneProducts.addAll( this.convert( acc, gene ) );

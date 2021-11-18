@@ -45,7 +45,7 @@ public class DatabaseEntryServiceImpl extends AbstractFilteringVoEnabledService<
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public DatabaseEntry load( String accession ) {
         return this.databaseEntryDao.findByAccession( accession );
     }

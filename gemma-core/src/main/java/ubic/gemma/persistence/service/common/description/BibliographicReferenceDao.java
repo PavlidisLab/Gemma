@@ -46,10 +46,6 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
 
     Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
-    BibliographicReference thaw( BibliographicReference bibliographicReference );
-
-    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
     Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
 

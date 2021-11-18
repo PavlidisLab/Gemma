@@ -51,37 +51,38 @@ public interface GeneSetService {
      * {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  gene gene
-     * @return      gene sets
+     * @return gene sets
      * @see         GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> findByGene( Gene gene );
-
-    /**
-     * The ids of member genes will not be filled in
-     *
-     * @param  ids ids
-     * @return     gene set value object
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
 
     /**
+     * The ids of member genes will not be filled in
+     *
+     * @param  ids ids
+     * @return gene set value object
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
+
+
+    /**
      * Ids of member genes will be filled in
      *
      * @param  ids ids
-     * @return     gene set value object
+     * @return gene set value object
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
+    Collection<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
      * Security filtering done at DAO level see {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  name name
-     * @return      gene sets
+     * @return gene sets
      * @see         GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> findByName( String name );
@@ -91,7 +92,7 @@ public interface GeneSetService {
      *
      * @param  name  name
      * @param  taxon taxon
-     * @return       gene sets
+     * @return gene sets
      * @see          GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> findByName( String name, Taxon taxon );
@@ -101,7 +102,7 @@ public interface GeneSetService {
      * {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  ids ids
-     * @return     gene sets
+     * @return gene sets
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> load( Collection<Long> ids );
@@ -111,7 +112,7 @@ public interface GeneSetService {
      * {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  id id
-     * @return    geneSet with he given ID or null
+     * @return geneSet with he given ID or null
      * @see       GeneSetDao GeneSetDao for security filtering
      */
     GeneSet load( Long id );
@@ -129,7 +130,7 @@ public interface GeneSetService {
      * Security filtering done at DAO level see {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  tax taxon
-     * @return     gene sets
+     * @return gene sets
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> loadAll( Taxon tax );
@@ -151,7 +152,7 @@ public interface GeneSetService {
      * Security filtering done at DAO level see {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  tax taxon
-     * @return     gene sets
+     * @return gene sets
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> loadMyGeneSets( Taxon tax );
@@ -168,7 +169,7 @@ public interface GeneSetService {
      * Security filtering done at DAO level see {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
      * @param  tax taxon
-     * @return     gene sets
+     * @return gene sets
      * @see        GeneSetDao GeneSetDao for security filtering
      */
     Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
@@ -213,7 +214,7 @@ public interface GeneSetService {
      * Get a value object for the id param
      *
      * @param  id id
-     * @return    null if id doesn't match an genes set
+     * @return null if id doesn't match an genes set
      */
     DatabaseBackedGeneSetValueObject getValueObject( Long id );
 
@@ -221,25 +222,25 @@ public interface GeneSetService {
      * create an entity in the database based on the value object parameter
      *
      * @param  gsvo gene set value object
-     * @return      value object converted from the newly created entity
+     * @return value object converted from the newly created entity
      */
-    GeneSetValueObject createDatabaseEntity( GeneSetValueObject gsvo );
+    DatabaseBackedGeneSetValueObject createDatabaseEntity( GeneSetValueObject gsvo );
 
     /**
      * Given a Gemma Gene Id, find all the gene groups it is a member of (filtering is handled when gene sets are
      * loaded)
      *
      * @param  geneId gene id
-     * @return        collection of geneSetValueObject
+     * @return collection of geneSetValueObject
      */
-    Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId );
+    Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByGene( Long geneId );
 
     /**
      * AJAX Updates the database entity (permission permitting) with the name and description fields of the param value
      * object
      *
      * @param  geneSetVO gene set value object
-     * @return           value objects for the updated entities
+     * @return value objects for the updated entities
      */
     DatabaseBackedGeneSetValueObject updateDatabaseEntityNameDesc( DatabaseBackedGeneSetValueObject geneSetVO );
 
@@ -256,7 +257,7 @@ public interface GeneSetService {
      * AJAX Updates the database entity (permission permitting) with the fields of the param value object
      *
      * @param  geneSetVos gene sets
-     * @return            value objects for the updated entities
+     * @return value objects for the updated entities
      */
     Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
             Collection<DatabaseBackedGeneSetValueObject> geneSetVos );
@@ -281,7 +282,7 @@ public interface GeneSetService {
      *                          null)
      * @param  sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
      *                          been shared with the user. If param privateOnly is true, this will have no effect.
-     * @return                  all the gene sets user can see, with optional restrictions based on taxon and whether
+     * @return all the gene sets user can see, with optional restrictions based on taxon and whether
      *                          the set is public
      *                          or private
      */
@@ -293,16 +294,19 @@ public interface GeneSetService {
      *
      * @param  privateOnly only private
      * @param  taxonId     if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return             gene set value objects
+     * @return gene set value objects
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly, Long taxonId );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<Gene> getGenesInGroup( GeneSet gs );
 
     /**
      * Get the gene value objects for the members of the group param
      *
      * @param  object can be just a wrapper to trigger security
-     * @return        gene value object
+     * @return gene value object
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object );
@@ -311,22 +315,25 @@ public interface GeneSetService {
     Collection<Long> getGeneIdsInGroup( GeneSetValueObject geneSetVO );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    int getSize( GeneSetValueObject geneSetVO );
+    int getSize( GeneSet gs );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    int getSize( DatabaseBackedGeneSetValueObject geneSetVO );
 
     /**
      * @param  query   string to match to gene sets
      * @param  taxonId taxon id
-     * @return         collection of GeneSetValueObjects that match name query
+     * @return collection of GeneSetValueObjects that match name query
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId );
+    Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByName( String query, Long taxonId );
 
     /**
      * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
      * all the genes
      *
      * @param  geneSetVO gene set value object
-     * @return           the taxon or null if the gene set param was null
+     * @return the taxon or null if the gene set param was null
      */
     TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO );
 
@@ -335,14 +342,10 @@ public interface GeneSetService {
      * all the genes
      *
      * @param  geneSet gene set
-     * @return         the taxon or null if the gene set param was null
+     * @return the taxon or null if the gene set param was null
      */
     Taxon getTaxon( GeneSet geneSet );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    void thaw( GeneSet geneSet );
-
 }

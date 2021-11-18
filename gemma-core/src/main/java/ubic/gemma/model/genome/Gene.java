@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.gene.Multifunctionality;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
@@ -40,12 +41,12 @@ public class Gene extends ChromosomeFeature {
     private String officialName;
     private Integer ncbiGeneId;
     private String ensemblId; //Non-unique for roughly 2000 genes as of Aug 11th 2017
-    private Collection<GeneProduct> products = new HashSet<>();
-    private Collection<GeneAlias> aliases = new HashSet<>();
+    private Set<GeneProduct> products = new HashSet<>();
+    private Set<GeneAlias> aliases = new HashSet<>();
     private Taxon taxon;
-    private Collection<DatabaseEntry> accessions = new HashSet<>();
+    private Set<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
-    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
+    private Set<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -125,19 +126,19 @@ public class Gene extends ChromosomeFeature {
                 " (NCBI " + this.getNcbiGeneId() + ")" );
     }
 
-    public Collection<DatabaseEntry> getAccessions() {
+    public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
 
-    public void setAccessions( Collection<DatabaseEntry> accessions ) {
+    public void setAccessions( Set<DatabaseEntry> accessions ) {
         this.accessions = accessions;
     }
 
-    public Collection<GeneAlias> getAliases() {
+    public Set<GeneAlias> getAliases() {
         return this.aliases;
     }
 
-    public void setAliases( Collection<GeneAlias> aliases ) {
+    public void setAliases( Set<GeneAlias> aliases ) {
         this.aliases = aliases;
     }
 
@@ -184,19 +185,19 @@ public class Gene extends ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
-    public Collection<PhenotypeAssociation> getPhenotypeAssociations() {
+    public Set<PhenotypeAssociation> getPhenotypeAssociations() {
         return this.phenotypeAssociations;
     }
 
-    public void setPhenotypeAssociations( Collection<PhenotypeAssociation> phenotypeAssociations ) {
+    public void setPhenotypeAssociations( Set<PhenotypeAssociation> phenotypeAssociations ) {
         this.phenotypeAssociations = phenotypeAssociations;
     }
 
-    public Collection<GeneProduct> getProducts() {
+    public Set<GeneProduct> getProducts() {
         return this.products;
     }
 
-    public void setProducts( Collection<GeneProduct> products ) {
+    public void setProducts( Set<GeneProduct> products ) {
         this.products = products;
     }
 

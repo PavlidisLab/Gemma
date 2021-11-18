@@ -38,7 +38,4 @@ public interface GeneProductDao extends BaseVoEnabledDao<GeneProduct, GeneProduc
     Collection<Gene> getGenesByNcbiId( String search );
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
-
-    GeneProduct thaw( GeneProduct existing );
-
 }

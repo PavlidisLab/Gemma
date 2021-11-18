@@ -28,10 +28,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.*;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -71,16 +68,19 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence ) {
         return this.compositeSequenceDao.findByBioSequence( bioSequence );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByBioSequenceName( String name ) {
         return this.compositeSequenceDao.findByBioSequenceName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         return this.compositeSequenceDao.findByGene( gene );
     }
@@ -113,21 +113,25 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
         return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         return this.compositeSequenceDao.findByGene( gene, arrayDesign );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByName( String name ) {
         return this.compositeSequenceDao.findByName( name );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CompositeSequence findByName( ArrayDesign arrayDesign, String name ) {
         return this.compositeSequenceDao.findByName( arrayDesign, name );
     }
@@ -137,6 +141,7 @@ public class CompositeSequenceServiceImpl
      * collection of composite sequences as a HashSet, preserving order based on insertion.
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns ) {
         LinkedHashMap<String, CompositeSequence> compositeSequencesMap = new LinkedHashMap<>();
@@ -162,37 +167,44 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences ) {
         return this.compositeSequenceDao.getGenes( sequences );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenes( CompositeSequence compositeSequence ) {
         return this.getGenes( compositeSequence, 0, -1 );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences ) {
         return this.compositeSequenceDao.getGenesWithSpecificity( compositeSequences );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( compositeSequences );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( arrayDesign, numResults );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
             CompositeSequenceValueObject cs ) {
 
@@ -257,17 +269,7 @@ public class CompositeSequenceServiceImpl
     }
 
     @Override
-    public void thaw( Collection<CompositeSequence> compositeSequences ) {
-        this.compositeSequenceDao.thaw( compositeSequences );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
-        return this.compositeSequenceDao.thaw( compositeSequence );
-    }
-
-    @Override
+    @Transactional
     public void remove( Collection<CompositeSequence> sequencesToDelete ) {
         // check the collection to make sure it contains no transitive entities (just check the id and make sure its
         // non-null
@@ -285,8 +287,9 @@ public class CompositeSequenceServiceImpl
      */
     private void addBlatResultsLackingGenes( BioSequence biologicalCharacteristic,
             Map<Integer, GeneMappingSummary> blatResults, CompositeSequenceValueObject cs ) {
-        Collection<BlatResultValueObject> allBlatResultsForCs = blatResultService.loadValueObjects(
-                blatResultService.thaw( blatResultService.findByBioSequence( biologicalCharacteristic ) ) );
+        Collection<BlatResult> results = blatResultService.findByBioSequence( biologicalCharacteristic );
+        results = blatResultService.thaw( results );
+        Collection<BlatResultValueObject> allBlatResultsForCs = blatResultService.loadValueObjects( results );
         for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {
             if ( !blatResults.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();

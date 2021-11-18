@@ -73,9 +73,5 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     Collection<Gene> getGenesByName( String search );
 
-    Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
-
-    BioSequence thaw( BioSequence bs );
-
     BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

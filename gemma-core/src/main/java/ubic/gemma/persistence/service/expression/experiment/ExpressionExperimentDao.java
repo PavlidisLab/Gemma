@@ -15,7 +15,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -38,7 +37,7 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
-    Integer countNotTroubled();
+    Long countNotTroubled();
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
@@ -155,13 +154,11 @@ public interface ExpressionExperimentDao
 
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    void thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
-
-    ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
 
     Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
 

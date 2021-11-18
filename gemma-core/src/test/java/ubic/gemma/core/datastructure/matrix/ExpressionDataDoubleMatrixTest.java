@@ -112,8 +112,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
             DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
@@ -267,7 +267,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         de2.setArrayDesign( ad );
         vector2.setDesignElement( de2 );
 
-        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
+        Set<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 
@@ -298,7 +298,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
-        rawExpressionDataVectorService.thaw( vectors );
+        vectors = rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
@@ -333,7 +333,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         newee = expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
-        this.processedDataVectorService.thaw( vecs );
+        vecs = this.processedDataVectorService.thaw( vecs );
 
         assertTrue( !vecs.isEmpty() );
 
@@ -349,7 +349,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         newee = expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
-        this.processedDataVectorService.thaw( vecs );
+        vecs = this.processedDataVectorService.thaw( vecs );
 
         assertTrue( !vecs.isEmpty() );
 

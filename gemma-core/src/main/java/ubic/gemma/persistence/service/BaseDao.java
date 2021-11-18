@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface that supports basic CRUD operations.
@@ -29,12 +30,12 @@ import java.util.Collection;
 public interface BaseDao<T> {
 
     /**
-     * Crates all the given entities in the persistent storage.
+     * Create all the given entities in the persistent storage.
      *
      * @param entities the entities to be crated.
      * @return collection of entities representing the instances in the persistent storage that were created.
      */
-    Collection<T> create( Collection<T> entities );
+    List<T> create( Collection<T> entities );
 
     /**
      * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
@@ -51,13 +52,14 @@ public interface BaseDao<T> {
      * @param ids the ids of entities to be loaded. If some id's are not found, they are skipped.
      * @return collection of entities with given ids.
      */
-    Collection<T> load( Collection<Long> ids );
+    List<T> load( Collection<Long> ids );
 
     /**
      * Loads the entity with given id from the persistent storage.
      *
      * @param id the id of entity to load.
-     * @return the entity with given id, or null if such entity does not exist.
+     * @return the entity with given id, or null if such entity does not exist. Note that passing a null identifier will
+     * return null.
      */
     T load( Long id );
 
@@ -66,15 +68,19 @@ public interface BaseDao<T> {
      *
      * @return a collection containing all instances that are currently accessible.
      */
-    Collection<T> loadAll();
+    List<T> loadAll();
 
     /**
      * Counts all instances of specific class in the persitent storage.
      *
      * @return number that is the amount of instances currently accessible.
      */
-    Integer countAll();
+    long countAll();
 
+    /**
+     * Remove all entities in the collection.
+     * @param entities
+     */
     void remove( Collection<T> entities );
 
     /**
@@ -124,4 +130,20 @@ public interface BaseDao<T> {
      * @return the given entity, guaranteed to be representing an entity present in the persistent storage.
      */
     T findOrCreate( T entity );
+
+    /**
+     * Thaw a list of entities.
+     *
+     * The implementation can mutate the collection in-place if desirable. If so, we suggest using {@link java.util.Collections#copy(List, List)}
+     * to perform this operation efficiently.
+     *
+     * @param entities
+     */
+    void thaw( List<T> entities );
+
+    /**
+     * Thaw a single entity.
+     * @param entity
+     */
+    void thaw( T entity );
 }

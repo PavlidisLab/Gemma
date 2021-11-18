@@ -26,6 +26,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a Gene group gene set
@@ -53,7 +54,7 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
 
     private boolean currentUserIsOwner = false;
     private String description;
-    private Collection<Long> geneIds = new HashSet<>();
+    private Set<Long> geneIds = new HashSet<>();
 
     private boolean isPublic;
     private boolean isShared;
@@ -102,7 +103,7 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         return this.description;
     }
 
-    public Collection<Long> getGeneIds() {
+    public Set<Long> getGeneIds() {
         return this.geneIds;
     }
 
@@ -166,7 +167,7 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         this.description = description;
     }
 
-    public void setGeneIds( Collection<Long> geneMembers ) {
+    public void setGeneIds( Set<Long> geneMembers ) {
         this.geneIds = geneMembers;
     }
 

@@ -27,7 +27,9 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.BaseDao;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -39,30 +41,4 @@ public class GeneSetMemberDaoImpl extends AbstractDao<GeneSetMember> implements 
     public GeneSetMemberDaoImpl( SessionFactory sessionFactory ) {
         super( GeneSetMember.class, sessionFactory );
     }
-
-    @Override
-    public Collection<GeneSetMember> create( final Collection<GeneSetMember> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( GeneSetMember entity : entities ) {
-                    GeneSetMemberDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
-    }
-
-    @Override
-    public void update( final Collection<GeneSetMember> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( GeneSetMember entity : entities ) {
-                    GeneSetMemberDaoImpl.this.update( entity );
-                }
-            }
-        } );
-    }
-
 }

@@ -34,10 +34,7 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -249,11 +246,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
             Collection<Long> geneIds = EntityUtils.getIds( gvos );
 
-            GeneSetValueObject transientGeneSet = new GeneSetValueObject();
+            GeneSetValueObject transientGeneSet = new TransientGeneSetValueObject();
 
             transientGeneSet.setName( this.uri2phenoID( uris.get( uri ) ) );
             transientGeneSet.setDescription( uris.get( uri ).getValue() );
-            transientGeneSet.setGeneIds( geneIds );
+            transientGeneSet.setGeneIds( new HashSet<>( geneIds ) );
 
             transientGeneSet.setTaxonId( gvos.iterator().next().getTaxonId() );
             transientGeneSet.setTaxonName( gvos.iterator().next().getTaxonCommonName() );
@@ -299,7 +296,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-       // GeneSetSearchImpl.log.info( term );
+        // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */

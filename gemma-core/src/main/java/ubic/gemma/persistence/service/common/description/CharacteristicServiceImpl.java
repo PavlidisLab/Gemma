@@ -72,26 +72,31 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit ) {
         return this.characteristicDao.findExperimentsByUris( uriStrings, t, limit );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( Collection<String> uris ) {
         return this.characteristicDao.findByUri( uris );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByUri( String searchString ) {
         return this.characteristicDao.findByUri( searchString );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByValue( java.lang.String search ) {
         return this.characteristicDao.findByValue( search + '%' );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         Collection<Characteristic> needToSearch = new HashSet<>();
@@ -105,6 +110,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics ) {
         return this.characteristicDao.getParentIds( parentClass, characteristics );
     }
@@ -121,6 +127,7 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<? extends Characteristic> findByCategory( String query ) {
         return this.characteristicDao.findByCategory( query );
     }

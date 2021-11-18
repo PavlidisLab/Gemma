@@ -152,7 +152,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                     .findPhenotypesForBibliographicReference( pubMedId );
 
-            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+            Set<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
                     .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
 
             // set phenotypes associated with this bibliographic reference
@@ -163,7 +163,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .getRelatedExperiments( bibliographicReference );
 
             if ( experiments != null && !experiments.isEmpty() ) {
-                bibliographicReferenceVO.setExperiments( expressionExperimentService.loadValueObjects( experiments ) );
+                bibliographicReferenceVO.setExperiments( new HashSet<>( expressionExperimentService.loadValueObjects( experiments ) ) );
             }
 
             return bibliographicReferenceVO;

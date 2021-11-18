@@ -54,16 +54,4 @@ public class BlatResultServiceImpl extends AbstractVoEnabledService<BlatResult, 
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         return this.blatResultDao.findByBioSequence( bioSequence );
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BlatResult thaw( BlatResult blatResult ) {
-        return this.blatResultDao.thaw( blatResult );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
-        return this.blatResultDao.thaw( blatResults );
-    }
 }

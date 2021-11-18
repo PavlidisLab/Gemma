@@ -31,6 +31,7 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -104,7 +105,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
+                        "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
                 .setParameter( "ee", experiment ).list();
     }
 
@@ -119,7 +120,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
+                        "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
                 .setParameter( "bmid", bioMaterialId ).uniqueResult();
     }
 
@@ -135,14 +136,15 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+    public void thaw( List<BioMaterial> bioMaterials ) {
         if ( bioMaterials.isEmpty() )
-            return bioMaterials;
+            return;
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
-                        + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
+        List<BioMaterial> results = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                                + " left join fetch b.treatments left join fetch b.factorValues where b.id in (:ids)" )
                 .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
+        Collections.copy( bioMaterials, results );
     }
 
     @Override

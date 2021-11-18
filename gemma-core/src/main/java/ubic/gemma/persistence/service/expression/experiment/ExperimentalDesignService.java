@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -43,7 +44,7 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Collection<ExperimentalDesign> loadAll();
+    List<ExperimentalDesign> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

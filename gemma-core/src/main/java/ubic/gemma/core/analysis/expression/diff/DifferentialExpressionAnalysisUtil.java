@@ -315,7 +315,7 @@ public class DifferentialExpressionAnalysisUtil {
         int numHaveAny = 0;
         for ( BioMaterial b : biomaterials ) {
             Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
-            Collection<FactorValue> factorValuesToConsider = new HashSet<>( biomaterialFactorValues );
+            Set<FactorValue> factorValuesToConsider = new HashSet<>( biomaterialFactorValues );
             for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
                 numHaveAny++;
                 if ( !allFactorValuesFromGivenFactors.contains( biomaterialFactorValue ) ) {

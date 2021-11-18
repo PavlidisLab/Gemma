@@ -27,6 +27,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Summary of a result set.
@@ -48,7 +49,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private Integer downregulatedCount;
 
-    private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
+    private Set<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
 
     private Collection<Long> factorIds;
 
@@ -151,7 +152,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         this.downregulatedCount = downregulatedCount;
     }
 
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
+    public Set<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
 
@@ -256,7 +257,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         return Objects.equals( id, other.id );
     }
 
-    public void setExperimentalFactorsByValueObject( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
+    public void setExperimentalFactorsByValueObject( Set<ExperimentalFactorValueObject> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
 

@@ -51,31 +51,6 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     }
 
     @Override
-    public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BioAssay entity : entities ) {
-                    BioAssayDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
-    }
-
-    @Override
-    public void update( final Collection<BioAssay> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BioAssay entity : entities ) {
-                    BioAssayDaoImpl.this.update( entity );
-                }
-            }
-        } );
-    }
-
-    @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
             Criteria queryObject = BusinessKey
@@ -116,7 +91,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                        "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
 
@@ -127,47 +102,35 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
+                        "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
                 .setParameter( "accession", accession ).list();
     }
 
     @Override
     public void thaw( final BioAssay bioAssay ) {
-        try {
-            this.getSessionFactory().getCurrentSession().doWork( new Work() {
-                @Override
-                public void execute( Connection connection ) {
-                    Session session = getSessionFactory().getCurrentSession();
-                    session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
-                    Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                    Hibernate.initialize( bioAssay.getOriginalPlatform() );
-                    BioMaterial bm = bioAssay.getSampleUsed();
-                    session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                    Hibernate.initialize( bm );
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    session.evict( bm );
-                    session.evict( bioAssay );
-                }
-            } );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'BioAssayDao.thawRawAndProcessed(BioAssay bioAssay)' --> " + th, th );
-        }
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+        Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+        Hibernate.initialize( bioAssay.getOriginalPlatform() );
+        BioMaterial bm = bioAssay.getSampleUsed();
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( bm );
+        Hibernate.initialize( bm );
+        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+        Hibernate.initialize( bm.getFactorValues() );
+        this.getSessionFactory().getCurrentSession().evict( bm );
+        this.getSessionFactory().getCurrentSession().evict( bioAssay );
     }
 
     @Override
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
+    public void thaw( List<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() )
-            return bioAssays;
-        List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
+            return;
+        List<BioAssay> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
                         + " left join fetch b.sampleUsed bm"
                         + " left join bm.factorValues left join bm.bioAssaysUsedIn where b.id in (:ids) ",
                 "ids",
                 EntityUtils.getIds( bioAssays ) );
-        //noinspection unchecked
-        return ( Collection<BioAssay> ) thawedBioassays;
+        Collections.copy( bioAssays, thawedBioassays );
     }
 
     /**

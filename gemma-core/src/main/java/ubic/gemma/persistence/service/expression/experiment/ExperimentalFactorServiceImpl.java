@@ -16,6 +16,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -46,6 +47,7 @@ public class ExperimentalFactorServiceImpl
     }
 
     @Override
+    @Transactional
     public void delete( ExperimentalFactor experimentalFactor ) {
         /*
          * First, check to see if there are any diff results that use this factor.
@@ -57,10 +59,4 @@ public class ExperimentalFactorServiceImpl
         }
         this.experimentalFactorDao.remove( experimentalFactor );
     }
-
-    @Override
-    public ExperimentalFactor thaw(ExperimentalFactor ef){
-        return this.experimentalFactorDao.thaw(ef);
-    }
-
 }

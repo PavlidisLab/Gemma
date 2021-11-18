@@ -19,10 +19,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Summary of a differential expression analysis
@@ -37,7 +34,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
     private static final long serialVersionUID = 622877438067070041L;
 
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
-    private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
+    private Set<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
     private Collection<Long> arrayDesignsUsed = null;
     private Long bioAssaySetId;
     private Long sourceExperiment;
@@ -89,11 +86,11 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
         this.factorValuesUsed = factorValuesUsed;
     }
 
-    public Collection<DiffExResultSetSummaryValueObject> getResultSets() {
+    public Set<DiffExResultSetSummaryValueObject> getResultSets() {
         return resultSets;
     }
 
-    public void setResultSets( Collection<DiffExResultSetSummaryValueObject> resultSets ) {
+    public void setResultSets( Set<DiffExResultSetSummaryValueObject> resultSets ) {
         this.resultSets = resultSets;
     }
 

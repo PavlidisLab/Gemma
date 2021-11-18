@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -65,7 +66,7 @@ public interface DiffExAnalyzer {
      * @param results        results
      * @return hit list sizes
      */
-    Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
+    Set<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap );
 
     /**

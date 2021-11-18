@@ -97,7 +97,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
 
-        Integer count = this.bibliographicReferenceService.countAll();
+        Long count = this.bibliographicReferenceService.countAll();
         List<BibliographicReference> records = this.getBatch( batch );
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
                 .getRelatedExperiments( records );
@@ -110,7 +110,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
 
             if ( relatedExperiments.containsKey( ref ) ) {
-                vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
+                vo.setExperiments( new HashSet<>( expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) ) );
             }
             valueObjects.add( vo );
 
@@ -119,13 +119,13 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
                     .findPhenotypesForBibliographicReference( vo.getPubAccession() );
 
-            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+            Set<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
                     .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
             vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
         }
 
-        return new JsonReaderResponse<>( valueObjects, count );
+        return new JsonReaderResponse<>( valueObjects, count.intValue() );
     }
 
     @Override
@@ -179,8 +179,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
 
-        Collection<BibliographicReference> bss = bibliographicReferenceService.load( ids );
-        bss = bibliographicReferenceService.thaw( bss );
+        Collection<BibliographicReference> bss = bibliographicReferenceService.loadAndThaw( ids );
         Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService.loadValueObjects( bss );
 
         return new JsonReaderResponse<>( new ArrayList<>( bibRefs ), bibRefs.size() );

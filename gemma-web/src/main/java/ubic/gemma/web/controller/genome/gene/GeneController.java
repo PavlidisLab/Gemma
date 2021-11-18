@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.TransientGeneSetValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -241,7 +242,7 @@ public class GeneController extends BaseController {
         }
         if ( geneSetIds != null ) {
             for ( Long id : geneSetIds ) {
-                genes.addAll( geneSetService.getGenesInGroup( new GeneSetValueObject( id ) ) );
+                genes.addAll( geneSetService.getGenesInGroup( new TransientGeneSetValueObject( id ) ) );
             }
         }
 

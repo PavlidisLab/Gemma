@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -76,11 +77,10 @@ public class AnnotationController {
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
+        BioMaterial bm = bioMaterialService.loadAndThaw( id );
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
-        bioMaterialService.thaw( bm );
         ontologyService.saveBioMaterialStatement( vc, bm );
     }
 
@@ -91,11 +91,10 @@ public class AnnotationController {
      * @param id of the expression experiment
      */
     public void createExperimentTag( Characteristic vc, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         if ( ee == null ) {
             throw new IllegalArgumentException( "No such experiment with id=" + id );
         }
-        ee = expressionExperimentService.thawLite( ee );
         ontologyService.addExpressionExperimentStatement( vc, ee );
         expressionExperimentService.update( ee );
     }
@@ -129,25 +128,22 @@ public class AnnotationController {
     }
 
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
+        BioMaterial bm = bioMaterialService.loadAndThaw( id );
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
-        bioMaterialService.thaw( bm );
         ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 
     public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( eeId );
 
         if ( ee == null ) {
             return;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
-
-        Collection<Characteristic> current = ee.getCharacteristics();
+        Set<Characteristic> current = ee.getCharacteristics();
 
         Collection<Characteristic> found = new HashSet<>();
 

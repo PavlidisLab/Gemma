@@ -30,6 +30,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,22 +88,8 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
     }
 
-    /**
-     * @see BioAssayService#thaw(BioAssay)
-     */
     @Override
     @Transactional(readOnly = true)
-    public void thaw( final BioAssay bioAssay ) {
-        this.bioAssayDao.thaw( bioAssay );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
-        return this.bioAssayDao.thaw( bioAssays );
-    }
-
-    @Override
     public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
         return entities == null ? null : bioAssayDao.loadValueObjects( entities, basic );
     }
@@ -112,7 +99,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         bioAssay.setSampleUsed( bioMaterial );
 
         // add bioAssay to bioMaterial
-        Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
+        Set<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
         currentBioAssays.add( bioAssay );
         bioMaterial.setBioAssaysUsedIn( currentBioAssays );
 
@@ -147,7 +134,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         bioAssayTemp.setSampleUsed( currentBioMaterials );
 
         // Remove bioAssay from bioMaterial
-        Collection<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();
+        Set<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();
         currentBioAssays.remove( bioAssayTemp );
         biomaterialToBeRemoved.setBioAssaysUsedIn( currentBioAssays );
 

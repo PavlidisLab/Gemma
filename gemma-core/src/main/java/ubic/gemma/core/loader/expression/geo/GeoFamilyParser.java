@@ -63,8 +63,8 @@ public class GeoFamilyParser implements Parser<Object> {
     /*
      * Elements seen for the 'current sample'.
      */
-    private final Collection<String> processedDesignElements = new HashSet<>();
-    private final Collection<Integer> wantedQuantitationTypes = new HashSet<>();
+    private final Set<String> processedDesignElements = new HashSet<>();
+    private final Set<Integer> wantedQuantitationTypes = new HashSet<>();
     private boolean alreadyWarnedAboutClobbering = false;
     private boolean alreadyWarnedAboutInconsistentColumnOrder = false;
     private boolean alreadyWarnedAboutDuplicateColumnName = false;

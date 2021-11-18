@@ -47,9 +47,4 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
     Collection<BlatAssociation> find( BioSequence bioSequence );
 
     Collection<BlatAssociation> find( Gene gene );
-
-    void thaw( Collection<BlatAssociation> blatAssociations );
-
-    void thaw( BlatAssociation blatAssociation );
-
 }

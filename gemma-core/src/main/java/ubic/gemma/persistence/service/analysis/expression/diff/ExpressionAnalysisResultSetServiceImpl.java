@@ -37,12 +37,6 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( ExpressionAnalysisResultSet e ) {
-        voDao.thaw( e );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id ) {
         ExpressionAnalysisResultSet ears = voDao.load( id );
         if ( ears != null ) {

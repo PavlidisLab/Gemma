@@ -37,7 +37,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author tvrossum
@@ -57,8 +57,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
 
     /**
      * Method to create a display object from scratch
-     *
-     * @param name        cannot be null
+     *  @param name        cannot be null
      * @param description should not be null
      * @param taxonId     can be null
      * @param taxonName   can be null
@@ -66,7 +65,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
      * @param queryString query string
      */
     public FreeTextExpressionExperimentResultsValueObject( String name, String description, Long taxonId,
-            String taxonName, Collection<Long> memberIds, String queryString ) {
+            String taxonName, Set<Long> memberIds, String queryString ) {
         super( -1L );
         this.setName( name );
         this.setDescription( description );

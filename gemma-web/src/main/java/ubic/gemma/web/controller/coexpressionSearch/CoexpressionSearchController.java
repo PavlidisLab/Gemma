@@ -36,6 +36,7 @@ import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.TransientGeneSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -101,7 +102,7 @@ public class CoexpressionSearchController {
 
             if ( searchOptions.getGeneSetId() != null ) {
                 searchOptions.setGeneIds(
-                        geneSetService.getGeneIdsInGroup( new GeneSetValueObject( searchOptions.getGeneSetId() ) ) );
+                        geneSetService.getGeneIdsInGroup( new TransientGeneSetValueObject( searchOptions.getGeneSetId() ) ) );
             }
 
             if ( searchOptions.getGeneIds().isEmpty() ) {

@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -152,7 +151,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
             ee = eeService.thaw( ee );
             Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
-            dataVectorService.thaw( vecs );
+            vecs = dataVectorService.thaw( vecs );
 
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
 
@@ -240,8 +239,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             return;
         }
 
-        ee = eeService.load( ee.getId() );
-        ee = this.eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
         // fix for unknown log scale
         for ( QuantitationType qt : ee.getQuantitationTypes() ) {
@@ -257,8 +255,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         twoChannelMissingValues.computeMissingValues( ee );
 
-        ee = eeService.load( ee.getId() );
-        ee = this.eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
@@ -267,14 +264,13 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 10, dataVectors.size() );
 
-        processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = processedExpressionDataVectorService.thaw( dataVectors );
         for ( ProcessedExpressionDataVector v : dataVectors ) {
             assertTrue( v.getRankByMax() != null );
             assertTrue( v.getRankByMean() != null );
         }
 
-        ee = eeService.load( ee.getId() );
-        ee = this.eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
         File f = dataFileService.writeOrLocateDataFile( ee, true, true );
@@ -365,7 +361,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
 
-        rawExpressionDataVectorService.thaw( vectors );
+        vectors = rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
@@ -436,7 +432,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @SuppressWarnings("unused")
-    // !! Please leave this here, we use it to load data sets for chopping.
+        // !! Please leave this here, we use it to load data sets for chopping.
     ExpressionExperiment fetchASeries( String accession ) {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         return ( ExpressionExperiment ) geoService.fetchAndLoad( accession, false, false, false ).iterator().next();

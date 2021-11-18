@@ -105,7 +105,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         /*
          * These are transient instances only
          */
-        Collection<GeneProduct> geneProducts = new HashSet<>();
+        Set<GeneProduct> geneProducts = new HashSet<>();
 
         if ( config.isUseRefGene() ) {
             // starting with refgene means we can get the correct transcript name etc.
@@ -120,7 +120,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( geneProducts.size() == 0 )
             return null;
 
-        Collection<BlatAssociation> results = new HashSet<>();
+        Set<BlatAssociation> results = new HashSet<>();
         for ( GeneProduct geneProduct : geneProducts ) {
             if ( GoldenPath.log.isDebugEnabled() )
                 GoldenPath.log.debug( geneProduct );
@@ -937,7 +937,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         Collection<PhysicalLocation> exons = this.blocksToPhysicalLocations( exonSizeInts, exonStartInts, chromosome );
         gp.setExons( exons );
         gp.setName( gene.getNcbiGeneId().toString() ); // this isn't right?
-        Collection<GeneProduct> products = new HashSet<>();
+        Set<GeneProduct> products = new HashSet<>();
         products.add( gp );
         gene.setProducts( products );
     }

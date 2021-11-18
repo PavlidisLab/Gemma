@@ -113,7 +113,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                     .getProcessedDataVectors( ee );
-            processedExpressionDataVectorService.thaw( dataVectors );
+            dataVectors = processedExpressionDataVectorService.thaw( dataVectors );
 
             LinkAnalysisServiceImpl.log.info( "Starting analysis" );
             this.analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors );

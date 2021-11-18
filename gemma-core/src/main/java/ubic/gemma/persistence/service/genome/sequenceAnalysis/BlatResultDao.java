@@ -31,10 +31,6 @@ import java.util.Collection;
  */
 public interface BlatResultDao extends BaseVoEnabledDao<BlatResult, BlatResultValueObject> {
 
-    BlatResult thaw( BlatResult blatResult );
-
-    Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
-
     /**
      * Find BLAT results for the given sequence
      *

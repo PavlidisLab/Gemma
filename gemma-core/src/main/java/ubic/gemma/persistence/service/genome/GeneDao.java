@@ -130,13 +130,11 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
-    Gene thaw( Gene gene );
+    void thawAliases( Gene gene );
 
-    Gene thawAliases( Gene gene );
+    void thawLite( Collection<Gene> genes );
 
-    Collection<Gene> thawLite( Collection<Gene> genes );
+    void thawLite( Gene gene );
 
-    Gene thawLite( Gene gene );
-
-    Gene thawLiter( Gene gene );
+    void thawLiter( Gene gene );
 }

@@ -96,27 +96,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
-                .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
-        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
-        Collection<ExpressionAnalysisResultSet> rss = differentialExpressionAnalysis.getResultSets();
-        int size = rss.size();
-        int cnt = 0;
-        for ( ExpressionAnalysisResultSet rs : rss ) {
-            thawed.add( loadWithResultsAndContrasts( rs.getId() ) );
-            cnt++;
-            log.info( "Thawed " + cnt + "/" + size + " resultSets" );
-        }
-        boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
-        assert !changed; // they are the same objects, just updated.
-        return differentialExpressionAnalysis;
-    }
-
-    @Override
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select a from GeneDifferentialExpressionMetaAnalysis a"
@@ -233,15 +212,15 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Map<DifferentialExpressionAnalysisResult, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet ) {
-        Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
-                        + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
-                        + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
-                        + "where {result}.RESULT_SET_FK = :rsid" )
-                .addEntity( "result", DifferentialExpressionAnalysisResult.class )
-                .addEntity( "gene", Gene.class )
-                .setParameter( "rsid", resultSet.getId() )
-                .setCacheable( true );
+Query query = getSessionFactory().getCurrentSession()
+        .createSQLQuery( "select {result.*}, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT {result} "
+                + "join GENE2CS on GENE2CS.CS = {result}.PROBE_FK "
+                + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
+                + "where {result}.RESULT_SET_FK = :rsid" )
+        .addEntity( "result", DifferentialExpressionAnalysisResult.class )
+        .addEntity( "gene", Gene.class )
+        .setParameter( "rsid", resultSet.getId() )
+        .setCacheable( true );
 
         //noinspection unchecked
         List<Object[]> list = query.list();

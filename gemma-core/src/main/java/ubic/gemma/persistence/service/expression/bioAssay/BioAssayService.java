@@ -30,6 +30,7 @@ import ubic.gemma.persistence.service.FilteringService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -72,7 +73,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> load( Collection<Long> ids );
+    List<BioAssay> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -80,7 +81,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> loadAll();
+    List<BioAssay> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -99,11 +100,15 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
+    @Override
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thaw( BioAssay bioAssay );
+    BioAssay thaw( BioAssay bioAssay );
 
+    @Override
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
+    List<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

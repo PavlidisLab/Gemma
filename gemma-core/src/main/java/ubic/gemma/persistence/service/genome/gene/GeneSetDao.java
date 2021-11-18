@@ -24,9 +24,11 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The interface for managing groupings of genes.
@@ -65,23 +67,23 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     Collection<GeneSet> loadMyGeneSets();
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<? extends GeneSet> loadMyGeneSets( Taxon tax );
+    Collection<GeneSet> loadMyGeneSets( Taxon tax );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<? extends GeneSet> loadMySharedGeneSets();
+    Collection<GeneSet> loadMySharedGeneSets();
 
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax );
+    Collection<GeneSet> loadMySharedGeneSets( Taxon tax );
 
-    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
+    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet resultObject );
 
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
+    Collection<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
 
-    Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
+    Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
 
     @Override
     @Secured({ "GROUP_USER" })
-    Collection<GeneSet> create( final Collection<GeneSet> entities );
+    List<GeneSet> create( final Collection<GeneSet> entities );
 
     @Secured({ "GROUP_USER" })
     @Override
@@ -89,7 +91,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> load( Collection<Long> ids );
+    List<GeneSet> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -97,7 +99,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll();
+    List<GeneSet> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
@@ -130,10 +132,4 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneSet> loadAll( Taxon tax );
-
-    /**
-     * @param geneSet gene set
-     */
-    void thaw( GeneSet geneSet );
-
 }

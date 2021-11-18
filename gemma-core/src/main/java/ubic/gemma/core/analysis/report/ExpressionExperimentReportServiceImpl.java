@@ -450,7 +450,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Long id = eeVo.getId();
         assert id != null;
 
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
+        Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( id ) );
         if ( analysis != null && analysis.containsKey( eeVo ) ) {
             eeVo.setDifferentialExpressionAnalyses( analysis.get( eeVo ) );

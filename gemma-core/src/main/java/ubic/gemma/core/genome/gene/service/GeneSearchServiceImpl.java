@@ -217,7 +217,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // convert result object to a value object
             for ( SearchResult sr : taxonCheckedSets ) {
                 GeneSet g = ( GeneSet ) sr.getResultObject();
-                DatabaseBackedGeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( g );
+                GeneSetValueObject gsVo = geneSetValueObjectHelper.convertToValueObject( g );
                 sr.setResultObject( gsVo );
             }
             geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
@@ -524,7 +524,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
                 newTaxonSet.setName( gs.getName() );
                 newTaxonSet.setDescription( gs.getDescription() );
-                Collection<GeneSetMember> members = new ArrayList<>();
+                Set<GeneSetMember> members = new HashSet<>();
                 members.add( geneMember );
 
                 newTaxonSet.setMembers( members );
@@ -747,12 +747,12 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResultDisplayObject> displayResultsPublic = new ArrayList<>();
         SearchResultDisplayObject newSrDo;
 
-        List<DatabaseBackedGeneSetValueObject> valueObjects = geneSetValueObjectHelper
+        List<? extends GeneSetValueObject> valueObjects = geneSetValueObjectHelper
                 .convertToValueObjects( sets, false );
         if ( watch.getTime() > 500 )
             GeneSearchServiceImpl.log.info( "Database stage done: " + watch.getTime() + "ms" );
 
-        for ( DatabaseBackedGeneSetValueObject set : valueObjects ) {
+        for ( GeneSetValueObject set : valueObjects ) {
             newSrDo = new SearchResultDisplayObject( set );
             newSrDo.setTaxonId( ( ( GeneSetValueObject ) newSrDo.getResultValueObject() ).getTaxonId() );
             newSrDo.setTaxonName( ( ( GeneSetValueObject ) newSrDo.getResultValueObject() ).getTaxonName() );

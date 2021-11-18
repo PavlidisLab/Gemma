@@ -21,9 +21,12 @@ package ubic.gemma.persistence.service.genome.biosequence;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -154,11 +157,12 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
     }
 
     @Override
-    public Collection<BioSequence> thaw( final Collection<BioSequence> bioSequences ) {
+    @Transactional(readOnly = true)
+    public void thaw( final List<BioSequence> bioSequences ) {
         if ( bioSequences.isEmpty() )
-            return new HashSet<>();
+            return;
 
-        Collection<BioSequence> result = new HashSet<>();
+        List<BioSequence> result = new ArrayList<>();
         Collection<BioSequence> batch = new HashSet<>();
 
         for ( BioSequence g : bioSequences ) {
@@ -173,25 +177,26 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
             result.addAll( this.doThawBatch( batch ) );
         }
 
-        return result;
+        Collections.copy( bioSequences, result );
     }
 
     @Override
-    public BioSequence thaw( final BioSequence bioSequence ) {
-        if ( bioSequence == null )
-            return null;
-        if ( bioSequence.getId() == null )
-            return bioSequence;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select b from BioSequence b "
-                + " left join fetch b.taxon tax left join fetch tax.externalDatabase "
-                + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
-                + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
-                bioSequence.getId() );
-
-        return ( BioSequence ) res.iterator().next();
+    public void thaw( final BioSequence bioSequence ) {
+        if ( bioSequence == null || bioSequence.getId() == null )
+            return;
+        Hibernate.initialize( bioSequence.getTaxon() );
+        Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
+        Hibernate.initialize( bioSequence.getSequenceDatabaseEntry() );
+        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+            Hibernate.initialize( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() );
+        }
+        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
+        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+            Hibernate.initialize( bs2gp.getGeneProduct() );
+            Hibernate.initialize( bs2gp.getGeneProduct().getGene() );
+            Hibernate.initialize( bs2gp.getGeneProduct().getGene().getAliases() );
+            Hibernate.initialize( bs2gp.getGeneProduct().getGene().getAccessions() );
+        }
     }
 
     @Override

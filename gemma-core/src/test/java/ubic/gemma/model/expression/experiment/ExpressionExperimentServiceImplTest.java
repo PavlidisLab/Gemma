@@ -30,8 +30,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentServiceImpl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +43,7 @@ import static org.mockito.Mockito.when;
  * @author paul
  */
 public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
-    private Collection<ExpressionExperiment> c;
+    private List<ExpressionExperiment> c;
     private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
     private User nobody = null;
@@ -80,7 +82,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
             ee.getBioAssays().add( ba );
         }
 
-        c = new HashSet<>();
+        c = new ArrayList<>();
         ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
         numberTwelve.setId( 12L );
 

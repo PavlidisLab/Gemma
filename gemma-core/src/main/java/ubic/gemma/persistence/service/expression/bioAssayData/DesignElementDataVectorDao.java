@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
@@ -52,7 +53,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
      * @return the created instances.
      */
     @Override
-    Collection<T> create( Collection<T> entities );
+    List<T> create( Collection<T> entities );
 
     /**
      * @param designElementDataVector DE data vector
@@ -75,7 +76,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> e
      * @return the loaded entities.
      */
     @Override
-    Collection<T> loadAll();
+    List<T> loadAll();
 
     void thaw( Collection<T> designElementDataVectors );
 

@@ -48,13 +48,9 @@ public class BioAssayDimensionServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimensionDao.thawLite( bioAssayDimension );
+    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
+        BioAssayDimension result = this.load( bioAssayDimension.getId() );
+        this.bioAssayDimensionDao.thawLite( result );
+        return result;
     }
-
-    @Override
-    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
-        return this.bioAssayDimensionDao.thaw( bioAssayDimension );
-    }
-
 }

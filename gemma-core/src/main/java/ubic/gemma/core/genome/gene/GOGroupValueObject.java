@@ -37,7 +37,7 @@
 
 package ubic.gemma.core.genome.gene;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author tvrossum
@@ -65,7 +65,7 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param goId        go ID
      */
     public GOGroupValueObject( String name, String description, Long taxonId, String taxonName,
-            Collection<Long> memberIds, String goId, String searchTerm ) {
+            Set<Long> memberIds, String goId, String searchTerm ) {
 
         this.setName( name );
         this.setDescription( description );

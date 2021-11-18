@@ -146,13 +146,12 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
         Collection<BioAssay> bioAssays = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
@@ -299,13 +298,12 @@ public class ExpressionExperimentQCController extends BaseController {
             return;
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiter( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
             return;
         }
 
-        ee = expressionExperimentService.thawLiter( ee );
         DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadTryRegressedThenFull( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {

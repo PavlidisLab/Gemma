@@ -97,7 +97,7 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * 
+     *
      * @param geoPlatformId (GPL)
      * @return true if we recognize it as an Affymetrix platform. Depends on our mappings, if an error is spotted let us
      *         know.
@@ -109,11 +109,11 @@ public class GeoPlatform extends GeoData {
     /**
      * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
      * from CEL files - exon arrays.
-     * 
+     *
      * Logic: if this was run on an Affymetrix exon array we won't use the data from GEO, even if it was already using
      * the gene-level version of the platform, because there are several variant versions that just muck up the system
      * with useless probes (we have gone back and forth on this a bit...)
-     * 
+     *
      * Note that we endeavour to reanalyze all Affy data sets at the CEL file level.
      *
      * @param geoPlatformId (GPL)
@@ -137,11 +137,11 @@ public class GeoPlatform extends GeoData {
 
     }
 
-    private Collection<String> catalogNumbers = new HashSet<>();
+    private Set<String> catalogNumbers = new HashSet<>();
     private String coating = "";
-    private Collection<String> contributer = new HashSet<>();
+    private Set<String> contributer = new HashSet<>();
     private String description = "";
-    private final Collection<String> designElements = new HashSet<>();
+    private final Set<String> designElements = new HashSet<>();
     private String distribution = "";
     private String lastUpdateDate = "";
     private String manufactureProtocol = "";
@@ -228,7 +228,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @return Returns the catalogNumbers.
      */
-    public Collection<String> getCatalogNumbers() {
+    public Set<String> getCatalogNumbers() {
         return this.catalogNumbers;
     }
 
@@ -269,7 +269,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @return Returns the contributer.
      */
-    public Collection<String> getContributer() {
+    public Set<String> getContributer() {
         return this.contributer;
     }
 
@@ -399,7 +399,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @param catalogNumbers The catalogNumbers to set.
      */
-    public void setCatalogNumbers( Collection<String> catalogNumbers ) {
+    public void setCatalogNumbers( Set<String> catalogNumbers ) {
         this.catalogNumbers = catalogNumbers;
     }
 
@@ -413,7 +413,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @param contributer The contributer to set.
      */
-    public void setContributer( Collection<String> contributer ) {
+    public void setContributer( Set<String> contributer ) {
         this.contributer = contributer;
     }
 

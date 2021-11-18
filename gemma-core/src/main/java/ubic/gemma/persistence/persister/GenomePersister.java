@@ -42,10 +42,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.SequenceBinUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -233,7 +230,7 @@ abstract public class GenomePersister extends CommonPersister {
                      * genes; or 3) an error in the data source. The problem for us is at this point in processing, we
                      * don't know if the gene is going to get 'reattached' to its original gene.
                      */
-                    existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
+                    geneProductDao.thaw( existingGeneProduct );
                     Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
                     if ( oldGeneForExistingGeneProduct != null ) {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
@@ -245,7 +242,7 @@ abstract public class GenomePersister extends CommonPersister {
                                             + " (this can also happen if an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
 
                             // Here we just remove its old association.
-                            oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
+                            geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
                             log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
                                     + existingGeneProduct.getNcbiGi() );
@@ -467,7 +464,7 @@ abstract public class GenomePersister extends CommonPersister {
             AbstractPersister.log.debug( "New gene: " + gene );
         gene = geneDao.create( gene );
 
-        Collection<GeneProduct> geneProductsForNewGene = new HashSet<>();
+        Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
         for ( GeneProduct product : tempGeneProduct ) {
             GeneProduct existingProduct = geneProductDao.find( product );
             if ( existingProduct != null ) {
@@ -500,7 +497,7 @@ abstract public class GenomePersister extends CommonPersister {
             // products are not persistent until the session is flushed, later. There might be a better way around this,
             // but so far as I know this is the only place this happens.
             //noinspection unchecked
-            gene.setProducts( geneProductDao.create( gene.getProducts() ) );
+            gene.setProducts( new HashSet<>( geneProductDao.create( gene.getProducts() ) ) );
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {
@@ -675,7 +672,7 @@ abstract public class GenomePersister extends CommonPersister {
 
     private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
-        existing = geneProductDao.thaw( existing );
+        geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
             updatedGpMap.put( de.getAccession(), de );
         }
@@ -783,7 +780,7 @@ abstract public class GenomePersister extends CommonPersister {
                 }
 
                 // handle less common cases, largely due to database cruft.
-                otherGpUsingThisGi = geneProductDao.thaw( otherGpUsingThisGi );
+                geneProductDao.thaw( otherGpUsingThisGi );
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
@@ -810,7 +807,7 @@ abstract public class GenomePersister extends CommonPersister {
                                     + existingGene + " -- detected during GI update checks " );
 
                     // Here we just remove its old association.
-                    oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
+                    geneDao.thaw( oldGeneForExistingGeneProduct );
                     oldGeneForExistingGeneProduct.getProducts().remove( otherGpUsingThisGi );
                     geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -954,7 +951,7 @@ abstract public class GenomePersister extends CommonPersister {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
         assert !this.isTransient( geneForExistingGeneProduct );
 
-        existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
+        geneProductDao.thaw( existingGeneProduct );
 
         // Update all the fields. Note that usually, some of these can't have changed or we wouldn't have even
         // found the 'existing' one (name GI in particular); however, sometimes we are updating this information

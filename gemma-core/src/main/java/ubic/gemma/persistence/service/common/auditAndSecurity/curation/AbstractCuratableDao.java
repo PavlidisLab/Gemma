@@ -13,6 +13,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,16 +27,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
 
     protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
         super( objectAlias, elementClass, sessionFactory );
-    }
-
-    @Override
-    public Collection<C> create( final Collection<C> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( connection -> {
-            for ( C entity : entities ) {
-                AbstractCuratableDao.this.create( entity );
-            }
-        } );
-        return entities;
     }
 
     @Override

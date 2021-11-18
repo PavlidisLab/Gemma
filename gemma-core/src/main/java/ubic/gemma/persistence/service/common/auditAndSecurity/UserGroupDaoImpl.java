@@ -96,11 +96,6 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public Integer countAll() {
-        return this.loadAll().size();
-    }
-
-    @Override
     public void remove( Long id ) {
         UserGroup userGroup = this.load( id );
         // this check is done higher up as well...

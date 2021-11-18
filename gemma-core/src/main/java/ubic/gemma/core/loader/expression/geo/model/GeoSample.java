@@ -21,10 +21,7 @@ package ubic.gemma.core.loader.expression.geo.model;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
@@ -55,7 +52,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private Collection<GeoPlatform> platforms;
     private final Collection<GeoReplication> replicates;
     private String scanProtocol = "";
-    private Collection<String> seriesAppearsIn = new HashSet<>();
+    private Set<String> seriesAppearsIn = new HashSet<>();
     private String supplementaryFile = "";
     private int tagCount;
     private int tagLength;
@@ -282,7 +279,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.scanProtocol;
     }
 
-    public Collection<String> getSeriesAppearsIn() {
+    public Set<String> getSeriesAppearsIn() {
         return seriesAppearsIn;
     }
 
@@ -415,7 +412,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.scanProtocol = scanProtocol;
     }
 
-    public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
+    public void setSeriesAppearsIn( Set<String> otherSeriesAppearsIn ) {
         this.seriesAppearsIn = otherSeriesAppearsIn;
     }
 

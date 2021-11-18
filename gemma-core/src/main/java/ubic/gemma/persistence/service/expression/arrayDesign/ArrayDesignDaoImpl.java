@@ -19,6 +19,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -799,7 +800,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesign thaw( final ArrayDesign arrayDesign ) {
+    public void thaw( final ArrayDesign arrayDesign ) {
         if ( arrayDesign.getId() == null ) {
             throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
         }
@@ -810,7 +811,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         StopWatch timer = new StopWatch();
         timer.start();
 
-        ArrayDesign result = this.thawLite( arrayDesign );
+        this.thawLite( arrayDesign );
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.info( "Thaw array design stage 1: " + timer.getTime() + "ms" );
@@ -825,7 +826,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
          */
         AbstractDao.log.info( "Start initialize composite sequences" );
 
-        Hibernate.initialize( result.getCompositeSequences() );
+        Hibernate.initialize( arrayDesign.getCompositeSequences() );
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.info( "Thaw array design stage 2: " + timer.getTime() + "ms" );
@@ -840,7 +841,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Collection<CompositeSequence> thawed = new HashSet<>();
         Collection<CompositeSequence> batch = new HashSet<>();
         long lastTime = timer.getTime();
-        for ( CompositeSequence cs : result.getCompositeSequences() ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             batch.add( cs );
             if ( batch.size() == 1000 ) {
                 long t = timer.getTime();
@@ -862,54 +863,50 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
         }
 
-        result.getCompositeSequences().clear();
-        result.getCompositeSequences().addAll( thawed );
+        arrayDesign.getCompositeSequences().clear();
+        arrayDesign.getCompositeSequences().addAll( thawed );
 
         /*
          * This is a bit ugly, but necessary to avoid 'dirty collection' errors later.
          */
-        if ( result.getCompositeSequences() instanceof PersistentCollection )
-            ( ( PersistentCollection ) result.getCompositeSequences() ).clearDirty();
+        if ( arrayDesign.getCompositeSequences() instanceof PersistentCollection )
+            ( ( PersistentCollection ) arrayDesign.getCompositeSequences() ).clearDirty();
 
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.info( "Thaw array design stage 3: " + timer.getTime() );
         }
-
-        return result;
     }
 
     @Override
-    public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "array design cannot be null" );
-        }
-        List res = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
-                                + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
-                                + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.alternativeTo where a.id=:adId" )
-                .setParameter( "adId", arrayDesign.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException(
-                    "No array design with id=" + arrayDesign.getId() + " could be loaded." );
-        }
-
-        return ( ArrayDesign ) res.get( 0 );
+    public void thawLite( ArrayDesign arrayDesign ) {
+        Hibernate.initialize( arrayDesign.getExternalReferences() );
+        Hibernate.initialize( arrayDesign.getSubsumingArrayDesign() );
+        Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
+        Hibernate.initialize( arrayDesign.getDesignProvider() );
+        Hibernate.initialize( arrayDesign.getPrimaryTaxon() );
+        Hibernate.initialize( arrayDesign.getAuditTrail() );
+        Hibernate.initialize( arrayDesign.getAuditTrail().getEvents() );
+        Hibernate.initialize( arrayDesign.getCurationDetails() );
+        Hibernate.initialize( arrayDesign.getMergees() );
+        Hibernate.initialize( arrayDesign.getMergedInto() );
+        Hibernate.initialize( arrayDesign.getAlternateNames() );
+        Hibernate.initialize( arrayDesign.getAlternativeTo() );
     }
 
     @Override
-    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
+    public void thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() )
-            return arrayDesigns;
+            return;
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
+        List<ArrayDesign> thawedAds = this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from ArrayDesign a " + "left join fetch a.subsumedArrayDesigns "
                                 + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                                 + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
                                 + " left join fetch a.mergedInto left join fetch a.alternativeTo where a.id in (:adIds)" )
                 .setParameterList( "adIds", EntityUtils.getIds( arrayDesigns ) ).list();
+        arrayDesigns.clear();
+        arrayDesigns.addAll( thawedAds );
     }
 
     @Override

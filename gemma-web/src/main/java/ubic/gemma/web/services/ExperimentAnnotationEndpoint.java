@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,7 +35,7 @@ import java.util.Collection;
  * category often just an ontology URI and the term is the URI of the annotation. The category is left blank for terms
  * that are not from ontologies (free text). The evidence code represents how the annotation came to be.
  * (http://www.geneontology.org/GO.evidence.shtml)
- * 
+ *
  * @author klc, gavin
  *
  */
@@ -60,7 +60,7 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
@@ -86,13 +86,12 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
         for ( String eeString : eeResult ) {
 
             eeId = Long.parseLong( eeString );
-            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+            ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( eeId );
 
             if ( ee == null ) {
                 String msg = "No expression experiment with id, " + eeId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
-            ee = expressionExperimentService.thawLite( ee );
             Collection<Characteristic> characterCol = ee.getCharacteristics();
 
             for ( Characteristic character : characterCol ) {

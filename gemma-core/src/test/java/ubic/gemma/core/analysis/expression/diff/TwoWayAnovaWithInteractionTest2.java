@@ -33,13 +33,12 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 
 import static org.junit.Assert.*;
 
@@ -157,10 +156,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService
                 .load( persistent.iterator().next().getId() );
 
-        differentialExpressionAnalysisService.thaw( refetched );
-        for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            expressionAnalysisResultSetService.thaw( ears );
-        }
+        refetched = differentialExpressionAnalysisService.thaw( refetched );
+        refetched.setResultSets( new HashSet<>( expressionAnalysisResultSetService.thaw( refetched.getResultSets() ) ) );
 
         this.checkResults( refetched );
 

@@ -59,6 +59,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vectors ) {
         try {
@@ -249,7 +250,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             return null;
         }
 
-        expressionAnalysisResultSetService.thaw( ar );
+        ar = expressionAnalysisResultSetService.thaw( ar );
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
@@ -292,6 +293,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
         try {
 
@@ -306,12 +308,13 @@ public class ProcessedExpressionDataVectorServiceImpl
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
                     ExceptionUtils.getStackTrace( e ) );
-            throw new RuntimeException( e );
+            throw e;
         }
 
     }
 
     @Override
+    @Transactional
     public void reorderByDesign( Long eeId ) {
         this.helperService.reorderByDesign( eeId );
     }

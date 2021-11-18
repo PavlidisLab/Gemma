@@ -55,10 +55,10 @@ public class BibliographicPhenotypesValueObject implements Comparable<Bibliograp
         this.phenotypesValues = phenotypesValues;
     }
 
-    public static Collection<BibliographicPhenotypesValueObject> phenotypeAssociations2BibliographicPhenotypesValueObjects(
+    public static Set<BibliographicPhenotypesValueObject> phenotypeAssociations2BibliographicPhenotypesValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = new TreeSet<>();
+        Set<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = new TreeSet<>();
 
         for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 

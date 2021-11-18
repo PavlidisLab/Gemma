@@ -73,7 +73,4 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
     Collection<Gene> getGenesByNcbiId( String search );
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
-
-    GeneProduct thaw( GeneProduct geneProduct );
-
 }

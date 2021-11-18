@@ -107,8 +107,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         assertEquals( null, charToParent.get( eeChar2 ) );
     }
 
-    private Collection<Characteristic> getTestPersistentCharacteristics( int n ) {
-        Collection<Characteristic> chars = new HashSet<>();
+    private Set<Characteristic> getTestPersistentCharacteristics( int n ) {
+        Set<Characteristic> chars = new HashSet<>();
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );

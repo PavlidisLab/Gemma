@@ -15,6 +15,7 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,7 @@ public class BibliographicReferenceDaoImpl
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
         //noinspection unchecked
         return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
-                "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                        "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
                 .setParameter( "id", id ).setParameter( "databaseName", databaseName ).uniqueResult();
     }
 
@@ -73,24 +74,25 @@ public class BibliographicReferenceDaoImpl
     }
 
     @Override
-    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+    public void thaw( BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getId() == null )
-            return bibliographicReference;
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id " )
-                .setParameter( "id", bibliographicReference.getId() ).uniqueResult();
+            return;
+        Hibernate.initialize( bibliographicReference.getPubAccession() );
+        Hibernate.initialize( bibliographicReference.getChemicals() );
+        Hibernate.initialize( bibliographicReference.getMeshTerms() );
+        Hibernate.initialize( bibliographicReference.getKeywords() );
     }
 
     @Override
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
+    public void thaw( List<BibliographicReference> bibliographicReferences ) {
         if ( bibliographicReferences.isEmpty() )
-            return bibliographicReferences;
+            return;
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
+        List<BibliographicReference> thawed = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
+        Collections.copy( bibliographicReferences, thawed );
     }
 
     @Override

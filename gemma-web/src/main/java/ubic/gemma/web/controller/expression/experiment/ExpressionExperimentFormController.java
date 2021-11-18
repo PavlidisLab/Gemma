@@ -171,12 +171,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
         BaseFormController.log.debug( id );
         ExpressionExperimentEditValueObject obj;
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         }
-
-        ee = expressionExperimentService.thawLite( ee );
 
         List<QuantitationTypeValueObject> qts = new ArrayList<>(
                 quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
@@ -219,13 +217,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
             BindException errors ) {
 
         ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.loadAndThawLite( eeCommand.getId() );
 
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "Could not load experiment" );
         }
-
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         /*
          * Much more complicated

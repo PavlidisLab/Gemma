@@ -111,7 +111,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         /*
          * Load all the bioassay dimensions, which will be merged.
          */
-        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<>();
+        Set<BioAssayDimension> allOldBioAssayDims = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
             for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
@@ -437,7 +437,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalStateException( "No vectors" );
         }
 
-        rawExpressionDataVectorService.thaw( oldVectors );
+        oldVectors = rawExpressionDataVectorService.thaw( oldVectors );
         Map<QuantitationType, Collection<RawExpressionDataVector>> qt2Vec = new HashMap<>();
         Collection<QuantitationType> qtsToAdd = new HashSet<>();
         for ( RawExpressionDataVector v : oldVectors ) {

@@ -235,7 +235,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 .findByName( "Master set for " + taxon.getCommonName().toLowerCase() );
         SearchResultDisplayObject newSRDO;
         for ( ExpressionExperimentSet set : sets ) {
-            expressionExperimentSetService.thaw( set );
+            set = expressionExperimentSetService.thaw( set );
             if ( set.getTaxon().getId().equals( taxonId ) ) {
                 ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set );
                 newSRDO = new SearchResultDisplayObject( eevo );

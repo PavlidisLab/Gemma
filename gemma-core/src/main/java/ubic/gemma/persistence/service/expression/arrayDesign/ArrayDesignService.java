@@ -99,15 +99,24 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     @Override
-    Collection<ArrayDesign> load( Collection<Long> ids );
+    List<ArrayDesign> load( Collection<Long> ids );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     @Override
     ArrayDesign load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ArrayDesign loadAndThaw( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ArrayDesign loadAndThawLite( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> loadAndThawLite( Collection<Long> id );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     @Override
-    Collection<ArrayDesign> loadAll();
+    List<ArrayDesign> loadAll();
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     @Override
@@ -360,18 +369,29 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    /**
+     * @deprecated use {@link #loadAndThaw} instead
+     */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      *
+     * @deprecated use {@link #loadAndThawLite(Long)} instead
+     *
      * @param arrayDesign AD
      * @return AD
      */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
+    /**
+     * @deprecated use {@link #loadAndThawLite(Long)} instead
+     */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
@@ -391,5 +411,4 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @return
      */
     boolean isBlackListed( String geoAccession );
-
 }

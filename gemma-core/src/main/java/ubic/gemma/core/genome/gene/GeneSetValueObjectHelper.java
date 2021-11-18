@@ -16,6 +16,7 @@ package ubic.gemma.core.genome.gene;
 
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 import java.util.Collection;
 import java.util.List;

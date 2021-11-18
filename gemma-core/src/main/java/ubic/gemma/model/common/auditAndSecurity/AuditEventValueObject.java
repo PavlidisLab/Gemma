@@ -56,7 +56,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
     }
 
     public AuditEventValueObject( AuditEvent ae ) {
-        super( ae.getId() );
+        super( ae );
         if ( ae.getPerformer() != null )
             this.setPerformer( ae.getPerformer().getUserName() );
         if ( ae.getAction() != null )

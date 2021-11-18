@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author paul
@@ -39,6 +40,8 @@ public interface ExperimentalFactorService
 
     String BATCH_FACTOR_NAME = "batch";
     String FACTOR_VALUE_RNAME_PREFIX = "fv_";
+
+    ExperimentalFactor loadAndThaw( Long id );
 
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
@@ -58,7 +61,7 @@ public interface ExperimentalFactorService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> load( Collection<Long> ids );
+    List<ExperimentalFactor> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -66,11 +69,17 @@ public interface ExperimentalFactorService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> loadAll();
+    List<ExperimentalFactor> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExperimentalFactor experimentalFactor );
 
+    /**
+     * @deprecated use {@link #loadAndThaw(Long)} instead
+     * @param ef
+     * @return
+     */
+    @Deprecated
     ExperimentalFactor thaw( ExperimentalFactor ef );
 }

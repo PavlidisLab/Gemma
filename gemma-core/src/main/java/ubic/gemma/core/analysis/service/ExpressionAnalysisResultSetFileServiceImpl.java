@@ -30,10 +30,10 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
         // we need to peek in the contrast result to understand factor value interactions
         // i.e. interaction between genotype and time point might result in a contrast_male_3h column, although we would
         // use factor value IDs in the actual column name which might result in something like contrast_1292_2938
-        final Collection<ContrastResult> firstContrastResults = analysisResultSet.getResults().stream()
+        final Set<ContrastResult> firstContrastResults = analysisResultSet.getResults().stream()
                 .findFirst()
                 .map( DifferentialExpressionAnalysisResult::getContrasts )
-                .orElse( Collections.emptyList() );
+                .orElse( Collections.emptySet() );
 
         // this is the order the factor values are displayed
         Comparator<ContrastResult> contrastResultComparator = Comparator

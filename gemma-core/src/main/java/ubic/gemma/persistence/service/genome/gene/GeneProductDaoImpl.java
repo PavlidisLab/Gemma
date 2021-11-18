@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         try {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
+                            "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -82,7 +83,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         try {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
+                            "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -94,26 +95,22 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
-                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
-                        + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
-                        + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
+                        "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
+                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
+                                + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
+                                + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
                 .setParameter( "taxon", taxon ).list();
     }
 
     @Override
-    public GeneProduct thaw( GeneProduct existing ) {
-        List<?> re = this.getHibernateTemplate().findByNamedParam(
-                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
-                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
-                        + "left join fetch g.aliases  where gp = :gp", "gp", existing );
-
-        if ( re.isEmpty() )
-            return null;
-
-        assert re.size() == 1;
-
-        return ( GeneProduct ) re.iterator().next();
+    public void thaw( GeneProduct existing ) {
+        Hibernate.initialize( existing.getGene() );
+        Hibernate.initialize( existing.getGene().getTaxon() );
+        Hibernate.initialize( existing.getGene().getAliases() );
+        Hibernate.initialize( existing.getPhysicalLocation() );
+        Hibernate.initialize( existing.getPhysicalLocation().getChromosome() );
+        Hibernate.initialize( existing.getPhysicalLocation().getChromosome().getTaxon() );
+        Hibernate.initialize( existing.getAccessions() );
     }
 
     @Override

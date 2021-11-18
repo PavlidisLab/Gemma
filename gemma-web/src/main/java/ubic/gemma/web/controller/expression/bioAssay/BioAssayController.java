@@ -67,12 +67,11 @@ public class BioAssayController {
     private OutlierDetectionService outlierDetectionService;
 
     public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
-        ExpressionExperiment ee = eeService.load( eeId );
+        ExpressionExperiment ee = eeService.loadAndThawLite( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
         }
 
-        ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
         Collection<OutlierDetails> outliers = null;
         try {
@@ -117,12 +116,10 @@ public class BioAssayController {
                     .addObject( "message", BioAssayController.identifierNotFound );
         }
 
-        BioAssay bioAssay = bioAssayService.load( id );
+        BioAssay bioAssay = bioAssayService.loadAndThaw( id );
         if ( bioAssay == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-
-        bioAssayService.thaw( bioAssay );
 
         request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" )
@@ -143,11 +140,10 @@ public class BioAssayController {
             String[] idList = StringUtils.split( sId, ',' );
             for ( String anIdList : idList ) {
                 Long id = Long.parseLong( anIdList );
-                BioAssay bioAssay = bioAssayService.load( id );
+                BioAssay bioAssay = bioAssayService.loadAndThaw( id );
                 if ( bioAssay == null ) {
                     throw new EntityNotFoundException( id + " not found" );
                 }
-                bioAssayService.thaw( bioAssay );
                 bioAssays.add( bioAssay );
             }
         }

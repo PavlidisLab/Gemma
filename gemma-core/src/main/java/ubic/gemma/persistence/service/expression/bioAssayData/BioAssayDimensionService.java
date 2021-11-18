@@ -41,7 +41,10 @@ public interface BioAssayDimensionService
     @Secured({ "GROUP_USER" })
     void remove( BioAssayDimension bioAssayDimension );
 
-    void thawLite( BioAssayDimension bioAssayDimension );
+    @Deprecated
+    BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
+    @Override
+    @Deprecated
     BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
 }

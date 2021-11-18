@@ -21,16 +21,28 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface PreprocessorService {
 
+    /**
+     * Preprocess the given experiment, which consist of the following steps:
+     *
+     *  * remove invalidated date
+     *  * process missing values
+     *  * compute processed expression data
+     *  * perform batch correction and diagnostics
+     *  * recalculate experiment batch information
+     *
+     * @param ee an EE to be pre-processed
+     * @return a pre-processed EE which you should use as a replacement
+     * @throws PreprocessingException if any aforementioned step fails
+     */
     ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
+     * This is a light flavour of {@link #process(ExpressionExperiment)} used solely in {@link ubic.gemma.core.apps.TwoChannelMissingValueCLI}.
+     *
      * @param  ee                     the experiment
-     * @param  light                  if true, just do the bare minimum. The following are skipped: two-channel missing
-     *                                values; redoing
-     *                                differential expression; batch correction.
      * @throws PreprocessingException if there was a problem during the processing
      */
-    void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
+    void processLight( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
      * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
@@ -50,9 +62,9 @@ public interface PreprocessorService {
     /**
      * Create or update the sample correlation, PCA and M-V data. This is also done as part of process so should only be
      * called if only a refresh is needed.
-     * 
+     *
      * @param ee to be processed
      */
-    void processDiagnostics( ExpressionExperiment ee );
+    void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException;
 
 }

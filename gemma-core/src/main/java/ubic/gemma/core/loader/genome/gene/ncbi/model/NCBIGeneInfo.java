@@ -2,10 +2,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi.model;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -65,7 +62,7 @@ import java.util.Map;
 @SuppressWarnings("unused") // Possible external use
 public class NCBIGeneInfo {
 
-    private final Collection<String> synonyms = new HashSet<>();
+    private final Set<String> synonyms = new HashSet<>();
     private final Map<String, String> dbXrefs = new HashMap<>();
     private int taxId;
     private String geneId;

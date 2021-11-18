@@ -19,7 +19,8 @@ import cern.colt.matrix.DoubleMatrix2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -58,7 +59,7 @@ import java.util.*;
  *
  * @author paul
  */
-@Component
+@Service
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger( SampleCoexpressionAnalysisServiceImpl.class );
@@ -93,11 +94,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = FilteringException.class)
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
+    @Transactional(rollbackFor = FilteringException.class)
     public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException {
         SampleCoexpressionAnalysis analysis = this.load( ee );
         SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
@@ -110,6 +113,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional(readOnly = true, rollbackFor = FilteringException.class)
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -127,11 +131,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasAnalysis( ExpressionExperiment ee ) {
         return sampleCoexpressionAnalysisDao.load( ee ) != null;
     }
 
     @Override
+    @Transactional(rollbackFor = FilteringException.class)
     public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -152,6 +158,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
     }
@@ -271,7 +278,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws
+            FilteringException {
         FilterConfig fConfig = new FilterConfig();
         fConfig.setIgnoreMinimumRowsThreshold( true );
         fConfig.setIgnoreMinimumSampleThreshold( true );
@@ -287,7 +295,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
-    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix
+            mat ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
         if ( !importantFactors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );

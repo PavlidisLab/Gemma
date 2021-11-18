@@ -38,6 +38,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing gene sets
@@ -89,21 +91,20 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
+    public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet resultObject ) {
+        return this.geneSetDao.loadValueObject( resultObject );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
         return this.geneSetDao.loadValueObjectsLite( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
-        return geneSetDao.loadValueObject( geneSet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
+    public Collection<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
         return this.geneSetDao.loadValueObjects( ids );
-
     }
 
     @Override
@@ -198,7 +199,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
-    
+
 //    @Override
 //    @Transactional
 //    public void addGene(GeneSet geneset, Gene gene) {
@@ -220,7 +221,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional
-    public GeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
+    public DatabaseBackedGeneSetValueObject createDatabaseEntity( GeneSetValueObject geneSetVo ) {
         GeneSet newGeneSet = GeneSet.Factory.newInstance();
         newGeneSet.setName( geneSetVo.getName() );
         newGeneSet.setDescription( geneSetVo.getDescription() );
@@ -236,7 +237,7 @@ public class GeneSetServiceImpl implements GeneSetService {
                         + " genes fetched" );
             }
 
-            Collection<GeneSetMember> geneMembers = new HashSet<>();
+            Set<GeneSetMember> geneMembers = new HashSet<>();
             for ( Gene g : genes ) {
                 GeneSetMember gmember = GeneSetMember.Factory.newInstance();
                 gmember.setGene( g );
@@ -262,16 +263,13 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+    public Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
         Gene gene = geneService.load( geneId );
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
 
-        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
-        //noinspection CollectionAddAllCanBeReplacedWithConstructor // not possible safely
-        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
-        return gsvos;
+        return geneSetValueObjectHelper.convertToValueObjects( genesets, false );
     }
 
     @Override
@@ -442,6 +440,11 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    public Collection<Gene> getGenesInGroup( GeneSet gs ) {
+        return gs.getMembers().stream().map( GeneSetMember::getGene ).collect( Collectors.toSet() );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
 
@@ -463,14 +466,19 @@ public class GeneSetServiceImpl implements GeneSetService {
     }
 
     @Override
+    public int getSize( GeneSet gs ) {
+        return this.geneSetDao.getGeneCount( gs.getId() );
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public int getSize( GeneSetValueObject object ) {
+    public int getSize( DatabaseBackedGeneSetValueObject object ) {
         return this.geneSetDao.getGeneCount( object.getId() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+    public Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -510,10 +518,7 @@ public class GeneSetServiceImpl implements GeneSetService {
             }
         }
 
-        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
-        //noinspection CollectionAddAllCanBeReplacedWithConstructor // Not possible safely
-        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
-        return gsvos;
+        return geneSetValueObjectHelper.convertToValueObjects( foundGeneSets );
     }
 
     @Override
@@ -572,15 +577,4 @@ public class GeneSetServiceImpl implements GeneSetService {
             }
         }
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#thaw(ubic.gemma.model.genome.gene.GeneSet)
-     */
-    @Override
-    public void thaw( GeneSet geneSet ) {
-        this.geneSetDao.thaw( geneSet );
-    }
-
 }

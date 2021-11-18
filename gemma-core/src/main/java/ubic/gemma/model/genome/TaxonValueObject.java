@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
@@ -38,6 +39,7 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         this.setNcbiId( taxon.getNcbiId() );
         this.setIsGenesUsable( taxon.getIsGenesUsable() );
 
+        // this is set to lazy="false" in Taxon.hbm.xml, so we don't need to test with Hibernate.isInitialized
         if ( taxon.getExternalDatabase() != null ) {
             this.setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
         }

@@ -23,6 +23,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -39,7 +40,7 @@ public interface ProtocolService extends BaseService<Protocol> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Protocol> loadAll();
+    List<Protocol> loadAll();
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( Long id );

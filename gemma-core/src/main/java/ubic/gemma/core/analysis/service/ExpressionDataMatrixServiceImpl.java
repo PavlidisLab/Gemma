@@ -21,14 +21,14 @@ package ubic.gemma.core.analysis.service;
 import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -49,7 +49,7 @@ import java.util.Map;
  *
  * @author keshav
  */
-@Component
+@Service
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
 
     @Autowired
@@ -62,6 +62,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     private ArrayDesignService arrayDesignService;
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
@@ -69,6 +70,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -76,6 +78,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException {
         ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignName );
@@ -88,6 +91,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
@@ -95,11 +99,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
             throw new IllegalArgumentException(
                     "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
         }
-        this.processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method ) {
 
@@ -144,7 +149,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( dataVectors == null || dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
-        this.processedExpressionDataVectorService.thaw( dataVectors );
+        dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return filter.getFilteredMatrix( dataVectors );
     }
 

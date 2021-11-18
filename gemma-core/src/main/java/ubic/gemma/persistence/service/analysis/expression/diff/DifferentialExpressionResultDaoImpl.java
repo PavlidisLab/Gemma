@@ -454,7 +454,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     .info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds=" + StringUtils
                             .abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
                             + StringUtils
-                                    .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
+                            .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
             if ( timeForFillingNonSig > 100 ) {
                 AbstractDao.log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
             }
@@ -512,7 +512,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
             Double threshold, Integer limit, Integer minNumberOfResults ) {
 
-        if ( minNumberOfResults == null || minNumberOfResults < 1) {
+        if ( minNumberOfResults == null || minNumberOfResults < 1 ) {
             throw new IllegalArgumentException( "Minimum number of results must be positive" );
         }
 
@@ -648,7 +648,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select ef from ExpressionAnalysisResultSet rs"
-                + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
+                        + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
                 .setParameter( "differentialExpressionAnalysisResult", differentialExpressionAnalysisResult ).list();
 
     }
@@ -877,8 +877,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         //noinspection unchecked
         List<Object[]> ees = session.createQuery(
-                "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
-                        + " where rs.id in (:rsids)" )
+                        "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
+                                + " where rs.id in (:rsids)" )
                 .setParameterList( "rsids", resultSets ).list();
 
         /*
@@ -953,36 +953,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
-        //language=HQL
-        final String queryString = "from DifferentialExpressionAnalysisResult dea where dea.id in (:ids)";
-
-        Collection<DifferentialExpressionAnalysisResult> probeResults = new HashSet<>();
-
-        if ( ids.isEmpty() ) {
-            return probeResults;
-        }
-
-        int BATCH_SIZE = 1000; // previously: 500.
-
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
-            StopWatch timer = new StopWatch();
-            timer.start();
-            //noinspection unchecked
-            probeResults.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ids", batch ).list() );
-
-            if ( timer.getTime() > 1000 ) {
-                AbstractDao.log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer
-                        .getTime() + "ms; query was\n " + queryString );
-            }
-        }
-
-        return probeResults;
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysisResult> loadAll() {
+    public List<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
 

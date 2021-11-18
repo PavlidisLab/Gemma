@@ -87,7 +87,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     /**
      * Retrieve relationships between factors, biomaterials and factorvalues.
-     * 
+     *
      * @param bioMaterialFactorMap to be populated, of experimental factor -> biomaterial ID -> ID of the factor value
      *                             (just an indicator)
      * @param biomaterial          to populate for
@@ -159,7 +159,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
         }
 
-        processedExpressionDataVectorService.thaw( vectors );
+        vectors = processedExpressionDataVectorService.thaw( vectors );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
 
         SVDServiceHelperImpl.log.info( "Starting SVD" );

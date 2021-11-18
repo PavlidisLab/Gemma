@@ -23,6 +23,7 @@ import ubic.gemma.core.loader.util.parser.RecordParser;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This does a very minimal parse of Swissprot records, just to get mRNAs associated with a single protein.
@@ -31,7 +32,7 @@ import java.util.HashSet;
  */
 public class SwissProtParser extends RecordParser<Object> {
 
-    private final Collection<Object> results = new HashSet<>();
+    private final Set<Object> results = new HashSet<>();
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SwissProtParser() {

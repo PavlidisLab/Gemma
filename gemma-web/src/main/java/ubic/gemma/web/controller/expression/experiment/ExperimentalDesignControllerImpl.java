@@ -94,8 +94,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeid );
-        ee = expressionExperimentService.thaw( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThaw( eeid );
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
@@ -112,7 +111,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try (InputStream is = new FileInputStream( f )) {
+        try ( InputStream is = new FileInputStream( f ) ) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. However, this call is wrapped in a transaction
             // as a fail safe.
@@ -167,7 +166,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                     "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Set<Characteristic> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
             //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
             for ( Characteristic c : fv.getCharacteristics() ) {
@@ -202,9 +201,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( fv == null ) {
             throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
         }
-        
+
         if ( StringUtils.isBlank( c.getCategory() ) ) {
-            throw new IllegalArgumentException("The category cannot be blank for " + c);
+            throw new IllegalArgumentException( "The category cannot be blank for " + c );
         }
 
         if ( fv.getCharacteristics() == null ) {
@@ -280,8 +279,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
-        ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
-        ee = expressionExperimentService.thawLite( ee );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( e.getId() );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();

@@ -29,8 +29,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisDao;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see DifferentialExpressionAnalysis
@@ -77,6 +77,6 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
 
     void thawResultSets(DifferentialExpressionAnalysis dea);
 
-    Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
+    Map<Long, Set<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit );
 }

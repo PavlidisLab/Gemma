@@ -527,6 +527,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
+            t = taxonService.thaw( t );
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
@@ -655,7 +656,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            compositeSequenceService.thaw( Collections.singleton( probe ) );
+            probe = compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

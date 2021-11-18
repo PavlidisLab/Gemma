@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private String abstractText;
     private String authorList;
     private CitationValueObject citation;
-    private Collection<ExpressionExperimentValueObject> experiments = new HashSet<>();
+    private Set<ExpressionExperimentValueObject> experiments = new HashSet<>();
     private String issue;
     private String pages;
     private String pubAccession;
@@ -48,7 +48,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private String volume;
     private Collection<String> meshTerms;
     private Collection<String> chemicalsTerms;
-    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
+    private Set<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
     private boolean retracted = false;
 
     /**
@@ -87,7 +87,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
             String pages, String pubAccession, String publication, Date publicationDate, String publisher, String title,
-            String volume, Collection<ExpressionExperimentValueObject> experiments ) {
+            String volume, Set<ExpressionExperimentValueObject> experiments ) {
         super( id );
         this.abstractText = abstractText;
         this.authorList = authorList;
@@ -158,11 +158,11 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.authorList = authorList;
     }
 
-    public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
+    public Set<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
         return this.bibliographicPhenotypes;
     }
 
-    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
+    public void setBibliographicPhenotypes( Set<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
         this.bibliographicPhenotypes = bibliographicPhenotypes;
     }
 
@@ -190,14 +190,14 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     /**
      * @return the experiments
      */
-    public Collection<ExpressionExperimentValueObject> getExperiments() {
+    public Set<ExpressionExperimentValueObject> getExperiments() {
         return experiments;
     }
 
     /**
      * @param experiments the experiments to set
      */
-    public void setExperiments( Collection<ExpressionExperimentValueObject> experiments ) {
+    public void setExperiments( Set<ExpressionExperimentValueObject> experiments ) {
         this.experiments = experiments;
     }
 

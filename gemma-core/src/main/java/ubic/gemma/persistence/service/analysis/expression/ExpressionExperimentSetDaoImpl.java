@@ -249,7 +249,7 @@ public class ExpressionExperimentSetDaoImpl
 
             // Add experiment ids
             if ( loadEEIds ) {
-                v.setExpressionExperimentIds( this.getExperimentIdsInSet( eeId ) );
+                v.setExpressionExperimentIds( new HashSet<>( this.getExperimentIdsInSet( eeId ) ) );
             }
 
             vo.put( eeId, v );

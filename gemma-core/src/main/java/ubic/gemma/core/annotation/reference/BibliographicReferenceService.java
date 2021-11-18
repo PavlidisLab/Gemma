@@ -126,9 +126,4 @@ public interface BibliographicReferenceService
     List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
     List<BibliographicReferenceValueObject> search( String query );
-
-    BibliographicReference thaw( BibliographicReference bibliographicReference );
-
-    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
 }

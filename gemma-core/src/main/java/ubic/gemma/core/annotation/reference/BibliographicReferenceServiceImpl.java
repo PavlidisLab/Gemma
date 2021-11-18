@@ -69,11 +69,13 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
         return this.loadMultipleValueObjectsFromObjects( Collections.singleton( entity ) ).iterator().next();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> loadAllValueObjects() {
         return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }
@@ -97,7 +99,7 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( String id ) {
 
         return this.bibliographicReferenceDao
@@ -106,7 +108,7 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( String id, String databaseName ) {
 
         return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
@@ -134,7 +136,7 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
     }
@@ -282,18 +284,6 @@ public class BibliographicReferenceServiceImpl
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
-        return this.bibliographicReferenceDao.thaw( bibliographicReference );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
-        return this.bibliographicReferenceDao.thaw( bibliographicReferences );
-    }
-
     private List<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
             Collection<BibliographicReference> bibRefs ) {
         if ( bibRefs.isEmpty() ) {
@@ -316,7 +306,7 @@ public class BibliographicReferenceServiceImpl
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
                 .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+        Set<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
                 .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
         bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
     }
@@ -332,9 +322,9 @@ public class BibliographicReferenceServiceImpl
             BibliographicReferenceValueObject bibRefVO ) {
         Collection<ExpressionExperiment> relatedExperiments = this.getRelatedExperiments( bibRef );
         if ( relatedExperiments.isEmpty() ) {
-            bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
+            bibRefVO.setExperiments( new HashSet<>() );
         } else {
-            bibRefVO.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments ) );
+            bibRefVO.setExperiments( new HashSet<>( expressionExperimentService.loadValueObjects( relatedExperiments ) ) );
         }
 
     }
@@ -346,7 +336,7 @@ public class BibliographicReferenceServiceImpl
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = idToBibRefVO.get( bibref.getId() );
             if ( relatedExperiments.containsKey( bibref ) ) {
-                vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( bibref ) ) );
+                vo.setExperiments( new HashSet<>( expressionExperimentService.loadValueObjects( relatedExperiments.get( bibref ) ) ) );
             }
         }
     }

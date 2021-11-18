@@ -45,9 +45,9 @@ import java.util.Map.Entry;
 public class GeoValues implements Serializable {
 
     private static final long serialVersionUID = 3748363645735281578L;
-    private static final Collection<String> aggressivelyRemovedQuantitationTypes = new HashSet<>();
+    private static final Set<String> aggressivelyRemovedQuantitationTypes = new HashSet<>();
     private static final Log log = LogFactory.getLog( GeoValues.class.getName() );
-    private static final Collection<String> skippableQuantitationTypes = new HashSet<>();
+    private static final Set<String> skippableQuantitationTypes = new HashSet<>();
 
     // private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
 

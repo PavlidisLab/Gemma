@@ -291,6 +291,8 @@ public class GeoConverterImpl implements GeoConverter {
 
         GeoConverterImpl.log.debug( platformTaxa.size() + " taxa in GEO platform" );
         // check if they share a common parent taxon to use as primary taxa.
+        // thaw to get parent taxon
+        platformTaxa = this.taxonService.thaw( platformTaxa );
         // calculate based on probe taxa:
 
         GeoConverterImpl.log.debug( "Looking at probe taxa to determine 'primary' taxon" );

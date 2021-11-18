@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,21 +32,18 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 
 /**
- * 
- * 
+ *
+ *
  * @author paul
  */
 public class BlacklistTest extends BaseSpringContextTest {
 
     @Autowired
-    BlacklistedEntityDao blacklistedEntityDao;
-
-    @Autowired
-    ExternalDatabaseDao externalDatabaseDao;
+    BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     GeoService geoService;
@@ -63,15 +60,15 @@ public class BlacklistTest extends BaseSpringContextTest {
 
         blee.setShortName( acc );
 
-        ExternalDatabase geo = externalDatabaseDao.findByName( "geo" );
+        ExternalDatabase geo = externalDatabaseService.findByName( "geo" );
 
         DatabaseEntry d = DatabaseEntry.Factory.newInstance( acc, null, null, geo );
         blee.setExternalAccession( d );
 
-        blacklistedEntityDao.create( blee );
+        blacklistedEntityService.create( blee );
 
-        assertTrue( blacklistedEntityDao.isBlacklisted( acc ) );
-        assertFalse( blacklistedEntityDao.isBlacklisted( "imok" ) );
+        assertTrue( blacklistedEntityService.isBlacklisted( acc ) );
+        assertFalse( blacklistedEntityService.isBlacklisted( "imok" ) );
         try {
             geoService.fetchAndLoad( acc, false, false, false );
             fail( "Should have gotten an exception when trying to load a blacklisted experiment" );

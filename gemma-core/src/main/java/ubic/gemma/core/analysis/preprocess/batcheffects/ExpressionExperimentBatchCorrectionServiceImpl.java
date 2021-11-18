@@ -156,7 +156,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          */
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-        processedExpressionDataVectorService.thaw( vectos );
+        vectos = processedExpressionDataVectorService.thaw( vectos );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
         return this.comBat( mat );

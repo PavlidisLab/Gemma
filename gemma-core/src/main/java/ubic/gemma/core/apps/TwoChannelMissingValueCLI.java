@@ -43,6 +43,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * CLI for computing and persisting the 'present' calls for two-channel data -- AND creates the processed data vectors
@@ -53,7 +54,7 @@ import java.util.HashSet;
 public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String MISSING_VALUE_OPTION = "mvind";
-    private final Collection<Double> extraMissingValueIndicators = new HashSet<>();
+    private final Set<Double> extraMissingValueIndicators = new HashSet<>();
     private RawExpressionDataVectorService rawService;
     private ProcessedExpressionDataVectorService procService;
     private PreprocessorService preprocessorService;
@@ -184,7 +185,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         }
 
         try {
-            preprocessorService.process( ee, true );
+            preprocessorService.processLight( ee );
         } catch ( PreprocessingException e ) {
             AbstractCLI.log
                     .error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );

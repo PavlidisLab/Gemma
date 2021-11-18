@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.biomaterial.Compound;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 public class BibliographicReference extends Describable {
 
@@ -48,14 +49,14 @@ public class BibliographicReference extends Describable {
     private Boolean retracted = false;
 
     /**
-     * @deprecated  never used
+     * @deprecated never used
      */
     @Deprecated
-    private Collection<Characteristic> annotations = new HashSet<>();
+    private Set<Characteristic> annotations = new HashSet<>();
 
-    private Collection<MedicalSubjectHeading> meshTerms = new HashSet<>();
-    private Collection<Keyword> keywords = new HashSet<>();
-    private Collection<Compound> chemicals = new HashSet<>();
+    private Set<MedicalSubjectHeading> meshTerms = new HashSet<>();
+    private Set<Keyword> keywords = new HashSet<>();
+    private Set<Compound> chemicals = new HashSet<>();
 
     public String getAbstractText() {
         return this.abstractText;
@@ -77,12 +78,12 @@ public class BibliographicReference extends Describable {
     }
 
     // never used
-    public Collection<Characteristic> getAnnotations() {
+    public Set<Characteristic> getAnnotations() {
         return this.annotations;
     }
 
     // never used
-    public void setAnnotations( Collection<Characteristic> annotations ) {
+    public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
     }
 
@@ -94,11 +95,11 @@ public class BibliographicReference extends Describable {
         this.authorList = authorList;
     }
 
-    public Collection<Compound> getChemicals() {
+    public Set<Compound> getChemicals() {
         return this.chemicals;
     }
 
-    public void setChemicals( Collection<ubic.gemma.model.expression.biomaterial.Compound> chemicals ) {
+    public void setChemicals( Set<ubic.gemma.model.expression.biomaterial.Compound> chemicals ) {
         this.chemicals = chemicals;
     }
 
@@ -140,19 +141,19 @@ public class BibliographicReference extends Describable {
         this.issue = issue;
     }
 
-    public Collection<Keyword> getKeywords() {
+    public Set<Keyword> getKeywords() {
         return this.keywords;
     }
 
-    public void setKeywords( Collection<Keyword> keywords ) {
+    public void setKeywords( Set<Keyword> keywords ) {
         this.keywords = keywords;
     }
 
-    public Collection<MedicalSubjectHeading> getMeshTerms() {
+    public Set<MedicalSubjectHeading> getMeshTerms() {
         return this.meshTerms;
     }
 
-    public void setMeshTerms( Collection<MedicalSubjectHeading> meshTerms ) {
+    public void setMeshTerms( Set<MedicalSubjectHeading> meshTerms ) {
         this.meshTerms = meshTerms;
     }
 

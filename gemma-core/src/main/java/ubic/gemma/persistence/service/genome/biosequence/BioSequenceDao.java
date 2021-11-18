@@ -58,9 +58,5 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
      */
     Collection<Gene> getGenesByName( String search );
 
-    Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
-
-    BioSequence thaw( BioSequence bioSequence );
-
     BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

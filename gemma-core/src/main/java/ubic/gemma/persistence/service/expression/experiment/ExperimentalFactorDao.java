@@ -33,5 +33,5 @@ public interface ExperimentalFactorDao extends BaseVoEnabledDao<ExperimentalFact
     @Override
     ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
-    ExperimentalFactor thaw( ExperimentalFactor ef );
+    void thaw( ExperimentalFactor ef );
 }

@@ -86,18 +86,6 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public void thaw( BioMaterial bioMaterial ) {
-        this.bioMaterialDao.thaw( bioMaterial );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        return this.bioMaterialDao.thaw( bioMaterials );
-    }
-
-    @Override
     @Transactional
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
@@ -112,6 +100,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional
     public <T> void associateBatchFactor( final Map<BioMaterial, T> descriptors, final Map<T, FactorValue> d2fv ) {
 
         for ( final BioMaterial bm : descriptors.keySet() ) {
@@ -172,6 +161,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
      * @see BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
+    @Transactional
     public BioMaterial findOrCreate( BioMaterial bioMaterial ) {
         return this.bioMaterialDao.findOrCreate( bioMaterial );
     }

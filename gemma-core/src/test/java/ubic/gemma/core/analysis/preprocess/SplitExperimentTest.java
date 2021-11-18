@@ -21,7 +21,9 @@ package ubic.gemma.core.analysis.preprocess;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -82,12 +84,14 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSplitGSE17183ByOrganismPart() throws Exception, PreprocessingException {
+    public void testSplitGSE17183ByOrganismPart() throws PreprocessingException, URISyntaxException, IOException {
 
         String geoId = "GSE17183";
 
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/preprocess" ) ) );
+
+        eeService.remove( eeService.findByAccession( geoId ) );
 
         @SuppressWarnings("unchecked")
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( geoId, false, false, false );

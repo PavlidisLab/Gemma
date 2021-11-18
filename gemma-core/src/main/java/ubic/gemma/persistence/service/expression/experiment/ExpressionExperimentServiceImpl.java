@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
@@ -149,7 +150,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
-    private BlacklistedEntityDao blacklistedEntityDao;
+    private BlacklistedEntityService blacklistedEntityService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -253,6 +254,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -268,6 +270,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BatchInformationFetchingEvent checkBatchFetchStatus( ExpressionExperiment ee ) {
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -283,7 +286,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Integer countNotTroubled() {
+    @Transactional(readOnly = true)
+    public Long countNotTroubled() {
         return this.expressionExperimentDao.countNotTroubled();
     }
 
@@ -313,6 +317,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
         return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
@@ -613,7 +618,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
-        ee = this.thawLiter( ee );
+        this.thawLiter( ee );
 
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );
@@ -819,6 +824,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
         /*
@@ -846,6 +852,7 @@ public class ExpressionExperimentServiceImpl
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
+    @Transactional(readOnly = true)
     public boolean isTroubled( ExpressionExperiment ee ) {
         if ( ee.getCurationDetails().getTroubled() )
             return true;
@@ -967,9 +974,10 @@ public class ExpressionExperimentServiceImpl
      * @param ee the experiment to add the characteristics to.
      */
     @Override
+    @Transactional
     public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        ee = this.thawLite(
-                this.load( ee.getId() ) ); // Necessary to make sure we have the persistent version of the given ee.
+        // Necessary to make sure we have the persistent version of the given ee.
+        ee = this.loadAndThawLite( ee.getId() );
         ontologyService.addExpressionExperimentStatement( vc, ee );
         this.update( ee );
     }
@@ -982,6 +990,7 @@ public class ExpressionExperimentServiceImpl
      * @param ee the experiment to add the characteristics to.
      */
     @Override
+    @Transactional
     public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
         for ( Characteristic characteristic : vc ) {
             this.saveExpressionExperimentStatement( characteristic, ee );
@@ -990,31 +999,55 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+        ExpressionExperiment result = this.load( expressionExperiment.getId() );
+        this.expressionExperimentDao.thawBioAssays( result );
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+        ExpressionExperiment result = this.load( expressionExperiment.getId() );
+        this.expressionExperimentDao.thawWithoutVectors( result );
+        return result;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+        ExpressionExperiment result = this.load( expressionExperiment.getId() );
+        this.expressionExperimentDao.thawForFrontEnd( result );
+        return result;
     }
 
     @Override
     @Transactional
     public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.findOrCreate( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawLiter( Long id ) {
+        return this.thawLiter( this.load( id ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawLite( Long id ) {
+        return this.thawLite( this.load( id ) );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> loadAndThawLite( Collection<Long> ids ) {
+        return null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment loadAndThawBioAssays( Long id ) {
+        return this.thawBioAssays( this.load( id ) );
     }
 
     @Override
@@ -1126,11 +1159,13 @@ public class ExpressionExperimentServiceImpl
      * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isBlackListed(java.lang.String)
      */
     @Override
+    @Transactional(readOnly = true)
     public boolean isBlackListed( String geoAccession ) {
-        return this.blacklistedEntityDao.isBlacklisted( geoAccession );
+        return this.blacklistedEntityService.isBlacklisted( geoAccession );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
         AuditEvent ev = auditEventDao.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
         if ( ev == null ) return true;
@@ -1141,6 +1176,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
     }

@@ -153,8 +153,7 @@ public class ExpressionDataFileUploadController {
 
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
-            ArrayDesign design = arrayDesignService.load( arrayDesignId );
-            design = arrayDesignService.thaw( design );
+            ArrayDesign design = arrayDesignService.loadAndThaw( arrayDesignId );
 
             // check that the probes can be matched up...
             int numRowsMatchingArrayDesign = 0;
@@ -222,7 +221,7 @@ public class ExpressionDataFileUploadController {
         public TaskResult execute() {
             File file = ExpressionDataFileUploadController.this.getFile( taskCommand );
 
-            try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
+            try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) ) {
 
                 this.populateCommandObject( taskCommand );
 

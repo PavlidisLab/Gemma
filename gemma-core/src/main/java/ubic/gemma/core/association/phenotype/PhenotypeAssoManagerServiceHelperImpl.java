@@ -210,7 +210,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     /**
      * @param  evidenceValueObject the evidence we want to convert
-     * @return                     PhenotypeAssociation the entity created from the ValueObject
+     * @return PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2DifferentialExpressionEvidence(
             DiffExpressionEvidenceValueObject evidenceValueObject ) {
@@ -232,7 +232,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     /**
      * @param  evidenceValueObject the evidence we want to convert
-     * @return                     PhenotypeAssociation the entity created from the ValueObject
+     * @return PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2ExperimentalEvidence(
             ExperimentalEvidenceValueObject evidenceValueObject ) {
@@ -330,7 +330,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
             }
 
             genericExperiment
-                    .setOtherRelevantPublications( this.findOrCreateBibliographicReference( relevantPubmedId ) );
+                    .setOtherRelevantPublications( new HashSet<>( this.findOrCreateBibliographicReference( relevantPubmedId ) ) );
 
             // characteristics for an experiment
             Collection<Characteristic> characteristics = new HashSet<>();
@@ -357,7 +357,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     /**
      * @param  evidenceValueObject the evidence we want to convert
-     * @return                     PhenotypeAssociation the entity created from the ValueObject
+     * @return PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
 
@@ -372,7 +372,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
 
     /**
      * @param  evidenceValueObject the evidence we want to convert
-     * @return                     PhenotypeAssociation the entity created from the ValueObject
+     * @return PhenotypeAssociation the entity created from the ValueObject
      */
     private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
 

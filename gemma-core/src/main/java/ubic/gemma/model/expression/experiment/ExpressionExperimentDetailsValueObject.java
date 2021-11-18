@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author paul
@@ -52,7 +53,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Date dateMissingValueAnalysis;
     private Date datePcaAnalysis;
     private Date dateProcessedDataVectorComputation;
-    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
+    private Set<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
     private boolean hasBatchInformation;
     private Boolean hasBothIntensities = false;
@@ -75,7 +76,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Collection<ArrayDesignValueObject> originalPlatforms;
 
     // if it was split.
-    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    private Set<ExpressionExperimentValueObject> otherParts = new HashSet<>();
 
     private String pcaAnalysisEventType;
 
@@ -192,7 +193,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return this.description;
     }
 
-    public Collection<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
+    public Set<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
         return differentialExpressionAnalyses;
     }
 
@@ -465,7 +466,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     public void setDifferentialExpressionAnalyses(
-            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
+            Set<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
         this.differentialExpressionAnalyses = differentialExpressionAnalyses;
     }
 

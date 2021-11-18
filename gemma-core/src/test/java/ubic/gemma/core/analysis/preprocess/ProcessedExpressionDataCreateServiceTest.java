@@ -144,7 +144,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
         ee = this.eeService.thawLite( ee );
-        processedExpressionDataVectorService.thaw( preferredVectors );
+        preferredVectors = processedExpressionDataVectorService.thaw( preferredVectors );
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
         assertEquals( 10, mat.columns() );
@@ -323,7 +323,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             // thawingto avoid lazy error because we are outside of transaction in this test. All references in code run
             // inside a transaction
             BioAssayDimension bioAssayDimension = vector.getBioAssayDimension();
-            bioAssayDimensionService.thawLite( bioAssayDimension );
+            bioAssayDimension = bioAssayDimensionService.thawLite( bioAssayDimension );
 
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
 

@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.persistence.Transient;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * A subset of samples from an ExpressionExperiment
@@ -50,7 +51,7 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
     }
 
     @Override
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 

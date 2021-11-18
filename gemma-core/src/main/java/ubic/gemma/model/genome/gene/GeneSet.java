@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A grouping of genes that share a common relationship
@@ -35,10 +36,10 @@ import java.util.HashSet;
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     private static final long serialVersionUID = 4357218100681569138L;
-    private Collection<Characteristic> characteristics = new HashSet<>();
+    private Set<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry sourceAccession;
-    private Collection<BibliographicReference> literatureSources = new HashSet<>();
-    private Collection<GeneSetMember> members = new HashSet<>();
+    private Set<BibliographicReference> literatureSources = new HashSet<>();
+    private Set<GeneSetMember> members = new HashSet<>();
 
     static public GeneSetMember containsGene( Gene g, GeneSet gs ) {
         for ( GeneSetMember gm : gs.getMembers() ) {
@@ -48,27 +49,27 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         return null;
     }
 
-    public Collection<Characteristic> getCharacteristics() {
+    public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Characteristic> characteristics ) {
         this.characteristics = characteristics;
     }
 
-    public Collection<BibliographicReference> getLiteratureSources() {
+    public Set<BibliographicReference> getLiteratureSources() {
         return this.literatureSources;
     }
 
-    public void setLiteratureSources( Collection<BibliographicReference> literatureSources ) {
+    public void setLiteratureSources( Set<BibliographicReference> literatureSources ) {
         this.literatureSources = literatureSources;
     }
 
-    public Collection<GeneSetMember> getMembers() {
+    public Set<GeneSetMember> getMembers() {
         return this.members;
     }
 
-    public void setMembers( Collection<GeneSetMember> members ) {
+    public void setMembers( Set<GeneSetMember> members ) {
         this.members = members;
     }
 

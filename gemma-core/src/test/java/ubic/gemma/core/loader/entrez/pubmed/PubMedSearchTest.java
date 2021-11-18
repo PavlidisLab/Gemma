@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -48,7 +49,7 @@ public class PubMedSearchTest {
     public void testSearchAndRetrieveByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
+            Set<String> searchTerms = new HashSet<>();
             searchTerms.add( "brain" );
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );
@@ -59,8 +60,8 @@ public class PubMedSearchTest {
              * at least, this was the result on 4/2008.
              */
             BibliographicReference r = actualResult.iterator().next();
-            assertNotNull(r.getAuthorList());
-            assertNotNull(r.getPublicationDate());
+            assertNotNull( r.getAuthorList() );
+            assertNotNull( r.getPublicationDate() );
         } catch ( java.net.UnknownHostException e ) {
             PubMedSearchTest.log.warn( "Test skipped due to unknown host exception" );
         } catch ( java.io.IOException e ) {
@@ -80,7 +81,7 @@ public class PubMedSearchTest {
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
+            Set<String> searchTerms = new HashSet<>();
             searchTerms.add( "brain" );
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );
@@ -102,7 +103,7 @@ public class PubMedSearchTest {
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
+            Set<String> searchTerms = new HashSet<>();
             searchTerms.add( "23865096" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
             assertEquals( 1, actualResult.size() );
@@ -117,7 +118,7 @@ public class PubMedSearchTest {
     public void testSearchAndRetrievIdsByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new HashSet<>();
+            Set<String> searchTerms = new HashSet<>();
             searchTerms.add( "brain" );
             searchTerms.add( "hippocampus" );
             searchTerms.add( "habenula" );

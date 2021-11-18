@@ -50,9 +50,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -219,7 +217,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListDifferentialExpressionAnalysisValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
+    public ResponseDataObject<Set<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
@@ -524,11 +522,11 @@ public class DatasetsWebService {
                 .build();
     }
 
-    private List<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
+    private Set<DifferentialExpressionAnalysisValueObject> getDiffExVos( Long eeId, int offset, int limit ) {
+        Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> map = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( eeId ), offset, limit );
         if ( map == null || map.size() < 1 ) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
         return map.get( map.keySet().iterator().next() );
     }

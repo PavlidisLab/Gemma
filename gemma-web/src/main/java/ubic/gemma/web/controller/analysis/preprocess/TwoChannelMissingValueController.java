@@ -45,12 +45,11 @@ public class TwoChannelMissingValueController {
      * AJAX entry point. -- uses default settings
      */
     public String run( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
-        ee = expressionExperimentService.thawLite( ee );
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
         experimentReportService.evictFromCache( id );

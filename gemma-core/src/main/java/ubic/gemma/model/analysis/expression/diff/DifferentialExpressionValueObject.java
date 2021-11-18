@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the results for one probe. Fairly heavy-weight.
@@ -37,7 +38,7 @@ public class DifferentialExpressionValueObject {
     private final ContrastsValueObject contrasts;
     private Double corrP;
     private Direction direction;
-    private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
+    private Set<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
     private ExpressionExperimentValueObject expressionExperiment;
     private Boolean fisherContribution = false;
     private GeneValueObject gene;
@@ -100,11 +101,11 @@ public class DifferentialExpressionValueObject {
         this.direction = direction;
     }
 
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
+    public Set<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
 
-    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
+    public void setExperimentalFactors( Set<ExperimentalFactorValueObject> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
 

@@ -39,7 +39,7 @@ package ubic.gemma.core.genome.gene;
 
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author tvrossum
@@ -58,18 +58,17 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     /**
      * Method to create a display object from scratch
-     *
-     * @param name              cannot be null
+     *  @param name              cannot be null
      * @param description       should not be null
      * @param taxonId           can be null
      * @param taxonName         can be null
      * @param memberIds         can be null; for a gene this is a collection just containing their id
-     * @param searchTerm        search term
-     * @param phenotypeCategory phenotype category
      * @param phenotypeName     phenotype name
+     * @param phenotypeCategory phenotype category
+     * @param searchTerm        search term
      */
     public PhenotypeGroupValueObject( String name, String description, Long taxonId, String taxonName,
-            Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
+            Set<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
 
         this.setName( name );
         this.setDescription( description );

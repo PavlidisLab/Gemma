@@ -101,15 +101,15 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         QuantitationType quantitationType = this.convertQuantitationType( metaData );
 
         /* set the quantitation types on the experiment */
-        Collection<QuantitationType> qTypes = new HashSet<>();
+        Set<QuantitationType> qTypes = new HashSet<>();
         qTypes.add( quantitationType );
         experiment.setQuantitationTypes( qTypes );
 
         Collection<ArrayDesign> arrayDesigns = this.convertArrayDesigns( metaData, matrix );
 
         // Divide up multiple array designs into multiple BioAssayDimensions.
-        Collection<RawExpressionDataVector> allVectors = new HashSet<>();
-        Collection<BioAssay> allBioAssays = new HashSet<>();
+        Set<RawExpressionDataVector> allVectors = new HashSet<>();
+        Set<BioAssay> allBioAssays = new HashSet<>();
         Collection<Object> usedDesignElements = new HashSet<>();
         for ( ArrayDesign design : arrayDesigns ) {
             SimpleExpressionDataLoaderServiceImpl.log.info( "Processing " + design );

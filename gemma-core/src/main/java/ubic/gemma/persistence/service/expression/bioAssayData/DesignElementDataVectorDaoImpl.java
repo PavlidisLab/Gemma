@@ -34,10 +34,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.sql.Connection;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -125,8 +122,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( BioAssayDimension bad : dims.keySet() ) {
 
             BioAssayDimension tbad = ( BioAssayDimension ) this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
-                            + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
+                            "select distinct bad from BioAssayDimension bad join fetch bad.bioAssays ba join fetch ba.sampleUsed "
+                                    + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues fetch all properties where bad.id= :bad " )
                     .setParameter( "bad", bad.getId() ).uniqueResult();
 
             assert tbad != null;
@@ -207,35 +204,10 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         return new HashSet<>( this.findByProperty( "quantitationType", quantitationType ) );
     }
 
-    @Override
-    public Collection<T> create( final Collection<T> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( T entity : entities ) {
-                    DesignElementDataVectorDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
-    }
-
-    @Override
-    public void update( final Collection<T> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( T entity : entities ) {
-                    DesignElementDataVectorDaoImpl.this.update( entity );
-                }
-            }
-        } );
-    }
-
     /**
      * @param  ee      ee
      * @param  cs2gene Map of probes to genes.
-     * @return         map of vectors to gene ids.
+     * @return map of vectors to gene ids.
      */
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene ) {
 

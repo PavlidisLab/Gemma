@@ -80,7 +80,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
 
         Collection<Long> ids = EntityUtils
-                .getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs.getId() ) ) );
+                .getIds( this.geneSetService.getGenesInGroup( gs ) );
         dbgsvo.getGeneIds().addAll( ids );
         dbgsvo.setSize( ids.size() );
 
@@ -103,7 +103,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
      * @param  geneSets                gene sets
      * @param  includeOnesWithoutGenes should empty sets get removed?
      * @param  light                   Don't fill in the gene ids. Should be faster
-     * @return                         list of gene set value objects
+     * @return list of gene set value objects
      */
     private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes, boolean light ) {
@@ -145,10 +145,10 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             sbgsvo.setSize( gs.getMembers() != null ? gs.getMembers().size() : 0 );
         } else {// this case may never happen as this is only called from convertToGoValueObject() leaving here in case
             // this method is ever called from somewhere else
-            sbgsvo.setSize( this.geneSetService.getSize( new GeneSetValueObject( gs.getId() ) ) );
+            sbgsvo.setSize( this.geneSetService.getSize( gs ) );
         }
 
-        Collection<Long> gids = new HashSet<>();
+        Set<Long> gids = new HashSet<>();
         for ( GeneSetMember gm : gs.getMembers() ) {
             gids.add( gm.getGene().getId() );
         }

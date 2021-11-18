@@ -36,7 +36,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
      */
     private boolean dbPhenotype = false;
     // all geneNBCI associated with the node or children from publicEvidence, used to write dump file ermineJ way
-    private HashSet<Integer> publicGenesNBCI = new HashSet<>();
+    private Set<Integer> publicGenesNBCI = new HashSet<>();
     // if we need to reconstruct part of the tree in the cache we need to know highest root parent
     private String rootOfTree = "";
 

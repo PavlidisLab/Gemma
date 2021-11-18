@@ -55,7 +55,7 @@ public interface CompositeSequenceService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    Collection<CompositeSequence> load( Collection<Long> ids );
+    List<CompositeSequence> load( Collection<Long> ids );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -124,9 +124,4 @@ public interface CompositeSequenceService
 
     Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
             CompositeSequenceValueObject cs );
-
-    void thaw( Collection<CompositeSequence> compositeSequences );
-
-    CompositeSequence thaw( CompositeSequence compositeSequence );
-
 }

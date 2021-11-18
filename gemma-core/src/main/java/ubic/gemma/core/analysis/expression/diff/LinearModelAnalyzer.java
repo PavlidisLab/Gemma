@@ -28,7 +28,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -121,7 +120,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
      *
      * @param  columnsToUse columns to use
-     * @return              bio assay dimension
+     * @return bio assay dimension
      */
     private static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
@@ -170,9 +169,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     @Override
-    public Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
+    public Set<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
-        Collection<HitListSize> hitListSizes = new HashSet<>();
+        Set<HitListSize> hitListSizes = new HashSet<>();
         StopWatch timer = new StopWatch();
         timer.start();
         double maxThreshold = MathUtil.max( LinearModelAnalyzer.qValueThresholdsForHitLists );
@@ -475,7 +474,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 }
                 eeSubSet.getBioAssays().addAll( bioAssays );
 
-                Collection<ExperimentalFactor> subsetFactors = this
+                List<ExperimentalFactor> subsetFactors = this
                         .fixFactorsForSubset( subsets.get( subsetFactorValue ), eeSubSet, factors );
 
                 DifferentialExpressionAnalysisConfig subsetConfig = this
@@ -492,7 +491,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                  */
                 DifferentialExpressionAnalysis analysis = this
                         .doAnalysis( eeSubSet, subsetConfig, subsets.get( subsetFactorValue ), bioMaterials,
-                                new ArrayList<>( subsetFactors ), subsetFactorValue );
+                                subsetFactors, subsetFactorValue );
 
                 if ( analysis == null ) {
                     LinearModelAnalyzer.log
@@ -575,8 +574,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
         MatrixWriter mw = new MatrixWriter();
-        try (FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
-                FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) )) {
+        try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
+                FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
             mw.write( writer, dmatrix, null, true, false );
 
@@ -642,7 +641,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param  samplesUsed       analyzed
      * @param  factors           included in the model
      * @param  subsetFactorValue null unless analyzing a subset (only used for book-keeping)
-     * @return                   analysis, or null if there was a problem.
+     * @return analysis, or null if there was a problem.
      */
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
@@ -934,7 +933,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
      * @param  factors the factors that will be included
-     * @return         an updated config; the baselines are cleared; subset is cleared; interactions are only kept if
+     * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if
      *                 they only
      *                 involve the given factors.
      */
@@ -967,7 +966,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove factors which are no longer usable, based on the subset.
      */
-    private Collection<ExperimentalFactor> fixFactorsForSubset( ExpressionDataDoubleMatrix dmatrix,
+    private List<ExperimentalFactor> fixFactorsForSubset( ExpressionDataDoubleMatrix dmatrix,
             ExpressionExperimentSubSet eesubSet, List<ExperimentalFactor> factors ) {
 
         List<ExperimentalFactor> result = new ArrayList<>();
@@ -1111,7 +1110,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
-        Collection<ExpressionAnalysisResultSet> resultSets = this
+        Set<ExpressionAnalysisResultSet> resultSets = this
                 .makeResultSets( label2Factors, baselineConditions, oneSampleTtest, expressionAnalysis, resultLists );
 
         expressionAnalysis.setResultSets( resultSets );
@@ -1235,11 +1234,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /**
      * Build the design matrix, including interactions if possible
-     * 
+     *
      * @param  designMatrix           partially setup matrix
      * @param  interactionFactorLists interactions to consider
      * @param  baselineConditions     designation of baseline conditions for each factor
-     * @return                        final design matrix
+     * @return final design matrix
      */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
             List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
@@ -1274,7 +1273,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         return properDesignMatrix;
     }
 
-    private Collection<ExpressionAnalysisResultSet> makeResultSets(
+    private Set<ExpressionAnalysisResultSet> makeResultSets(
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
@@ -1288,11 +1287,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         LinearModelAnalyzer.log.info( "Processing " + resultLists.size() + " resultSets" );
         // StopWatch timer = new StopWatch();
         // timer.start();
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
+        Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
         for ( String fName : resultLists.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
 
-            Collection<ExperimentalFactor> factorsUsed = new HashSet<>( label2Factors.get( fName ) );
+            Set<ExperimentalFactor> factorsUsed = new HashSet<>( label2Factors.get( fName ) );
 
             FactorValue baselineGroup = null;
             if ( !oneSampleTtest && factorsUsed.size() == 1 /* not interaction */ ) {
@@ -1301,7 +1300,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 baselineGroup = baselineConditions.get( factor );
             }
 
-            Collection<HitListSize> hitListSizes = this.computeHitListSizes( results, probeToGeneMap );
+            Set<HitListSize> hitListSizes = this.computeHitListSizes( results, probeToGeneMap );
 
             int numberOfProbesTested = results.size();
             int numberOfGenesTested = this.getNumberOfGenesTested( results, probeToGeneMap );

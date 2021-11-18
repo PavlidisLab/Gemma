@@ -44,10 +44,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -116,7 +113,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         eeCharCortexURI.setValueUri( SearchServiceTest.BRAIN_CAVITY );
         characteristicService.create( eeCharCortexURI );
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Set<Characteristic> chars = new HashSet<>();
         chars.add( eeCharSpinalCord );
         chars.add( eeCharGeneURI );
         chars.add( eeCharCortexURI );

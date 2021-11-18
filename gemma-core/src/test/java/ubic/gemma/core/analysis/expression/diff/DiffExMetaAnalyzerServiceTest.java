@@ -130,8 +130,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
          * Add genes.
          */
         if ( !loadedGenes ) {
-            try (InputStream geneFile = this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" )) {
+            try ( InputStream geneFile = this.getClass().getResourceAsStream(
+                    "/data/loader/expression/geo/meta-analysis/human.genes.subset.for.import.txt" ) ) {
                 externalFileGeneLoaderService.load( geneFile, "human" );
                 loadedGenes = true;
             }
@@ -236,9 +236,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertTrue( !ds2Analyses.isEmpty() );
         assertTrue( !ds3Analyses.isEmpty() );
 
-        differentialExpressionAnalysisService.thaw( ds1Analyses );
-        differentialExpressionAnalysisService.thaw( ds2Analyses );
-        differentialExpressionAnalysisService.thaw( ds3Analyses );
+        ds1Analyses = differentialExpressionAnalysisService.thaw( ds1Analyses );
+        ds2Analyses = differentialExpressionAnalysisService.thaw( ds2Analyses );
+        ds3Analyses = differentialExpressionAnalysisService.thaw( ds3Analyses );
 
         ExpressionAnalysisResultSet rs1 = ds1Analyses.iterator().next().getResultSets().iterator().next();
         ExpressionAnalysisResultSet rs2 = ds2Analyses.iterator().next().getResultSets().iterator().next();
@@ -301,7 +301,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                     foundTests++;
                     assertTrue( r.getUpperTail() );
                     assertEquals( this.logComponentResults( r, gene ), 0.003375654, r.getMetaPvalue(), 0.00001 );
-                    found[0]= true;
+                    found[0] = true;
                     break;
                 case "ABCF1":
                     fail( "Should have gotten removed due to conflicting results" );
@@ -421,7 +421,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
         assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
 
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
+        Map<ExpressionExperimentDetailsValueObject, Set<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
 
         Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();

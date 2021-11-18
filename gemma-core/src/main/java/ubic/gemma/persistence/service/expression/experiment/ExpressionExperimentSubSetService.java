@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -50,7 +51,7 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSubSet> loadAll();
+    List<ExpressionExperimentSubSet> loadAll();
 
     /**
      * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is

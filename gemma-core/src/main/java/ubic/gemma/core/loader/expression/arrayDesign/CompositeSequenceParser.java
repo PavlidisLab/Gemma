@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Parse the "old" array description format. This has three columns, with probe id, a genbank id, and a description.
@@ -36,7 +37,7 @@ import java.util.HashSet;
  */
 public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> {
 
-    private final Collection<CompositeSequence> results = new HashSet<>();
+    private final Set<CompositeSequence> results = new HashSet<>();
 
     @Override
     public Collection<CompositeSequence> getResults() {

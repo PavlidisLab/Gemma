@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.TransientGeneSetValueObject;
 import ubic.gemma.web.persistence.SessionListManager;
 
 import javax.servlet.http.HttpServletRequest;
@@ -176,7 +177,7 @@ public class GeneSetController {
      * @param geneId gene id
      * @return collection of geneSetValueObject
      */
-    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+    public Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
         return geneSetService.findGeneSetsByGene( geneId );
     }
@@ -186,7 +187,7 @@ public class GeneSetController {
      * @param taxonId taxon id
      * @return collection of GeneSetValueObject
      */
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+    public Collection<DatabaseBackedGeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
         return geneSetService.findGeneSetsByName( query, taxonId );
     }
 
@@ -202,7 +203,7 @@ public class GeneSetController {
             throw new IllegalArgumentException( "Must be a persistent gene group" );
 
         // FIXME inefficient way to implement the limit
-        Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( new GeneSetValueObject( groupId ) );
+        Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( new TransientGeneSetValueObject( groupId ) );
 
         if ( limit != null && limit > 0 && limit < genesInGroup.size() ) {
             return CollectionUtils.select( genesInGroup, new Predicate<GeneValueObject>() {
@@ -226,7 +227,7 @@ public class GeneSetController {
     public Collection<Long> getGeneIdsInGroup( Long groupId ) {
         if ( groupId == null || groupId < 0 )
             throw new IllegalArgumentException( "Must be a persistent gene group" );
-        return geneSetService.getGeneIdsInGroup( new GeneSetValueObject( groupId ) );
+        return geneSetService.getGeneIdsInGroup( new TransientGeneSetValueObject( groupId ) );
     }
 
     /**

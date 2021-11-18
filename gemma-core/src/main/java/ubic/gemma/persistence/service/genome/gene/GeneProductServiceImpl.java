@@ -60,11 +60,13 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByName( String search ) {
         return this.geneProductDao.getGenesByName( search );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByNcbiId( String search ) {
         return this.geneProductDao.getGenesByNcbiId( search );
     }
@@ -73,12 +75,6 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     @Transactional(readOnly = true)
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
         return this.geneProductDao.findByName( name, taxon );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneProduct thaw( GeneProduct existing ) {
-        return this.geneProductDao.thaw( existing );
     }
 
     @Override

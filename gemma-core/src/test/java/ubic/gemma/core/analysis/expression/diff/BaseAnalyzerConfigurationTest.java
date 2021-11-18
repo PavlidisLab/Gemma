@@ -48,10 +48,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Settings;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -77,7 +74,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     ExperimentalFactor experimentalFactorA_Area = null;
     ExperimentalFactor experimentalFactorB = null;
-    List<ExperimentalFactor> experimentalFactors = null;
+    Set<ExperimentalFactor> experimentalFactors = null;
     QuantitationType quantitationType = null;
     FactorValue factorValueA1;
     FactorValue factorValueA2;
@@ -103,7 +100,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     private RClient rc = null;
 
-    private Collection<ProcessedExpressionDataVector> vectors = null;
+    private Set<ProcessedExpressionDataVector> vectors = null;
 
     @Before
     public void setUp() throws Exception {
@@ -336,9 +333,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         biomaterial3a.getBioAssaysUsedIn().add( bioAssay3a );
         biomaterial3b.getBioAssaysUsedIn().add( bioAssay3b );
 
-        expressionExperiment.setBioAssays( bioAssays );
+        expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
 
-        experimentalFactors = new ArrayList<>();
+        experimentalFactors = new HashSet<>();
         experimentalFactors.add( experimentalFactorA_Area );
         experimentalFactors.add( experimentalFactorB );
 
@@ -437,7 +434,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssays.remove( bioAssay2b );
         bioAssays.remove( bioAssay3b );
 
-        expressionExperiment.setBioAssays( bioAssays );
+        expressionExperiment.setBioAssays( new HashSet<>( bioAssays ) );
 
         bioAssayDimension.setBioAssays( bioAssays );
 
@@ -466,7 +463,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream( path ) );
         // RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed - important!
 
-        Collection<CompositeSequence> compositeSequences = new HashSet<>();
+        Set<CompositeSequence> compositeSequences = new HashSet<>();
         for ( int i = 0; i < BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS; i++ ) {
             ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );

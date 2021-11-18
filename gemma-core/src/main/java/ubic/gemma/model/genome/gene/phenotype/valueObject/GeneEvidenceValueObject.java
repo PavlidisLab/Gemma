@@ -38,7 +38,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     /**
      * Added field for the Candidate Gene Management System
      */
-    private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence = new HashSet<>();
+    private Set<EvidenceValueObject<? extends PhenotypeAssociation>> evidence = new HashSet<>();
     private Set<String> phenotypesValueUri = new HashSet<>();
 
     /**
@@ -52,7 +52,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     }
 
     public GeneEvidenceValueObject( Gene gene,
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
+            Set<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( gene );
         this.evidence = evidence;
     }
@@ -60,7 +60,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     public GeneEvidenceValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId,
             String officialSymbol, String officialName, String description, Double score, Long taxonId,
             String taxonScientificName, String taxonCommonName,
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
+            Set<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
                 taxonScientificName, taxonCommonName );
         this.evidence = evidence;
@@ -82,11 +82,11 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         return allPhenotypesOnGene;
     }
 
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> getEvidence() {
+    public Set<EvidenceValueObject<? extends PhenotypeAssociation>> getEvidence() {
         return this.evidence;
     }
 
-    public void setEvidence( Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
+    public void setEvidence( Set<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         this.evidence = evidence;
     }
 

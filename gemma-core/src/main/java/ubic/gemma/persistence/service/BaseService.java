@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Interface that supports basic CRUD operations.
@@ -34,8 +35,9 @@ public interface BaseService<O extends Identifiable> {
      * @param entities the entities to be created.
      * @return collection of objects referencing the persistent instances of given entities.
      */
-    @SuppressWarnings("unused") // Consistency
-    Collection<O> create( Collection<O> entities );
+    @SuppressWarnings("unused")
+    // Consistency
+    List<O> create( Collection<O> entities );
 
     /**
      * Creates the given entity in the persistent storage.
@@ -51,7 +53,7 @@ public interface BaseService<O extends Identifiable> {
      * @param ids the ids of objects to be loaded.
      * @return collection containing object with given ids.
      */
-    Collection<O> load( Collection<Long> ids );
+    List<O> load( Collection<Long> ids );
 
     /**
      * Loads object with given id.
@@ -62,13 +64,27 @@ public interface BaseService<O extends Identifiable> {
     O load( Long id );
 
     /**
+     * Load and thaw using {@link BaseDao#thaw(List)} in a single transaction.
+     * @param ids
+     * @return
+     */
+    List<O> loadAndThaw( Collection<Long> ids );
+
+    /**
+     * Load and thaw using {@link BaseDao#thaw(Object)} in a single transaction.
+     * @param id
+     * @return
+     */
+    O loadAndThaw( Long id );
+
+    /**
      * Loads all the entities of specific type.
      *
      * @return collection of all entities currently available in the persistent storage.
      */
-    Collection<O> loadAll();
+    List<O> loadAll();
 
-    int countAll();
+    long countAll();
 
     /**
      * Removes all the given entities from persistent storage.
@@ -110,4 +126,21 @@ public interface BaseService<O extends Identifiable> {
      */
     void update( O entity );
 
+    /**
+     * Reload and thaw a collection of entities.
+     * @deprecated use {@link #loadAndThaw(Collection)} instead, this is inefficient as it will reload the entities from
+     *             the database to ensure that the loading and thawing operations are performed in the same Hibernate
+     *             session.
+     */
+    @Deprecated
+    List<O> thaw( Collection<O> entities );
+
+    /**
+     * Reload and thaw an entity.
+     * @deprecated use {@link #loadAndThaw(Long)} instead, this is inefficient as it will reload the entity from the
+     *             database to ensure that the loading and thawing operations are performed in the same Hibernate
+     *             session.
+     */
+    @Deprecated
+    O thaw( O entity );
 }

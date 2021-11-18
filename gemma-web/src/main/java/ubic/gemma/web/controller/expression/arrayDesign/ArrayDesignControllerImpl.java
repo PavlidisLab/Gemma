@@ -407,13 +407,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new IllegalArgumentException( "ID cannot be null" );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        ArrayDesign arrayDesign = arrayDesignService.loadAndThawLite( id );
 
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
         }
 
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
         return arrayDesign;
     }
 

@@ -22,11 +22,14 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -34,6 +37,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -348,40 +352,47 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Gene thaw( final Gene gene ) {
+    public void thaw( final Gene gene ) {
         if ( gene.getId() == null )
-            return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
-                        + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                        + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                        + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                        + " left join fetch g.taxon t left join fetch t.externalDatabase "
-                        + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
-                        + " where g.id=:gid", "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+            return;
+        Hibernate.initialize( gene.getAliases() );
+        Hibernate.initialize( gene.getAccessions() );
+        for ( DatabaseEntry acc : gene.getAccessions() ) {
+            Hibernate.initialize( acc.getExternalDatabase() );
+        }
+        Hibernate.initialize( gene.getTaxon() );
+        Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+        Hibernate.initialize( gene.getMultifunctionality() );
+        Hibernate.initialize( gene.getPhenotypeAssociations() );
+        Hibernate.initialize( gene.getProducts() );
+        for ( GeneProduct gp : gene.getProducts() ) {
+            Hibernate.initialize( gp.getAccessions() );
+            for ( DatabaseEntry de : gp.getAccessions() ) {
+                Hibernate.initialize( de.getExternalDatabase() );
+            }
+            Hibernate.initialize( gp.getPhysicalLocation() );
+            if ( gp.getPhysicalLocation() != null ) {
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+            }
+        }
     }
 
     /**
      * Only thaw the Aliases, very light version
      */
     @Override
-    public Gene thawAliases( final Gene gene ) {
+    public void thawAliases( final Gene gene ) {
         if ( gene.getId() == null )
-            return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select distinct g from Gene g "
-                + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+            return;
+        Hibernate.initialize( gene.getAliases() );
+        Hibernate.initialize( gene.getAccessions() );
     }
 
     @Override
-    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
+    public void thawLite( final Collection<Gene> genes ) {
         if ( genes.isEmpty() )
-            return new HashSet<>();
+            return;
 
         Collection<Gene> result = new HashSet<>();
         Collection<Gene> batch = new HashSet<>();
@@ -398,51 +409,20 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             result.addAll( this.loadThawed( EntityUtils.getIds( batch ) ) );
         }
 
-        return result;
+        genes.clear();
+        genes.addAll( result );
     }
 
     @Override
-    public Gene thawLite( final Gene gene ) {
-        return this.thaw( gene );
+    public void thawLite( final Gene gene ) {
+        this.thaw( gene );
     }
 
     @Override
-    public Gene thawLiter( final Gene gene ) {
+    public void thawLiter( final Gene gene ) {
         if ( gene.getId() == null )
-            return gene;
-
-        List<?> res = this.getHibernateTemplate()
-                .findByNamedParam( "select distinct g from Gene g " + " left join fetch g.taxon" + " where g.id=:gid",
-                        "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
-    }
-
-    @Override
-    public Collection<Gene> load( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-        int batchSize = 2000;
-        if ( ids.size() > batchSize ) {
-            AbstractDao.log.info( "Loading " + ids.size() + " genes ..." );
-        }
-
-        //language=HQL
-        final String queryString = "from Gene where id in (:ids)";
-        Collection<Gene> genes = new HashSet<>();
-
-        BatchIterator<Long> it = BatchIterator.batches( ids, batchSize );
-        for ( ; it.hasNext(); ) {
-            //noinspection unchecked
-            genes.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "ids", it.next() ) );
-        }
-
-        if ( ids.size() > batchSize ) {
-            AbstractDao.log.info( "... done" );
-        }
-
-        return genes;
+            return;
+        Hibernate.initialize( gene.getTaxon() );
     }
 
     @Override

@@ -305,7 +305,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         if ( gene == null ) {
             return null;
         }
-        gene = this.geneDao.thaw( gene );
+        this.geneDao.thaw( gene );
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
@@ -430,7 +430,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         Gene g = this.geneDao.load( id );
         if ( g == null )
             return null;
-        g = this.geneDao.thaw( g );
+        this.geneDao.thaw( g );
         return GeneValueObject.convert2ValueObject( g );
     }
 
@@ -449,32 +449,31 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
     }
 
     @Override
-    public Gene thaw( Gene gene ) {
-        return this.geneDao.thaw( gene );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Gene thawAliases( Gene gene ) {
-        return this.geneDao.thawAliases( gene );
+        this.geneDao.thawAliases( gene );
+        return gene;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {
-        return this.geneDao.thawLite( genes );
+        this.geneDao.thawLite( genes );
+        return genes;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Gene thawLite( Gene gene ) {
-        return this.geneDao.thawLite( gene );
+        this.geneDao.thawLite( gene );
+        return gene;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Gene thawLiter( Gene gene ) {
-        return this.geneDao.thawLiter( gene );
+        this.geneDao.thawLiter( gene );
+        return gene;
     }
 
     /**
@@ -484,6 +483,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * @return Collection of Gene entity objects
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
 
         Taxon taxon = null;

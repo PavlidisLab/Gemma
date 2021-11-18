@@ -26,10 +26,18 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
         this.id = id;
     }
 
+    /**
+     * Constructor from an existing {@link Identifiable} that sets the ID.
+     * @param identifiable an identifiable used to set this VO's ID
+     */
     protected IdentifiableValueObject( O identifiable ) {
         this( identifiable.getId() );
     }
 
+    /**
+     * Copy constructor from an existing {@link IdentifiableValueObject}.
+     * @param vo a VO whose ID will be copied over this newly created identifiable VO
+     */
     protected IdentifiableValueObject( IdentifiableValueObject vo ) {
         this( vo.getId() );
     }

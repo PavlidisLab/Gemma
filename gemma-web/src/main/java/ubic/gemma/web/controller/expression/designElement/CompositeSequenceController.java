@@ -139,7 +139,7 @@ public class CompositeSequenceController extends BaseController {
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
 
         // unnecessary see https://github.com/PavlidisLab/Gemma/issues/176
-   //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
+        //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
         return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(),
@@ -185,12 +185,10 @@ public class CompositeSequenceController extends BaseController {
     @RequestMapping(value = "/show")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        CompositeSequence cs = compositeSequenceService.load( id );
+        CompositeSequence cs = compositeSequenceService.loadAndThaw( id );
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
         }
-
-        compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
 

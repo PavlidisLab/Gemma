@@ -54,8 +54,6 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      */
     void thaw( ExpressionAnalysisResultSet resultSet );
 
-    DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**

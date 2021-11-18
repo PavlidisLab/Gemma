@@ -191,18 +191,20 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
 
     Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids );
 
-    Gene thaw( Gene gene );
-
     /**
      * @param gene gene
      * @return thaw the Aliases, very light version
      */
+    @Deprecated
     Gene thawAliases( Gene gene );
 
+    @Deprecated
     Collection<Gene> thawLite( Collection<Gene> genes );
 
+    @Deprecated
     Gene thawLite( Gene gene );
 
+    @Deprecated
     Gene thawLiter( Gene gene );
 
     Collection<GeneValueObject> searchGenes( String query, Long taxonId );

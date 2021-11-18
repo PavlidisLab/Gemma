@@ -46,10 +46,9 @@ public class BatchInfoFetchController {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLite( id );
         if ( ee == null )
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-        ee = expressionExperimentService.thawLite( ee );
 
         /*
          * Check preconditions.

@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.util.biomart;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Value object that represents a file record line from BioMart as configured with query parameters. Which follows the
@@ -33,7 +34,7 @@ import java.util.HashSet;
 public class Ensembl2NcbiValueObject implements Serializable {
 
     private static final long serialVersionUID = -859220901359582113L;
-    private final Collection<String> ncbiGenes = new HashSet<>();
+    private final Set<String> ncbiGenes = new HashSet<>();
     private String enemblTranscriptId = "";
     private String ensembleGeneId = "";
     private String ensemblPeptideId = "";

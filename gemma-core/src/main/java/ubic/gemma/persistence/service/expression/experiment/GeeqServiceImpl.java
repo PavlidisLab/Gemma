@@ -122,7 +122,74 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     @Override
     @Transactional
     public void calculateScore( Long eeId, String mode ) {
-        this.doScoring( eeId, mode );
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+        if ( ee == null ) {
+            return;
+        }
+
+        this.ensureEeHasGeeq( ee );
+        Geeq gq = ee.getGeeq();
+
+        StopWatch stopwatch = new StopWatch();
+        stopwatch.start();
+
+        try {
+            // Update score values
+            switch ( mode ) {
+                case GeeqService.OPT_MODE_ALL:
+                    log.info(
+                            GeeqServiceImpl.LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
+                    gq = this.scoreAll( ee );
+                    break;
+                case GeeqService.OPT_MODE_BATCH:
+                    log.info(
+                            GeeqServiceImpl.LOG_PREFIX + " Starting batch info, confound and batch effect geeq re-scoring for ee id " + eeId );
+                    gq = this.scoreOnlyBatchArtifacts( ee );
+                    break;
+                case GeeqService.OPT_MODE_REPS:
+                    log.info(
+                            GeeqServiceImpl.LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
+                    gq = this.scoreOnlyReplicates( ee );
+                    break;
+                case GeeqService.OPT_MODE_PUB:
+                    log.info(
+                            GeeqServiceImpl.LOG_PREFIX + " Starting publication geeq re-scoring for ee id " + eeId );
+                    gq = this.scoreOnlyPublication( ee );
+                    break;
+                default:
+                    log.warn(
+                            GeeqServiceImpl.LOG_PREFIX + " Did not recognize the given mode " + mode + " for ee id "
+                                    + eeId );
+            }
+            log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId
+                    + ", saving results..." );
+        } catch ( Exception e ) {
+            log.warn(
+                    GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
+                            + ".", e );
+            gq.addOtherIssues( e.getMessage() );
+        }
+
+        // Recalculate final scores
+        gq = this.updateQualityScore( gq );
+        gq = this.updateSuitabilityScore( gq );
+
+        // Add note if experiment curation not finished
+        if ( ee.getCurationDetails().getNeedsAttention() ) {
+            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
+        }
+
+        stopwatch.stop();
+        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
+                "Took " + stopwatch.getTime() + "ms.\nUnexpected problems encountered: \n" + gq
+                        .getOtherIssues() );
+
+        this.update( gq );
+        log.info(
+                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
+                        + " minutes to process ee id " + eeId );
+
     }
 
     @Override
@@ -192,88 +259,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         this.update( gq );
         log.info( GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for ee id " + eeId );
-    }
-
-    /**
-     * Does all the preparations and calls the appropriate scoring methods.
-     *
-     * @param eeId the id of experiment to be scored.
-     * @param mode the mode of scoring. All will redo all scores, batchEffect and batchConfound will only recalculate
-     *             scores relevant to batch effect and batch confound, respectively.
-     *             Scoring batch effect and confound is fairly fast, especially compared to the 'all' mode, which goes
-     *             through almost all information associated with the experiment, and can therefore be very slow,
-     *             depending on the experiment.
-     */
-    private void doScoring( Long eeId, String mode ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            return;
-        }
-
-        this.ensureEeHasGeeq( ee );
-        Geeq gq = ee.getGeeq();
-
-        StopWatch stopwatch = new StopWatch();
-        stopwatch.start();
-
-        try {
-            // Update score values
-            switch ( mode ) {
-                case GeeqService.OPT_MODE_ALL:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
-                    gq = this.scoreAll( ee );
-                    break;
-                case GeeqService.OPT_MODE_BATCH:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting batch info, confound and batch effect geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyBatchArtifacts( ee );
-                    break;
-                case GeeqService.OPT_MODE_REPS:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyReplicates( ee );
-                    break;
-                case GeeqService.OPT_MODE_PUB:
-                    log.info(
-                            GeeqServiceImpl.LOG_PREFIX + " Starting publication geeq re-scoring for ee id " + eeId );
-                    gq = this.scoreOnlyPublication( ee );
-                    break;
-                default:
-                    log.warn(
-                            GeeqServiceImpl.LOG_PREFIX + " Did not recognize the given mode " + mode + " for ee id "
-                                    + eeId );
-            }
-            log.info( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId
-                    + ", saving results..." );
-        } catch ( Exception e ) {
-            log.info(
-                    GeeqServiceImpl.LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId
-                            + "." );
-            e.printStackTrace();
-            gq.addOtherIssues( e.getMessage() );
-        }
-
-        // Recalculate final scores
-        gq = this.updateQualityScore( gq );
-        gq = this.updateSuitabilityScore( gq );
-
-        // Add note if experiment curation not finished
-        if ( ee.getCurationDetails().getNeedsAttention() ) {
-            gq.addOtherIssues( "Experiment was not fully curated when the score was calculated." );
-        }
-
-        stopwatch.stop();
-        this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
-                "Took " + stopwatch.getTime() + "ms.\nUnexpected problems encountered: \n" + gq
-                        .getOtherIssues() );
-
-        this.update( gq );
-        log.info(
-                GeeqServiceImpl.LOG_PREFIX + " took " + Math.round( stopwatch.getTime( TimeUnit.SECONDS ) / 60.0 )
-                        + " minutes to process ee id " + eeId );
-
     }
 
     private Geeq updateSuitabilityScore( Geeq gq ) {
@@ -434,6 +419,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( ArrayDesign ad : ads ) {
 
             Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
+            taxon = taxonService.thaw( taxon );
             long cnt = arrayDesignService.numGenes( ad );
 
             /*
@@ -523,6 +509,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             } catch ( Exception e ) {
                 hasProcessedVectors = false;
                 problems = GeeqServiceImpl.ERR_MSG_MISSING_VALS + e.getMessage();
+                log.warn( "Failed to get processed expression data matrix for " + ee + ", will skip scoring missing values.", e );
             }
         }
 

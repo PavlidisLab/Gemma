@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data. (probably not used)
@@ -45,7 +46,7 @@ import java.util.HashSet;
 @Deprecated
 public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
 
-    private final Collection<ArrayDesign> results = new HashSet<>();
+    private final Set<ArrayDesign> results = new HashSet<>();
 
     @Override
     public Collection<ArrayDesign> getResults() {

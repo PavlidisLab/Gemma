@@ -151,8 +151,4 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
 
     Histogram loadPvalueDistribution( Long analysisResultSetId );
-
-    void thaw( Collection<DifferentialExpressionAnalysisResult> results );
-
-    void thaw( DifferentialExpressionAnalysisResult result );
 }

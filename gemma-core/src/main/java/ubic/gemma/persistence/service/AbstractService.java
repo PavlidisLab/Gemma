@@ -2,11 +2,17 @@ package ubic.gemma.persistence.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.aspectj.bridge.MessageUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Base for all services handling DAO access.
@@ -16,7 +22,11 @@ import java.util.Collection;
  */
 public abstract class AbstractService<O extends Identifiable> implements BaseService<O> {
 
-    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    /**
+     * @deprecated define your own logger
+     */
+    @Deprecated
+    protected static final Log log = LogFactory.getLog( AbstractService.class );
 
     private final BaseDao<O> mainDao;
 
@@ -38,7 +48,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public Collection<O> create( Collection<O> entities ) {
+    public List<O> create( Collection<O> entities ) {
         return mainDao.create( entities );
     }
 
@@ -49,26 +59,46 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
-    @Transactional
-    public Collection<O> load( Collection<Long> ids ) {
+    @Transactional(readOnly = true)
+    public List<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public O load( Long id ) {
         return mainDao.load( id );
     }
 
     @Override
-    @Transactional
-    public Collection<O> loadAll() {
+    @Transactional(readOnly = true)
+    public List<O> loadAndThaw( Collection<Long> ids ) {
+        List<O> identifiable = this.load( ids );
+        if ( identifiable != null ) {
+            mainDao.thaw( identifiable );
+        }
+        return identifiable;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public O loadAndThaw( Long id ) {
+        O identifiable = this.load( id );
+        if ( identifiable != null ) {
+            mainDao.thaw( identifiable );
+        }
+        return identifiable;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<O> loadAll() {
         return mainDao.loadAll();
     }
 
     @Override
-    @Transactional
-    public int countAll() {
+    @Transactional(readOnly = true)
+    public long countAll() {
         return this.mainDao.countAll();
     }
 
@@ -108,4 +138,23 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         mainDao.update( entity );
     }
 
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<O> thaw( final Collection<O> identifiables ) {
+        List<O> result = this.load( EntityUtils.getIds( identifiables ) );
+        mainDao.thaw( result );
+        return result;
+    }
+
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public O thaw( O identifiable ) {
+        O result = this.load( identifiable.getId() );
+        if ( result != null ) {
+            mainDao.thaw( result );
+        }
+        return result;
+    }
 }

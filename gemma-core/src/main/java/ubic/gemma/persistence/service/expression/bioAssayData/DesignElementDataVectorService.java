@@ -57,13 +57,6 @@ interface DesignElementDataVectorService<T extends DesignElementDataVector> exte
     void removeDataForQuantitationType( QuantitationType quantitationType );
 
     /**
-     * Thaws the given vectors.
-     *
-     * @param designElementDataVectors the vectors to thaw.
-     */
-    void thaw( Collection<T> designElementDataVectors );
-
-    /**
      * Find specific type ({@link T}) of vectors that meet the given criteria.
      *
      * @param arrayDesign      the AD

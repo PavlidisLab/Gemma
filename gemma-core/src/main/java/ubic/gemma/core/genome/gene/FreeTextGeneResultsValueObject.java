@@ -37,7 +37,7 @@
 
 package ubic.gemma.core.genome.gene;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * *
@@ -59,8 +59,7 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
 
     /**
      * Method to create a display object from scratch
-     *
-     * @param name        cannot be null
+     *  @param name        cannot be null
      * @param description should not be null
      * @param taxonId     can be null
      * @param taxonName   can be null
@@ -68,7 +67,7 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
      * @param queryString the query string
      */
     public FreeTextGeneResultsValueObject( String name, String description, Long taxonId, String taxonName,
-            Collection<Long> geneIds, String queryString ) {
+            Set<Long> geneIds, String queryString ) {
 
         this.setName( name );
         this.setDescription( description );

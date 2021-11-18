@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -63,6 +64,7 @@ public class CurationDetailsService {
      * @param curatable  curatable
      */
     @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Transactional
     public void update( Curatable curatable, AuditEvent auditEvent ) {
         this.curationDetailsDao.update( curatable, auditEvent );
 

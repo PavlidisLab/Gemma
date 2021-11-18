@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author keshav
@@ -84,8 +85,8 @@ public class BioMaterialController {
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
         for ( BioMaterial material : bms ) {
-            Collection<FactorValue> oldValues = material.getFactorValues();
-            Collection<FactorValue> updatedValues = new HashSet<>();
+            Set<FactorValue> oldValues = material.getFactorValues();
+            Set<FactorValue> updatedValues = new HashSet<>();
 
             // Make sure that the BM doesn't have a FactorValue for the Factor
             // we are adding already
@@ -187,7 +188,7 @@ public class BioMaterialController {
             return null;
 
         BioMaterial bioM = bioMaterialService.load( bm.getId() );
-        bioMaterialService.thaw( bioM );
+        bioM = bioMaterialService.thaw( bioM );
         Collection<FactorValueValueObject> results = new HashSet<>();
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
@@ -233,7 +234,7 @@ public class BioMaterialController {
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-        bioMaterialService.thaw( bioMaterial );
+        bioMaterial = bioMaterialService.thaw( bioMaterial );
 
         request.setAttribute( "id", id ); // / ??
 

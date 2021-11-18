@@ -80,7 +80,7 @@ public interface ExpressionExperimentService
     boolean checkHasBatchInfo( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Integer countNotTroubled();
+    Long countNotTroubled();
 
     /**
      * returns ids of search results.
@@ -113,16 +113,31 @@ public interface ExpressionExperimentService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
+    List<ExpressionExperiment> load( Collection<Long> ids );
 
     @Override
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment loadAndThaw( Long eeid );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment loadAndThawLiter( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment loadAndThawLite( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> loadAndThawLite( Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment loadAndThawBioAssays( Long id );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadAll();
+    List<ExpressionExperiment> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -498,21 +513,36 @@ public interface ExpressionExperimentService
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 
+    /**
+     * @deprecated use {@link #loadAndThaw(Long)} instead
+     */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @deprecated use {@link #loadAndThawBioAssays(Long)} instead
+     */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
      *
+     * @deprecated use {@link #loadAndThawLite(Long)} instead
+     *
      * @param expressionExperiment experiment
      * @return thawed experiment
      */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @deprecated use {@link #loadAndThawLiter(Long)} instead
+     */
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 

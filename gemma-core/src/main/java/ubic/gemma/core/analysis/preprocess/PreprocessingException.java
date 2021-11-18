@@ -26,8 +26,8 @@ public class PreprocessingException extends Exception {
 
     private static final long serialVersionUID = -8463478950898408838L;
 
-    public PreprocessingException( Exception e ) {
-        super( e );
+    public PreprocessingException( Throwable cause ) {
+        super( cause );
     }
 
     public PreprocessingException( String message ) {

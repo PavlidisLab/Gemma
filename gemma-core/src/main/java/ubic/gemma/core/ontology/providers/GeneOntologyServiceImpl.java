@@ -130,7 +130,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      */
     private final Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<>();
 
-    private final Collection<SearchIndex> indices = new HashSet<>();
+    private final Set<SearchIndex> indices = new HashSet<>();
 
     private OntModel model;
 

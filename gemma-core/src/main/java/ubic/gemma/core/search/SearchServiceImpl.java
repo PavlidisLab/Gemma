@@ -66,7 +66,7 @@ import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -153,9 +153,8 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
-    // TODO: use services instead of DAO here
     @Autowired
-    private BlacklistedEntityDao blackListDao;
+    private BlacklistedEntityService blacklistService;
     @Autowired
     private TaxonService taxonService;
 
@@ -596,7 +595,7 @@ public class SearchServiceImpl implements SearchService {
             return results;
         }
 
-        BlacklistedEntity b = blackListDao.findByAccession( searchString );
+        BlacklistedEntity b = blacklistService.findByAccession( searchString );
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
             results.add( new SearchResult<>( ArrayDesign.class, b.getId(), 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
@@ -1106,7 +1105,7 @@ public class SearchServiceImpl implements SearchService {
                 return results;
             }
 
-            BlacklistedEntity b = blackListDao.findByAccession( settings.getQuery() );
+            BlacklistedEntity b = blacklistService.findByAccession( settings.getQuery() );
             if ( b != null ) {
                 results.add( new SearchResult<>( ExpressionExperiment.class, b.getId(), 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
                 return results;

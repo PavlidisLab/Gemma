@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,7 +60,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> load( Collection<Long> ids );
+    List<BioMaterial> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -68,7 +68,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> loadAll();
+    List<BioMaterial> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -81,11 +81,15 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( Long id );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    void thaw( BioMaterial bioMaterial );
+    @Override
+    @Deprecated
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    BioMaterial thaw( BioMaterial bioMaterial );
 
+    @Override
+    @Deprecated
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+    List<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Update the biomaterials that are described by the given valueObjects. This is used to update experimental designs

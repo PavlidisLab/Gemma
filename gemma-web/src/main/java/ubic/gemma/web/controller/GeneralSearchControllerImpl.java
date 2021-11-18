@@ -318,9 +318,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             vos = compositeSequenceService
                     .loadValueObjectsWithoutGeneMappingSummary( compositeSequences );
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            Collection<BibliographicReference> bss = bibliographicReferenceService
-                    .load( ids );
-            bss = bibliographicReferenceService.thaw( bss );
+            Collection<BibliographicReference> bss = bibliographicReferenceService.loadAndThaw( ids );
             vos = bibliographicReferenceService.loadValueObjects( bss );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             Collection<Gene> genes = geneService.load( ids );
