@@ -511,14 +511,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty.version}</version>
-				<configuration>
-					<skip>true</skip> <!-- only enabled for gemma-web -->
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
 				<version>6.4.1</version>
@@ -632,7 +624,6 @@
 		<swagger.version>2.1.11</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<tomcat.version>8.5.71</tomcat.version>
-		<jetty.version>9.4.43.v20210629</jetty.version>
 		<mysql.version>8.0.27</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slf4j.version>1.7.32</slf4j.version>
