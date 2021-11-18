@@ -14,6 +14,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -120,20 +121,23 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int start, int limit );
+
     /**
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param orderField the field to order the results by.
-     * @param descending whether the ordering by the orderField should be descending.
      * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @param limit      max to return
+     * @param sort       the field to order the results by.
      * @param start      offset
+     * @param limit      max to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int start, int limit );
+
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Sort sort, int start, int limit );
+
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );
 
     Collection<ExpressionExperiment> loadLackingFactors();
 

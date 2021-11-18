@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractDao<O> implements BaseVoEnabledDao<O, VO> {
 
+    protected static final int REPORT_SLOW_QUERY_AFTER_MS = 20;
+
     protected AbstractVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }

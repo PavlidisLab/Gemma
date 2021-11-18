@@ -851,9 +851,14 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( sort, ids, taxon, limit, start );
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( List<Long> ids, Taxon taxon, Sort sort, int start, int limit ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, start, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( ids );
     }
 
     @Override

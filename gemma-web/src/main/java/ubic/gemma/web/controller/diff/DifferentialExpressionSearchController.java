@@ -305,7 +305,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
-                .loadDetailsValueObjects( null, ids, null, 0, 0 );
+                .loadDetailsValueObjects( ids );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

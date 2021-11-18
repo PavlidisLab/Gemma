@@ -593,7 +593,7 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment ee = this.getEESafely( id );
         Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService
-                .loadDetailsValueObjects( null, Collections.singleton( id ), null, 0, 0 );
+                .loadDetailsValueObjects( Collections.singleton( id ) );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -1579,8 +1579,7 @@ public class ExpressionExperimentController {
             List<Long> eeIds, Integer limit, boolean showPublic ) {
 
         Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( Sort.by( "curationDetails.lastUpdated", Sort.Direction.DESC ), eeIds, taxon, Math.abs( limit ),
-                        0 );
+                .loadDetailsValueObjects( eeIds, taxon, Sort.by( "curationDetails.lastUpdated", Sort.Direction.DESC ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
@@ -1615,7 +1614,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjects( Sort.by( o, direction ), ids, taxon, limit, start );
+        return expressionExperimentService.loadDetailsValueObjects( ids, taxon, Sort.by( o, direction ), start, limit );
     }
 
     /**

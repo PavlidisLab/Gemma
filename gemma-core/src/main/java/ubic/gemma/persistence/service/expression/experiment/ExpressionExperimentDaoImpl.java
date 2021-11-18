@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.core.util.StopWatchMonitor;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -1021,37 +1022,15 @@ public class ExpressionExperimentDaoImpl
         return this.loadValueObjectsPreFilter( null, null );
     }
 
-    /*
-     * Note that unlike loadValueObjectsPreFilter this returns ExpressionExperimentDetailsValueObject
-     */
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        final ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
-        if ( ids != null ) {
-            if ( ids.isEmpty() )
-                return new Slice<>();
-            List<Long> idList = new ArrayList<>( ids );
-            Collections.sort( idList );
-            filters[0] = new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList );
-        }
-        if ( taxon != null ) {
-            filters[1] = new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() );
-        }
-
-        Filters filtersList = new Filters() {
-            {
-                this.add( filters );
-            }
-        };
-
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int start, int limit ) {
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( start <= 0 && limit <= 0 )
             hints.add( QueryHint.FETCH_ALL );
 
         // Compose query
-        Query query = this.getLoadValueObjectsQuery( filtersList, sort, hints );
+        Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
 
         if ( start > 0 ) {
             query.setFirstResult( start );
@@ -1060,14 +1039,19 @@ public class ExpressionExperimentDaoImpl
             query.setMaxResults( limit );
         }
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+        StopWatch timer = StopWatch.createStarted();
         //noinspection unchecked
         List<Object[]> list = query.list();
         log.info( "EE details query: " + timer.getTime() + " ms for " + list.size() + " results" );
 
+        // timers for sub-steps
+        StopWatch arrayDesignsTimer = StopWatch.create();
+        StopWatch arrayDesignsInitializeTimer = StopWatch.create();
+        StopWatch otherPartsTimer = StopWatch.create();
+        StopWatch originalPlatformsTimer = StopWatch.create();
+
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
-        Long totalElements = ( Long ) this.getCountValueObjectsQuery( filtersList ).uniqueResult();
+        Long totalElements = ( Long ) this.getCountValueObjectsQuery( filters ).uniqueResult();
         for ( Object[] row : list ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
@@ -1076,23 +1060,85 @@ public class ExpressionExperimentDaoImpl
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
 
             // FIXME Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
-            Collection<ArrayDesignValueObject> adVos = ee.getBioAssays().stream()
-                    .map( BioAssay::getArrayDesignUsed )
-                    .map( ArrayDesignValueObject::new )
-                    .collect( Collectors.toSet() );
-            vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
+            try ( StopWatchMonitor swm = new StopWatchMonitor( arrayDesignsInitializeTimer ) ) {
+                Hibernate.initialize( ee.getBioAssays() );
+            }
+            try ( StopWatchMonitor swm = new StopWatchMonitor( arrayDesignsTimer ) ) {
+                Collection<ArrayDesignValueObject> adVos = ee.getBioAssays().stream()
+                        .map( BioAssay::getArrayDesignUsed )
+                        .map( ArrayDesignValueObject::new )
+                        .collect( Collectors.toSet() );
+                vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
+            }
 
             // FIXME watch out: this may be a performance drain for long lists (if so, could batch)
-            vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
+            try ( StopWatchMonitor swm = new StopWatchMonitor( otherPartsTimer ) ) {
+                vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
+            }
+
             // TODO: optimize this with a join-fetch
-            vo.setOriginalPlatforms( this.getOriginalPlatforms( ee ).stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() ) );
+            try ( StopWatchMonitor swm = new StopWatchMonitor( originalPlatformsTimer ) ) {
+                vo.setOriginalPlatforms( this.getOriginalPlatforms( ee ).stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() ) );
+            }
 
             vos.add( vo );
         }
 
-        this.populateAnalysisInformation( vos );
-        log.info( "EE details VO query + postprocessing: " + timer.getTime() + " ms" );
+        StopWatch analysisInformationTimer = StopWatch.create();
+        try ( StopWatchMonitor smw = new StopWatchMonitor( analysisInformationTimer ) ) {
+            this.populateAnalysisInformation( vos );
+        }
+
+        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.info( "EE details VO query + postprocessing: " + timer.getTime() + " ms ("
+                    + "arrayDesigns (initialize): " + arrayDesignsInitializeTimer.getTime() + " ms, "
+                    + "arrayDesigns: " + arrayDesignsTimer.getTime() + " ms, "
+                    + "otherParts: " + otherPartsTimer.getTime() + " ms, "
+                    + "originalPlatforms: " + originalPlatformsTimer.getTime() + " ms, "
+                    + "analysis information: " + analysisInformationTimer.getTime() + " ms)" );
+        }
+
         return new Slice<>( vos, sort, start, limit, totalElements );
+    }
+
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int start, int limit ) {
+        Filters filters = new Filters();
+
+        if ( ids != null ) {
+            if ( ids.isEmpty() )
+                return new Slice<>();
+            List<Long> idList = new ArrayList<>( ids );
+            Collections.sort( idList );
+            filters.add( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList ) );
+            // TODO: taxon filters
+        }
+
+        return this.loadDetailsValueObjects( filters, sort, start, limit );
+    }
+
+    /*
+     * Note that unlike loadValueObjectsPreFilter this returns ExpressionExperimentDetailsValueObject
+     */
+    @Override
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Sort sort,
+            int start, int limit ) {
+        Filters filters = new Filters();
+
+        if ( ids != null ) {
+            if ( ids.isEmpty() )
+                return new Slice<>();
+            List<Long> idList = new ArrayList<>( ids );
+            Collections.sort( idList );
+            filters.add( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idList ) );
+        }
+
+        return this.loadDetailsValueObjects( filters, sort, start, limit );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
+        return null;
     }
 
     @Override

@@ -439,14 +439,15 @@ public interface ExpressionExperimentService
      * @param orderField the field to order the results by e.g. curationDetails.lastUpdated
      * @param descending whether the ordering by the orderField should be descending.
      * @param ids        only list specific ids given (default = null)
-     * @param taxon      only list experiments within specific taxon (default = null)
-     * @param limit      limit of how many results to give; default no limit.
      * @param start      offset how many results to skip (for paging); default 0.
+     * @param limit      limit of how many results to give; default no limit.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( List<Long> ids, Taxon taxon, Sort by, int start, int limit );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
