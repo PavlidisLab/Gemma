@@ -135,9 +135,6 @@ public class PubMedXMLParser {
                             al.append( ", " );
                             break;
                         case "ForeName":
-                            al.append( XMLUtils.getTextValue( f ) );
-                            al.append( "; " );
-                            break;
                         case "CollectiveName":
                             al.append( XMLUtils.getTextValue( f ) );
                             al.append( "; " );
@@ -158,7 +155,7 @@ public class PubMedXMLParser {
             return "(No authors listed)";
         if ( al.length() < 3 )
             return al.toString();
-        return al.toString().substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
+        return al.substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
     }
 
     private Collection<BibliographicReference> extractBibRefs( Document document ) {
@@ -282,13 +279,9 @@ public class PubMedXMLParser {
                     monthText = monthText.replaceAll( "-\\w+", "" );
                     break;
                 case 4:
-                    // 1983 Aug 31-Sep 6
-                    yearText = yearmo[0];
-                    monthText = yearmo[1];
-                    dayText = yearmo[2].replaceAll( "-\\w+", "" );
-                    break;
                 case 3:
                     // 1983 Jul 9-16
+                    // 1983 Aug 31-Sep 6
                     yearText = yearmo[0];
                     monthText = yearmo[1];
                     dayText = yearmo[2].replaceAll( "-\\w+", "" );
@@ -428,12 +421,16 @@ public class PubMedXMLParser {
                                 continue;
                             }
                             if ( jitem.getNodeName().equals( "AbstractText" ) ) {
-                                String label = jitem.getAttributes().getNamedItem( "Label" ).getTextContent();
-                                String part = jitem.getTextContent();
-                                if ( StringUtils.isNotBlank( label ) ) {
-                                    buf.append( label ).append( ": " ).append( part ).append( "\n" );
-                                } else {
-                                    buf.append( part ).append( "\n" );
+                                Node lab = jitem.getAttributes().getNamedItem( "Label" );
+                                if ( lab != null ) {
+                                    String label = lab.getTextContent();
+
+                                    String part = jitem.getTextContent();
+                                    if ( StringUtils.isNotBlank( label ) ) {
+                                        buf.append( label ).append( ": " ).append( part ).append( "\n" );
+                                    } else {
+                                        buf.append( part ).append( "\n" );
+                                    }
                                 }
                             }
                         }
