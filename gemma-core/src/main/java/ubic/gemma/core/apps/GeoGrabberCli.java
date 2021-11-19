@@ -197,7 +197,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         try ( Writer os = new FileWriter( outputFile ) ) {
 
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tOverallDesign\n" );
+                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tLibraryStrategy\tOverallDesign\n" );
             os.flush();
 
             int numProcessed = 0;
@@ -370,6 +370,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                     + "\t" + geoRecord.getSummary()
                                     + "\t" + geoRecord.getMeshHeadings()
                                     + "\t" + geoRecord.getSampleDetails()
+                                    + "\t" + geoRecord.getLibraryStrategy()
                                     + "\t" + geoRecord.getOverallDesign() + "\n" );
 
                     seen.add( geoRecord.getGeoAccession() );

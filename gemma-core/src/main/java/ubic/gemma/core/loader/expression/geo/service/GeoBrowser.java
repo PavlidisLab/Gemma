@@ -98,7 +98,7 @@ public class GeoBrowser {
 
     XPathExpression xaccession;
     XPathExpression xChannel;
-
+    XPathExpression xLibraryStrategy;
     XPathFactory xFactory = XPathFactory.newInstance();
     XPathExpression xgpl;
     XPathExpression xnumSamples;
@@ -133,6 +133,7 @@ public class GeoBrowser {
             xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
             xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
             xChannel = xpath.compile( "//MINiML/Sample/Channel" );
+            xLibraryStrategy = xpath.compile( "//MINiML/Sample/Library-Strategy" );
             source = xpath.compile( "//Source" );
             characteristics = xpath.compile( "//Characteristics" );
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
@@ -802,17 +803,33 @@ public class GeoBrowser {
             for ( int k = 0; k < sources.getLength(); k++ ) {
                 String s = sources.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
-                if ( v.matches( "[0-9]+" ) ) continue; // skip unadorned numbers
-
-                props.add( v );
+                try {
+                    Double.parseDouble( v );
+                    // skip unadorned numbers
+                } catch ( NumberFormatException e ) {
+                    props.add( v );
+                }
             }
             NodeList chars = ( NodeList ) characteristics.evaluate( item, XPathConstants.NODESET );
             for ( int k = 0; k < chars.getLength(); k++ ) {
                 String s = chars.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
-                if ( v.matches( "[0-9]+" ) ) continue;
-                props.add( v );
+                try {
+                    Double.parseDouble( v );
+                } catch ( NumberFormatException e ) {
+                    props.add( v );
+                }
             }
+        }
+
+        NodeList ls = ( NodeList ) xLibraryStrategy.evaluate( detailsDocument, XPathConstants.NODESET );
+        Set<String> libraryStrategies = new HashSet<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            libraryStrategies.add( ls.item( i ).getTextContent() );
+        }
+
+        if ( !libraryStrategies.isEmpty() ) {
+            record.setLibraryStrategy( StringUtils.join( libraryStrategies, ";" ) );
         }
         record.setSampleDetails( StringUtils.join( props, ";" ) );
     }
