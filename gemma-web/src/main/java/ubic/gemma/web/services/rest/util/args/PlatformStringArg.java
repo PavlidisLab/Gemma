@@ -16,6 +16,10 @@ public class PlatformStringArg extends PlatformArg<String> {
         super( s );
     }
 
+    public PlatformStringArg( String message, Throwable cause ) {
+        super( message, cause );
+    }
+
     @Override
     public ArrayDesign getEntity( ArrayDesignService service ) {
         String value = this.getValue();

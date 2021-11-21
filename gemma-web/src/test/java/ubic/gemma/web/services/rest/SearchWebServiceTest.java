@@ -13,6 +13,8 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
@@ -42,6 +44,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         public SearchService searchService() {
             return mock( SearchService.class );
         }
+
+        @Bean
+        public TaxonService taxonService() {
+            return mock( TaxonService.class );
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock( ArrayDesignService.class );
+        }
     }
 
     @Autowired
@@ -64,7 +76,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testSearchEverything() {
-        ResponseDataObject<List<SearchWebService.SearchResultValueObject>> searchResults = searchWebService.search( "BRCA1", null );
+        ResponseDataObject<List<SearchWebService.SearchResultValueObject>> searchResults = searchWebService.search( "BRCA1", null, null, null );
         assertThat( searchResults.getData() )
                 .hasSize( 1 )
                 .first()
@@ -74,6 +86,6 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenUnsupportedResultTypeIsProvided() {
-        searchWebService.search( "brain", Arrays.asList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ) );
+        searchWebService.search( "brain", null, null, Arrays.asList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ) );
     }
 }

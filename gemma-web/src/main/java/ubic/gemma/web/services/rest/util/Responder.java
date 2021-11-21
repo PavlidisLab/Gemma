@@ -14,10 +14,12 @@
  */
 package ubic.gemma.web.services.rest.util;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.web.services.rest.SearchWebService;
 
 import javax.ws.rs.NotFoundException;
+import java.util.List;
 
 /**
  * Handles setting of the response status code and composing a proper payload structure.
@@ -31,16 +33,16 @@ public class Responder {
     /**
      * Produce a {@link ResponseDataObject} that wraps the given argument.
      *
-     * @param toReturn           an object to be wrapped and published to the API
+     * @param payload           an object to be wrapped and published to the API
      * @throws NotFoundException if the argument is null, a suitable {@link ResponseErrorObject} will be subsequently
      *                           produced by {@link ubic.gemma.web.services.rest.providers.NotFoundExceptionMapper}
      * @return a {@link ResponseDataObject} containing the argument
      */
-    public static <T> ResponseDataObject<T> respond( T toReturn ) throws NotFoundException {
-        if ( toReturn == null ) { // object is null.
+    public static <T> ResponseDataObject<T> respond( T payload ) throws NotFoundException {
+        if ( payload == null ) { // object is null.
             throw new NotFoundException( Responder.DEFAULT_ERR_MSG_NULL_OBJECT );
         } else {
-            return new ResponseDataObject<>( toReturn );
+            return new ResponseDataObject<>( payload );
         }
     }
 

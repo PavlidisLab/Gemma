@@ -123,4 +123,9 @@ public interface SearchService {
      * This is mainly used to perform a search for everything via {@link SearchSettings#getResultTypes()}.
      */
     Set<Class<?>> getSupportedResultTypes();
+
+    /**
+     * Convert the {@link SearchResult#getResultObject()} to its corresponding VO representation.
+     */
+    Object convertSearchResultObjectToValueObject( SearchResult searchResult );
 }

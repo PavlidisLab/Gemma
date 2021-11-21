@@ -1,12 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -36,6 +39,10 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         super( Taxon.class, arg );
     }
 
+    protected TaxonArg( String message, Throwable cause ) {
+        super( Taxon.class, message, cause );
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -44,6 +51,9 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
      */
     @SuppressWarnings("unused")
     public static TaxonArg<?> valueOf( final String s ) {
+        if ( StringUtils.isBlank( s ) ) {
+            return new TaxonStringArg( "Taxon identifier cannot be null or empty.", null );
+        }
         try {
             long id = Long.parseLong( s.trim() );
             return id > TaxonArg.MIN_NCBI_ID ? new TaxonNcbiIdArg( ( int ) id ) : new TaxonIdArg( id );
@@ -70,10 +80,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         if ( filters == null ) {
             filters = new Filters();
         }
-        filters.add( new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId()
-                ) } );
-
+        filters.add( new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId() ) );
         return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 

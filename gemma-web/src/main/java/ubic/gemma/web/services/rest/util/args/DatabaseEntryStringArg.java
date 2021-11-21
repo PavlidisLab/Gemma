@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
@@ -14,6 +15,10 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
         super( s );
+    }
+
+    DatabaseEntryStringArg( String message, Throwable cause ) {
+        super( message, cause );
     }
 
     @Override

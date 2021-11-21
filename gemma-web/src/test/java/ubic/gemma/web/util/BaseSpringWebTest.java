@@ -29,7 +29,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
  * dumbster)
  *
  * This is meant for integration tests, if you want to perform unit tests, consider using {@link WebAppConfiguration}
- * and {@link @ContextConfiguration} with a static inner class annotated with {@link org.springframework.context.annotation.Configuration}.
+ * and {@link ContextConfiguration} with a static inner class annotated with {@link org.springframework.context.annotation.Configuration}.
  * See {@link ubic.gemma.web.services.rest.SearchWebServiceTest} for a complete example.
  *
  * @author pavlidis

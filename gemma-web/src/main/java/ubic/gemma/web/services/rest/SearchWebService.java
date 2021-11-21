@@ -6,25 +6,24 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
+import ubic.gemma.model.common.search.SearchSettingsValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.args.PlatformArg;
+import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.ws.rs.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
@@ -41,15 +40,22 @@ public class SearchWebService {
 
     @Autowired
     private SearchService searchService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     /**
-     * Search everything.
+     * Search everything subject to taxon and platform constraints.
      * @return
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma.")
-    public ResponseDataObject<List<SearchResultValueObject>> search( @QueryParam("query") String query, @QueryParam("resultTypes") List<String> resultTypes ) {
+    public SearchResultResponseDataObject search( @QueryParam("query") String query,
+            @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("platform") PlatformArg<?> platformArg,
+            @QueryParam("resultTypes") List<String> resultTypes ) {
         Map<String, Class<?>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
                 .collect( Collectors.toMap( Class::getName, identity() ) );
         Collection<Class<?>> resultTypesCls;
@@ -63,22 +69,43 @@ public class SearchWebService {
             throw new BadRequestException( String.format( "Unsupported result type(s). Ensure that your results are among: %s.",
                     supportedResultTypesByName.keySet().stream().collect( Collectors.joining( ", " ) ) ) );
         }
+
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query )
+                .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
+                .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
                 .resultTypes( resultTypesCls )
                 .build();
-        return Responder.respond( searchAndInitialize( searchSettings ) );
-    }
 
-    @Transactional(readOnly = true)
-    List<SearchResultValueObject> searchAndInitialize( SearchSettings searchSettings ) {
-        return searchService.search( searchSettings ).values()
-                .stream()
+        // convert the response to search results of VOs
+        return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
                 .flatMap( List::stream )
                 .sorted() // SearchResults are sorted by descending score order
                 .map( SearchResultValueObject::new )
-                .filter( vo -> vo.resultObject != null ) // exclude null results, there will be a warning in the logs
-                .collect( Collectors.toList() );
+                .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+    }
+
+    /**
+     * Represents search settings for the RESTful API.
+     *
+     * Note that we will only expose back what the {@link SearchWebService} accepts to take as parameters for searching.
+     */
+    @Data
+    public class SearchSettingsValueObject {
+
+        private final String query;
+        private final Set<String> resultTypes;
+
+        /* constraints */
+        private final TaxonValueObject taxon;
+        private final ArrayDesignValueObject platform;
+
+        public SearchSettingsValueObject( SearchSettings searchSettings ) {
+            this.query = searchSettings.getQuery();
+            this.resultTypes = searchSettings.getResultTypes().stream().map( Class::getName ).collect( Collectors.toSet() );
+            this.taxon = taxonService.loadValueObject( searchSettings.getTaxon() );
+            this.platform = arrayDesignService.loadValueObject( searchSettings.getPlatformConstraint() );
+        }
     }
 
     /**
@@ -99,27 +126,24 @@ public class SearchWebService {
             this.resultId = searchResult.getResultId();
             this.resultType = searchResult.getResultClass().getName();
             this.score = searchResult.getScore();
-            this.resultObject = toValueObject( searchResult.getResultObject(), searchResult.getResultClass() );
+            this.resultObject = searchService.convertSearchResultObjectToValueObject( searchResult );
+        }
+    }
+
+    public static class SearchResultResponseDataObject extends ResponseDataObject<List<SearchResultValueObject>> {
+
+        private final SearchSettingsValueObject searchSettings;
+
+        /**
+         * @param payload the data to be serialised and returned as the response payload.
+         */
+        public SearchResultResponseDataObject( List<SearchResultValueObject> payload, SearchSettingsValueObject searchSettings ) {
+            super( payload );
+            this.searchSettings = searchSettings;
         }
 
-        private <T> Object toValueObject( T resultObject, Class<T> resultClass ) {
-            if ( resultObject instanceof Gene ) {
-                return new GeneValueObject( ( Gene ) resultObject );
-            } else if ( resultObject instanceof ExpressionExperiment ) {
-                return new ExpressionExperimentValueObject( ( ExpressionExperiment ) resultObject );
-            } else if ( resultObject instanceof CompositeSequence ) {
-                return new CompositeSequenceValueObject( ( CompositeSequence ) resultObject );
-            } else if ( resultObject instanceof BioSequence ) {
-                return null;
-                // return BioSequenceValueObject.fromEntity( ( BioSequence ) resultObject );
-            } else if ( searchService.getSupportedResultTypes().contains( resultClass ) ) {
-                // ideally we would raise a specific HTTP status code,
-                log.warn( "Result type " + resultClass + " is not handled by this endpoint." );
-                return null;
-            } else {
-                // this should never happen though since we minimally expect the search service to only produce result types it supports.
-                throw new IllegalArgumentException( "Unsupported result type " + resultClass + " for searching." );
-            }
+        public SearchSettingsValueObject getSearchSettings() {
+            return searchSettings;
         }
     }
 }

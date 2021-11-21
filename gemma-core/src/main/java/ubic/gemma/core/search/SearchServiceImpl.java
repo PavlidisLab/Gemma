@@ -39,6 +39,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -48,6 +49,7 @@ import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -56,6 +58,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
@@ -286,6 +289,35 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public Set<Class<?>> getSupportedResultTypes() {
         return supportedResultTypes;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object convertSearchResultObjectToValueObject( SearchResult searchResult ) {
+        Object resultObject = searchResult.getResultObject();
+        Class<?> resultClass = searchResult.getResultClass();
+        if ( resultObject == null ) {
+            return null; // that's a valid state of the result is provisional
+        } else if ( resultObject instanceof ArrayDesign ) {
+            return arrayDesignService.loadValueObject( ( ArrayDesign ) resultObject );
+        } else if ( resultObject instanceof BioSequence ) {
+            // FIXME: this is broken?
+            return BioSequenceValueObject.fromEntity( ( BioSequence ) resultObject );
+        } else if ( resultObject instanceof Gene ) {
+            return geneService.loadValueObject( ( Gene ) resultObject );
+        } else if ( resultObject instanceof GeneSet ) {
+            return geneSetService.loadValueObject( ( GeneSet ) resultObject );
+        } else if ( resultObject instanceof ExpressionExperiment ) {
+            return expressionExperimentService.loadValueObject( ( ExpressionExperiment ) resultObject );
+        } else if ( resultObject instanceof CompositeSequence ) {
+            return new CompositeSequenceValueObject( ( CompositeSequence ) resultObject );
+        } else if ( resultObject instanceof IdentifiableValueObject ) {
+            // FIXME: apparently, some search sources return VOs!
+            return resultObject;
+        } else {
+            log.warn( "Result type " + resultClass + " is not supported for VO conversion." );
+            return null;
+        }
     }
 
     @PostConstruct
