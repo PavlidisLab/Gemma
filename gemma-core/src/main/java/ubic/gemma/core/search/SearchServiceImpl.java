@@ -65,6 +65,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -150,6 +151,8 @@ public class SearchServiceImpl implements SearchService {
     private OntologyService ontologyService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    @Autowired
+    private BioSequenceService bioSequenceService;
 
     // TODO: use services instead of DAO here
     @Autowired
@@ -302,8 +305,7 @@ public class SearchServiceImpl implements SearchService {
         } else if ( resultObject instanceof ArrayDesign ) {
             return arrayDesignService.loadValueObject( ( ArrayDesign ) resultObject );
         } else if ( resultObject instanceof BioSequence ) {
-            // FIXME: this is broken?
-            return BioSequenceValueObject.fromEntity( ( BioSequence ) resultObject );
+            return bioSequenceService.loadValueObject( ( BioSequence ) resultObject );
         } else if ( resultObject instanceof Gene ) {
             return geneService.loadValueObject( ( Gene ) resultObject );
         } else if ( resultObject instanceof GeneSet ) {
