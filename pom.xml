@@ -623,7 +623,7 @@
 		<jackson.version>2.13.0</jackson.version>
 		<swagger.version>2.1.11</swagger.version>
 		<jawr.version>3.9</jawr.version>
-		<tomcat.version>8.5.71</tomcat.version>
+		<tomcat.version>8.5.72</tomcat.version>
 		<mysql.version>8.0.27</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slf4j.version>1.7.32</slf4j.version>
