@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -32,6 +33,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -82,6 +84,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
      * Test differential expression analysis on RNA-seq data. See bug 3383. R code in voomtest.R
      */
     @Test
+    @Category(SlowTest.class)
     public void testCountData() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

@@ -21,6 +21,8 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -39,6 +41,7 @@ public class ExpressionExperimentBibRefFinderTest {
     private static final Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
 
     @Test
+    @Category(SlowTest.class)
     public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();

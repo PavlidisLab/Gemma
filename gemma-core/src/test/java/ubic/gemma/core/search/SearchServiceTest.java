@@ -21,6 +21,7 @@ package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -30,6 +31,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -205,6 +207,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() {
         try {
             this.setup();

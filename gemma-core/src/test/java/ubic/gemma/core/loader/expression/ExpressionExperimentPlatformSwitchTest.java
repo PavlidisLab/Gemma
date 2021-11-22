@@ -16,10 +16,12 @@ package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -53,6 +55,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
      * for bug 3451
      */
     @Test
+    @Category(SlowTest.class)
     public void test() {
         // GSE36025
         //

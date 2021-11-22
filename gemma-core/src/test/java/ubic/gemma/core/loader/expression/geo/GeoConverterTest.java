@@ -34,12 +34,14 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -145,6 +147,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
      *
      */
     @Test
+    @Category(SlowTest.class)
     public void testConvertGSE18Stress() throws Exception {
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ) );
@@ -404,6 +407,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
+    @Category(SlowTest.class)
     public void testConvertGSE60() throws Exception {
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse60Short/GSE60_family.soft.gz" ) );
@@ -617,6 +621,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     @Test
+    @Category(SlowTest.class)
     public final void testGSE8872() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/gse8872short/GSE8872_family.soft.gz" ) );

@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -28,6 +29,7 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -121,6 +123,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
      */
     @SuppressWarnings("unchecked")
     @Test
+    @Category(SlowTest.class)
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
 
         try {
@@ -221,6 +224,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testReorder() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE404" );

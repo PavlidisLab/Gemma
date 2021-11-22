@@ -21,8 +21,10 @@ package ubic.gemma.core.loader.expression.geo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -94,6 +96,7 @@ public class GeoBrowserTest {
      * @throws Exception
      */
     @Test
+    @Category(SlowTest.class)
     public void testGetGeoRecords() throws Exception {
         GeoBrowser b = new GeoBrowser();
 

@@ -22,9 +22,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -131,6 +133,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testFindGene() {
         Gene g = Gene.Factory.newInstance();
         g.setOfficialName( testGeneIdentifier );

@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
@@ -56,6 +58,7 @@ public class PubMedXMLFetcherTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTP2() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 24850731 );
@@ -77,6 +80,7 @@ public class PubMedXMLFetcherTest {
      * 23865096 is a NCBI bookshelf article, not a paper
      */
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTPBookshelf() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 23865096 );
@@ -96,6 +100,7 @@ public class PubMedXMLFetcherTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTPNotFound() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );

@@ -28,6 +28,7 @@ import java.util.HashSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import gemma.gsec.SecurityService;
@@ -36,6 +37,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -130,6 +132,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {
 
         String geoId = "GSE123753";

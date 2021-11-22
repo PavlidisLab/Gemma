@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
@@ -27,6 +28,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -152,6 +154,7 @@ public class ExpressionDataSVDTest {
      * Test on full-sized data set.
      */
     @Test
+    @Category(SlowTest.class)
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
         InputStream is = new GZIPInputStream( this.getClass()
