@@ -81,7 +81,7 @@ public class SearchWebService {
         return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
                 .flatMap( List::stream )
                 .sorted() // SearchResults are sorted by descending score order
-                .map( SearchResultValueObject::new )
+                .map( result -> new SearchResultValueObject( result, searchService.convertSearchResultObjectToValueObject( result ) ) )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
 
@@ -122,11 +122,11 @@ public class SearchWebService {
 
         private final Object resultObject;
 
-        public SearchResultValueObject( SearchResult searchResult ) {
+        public SearchResultValueObject( SearchResult searchResult, Object resultObject ) {
             this.resultId = searchResult.getResultId();
             this.resultType = searchResult.getResultClass().getName();
             this.score = searchResult.getScore();
-            this.resultObject = searchService.convertSearchResultObjectToValueObject( searchResult );
+            this.resultObject = resultObject;
         }
     }
 
