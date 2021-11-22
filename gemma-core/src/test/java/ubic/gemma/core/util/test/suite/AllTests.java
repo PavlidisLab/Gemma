@@ -1,4 +1,4 @@
-package ubic.gemma.core.util.test;
+package ubic.gemma.core.util.test.suite;
 
 import org.junit.extensions.cpsuite.ClasspathSuite;
 import org.junit.runner.RunWith;
