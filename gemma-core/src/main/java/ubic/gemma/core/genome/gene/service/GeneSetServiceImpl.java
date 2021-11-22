@@ -95,6 +95,12 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
+    public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
+        return geneSetDao.loadValueObject( geneSet );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
         return this.geneSetDao.loadValueObjects( ids );
 

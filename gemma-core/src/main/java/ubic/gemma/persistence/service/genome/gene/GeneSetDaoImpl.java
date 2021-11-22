@@ -91,6 +91,18 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
+    public DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet ) {
+        Object[] row = ( Object[] ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select g, t, count(m) from GeneSet g "
+                                + "left join g.members m "
+                                + "left join m.gene.taxon t "
+                                + "where g = (:geneset) group by g.id" )
+                .setParameter( "geneset", geneSet )
+                .uniqueResult();
+        return fillValueObject( ( GeneSet ) row[0], ( Taxon ) row[1], ( Long ) row[2] );
+    }
+
+    @Override
     public Collection<DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
         Collection<DatabaseBackedGeneSetValueObject> result = this.loadValueObjectsLite( ids );
 
@@ -100,11 +112,10 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
          */
 
         for ( GeneSetValueObject res : result ) {
-            res.setGeneIds( new HashSet<Long>() );
             //noinspection unchecked
-            res.getGeneIds().addAll( this.getSessionFactory().getCurrentSession()
+            res.setGeneIds( new HashSet<>( this.getSessionFactory().getCurrentSession()
                     .createQuery( "select genes.id from GeneSet g join g.members m join m.gene genes where g.id = :id" )
-                    .setParameter( "id", res.getId() ).list() );
+                    .setParameter( "id", res.getId() ).list() ) );
         }
 
         return result;
@@ -120,30 +131,17 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         // Left join: includes one that have no members. Caller has to filter them out if they need to.
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
-                "select g.id, g.description, count(m), g.name from GeneSet g"
-                        + " left join g.members m where g.id in (:ids) group by g.id" )
+                        "select g, t, count(m) from GeneSet g "
+                                + "left join g.members m "
+                                + "left join m.gene.taxon t "
+                                + "where g.id in (:ids) group by g.id" )
                 .setParameterList( "ids", ids )
                 .list();
 
-        Map<Long, Taxon> taxa = this.getTaxa( ids );
-
         for ( Object[] oa : list ) {
-
-            DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject();
-            dvo.setDescription( ( String ) oa[1] );
-            dvo.setId( ( Long ) oa[0] );
-            dvo.setSize( ( ( Long ) oa[2] ).intValue() );
-            dvo.setName( ( String ) oa[3] );
-
-            Taxon t = taxa.get( dvo.getId() );
-            if ( t == null ) { // NPE bug 60 - happens if we have leftover (empty) gene sets for taxa that were removed.
-                log.warn( "No taxon found for " + dvo );
-                continue;
-            }
-            dvo.setTaxonId( t.getId() );
-            dvo.setTaxonName( t.getCommonName() );
-            result.add( dvo );
+            result.add( this.fillValueObject( ( GeneSet ) oa[0], ( Taxon ) oa[1], ( Long ) oa[2] ) );
         }
+
         return result;
     }
 
@@ -247,5 +245,21 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             }
         } );
 
+    }
+
+    private DatabaseBackedGeneSetValueObject fillValueObject( GeneSet geneSet, Taxon taxon, Long membersCount ) {
+        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject();
+        dvo.setSize( membersCount.intValue() );
+        dvo.setId( geneSet.getId() );
+        dvo.setName( geneSet.getName() );
+        dvo.setDescription( geneSet.getDescription() );
+        if ( taxon != null ) {
+            dvo.setTaxonId( taxon.getId() );
+            dvo.setTaxonName( taxon.getCommonName() );
+        } else {
+            // NPE bug 60 - happens if we have leftover (empty) gene sets for taxa that were removed.
+            log.warn( "No taxon found for gene set " + geneSet );
+        }
+        return dvo;
     }
 }

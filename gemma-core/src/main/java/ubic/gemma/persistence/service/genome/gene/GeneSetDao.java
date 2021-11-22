@@ -73,6 +73,8 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax );
 
+    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
+
     Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
 
     Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
