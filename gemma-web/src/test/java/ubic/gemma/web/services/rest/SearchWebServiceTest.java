@@ -10,13 +10,12 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.ws.rs.BadRequestException;
 import java.util.Arrays;
@@ -72,6 +71,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         taxon = new Taxon();
         gene.setTaxon( taxon );
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
+        when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
     }
 
     @Test
@@ -80,6 +80,8 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         assertThat( searchResults.getData() )
                 .hasSize( 1 )
                 .first()
+                .hasFieldOrPropertyWithValue( "resultId", gene.getId() )
+                .hasFieldOrPropertyWithValue( "resultType", gene.getClass().getName() )
                 .extracting( "resultObject" )
                 .hasFieldOrPropertyWithValue( "officialSymbol", gene.getOfficialSymbol() );
     }
