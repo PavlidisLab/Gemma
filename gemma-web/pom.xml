@@ -12,44 +12,6 @@
 	<description>Gemma web application</description>
 	<build>
 		<finalName>Gemma</finalName>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>target/generated-sources/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-		</resources>
-		<testResources>
-			<testResource>
-				<directory>src/test/resources</directory>
-				<includes>
-					<include>**/*.txt</include>
-					<include>**/*.xml</include>
-					<include>**/*.csv</include>
-				</includes>
-			</testResource>
-			<testResource>
-				<targetPath>WEB-INF</targetPath>
-				<directory>target/Gemma/WEB-INF</directory>
-				<includes>
-					<include>**/*.xml</include>
-				</includes>
-			</testResource>
-			<testResource>
-				<targetPath>WEB-INF</targetPath>
-				<directory>src/main/webapp/WEB-INF</directory>
-				<includes>
-					<include>**/*.xml</include>
-				</includes>
-			</testResource>
-		</testResources>
 		<plugins>
 			<plugin>
 				<groupId>com.github.klieber</groupId>
