@@ -37,10 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Simple class to parse XML in the format defined by
@@ -56,8 +53,9 @@ public class PubMedXMLParser {
     protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
     private static final String ERROR_TAG = "Error";
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
+    private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
     final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
-    private final String[] formats = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
+    private final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
     DocumentBuilder builder;
 
     public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
@@ -69,7 +67,7 @@ public class PubMedXMLParser {
             }
             if ( a.getNodeName().equals( "Year" ) ) {
                 try {
-                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), formats ) );
+                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), PUB_MED_LOCALE, PUB_MED_DATE_FORMATS ) );
                 } catch ( ParseException e ) {
                     PubMedXMLParser.log.warn( "Could not extract date of publication from : " + XMLUtils
                             .getTextValue( ( Element ) a ) );
@@ -304,7 +302,7 @@ public class PubMedXMLParser {
         String dateString = monthText + " " + ( dayText == null ? "01" : dayText ) + ", " + yearText;
 
         try {
-            return DateUtils.parseDate( dateString, formats );
+            return DateUtils.parseDate( dateString, PUB_MED_LOCALE, PUB_MED_DATE_FORMATS );
         } catch ( ParseException e ) {
             PubMedXMLParser.log.warn( "Could not parse date " + dateString );
             return null;

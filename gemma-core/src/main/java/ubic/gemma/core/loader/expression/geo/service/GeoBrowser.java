@@ -29,15 +29,7 @@ import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -114,7 +106,11 @@ public class GeoBrowser {
     XPathExpression xtitle;
 
     XPathExpression xtype;
-    private final String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+
+    /* locale */
+    private static final Locale GEO_LOCALE = Locale.ENGLISH;
+    private final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+
     @SuppressWarnings("FieldCanBeLocal") // Constant is better
     private final String GEO_BROWSE_SUFFIX = "&display=";
 
@@ -720,7 +716,7 @@ public class GeoBrowser {
                 geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
 
                 Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
-                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), DATE_FORMATS );
+                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
                 geoRecord.setReleaseDate( date );
 
                 geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
