@@ -3,8 +3,10 @@ package ubic.gemma.web.services.rest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -81,6 +83,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSomeById() {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
@@ -98,6 +101,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAllFilterById() {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
@@ -113,6 +117,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAllFilterByIdIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ")" );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
@@ -136,6 +141,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAllFilterByShortName() {
         FilterArg filterArg = FilterArg.valueOf( "shortName = " + ees.get( 0 ).getShortName() );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
@@ -159,6 +165,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAllFilterByShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "shortName in (" + ees.get( 0 ).getShortName() + ")" );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
@@ -182,6 +189,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAllFilterByIdInOrShortNameIn() {
         FilterArg filterArg = FilterArg.valueOf( "id in (" + ees.get( 0 ).getId() + ") or shortName in (" + ees.get( 1 ).getShortName() + ")" );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
@@ -224,6 +232,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFilterByGeeqPublicationScore() {
         datasetsWebService.all( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
                 OffsetArg.valueOf( "0" ),

@@ -17,10 +17,12 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
@@ -65,6 +67,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
 
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
+    @Category(SlowTest.class)
     public void testSignup() throws Exception {
         int numThreads = 10; // too high and we run out of connections, which is not what we're testing.
         final int numsignupsperthread = 20;

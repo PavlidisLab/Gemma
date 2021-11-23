@@ -19,11 +19,13 @@
 package ubic.gemma.web.controller;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.web.job.progress.ProgressStatusService;
 import ubic.gemma.web.util.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
@@ -106,6 +108,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testSuccessfulRun() throws Exception {
 
         TaskCommand taskCommand = new TaskCommand();
