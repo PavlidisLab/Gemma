@@ -317,6 +317,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
      * Test case where some samples cannot be used.
      */
     @Test
+    @Category(SlowTest.class)
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

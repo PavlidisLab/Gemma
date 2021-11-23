@@ -20,9 +20,11 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -43,6 +45,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     private ArrayDesignSequenceAlignmentService aligner;
 
     @Test
+    @Category(SlowTest.class)
     public final void testProcessArrayDesign() throws Exception {
 
         ad = arrayDesignService.thaw( ad );

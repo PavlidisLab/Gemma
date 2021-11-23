@@ -80,6 +80,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSplitGSE17183ByOrganismPart() throws Exception, PreprocessingException {
 
         String geoId = "GSE17183";

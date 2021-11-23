@@ -116,6 +116,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category( SlowTest.class )
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();

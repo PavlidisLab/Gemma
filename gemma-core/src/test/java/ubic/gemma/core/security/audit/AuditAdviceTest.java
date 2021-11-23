@@ -33,10 +33,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -165,6 +167,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("Duplicates") // Not in this project
     @Test
+    @Category( SlowTest.class )
     public void testAuditFindOrCreateConcurrentTorture() throws Exception {
         int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
         final int numExperimentsPerThread = 5;

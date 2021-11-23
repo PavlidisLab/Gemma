@@ -59,6 +59,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  *
  * @author pavlidis
  */
+@Category(SlowTest.class)
 public class GeoConverterTest extends BaseSpringContextTest {
 
     private final ByteArrayConverter bac = new ByteArrayConverter();

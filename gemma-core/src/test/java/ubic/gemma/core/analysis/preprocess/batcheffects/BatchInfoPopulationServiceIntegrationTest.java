@@ -15,11 +15,13 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -50,6 +52,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     private ExpressionExperimentService eeService;
 
     @Test
+    @Category(SlowTest.class)
     public void testLoad() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -73,6 +76,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
      * Another Affymetrix format - GCOS
      */
     @Test
+    @Category(SlowTest.class)
     public void testLoadCommandConsoleFormat() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );

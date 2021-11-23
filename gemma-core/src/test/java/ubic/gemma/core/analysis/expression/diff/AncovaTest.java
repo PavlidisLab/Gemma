@@ -20,7 +20,9 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -45,6 +47,7 @@ import static org.junit.Assert.*;
  *
  * @author paul
  */
+@Category(SlowTest.class)
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired

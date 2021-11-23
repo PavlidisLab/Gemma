@@ -44,6 +44,7 @@ public class PubMedSearchTest {
      * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
     @Test
+    @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();

@@ -79,6 +79,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @SuppressWarnings("unchecked")
     @Test
+    @Category(SlowTest.class)
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
         try {

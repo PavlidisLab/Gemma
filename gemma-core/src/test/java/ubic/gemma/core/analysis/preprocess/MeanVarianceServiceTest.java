@@ -18,6 +18,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -29,6 +30,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -110,6 +112,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     final public void testServiceCreateTwoColor() {
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
@@ -159,6 +162,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     final public void testServiceCreateOneColor() {
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
@@ -205,6 +209,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     final public void testServiceCreateCountData() throws Exception {
 
         // so it doesn't look for soft files
@@ -299,6 +304,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     final public void testServiceCreateExistingEe() {
 
         // no MeanVarianceRelation exists yet
