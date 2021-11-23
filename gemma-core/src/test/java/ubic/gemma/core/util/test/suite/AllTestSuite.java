@@ -8,5 +8,5 @@ import org.junit.runner.RunWith;
  * @author poirigui
  */
 @RunWith(ClasspathSuite.class)
-public class AllTests {
+public class AllTestSuite {
 }
