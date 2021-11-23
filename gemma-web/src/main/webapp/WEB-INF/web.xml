@@ -227,34 +227,29 @@
         <session-timeout>60</session-timeout>
     </session-config>
 
-    <!-- redefined to exclude index.htm from defaults -->
-    <welcome-file-list>
-        <welcome-file>/WEB-INF/pages/index.jsp</welcome-file>
-    </welcome-file-list>
-
     <error-page>
         <error-code>500</error-code>
-        <location>/WEB-INF/pages/error.jsp</location>
+        <location>/pages/error.jsp</location>
     </error-page>
     <error-page>
         <error-code>502</error-code>
-        <location>/WEB-INF/pages/error.jsp</location>
+        <location>/pages/error.jsp</location>
     </error-page>
     <error-page>
         <error-code>503</error-code>
-        <location>/WEB-INF/pages/error.jsp</location>
+        <location>/pages/error.jsp</location>
     </error-page>
     <error-page>
         <error-code>400</error-code>
-        <location>/WEB-INF/pages/index.jsp</location>
+        <location>/index.jsp</location>
     </error-page>
     <error-page>
         <error-code>403</error-code>
-        <location>/WEB-INF/pages/403.jsp</location>
+        <location>/pages/403.jsp</location>
     </error-page>
     <error-page>
         <error-code>404</error-code>
-        <location>/WEB-INF/pages/404.jsp</location>
+        <location>/pages/404.jsp</location>
     </error-page>
 
     <!--  for web fonts -->
