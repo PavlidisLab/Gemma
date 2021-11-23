@@ -5,9 +5,9 @@
 	be broken.
 </p>
 <form name="maintenanceForm" method="POST">
-	<input type="submit" style="color: BB3333" name="start"
+	<input type="submit" style="color: #BB3333" name="start"
 		value="Enter Maintenance Mode">
 
-	<input type="submit" style="color: BB3333" name="stop"
+	<input type="submit" style="color: #BB3333" name="stop"
 		value="Exit Maintenance Mode">
 </form>
