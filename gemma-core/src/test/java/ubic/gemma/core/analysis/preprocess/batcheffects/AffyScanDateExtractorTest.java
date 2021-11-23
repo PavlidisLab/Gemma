@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +38,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "08/15/08 7:15:36" );
 
         assertEquals( expected, actual );
@@ -51,7 +52,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "03/15/01 12:16:30" );
 
         assertEquals( expected, actual );
@@ -65,7 +66,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "09/09/05 12:14:40" );
 
         assertEquals( expected, actual );
@@ -79,7 +80,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "01/20/05 11:04:38" );
 
         assertEquals( expected, actual );

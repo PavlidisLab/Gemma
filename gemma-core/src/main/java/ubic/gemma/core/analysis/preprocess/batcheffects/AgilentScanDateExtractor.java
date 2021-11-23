@@ -31,6 +31,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Because agilent makes slides that work with any scanner, the formats are not that predictable. I've seen these so
@@ -47,6 +48,8 @@ import java.util.Date;
 public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
     private static final Log log = LogFactory.getLog( AgilentScanDateExtractor.class );
+
+    public static DateFormat AGILENT_DATE_FORMAT = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss", Locale.ENGLISH ); // 10-18-2005 13:02:36
 
     @Override
     public Date extract( InputStream is ) {
@@ -91,7 +94,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
                     Date d;
 
-                    DateFormat f = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss" ); // 10-18-2005 13:02:36
+                    DateFormat f = AGILENT_DATE_FORMAT;
                     f.setLenient( true );
                     d = f.parse( date );
 

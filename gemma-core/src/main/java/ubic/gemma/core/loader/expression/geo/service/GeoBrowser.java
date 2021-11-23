@@ -520,7 +520,7 @@ public class GeoBrowser {
                         + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
 
         StopWatch t = new StopWatch();
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" ); // for logging
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
 
         t.start();
         conn = fetchUrl.openConnection();

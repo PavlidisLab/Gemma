@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
@@ -72,7 +73,7 @@ public class PubMedXMLParserTest {
             assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
             assertNotNull( br.getVolume() );
             assertNotNull( br.getPages() );
-            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
+            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             this.logOrThrowException( e );
@@ -98,7 +99,7 @@ public class PubMedXMLParserTest {
 
             assertEquals( "Rare Diseases and Orphan Products: Accelerating Research and Development", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
             Date publicationDate = br.getPublicationDate();
             assertNotNull( publicationDate );
             assertEquals( "2010", f.format( publicationDate ) );
@@ -130,7 +131,7 @@ public class PubMedXMLParserTest {
             assertEquals( "GeneReviews", br.getPublication() );
             assertEquals( "Giant Axonal Neuropathy", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
             Date publicationDate = br.getPublicationDate();
             assertNotNull( publicationDate );
             assertEquals( "2003", f.format( publicationDate ) );

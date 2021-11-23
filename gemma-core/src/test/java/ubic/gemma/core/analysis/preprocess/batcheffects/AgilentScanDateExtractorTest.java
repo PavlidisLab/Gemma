@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
@@ -43,7 +44,7 @@ public class AgilentScanDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" );
+            DateFormat formatter = AgilentScanDateExtractor.AGILENT_DATE_FORMAT;
             Date expected = formatter.parse( "2005/11/09 11:36:27" );
 
             assertEquals( expected, actual );
@@ -58,7 +59,7 @@ public class AgilentScanDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = new SimpleDateFormat( "MM-dd-yyyy HH:mm:ss" );
+            DateFormat formatter = AgilentScanDateExtractor.AGILENT_DATE_FORMAT;
             Date expected = formatter.parse( "10-18-2005 13:02:36" );
 
             assertEquals( expected, actual );
@@ -73,7 +74,7 @@ public class AgilentScanDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = new SimpleDateFormat( "MM-dd-yyyy HH:mm:ss" );
+            DateFormat formatter =  AgilentScanDateExtractor.AGILENT_DATE_FORMAT;
             Date expected = formatter.parse( "02-27-2014 09:32:52" );
 
             assertEquals( expected, actual );

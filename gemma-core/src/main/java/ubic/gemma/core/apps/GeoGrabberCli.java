@@ -105,6 +105,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         if ( commandLine.hasOption( "date" ) ) {
             try {
+                // this is a user input, so we have to respect its locale
                 this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) );
@@ -134,6 +135,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         if ( commandLine.hasOption( "startdate" ) ) {
             try {
+                // this is a user input, so we have to respect its locale
                 this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), new String[] { "yyyy.MM.dd" } );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
@@ -156,7 +158,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         TaxonService ts = this.getBean( TaxonService.class );
         ArrayDesignService ads = this.getBean( ArrayDesignService.class );
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
         int start = 0;
 
