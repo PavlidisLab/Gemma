@@ -147,7 +147,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( means );
         Arrays.sort( variances );
 
-        int expectedLength = 75; // after filtering
+        int expectedLength = 72; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
 
@@ -192,8 +192,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( variances );
 
         // check sizes
-        int expectedMeanVarianceLength = 75;
-        int expectedLowessLength = 75; // NAs removed
+        int expectedMeanVarianceLength = 72;
+        int expectedLowessLength = 72; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
 
