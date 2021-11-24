@@ -197,7 +197,7 @@
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
 			<artifactId>spring-ws-core</artifactId>
-			<version>1.5.8</version>
+			<version>1.5.10</version>
 		</dependency>
 
 		<!-- Apache Commons -->
