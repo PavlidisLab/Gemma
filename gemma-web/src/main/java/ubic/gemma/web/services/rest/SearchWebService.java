@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,9 @@ public class SearchWebService {
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @QueryParam("resultTypes") List<String> resultTypes ) {
+        if ( StringUtils.isBlank( query ) ) {
+            throw new BadRequestException( "A non-empty query must be supplied." );
+        }
         Map<String, Class<?>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
                 .collect( Collectors.toMap( Class::getName, identity() ) );
         Collection<Class<?>> resultTypesCls;
