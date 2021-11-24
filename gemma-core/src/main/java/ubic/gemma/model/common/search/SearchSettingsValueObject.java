@@ -19,10 +19,16 @@
 package ubic.gemma.model.common.search;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneSet;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -55,44 +61,6 @@ public class SearchSettingsValueObject implements Serializable {
     private Boolean useIndices = Boolean.TRUE;
 
     public SearchSettingsValueObject() {
-    }
-
-    public static SearchSettings toEntity( SearchSettingsValueObject valueObject ) {
-        return SearchSettings.builder()
-                .query( !StringUtils.isBlank( valueObject.getQuery() ) ? valueObject.getQuery() : valueObject.getTermUri() )
-                .platformConstraint( valueObject.getPlatformConstraint() )
-                .taxon( valueObject.getTaxon() )
-                .maxResults( valueObject.getMaxResults() )
-                .resultTypes( resultTypesFromVo( valueObject ) )
-                .useIndices( valueObject.getUseIndices() )
-                .useDatabase( valueObject.getUseDatabase() )
-                .useCharacteristics( valueObject.getUseCharacteristics() )
-                .useGo( valueObject.getUseGo() )
-                .build();
-    }
-
-    /**
-     * This is silly, but the frontend relies on this.
-     * @param valueObject
-     * @return
-     */
-    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
-        Set<Class<?>> ret = new HashSet<>();
-        if ( valueObject.getSearchExperiments() ) {
-            ret.add( ExpressionExperiment.class );
-        }
-        if ( valueObject.getSearchGenes() ) {
-            ret.add( Gene.class );
-        }
-        // TODO
-        // .searchPlatforms( valueObject.getSearchPlatforms() )
-        // .searchExperimentSets( valueObject.getSearchExperimentSets() )
-        // .searchPhenotypes( valueObject.getSearchPhenotypes() )
-        // .searchProbes( valueObject.getSearchProbes() )
-        // .searchGeneSets( valueObject.getSearchGeneSets() )
-        // .searchBioSequences( valueObject.getSearchBioSequences() )
-        // .searchBibrefs( valueObject.getSearchBibrefs() )
-        return ret;
     }
 
     public Integer getMaxResults() {
@@ -238,5 +206,4 @@ public class SearchSettingsValueObject implements Serializable {
     public void setUseIndices( Boolean useIndices ) {
         this.useIndices = useIndices;
     }
-
 }

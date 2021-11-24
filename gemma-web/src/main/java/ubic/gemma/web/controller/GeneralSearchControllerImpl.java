@@ -37,6 +37,7 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -100,24 +101,25 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Override
     public JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        SearchSettings settings = SearchSettingsValueObject.toEntity( settingsValueObject );
+        StopWatch watch = new StopWatch();
 
-        List<SearchResult> finalResults = new ArrayList<>();
-        if ( settings == null || StringUtils.isBlank( settings.getQuery() ) || StringUtils
-                .isBlank( settings.getQuery().replaceAll( "\\*", "" ) ) ) {
+        if ( settingsValueObject == null || StringUtils.isBlank( settingsValueObject.getQuery() ) || StringUtils
+                .isBlank( settingsValueObject.getQuery().replaceAll( "\\*", "" ) ) ) {
             // FIXME validate input better, and return error.
             BaseFormController.log.info( "No query or invalid." );
             // return new ListRange( finalResults );
-            throw new IllegalArgumentException( "Query '" + settings + "' was invalid" );
+            throw new IllegalArgumentException( "Query '" + settingsValueObject + "' was invalid" );
         }
-        StopWatch watch = new StopWatch();
+
+        SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
+                .withDoHighlighting( true );
+
         watch.start();
-        ( ( SearchSettings ) settings ).setDoHighlighting( true );
-        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
+        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( searchSettings );
         watch.stop();
 
         if ( watch.getTime() > 500 ) {
-            BaseFormController.log.info( "Search service work on: " + settings + " took " + watch.getTime() + " ms" );
+            BaseFormController.log.info( "Search service work on: " + searchSettings + " took " + watch.getTime() + " ms" );
         }
 
         /*
@@ -126,6 +128,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         watch.reset();
         watch.start();
 
+        List<SearchResult> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
                 List<SearchResult> results = searchResults.get( clazz );
@@ -134,21 +137,21 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     continue;
 
                 BaseFormController.log
-                        .info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName()
+                        .info( "Search for: " + searchSettings + "; result: " + results.size() + " " + clazz.getSimpleName()
                                 + "s" );
 
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
                 Collections.sort( results );
-                this.fillValueObjects( clazz, results, settings );
+                this.fillValueObjects( clazz, results, searchSettings );
                 finalResults.addAll( results );
             }
         }
 
         if ( watch.getTime() > 500 ) {
             BaseFormController.log
-                    .info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
+                    .info( "Final unpacking of results for query:" + searchSettings + " took " + watch.getTime() + " ms" );
         }
 
         return new JsonReaderResponse<>( finalResults );
@@ -274,7 +277,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     *
      * @param entityClass
      * @param results
      * @param settings
@@ -415,8 +417,53 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         mapping.put( "taxa", taxa );
     }
 
-    private boolean searchStringValidator( String query ) {
+    private static boolean searchStringValidator( String query ) {
         return !StringUtils.isBlank( query ) && !( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) );
     }
 
+    private static SearchSettings searchSettingsFromVo( SearchSettingsValueObject settingsValueObject ) {
+        return SearchSettings.builder()
+                .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
+                .platformConstraint( settingsValueObject.getPlatformConstraint() )
+                .taxon( settingsValueObject.getTaxon() )
+                .maxResults( settingsValueObject.getMaxResults() )
+                .resultTypes( resultTypesFromVo( settingsValueObject ) )
+                .useIndices( settingsValueObject.getUseIndices() )
+                .useDatabase( settingsValueObject.getUseDatabase() )
+                .useCharacteristics( settingsValueObject.getUseCharacteristics() )
+                .useGo( settingsValueObject.getUseGo() )
+                .build();
+    }
+
+    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
+        Set<Class<?>> ret = new HashSet<>();
+        if ( valueObject.getSearchExperiments() ) {
+            ret.add( ExpressionExperiment.class );
+        }
+        if ( valueObject.getSearchGenes() ) {
+            ret.add( Gene.class );
+        }
+        if ( valueObject.getSearchPlatforms() ) {
+            ret.add( ArrayDesign.class );
+        }
+        if ( valueObject.getSearchExperimentSets() ) {
+            ret.add( ExpressionExperimentSet.class );
+        }
+        if ( valueObject.getSearchPhenotypes() ) {
+            ret.add( PhenotypeAssociation.class );
+        }
+        if ( valueObject.getSearchProbes() ) {
+            ret.add( CompositeSequence.class );
+        }
+        if ( valueObject.getSearchGeneSets() ) {
+            ret.add( GeneSet.class );
+        }
+        if ( valueObject.getSearchBioSequences() ) {
+            ret.add( BioSequence.class );
+        }
+        if ( valueObject.getSearchBibrefs() ) {
+            ret.add( BibliographicReference.class );
+        }
+        return ret;
+    }
 }
