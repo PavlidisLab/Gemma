@@ -161,54 +161,6 @@ public class SearchServiceImpl implements SearchService {
 
     private Set<Class<?>> supportedResultTypes;
 
-    @Override
-    public Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        SearchSettings searchSettings = SearchSettings.builder()
-                .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
-                .platformConstraint( settingsValueObject.getPlatformConstraint() )
-                .taxon( settingsValueObject.getTaxon() )
-                .maxResults( settingsValueObject.getMaxResults() )
-                .resultTypes( resultTypesFromVo( settingsValueObject ) )
-                .useIndices( settingsValueObject.getUseIndices() )
-                .useDatabase( settingsValueObject.getUseDatabase() )
-                .useCharacteristics( settingsValueObject.getUseCharacteristics() )
-                .useGo( settingsValueObject.getUseGo() )
-                .build();
-        return this.search( searchSettings );
-    }
-
-    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
-        Set<Class<?>> ret = new HashSet<>();
-        if ( valueObject.getSearchExperiments() ) {
-            ret.add( ExpressionExperiment.class );
-        }
-        if ( valueObject.getSearchGenes() ) {
-            ret.add( Gene.class );
-        }
-        if ( valueObject.getSearchPlatforms() ) {
-            ret.add( ArrayDesign.class );
-        }
-        if ( valueObject.getSearchExperimentSets() ) {
-            ret.add( ExpressionExperimentSet.class );
-        }
-        if ( valueObject.getSearchPhenotypes() ) {
-            ret.add( PhenotypeAssociation.class );
-        }
-        if ( valueObject.getSearchProbes() ) {
-            ret.add( CompositeSequence.class );
-        }
-        if ( valueObject.getSearchGeneSets() ) {
-            ret.add( GeneSet.class );
-        }
-        if ( valueObject.getSearchBioSequences() ) {
-            ret.add( BioSequence.class );
-        }
-        if ( valueObject.getSearchBibrefs() ) {
-            ret.add( BibliographicReference.class );
-        }
-        return ret;
-    }
-
     /*
      * This is the method used by the main search page.
      */

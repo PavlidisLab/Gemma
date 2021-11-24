@@ -41,26 +41,6 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    @SuppressWarnings("unused")
-    //Used in JS through DWR i.e. in search.js - the main search method.
-    Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settings );
-
-    /**
-     * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
-     * for, depending on the configuration of the input object.
-     * <ul>
-     * <li>Genes
-     * <li>ExpressionExperiments
-     * <li>CompositeSequences (probes)
-     * <li>ArrayDesigns (platforms)
-     * <li>Characteristics (e.g., Ontology annotations)
-     * <li>BioSequences
-     * <li>BibliographicReferences (articles)
-     * </ul>
-     *
-     * @param  settings settings
-     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
-     */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
 
     /**
