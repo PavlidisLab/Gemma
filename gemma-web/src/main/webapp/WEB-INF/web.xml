@@ -24,15 +24,6 @@
         <param-value>en</param-value>
     </context-param>
 
-    <!--
-          Name of Log4j config file relative to webapp root directory. This is done by the
-          org.springframework.web.util.Log4jWebConfigurer
-       -->
-    <context-param>
-        <param-name>log4jConfigLocation</param-name>
-        <param-value>/WEB-INF/classes/log4j.properties</param-value>
-    </context-param>
-
     <!-- Context Configuration locations for Spring XML files -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
