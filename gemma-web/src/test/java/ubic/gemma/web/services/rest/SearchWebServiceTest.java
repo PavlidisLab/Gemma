@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @WebAppConfiguration
 @ContextConfiguration
@@ -72,6 +72,11 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         gene.setTaxon( taxon );
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
         when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+    }
+
+    @After
+    public void tearDown() {
+        reset( searchService );
     }
 
     @Test
