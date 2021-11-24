@@ -20,7 +20,7 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,6 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -38,7 +37,6 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
@@ -121,7 +119,6 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
@@ -162,7 +159,6 @@ public class AnnotationsWebService {
     @GET
     @Path("/{taxonArg}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
@@ -204,7 +200,7 @@ public class AnnotationsWebService {
         for ( String value : values ) {
             Set<Long> valueIds = new HashSet<>();
 
-            SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( value );
+            SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
             List<SearchResult> eeResults = results.get( ExpressionExperiment.class );

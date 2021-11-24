@@ -21,6 +21,7 @@ package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -30,6 +31,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -76,11 +78,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     /**
      * This is not configured as a regular test fixture on purpose, it is called explicitly by tests.
-     * 
+     *
      * @throws Exception
      */
     public void setup() throws Exception {
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
 
             // this abuses the service as our example is a legacy FMA test (not uberon), but it doesn't matter since we're loading from a file anyway.
@@ -147,13 +149,13 @@ public class SearchServiceTest extends BaseSpringContextTest {
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.noSearches();
-        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
-        settings.setSearchExperiments( true );
-        settings.setUseCharacteristics( true );
-        settings.setUseDatabase( false );
-        settings.setUseIndices( false );
+        SearchSettings settings = SearchSettings.builder()
+                .query( "Brain" ) // should hit 'cavity of brain'.
+                .resultType( ExpressionExperiment.class )
+                .useCharacteristics( true )
+                .useDatabase( false )
+                .useIndices( false )
+                .build();
 
         Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
         assertTrue( !ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
@@ -185,9 +187,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( SearchServiceTest.GENE_URI + this.geneNcbiId );
-        settings.setSearchGenes( true );
+        SearchSettings settings = SearchSettings.builder()
+                .query( SearchServiceTest.GENE_URI + this.geneNcbiId )
+                .resultType( Gene.class )
+                .build();
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
@@ -204,6 +207,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() {
         try {
             this.setup();
@@ -222,10 +226,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         indexerTask.setTaskCommand( c );
         indexerTask.execute();
 
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.noSearches();
-        settings.setQuery( "de novo mutation" );
-        settings.setSearchBibrefs( true );
+        SearchSettings settings = SearchSettings.builder()
+                .query( "de novo mutation" )
+                .resultType( BibliographicReference.class )
+                .build();
 
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
@@ -258,10 +262,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         indexerTask.setTaskCommand( c );
         indexerTask.execute();
 
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.noSearches();
-        settings.setQuery( "confirm chromosome 22q12" );
-        settings.setSearchBibrefs( true );
+        SearchSettings settings = SearchSettings.builder()
+                .query( "confirm chromosome 22q12" )
+                .resultType( BibliographicReference.class )
+                .build();
 
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
@@ -304,7 +308,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 //        indexerTask.execute();
 //
 //        SearchSettings settings = SearchSettings.Factory.newInstance();
-//        settings.noSearches();
 //        settings.setQuery( id );
 //        settings.setSearchExperiments( true );
 //        settings.setUseCharacteristics( false );
@@ -331,10 +334,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( "http://purl.obolibrary.org/obo/FMA_83153" ); // OrganComponent of Neuraxis; superclass of
-        // 'spinal cord'.
-        settings.setSearchExperiments( true );
+        SearchSettings settings = SearchSettings.builder()
+                .query( "http://purl.obolibrary.org/obo/FMA_83153" ) // OrganComponent of Neuraxis; superclass of
+                // 'spinal cord'.
+                .resultType( ExpressionExperiment.class )
+                .build();
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
@@ -358,12 +362,13 @@ public class SearchServiceTest extends BaseSpringContextTest {
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-        SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( SearchServiceTest.SPINAL_CORD );
-        settings.setSearchExperiments( true );
-        settings.setUseDatabase( false );
-        settings.setUseIndices( false );
-        settings.setUseCharacteristics( true );
+        SearchSettings settings = SearchSettings.builder()
+                .query( SearchServiceTest.SPINAL_CORD )
+                .resultType( ExpressionExperiment.class )
+                .useDatabase( false )
+                .useIndices( false )
+                .useCharacteristics( true )
+                .build();
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 

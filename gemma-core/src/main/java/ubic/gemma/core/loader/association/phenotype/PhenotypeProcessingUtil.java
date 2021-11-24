@@ -1096,7 +1096,7 @@ class PhenotypeProcessingUtil {
      * @return todays date
      */
     private String getTodayDate() {
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH.mm" );
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH.mm", Locale.ENGLISH );
         Calendar cal = Calendar.getInstance();
         return dateFormat.format( cal.getTime() );
     }

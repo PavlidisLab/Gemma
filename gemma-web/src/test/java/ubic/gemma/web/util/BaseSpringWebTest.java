@@ -20,7 +20,7 @@ package ubic.gemma.web.util;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
-
+import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 /**
@@ -28,10 +28,14 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
  * with mock requests and responses. Also provides a safe port to send email on for testing (for example, using
  * dumbster)
  *
+ * This is meant for integration tests, if you want to perform unit tests, consider using {@link WebAppConfiguration}
+ * and {@link ContextConfiguration} with a static inner class annotated with {@link org.springframework.context.annotation.Configuration}.
+ * See {@link ubic.gemma.web.services.rest.SearchWebServiceTest} for a complete example.
+ *
  * @author pavlidis
  */
-@ContextConfiguration(loader = WebContextLoader.class, locations = {
-        "classpath*:WEB-INF/gemma-servlet.xml" }, inheritLocations = true)
+@WebAppConfiguration
+@ContextConfiguration(locations = { "classpath*:WEB-INF/gemma-servlet.xml" })
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     public MockHttpServletRequest newGet( String url ) {

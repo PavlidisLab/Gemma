@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
@@ -26,6 +27,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -70,6 +72,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     private GeoService geoService;
 
     @Test
+    @Category(SlowTest.class)
     public void test() {
         AnalysisType aa = analysisService
                 .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );

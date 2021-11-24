@@ -70,11 +70,11 @@
 				</property>
 				<property name="batchEffect" type="java.lang.String">
 					<column name="BATCH_EFFECT" not-null="false" unique="false"
-							sql-type="VARCHAR(255)"/>
+							sql-type="TEXT"/>
 				</property>
 				<property name="batchConfound" type="java.lang.String">
 					<column name="BATCH_CONFOUND" not-null="false" unique="false"
-							sql-type="VARCHAR(255)"/>
+							sql-type="TEXT"/>
 				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.Geeq" cascade="all" lazy="proxy"
 							 fetch="select">

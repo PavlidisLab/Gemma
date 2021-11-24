@@ -57,7 +57,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
  * and a merged AD exists. The following steps are needed:
  * <ul>
- * 
+ *
  * <li>Delete old analyses of this experiment and processeddata vectors
  * <li>For each array design, for each probe, identify the matching probe on the merged AD. Have to deal with situation
  * <li>where more than one occurrence of each sequence is found.
@@ -118,7 +118,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param  ee          ee
      * @param  arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *                     changed for them.
-     * @return             the switched experiment
+     * @return the switched experiment
      */
     public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
@@ -151,7 +151,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
          * 1. Pick a BAD that can be used for all DataVectors (it has all BioAssays in it).
          * 2. Switch vectors to use it - may require adding NaNs and reordering the vectors (switchDataForPlatform)
          * 3. Delete the Bioassays that are using other BADs (cleanupUnused)
-         * 
+         *
          * For Case 1 (each sample run on one platform, all platforms are related/similar) Simply switch the vectors
          * (switchDataForPlatform)
          */
@@ -211,7 +211,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * Automatically identify an appropriate merged platform
      *
      * @param  expExp ee
-     * @return        ee
+     * @return ee
      */
     public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
@@ -244,7 +244,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     /**
      * Remove bioassays that are no longer needed
-     * 
+     *
      * @param unusedBADs
      * @param maxBAD
      */
@@ -278,7 +278,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     /**
      * Find the bioassaydimension that covers all the biomaterials.
-     * 
+     *
      * @param  ee
      * @param  unusedBADs
      * @return
@@ -305,7 +305,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         /*
          * Make sure all biomaterials in the study are included in the chosen bioassaydimension. If not, we'd have
-         * to make a new BAD. I haven't implemented that case.
+         * to make a new BAD.
          */
         if ( maxBAD != null ) {
             Collection<BioMaterial> bmsInmaxBAD = new HashSet<>();
@@ -317,7 +317,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 if ( !bmsInmaxBAD.contains( ba.getSampleUsed() ) ) {
 
                     ExpressionExperimentPlatformSwitchService.log
-                            .warn( "This experiment looked like it had samples run on more than one platform, "
+                            .debug( "This experiment looked like it had samples run on more than one platform, "
                                     + "but it also has no BioAssayDimension that is eligible to accomodate all samples (Example: "
                                     + ba.getSampleUsed() );
                     maxBAD = null;
@@ -326,6 +326,15 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
 
         }
+
+        if ( maxBAD == null ) {
+            log.info( "Creating new bioassaydimension to accomodate merged data as no existing one was suitable" );
+            maxBAD = BioAssayDimension.Factory.newInstance( "For " + ee.getBioAssays().size() +
+                    " bioMaterials", "Created to accomodate platform switch", new ArrayList<>( ee.getBioAssays() ) );
+            maxBAD = bioAssayDimensionService.create( maxBAD );
+        }
+
+
         return maxBAD;
     }
 
@@ -335,7 +344,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      *
      * @param  currentOrder current order
      * @param  desiredOrder desired order
-     * @return              boolean
+     * @return boolean
      */
     private boolean equivalent( List<BioAssay> currentOrder, List<BioAssay> desiredOrder ) {
         if ( currentOrder.size() != desiredOrder.size() ) {
@@ -388,7 +397,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     /**
      * Set up a map of sequences to elements for the platform we're switching to
-     * 
+     *
      * @param arrayDesign
      * @param designElementMap
      * @param elsWithNoSeq
@@ -422,7 +431,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param  bad                   BioAssayDimension to use, if necessary. If this is null or already the one used,
      *                               it's ignored.
      *                               Otherwise the vector data will be rewritten to match it.
-     * @return                       true if a switch was made
+     * @return true if a switch was made
      * @throws IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
     private boolean processVector( Map<BioSequence, Collection<CompositeSequence>> designElementMap,
@@ -477,7 +486,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     /**
      * Switch the vectors from one platform to the other, using the bioassaydimension passed if non-null
-     * 
+     *
      * @param  ee
      * @param  arrayDesign
      * @param  designElementMap
@@ -485,7 +494,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      *                                 the new one.
      * @param  usedDesignElements
      * @param  oldAd
-     * @return                         how many vectors were switched
+     * @return how many vectors were switched
      */
     private int switchDataForPlatform( ExpressionExperiment ee, ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> designElementMap, BioAssayDimension targetBioAssayDimension,
@@ -546,9 +555,18 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             rawExpressionDataVectorService.thaw( vecsForQt );
 
+            int numwarns = 0;
+            int maxwarns = 30;
             for ( RawExpressionDataVector vector : vecsForQt ) {
                 if ( this.processVector( designElementMap, usedDesignElements, vector, targetBioAssayDimension ) ) {
                     count++;
+                } else {
+                    if ( numwarns++ < maxwarns ) {
+                        log.warn( "No matching element found on target platform for " + vector.getDesignElement() );
+                    }
+                    if ( numwarns == maxwarns ) {
+                        log.warn( "[Further no-match warnings suppressed]" );
+                    }
                 }
             }
 

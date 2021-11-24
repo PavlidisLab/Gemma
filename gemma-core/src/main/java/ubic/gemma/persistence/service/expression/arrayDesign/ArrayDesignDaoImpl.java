@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
@@ -496,18 +495,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
     }
 
-    // TODO: remove this when _totalInQuery is removed
-    private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
-
     /**
      * Loads a single value objects for the given array design.
      *
-     * @param  e the array design to be converted to a value object
+     * @param ad the array design to be converted to a value object
      * @return a value object with properties of the given array design.
      */
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
-        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad, totalElements.get() == null ? 1 : totalElements.get().intValue() );
+        ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
 
         vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
         vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
@@ -517,14 +513,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
-        this.totalElements.set( ( long ) entities.size() );
-        try {
-            List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override
@@ -553,43 +544,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return ObjectFilter.DAO_AD_ALIAS;
     }
 
-    /**
-     * Queries the database to retrieve all array designs, based on the given parameters, and then
-     * converts them to value objects.
-     *
-     *
-     * @param filters
-     * @param sort the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
-     * @param offset  amount of ADs to skip.
-     * @param limit   maximum amount of ADs to retrieve.
-     * @return list of value objects representing the ADs that matched the criteria.
-     */
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        // TODO: remove this when _totalInQuery is removed
         Query countQuery = this.getCountValueObjectsQuery( filters );
-        this.totalElements.set( ( Long ) countQuery.uniqueResult() );
-        try {
-            Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        // TODO: remove this when _totalInQuery is removed
         Query countQuery = this.getCountValueObjectsQuery( filters );
-        this.totalElements.set( ( Long ) countQuery.uniqueResult() );
-        try {
-            List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
-            populateBlacklisted( results );
-            return results;
-        } finally {
-            this.totalElements.remove();
-        }
+        List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        populateBlacklisted( results );
+        return results;
     }
 
     @Override
@@ -1048,7 +1016,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<AbstractQueryFilteringVoEnabledDao.QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         // contain duplicated platforms
         String queryString =
                 "select ad from ArrayDesign as ad "

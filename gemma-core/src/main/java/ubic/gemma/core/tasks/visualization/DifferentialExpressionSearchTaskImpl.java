@@ -193,11 +193,11 @@ public class DifferentialExpressionSearchTaskImpl
                         }
                         if ( condition.getNumberOfProbesOnArray() == null
                                 || condition.getNumberDiffExpressedProbes() == null ) {
-                            DifferentialExpressionSearchTaskImpl.log.error( bas
+                            DifferentialExpressionSearchTaskImpl.log.warn( bas
                                     + ": Error: Null counts for # diff ex probe or # probes on array, Skipping" );
                             continue experiment;
                         } else if ( condition.getNumberOfProbesOnArray() < condition.getNumberDiffExpressedProbes() ) {
-                            DifferentialExpressionSearchTaskImpl.log.error( bas
+                            DifferentialExpressionSearchTaskImpl.log.warn( bas
                                     + ": Error: More diff expressed probes than probes on array. Skipping." );
                             continue experiment;
                         }
@@ -436,7 +436,7 @@ public class DifferentialExpressionSearchTaskImpl
             // Skip if baseline is not specified.
             if ( resultSet.getBaselineGroup() == null ) {
                 DifferentialExpressionSearchTaskImpl.log
-                        .error( "Possible Data Issue: resultSet.getBaselineGroup() returned null for result set with ID="
+                        .warn( "Possible Data Issue: resultSet.getBaselineGroup() returned null for result set with ID="
                                 + resultSet.getResultSetId() );
                 continue;
             }
@@ -645,7 +645,7 @@ public class DifferentialExpressionSearchTaskImpl
                     if ( factorValue == null ) {
                         if ( !warned ) {
                             DifferentialExpressionSearchTaskImpl.log
-                                    .error( "Data Integrity error: Null factor value for contrast with id=" + cr.getId()
+                                    .warn( "Data Integrity error: Null factor value for contrast with id=" + cr.getId()
                                             + " associated with diffexresult " + deaResult.getResultId()
                                             + " for resultset " + resultSet.getResultSetId()
                                             + ". (additional warnings may be suppressed but additional results will be omitted)" );

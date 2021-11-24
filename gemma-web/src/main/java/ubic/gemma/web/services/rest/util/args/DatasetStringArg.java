@@ -17,6 +17,10 @@ public class DatasetStringArg extends DatasetArg<String> {
         super( s );
     }
 
+    DatasetStringArg( String message, Throwable cause ) {
+        super( message, cause );
+    }
+
     @Override
     public ExpressionExperiment getEntity( ExpressionExperimentService service ) {
         return this.checkEntity( Strings.isNullOrEmpty( this.getValue() ) ? null : service.findByShortName( this.getValue() ) );

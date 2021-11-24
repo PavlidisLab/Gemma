@@ -29,6 +29,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,14 +82,14 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
         try {
 
-            DateFormat f = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
+            DateFormat f = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss", Locale.ENGLISH ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
             return f.parse( dateString );
         } catch ( ParseException e ) {
             try {
                 /*
                  * Another format we see in GPR files ... 2008:11:27 10:27:42
                  */
-                DateFormat f = new SimpleDateFormat( "yyyy:MM:dd HH:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07
+                DateFormat f = new SimpleDateFormat( "yyyy:MM:dd HH:mm:ss", Locale.ENGLISH ); // 2005/11/09 11:36:27, 2006/04/07
                 // 14:18:18
                 return f.parse( dateString );
             } catch ( ParseException e1 ) {
@@ -121,7 +122,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      */
     protected Date parseLongFormat( String string ) {
         try {
-            DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy" );
+            DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH );
 
             Pattern regex = Pattern.compile( BaseScanDateExtractor.LONG_FORMAT_REGEX );
 
@@ -145,7 +146,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     protected Date parseStandardFormat( String string ) {
 
         try {
-            DateFormat f = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
+            DateFormat f = new SimpleDateFormat( "MM/dd/yy HH:mm:ss", Locale.ENGLISH );
 
             Pattern regex = Pattern.compile( BaseScanDateExtractor.STANDARD_FORMAT_REGEX );
 

@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -33,6 +34,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -101,6 +103,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAddData() throws Exception {
 
         /*
@@ -214,6 +217,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
      * More realistic test of RNA seq. GSE19166. Test re-loading as well.
      */
     @Test
+    @Category(SlowTest.class)
     public void testLoadRNASeqData() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -313,6 +317,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
      * Test case where some samples cannot be used.
      */
     @Test
+    @Category(SlowTest.class)
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );

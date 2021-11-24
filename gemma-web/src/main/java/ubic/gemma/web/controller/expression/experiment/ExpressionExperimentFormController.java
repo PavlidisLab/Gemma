@@ -19,7 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;

@@ -1,6 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import lombok.NonNull;
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
@@ -15,19 +14,19 @@ import javax.ws.rs.NotFoundException;
  * Class representing and API call argument that can represent various identifiers of different types.
  * E.g a taxon can be represented by Long number (ID) or multiple String properties (scientific/common name).
  *
- * @param <A>  the type that the argument is expected to mutate to.
+ * @param <T>  the type that the argument is expected to mutate to.
  * @param <O>  the persistent object type.
  * @param <S>  the service for the object type.
  * @author tesarst
  */
-public abstract class AbstractEntityArg<A, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<A> {
+public abstract class AbstractEntityArg<T, O extends Identifiable, S extends FilteringService<O>> extends AbstractArg<T> {
 
     private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
 
     private final Class<O> entityClass;
 
-    protected AbstractEntityArg( Class<O> entityClass, A value ) {
+    protected AbstractEntityArg( Class<O> entityClass, T value ) {
         super( value );
         this.entityClass = entityClass;
     }

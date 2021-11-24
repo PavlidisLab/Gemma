@@ -18,10 +18,12 @@
  */
 package ubic.gemma.core.util;
 
+import com.google.common.base.Charsets;
 import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,6 +39,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.List;
 
@@ -51,8 +56,20 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private static final String USERNAME_OPTION = "u";
     private static final String PASSWORD_OPTION = "p";
 
-    private String username;
-    private String password;
+    /**
+     * Environment variable used to store the username (if not passed directly to the CLI).
+     */
+    private static final String USERNAME_ENV = "GEMMA_USERNAME";
+
+    /**
+     * Environment variable used to store the user password.
+     */
+    private static final String PASSWORD_ENV = "GEMMA_PASSWORD";
+
+    /**
+     * Environment variable used to store the command that produces the password.
+     */
+    private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
 
     protected AuditTrailService auditTrailService;
     protected AuditEventService auditEventService;
@@ -73,11 +90,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         super.buildStandardOptions( options );
         options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
                 .desc( "User name for accessing the system (optional for some tools)" )
-                .required( requireLogin() )
                 .build() );
         options.addOption( Option.builder( PASSWORD_OPTION ).argName( "passwd" ).longOpt( "password" ).hasArg()
                 .desc( "Password for accessing the system (optional for some tools)" )
-                .required( requireLogin() )
                 .build() );
     }
 
@@ -100,12 +115,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void processStandardOptions( CommandLine commandLine ) {
         super.processStandardOptions( commandLine );
         this.createSpringContext( commandLine );
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            this.username = commandLine.getOptionValue( USERNAME_OPTION );
-        }
-        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
-            this.password = commandLine.getOptionValue( PASSWORD_OPTION );
-        }
         this.authenticate( commandLine );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         this.auditEventService = this.getBean( AuditEventService.class );
@@ -237,22 +246,21 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
-        if ( commandLine.hasOption( 'u' ) && commandLine.hasOption( 'p' ) ) {
-            username = commandLine.getOptionValue( 'u' );
-            password = commandLine.getOptionValue( 'p' );
+        if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {
+            String username = getUsername( commandLine );
+            String password = getPassword( commandLine );
 
             if ( StringUtils.isBlank( username ) ) {
-                AbstractCLI.log.debug( "Username=" + username );
-                throw new RuntimeException( "Not authenticated. Username was blank" );
+                throw new IllegalArgumentException( "Not authenticated. Username was blank" );
             }
 
             if ( StringUtils.isBlank( password ) ) {
-                throw new RuntimeException( "Not authenticated. You didn't enter a password" );
+                throw new IllegalArgumentException( "Not authenticated. You didn't enter a password" );
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
-                throw new RuntimeException( "Not authenticated. Make sure you entered a valid username (got '" + username
+                throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
             } else {
                 AbstractCLI.log.info( "Logged in as " + username );
@@ -264,4 +272,46 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     }
 
+    private String getUsername( CommandLine commandLine ) {
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            return commandLine.getOptionValue( USERNAME_OPTION );
+        } else if ( System.getenv().containsKey( USERNAME_ENV ) ) {
+            return System.getenv().get( USERNAME_ENV );
+        } else {
+            return System.console().readLine( "Username: " );
+        }
+    }
+
+    private String getPassword( CommandLine commandLine ) {
+        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
+            log.warn( "Using the " + PASSWORD_OPTION + " CLI option is highly discouraged. Consider instead passing  a " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variable." );
+            return commandLine.getOptionValue( PASSWORD_OPTION );
+        }
+
+        if ( System.getenv().containsKey( PASSWORD_ENV ) ) {
+            return System.getenv().get( PASSWORD_ENV );
+        }
+
+        if ( System.getenv().containsKey( PASSWORD_CMD_ENV ) ) {
+            String passwordCommand = System.getenv().get( PASSWORD_CMD_ENV );
+            try {
+                Process proc = Runtime.getRuntime().exec( passwordCommand );
+                if ( proc.waitFor() == 0 ) {
+                    try ( BufferedReader reader = new BufferedReader( new InputStreamReader( proc.getInputStream() ) ) ) {
+                        return reader.readLine();
+                    }
+                } else {
+                    log.error( "Could not read the password from '" + passwordCommand + "':\n"
+                            + String.join( "\n", IOUtils.readLines( proc.getErrorStream(), Charsets.UTF_8 ) ) );
+                    throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'." );
+                }
+            } catch ( IOException | InterruptedException e ) {
+                log.error( "Could not read the password from '" + passwordCommand + "'.", e );
+                throw new IllegalArgumentException( "Could not read the password from '" + passwordCommand + "'.", e );
+            }
+        }
+
+        // prompt the user for his password
+        return String.valueOf( System.console().readPassword( "Password: " ) );
+    }
 }

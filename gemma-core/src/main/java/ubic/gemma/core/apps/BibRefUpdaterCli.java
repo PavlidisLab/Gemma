@@ -22,8 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
@@ -107,7 +106,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
             } catch ( Exception e ) {
                 log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
             }
-            Thread.sleep( RandomUtils.nextInt( 1000 ) );
+            Thread.sleep( RandomUtils.nextInt( 0, 1000 ) );
         }
     }
 

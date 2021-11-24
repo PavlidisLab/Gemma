@@ -22,6 +22,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
@@ -29,6 +30,7 @@ import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -100,6 +102,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testLoadAnalyzeSaveAndCoexpSearch() {
         ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );

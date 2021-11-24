@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -32,6 +33,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -131,6 +133,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Test for bug 2026, not a subsetted analysis.
      */
     @Test
+    @Category(SlowTest.class)
     public void testAnalyzeAndDeleteSpecificAnalysis() {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -154,6 +157,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Tests running with a subset factor, then deleting.
      */
     @Test
+    @Category(SlowTest.class)
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() {
 
         ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
@@ -175,6 +179,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testAnalyzeAndDelete() throws Exception {
 
         assert ee.getId() != null;
@@ -238,6 +243,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Test inspired by bug 2605
      */
     @Test
+    @Category(SlowTest.class)
     public void testAnalyzeWithSubsetWhenOneIsNotUsableAndWithInteractionInTheOther() throws Exception {
         ee = expressionExperimentService.findByShortName( "GSE32136" );
 
@@ -330,6 +336,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testWritePValuesHistogram() {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();

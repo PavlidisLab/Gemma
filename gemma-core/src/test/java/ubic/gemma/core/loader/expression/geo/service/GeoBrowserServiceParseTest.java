@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -256,7 +257,7 @@ public class GeoBrowserServiceParseTest {
 
             assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
             assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
-
+            assertEquals("RNA-Seq", rec.getLibraryStrategy());
         }
 
     }

@@ -20,9 +20,11 @@ package ubic.gemma.core.loader.expression.simple;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -93,6 +95,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
      * Note that this test will fail if you run it again on a dirty DB. Sorry!
      */
     @Test
+    @Category(SlowTest.class)
     public final void testParse() throws Exception {
 
         try (InputStream is = this.getClass()

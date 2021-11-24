@@ -18,17 +18,14 @@
  */
 package ubic.gemma.core.loader.entrez;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tools.ant.filters.StringInputStream;
-import org.openjena.atlas.logging.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.persistence.util.Settings;
 
@@ -45,6 +42,7 @@ import java.net.URLConnection;
 /**
  * @author paul
  */
+@CommonsLog
 public class EutilFetch {
 
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
@@ -52,7 +50,6 @@ public class EutilFetch {
     private static final String APIKEY = Settings.getString( "entrez.efetch.apikey" );
     private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private static final int MAX_TRIES = 3;
-    private static Logger log = LoggerFactory.getLogger( EutilFetch.class );
 
     /**
      * Attempts to fetch data via Eutils; failures will be re-attempted several times.
@@ -73,7 +70,7 @@ public class EutilFetch {
         int tries = 0;
 
         while ( true ) {
-            try (InputStream is = new StringInputStream( details )) {
+            try ( InputStream is = new StringInputStream( details ) ) {
                 return builder.parse( is );
             } catch ( IOException e ) {
                 // FIXME this can't happen, can it?
@@ -142,25 +139,21 @@ public class EutilFetch {
                 conn = fetchUrl.openConnection();
                 conn.connect();
             } catch ( ParserConfigurationException | SAXException e1 ) {
-
-                throw new RuntimeException( "Failed to parse XML: " + e1.getMessage(), e1 );
+                throw new RuntimeException( "Failed to parse XML.", e1 );
             } catch ( IOException e2 ) {
                 if ( numTries == MAX_TRIES )
                     throw e2;
-                log.warn( e2.getMessage() );
-                try {
-                    Thread.sleep( 500 );
-                } catch ( InterruptedException e ) {
-                }
+                log.warn( "I/O error occurred while parsing XML, will sleep for 500ms and try again", e2 );
+                EutilFetch.trySleep( 500 );
             }
         }
 
         if ( conn == null )
             throw new IllegalStateException( "Connection was null" );
 
-        try (InputStream is = conn.getInputStream()) {
+        try ( InputStream is = conn.getInputStream() ) {
 
-            try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
                 StringBuilder buf = new StringBuilder();
                 String line;
                 while ( ( line = br.readLine() ) != null ) {
@@ -181,7 +174,7 @@ public class EutilFetch {
         while ( true ) {
             URLConnection conn = url.openConnection();
             conn.connect();
-            try (InputStream is = conn.getInputStream()) {
+            try ( InputStream is = conn.getInputStream() ) {
                 return builder.parse( is );
             } catch ( IOException e ) {
                 tries = EutilFetch.tryAgainOrFail( tries, e );
@@ -201,10 +194,10 @@ public class EutilFetch {
         if ( e.getMessage().contains( "429" ) ) {
             tries++;
             if ( tries > MAX_TRIES ) {
-                Log.fatal( EutilFetch.class, "Got HTTP 429 " + tries + " times" );
+                log.warn( "Got HTTP 429 " + tries + " times" );
                 throw e;
             }
-            Log.warn( EutilFetch.class, "got HTTP 429 " + tries + " time(s), letting the server rest." );
+            log.warn( "got HTTP 429 " + tries + " time(s), letting the server rest." );
             EutilFetch.trySleep( 500 * tries );
         } else {
             throw e;
@@ -216,7 +209,7 @@ public class EutilFetch {
         try {
             Thread.sleep( milliseconds );
         } catch ( InterruptedException e1 ) {
-            e1.printStackTrace(); // Log and try to continue
+            log.error( "Sleep for " + milliseconds + "ms was interrupted.", e1 ); // Log and try to continue
         }
     }
 

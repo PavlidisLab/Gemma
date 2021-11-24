@@ -44,8 +44,9 @@
 			<column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE" />
 		</property>
 		<!-- cascade=all is a problem since same entry can be associated with geneproduct - see chromosomefeature configuration -->
+		<!-- this must be eager because BioSequenceValueObject assumes it is readily available -->
 		<many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"
-			cascade="all" lazy="proxy" fetch="select">
+			cascade="all" lazy="false" fetch="join">
 			<column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
 		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">

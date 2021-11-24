@@ -37,9 +37,9 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.BlacklistedValueObject;
@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -100,24 +101,25 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Override
     public JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        SearchSettings settings = SearchSettingsValueObject.toEntity( settingsValueObject );
+        StopWatch watch = new StopWatch();
 
-        List<SearchResult> finalResults = new ArrayList<>();
-        if ( settings == null || StringUtils.isBlank( settings.getQuery() ) || StringUtils
-                .isBlank( settings.getQuery().replaceAll( "\\*", "" ) ) ) {
+        if ( settingsValueObject == null || StringUtils.isBlank( settingsValueObject.getQuery() ) || StringUtils
+                .isBlank( settingsValueObject.getQuery().replaceAll( "\\*", "" ) ) ) {
             // FIXME validate input better, and return error.
             BaseFormController.log.info( "No query or invalid." );
             // return new ListRange( finalResults );
-            throw new IllegalArgumentException( "Query '" + settings + "' was invalid" );
+            throw new IllegalArgumentException( "Query '" + settingsValueObject + "' was invalid" );
         }
-        StopWatch watch = new StopWatch();
+
+        SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
+                .withDoHighlighting( true );
+
         watch.start();
-        ( ( SearchSettingsImpl ) settings ).setDoHighlighting( true );
-        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
+        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( searchSettings );
         watch.stop();
 
         if ( watch.getTime() > 500 ) {
-            BaseFormController.log.info( "Search service work on: " + settings + " took " + watch.getTime() + " ms" );
+            BaseFormController.log.info( "Search service work on: " + searchSettings + " took " + watch.getTime() + " ms" );
         }
 
         /*
@@ -126,6 +128,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         watch.reset();
         watch.start();
 
+        List<SearchResult> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
                 List<SearchResult> results = searchResults.get( clazz );
@@ -134,21 +137,21 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     continue;
 
                 BaseFormController.log
-                        .info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName()
+                        .info( "Search for: " + searchSettings + "; result: " + results.size() + " " + clazz.getSimpleName()
                                 + "s" );
 
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
                 Collections.sort( results );
-                this.fillValueObjects( clazz, results, settings );
+                this.fillValueObjects( clazz, results, searchSettings );
                 finalResults.addAll( results );
             }
         }
 
         if ( watch.getTime() > 500 ) {
             BaseFormController.log
-                    .info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
+                    .info( "Final unpacking of results for query:" + searchSettings + " took " + watch.getTime() + " ms" );
         }
 
         return new JsonReaderResponse<>( finalResults );
@@ -198,11 +201,47 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        SearchSettingsImpl searchSettings = new SearchSettingsImpl();
-        // Reset default settings.
-        searchSettings.noSearches();
-        return searchSettings;
+    protected SearchSettings formBackingObject( HttpServletRequest request ) {
+        SearchSettings.SearchSettingsBuilder csc = SearchSettings.builder();
+        csc.query( !StringUtils.isBlank( request.getParameter( "query" ) ) ? request.getParameter( "query" ) : request.getParameter( "termUri" ) );
+        String taxon = request.getParameter( "taxon" );
+        if ( taxon != null )
+            csc.taxon( taxonService.findByScientificName( taxon ) );
+
+        String scope = request.getParameter( "scope" );
+        if ( StringUtils.isNotBlank( scope ) ) {
+            char[] scopes = scope.toCharArray();
+            for ( char scope1 : scopes ) {
+                switch ( scope1 ) {
+                    case 'G':
+                        csc.resultType( Gene.class );
+                        break;
+                    case 'E':
+                        csc.resultType( ExpressionExperiment.class );
+                        break;
+                    case 'S':
+                        csc.resultType( BioSequence.class );
+                        break;
+                    case 'P':
+                        csc.resultType( CompositeSequence.class );
+                        break;
+                    case 'A':
+                        csc.resultType( ArrayDesign.class );
+                        break;
+                    case 'M':
+                        csc.resultType( GeneSet.class );
+                        break;
+                    case 'N':
+                        csc.resultType( ExpressionExperimentSet.class );
+                        break;
+                    default:
+                        // TODO: 400 Bad Request error?
+                        log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
+                        break;
+                }
+            }
+        }
+        return csc.build();
     }
 
     @Override
@@ -218,46 +257,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
-            SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
-            csc.setQuery( request.getParameter( "query" ) );
-            csc.setTermUri( request.getParameter( "termUri" ) );
-            String taxon = request.getParameter( "taxon" );
-            if ( taxon != null )
-                csc.setTaxon( taxonService.findByScientificName( taxon ) );
-
-            String scope = request.getParameter( "scope" );
-            if ( StringUtils.isNotBlank( scope ) ) {
-                char[] scopes = scope.toCharArray();
-                for ( char scope1 : scopes ) {
-                    switch ( scope1 ) {
-                        case 'G':
-                            csc.setSearchGenes( true );
-                            break;
-                        case 'E':
-                            csc.setSearchExperiments( true );
-                            break;
-                        case 'S':
-                            csc.setSearchBioSequences( true );
-                            break;
-                        case 'P':
-                            csc.setSearchProbes( true );
-                            break;
-                        case 'A':
-                            csc.setSearchPlatforms( true );
-                            break;
-                        case 'M':
-                            csc.setSearchGeneSets( true );
-                            break;
-                        case 'N':
-                            csc.setSearchExperimentSets( true );
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            return this.doSearch( request, response, csc, errors );
+            SearchSettings searchSettings = this.formBackingObject( request );
+            return this.doSearch( request, response, searchSettings, errors );
         }
 
         return new ModelAndView( "generalSearch" );
@@ -276,7 +277,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     /**
      * Populate the search results with the value objects - we generally only have the entity class and ID (or, in some
      * cases, possibly the entity)
-     * 
      * @param entityClass
      * @param results
      * @param settings
@@ -417,8 +417,53 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         mapping.put( "taxa", taxa );
     }
 
-    private boolean searchStringValidator( String query ) {
+    private static boolean searchStringValidator( String query ) {
         return !StringUtils.isBlank( query ) && !( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) );
     }
 
+    private static SearchSettings searchSettingsFromVo( SearchSettingsValueObject settingsValueObject ) {
+        return SearchSettings.builder()
+                .query( !StringUtils.isBlank( settingsValueObject.getQuery() ) ? settingsValueObject.getQuery() : settingsValueObject.getTermUri() )
+                .platformConstraint( settingsValueObject.getPlatformConstraint() )
+                .taxon( settingsValueObject.getTaxon() )
+                .maxResults( settingsValueObject.getMaxResults() )
+                .resultTypes( resultTypesFromVo( settingsValueObject ) )
+                .useIndices( settingsValueObject.getUseIndices() )
+                .useDatabase( settingsValueObject.getUseDatabase() )
+                .useCharacteristics( settingsValueObject.getUseCharacteristics() )
+                .useGo( settingsValueObject.getUseGo() )
+                .build();
+    }
+
+    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
+        Set<Class<?>> ret = new HashSet<>();
+        if ( valueObject.getSearchExperiments() ) {
+            ret.add( ExpressionExperiment.class );
+        }
+        if ( valueObject.getSearchGenes() ) {
+            ret.add( Gene.class );
+        }
+        if ( valueObject.getSearchPlatforms() ) {
+            ret.add( ArrayDesign.class );
+        }
+        if ( valueObject.getSearchExperimentSets() ) {
+            ret.add( ExpressionExperimentSet.class );
+        }
+        if ( valueObject.getSearchPhenotypes() ) {
+            ret.add( PhenotypeAssociation.class );
+        }
+        if ( valueObject.getSearchProbes() ) {
+            ret.add( CompositeSequence.class );
+        }
+        if ( valueObject.getSearchGeneSets() ) {
+            ret.add( GeneSet.class );
+        }
+        if ( valueObject.getSearchBioSequences() ) {
+            ret.add( BioSequence.class );
+        }
+        if ( valueObject.getSearchBibrefs() ) {
+            ret.add( BibliographicReference.class );
+        }
+        return ret;
+    }
 }

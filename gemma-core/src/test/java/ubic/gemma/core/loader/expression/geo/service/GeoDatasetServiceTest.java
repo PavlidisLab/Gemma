@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -33,6 +34,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -91,6 +93,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @Test
+    @Category(SlowTest.class)
     public void testFetchAndLoadGSE1133() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -137,6 +140,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFetchAndLoadGSE16035() throws Exception, PreprocessingException {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         try {
@@ -161,6 +165,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFetchAndLoadGSE12135EXON() throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         try {
@@ -221,6 +226,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFetchAndLoadGSE9048() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -378,6 +384,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testLoadGSE30521ExonArray() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -402,6 +409,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testLoadGSE28383ExonArray() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );

@@ -71,7 +71,7 @@ public class SimpleFastaCmd implements FastaCmd {
     @Override
     public BioSequence getByIdentifier( int identifier, String database ) {
         try {
-            return this.getSingle( identifier, database, SimpleFastaCmd.blastDbHome );
+            return this.getSingle( String.valueOf( identifier ), database, SimpleFastaCmd.blastDbHome );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -99,7 +99,7 @@ public class SimpleFastaCmd implements FastaCmd {
     @Override
     public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
         try {
-            return this.getSingle( identifier, database, blastHome );
+            return this.getSingle( String.valueOf( identifier ), database, blastHome );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -128,7 +128,7 @@ public class SimpleFastaCmd implements FastaCmd {
 
     /**
      * Keys can be numbers or strings...
-     * 
+     *
      * @param keys keys
      * @param database database
      * @param blastHome blast home
@@ -147,7 +147,7 @@ public class SimpleFastaCmd implements FastaCmd {
                     "No blast database location specified, you must set this in your environment" );
         }
         File tmp = File.createTempFile( "sequenceIds", ".txt" );
-        try (Writer tmpOut = new FileWriter( tmp )) {
+        try ( Writer tmpOut = new FileWriter( tmp ) ) {
 
             for ( Object object : keys ) {
                 if ( object instanceof String ) {
@@ -160,8 +160,7 @@ public class SimpleFastaCmd implements FastaCmd {
             }
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids  -target_only -" + dbOption + " " + database + " -" + entryBatchOption + " "
-                + tmp.getAbsolutePath();
+        String[] command = new String[] { SimpleFastaCmd.fastaCmdExecutable, "-long_seqids", "-target_only", "-" + dbOption, database, "-" + entryBatchOption, tmp.getAbsolutePath() };
         SimpleFastaCmd.log.info( command );
         Process pr;
         SimpleFastaCmd.log.info( "BLASTDB=" + blastHome );
@@ -174,8 +173,8 @@ public class SimpleFastaCmd implements FastaCmd {
 
     private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
 
-        try (final InputStream is = new BufferedInputStream( pr.getInputStream() );
-                InputStream err = pr.getErrorStream()) {
+        try ( final InputStream is = new BufferedInputStream( pr.getInputStream() );
+                InputStream err = pr.getErrorStream() ) {
 
             final FastaParser parser = new FastaParser();
 
@@ -211,12 +210,12 @@ public class SimpleFastaCmd implements FastaCmd {
      * @param database db
      * @throws IOException io problems
      */
-    private BioSequence getSingle( Object key, String database, String blastHome ) throws IOException {
+    private BioSequence getSingle( String key, String database, String blastHome ) throws IOException {
         if ( blastHome == null ) {
             blastHome = SimpleFastaCmd.blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = SimpleFastaCmd.fastaCmdExecutable + " -long_seqids -target_only -" + dbOption + " " + database + " -" + queryOption + " " + key;
+        String[] command = new String[] { SimpleFastaCmd.fastaCmdExecutable, "-long_seqids", "-target_only", "-" + dbOption, database, "-" + queryOption, key };
         Process pr = Runtime.getRuntime().exec( command, opts );
         log.info( StringUtils.join( opts, " " ) );
         SimpleFastaCmd.log.info( command );

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -27,6 +28,7 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -181,6 +183,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category( SlowTest.class )
     public void testLoadAllPhenotypeUris() {
         Set<String> uris = this.phenotypeAssociationService.loadAllUsedPhenotypeUris();
         assertTrue( !uris.isEmpty() );

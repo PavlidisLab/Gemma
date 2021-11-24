@@ -7,11 +7,9 @@ import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Hibernate;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.Date;
 import java.util.Objects;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
@@ -45,6 +43,22 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Long taxonId;
 
     private String technologyType;
+
+    /**
+     * Required when using the class as a spring bean.
+     */
+    protected ExpressionExperimentValueObject() {
+    }
+
+    protected ExpressionExperimentValueObject( Long id ) {
+        super( id );
+    }
+
+    public ExpressionExperimentValueObject( Long id, String shortName, String name ) {
+        this.id = id;
+        this.shortName = shortName;
+        this.name = name;
+    }
 
     /**
      * Creates a new value object out of given Expression Experiment.
@@ -116,10 +130,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // 29: other parts
     }
 
-    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid, int totalInQuery ) {
+    /**
+     * Creates a new {@link ExpressionExperiment} value object with additional information about ownership.
+     */
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, AclObjectIdentity aoi, AclSid sid ) {
         this( ee );
-
-        set_totalInQuery( totalInQuery );
 
         // ACL
         boolean[] permissions = EntityUtils.getPermissions( aoi );
@@ -134,69 +149,32 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
     }
 
-    public ExpressionExperimentValueObject( Long id, String shortName, String name ) {
-        this.id = id;
-        this.shortName = shortName;
-        this.name = name;
-    }
-
-    public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
-            String accession, String batchConfound, String batchEffect, String externalDatabase, String externalUri,
-            String metadata, String shortName, String source, String taxon, String technologyType, Long taxonId,
-            Long experimentalDesign, Integer processedExpressionVectorCount, Integer arrayDesignCount,
-            Integer bioMaterialCount, Boolean currentUserHasWritePermission, Boolean currentUserIsOwner,
-            Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
-            AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
-            AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
-            AuditEventValueObject lastNoteUpdateEvent, GeeqValueObject geeqValueObject, Boolean suitableForDEA ) {
-        super( id, lastUpdated, troubled, lastTroubledEvent, needsAttention, lastNeedsAttentionEvent, curationNote,
-                lastNoteUpdateEvent );
-        this.name = name;
-        this.description = description;
-        this.bioAssayCount = bioAssayCount;
-        this.accession = accession;
-        this.batchConfound = batchConfound;
-        this.batchEffect = batchEffect;
-        this.externalDatabase = externalDatabase;
-        this.externalUri = externalUri;
-        this.metadata = metadata;
-        this.shortName = shortName;
-        this.source = source;
-        this.taxon = taxon;
-        this.technologyType = technologyType;
-        this.taxonId = taxonId;
-        this.experimentalDesign = experimentalDesign;
-        this.processedExpressionVectorCount = processedExpressionVectorCount;
-        this.arrayDesignCount = arrayDesignCount;
-        this.bioMaterialCount = bioMaterialCount;
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-        this.currentUserIsOwner = currentUserIsOwner;
-        this.isPublic = isPublic;
-        this.isShared = isShared;
-        this.geeq = geeqValueObject;
-        this.suitableForDEA = suitableForDEA;
-
-    }
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    protected ExpressionExperimentValueObject() {
-    }
-
-    protected ExpressionExperimentValueObject( Long id ) {
-        super( id );
-    }
-
-    public ExpressionExperimentValueObject( ExpressionExperimentValueObject vo ) {
-        this( vo.getId(), vo.name, vo.description, vo.bioAssayCount, vo.getAccession(), vo.getBatchConfound(),
-                vo.getBatchEffect(), vo.getExternalDatabase(), vo.getExternalUri(), vo.getMetadata(), vo.getShortName(),
-                vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), vo.getExperimentalDesign(),
-                vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(), vo.getBioMaterialCount(),
-                vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(), vo.getIsPublic(), vo.getIsShared(),
-                vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(), vo.getNeedsAttention(),
-                vo.getLastNeedsAttentionEvent(), vo.getCurationNote(), vo.getLastNoteUpdateEvent(), vo.getGeeq(),
-                vo.getSuitableForDEA() );
+    protected ExpressionExperimentValueObject( ExpressionExperimentValueObject vo ) {
+        super( vo );
+        this.name = vo.name;
+        this.description = vo.description;
+        this.bioAssayCount = vo.bioAssayCount;
+        this.accession = vo.getAccession();
+        this.batchConfound = vo.getBatchConfound();
+        this.batchEffect = vo.getBatchEffect();
+        this.externalDatabase = vo.getExternalDatabase();
+        this.externalUri = vo.getExternalUri();
+        this.metadata = vo.getMetadata();
+        this.shortName = vo.getShortName();
+        this.source = vo.getSource();
+        this.taxon = vo.getTaxon();
+        this.technologyType = vo.getTechnologyType();
+        this.taxonId = vo.getTaxonId();
+        this.experimentalDesign = vo.getExperimentalDesign();
+        this.processedExpressionVectorCount = vo.getProcessedExpressionVectorCount();
+        this.arrayDesignCount = vo.getArrayDesignCount();
+        this.bioMaterialCount = vo.getBioMaterialCount();
+        this.currentUserHasWritePermission = vo.getCurrentUserHasWritePermission();
+        this.currentUserIsOwner = vo.getCurrentUserIsOwner();
+        this.isPublic = vo.getIsPublic();
+        this.isShared = vo.getIsShared();
+        this.geeq = vo.getGeeq();
+        this.suitableForDEA = vo.getSuitableForDEA();
     }
 
     @Override

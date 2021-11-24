@@ -37,10 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Simple class to parse XML in the format defined by
@@ -56,8 +53,9 @@ public class PubMedXMLParser {
     protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
     private static final String ERROR_TAG = "Error";
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
+    private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
     final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
-    private final String[] formats = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
+    private final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
     DocumentBuilder builder;
 
     public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
@@ -69,7 +67,7 @@ public class PubMedXMLParser {
             }
             if ( a.getNodeName().equals( "Year" ) ) {
                 try {
-                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), formats ) );
+                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), PUB_MED_LOCALE, PUB_MED_DATE_FORMATS ) );
                 } catch ( ParseException e ) {
                     PubMedXMLParser.log.warn( "Could not extract date of publication from : " + XMLUtils
                             .getTextValue( ( Element ) a ) );
@@ -135,9 +133,6 @@ public class PubMedXMLParser {
                             al.append( ", " );
                             break;
                         case "ForeName":
-                            al.append( XMLUtils.getTextValue( f ) );
-                            al.append( "; " );
-                            break;
                         case "CollectiveName":
                             al.append( XMLUtils.getTextValue( f ) );
                             al.append( "; " );
@@ -158,7 +153,7 @@ public class PubMedXMLParser {
             return "(No authors listed)";
         if ( al.length() < 3 )
             return al.toString();
-        return al.toString().substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
+        return al.substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
     }
 
     private Collection<BibliographicReference> extractBibRefs( Document document ) {
@@ -282,13 +277,9 @@ public class PubMedXMLParser {
                     monthText = monthText.replaceAll( "-\\w+", "" );
                     break;
                 case 4:
-                    // 1983 Aug 31-Sep 6
-                    yearText = yearmo[0];
-                    monthText = yearmo[1];
-                    dayText = yearmo[2].replaceAll( "-\\w+", "" );
-                    break;
                 case 3:
                     // 1983 Jul 9-16
+                    // 1983 Aug 31-Sep 6
                     yearText = yearmo[0];
                     monthText = yearmo[1];
                     dayText = yearmo[2].replaceAll( "-\\w+", "" );
@@ -311,7 +302,7 @@ public class PubMedXMLParser {
         String dateString = monthText + " " + ( dayText == null ? "01" : dayText ) + ", " + yearText;
 
         try {
-            return DateUtils.parseDate( dateString, formats );
+            return DateUtils.parseDate( dateString, PUB_MED_LOCALE, PUB_MED_DATE_FORMATS );
         } catch ( ParseException e ) {
             PubMedXMLParser.log.warn( "Could not parse date " + dateString );
             return null;
@@ -428,12 +419,16 @@ public class PubMedXMLParser {
                                 continue;
                             }
                             if ( jitem.getNodeName().equals( "AbstractText" ) ) {
-                                String label = jitem.getAttributes().getNamedItem( "Label" ).getTextContent();
-                                String part = jitem.getTextContent();
-                                if ( StringUtils.isNotBlank( label ) ) {
-                                    buf.append( label ).append( ": " ).append( part ).append( "\n" );
-                                } else {
-                                    buf.append( part ).append( "\n" );
+                                Node lab = jitem.getAttributes().getNamedItem( "Label" );
+                                if ( lab != null ) {
+                                    String label = lab.getTextContent();
+
+                                    String part = jitem.getTextContent();
+                                    if ( StringUtils.isNotBlank( label ) ) {
+                                        buf.append( label ).append( ": " ).append( part ).append( "\n" );
+                                    } else {
+                                        buf.append( part ).append( "\n" );
+                                    }
                                 }
                             }
                         }

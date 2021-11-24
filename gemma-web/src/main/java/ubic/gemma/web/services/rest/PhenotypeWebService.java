@@ -71,7 +71,6 @@ public class PhenotypeWebService {
     @GET
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all the evidence from a given external database name")
     public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
             @QueryParam("database") StringArg database, // required
@@ -93,7 +92,6 @@ public class PhenotypeWebService {
     @GET
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve all phenotype data dumps")
     public ResponseDataObject<Set<DumpsValueObject>> dumps( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting

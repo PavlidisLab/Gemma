@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +30,7 @@ import java.util.*;
  * @author Paul
  */
 @Service
+@CommonsLog
 public class ProcessedExpressionDataVectorServiceImpl
         extends DesignElementDataVectorServiceImpl<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorService {
@@ -238,12 +239,13 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
             int maxNumberOfResults ) {
 
         ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.load( resultSetId );
         if ( ar == null ) {
-            Log.warn( this.getClass(), "No diff ex result set with ID=" + resultSetId );
+            log.warn( "No diff ex result set with ID=" + resultSetId );
             return null;
         }
 

@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.core.loader.genome.FastaCmd;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;

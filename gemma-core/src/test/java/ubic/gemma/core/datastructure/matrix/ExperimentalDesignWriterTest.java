@@ -21,10 +21,12 @@ package ubic.gemma.core.datastructure.matrix;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -68,6 +70,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testWrite() throws Exception {
         if ( ee == null ) {
             log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );

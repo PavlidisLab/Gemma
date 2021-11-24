@@ -20,9 +20,9 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
@@ -31,7 +31,6 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -1068,7 +1067,7 @@ public class ExpressionExperimentDaoImpl
             }
         };
 
-        Set<QueryHint> hints = new HashSet<>();
+        EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( start <= 0 && limit <= 0 )
             hints.add( QueryHint.FETCH_ALL );
@@ -1096,7 +1095,7 @@ public class ExpressionExperimentDaoImpl
             AclObjectIdentity aoi = ( AclObjectIdentity ) row[1];
             AclSid sid = ( AclSid ) row[2];
 
-            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid, totalElements.intValue() );
+            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
 
             // FIXME Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
             Collection<ArrayDesignValueObject> adVos = ee.getBioAssays().stream()
@@ -1108,7 +1107,7 @@ public class ExpressionExperimentDaoImpl
             // FIXME watch out: this may be a performance drain for long lists (if so, could batch)
             vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
             // TODO: optimize this with a join-fetch
-            vo.setOriginalPlatforms( this.getOriginalPlatforms( vo.getId() ) );
+            vo.setOriginalPlatforms( this.getOriginalPlatforms( ee ).stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() ) );
 
             vos.add( vo );
         }
@@ -1196,18 +1195,6 @@ public class ExpressionExperimentDaoImpl
         return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
     }
 
-    /**
-     * This is only to make {@link ExpressionExperimentValueObject#get_totalInQuery()} work without redefining the
-     * {@link ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao} interface to account for this special case.
-     *
-     * We're using a {@link ThreadLocal} here to ensure that other threads cannot overwrite this value while the VO
-     * slice is being generated.
-     *
-     * TODO: simply get rid of {@link AbstractCuratableValueObject#get_totalInQuery()} since we now have properly
-     * paginated results.
-     */
-    private final ThreadLocal<Long> totalElements = new ThreadLocal<>();
-
     @Override
     protected ExpressionExperimentValueObject processLoadValueObjectsQueryResult( Object result ) {
         Object[] row = ( Object[] ) result;
@@ -1221,7 +1208,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getTaxon() );
         Hibernate.initialize( ee.getGeeq() );
 
-        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid, this.totalElements.get() == null ? 1 : this.totalElements.get().intValue() );
+        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( ee, aoi, sid );
 
         // Add array design info; watch out: this may be a performance drain for long lists  (if so, could batch)
         // TODO: if slow, preload with join fetch
@@ -1273,42 +1260,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         return super.getObjectFilter( propertyName, operator, requiredValue );
-    }
-
-    /**
-     * Loads value objects of experiments matching the given criteria using a query that pre-filters for EEs
-     * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
-     * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
-     *
-     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                be a property of EE itself, or any nested property that hibernate can reach.
-     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filters  see this#formRestrictionClause(ArrayList) filters argument for description.
-     * @param offset  amount of EEs to skip when ordered by the orderBy param in the order defined byt the 'asc' param.
-     * @param limit   maximum amount of EEs to retrieve.
-     * @return list of value objects representing the EEs that matched the criteria.
-     */
-    @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        // TODO: remove this line when we get rid of _totalInQuery
-        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
-        try {
-            return super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        } finally {
-            this.totalElements.remove();
-        }
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        // TODO: remove this line when we get rid of _totalInQuery
-        this.totalElements.set( ( Long ) getCountValueObjectsQuery( filters ).uniqueResult() );
-        try {
-            return super.loadValueObjectsPreFilter( filters, sort );
-        } finally {
-            this.totalElements.remove();
-        }
     }
 
     @Override
@@ -1481,7 +1432,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, Set<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();
         }
@@ -1665,19 +1616,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Retrieve platforms that were originally assigned to this data set, if they are different from the current platform
-     *
-     * @param  id {@link ExpressionExperiment} identifier
-     * @return a set of ArrayDesignValueObject (minimally populated)
+     * Retrieve platforms that were originally assigned to this data set, if they are different from the current
+     * platform.
      */
-    private Set<ArrayDesignValueObject> getOriginalPlatforms( Long id ) {
-        //noinspection unchecked
-        List<ArrayDesign> o = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct o from ExpressionExperiment e inner join "
-                                + "e.bioAssays b inner join b.originalPlatform o "
-                                + "inner join e.bioAssays c inner join b.arrayDesignUsed a where e.id = :id and a <> o" )
-                .setLong( "id", id ).list();
-        return o.stream().map( ArrayDesignValueObject::new ).collect( Collectors.toSet() );
+    private Set<ArrayDesign> getOriginalPlatforms( ExpressionExperiment ee ) {
+        Set<ArrayDesign> currentPlatforms = ee.getBioAssays().stream()
+                .map( BioAssay::getArrayDesignUsed )
+                .collect( Collectors.toSet() );
+        return ee.getBioAssays().stream()
+                .map( BioAssay::getOriginalPlatform )
+                .filter( Objects::nonNull ) // some EE can have never had their platform changing
+                .filter( op -> !currentPlatforms.contains( op ) )
+                .collect( Collectors.toSet() );
     }
 
     /**

@@ -21,6 +21,11 @@ package ubic.gemma.persistence.util;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.commons.lang3.ClassUtils;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.ConfigurableConversionService;
+import org.springframework.core.convert.support.GenericConversionService;
 import ubic.gemma.persistence.service.ObjectFilterException;
 
 import java.util.Arrays;
@@ -44,6 +49,24 @@ public class ObjectFilter {
     public static final String DAO_CHARACTERISTIC_ALIAS = "ch";
     public static final String DAO_BIOASSAY_ALIAS = "ba";
     public static final String DAO_DATABASE_ENTRY_ALIAS = "accession";
+
+    /**
+     * Provide all the supported type conversion for parsing required values.
+     */
+    private static final ConfigurableConversionService conversionService = new GenericConversionService();
+
+    private static <T> void addConverter( Class<?> targetClass, Converter<String, T> converter ) {
+        conversionService.addConverter( String.class, targetClass, converter );
+    }
+
+    static {
+        addConverter( String.class, s -> s );
+        addConverter( Boolean.class, Boolean::parseBoolean );
+        addConverter( Double.class, Double::parseDouble );
+        addConverter( Float.class, Float::parseFloat );
+        addConverter( Long.class, Long::parseLong );
+        addConverter( Integer.class, Integer::parseInt );
+    }
 
     /**
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
@@ -174,6 +197,12 @@ public class ObjectFilter {
         // if the operator does not have a specific type requirement, then consider that the propertyType is the type requirement
         Class<?> requiredType = operator.getRequiredType() != null ? operator.getRequiredType() : propertyType;
 
+        // if the required type is a primitive, convert it to the corresponding wrapper type because required value can
+        // never be a primitive
+        if ( requiredType.isPrimitive() ) {
+            requiredType = ClassUtils.primitiveToWrapper( requiredType );
+        }
+
         if ( requiredValue != null && !requiredType.isAssignableFrom( requiredValue.getClass() ) ) {
             throw new IllegalArgumentException( "requiredValue " + requiredValue + " of type " + requiredValue.getClass().getName() + " for operator " + operator + " must be assignable from " + requiredType.getName() + "." );
         }
@@ -205,7 +234,7 @@ public class ObjectFilter {
             } else {
                 return parseItem( rv, pt );
             }
-        } catch ( IllegalArgumentException e ) {
+        } catch ( IllegalArgumentException | ConversionFailedException e ) {
             throw new ObjectFilterException( "Could not parse required value '" + rv + "'.", e );
         }
     }
@@ -245,30 +274,10 @@ public class ObjectFilter {
      * @throws IllegalArgumentException if the type is not supported
      */
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
-        if ( String.class.isAssignableFrom( pt ) )
-            return rv;
-
-        if ( Boolean.class.isAssignableFrom( pt ) || boolean.class.isAssignableFrom( pt ) )
-            return Boolean.parseBoolean( rv );
-
-        if ( Double.class.isAssignableFrom( pt ) || double.class.isAssignableFrom( pt ) )
-            return Double.valueOf( rv );
-
-        if ( Float.class.isAssignableFrom( pt ) || float.class.isAssignableFrom( pt ) )
-            return Float.valueOf( rv );
-
-        if ( Long.class.isAssignableFrom( pt ) || long.class.isAssignableFrom( pt ) )
-            return Long.valueOf( rv );
-
-        if ( Integer.class.isAssignableFrom( pt ) || int.class.isAssignableFrom( pt ) )
-            return Integer.valueOf( rv );
-
-        if ( Short.class.isAssignableFrom( pt ) || short.class.isAssignableFrom( pt ) )
-            return Short.valueOf( rv );
-
-        if ( Byte.class.isAssignableFrom( pt ) || byte.class.isAssignableFrom( pt ) )
-            return Byte.valueOf( rv );
-
-        throw new IllegalArgumentException( "Property type not supported (" + pt + ")." );
+        if ( conversionService.canConvert( String.class, pt ) ) {
+            return conversionService.convert( rv, pt );
+        } else {
+            throw new IllegalArgumentException( "Property type not supported (" + pt + ")." );
+        }
     }
 }

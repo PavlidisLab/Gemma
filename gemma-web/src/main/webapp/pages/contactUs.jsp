@@ -20,8 +20,8 @@
 					Please also keep an eye out for the feedback button-tab on the left
 					of some pages in Gemma. It looks like
 					<a class="thumbnail" href="javascript:void(0)">this<span><img
-								src="${pageContext.request.contextPath}/images/feedbackButton.png" width="30px"
-								height="103px" border="0" />
+                            src="${pageContext.request.contextPath}/images/feedbackButton.png" width="30px"
+                            height="103px" border="0" />
 							<br />
 					</span>
 					</a> and is an easy way to give us in-context feedback!

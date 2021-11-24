@@ -16,6 +16,10 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
         super( s );
     }
 
+    public CompositeSequenceIdArg( String message, Throwable cause ) {
+        super( message, cause );
+    }
+
     @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( arrayDesign == null )

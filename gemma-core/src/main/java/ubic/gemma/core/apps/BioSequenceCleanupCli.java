@@ -18,19 +18,10 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -41,9 +32,16 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Goes through the biosequences for array designs in the database and removes duplicates.
- * 
+ *
  * Moved from GemmaAnalysis as this is a database maintenance tool
  *
  * @author pavlidis
@@ -74,16 +72,15 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
-        OptionBuilder.withDescription( "Set to run without any database modifications" );
-        Option justTestingOption = OptionBuilder
-                .create( "dryrun" );
+        Option justTestingOption = Option.builder( "dryrun" )
+                .desc( "Set to run without any database modifications" )
+                .build();
         options.addOption( justTestingOption );
 
-        OptionBuilder.hasArg();
-        OptionBuilder.withArgName( "file" );
-        OptionBuilder
-                .withDescription( "File with list of biosequence ids to check; default: check all on provided platforms" );
-        Option sequenceNameList = OptionBuilder.create( 'b' );
+        Option sequenceNameList = Option.builder( "b" )
+                .longOpt( "file" )
+                .desc( "File with list of biosequence ids to check; default: check all on provided platforms" )
+                .build();
         options.addOption( sequenceNameList );
     }
 
@@ -94,8 +91,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {
             ads.addAll( this.getArrayDesignsToProcess() );
         } else if ( file != null ) {
-            try (InputStream is = new FileInputStream( file );
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+            try ( InputStream is = new FileInputStream( file );
+                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) ); ) {
 
                 String id = null;
                 Collection<Long> ids = new HashSet<>();
@@ -229,7 +226,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         if ( one.getSequenceDatabaseEntry() != null
                 && that.getSequenceDatabaseEntry() != null
                 && !one.getSequenceDatabaseEntry().getAccession()
-                        .equals( that.getSequenceDatabaseEntry().getAccession() ) )
+                .equals( that.getSequenceDatabaseEntry().getAccession() ) )
             return false;
 
         if ( one.getTaxon() != null && that.getTaxon() != null && !one.getTaxon().equals( that.getTaxon() ) )

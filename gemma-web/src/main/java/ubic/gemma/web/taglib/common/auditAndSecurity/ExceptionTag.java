@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.jsp.tagext.Tag;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 
 /**
@@ -50,7 +50,7 @@ public class ExceptionTag extends TagSupport {
                 if ( showStackTrace ) {
                     buf.append( "<div id=\"stacktrace\" class=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
-                        buf.append( escapeHtml( ExceptionUtils.getStackTrace( exception ) ));
+                        buf.append( escapeHtml4( ExceptionUtils.getStackTrace( exception ) ));
                     } else {
                         buf.append( "There was no stack trace!" );
                     }

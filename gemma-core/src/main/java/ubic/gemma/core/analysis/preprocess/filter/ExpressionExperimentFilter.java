@@ -95,6 +95,8 @@ public class ExpressionExperimentFilter {
      * happens when people "set values less than 10 equal to 10" for example. This effectively filters rows that have
      * too many missing values, because missing values are counted as a single value.
      *
+     * The tolerance is set to a default value of Constants.SMALLISH.
+     *
      * @param threshold fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at
      *                  least 5 distinct values.
      * @param matrix    the data matrix
@@ -102,9 +104,20 @@ public class ExpressionExperimentFilter {
      */
     public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,
             double threshold ) {
+        return tooFewDistinctValues( matrix, threshold, Constants.SMALLISH );
+    }
+
+    /**
+     * @param matrix
+     * @param threshold
+     * @param tolerance differences smaller than this are counted as "the same value".
+     * @return
+     */
+    public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix,
+            double threshold, double tolerance ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setMethod( Method.DISTINCTVALUES );
-        rowLevelFilter.setTolerance( Constants.SMALLISH );
+        rowLevelFilter.setTolerance( tolerance );
         rowLevelFilter.setRemoveAllNegative( false );
 
         /*
@@ -115,6 +128,8 @@ public class ExpressionExperimentFilter {
         rowLevelFilter.setUseAsFraction( false );
         return rowLevelFilter.filter( matrix );
     }
+
+
 
     /**
      * Remove rows that have a variance of zero (within a small constant)

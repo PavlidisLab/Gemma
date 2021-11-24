@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.util;
 
 import org.junit.Test;
+import org.springframework.core.convert.ConversionFailedException;
 import ubic.gemma.persistence.service.ObjectFilterException;
 
 import java.util.Arrays;
@@ -70,14 +71,13 @@ public class ObjectFilterTest {
     public void testParseInvalidCollection() {
         assertThatThrownBy( () -> ObjectFilter.parseObjectFilter( "ee", "id", Integer.class, ObjectFilter.Operator.in, "(1, 2, c)" ) )
                 .isInstanceOf( ObjectFilterException.class )
-                .hasCauseInstanceOf( NumberFormatException.class );
+                .hasCauseInstanceOf( ConversionFailedException.class );
     }
 
     @Test
     public void testParseUnsupportedType() {
         assertThatThrownBy( () -> ObjectFilter.parseObjectFilter( "ee", "id", Object.class, ObjectFilter.Operator.in, "unsupported type" ) )
-                .isInstanceOf( ObjectFilterException.class )
-                .hasCauseInstanceOf( IllegalArgumentException.class );
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test
@@ -110,9 +110,8 @@ public class ObjectFilterTest {
     }
 
     @Test
-    public void testInvalidWrapperToPrimitiveConversion() {
-        assertThatThrownBy( () -> new ObjectFilter( "ee", "id", int.class, ObjectFilter.Operator.greaterOrEq, Integer.valueOf( 1 ) ) )
-                .isInstanceOf( IllegalArgumentException.class );
+    public void testWrapperToPrimitiveConversion() {
+        new ObjectFilter( "ee", "id", int.class, ObjectFilter.Operator.greaterOrEq, Integer.valueOf( 1 ) );
     }
 
     @Test

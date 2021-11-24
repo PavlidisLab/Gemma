@@ -15,21 +15,21 @@
 	</bean>
 
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
-	<bean id="corsFilter" class="ubic.gemma.web.services.rest.util.CORSFilter"/>
+	<bean id="corsFilter" class="ubic.gemma.web.services.rest.util.CorsFilter"/>
 	<bean id="restAuthEntryPoint" class="ubic.gemma.web.services.rest.util.RestAuthEntryPoint"/>
 
 	<s:http auto-config="true" access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">
 
 		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<s:http-basic/>
 
-		<s:http-basic entry-point-ref="restAuthEntryPoint"/>
 		<s:custom-filter position="FIRST" ref="corsFilter"/>
 		<!--
-        The next line provides bulk access control for all url matching the given pattern,
-        but we also use @PreAuthorize annotations on endpoints for a more fine-grained
-        authorization
-         -->
+		The next line provides bulk access control for all url matching the given pattern,
+		but we also use @PreAuthorize annotations on endpoints for a more fine-grained
+		authorization
+		 -->
 		<!--<s:intercept-url pattern="/rest/v2/datasets/**" access="GROUP_ADMIN"/>-->
 	</s:http>
 

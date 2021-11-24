@@ -29,15 +29,7 @@ import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -98,7 +90,7 @@ public class GeoBrowser {
 
     XPathExpression xaccession;
     XPathExpression xChannel;
-
+    XPathExpression xLibraryStrategy;
     XPathFactory xFactory = XPathFactory.newInstance();
     XPathExpression xgpl;
     XPathExpression xnumSamples;
@@ -114,7 +106,11 @@ public class GeoBrowser {
     XPathExpression xtitle;
 
     XPathExpression xtype;
-    private final String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+
+    /* locale */
+    private static final Locale GEO_LOCALE = Locale.ENGLISH;
+    private final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
+
     @SuppressWarnings("FieldCanBeLocal") // Constant is better
     private final String GEO_BROWSE_SUFFIX = "&display=";
 
@@ -133,6 +129,7 @@ public class GeoBrowser {
             xtype = xpath.compile( "//DocSum/Item[@Name='gdsType']" );
             xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
             xChannel = xpath.compile( "//MINiML/Sample/Channel" );
+            xLibraryStrategy = xpath.compile( "//MINiML/Sample/Library-Strategy" );
             source = xpath.compile( "//Source" );
             characteristics = xpath.compile( "//Characteristics" );
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
@@ -523,7 +520,7 @@ public class GeoBrowser {
                         + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + NCBI_API_KEY : "" ) );
 
         StopWatch t = new StopWatch();
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" ); // for logging
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
 
         t.start();
         conn = fetchUrl.openConnection();
@@ -719,7 +716,7 @@ public class GeoBrowser {
                 geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
 
                 Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
-                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), DATE_FORMATS );
+                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
                 geoRecord.setReleaseDate( date );
 
                 geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
@@ -802,17 +799,33 @@ public class GeoBrowser {
             for ( int k = 0; k < sources.getLength(); k++ ) {
                 String s = sources.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
-                if ( v.matches( "[0-9]+" ) ) continue; // skip unadorned numbers
-
-                props.add( v );
+                try {
+                    Double.parseDouble( v );
+                    // skip unadorned numbers
+                } catch ( NumberFormatException e ) {
+                    props.add( v );
+                }
             }
             NodeList chars = ( NodeList ) characteristics.evaluate( item, XPathConstants.NODESET );
             for ( int k = 0; k < chars.getLength(); k++ ) {
                 String s = chars.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
-                if ( v.matches( "[0-9]+" ) ) continue;
-                props.add( v );
+                try {
+                    Double.parseDouble( v );
+                } catch ( NumberFormatException e ) {
+                    props.add( v );
+                }
             }
+        }
+
+        NodeList ls = ( NodeList ) xLibraryStrategy.evaluate( detailsDocument, XPathConstants.NODESET );
+        Set<String> libraryStrategies = new HashSet<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            libraryStrategies.add( ls.item( i ).getTextContent() );
+        }
+
+        if ( !libraryStrategies.isEmpty() ) {
+            record.setLibraryStrategy( StringUtils.join( libraryStrategies, ";" ) );
         }
         record.setSampleDetails( StringUtils.join( props, ";" ) );
     }

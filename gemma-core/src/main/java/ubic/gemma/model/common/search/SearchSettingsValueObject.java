@@ -18,10 +18,21 @@
  */
 package ubic.gemma.model.common.search;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneSet;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * author: anton date: 18/03/13
@@ -50,29 +61,6 @@ public class SearchSettingsValueObject implements Serializable {
     private Boolean useIndices = Boolean.TRUE;
 
     public SearchSettingsValueObject() {
-    }
-
-    public static SearchSettings toEntity( SearchSettingsValueObject valueObject ) {
-        final SearchSettings entity = new SearchSettingsImpl();
-        entity.setQuery( valueObject.getQuery() );
-        entity.setPlatformConstraint( valueObject.getPlatformConstraint() );
-        entity.setTermUri( valueObject.getTermUri() );
-        entity.setTaxon( valueObject.getTaxon() );
-        entity.setMaxResults( valueObject.getMaxResults() );
-        entity.setSearchExperiments( valueObject.getSearchExperiments() );
-        entity.setSearchGenes( valueObject.getSearchGenes() );
-        entity.setSearchPlatforms( valueObject.getSearchPlatforms() );
-        entity.setSearchExperimentSets( valueObject.getSearchExperimentSets() );
-        entity.setSearchPhenotypes( valueObject.getSearchPhenotypes() );
-        entity.setSearchProbes( valueObject.getSearchProbes() );
-        entity.setSearchGeneSets( valueObject.getSearchGeneSets() );
-        entity.setSearchBioSequences( valueObject.getSearchBioSequences() );
-        entity.setSearchBibrefs( valueObject.getSearchBibrefs() );
-        entity.setUseIndices( valueObject.getUseIndices() );
-        entity.setUseDatabase( valueObject.getUseDatabase() );
-        entity.setUseCharacteristics( valueObject.getUseCharacteristics() );
-        entity.setUseGo( valueObject.getUseGo() );
-        return entity;
     }
 
     public Integer getMaxResults() {
@@ -218,5 +206,4 @@ public class SearchSettingsValueObject implements Serializable {
     public void setUseIndices( Boolean useIndices ) {
         this.useIndices = useIndices;
     }
-
 }

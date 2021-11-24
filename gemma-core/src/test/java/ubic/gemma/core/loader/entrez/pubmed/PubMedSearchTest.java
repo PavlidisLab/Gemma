@@ -21,6 +21,8 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
@@ -42,6 +44,7 @@ public class PubMedSearchTest {
      * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
     @Test
+    @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -73,6 +76,7 @@ public class PubMedSearchTest {
      * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
     @Test
+    @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -94,6 +98,7 @@ public class PubMedSearchTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();

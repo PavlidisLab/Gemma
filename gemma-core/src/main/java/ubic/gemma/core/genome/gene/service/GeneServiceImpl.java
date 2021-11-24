@@ -34,7 +34,6 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,7 +45,6 @@ import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.genome.GeneDao;
@@ -349,10 +347,10 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         gvo.setPhenotypes( cVos );
 
         if ( gvo.getNcbiId() != null ) {
-            SearchSettingsImpl s = new SearchSettingsImpl();
-            s.setTermUri( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() );
-            s.noSearches();
-            s.setSearchExperiments( true );
+            SearchSettings s = SearchSettings.builder()
+                    .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
+                    .resultType( ExpressionExperiment.class )
+                    .build();
             Map<Class<?>, List<SearchResult>> r = searchService.search( s );
             if ( r.containsKey( ExpressionExperiment.class ) ) {
                 List<SearchResult> hits = r.get( ExpressionExperiment.class );
@@ -482,7 +480,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * Search for genes (by name or symbol)
      *
      * @param  taxonId, can be null to not constrain by taxon
-     * @return          Collection of Gene entity objects
+     * @return Collection of Gene entity objects
      */
     @Override
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
@@ -491,7 +489,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettingsImpl.geneSearch( query, taxon );
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();

@@ -1,10 +1,9 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.openjena.atlas.logging.Log;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
@@ -15,6 +14,7 @@ import java.util.Date;
  * curatable objects.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@CommonsLog
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C>
         implements Comparable<AbstractCuratableValueObject<C>> {
 
@@ -29,13 +29,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     protected AuditEventValueObject lastNoteUpdateEvent;
 
     /**
-     * A meta information about how many total results are available with the same filters as this
-     * object.
-     */
-    @Deprecated
-    private int _totalInQuery;
-
-    /**
      * Required when using the implementing classes as a spring beans.
      */
     public AbstractCuratableValueObject() {
@@ -46,58 +39,35 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     }
 
     protected AbstractCuratableValueObject( C curatable ) {
-        this( curatable.getId(), curatable.getCurationDetails().getLastUpdated(),
-                curatable.getCurationDetails().getTroubled(),
-                curatable.getCurationDetails().getLastTroubledEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) :
-                        null, curatable.getCurationDetails().getNeedsAttention(),
-                curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) :
-                        null, curatable.getCurationDetails().getCurationNote(),
-                curatable.getCurationDetails().getLastNoteUpdateEvent() != null ?
-                        new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) :
-                        null );
-    }
-
-    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,
-            AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
-            AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
-            AuditEventValueObject lastNoteUpdateEvent ) {
-        super( id );
-        this.lastUpdated = lastUpdated;
-        this.troubled = troubled;
-        this.lastTroubledEvent = lastTroubledEvent;
-        this.needsAttention = needsAttention;
-        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
-        if ( SecurityUtil.isUserAdmin() ) {
-            this.curationNote = curationNote;
-            this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+        super( curatable );
+        if ( curatable.getCurationDetails() != null ) {
+            this.lastUpdated = curatable.getCurationDetails().getLastUpdated();
+            this.troubled = curatable.getCurationDetails().getTroubled();
+            this.lastTroubledEvent = curatable.getCurationDetails().getLastTroubledEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) : null;
+            this.needsAttention = curatable.getCurationDetails().getNeedsAttention();
+            this.lastNeedsAttentionEvent = curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) : null;
+            if ( SecurityUtil.isUserAdmin() ) {
+                this.curationNote = curatable.getCurationDetails().getCurationNote();
+                this.lastNoteUpdateEvent = curatable.getCurationDetails().getLastNoteUpdateEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) : null;
+            }
         }
     }
 
     /**
-     * Creates a VO with the given curatable properties
-     * Note that the events can still be null, as the value-change events they represent might have not occurred since
-     * the curatable object was created, and they are not initialised with a creation event.
-     *
-     * @param id             the id of the curatable object this VO represents
-     * @param curationNote   the curation note attached to the curation details
-     * @param lastUpdated    the date the curatable object was last updated
-     * @param needsAttention whether the object requires curators attention
-     * @param troubled       whether the object is troubled
-     * @param troubleEvent   the last event that updated the troubled property
-     * @param attentionEvent the last event that updated the needs attention property
-     * @param noteEvent      the last event that updated the curation note property
-     * @param totalInBatch   the number indicating how many VOs have been returned in the database query along with this one
+     * Copy constructor.
+     * @param curatable
      */
-    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent troubleEvent,
-            Boolean needsAttention, AuditEvent attentionEvent, String curationNote, AuditEvent noteEvent,
-            Integer totalInBatch ) {
-        this( id, lastUpdated, troubled, troubleEvent == null ? null : new AuditEventValueObject( troubleEvent ),
-                needsAttention, attentionEvent == null ? null : new AuditEventValueObject( attentionEvent ),
-                curationNote, noteEvent == null ? null : new AuditEventValueObject( noteEvent ) );
-        // meta info
-        this.set_totalInQuery( totalInBatch != null ? totalInBatch : 0 );
+    protected AbstractCuratableValueObject( AbstractCuratableValueObject curatable ) {
+        super( curatable );
+        this.lastUpdated = curatable.getLastUpdated();
+        this.troubled = curatable.getTroubled();
+        this.lastTroubledEvent = curatable.getLastTroubledEvent();
+        this.needsAttention = curatable.getNeedsAttention();
+        this.lastNeedsAttentionEvent = curatable.getLastNeedsAttentionEvent();
+        if ( SecurityUtil.isUserAdmin() ) {
+            this.curationNote = curatable.getCurationNote();
+            this.lastNoteUpdateEvent = curatable.getLastNoteUpdateEvent();
+        }
     }
 
     public Date getLastUpdated() {
@@ -170,23 +140,13 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         String details = AbstractCuratableValueObject.TROUBLE_DETAILS_NONE;
         if ( this.getTroubled() ) {
             if ( this.getLastTroubledEvent() == null ) {
-                Log.warn( this, "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );
+                log.warn( "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );
             } else {
                 details = this.getLastTroubledEvent().toString();
             }
         }
 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
-    }
-
-    @Deprecated
-    public final int get_totalInQuery() {
-        return _totalInQuery;
-    }
-
-    @Deprecated
-    protected final void set_totalInQuery( int _totalInQuery ) {
-        this._totalInQuery = _totalInQuery;
     }
 
     @Override

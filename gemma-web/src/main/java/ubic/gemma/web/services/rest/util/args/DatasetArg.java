@@ -2,6 +2,7 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -31,6 +32,10 @@ public abstract class DatasetArg<T>
         super( ExpressionExperiment.class, value );
     }
 
+    protected DatasetArg( String message, Throwable cause ) {
+        super( ExpressionExperiment.class, message, cause );
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -39,6 +44,9 @@ public abstract class DatasetArg<T>
      */
     @SuppressWarnings("unused")
     public static DatasetArg<?> valueOf( final String s ) {
+        if ( StringUtils.isBlank( s ) ) {
+            return new DatasetStringArg( "Dataset identifier cannot be null or empty.", null );
+        }
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

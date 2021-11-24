@@ -21,6 +21,8 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
@@ -39,6 +41,7 @@ public class PubMedSearcherIntegrationTest {
      * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(String[])}.
      */
     @Test
+    @Category(SlowTest.class)
     public final void testMain() {
         try {
             p.executeCommand( new String[]{"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile"} );

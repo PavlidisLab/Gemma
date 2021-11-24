@@ -2,6 +2,7 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -13,6 +14,8 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+
+import java.lang.reflect.Array;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.
@@ -26,6 +29,10 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
         super( ArrayDesign.class, value );
     }
 
+    public PlatformArg( String message, Throwable cause ) {
+        super( ArrayDesign.class, message, cause );
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -34,6 +41,9 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      */
     @SuppressWarnings("unused")
     public static PlatformArg<?> valueOf( final String s ) {
+        if ( StringUtils.isBlank( s ) ) {
+            return new PlatformStringArg( "Platform identifier cannot be null or empty.", null );
+        }
         try {
             return new PlatformIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

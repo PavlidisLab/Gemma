@@ -23,10 +23,13 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 import static org.junit.Assert.*;
 
@@ -48,7 +51,7 @@ public class PubMedXMLFetcherTest {
             assertEquals( "Genome Res", br.getPublication() );
             assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
+            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             this.checkCause( e );
@@ -56,6 +59,7 @@ public class PubMedXMLFetcherTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTP2() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 24850731 );
@@ -77,6 +81,7 @@ public class PubMedXMLFetcherTest {
      * 23865096 is a NCBI bookshelf article, not a paper
      */
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTPBookshelf() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 23865096 );
@@ -88,7 +93,7 @@ public class PubMedXMLFetcherTest {
             assertEquals( "GeneReviews", br.getPublication().substring( 0, "GeneReviews".length() ) );
             assertEquals( "EZH2-Related Overgrowth", br.getTitle() );
 
-            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy", Locale.ENGLISH );
             assertEquals( "2013", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             this.checkCause( e );
@@ -96,6 +101,7 @@ public class PubMedXMLFetcherTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public final void testRetrieveByHTTPNotFound() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );

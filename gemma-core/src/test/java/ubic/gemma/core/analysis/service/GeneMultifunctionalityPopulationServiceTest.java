@@ -19,15 +19,17 @@
 
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
@@ -85,7 +87,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
-                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 5000 ), true ) );
+                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 0, 5000 ), true ) );
 
         /*
          * Create genes
@@ -111,6 +113,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     }
 
     @Test
+    @Category(SlowTest.class)
     public void test() {
         log.info( "Updating multifunctionality" );
         s.updateMultifunctionality( testTaxon );

@@ -97,7 +97,6 @@ public class GeneWebService {
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve genes matching a gene identifier")
     public ResponseDataObject<List<GeneValueObject>> genes( // Params:
             @PathParam("genes") GeneArrayArg genes, // Required
@@ -118,7 +117,6 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the evidence for a given gene")
     public ResponseDataObject<List<GeneEvidenceValueObject>> geneEvidence( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
@@ -137,7 +135,6 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the physical locations of a given gene")
     public ResponseDataObject<List<PhysicalLocationValueObject>> geneLocations( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
@@ -155,7 +152,6 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the probes associated to a genes")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> geneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
@@ -177,7 +173,6 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the GO terms associated to a gene")
     public ResponseDataObject<List<GeneOntologyTermValueObject>> genesGoTerms( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
@@ -197,7 +192,6 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/coexpression")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Operation(summary = "Retrieve the coexpression of two given genes")
     public ResponseDataObject<List<CoexpressionValueObjectExt>> geneCoexpression( // Params:
             @PathParam("gene") final GeneArg<Object> geneArg, // Required

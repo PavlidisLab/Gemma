@@ -65,6 +65,9 @@ public interface GeneSetService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    DatabaseBackedGeneSetValueObject loadValueObject( GeneSet geneSet );
+
     /**
      * Ids of member genes will be filled in
      *

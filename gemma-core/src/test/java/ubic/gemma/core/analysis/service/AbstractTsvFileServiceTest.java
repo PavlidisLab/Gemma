@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

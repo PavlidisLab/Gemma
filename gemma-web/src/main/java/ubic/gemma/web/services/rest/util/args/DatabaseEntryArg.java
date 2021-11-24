@@ -1,8 +1,11 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+
+import javax.ws.rs.NotFoundException;
 
 /**
  * Mutable argument type base class for DatabaseEntry API.
@@ -17,6 +20,10 @@ public abstract class DatabaseEntryArg<T>
         super( DatabaseEntry.class, value );
     }
 
+    protected DatabaseEntryArg( String message, Throwable cause ) {
+        super( DatabaseEntry.class, message, cause );
+    }
+
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -25,6 +32,9 @@ public abstract class DatabaseEntryArg<T>
      */
     @SuppressWarnings("unused")
     public static DatabaseEntryArg<?> valueOf( final String s ) {
+        if ( StringUtils.isBlank( s ) ) {
+            return new DatabaseEntryStringArg( "Database entry cannot be null or empty.", null );
+        }
         try {
             return new DatabaseEntryIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

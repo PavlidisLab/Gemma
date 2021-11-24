@@ -16,12 +16,14 @@ package ubic.gemma.core.analysis.preprocess.svd;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -50,6 +52,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
+    @Category(SlowTest.class)
     public void testsvd() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -85,6 +88,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
      * See bug 2139; two different sets of bioassays in the data.
      */
     @Test
+    @Category(SlowTest.class)
     public void testsvdGapped() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(

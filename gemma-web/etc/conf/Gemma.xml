@@ -1,9 +1,0 @@
-<!-- ======================================================================= -->
-<!--  This should be placed in the tomcat conf directory -->
-<!-- ======================================================================= -->
-
-<Context path="/Gemma"  docBase="@WEB-APP-ROOT@" workDir="@WEB-APP-WORK@" debug="99" reloadable="true"  antiJARLocking="true" antiResourceLocking="false">
-    <Logger className="org.apache.catalina.logger.FileLogger" 
-        prefix="gemma_log." suffix=".txt" timestamp="true"/>
-
-</Context>

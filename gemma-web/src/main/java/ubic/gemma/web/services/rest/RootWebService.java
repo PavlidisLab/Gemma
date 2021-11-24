@@ -80,7 +80,6 @@ public class RootWebService {
     @GET
     @Path("/users/{uname}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @PreAuthorize("hasRole('GROUP_USER')")
     @Operation(summary = "Retrieve the user information associated to the authenticated session")
     public ResponseDataObject<UserValueObject> loadUser( // Params:

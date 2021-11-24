@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +47,7 @@ public class GenericScanFileDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
             Date expected = formatter.parse( "2005-08-30T15:17:28" );
 
             assertEquals( expected, actual );
@@ -61,7 +62,7 @@ public class GenericScanFileDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "2008-11-27T10:27:42" );
 
         assertEquals( expected, actual );
@@ -77,7 +78,7 @@ public class GenericScanFileDateExtractorTest {
         Date actual = extractor.parseStandardFormat(
                 "DatHeader=[7..40002]  caf130_E_1:CLS=2367 RWS=2367 XIN=6  YIN=6  VE=17        2.0 08/26/ 3 12:30:45    ^T GridVerify=None ^T YG_S98.1sq ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T 6" );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "2003-08-26T12:30:45" );
 
         assertEquals( expected, actual );
@@ -89,7 +90,7 @@ public class GenericScanFileDateExtractorTest {
         Date actual = extractor.parseStandardFormat(
                 "DatHeader=[7..40002]  caf130_E_1:CLS=2367 RWS=2367 XIN=6  YIN=6  VE=17        2.0 08/26/03 12:30:45    ^T GridVerify=None ^T YG_S98.1sq ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T 6" );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "2003-08-26T12:30:45" );
 
         assertEquals( expected, actual );
@@ -103,7 +104,7 @@ public class GenericScanFileDateExtractorTest {
 
             Date actual = extractor.extract( is );
 
-            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
+            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz", Locale.ENGLISH );
             Date expected = formatter.parse( "2002-06-17T20:26:36 PDT" );
             assertEquals( expected, actual );
         }
@@ -113,7 +114,7 @@ public class GenericScanFileDateExtractorTest {
     public void testExtractLongDate() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseLongFormat( "        Date    Wed Jun 19 14:53:29 PST 2002" );
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz", Locale.ENGLISH );
         Date expected = formatter.parse( "2002-06-19T15:53:29 PDT" );
 
         assertEquals( expected, actual );
@@ -123,7 +124,7 @@ public class GenericScanFileDateExtractorTest {
     public void testExtractGenePix() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseGenePixDateTime( "\"DateTime=2006/04/07 14:18:18\"\t" );
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "2006-04-07T14:18:18" );
 
         assertEquals( expected, actual );
@@ -133,7 +134,7 @@ public class GenericScanFileDateExtractorTest {
     public void testExtractGenePixB() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseGenePixDateTime( "DateTime=2006/04/07 14:18:18\t" );
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH );
         Date expected = formatter.parse( "2006-04-07T14:18:18" );
 
         assertEquals( expected, actual );

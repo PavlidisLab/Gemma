@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.27.3</version>
+		<version>1.27.4</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
@@ -12,42 +12,10 @@
 	<description>Gemma web application</description>
 	<build>
 		<finalName>Gemma</finalName>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>target/generated-sources/resources</directory>
-				<includes>
-					<include>**/*</include>
-				</includes>
-			</resource>
-		</resources>
 		<testResources>
 			<testResource>
-				<directory>src/test/resources</directory>
-				<includes>
-					<include>**/*.txt</include>
-					<include>**/*.xml</include>
-					<include>**/*.csv</include>
-				</includes>
-			</testResource>
-			<testResource>
 				<targetPath>WEB-INF</targetPath>
-				<directory>target/Gemma/WEB-INF</directory>
-				<includes>
-					<include>**/*.xml</include>
-				</includes>
-			</testResource>
-			<testResource>
-				<targetPath>WEB-INF</targetPath>
-				<directory>src/main/webapp/WEB-INF</directory>
-				<includes>
-					<include>**/*.xml</include>
-				</includes>
+				<directory>${project.basedir}/src/main/webapp/WEB-INF</directory>
 			</testResource>
 		</testResources>
 		<plugins>
@@ -129,18 +97,9 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty.version}</version>
-				<configuration>
-					<skip>false</skip>
-					<scanIntervalSeconds>10</scanIntervalSeconds>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.3.2</version>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -227,16 +186,18 @@
 		</dependency>
 
 		<!-- Spring extra modules -->
+		<!-- latest for Spring 3 -->
 		<dependency>
 			<groupId>org.springframework.social</groupId>
 			<artifactId>spring-social-core</artifactId>
 			<version>1.0.3.RELEASE</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- latest for Spring 3 -->
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
 			<artifactId>spring-ws-core</artifactId>
-			<version>1.5.8</version>
+			<version>1.5.10</version>
 		</dependency>
 
 		<!-- Apache Commons -->
@@ -325,6 +286,7 @@
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>${jersey.version}</version>
 		</dependency>
+		<!-- this is determined by jersey-core -->
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>javax.ws.rs-api</artifactId>
@@ -396,6 +358,13 @@
 			<artifactId>request</artifactId>
 			<version>1.0.1</version>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Gemma Slack Bot -->
+		<dependency>
+			<groupId>com.slack.api</groupId>
+			<artifactId>slack-api-client</artifactId>
+			<version>1.14.0</version>
 		</dependency>
 	</dependencies>
 </project>

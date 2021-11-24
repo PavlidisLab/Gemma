@@ -18,11 +18,11 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Repository
+@CommonsLog
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
@@ -108,7 +109,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         for ( ExpressionAnalysisResultSet rs : rss ) {
             thawed.add( loadWithResultsAndContrasts( rs.getId() ) );
             cnt++;
-            Log.info( this.getClass(), "Thawed " + cnt + "/" + size + " resultSets" );
+            log.info( "Thawed " + cnt + "/" + size + " resultSets" );
         }
         boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
         assert !changed; // they are the same objects, just updated.

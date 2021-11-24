@@ -19,12 +19,14 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -55,6 +57,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     private ExpressionExperimentService eeService;
 
     @Test
+    @Category(SlowTest.class)
     public void testMissingValue() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE2221" );
         if ( old != null )
@@ -113,6 +116,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     final public void testMissingValueGSE523() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE523" );
         if ( old != null )
@@ -141,6 +145,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * Was giving all missing values.
      */
     @Test
+    @Category(SlowTest.class)
     public void testMissingValueGSE11017() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE11017" );
@@ -201,6 +206,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
      */
     @Test
+    @Category(SlowTest.class)
     public void testMissingValueGSE56() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE56" );
         if ( old != null )

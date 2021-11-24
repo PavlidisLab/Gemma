@@ -17,7 +17,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -105,6 +105,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         if ( commandLine.hasOption( "date" ) ) {
             try {
+                // this is a user input, so we have to respect its locale
                 this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), new String[] { "yyyy.MM.dd" } );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) );
@@ -134,6 +135,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
         if ( commandLine.hasOption( "startdate" ) ) {
             try {
+                // this is a user input, so we have to respect its locale
                 this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), new String[] { "yyyy.MM.dd" } );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
@@ -156,7 +158,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         TaxonService ts = this.getBean( TaxonService.class );
         ArrayDesignService ads = this.getBean( ArrayDesignService.class );
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd" );
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
         int start = 0;
 
@@ -197,7 +199,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         try ( Writer os = new FileWriter( outputFile ) ) {
 
             os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tOverallDesign\n" );
+                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tLibraryStrategy\tOverallDesign\n" );
             os.flush();
 
             int numProcessed = 0;
@@ -267,9 +269,6 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
 
                 for ( GeoRecord geoRecord : recs ) {
 
-                    if ( geoRecord.getGeoAccession().equals( "GSE174409" ) ) {
-                        log.info( "foo" );
-                    }
                     log.debug( geoRecord.getGeoAccession() );
 
                     /*
@@ -373,6 +372,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                                     + "\t" + geoRecord.getSummary()
                                     + "\t" + geoRecord.getMeshHeadings()
                                     + "\t" + geoRecord.getSampleDetails()
+                                    + "\t" + geoRecord.getLibraryStrategy()
                                     + "\t" + geoRecord.getOverallDesign() + "\n" );
 
                     seen.add( geoRecord.getGeoAccession() );

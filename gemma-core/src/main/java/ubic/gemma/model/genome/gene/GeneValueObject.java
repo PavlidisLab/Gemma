@@ -100,13 +100,13 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
-        if ( Hibernate.isInitialized( gene.getTaxon() ) ) {
+        if ( gene.getTaxon() != null && Hibernate.isInitialized( gene.getTaxon() ) ) {
+            this.taxonId = gene.getTaxon().getId();
             this.taxonScientificName = gene.getTaxon().getScientificName();
             this.setTaxonCommonName( gene.getTaxon().getCommonName() );
         }
         this.name = gene.getName();
         this.description = gene.getDescription();
-        this.taxonId = gene.getTaxon().getId();
         this.ensemblId = gene.getEnsemblId();
     }
 

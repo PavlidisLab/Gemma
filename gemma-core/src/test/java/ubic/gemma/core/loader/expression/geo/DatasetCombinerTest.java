@@ -21,8 +21,10 @@ package ubic.gemma.core.loader.expression.geo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -62,6 +64,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE13() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -142,6 +145,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE469() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try (InputStream is = new GZIPInputStream(
@@ -181,6 +185,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE493() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -225,6 +230,7 @@ public class DatasetCombinerTest {
      * Fairly hard case; twelve samples, 3 array design each sample run on each array design
      */
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE611() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -267,6 +273,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE88() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -304,6 +311,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSE91() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -346,6 +354,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFindGSECorrespondence() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try (InputStream is = new GZIPInputStream(
@@ -391,6 +400,7 @@ public class DatasetCombinerTest {
      * This has just a single data set but results in a "no platform assigned" error.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGDS186() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -430,6 +440,7 @@ public class DatasetCombinerTest {
      * A difficult case, lots of singletons.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE465() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
