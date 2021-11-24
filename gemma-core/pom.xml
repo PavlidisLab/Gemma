@@ -10,40 +10,6 @@
     <name>Gemma Core</name>
     <description>Module containing Gemma backend logic (everything but web-related)</description>
     <build>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources</directory>
-                <includes>
-                    <include>**/*.properties</include>
-                    <include>**/*.xml</include>
-                    <include>**/*.txt</include>
-                    <include>**/*.fa</include>
-                    <include>**/*_target</include>
-                    <include>**/*_probe</include>
-                    <include>**/*.gz</include>
-                    <include>**/*.zip</include>
-                    <include>**/*.probes</include>
-                    <include>**/*.txt.short</include>
-                    <include>**/*.sort</include>
-                    <include>**/*.dat</include>
-                    <include>**/*.owl</include>
-                    <include>**/*.fasta</include>
-                    <include>**/*.nib</include>
-                    <include>**/*.gff</include>
-                    <include>**/*.sql</include>
-                    <include>**/*.nhr</include>
-                    <include>**/*.nin</include>
-                    <include>**/*.nnd</include>
-                    <include>**/*.nni</include>
-                    <include>**/*.nog</include>
-                    <include>**/*.nsd</include>
-                    <include>**/*.nsi</include>
-                    <include>**/*.nsq</include>
-                    <include>**/*.sample</include>
-                    <include>**/*.header</include>
-                </includes>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
