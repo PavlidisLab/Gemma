@@ -12,6 +12,12 @@
 	<description>Gemma web application</description>
 	<build>
 		<finalName>Gemma</finalName>
+		<testResources>
+			<testResource>
+				<targetPath>WEB-INF</targetPath>
+				<directory>${project.basedir}/src/main/webapp/WEB-INF</directory>
+			</testResource>
+		</testResources>
 		<plugins>
 			<plugin>
 				<groupId>com.github.klieber</groupId>
