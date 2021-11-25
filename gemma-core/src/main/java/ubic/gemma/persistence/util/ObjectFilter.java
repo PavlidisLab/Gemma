@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import org.apache.commons.lang3.ClassUtils;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
@@ -83,6 +84,7 @@ public class ObjectFilter {
      *                      utility to obtain that type conveniently
      * @param operator      operator for this filter, see {@link Operator} for more details about available operations
      * @param requiredValue required value
+     * @throws IllegalArgumentException if
      */
     public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
         return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
@@ -226,29 +228,21 @@ public class ObjectFilter {
      * @param  pt  the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
      */
-    private static Object parseRequiredValue( String rv, Class<?> pt ) {
-        try {
-            if ( isCollection( rv ) ) {
-                // convert individual elements
-                return parseCollection( rv ).stream()
-                        .map( item -> parseItem( item, pt ) )
-                        .collect( Collectors.toList() );
-            } else {
-                return parseItem( rv, pt );
-            }
-        } catch ( ConversionFailedException e ) {
-            throw new IllegalArgumentException( e );
+    private static Object parseRequiredValue( String rv, Class<?> pt ) throws IllegalArgumentException {
+        if ( isCollection( rv ) ) {
+            // convert individual elements
+            return parseCollection( rv ).stream()
+                    .map( item -> parseItem( item, pt ) )
+                    .collect( Collectors.toList() );
+        } else {
+            return parseItem( rv, pt );
         }
     }
 
-    private static Object parseRequiredValues( Collection<String> requiredValues, Class<?> pt ) {
-        try {
-            return requiredValues.stream()
-                    .map( item -> parseItem( item, pt ) )
-                    .collect( Collectors.toList() );
-        } catch ( ConversionFailedException e ) {
-            throw new IllegalArgumentException( e );
-        }
+    private static Object parseRequiredValues( Collection<String> requiredValues, Class<?> pt ) throws IllegalArgumentException {
+        return requiredValues.stream()
+                .map( item -> parseItem( item, pt ) )
+                .collect( Collectors.toList() );
     }
 
     private static boolean isCollection( String value ) {
@@ -268,14 +262,11 @@ public class ObjectFilter {
                 .split( "\\s*,\\s*" ) );
     }
 
-    /**
-     *
-     * @param  rv required value
-     * @param  pt property type
-     * @return converted object
-     * @throws IllegalArgumentException if the type is not supported
-     */
-    private static Object parseItem( String rv, Class<?> pt ) {
-        return conversionService.convert( rv, pt );
+    private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
+        try {
+            return conversionService.convert( rv, pt );
+        } catch ( ConversionException e ) {
+            throw new IllegalArgumentException( e );
+        }
     }
 }

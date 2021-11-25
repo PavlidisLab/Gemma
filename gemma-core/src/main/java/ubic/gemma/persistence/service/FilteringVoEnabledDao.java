@@ -19,7 +19,7 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     /**
      * Load VOs with ordering, filtering and offset/limit.
      *
-     * Consider using {@link #getObjectFilter(String, ObjectFilter.Operator, String)} and {@link #getSort(String, Sort.Direction)}
+     * Consider using {@link FilteringService#getObjectFilter(String, ObjectFilter.Operator, String)} and {@link FilteringService#getSort(String, Sort.Direction)}
      * to produce the object filters and sort safely from user input.
      *
      * @param filters filters applied on the search. The properties mentioned in the {@link ubic.gemma.persistence.util.ObjectFilter}

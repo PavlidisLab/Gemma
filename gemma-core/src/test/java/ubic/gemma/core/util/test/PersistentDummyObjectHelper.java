@@ -21,15 +21,25 @@ package ubic.gemma.core.util.test;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.distribution.TDistribution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,9 +59,14 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import java.util.*;
@@ -89,6 +104,12 @@ public class PersistentDummyObjectHelper {
 
     @Autowired
     private ArrayDesignService adService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     public static BioSequence getTestNonPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = BioSequence.Factory.newInstance();
@@ -328,6 +349,88 @@ public class PersistentDummyObjectHelper {
 
         ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
         ee = persisterHelper.persist( ee, c );
+
+        return ee;
+    }
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
+    private FactorValueService factorValueService;
+
+    @Autowired
+    private ExperimentalDesignService experimentalDesignService;
+
+    /**
+     * Create a test EE with analysis results.
+     *
+     * The design is simple: two conditions: healthy and sick with 3 replicates
+     *
+     * Random statistics will be generated for all the probes defined in the provided {@link ArrayDesign}.
+     *
+     * @return
+     */
+    @Transactional
+    public ExpressionExperiment getTestExpressionExperimentWithAnalysisAndResults() {
+        ArrayDesign ad = getTestPersistentArrayDesign( 10, true, false );
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment( ad );
+
+        /* no experimental design, but we just create a single factor model */
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setExperimentalDesign( ee.getExperimentalDesign() );
+
+        FactorValue baseline = FactorValue.Factory.newInstance( ef );
+        baseline.setIsBaseline( true );
+        baseline.setValue( "healthy" );
+        ef.getFactorValues().add( baseline );
+        FactorValue condition = FactorValue.Factory.newInstance( ef );
+        condition.setValue( "sick" );
+        ef.getFactorValues().add( condition );
+
+        ef = experimentalFactorService.create( ef );
+
+        DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
+        dea.setExperimentAnalyzed( ee );
+
+        ExpressionAnalysisResultSet dears = new ExpressionAnalysisResultSet();
+        dears.setAnalysis( dea );
+        dears.setExperimentalFactors( Collections.singleton( ef ) );
+
+        // draw log2fc from an over-dispersed normal distribution
+        RealDistribution log2fcDistribution = new NormalDistribution( 0, 2 );
+        // assuming 3 replicates (thus 2 degree of freedom)
+        TDistribution ttestDistribution = new TDistribution( 3 - 1 );
+        Collection<DifferentialExpressionAnalysisResult> results = new HashSet<>();
+        for ( CompositeSequence probe : ad.getCompositeSequences() ) {
+            double log2fc = log2fcDistribution.sample();
+            double tstat = ( log2fc - 0.0 ) / 2.0; // simple Z-transform
+            double pvalue = 2.0 * ( 1.0 - ttestDistribution.cumulativeProbability( tstat ) );
+
+            ContrastResult cr = new ContrastResult();
+            cr.setCoefficient( 1.0 );
+            cr.setLogFoldChange( log2fc );
+            cr.setTstat( tstat );
+            cr.setPvalue( pvalue );
+            cr.setFactorValue( condition );
+
+            DifferentialExpressionAnalysisResult dear = DifferentialExpressionAnalysisResult.Factory.newInstance();
+            dear.setResultSet( dears );
+            dear.setPvalue( pvalue );
+            dear.setCorrectedPvalue( dear.getPvalue() / ad.getCompositeSequences().size() );
+            dear.setProbe( probe );
+            dear.setContrasts( Collections.singleton( cr ) );
+
+            results.add( dear );
+        }
+
+        dears.setResults( results );
+
+        dea.setResultSets( Collections.singleton( dears ) );
+
+        // create everything at once
+        differentialExpressionAnalysisService.create( dea );
 
         return ee;
     }
@@ -913,5 +1016,4 @@ public class PersistentDummyObjectHelper {
         bm.setExternalAccession( this.getTestPersistentDatabaseEntry( PersistentDummyObjectHelper.geo ) );
         return bm;
     }
-
 }

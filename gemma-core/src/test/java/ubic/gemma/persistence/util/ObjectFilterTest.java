@@ -21,8 +21,14 @@ package ubic.gemma.persistence.util;
 import org.junit.Test;
 import org.springframework.core.convert.ConversionFailedException;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,6 +61,17 @@ public class ObjectFilterTest {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", Boolean.class, ObjectFilter.Operator.greaterOrEq, "true" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( true );
+    }
+
+    @Test
+    public void testParseDate() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01" );
+        assertThat( of.getRequiredValue() ).isEqualTo( new GregorianCalendar( 2021, 10 - 1, 1 ).getTime() );
+    }
+
+    @Test
+    public void testParseCollectionOfDates() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.in, "(2021-10-01, 2021-10-02)" );
     }
 
     @Test

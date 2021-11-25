@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +42,7 @@ public interface CharacteristicDao
      *
      * @param  start How far into the list to start
      * @param  limit Maximum records to retrieve (might be subject to security filtering)
-     * @return       characteristics
+     * @return characteristics
      */
     @Override
     List<Characteristic> browse( Integer start, Integer limit );
@@ -53,7 +54,7 @@ public interface CharacteristicDao
      * @param  limit      maximum amount of entries
      * @param  descending order direction
      * @param  sortField  order field
-     * @return            characteristics
+     * @return characteristics
      */
     @Override
     List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
@@ -63,19 +64,19 @@ public interface CharacteristicDao
     /**
      * @param  classes            constraint of who the 'owner' of the Characteristic has to be.
      * @param  characteristicUris uris
-     * @return                    characteristics
+     * @return characteristics
      */
     Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are avoided
      * (and will thus be associated via the first uri that resulted in a hit).
-     * 
+     *
      * @param  uriStrings
      * @param  t          taxon to limit to (can be null for no limit)
      * @param  limit      approximate limit to how many results to return (just used to avoid extra queries; the limit
      *                    may be exceeded). Set to 0 for no limit.
-     * @return            map of classes (Experiment, FactorValue, BioMaterial) to the matching uri to IDs of
+     * @return map of classes (Experiment, FactorValue, BioMaterial) to the matching uri to IDs of
      *                    experiments which have an
      *                    associated characteristic using the given uriString. The class lets us track where the
      *                    annotation was.
@@ -90,14 +91,14 @@ public interface CharacteristicDao
      * Finds all Characteristics whose value match the given search term
      *
      * @param  search search
-     * @return        characteristics
+     * @return characteristics
      */
     Collection<Characteristic> findByValue( String search );
 
     /**
      * @param  characteristics characteristics
      * @param  parentClass     parent class
-     * @return                 a map of the specified characteristics to their parent objects.
+     * @return a map of the specified characteristics to their parent objects.
      */
     Map<Characteristic, Object> getParents( Class<?> parentClass, Collection<Characteristic> characteristics );
 
@@ -105,7 +106,7 @@ public interface CharacteristicDao
      * Optimized version that only retrieves the IDs of the owning objects. The parentClass has to be kept track of by
      * the
      * caller.
-     * 
+     *
      * @param  parentClass
      * @param  characteristics
      * @return

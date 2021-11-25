@@ -38,6 +38,9 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign load( Long id );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExperimentalDesign loadWithExperimentalFactors( Long id );
+
     @Override
     @Secured({ "GROUP_ADMIN" })
     Collection<ExperimentalDesign> loadAll();

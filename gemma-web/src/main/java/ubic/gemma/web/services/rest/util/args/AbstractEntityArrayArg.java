@@ -2,8 +2,6 @@ package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -16,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Array of identifiers of an Identifiable entity

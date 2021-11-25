@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.Data;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,10 +85,15 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -851,14 +857,15 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( List<Long> ids, Taxon taxon, Sort sort, int start, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, start, limit );
+    @Transactional(readOnly = true)
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit ) {
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( ids );
+        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
     }
 
     @Override
@@ -1139,4 +1146,78 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.getExperimentsLackingPublications();
     }
 
+    /**
+     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
+     * {@inheritDoc}
+     */
+    @Override
+    public ObjectFilter getObjectFilter( String propertyName, ObjectFilter.Operator operator, String requiredValue ) {
+        try {
+            AliasPropertyNameType ap = getAliasForProperty( propertyName );
+            return ObjectFilter.parseObjectFilter( ap.getObjectAlias(), ap.propertyName, ap.propertyType, operator, requiredValue );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
+
+    @Override
+    public ObjectFilter getObjectFilter( String propertyName, ObjectFilter.Operator operator, Collection<String> requiredValues ) {
+        try {
+            AliasPropertyNameType ap = getAliasForProperty( propertyName );
+            return ObjectFilter.parseObjectFilter( ap.getObjectAlias(), ap.propertyName, ap.propertyType, operator, requiredValues );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
+
+    @Override
+    public Sort getSort( String propertyName, Sort.Direction direction ) {
+        try {
+            AliasPropertyNameType ap = getAliasForProperty( propertyName );
+            return Sort.by( ap.getObjectAlias(), ap.getPropertyName(), direction );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
+
+    private AliasPropertyNameType getAliasForProperty( String propertyName ) throws NoSuchFieldException {
+        if ( propertyName.startsWith( "characteristics." ) ) {
+            String fieldName = propertyName.replaceFirst( "characteristics.", "" );
+            return new AliasPropertyNameType( CharacteristicDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, Characteristic.class ) );
+        }
+
+        if ( propertyName.startsWith( "bioAssays." ) ) {
+            String fieldName = propertyName.replaceFirst( "bioAssays.", "" );
+            return new AliasPropertyNameType( BioAssayDao.OBJECT_ALIAS, fieldName, EntityUtils.getDeclaredFieldType( fieldName, BioAssay.class ) );
+        }
+
+        if ( propertyName.equals( "taxon" ) ) {
+            return new AliasPropertyNameType( TaxonDao.OBJECT_ALIAS, "id", Long.class );
+        }
+
+        if ( propertyName.equals( "bioAssayCount" ) ) {
+            return new AliasPropertyNameType( expressionExperimentDao.getObjectAlias(), "bioAssays.size", Integer.class );
+        }
+
+        if ( propertyName.equals( "lastUpdated" ) ) {
+            return new AliasPropertyNameType( "s", "lastUpdated", Date.class );
+        }
+
+        if ( propertyName.equals( "troubled" ) ) {
+            return new AliasPropertyNameType( "s", "troubled", Boolean.class );
+        }
+
+        if ( propertyName.equals( "needsAttention" ) ) {
+            return new AliasPropertyNameType( "s", "needsAttention", Boolean.class );
+        }
+
+        return new AliasPropertyNameType( expressionExperimentDao.getObjectAlias(), propertyName, EntityUtils.getDeclaredFieldType( propertyName, expressionExperimentDao.getElementClass() ) );
+    }
+
+    @Data
+    private static class AliasPropertyNameType {
+        private final String objectAlias;
+        private final String propertyName;
+        private final Class<?> propertyType;
+    }
 }

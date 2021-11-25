@@ -34,31 +34,37 @@ public class ObjectFilterCriteriaUtils {
     }
 
     private static Criterion formRestrictionClause( ObjectFilter filter ) {
+        String propertyName;
+        if ( filter.getObjectAlias() != null ) {
+            propertyName = filter.getObjectAlias() + "." + filter.getPropertyName();
+        } else {
+            propertyName = filter.getPropertyName();
+        }
         switch ( filter.getOperator() ) {
             case eq:
                 if ( filter.getRequiredValue() == null ) {
-                    return Restrictions.isNull( ObjectFilterQueryUtils.formPropertyName( filter ) );
+                    return Restrictions.isNull( propertyName );
                 } else {
-                    return Restrictions.eq( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                    return Restrictions.eq( propertyName, filter.getRequiredValue() );
                 }
             case notEq:
                 if ( filter.getRequiredValue() == null ) {
-                    return Restrictions.isNotNull( ObjectFilterQueryUtils.formPropertyName( filter ) );
+                    return Restrictions.isNotNull( propertyName );
                 } else {
-                    return Restrictions.ne( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                    return Restrictions.ne( propertyName, filter.getRequiredValue() );
                 }
             case like:
-                return Restrictions.like( ObjectFilterQueryUtils.formPropertyName( filter ), ( String ) filter.getRequiredValue(), MatchMode.ANYWHERE );
+                return Restrictions.like( propertyName, ( String ) filter.getRequiredValue(), MatchMode.ANYWHERE );
             case lessThan:
-                return Restrictions.lt( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                return Restrictions.lt( propertyName, filter.getRequiredValue() );
             case greaterThan:
-                return Restrictions.gt( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                return Restrictions.gt( propertyName, filter.getRequiredValue() );
             case lessOrEq:
-                return Restrictions.le( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                return Restrictions.le( propertyName, filter.getRequiredValue() );
             case greaterOrEq:
-                return Restrictions.ge( ObjectFilterQueryUtils.formPropertyName( filter ), filter.getRequiredValue() );
+                return Restrictions.ge( propertyName, filter.getRequiredValue() );
             case in:
-                return Restrictions.in( ObjectFilterQueryUtils.formPropertyName( filter ), ( Collection<?> ) filter.getRequiredValue() );
+                return Restrictions.in( propertyName, ( Collection<?> ) filter.getRequiredValue() );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

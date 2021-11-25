@@ -668,7 +668,7 @@ public class ExpressionExperimentController {
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
         ArrayDesign ad = arrayDesignService.load( id );
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                new ArrayList<>( arrayDesignService.getSwitchedExperimentIds( ad ) ), 0, true );
+                arrayDesignService.getSwitchedExperimentIds( ad ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
@@ -1576,10 +1576,10 @@ public class ExpressionExperimentController {
      * @return Collection<ExpressionExperimentValueObject>
      */
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            List<Long> eeIds, Integer limit, boolean showPublic ) {
+            Collection<Long> eeIds, Integer limit, boolean showPublic ) {
 
         Slice<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( eeIds, taxon, Sort.by( "curationDetails.lastUpdated", Sort.Direction.DESC ), 0, Math.abs( limit ) );
+                .loadDetailsValueObjects( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", Sort.Direction.DESC ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
@@ -1614,7 +1614,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjects( ids, taxon, Sort.by( o, direction ), start, limit );
+        return expressionExperimentService.loadDetailsValueObjects( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
     }
 
     /**

@@ -1,10 +1,8 @@
 package ubic.gemma.persistence.util;
 
 import com.google.common.base.Strings;
-import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Query;
 import org.hibernate.QueryParameterException;
 import org.springframework.security.acls.domain.BasePermission;
@@ -26,18 +24,12 @@ public class AclQueryUtils {
                     + "and ug.name in (select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName)";
 
     /**
-     * Create an HQL select clause for all the alias mentioned in {@link #formAclJoinClause(String)}.
-     * <p>
-     * Use this if you need to retrieve the ACL OI and SID in the result set.
-     */
-    public static String formAclSelectClause() {
-        return String.join( ", ", AOI_ALIAS, SID_ALIAS );
-    }
-
-    /**
      * Create an HQL join clause from ACL OI -{@literal >} ACL entries and ACL OI -{@literal >} ACL SID.
      * <p>
      * Ensure that you use {@link #addAclJoinParameters(Query, Class)} afterward to bind the query parameters.
+     *
+     * FIXME: this ACL jointure is really annoying because it is one-to-many, maybe handling everything in a sub-query
+     * would be preferable?
      *
      * @param alias   placeholder for the identifier e.g. "ee.id"
      * @return clause to add to the query

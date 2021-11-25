@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import com.google.common.collect.Lists;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -220,13 +219,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             }
         }
 
-        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {
+        try ( InputStream reader = new BufferedInputStream( new FileInputStream( f ) ) ) {
 
             response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
             response.setContentLength( ( int ) f.length() );
             // response.setContentType( "application/x-gzip" ); // see Bug4206
 
-            try (OutputStream outputStream = response.getOutputStream()) {
+            try ( OutputStream outputStream = response.getOutputStream() ) {
 
                 byte[] buf = new byte[1024];
                 int len;
@@ -382,8 +381,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     "You do not have appropriate rights to see this platform. This is likely due "
                             + "to the platform being marked as unusable." );
         }
-        arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
-        arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
+        arrayDesignReportService.fillInValueObjects( Collections.singleton( vo ) );
+        arrayDesignReportService.fillInSubsumptionInfo( Collections.singleton( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
         result = this.setExtRefsAndCounts( result, arrayDesign );

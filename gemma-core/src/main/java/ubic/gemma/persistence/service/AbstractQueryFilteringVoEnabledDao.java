@@ -79,12 +79,11 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        StopWatch stopWatch = StopWatch.createStarted();
 
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
-        if ( offset <= 0 && limit <= 0 ) {
-            hints.add( QueryHint.FETCH_ALL );
+        if ( offset > 0 || limit > 0 ) {
+            hints.add( QueryHint.PAGINATED );
         }
 
         Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
@@ -97,19 +96,28 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             query.setMaxResults( limit );
 
         //noinspection unchecked
+        StopWatch queryStopWatch = StopWatch.createStarted();
         List<?> list = query.list();
+        queryStopWatch.stop();
 
+        StopWatch postProcessingStopWatch = StopWatch.createStarted();
         List<VO> vos = list.stream()
                 .map( this::processLoadValueObjectsQueryResult )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
+        postProcessingStopWatch.stop();
 
+        StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        countingStopWatch.stop();
 
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
-            log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
+            log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms "
+                    + "(querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "counting: " + countingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
         }
 
         return new Slice<>( vos, sort, offset, limit, totalElements );
@@ -117,24 +125,31 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch queryStopWatch = StopWatch.create();
+        StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.of( QueryHint.FETCH_ALL ) );
+        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) );
 
-        //noinspection unchecked
+        queryStopWatch.start();
         List<?> list = query.list();
+        queryStopWatch.stop();
 
-        try {
-            return list.stream()
-                    .map( this::processLoadValueObjectsQueryResult )
-                    .filter( Objects::nonNull )
-                    .collect( Collectors.toList() );
-        } finally {
-            stopWatch.stop();
-            if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
-                log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
-            }
+        postProcessingStopWatch.start();
+        List<VO> vos = list.stream()
+                .map( this::processLoadValueObjectsQueryResult )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+        postProcessingStopWatch.stop();
+
+        stopWatch.stop();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+            log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms ("
+                    + "querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
         }
+
+        return vos;
     }
 }

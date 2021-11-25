@@ -22,9 +22,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -33,12 +33,18 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * @author kkeshav
@@ -70,6 +76,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
             Contact c = this.getTestPersistentContact();
             ee.setOwner( c );
+
+            ee.getCharacteristics().add( Characteristic.Factory.newInstance() );
 
             expressionExperimentService.update( ee );
             ee = expressionExperimentService.thaw( ee );
@@ -125,12 +133,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertEquals( eeFound.getId(), ee.getId() );
 
     }
-    
+
     @Test
     public void testLoadAllValueObjects() {
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
         assertNotNull( vos );
-        assertTrue(vos.size() > 0);
+        assertTrue( vos.size() > 0 );
     }
 
     @Test
@@ -206,6 +214,42 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * EE service has a few extensions for supporting various filtering strategies in the frontend, so we need to test
+     * them here.
+     */
+    @Test
+    public final void testGetObjectFilter() {
+        assertThat( expressionExperimentService.getObjectFilter( "taxon", ObjectFilter.Operator.eq, "9606" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "taxon" )
+                .hasFieldOrPropertyWithValue( "propertyName", "id" )
+                .hasFieldOrPropertyWithValue( "requiredValue", 9606L );
+
+        assertThat( expressionExperimentService.getObjectFilter( "bioAssayCount", ObjectFilter.Operator.greaterOrEq, "4" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "ee" )
+                .hasFieldOrPropertyWithValue( "propertyName", "bioAssays.size" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "requiredValue", 4 );
+
+        assertThat( expressionExperimentService.getObjectFilter( "lastUpdated", ObjectFilter.Operator.greaterOrEq, "2020-01-10" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
+                .hasFieldOrPropertyWithValue( "propertyName", "lastUpdated" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.greaterOrEq )
+                .hasFieldOrPropertyWithValue( "requiredValue", new GregorianCalendar( 2020, Calendar.JANUARY, 10 ).getTime() );
+
+        assertThat( expressionExperimentService.getObjectFilter( "troubled", ObjectFilter.Operator.eq, "true" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
+                .hasFieldOrPropertyWithValue( "propertyName", "troubled" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "requiredValue", true );
+
+        assertThat( expressionExperimentService.getObjectFilter( "needsAttention", ObjectFilter.Operator.eq, "false" ) )
+                .hasFieldOrPropertyWithValue( "objectAlias", "s" )
+                .hasFieldOrPropertyWithValue( "propertyName", "needsAttention" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
+                .hasFieldOrPropertyWithValue( "requiredValue", false );
+    }
+
     @Test
     public final void testLoadValueObjects() {
         Collection<Long> ids = new HashSet<>();
@@ -213,6 +257,32 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsByIds( ids );
         assertNotNull( list );
+        assertEquals( 1, list.size() );
+    }
+
+    @Test
+    public void testLoadValueObjectsPreFilterByCharacteristic() {
+        Collection<Long> ids = new HashSet<>();
+        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "characteristics.id", ObjectFilter.Operator.eq, ee.getCharacteristics().stream().findFirst().orElse( null ).getId().toString() ) );
+        ObjectFilter of = filters.iterator().next()[0];
+        assertEquals( CharacteristicDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( "id", of.getPropertyName() );
+        Long id = ee.getId();
+        ids.add( id );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
+        assertEquals( 1, list.size() );
+    }
+
+    @Test
+    public void testLoadValueObjectsPreFilterByBioAssay() {
+        Collection<Long> ids = new HashSet<>();
+        Filters filters = Filters.singleFilter( expressionExperimentService.getObjectFilter( "bioAssays.id", ObjectFilter.Operator.eq, ee.getBioAssays().stream().findFirst().orElse( null ).getId().toString() ) );
+        ObjectFilter of = filters.iterator().next()[0];
+        assertEquals( BioAssayDao.OBJECT_ALIAS, of.getObjectAlias() );
+        assertEquals( "id", of.getPropertyName() );
+        Long id = ee.getId();
+        ids.add( id );
+        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjectsPreFilter( filters, null, 0, 0 );
         assertEquals( 1, list.size() );
     }
 

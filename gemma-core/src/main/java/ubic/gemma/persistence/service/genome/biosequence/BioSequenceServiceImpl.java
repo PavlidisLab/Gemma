@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.genome.biosequence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -95,7 +96,7 @@ public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence
     }
 
     @Override
-    public BioSequence findByCompositeSequence( Long id ) {
-        return this.bioSequenceDao.findByCompositeSequence( id );
+    public BioSequence findByCompositeSequence( CompositeSequence compositeSequence ) {
+        return this.bioSequenceDao.findByCompositeSequence( compositeSequence );
     }
 }

@@ -1,15 +1,16 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
-import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
+
+import static ubic.gemma.web.services.rest.util.StringUtils.splitAndTrim;
 
 @ArraySchema(schema = @Schema(implementation = TaxonArg.class))
 public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonService> {
@@ -47,10 +48,10 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
      */
     @SuppressWarnings("unused")
     public static TaxonArrayArg valueOf( final String s ) {
-        if ( Strings.isNullOrEmpty( s ) ) {
+        if ( StringUtils.isBlank( s ) ) {
             return new TaxonArrayArg( String.format( TaxonArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( TaxonArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new TaxonArrayArg( StringUtils.splitAndTrim( s ) );
+        return new TaxonArrayArg( splitAndTrim( s ) );
     }
 }

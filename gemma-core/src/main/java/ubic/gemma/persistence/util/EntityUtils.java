@@ -262,7 +262,7 @@ public class EntityUtils {
         // will be empty if anonymous
         //noinspection unchecked
         Collection<String> groups = sess.createQuery(
-                "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                        "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                 .setParameter( "user", userName ).list();
 
         Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedClass.getName() )
@@ -357,7 +357,7 @@ public class EntityUtils {
         if ( sqlQuery.contains( ":groups" ) ) {
             //noinspection unchecked
             Collection<String> groups = sessionFactory.getCurrentSession().createQuery(
-                    "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                            "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                     .setParameter( "user", userName ).list();
             queryObject.setParameterList( "groups", groups );
         }

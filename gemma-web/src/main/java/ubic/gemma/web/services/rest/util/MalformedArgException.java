@@ -28,4 +28,8 @@ public class MalformedArgException extends BadRequestException {
     public MalformedArgException( String message, Throwable cause ) {
         super( message, cause );
     }
+
+    public MalformedArgException( Throwable cause ) {
+        super( cause );
+    }
 }

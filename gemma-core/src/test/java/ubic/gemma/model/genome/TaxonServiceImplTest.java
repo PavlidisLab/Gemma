@@ -48,4 +48,11 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
         assertEquals( new Integer( 4932 ), found.getNcbiId() );
     }
 
+    @Test
+    public void testLoadValueObject() {
+        Taxon yeast = taxonService.findByCommonName( "yeast" );
+        assertNotNull( yeast ); // this should be loaded automatically.
+        taxonService.loadValueObject( yeast );
+    }
+
 }

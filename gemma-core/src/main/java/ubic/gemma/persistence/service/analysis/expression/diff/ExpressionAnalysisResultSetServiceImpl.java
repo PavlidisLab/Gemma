@@ -31,12 +31,6 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findByBioAssaySet( BioAssaySet bioAssaySet ) {
-        return voDao.findByBioAssaySet( bioAssaySet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value ) {
         return voDao.loadWithResultsAndContrasts( value );
     }

@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.util;
 
-import com.google.common.base.Strings;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.*;
 import org.hibernate.type.StringType;
@@ -21,7 +21,7 @@ public class AclCriteriaUtils {
      * @see AclQueryUtils#formAclRestrictionClause()
      */
     public static Criterion formAclRestrictionClause( String alias, Class<? extends Securable> aoiType ) {
-        if ( Strings.isNullOrEmpty( alias ) || aoiType == null )
+        if ( StringUtils.isBlank( alias ) || aoiType == null )
             throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
 
         DetachedCriteria dc = DetachedCriteria.forClass( AclObjectIdentity.class, "aoi" )

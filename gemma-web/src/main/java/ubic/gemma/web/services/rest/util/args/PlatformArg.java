@@ -8,12 +8,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
-
-import java.lang.reflect.Array;
+import ubic.gemma.persistence.util.*;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.
@@ -72,7 +67,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
-        Filters filters = Filters.singleFilter( service.getObjectFilter( "arrayDesign.id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
+        Filters filters = Filters.singleFilter( service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
         return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
 
     }

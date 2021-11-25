@@ -8,12 +8,10 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.io.Serializable;
-import java.util.Iterator;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement). However, for flattening out

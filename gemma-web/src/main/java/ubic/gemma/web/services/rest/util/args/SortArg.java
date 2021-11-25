@@ -15,6 +15,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -25,7 +28,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  * @author tesarst
  */
 @Schema(type = "string")
-public class SortArg extends AbstractArg<Sort> {
+public class SortArg extends AbstractArg<SortArg.Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
                     + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
@@ -45,46 +48,23 @@ public class SortArg extends AbstractArg<Sort> {
     }
 
     /**
-     * Obtain the field this is sorting by given an entity class that is expected to contain it.
-     * @param cls the class of the entity
-     * @return the field to sort by.
-     * @throws MalformedArgException if the original argument was not well-composed or the class does not contain the
-     * expected field
-     * @deprecated use {@link #getValueForClass(Class)} instead
-     */
-    @Deprecated
-    public String getFieldForClass( Class<?> cls ) throws MalformedArgException {
-        try {
-            EntityUtils.getDeclaredField( cls, getValue().getOrderBy() );
-            return getValue().getOrderBy();
-        } catch ( NoSuchFieldException e ) {
-            throw new MalformedArgException( e.getMessage(), e );
-        }
-    }
-
-    /**
-     * @return the direction of sort.
-     * @throws MalformedArgException if the original argument was not well-composed
-     * @deprecated use {@link #getValueForClass(Class)} instead to obtain the sorting direction
-     */
-    @Deprecated
-    public boolean isAsc() throws MalformedArgException {
-        return getValue().getDirection() == Sort.Direction.ASC;
-    }
-
-    /**
      * Obtain the {@link Sort} underlying this argument.
-     * @param cls check against the given class if the orderBy property is valid
+     * @param service a {@link FilteringService} that knows how to build a sort object
      * @return the sorting object in question
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
      *                               argument was malformed in the first place
      */
-    public Sort getValueForClass( Class<?> cls ) throws MalformedArgException {
+    public ubic.gemma.persistence.util.Sort getSort( FilteringService service ) throws MalformedArgException {
+        ubic.gemma.persistence.util.Sort.Direction direction = null;
+        if ( this.getValue().getDirection().equals( Sort.Direction.ASC ) ) {
+            direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
+        } else if ( this.getValue().getDirection().equals( Sort.Direction.DESC ) ) {
+            direction = ubic.gemma.persistence.util.Sort.Direction.DESC;
+        }
         try {
-            EntityUtils.getDeclaredField( cls, getValue().getOrderBy() );
-            return getValue();
-        } catch ( NoSuchFieldException e ) {
-            throw new MalformedArgException( e.getMessage(), e );
+            return service.getSort( this.getValue().getOrderBy(), direction );
+        } catch ( IllegalArgumentException e ) {
+            throw new MalformedArgException( e );
         }
     }
 
@@ -99,7 +79,8 @@ public class SortArg extends AbstractArg<Sort> {
     public static SortArg valueOf( final String s ) {
         try {
             Sort.Direction direction = parseDirection( s.charAt( 0 ) );
-            return new SortArg( direction == null ? s : s.substring( 1 ), direction );
+            String orderBy = direction == null ? s : s.substring( 1 );
+            return new SortArg( orderBy, direction );
         } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
             return new SortArg( String.format( ERROR_MSG, s ), e );
         }
@@ -118,6 +99,25 @@ public class SortArg extends AbstractArg<Sort> {
             return Sort.Direction.DESC;
         } else {
             return null;
+        }
+    }
+
+    @Data
+    public static class Sort {
+
+        private final String orderBy;
+        private final Direction direction;
+
+        public Sort( String orderBy, Direction direction ) {
+            if ( StringUtils.isBlank( orderBy ) ) {
+                throw new IllegalArgumentException( "The 'orderBy' attribute cannot be blank or empty." );
+            }
+            this.orderBy = orderBy;
+            this.direction = direction;
+        }
+
+        public enum Direction {
+            ASC, DESC
         }
     }
 }

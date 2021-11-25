@@ -50,7 +50,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
 
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
-        super( FactorValue.class, sessionFactory );
+        super( "fv", FactorValue.class, sessionFactory );
     }
 
     @Override
@@ -147,11 +147,6 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
             sb.append( object ).append( "\n" );
         }
         AbstractDao.log.error( sb.toString() );
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return "fv";
     }
 
     @Override

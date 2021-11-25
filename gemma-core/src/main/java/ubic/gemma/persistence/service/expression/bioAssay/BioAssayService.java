@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 
 import java.util.Collection;
 import java.util.List;
@@ -34,7 +35,7 @@ import java.util.List;
  * @author kelsey
  */
 @Service
-public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssayValueObject> {
+public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssayValueObject>, FilteringService<BioAssay> {
 
     /**
      * Associates a bioMaterial with a specified bioAssay.

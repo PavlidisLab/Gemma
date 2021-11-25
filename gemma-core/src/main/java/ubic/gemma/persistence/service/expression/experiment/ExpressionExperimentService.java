@@ -434,17 +434,10 @@ public interface ExpressionExperimentService
     Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
 
     /**
-     * Special method for front-end access
-     *
-     * @param orderField the field to order the results by e.g. curationDetails.lastUpdated
-     * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids given (default = null)
-     * @param start      offset how many results to skip (for paging); default 0.
-     * @param limit      limit of how many results to give; default no limit.
-     * @return a list of EE details VOs representing experiments matching the given arguments.
+     * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( List<Long> ids, Taxon taxon, Sort by, int start, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );

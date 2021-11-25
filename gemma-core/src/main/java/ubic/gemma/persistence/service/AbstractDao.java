@@ -157,7 +157,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return               an entity whose property first like-matched the given value.
+     * @return an entity whose property first like-matched the given value.
      */
     @SuppressWarnings("unchecked")
     protected T findOneByStringProperty( String propertyName, String propertyValue ) {
@@ -173,7 +173,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return               a list of entities whose properties like-matched the given value.
+     * @return a list of entities whose properties like-matched the given value.
      */
     @SuppressWarnings("SameParameterValue") // Better for general use
     protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
@@ -188,7 +188,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return               a list of entities whose properties matched the given value.
+     * @return a list of entities whose properties matched the given value.
      */
     @SuppressWarnings("unchecked")
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
@@ -215,7 +215,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      *
      * @param  propertyName  the name of property to be matched.
      * @param  propertyValue the value to look for.
-     * @return               an entity whose property first matched the given value.
+     * @return an entity whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );

@@ -283,8 +283,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+        StopWatch timer = StopWatch.createStarted();
         Collection<?> vos;
 
         Collection<Long> ids = new ArrayList<>();
@@ -307,8 +306,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             Collection<CompositeSequenceValueObject> css = new ArrayList<>();
             for ( SearchResult sr : results ) {
+                // we don't want to load the full gene-mapping summary
                 CompositeSequenceValueObject csvo = compositeSequenceService
-                        .loadValueObject( ( CompositeSequence ) sr.getResultObject() );
+                        .loadValueObjectWithoutGeneMappingSummary( ( CompositeSequence ) sr.getResultObject() );
                 css.add( csvo );
             }
             vos = css;
@@ -370,8 +370,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             sr.setResultObject( idMap.get( sr.getResultId() ) );
         }
 
-        if ( timer.getTime() > 1000 ) {
-            BaseFormController.log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
+        timer.stop();
+
+        if ( timer.getTime() > 200 ) {
+            BaseFormController.log.info( "Value object conversion for " + entityClass + " after search took " + timer.getTime() + " ms." );
         }
     }
 

@@ -22,7 +22,6 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 

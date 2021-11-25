@@ -25,6 +25,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -194,10 +195,10 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
     }
 
     @Override
-    public BioSequence findByCompositeSequence( Long id ) {
+    public BioSequence findByCompositeSequence( CompositeSequence compositeSequence ) {
         return ( BioSequence ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select cs.biologicalCharacteristic from CompositeSequence as cs where cs.id = :id" )
-                .setParameter( "id", id ).uniqueResult();
+                "select cs.biologicalCharacteristic from CompositeSequence as cs where cs = :cs" )
+                .setParameter( "cs", compositeSequence ).uniqueResult();
     }
 
     @Override

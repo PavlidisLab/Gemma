@@ -154,7 +154,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + getObjectAlias() + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( sort.getOrderBy(), sort.getDirection() );
+        queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 

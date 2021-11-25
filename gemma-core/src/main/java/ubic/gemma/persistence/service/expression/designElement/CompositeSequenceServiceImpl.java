@@ -84,6 +84,32 @@ public class CompositeSequenceServiceImpl
         return this.compositeSequenceDao.findByGene( gene );
     }
 
+    /**
+     * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CompositeSequenceValueObject loadValueObject( CompositeSequence cs ) {
+        CompositeSequenceValueObject vo = super.loadValueObject( cs );
+        // Not passing the vo since that would create data redundancy in the returned structure
+        vo.setGeneMappingSummaries(
+                this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+        return vo;
+    }
+
+    /**
+     * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CompositeSequenceValueObject loadValueObjectWithoutGeneMappingSummary( CompositeSequence cs ) {
+        CompositeSequenceValueObject vo = super.loadValueObject( cs );
+        // Not passing the vo since that would create data redundancy in the returned structure
+        vo.setGeneMappingSummaries(
+                this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+        return vo;
+    }
+
     @Override
     public Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit ) {
         return this.compositeSequenceDao.findByGene( gene, start, limit ).map( this::loadValueObject );
@@ -250,18 +276,6 @@ public class CompositeSequenceServiceImpl
         }
 
         this.compositeSequenceDao.remove( filteredSequence );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        for ( CompositeSequenceValueObject vo : vos ) {
-            // Not passing the vo since that would create data redundancy in the returned structure
-            vo.setGeneMappingSummaries(
-                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
-        }
-        return vos;
     }
 
     /**

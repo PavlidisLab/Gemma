@@ -1,10 +1,10 @@
 package ubic.gemma.persistence.util;
 
 import com.google.common.base.Strings;
-import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Query;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Utilities for integrating {@link ObjectFilter} into {@link org.hibernate.Query}.
@@ -16,7 +16,7 @@ public class ObjectFilterQueryUtils {
      * <p>
      * The alias is omitted if set to null.
      *
-     * @param alias        an alias, typically defined in {@link ObjectFilter}, or null
+     * @param alias        an alias, or null
      * @param propertyName a property name within the defined entity
      * @return a well-formed property name suitable for a HQL query
      */
@@ -24,37 +24,43 @@ public class ObjectFilterQueryUtils {
         return alias == null ? propertyName : alias + "." + propertyName;
     }
 
-    public static String formPropertyName( ObjectFilter filter ) {
-        return formPropertyName( filter.getObjectAlias(), filter.getPropertyName() );
+    /**
+     * Form an SQL/HQL parameter name for binding a query.
+     */
+    public static String formParamName( String objectAlias, String propertyName ) {
+        if ( objectAlias != null ) {
+            return objectAlias + "_" + propertyName.replaceAll( "\\.", "_" );
+        } else {
+            return propertyName.replaceAll( "\\.", "_" );
+        }
     }
 
     /**
-     * Forms an order by clause for a Hibernate query based on given arguments.
+     * Forms an order by clause for an Hibernate query based on given arguments.
      *
-     * @param orderByProperty the property the query should be ordered by.
-     * @param orderDesc       whether the ordering should be descending or ascending.
+     * @param sort the property and direction the query should be ordered by.
      * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
-    public static String formOrderByProperty( String orderBy, Sort.Direction direction ) {
-        if ( Strings.isNullOrEmpty( orderBy ) )
+    public static String formOrderByClause( Sort sort ) {
+        if ( Strings.isNullOrEmpty( sort.getPropertyName() ) )
             return "";
         StringBuilder ret = new StringBuilder();
 
         ret.append( " order by" );
 
-        if ( orderBy.endsWith( ".size" ) ) {
+        if ( sort.getPropertyName().endsWith( ".size" ) ) {
             // This will crate an order by count clause, stripping the object alias and size suffix
-            ret.append( " count( distinct " + orderBy.split( "\\." )[1] + ")" );
+            ret.append( " count(distinct " ).append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) ).append( ')' );
         } else {
             ret.append( " " );
-            ret.append( orderBy );
+            ret.append( formPropertyName( sort.getObjectAlias(), sort.getPropertyName() ) );
         }
 
-        if ( direction == null ) {
+        if ( sort.getDirection() == null ) {
             // use default direction
-        } else if ( direction.equals( Sort.Direction.ASC ) ) {
+        } else if ( sort.getDirection().equals( Sort.Direction.ASC ) ) {
             ret.append( " asc" );
-        } else if ( direction.equals( Sort.Direction.DESC ) ) {
+        } else if ( sort.getDirection().equals( Sort.Direction.DESC ) ) {
             ret.append( " desc" );
         }
 
@@ -72,11 +78,9 @@ public class ObjectFilterQueryUtils {
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
     public static String formRestrictionClause( Filters filters ) {
-        StringBuilder queryString = new StringBuilder();
-
         if ( filters == null || filters.isEmpty() )
-            return queryString.toString();
-        BindingParamNameGenerator generator = new BindingParamNameGenerator();
+            return "";
+        int i = 0;
         StringBuilder conjunction = new StringBuilder();
         for ( ObjectFilter[] filterArray : filters ) {
             if ( filterArray == null || filterArray.length == 0 )
@@ -84,13 +88,14 @@ public class ObjectFilterQueryUtils {
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
             for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null || filter.getObjectAlias() == null )
+                if ( filter == null )
                     continue;
-                String paramName = generator.nextParam( filter );
                 if ( !first )
                     disjunction.append( " or " );
                 disjunction
                         .append( formPropertyName( filter.getObjectAlias(), filter.getPropertyName() ) ).append( " " );
+
+                String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
 
                 // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
                 if ( filter.getOperator().equals( ObjectFilter.Operator.eq ) && filter.getRequiredValue() == null ) {
@@ -117,7 +122,7 @@ public class ObjectFilterQueryUtils {
             }
         }
 
-        return queryString.append( conjunction ).toString();
+        return conjunction.toString();
     }
 
     /**
@@ -126,23 +131,26 @@ public class ObjectFilterQueryUtils {
      * Use this if you've appended {@link #formRestrictionClause(Filters)} to the query so that the provided
      * object filters will be bound.
      *
+     * If the {@link ObjectFilter#getRequiredValue()} is a {@link Collection}, it will be sorted and duplicates will be
+     * excluded.
+     *
      * @param query   the query that needs parameters populated.
      * @param filters filters that provide the parameter values.
      */
     public static void addRestrictionParameters( Query query, Filters filters ) {
-        if ( filters == null || filters.isEmpty() )
+        if ( filters == null )
             return;
-
-        BindingParamNameGenerator generator = new BindingParamNameGenerator();
+        int i = 0;
         for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray == null || filterArray.length < 1 )
+            if ( filterArray == null )
                 continue;
             for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null || filter.getObjectAlias() == null )
+                if ( filter == null )
                     continue;
-                String paramName = generator.nextParam( filter );
+                String paramName = formParamName( filter.getObjectAlias(), filter.getPropertyName() ) + ( ++i );
                 if ( filter.getOperator().equals( ObjectFilter.Operator.in ) ) {
-                    query.setParameterList( paramName, ( Collection<?> ) filter.getRequiredValue() );
+                    // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
+                    query.setParameterList( paramName, ( ( Collection<?> ) filter.getRequiredValue() ).stream().sorted().distinct().collect( Collectors.toList() ) );
                 } else if ( filter.getOperator().equals( ObjectFilter.Operator.like ) ) {
                     query.setParameter( paramName, "%" + filter.getRequiredValue() + "%" );
                 } else {
@@ -151,84 +159,4 @@ public class ObjectFilterQueryUtils {
             }
         }
     }
-
-    /**
-     * Check if an alias is mentioned in a set of {@link ObjectFilter}.
-     *
-     * This should be used to eliminate parts of an HQL query that are not mentioned in the filters.
-     *
-     * @param filters
-     * @param aliases
-     * @return true if any provided alias is mentioned anywhere in the set of filters
-     */
-    public static boolean containsAnyAlias( Filters filters, String... aliases ) {
-        if ( filters == null )
-            return false;
-        for ( ObjectFilter[] filter : filters ) {
-            if ( filter == null )
-                continue;
-            for ( ObjectFilter f : filter ) {
-                if ( f == null )
-                    continue;
-                if ( ArrayUtils.contains( aliases, f.getObjectAlias() ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Generates unique parameter names for binding a {@link Query}.
-     */
-    private static class BindingParamNameGenerator {
-
-        private final Map<String, Integer> counts;
-
-        /**
-         * Create a new parameter name generator.
-         */
-        public BindingParamNameGenerator() {
-            this.counts = new HashMap<>();
-        }
-
-        /**
-         * Create a parameter name generator with initial counts, possibly from a previous parameter generator
-         * execution.
-         * @param initialCounts
-         */
-        public BindingParamNameGenerator( Map<String, Integer> initialCounts ) {
-            this.counts = new HashMap<>( initialCounts );
-        }
-
-        /**
-         * Generate the next, uniquely named parameter.
-         *
-         * Note that the returned string does not contain the leading ":" character that denotes a parameter keyword in
-         * the HQL query.
-         */
-        public String nextParam( String paramName ) {
-            if ( counts.containsKey( paramName ) ) {
-                counts.compute( paramName, ( k, v ) -> v + 1 );
-            } else {
-                counts.put( paramName, 1 );
-            }
-            return paramName + counts.get( paramName );
-        }
-
-        /**
-         * Forms a parameter name out of the filter object.
-         *
-         * @param filter the filter to create the parameter name out of.
-         * @return a name unique to the provided filter that can be used in an HQL query.
-         */
-        public String nextParam( ObjectFilter filter ) {
-            return this.nextParam( filter.getObjectAlias().replaceAll( "\\.", "_" ) + filter.getPropertyName().replaceAll( "\\.", "_" ) );
-        }
-
-        public Map<String, Integer> getCounts() {
-            return counts;
-        }
-    }
-
 }

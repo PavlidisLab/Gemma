@@ -124,23 +124,28 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int start, int limit );
+    /**
+     * This is a specialized flavour of {@link #loadDetailsValueObjects(Filters, Sort, int, int)} for detailed EE VOs.
+     */
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
 
     /**
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param ids        only list specific ids.
+     * @param ids        only list specific ids, or null to ignore
+     * @param taxon      only list EEs in the specified taxon, or null to ignore
      * @param sort       the field to order the results by.
-     * @param start      offset
-     * @param limit      max to return
+     * @param offset     offset
+     * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int start, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
 
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Sort sort, int start, int limit );
-
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );
+    /**
+     * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.
+     */
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
 
     Collection<ExpressionExperiment> loadLackingFactors();
 

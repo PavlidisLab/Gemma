@@ -1,5 +1,7 @@
 package ubic.gemma.persistence.util;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;

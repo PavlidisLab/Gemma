@@ -56,7 +56,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Autowired
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
-        super( Gene.class, sessionFactory );
+        super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
     }
 
@@ -575,7 +575,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         queryString += "group by " + getObjectAlias() + ".id ";
         if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByProperty( ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), sort.getOrderBy() ), sort.getDirection() );
+            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -657,10 +657,5 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         AbstractDao.log.error( buf );
 
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_GENE_ALIAS;
     }
 }

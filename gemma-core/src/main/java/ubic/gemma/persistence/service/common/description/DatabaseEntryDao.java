@@ -22,6 +22,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 /**
  * @see DatabaseEntry

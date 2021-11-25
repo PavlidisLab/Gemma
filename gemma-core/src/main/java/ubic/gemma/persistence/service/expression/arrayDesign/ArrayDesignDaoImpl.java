@@ -293,7 +293,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad";
 
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ad", arrayDesign )
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "ad", arrayDesign )
                 .list();
     }
 
@@ -326,7 +327,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * switch.
      *
      * @param  arrayDesign
-     * @param id
      * @return collection of experiment IDs.
      */
     @Override
@@ -541,7 +541,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        Query countQuery = this.getCountValueObjectsQuery( filters );
         Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
         populateBlacklisted( results );
         return results;
@@ -549,7 +548,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        Query countQuery = this.getCountValueObjectsQuery( filters );
         List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
         populateBlacklisted( results );
         return results;
@@ -1012,9 +1010,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
-        // contain duplicated platforms
+        // FIXME: the distinct is necessary because the ACL jointure creates duplicated platforms
         String queryString =
-                "select ad from ArrayDesign as ad "
+                "select distinct ad from ArrayDesign as ad "
                         + "left join fetch ad.curationDetails s "
                         + "left join fetch ad.primaryTaxon t "
                         + "left join fetch ad.mergedInto m "
@@ -1027,14 +1025,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             filters = new Filters();
         }
 
-        // Restrict to non-troubled EEs for non-administrators
+        // Restrict to non-troubled ADs for non-administrators
         addNonTroubledFilter( filters, getObjectAlias() );
 
         queryString += AclQueryUtils.formAclJoinClause( "ad" );
         queryString += AclQueryUtils.formAclRestrictionClause();
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+
         if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByProperty( this.getOrderByProperty( sort.getOrderBy() ), sort.getDirection() );
+            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -1065,7 +1064,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             filters = new Filters();
         }
 
-        // Restrict to non-troubled EEs for non-administrators
+        // Restrict to non-troubled ADs for non-administrators
         addNonTroubledFilter( filters, getObjectAlias() );
 
         queryString += AclQueryUtils.formAclJoinClause( getObjectAlias() );
@@ -1081,18 +1080,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         query.setCacheable( true );
 
         return query;
-    }
-
-    /**
-     * Creates and orderBy parameter.
-     *
-     * @param propertyName the property to order by, if null, default ordering is used.
-     * @return and order by parameter. Default ordering is id.
-     */
-    private String getOrderByProperty( String propertyName ) {
-        if ( propertyName == null )
-            return ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), "id" );
-        return ObjectFilterQueryUtils.formPropertyName( getObjectAlias(), propertyName );
     }
 
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {

@@ -121,7 +121,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     /**
      * @param taxon taxon
-     * @return  a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
+     * @return a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
      */
     Collection<Gene> loadKnownGenes( Taxon taxon );

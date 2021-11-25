@@ -42,11 +42,13 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -104,18 +106,16 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
-        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + getObjectAlias() + ".id as id, " // 0
-                + getObjectAlias() + ", " // 1
-                + "ad" + " " // 2
-                + "from CompositeSequence as " + getObjectAlias() + " " // probe
-                + "left join " + getObjectAlias() + ".arrayDesign as " + "ad" + " "//ad
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+        //language=HQL
+        String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
+                        + "left join fetch {0}.arrayDesign as {1} "
+                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
+                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + getObjectAlias() + ".id ";
+
         if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByProperty( sort.getOrderBy(), sort.getDirection() );
+            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -127,27 +127,20 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     protected Query getCountValueObjectsQuery( Filters filters ) {
-        String queryString = "select count(distinct " + getObjectAlias() + ".id) " // 0
-                + "from CompositeSequence as " + getObjectAlias() + " " // probe
-                + "left join " + getObjectAlias() + ".arrayDesign as " + "ad" + " "//ad
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+        //language=HQL
+        String queryString = MessageFormat.format( "select count(distinct {0}) "
+                        + "from CompositeSequence as {0} "
+                        + "left join {0}.arrayDesign as " + ArrayDesignDao.OBJECT_ALIAS + " "
+                        + "where {0}.id is not null ", // needed to use formRestrictionCause()
+                getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + getObjectAlias() + ".id ";
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
-    }
-
-    @Override
-    protected CompositeSequenceValueObject processLoadValueObjectsQueryResult( Object result ) {
-        Object[] row = ( Object[] ) result;
-        CompositeSequence cs = ( CompositeSequence ) row[1];
-        cs.setArrayDesign( ( ArrayDesign ) row[2] );
-        return this.loadValueObject( cs );
     }
 
     @Override
