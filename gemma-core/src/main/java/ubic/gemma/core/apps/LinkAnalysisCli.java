@@ -163,7 +163,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 AbstractCLI.log.info( "Sorting data sets by number of samples, doing large data sets first." );
 
                 Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjects( EntityUtils.getIds( expressionExperiments ), true );
+                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
                 final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
 
                 Collections.sort( sees, new Comparator<BioAssaySet>() {

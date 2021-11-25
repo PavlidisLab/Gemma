@@ -166,8 +166,8 @@ public class EntityUtils {
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
-    public static Collection<Long> getIds( Collection<? extends Identifiable> entities ) {
-        Collection<Long> r = new ArrayList<>( entities.size() );
+    public static List<Long> getIds( Collection<? extends Identifiable> entities ) {
+        List<Long> r = new ArrayList<>( entities.size() );
         for ( Identifiable i : entities ) {
             r.add( i.getId() );
         }
@@ -180,9 +180,8 @@ public class EntityUtils {
      * @param entity entity
      * @return a collection with one item in it.
      */
-    public static Collection<Long> getIds( Object entity ) {
-        Collection<Long> r;
-        r = new HashSet<>();
+    public static List<Long> getIds( Object entity ) {
+        List<Long> r = new ArrayList<>( 1 );
         r.add( EntityUtils.getId( entity ) );
         return r;
     }

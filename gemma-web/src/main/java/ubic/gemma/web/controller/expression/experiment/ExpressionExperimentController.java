@@ -1140,7 +1140,7 @@ public class ExpressionExperimentController {
             return mav;
         }
 
-        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds, false );
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjectsByIds( eeIds );
 
         for ( Long id : eeSetIds ) {
             ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );

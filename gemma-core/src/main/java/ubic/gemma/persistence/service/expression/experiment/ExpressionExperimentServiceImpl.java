@@ -851,24 +851,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort ) {
-        return this.expressionExperimentDao.loadAllValueObjectsOrdered( sort );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllValueObjectsTaxon( taxon );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort, Taxon taxon ) {
-        return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( sort, taxon );
-    }
-
-    @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
             Collection<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao.loadDetailsValueObjects( sort, ids, taxon, limit, start );
@@ -888,16 +870,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
-        return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
+        return this.expressionExperimentDao.loadValueObjectsByIds( ids, maintainOrder );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
-            Collection<Long> ids ) {
-        return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( sort, ids ) );
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        return this.expressionExperimentDao.loadValueObjectsByIds( ids );
     }
 
     @Override

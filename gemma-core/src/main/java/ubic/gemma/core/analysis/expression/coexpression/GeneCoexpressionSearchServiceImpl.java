@@ -347,10 +347,10 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         if ( eeIds == null || eeIds.isEmpty() ) {
             // all valid experiments for taxon.
             securityFilteredEevos = new ArrayList<>( expressionExperimentService
-                    .loadValueObjects( coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ), false ) );
+                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ) ) );
         } else {
             securityFilteredEevos = new ArrayList<>( expressionExperimentService
-                    .loadValueObjects( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ), false ) );
+                    .loadValueObjectsByIds( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ) ) );
         }
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<>();

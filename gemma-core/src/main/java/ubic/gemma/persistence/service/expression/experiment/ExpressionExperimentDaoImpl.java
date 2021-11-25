@@ -1018,29 +1018,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return this.loadValueObjectsPreFilter( null, null, 0, -1 );
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort ) {
-        return this.loadValueObjectsPreFilter( 0, -1, sort, null, true );
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
-        ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() ) };
-
-        return this.loadValueObjectsPreFilter( 0, -1, null, filter, true );
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort, Taxon taxon ) {
-
-        final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, taxon.getId() ) };
-
-        return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
+        return this.loadValueObjectsPreFilter( null, null );
     }
 
     /*
@@ -1134,65 +1112,41 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
-        return this.loadValueObject( entity.getId() );
-    }
-
-    @Override
-    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
-        Collection<ExpressionExperimentValueObject> r = this.loadValueObjects( Collections.singleton( eeId ), false );
-        if ( r.isEmpty() )
-            return null;
-        return r.iterator().next();
+        return this.loadValueObjectsByIds( Collections.singleton( entity.getId() ) ).stream().findFirst().orElse( null );
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
-        return this.loadValueObjects( EntityUtils.getIds( entities ), false );
+        return this.loadValueObjectsByIds( EntityUtils.getIds( entities ) );
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        if ( ids == null || ids.size() == 0 ) {
-            return Collections.emptyList();
-        }
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder ) {
+        List<ExpressionExperimentValueObject> results = this.loadValueObjectsByIds( ids );
 
-        List<Long> idl = new ArrayList<>( ids );
-        Collections.sort( idl ); // so it's consistent and therefore cacheable.
-
-        final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, idl ) };
-
-        List<ExpressionExperimentValueObject> vos = this.loadValueObjectsPreFilter( 0, -1, Sort.by( "id", Sort.Direction.ASC ), filter, true );
-
-        List<ExpressionExperimentValueObject> finalValues = new ArrayList<>( vos.size() );
+        // sort results according to ids
         if ( maintainOrder ) {
-            Map<Long, ExpressionExperimentValueObject> map = this.getExpressionExperimentValueObjectMap( vos );
+            List<ExpressionExperimentValueObject> finalValues = new ArrayList<>( results.size() );
+            Map<Long, ExpressionExperimentValueObject> map = this.getExpressionExperimentValueObjectMap( results );
             for ( Long id : ids ) {
-                if ( map.get( id ) != null ) {
-                    finalValues.add( map.get( id ) );
-                }
+                finalValues.add( map.get( id ) );
             }
-        } else {
-            finalValues = vos;
+            results = finalValues;
         }
 
-        if ( finalValues.isEmpty() ) {
-            AbstractDao.log.error( "No values were retrieved for the ids provided" );
-        }
-
-        return finalValues;
+        return results;
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
-            Collection<Long> ids ) {
-        if ( ids.isEmpty() )
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        if ( ids == null || ids.isEmpty() ) {
             return Collections.emptyList();
-
-        ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) };
-
-        return this.loadValueObjectsPreFilter( 0, -1, sort, filter, true );
+        }
+        // so it's consistent and therefore cacheable.
+        List<Long> sortedIds = ids.stream().sorted().distinct().collect( Collectors.toList() );
+        Filters filters = Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, sortedIds ) );
+        // FIXME: this is silly, but we keep the results ordered by ID
+        return loadValueObjectsPreFilter( filters, Sort.by( "id", Sort.Direction.ASC ) );
     }
 
     @Override
@@ -1628,41 +1582,6 @@ public class ExpressionExperimentDaoImpl
                 .filter( Objects::nonNull ) // some EE can have never had their platform changing
                 .filter( op -> !currentPlatforms.contains( op ) )
                 .collect( Collectors.toSet() );
-    }
-
-    /**
-     * @param offset      amount of EEs to skip.
-     * @param limit       maximum amount of EEs to retrieve.
-     * @param orderBy     the property to order by.
-     * @param asc         whether the ordering is ascending or descending.
-     * @param filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
-     * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
-     *                    filters property to be treated as a conjunction (AND).
-     *                    If you are passing a single filter, using <code>false</code> is slightly more effective;
-     * @return a hibernate Query object ready to be used for EEVO retrieval.
-     */
-    @SuppressWarnings("SameParameterValue") // Better reusability
-    private Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, Sort sort,
-            ObjectFilter[] filters, boolean disjunction ) {
-        if ( filters == null ) {
-            return this.loadValueObjectsPreFilter( null, sort, offset, limit );
-        }
-
-        Filters filterList = new Filters();
-        if ( disjunction ) {
-            ObjectFilter[] filterArray = new ObjectFilter[filters.length];
-            int i = 0;
-            for ( ObjectFilter filter : filters ) {
-                filterArray[i++] = filter;
-            }
-            filterList.add( filterArray );
-        } else {
-            for ( ObjectFilter filter : filters ) {
-                filterList.add( filter );
-            }
-        }
-
-        return this.loadValueObjectsPreFilter( filterList, sort, offset, limit );
     }
 
     /**

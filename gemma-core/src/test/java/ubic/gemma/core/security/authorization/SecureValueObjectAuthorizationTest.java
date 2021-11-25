@@ -91,13 +91,13 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
         super.runAsUser( aDifferentUsername );
 
         // should be able to see the ones which are
-        valueObjects = eeService.loadValueObjects( eeIds, true );
+        valueObjects = eeService.loadValueObjectsByIds( eeIds, true );
 
         assertEquals( 1, valueObjects.size() );
 
         super.runAsUser( ownerUsername );
 
-        valueObjects = eeService.loadValueObjects( eeIds, true );
+        valueObjects = eeService.loadValueObjectsByIds( eeIds, true );
 
         assertTrue( securityService.isViewableByUser( ee, ownerUsername ) );
 

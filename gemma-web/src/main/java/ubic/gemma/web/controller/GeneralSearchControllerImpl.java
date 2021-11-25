@@ -293,7 +293,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = expressionExperimentService.loadValueObjects( ids, false );
+            vos = expressionExperimentService.loadValueObjectsByIds( ids );
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
             }

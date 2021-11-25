@@ -14,7 +14,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -121,13 +120,6 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
-
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
-
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
-            Taxon taxon );
-
     /**
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
@@ -147,12 +139,9 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> loadLackingTags();
 
-    ExpressionExperimentValueObject loadValueObject( Long eeId );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
 
-    List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
-
-    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
-            Collection<Long> ids );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 

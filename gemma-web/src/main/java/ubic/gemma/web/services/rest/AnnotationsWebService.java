@@ -148,7 +148,7 @@ public class AnnotationsWebService {
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjects( foundIds, false ) ) );
+        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
     }
 
     /**
