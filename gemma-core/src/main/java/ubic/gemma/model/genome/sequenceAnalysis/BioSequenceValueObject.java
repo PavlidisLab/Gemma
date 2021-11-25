@@ -49,7 +49,11 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
         vo.setLength( bs.getLength() );
         vo.setType( bs.getType() );
         vo.setFractionRepeats( bs.getFractionRepeats() );
-        vo.setTaxon( TaxonValueObject.fromEntity( bs.getTaxon() ) );
+        // this should not happen normally since it's marked as non-null in the database, but the SearchService can
+        // produce biosequence without taxon
+        if ( bs.getTaxon() != null ) {
+            vo.setTaxon( new TaxonValueObject( bs.getTaxon() ) );
+        }
         return vo;
     }
 

@@ -15,8 +15,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.args.LimitArg;
+import ubic.gemma.web.services.rest.util.args.OffsetArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
@@ -56,7 +59,8 @@ public class SearchWebService {
     public SearchResultResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
-            @QueryParam("resultTypes") List<String> resultTypes ) {
+            @QueryParam("resultTypes") List<String> resultTypes,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
@@ -79,12 +83,14 @@ public class SearchWebService {
                 .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
                 .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
                 .resultTypes( resultTypesCls )
+                .maxResults( limit.getValue( 100 ) )
                 .build();
 
         // convert the response to search results of VOs
         return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
                 .flatMap( List::stream )
                 .sorted() // SearchResults are sorted by descending score order
+                .limit( limit.getValue( 100 ) ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( result -> new SearchResultValueObject( result, searchService.convertSearchResultObjectToValueObject( result ) ) )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
@@ -104,11 +110,14 @@ public class SearchWebService {
         private final TaxonValueObject taxon;
         private final ArrayDesignValueObject platform;
 
+        private final Integer maxResults;
+
         public SearchSettingsValueObject( SearchSettings searchSettings ) {
             this.query = searchSettings.getQuery();
             this.resultTypes = searchSettings.getResultTypes().stream().map( Class::getName ).collect( Collectors.toSet() );
             this.taxon = taxonService.loadValueObject( searchSettings.getTaxon() );
             this.platform = arrayDesignService.loadValueObject( searchSettings.getPlatformConstraint() );
+            this.maxResults = searchSettings.getMaxResults();
         }
     }
 
