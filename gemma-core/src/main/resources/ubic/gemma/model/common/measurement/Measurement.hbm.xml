@@ -26,6 +26,7 @@
         <property name="representation" type="ubic.gemma.model.common.quantitationtype.PrimitiveTypeEnum">
             <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
         </property>
+        <!-- absolutely necessary for this entity, so always fetched -->
         <many-to-one name="unit" class="ubic.gemma.model.common.measurement.UnitImpl" lazy="false" fetch="join">
             <column name="UNIT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

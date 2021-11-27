@@ -20,7 +20,8 @@
       <property name="type" type="ubic.gemma.model.expression.experiment.FactorTypeEnum">
          <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)"/>
       </property>
-      <set name="factorValues" lazy="false" fetch="join" inverse="true" cascade="all">
+      <!-- we always need those cached, thus a select -->
+      <set name="factorValues" lazy="false" fetch="select" inverse="true" cascade="all">
          <cache usage="read-write"/>
          <key foreign-key="FACTOR_VALUE_EXPERIMENTAL_FACTOR_FKC">
             <column name="EXPERIMENTAL_FACTOR_FK" sql-type="BIGINT"/>
@@ -31,6 +32,7 @@
                    cascade="none" lazy="proxy" fetch="select">
          <column name="EXPERIMENTAL_DESIGN_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
+      <!-- assumed readily available in ExperimentalFactorValueObject -->
       <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic" cascade="all" lazy="false"
                    fetch="join">
          <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"/>

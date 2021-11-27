@@ -20,6 +20,7 @@
         <property name="Uri" type="java.lang.String">
             <column name="URI" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
+        <!-- this is assumed readily accessible in DatabaseEntryValueObject, and almost certainly used -->
         <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase" cascade="none"
                      lazy="false" fetch="join">
             <column name="EXTERNAL_DATABASE_FK" not-null="true" sql-type="BIGINT"/>

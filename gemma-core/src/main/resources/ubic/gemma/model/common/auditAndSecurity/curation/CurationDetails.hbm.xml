@@ -12,6 +12,7 @@
             </generator>
         </id>
         <!--  cascade="all" on these events causes problems with EE deletion; however, making them 'none' exposed other issues -->
+        <!-- all the many-to-one below are absolutely necessary, so always fetch with an eager jointure -->
         <many-to-one name="lastTroubledEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
                      cascade="all" lazy="false" fetch="join">
             <column name="TROUBLE_AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>

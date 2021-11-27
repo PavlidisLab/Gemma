@@ -14,6 +14,8 @@
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
+      <!-- This is assumed readily available in AbstractCuratableValueObject -->
+      <!-- The curation details are a single-row thing with only eagerly join-fetched many-to-one relationships, so it's no big deal -->
       <many-to-one name="curationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="join">
          <column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
@@ -33,6 +35,7 @@
          <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <!-- considering lazy false on taxon, join fetch; we almost always need that (was: lazy=proxy, fetch=select) -->
+      <!-- this is assumed available in ArrayDesignValueObject -->
       <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
@@ -76,6 +79,8 @@
       <many-to-one name="designProvider" class="ubic.gemma.model.common.auditAndSecurity.Contact"  lazy="proxy" fetch="select">
          <column name="DESIGN_PROVIDER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
+      <!-- this is assumed readily available in the frontend -->
+      <!-- it makes sense to use an eager select here because we pro-actively cache them, so it never really result in an additional query -->
       <set name="alternateNames" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="ALTERNATE_NAME_ARRAY_DESIGN_FKC">

@@ -21,6 +21,7 @@
          <column name="SOURCE_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="factorValues" table="BIO_MATERIAL_FACTOR_VALUES" lazy="false" fetch="select">
+         <cache usage="read-write" />
          <key foreign-key="FACTOR_VALUE_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>

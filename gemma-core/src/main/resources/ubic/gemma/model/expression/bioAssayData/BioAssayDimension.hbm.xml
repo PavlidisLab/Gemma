@@ -19,7 +19,9 @@
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
+        <!-- assumed readily available in BioAssayDimensionValueObject -->
         <list name="bioAssays" table="BIO_ASSAY_DIMENSIONS2BIO_ASSAYS" lazy="false" fetch="select">
+            <cache usage="read-write"/>
             <key foreign-key="BIO_ASSAY_BIO_ASSAY_DIMENSIONS_FKC">
                 <column name="BIO_ASSAY_DIMENSIONS_FK" sql-type="BIGINT"/>
             </key>
