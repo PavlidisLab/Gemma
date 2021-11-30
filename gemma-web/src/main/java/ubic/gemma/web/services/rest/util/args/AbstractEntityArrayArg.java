@@ -6,7 +6,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
@@ -49,14 +48,11 @@ public abstract class AbstractEntityArrayArg<A, O extends Identifiable, S extend
      *
      * @param service a service which provide the
      * @return
-     * @throws MalformedArgException
      */
     public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         try {
             //noinspection unchecked
             return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName( service ), ObjectFilter.Operator.in, ( Collection<String> ) this.getValue() ) };
-        } catch ( ObjectFilterException e ) {
-            throw new MalformedArgException( "Could not generate filters for this entity array.", e );
         } catch ( ClassCastException e ) {
             throw new NotImplementedException( "Filtering with non-string values is not supported.", e );
         }

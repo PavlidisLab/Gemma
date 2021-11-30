@@ -34,6 +34,8 @@ import java.util.Map;
 public interface CharacteristicDao
         extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
+    String OBJECT_ALIAS = "ch";
+
     /**
      * Browse through the characteristics, excluding GO annotations.
      *

@@ -20,7 +20,6 @@ package ubic.gemma.persistence.util;
 
 import org.junit.Test;
 import org.springframework.core.convert.ConversionFailedException;
-import ubic.gemma.persistence.service.ObjectFilterException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,35 +30,35 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ObjectFilterTest {
 
     @Test
-    public void testParseString() throws ObjectFilterException {
+    public void testParseString() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", String.class, ObjectFilter.Operator.greaterOrEq, "just a string" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( "just a string" );
     }
 
     @Test
-    public void testParseInteger() throws ObjectFilterException {
+    public void testParseInteger() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", Integer.class, ObjectFilter.Operator.greaterOrEq, "12321" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( 12321 );
     }
 
     @Test
-    public void testParseDouble() throws ObjectFilterException {
+    public void testParseDouble() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", Double.class, ObjectFilter.Operator.greaterOrEq, "1.2" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( 1.2 );
     }
 
     @Test
-    public void testParseBoolean() throws ObjectFilterException {
+    public void testParseBoolean() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", Boolean.class, ObjectFilter.Operator.greaterOrEq, "true" );
         assertThat( of.getRequiredValue() )
                 .isEqualTo( true );
     }
 
     @Test
-    public void testParseCollection() throws ObjectFilterException {
+    public void testParseCollection() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "id", String.class, ObjectFilter.Operator.in, "(a, b, c)" );
         assertThat( of.getRequiredValue() )
                 .isInstanceOf( Collection.class )
@@ -70,7 +69,7 @@ public class ObjectFilterTest {
     @Test
     public void testParseInvalidCollection() {
         assertThatThrownBy( () -> ObjectFilter.parseObjectFilter( "ee", "id", Integer.class, ObjectFilter.Operator.in, "(1, 2, c)" ) )
-                .isInstanceOf( ObjectFilterException.class )
+                .isInstanceOf( IllegalArgumentException.class )
                 .hasCauseInstanceOf( ConversionFailedException.class );
     }
 

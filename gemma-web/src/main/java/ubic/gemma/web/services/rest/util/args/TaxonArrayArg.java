@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -30,13 +29,9 @@ public class TaxonArrayArg extends AbstractEntityArrayArg<String, Taxon, TaxonSe
     @Override
     public ObjectFilter[] getObjectFilters( TaxonService service ) throws MalformedArgException {
         if ( getPropertyName( service ).equals( "commonName" ) ) {
-            try {
-                return new ObjectFilter[] {
-                        service.getObjectFilter( "commonName", ObjectFilter.Operator.in, this.getValue() ),
-                        service.getObjectFilter( "scientificName", ObjectFilter.Operator.in, this.getValue() ) };
-            } catch ( ObjectFilterException e ) {
-                throw new MalformedArgException( "Could not produce a filter for the provided list of taxa.", e );
-            }
+            return new ObjectFilter[] {
+                    service.getObjectFilter( "commonName", ObjectFilter.Operator.in, this.getValue() ),
+                    service.getObjectFilter( "scientificName", ObjectFilter.Operator.in, this.getValue() ) };
         } else {
             return super.getObjectFilters( service );
         }

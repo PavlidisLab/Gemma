@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,10 +9,8 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValu
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.service.ObjectFilterException;
+import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -22,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
+public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoEnabledService<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> implements ExpressionAnalysisResultSetService {
 
     private final ExpressionAnalysisResultSetDao voDao;
 
@@ -30,6 +27,12 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledSer
     public ExpressionAnalysisResultSetServiceImpl( ExpressionAnalysisResultSetDao voDao ) {
         super( voDao );
         this.voDao = voDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DifferentialExpressionAnalysisResult> findByBioAssaySet( BioAssaySet bioAssaySet ) {
+        return voDao.findByBioAssaySet( bioAssaySet );
     }
 
     @Override
@@ -74,25 +77,5 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractVoEnabledSer
                 offset,
                 limit,
                 sort );
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return voDao.getObjectAlias();
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
-        return voDao.getObjectFilter( property, operator, value );
-    }
-
-    @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
-        return voDao.getObjectFilter( property, operator, values );
-    }
-
-    @Override
-    public Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException {
-        return voDao.getSort( property, direction );
     }
 }

@@ -17,7 +17,6 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
@@ -197,8 +196,9 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
                 ObjectFilter[] filterArray = new ObjectFilter[properties.length];
                 for ( int j = 0; j < properties.length; j++ ) {
                     try {
+                        // these are user-supplied filters, so we need to do basic exception checking
                         filterArray[j] = service.getObjectFilter( properties[j], operators[j], values[j] );
-                    } catch ( ObjectFilterException e ) {
+                    } catch ( IllegalArgumentException e ) {
                         throw new MalformedArgException( String.format( ERROR_MALFORMED_REQUEST_BECAUSE_OF_PROPERTY, properties[j], e.getMessage() ), e );
                     }
                 }

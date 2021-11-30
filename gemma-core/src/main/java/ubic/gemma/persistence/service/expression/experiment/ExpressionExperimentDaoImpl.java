@@ -48,7 +48,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
@@ -70,7 +69,7 @@ public class ExpressionExperimentDaoImpl
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
-        super( ExpressionExperiment.class, sessionFactory );
+        super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
     }
 
     @Override
@@ -1192,7 +1191,7 @@ public class ExpressionExperimentDaoImpl
         List<Long> sortedIds = ids.stream().sorted().distinct().collect( Collectors.toList() );
         Filters filters = Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, sortedIds ) );
         // FIXME: this is silly, but we keep the results ordered by ID
-        return loadValueObjectsPreFilter( filters, Sort.by( "id", Sort.Direction.ASC ) );
+        return loadValueObjectsPreFilter( filters, Sort.by( getObjectAlias(), "id", Sort.Direction.ASC ) );
     }
 
     @Override
@@ -1226,40 +1225,6 @@ public class ExpressionExperimentDaoImpl
         vo.setArrayDesignCount( arrayDesignsUsed.size() );
 
         return vo;
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_EE_ALIAS;
-    }
-
-    /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
-     * {@inheritDoc}
-     */
-    @Override
-    public ObjectFilter getObjectFilter( String propertyName, ObjectFilter.Operator operator, String requiredValue ) throws ObjectFilterException {
-        // Allow characteristics property filtering
-        if ( propertyName.startsWith( "characteristics." ) ) {
-            propertyName = propertyName.replaceFirst( "characteristics.", "" );
-            try {
-                return ObjectFilter.parseObjectFilter( ObjectFilter.DAO_CHARACTERISTIC_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, Characteristic.class ), operator, requiredValue );
-            } catch ( NoSuchFieldException e ) {
-                throw new ObjectFilterException( "Could not create a characteristic object filter for " + propertyName, e );
-            }
-        }
-
-        // Allow bioAssays property filtering
-        if ( propertyName.startsWith( "bioAssays." ) ) {
-            propertyName = propertyName.replaceFirst( "bioAssays.", "" );
-            try {
-                return ObjectFilter.parseObjectFilter( ObjectFilter.DAO_BIOASSAY_ALIAS, propertyName, EntityUtils.getDeclaredFieldType( propertyName, BioAssay.class ), operator, requiredValue );
-            } catch ( NoSuchFieldException e ) {
-                throw new ObjectFilterException( "Could not create a bioassay object filter for " + propertyName, e );
-            }
-        }
-
-        return super.getObjectFilter( propertyName, operator, requiredValue );
     }
 
     @Override

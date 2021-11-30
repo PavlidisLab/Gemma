@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -95,7 +94,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
-        super( CompositeSequence.class, sessionFactory );
+        super( CompositeSequenceDao.OBJECT_ALIAS, CompositeSequence.class, sessionFactory );
     }
 
     @Override
@@ -738,10 +737,5 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
         }
 
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_PROBE_ALIAS;
     }
 }

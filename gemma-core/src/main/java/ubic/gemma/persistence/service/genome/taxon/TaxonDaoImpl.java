@@ -40,7 +40,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
-        super( Taxon.class, sessionFactory );
+        super( TaxonDao.OBJECT_ALIAS, Taxon.class, sessionFactory );
     }
 
     @Override
@@ -178,10 +178,5 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_TAXON_ALIAS;
     }
 }

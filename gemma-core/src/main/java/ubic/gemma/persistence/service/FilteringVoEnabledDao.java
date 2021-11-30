@@ -7,14 +7,11 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Interface for VO-enabled DAO with filtering capabilities.
- *
- * @param <O>
- * @param <VO>
+ * @author poirigui
  */
 public interface FilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends FilteringDao<O>, BaseVoEnabledDao<O, VO> {

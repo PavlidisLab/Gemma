@@ -1,12 +1,10 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -58,14 +56,11 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
      * @param  eeService service to use to retrieve the EEs.
      * @return a collection of Datasets that the platform represented by this argument contains.
      */
-    @SneakyThrows(ObjectFilterException.class)
     public Slice<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( service );
-
-        Filters filters = new Filters();
-        filters.add( new ObjectFilter[] { service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) } );
-        return eeService.loadValueObjectsPreFilter( filters, Sort.by( "id" ), offset, limit );
+        Filters filters = Filters.singleFilter( service.getObjectFilter( "id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
+        return eeService.loadValueObjectsPreFilter( filters, service.getSort( "id", null ), offset, limit );
     }
 
     /**
@@ -77,12 +72,7 @@ public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, A
     public Slice<CompositeSequenceValueObject> getElements( ArrayDesignService service,
             CompositeSequenceService csService, int limit, int offset ) {
         final ArrayDesign ad = this.getEntity( service );
-        Filters filters = new Filters() {
-            {
-                add( new ObjectFilter[] {
-                        new ObjectFilter( csService.getObjectAlias(), "arrayDesign", ArrayDesign.class, ObjectFilter.Operator.eq, ad ) } );
-            }
-        };
+        Filters filters = Filters.singleFilter( service.getObjectFilter( "arrayDesign.id", ObjectFilter.Operator.eq, ad.getId().toString() ) );
         return csService.loadValueObjectsPreFilter( filters, null, offset, limit );
 
     }

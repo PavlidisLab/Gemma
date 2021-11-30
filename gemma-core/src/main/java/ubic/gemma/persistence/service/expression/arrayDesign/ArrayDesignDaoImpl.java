@@ -57,7 +57,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
-        super( ArrayDesign.class, sessionFactory );
+        super( ArrayDesignDao.OBJECT_ALIAS, ArrayDesign.class, sessionFactory );
     }
 
     @Override
@@ -537,11 +537,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId,
                 this.getSessionFactory().getCurrentSession() );
         return this.loadValueObjectsByIds( ids );
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_AD_ALIAS;
     }
 
     @Override
