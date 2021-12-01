@@ -24,7 +24,7 @@
 		</property>
 		<property name="sequence" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="SEQUENCE" not-null="false" unique="false"
-				sql-type="text" />
+				sql-type="longtext" />
 		</property>
 		<property name="isApproximateLength" type="java.lang.Boolean">
 			<column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT" />
