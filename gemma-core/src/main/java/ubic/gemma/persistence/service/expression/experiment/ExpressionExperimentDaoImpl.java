@@ -803,25 +803,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
-
-        Map<Taxon, Long> taxonCount = new LinkedHashMap<>();
-        String queryString = "select t, count(distinct ee) from ExpressionExperiment "
-                + "ee inner join ee.bioAssays as ba inner join ba.sampleUsed su "
-                + "inner join su.sourceTaxon t group by t order by t.scientificName ";
+        String queryString = "select t, count(distinct ee) from ExpressionExperiment ee "
+                + "join ee.bioAssays as ba "
+                + "join ba.sampleUsed su "
+                + "join su.sourceTaxon t "
+                + "group by t";
 
         // it is important to cache this, as it gets called on the home page. Though it's actually fast.
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        queryObject.setCacheable( true );
-        ScrollableResults list = queryObject.scroll();
-        while ( list.next() ) {
-            Taxon taxon = ( Taxon ) list.get( 0 );
-            Long count = list.getLong( 1 );
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setCacheable( true )
+                .list();
 
-            taxonCount.put( taxon, count );
-
-        }
-        return taxonCount;
-
+        return list.stream()
+                .collect( Collectors.toMap( row -> ( Taxon ) row[0], row -> ( Long ) row[1] ) );
     }
 
     @Override
@@ -966,33 +961,29 @@ public class ExpressionExperimentDaoImpl
 
         // is this going to run into problems if there are too many ees given? Need to batch?
         T example = bioAssaySets.iterator().next();
-        List list;
+
+        // FIXME: multiple taxon can be returned for a given EE
+        String queryString;
         if ( ExpressionExperiment.class.isAssignableFrom( example.getClass() ) ) {
-            String queryString = "select EE, SU.sourceTaxon from ExpressionExperiment as EE "
-                    + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE in (:ees)";
-            list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ees", bioAssaySets ).list();
+            queryString = "select EE, st from ExpressionExperiment as EE "
+                    + "join EE.bioAssays as BA join BA.sampleUsed as SU join SU.sourceTaxon st where EE in (:ees) "
+                    + "group by EE";
         } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
-            String queryString =
-                    "select eess, su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
-                            + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
-            list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ees", bioAssaySets ).list();
+            queryString = "select eess, st from ExpressionExperimentSubSet eess "
+                    + "join eess.sourceExperiment ee join ee.bioAssays as BA join BA.sampleUsed as su "
+                    + "join su.sourceTaxon as st where eess in (:ees) group by eess";
         } else {
             throw new UnsupportedOperationException(
                     "Can't get taxon of BioAssaySet of class " + example.getClass().getName() );
         }
 
-        for ( Object o : list ) {
-            Object[] oa = ( Object[] ) o;
+        // FIXME: this query cannot be made cacheable because the taxon is not initialized when retrieved from the cache, defeating the purpose of caching altogether
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "ees", bioAssaySets )
+                .list();
 
-            @SuppressWarnings("unchecked") T e = ( T ) oa[0];
-            Taxon t = ( Taxon ) oa[1];
-            result.put( e, t );
-
-        }
-
-        return result;
+        return list.stream().collect( Collectors.toMap( row -> ( T ) row[0], row -> ( Taxon ) row[1] ) );
     }
 
     @Override

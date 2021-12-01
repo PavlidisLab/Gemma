@@ -89,6 +89,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author keshav
@@ -479,106 +480,105 @@ public class ExpressionExperimentController {
      * @return json
      */
     public Map<String, Object> loadCountsForDataSummaryTable() {
+        StopWatch sw = StopWatch.createStarted();
+        StopWatch countTimer = StopWatch.create();
+        StopWatch reportTimer = StopWatch.create();
 
         Map<String, Object> summary = new HashMap<>();
         List<Map<String, Object>> taxonEntries = new ArrayList();
 
+        countTimer.start();
         long bioMaterialCount = bioMaterialService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
-        Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
-
-        /*
-         * Sort taxa by name.
-         */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( Comparator.comparing( Taxon::getScientificName ) );
-
-        long expressionExperimentCount = 0; // expressionExperimentService.countAll();
-        for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
-            Long c = unsortedEEsPerTaxon.get( t );
-
-            eesPerTaxon.put( t, c );
-            expressionExperimentCount += c;
-        }
+        long expressionExperimentCount = expressionExperimentService.countAll();
+        Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
+        countTimer.stop();
 
         // this is the slow part
-        WhatsNew wn = whatsNewService.retrieveReport();
-
+        reportTimer.start();
+        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
         if ( wn == null ) {
-            wn = whatsNewService.getReport();
+            log.warn( "Latest What's new report is not available, recomputing it on-the-fly..." );
+            wn = whatsNewService.getWeeklyReport();
         }
-        if ( wn != null ) {
-            // Get count for new assays
-            int newBioMaterialCount = wn.getNewBioMaterialCount();
+        reportTimer.stop();
 
-            Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
-                    : new ArrayList<>();
-            Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
-                    ? EntityUtils.getIds( updatedExpressionExperiments )
-                    : new ArrayList<>();
+        // Get count for new assays
+        int newBioMaterialCount = wn.getNewBioMaterialCount();
 
-            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
-            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
+        Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
+        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments )
+                : new ArrayList<>();
+        Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
+        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null )
+                ? EntityUtils.getIds( updatedExpressionExperiments )
+                : new ArrayList<>();
 
-            /* Store counts for new and updated experiments by taxonId */
-            Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
-            Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
+        int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
+        int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
 
-            for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
-                Map<String, Object> taxLine = new HashMap<>();
-                taxLine.put( "taxonId", t.getId() );
-                taxLine.put( "taxonName", t.getScientificName() );
-                taxLine.put( "totalCount", eesPerTaxon.get( t ) );
-                if ( newEEsPerTaxon.containsKey( t ) ) {
-                    taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
-                    taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
-                }
-                if ( updatedEEsPerTaxon.containsKey( t ) ) {
-                    taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
-                    taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
-                }
-                taxonEntries.add( taxLine );
+        /* Store counts for new and updated experiments by taxonId */
+        Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
+        Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
+
+        for ( Taxon t : eesPerTaxon.keySet() ) {
+            Map<String, Object> taxLine = new HashMap<>();
+            taxLine.put( "taxonId", t.getId() );
+            taxLine.put( "taxonName", t.getScientificName() );
+            taxLine.put( "totalCount", eesPerTaxon.get( t ) );
+            if ( newEEsPerTaxon.containsKey( t ) ) {
+                taxLine.put( "newCount", newEEsPerTaxon.get( t ).size() );
+                taxLine.put( "newIds", newEEsPerTaxon.get( t ) );
             }
-
-            summary.put( "sortedCountsPerTaxon", taxonEntries );
-
-            // Get count for new and updated array designs
-            Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
-            int newArrayCount = ( newArrayDesigns != null ) ? newArrayDesigns.size() : 0;
-            Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
-            int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
-
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0
-                    || newBioMaterialCount > 0 );
-            boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
-            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
-            date = date.replace( '-', ' ' );
-
-            summary.put( "updateDate", date );
-            summary.put( "drawNewColumn", drawNewColumn );
-            summary.put( "drawUpdatedColumn", drawUpdatedColumn );
-            if ( newBioMaterialCount != 0 )
-                summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
-            if ( newArrayCount != 0 )
-                summary.put( "newArrayDesignCount", ( long ) newArrayCount );
-            if ( updatedArrayCount != 0 )
-                summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
-            if ( newExpressionExperimentCount != 0 )
-                summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
-            if ( updatedExpressionExperimentCount != 0 )
-                summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
-            if ( newExpressionExperimentCount != 0 )
-                summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
-            if ( updatedExpressionExperimentCount != 0 )
-                summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
-
+            if ( updatedEEsPerTaxon.containsKey( t ) ) {
+                taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size() );
+                taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ) );
+            }
+            taxonEntries.add( taxLine );
         }
+
+        summary.put( "sortedCountsPerTaxon", taxonEntries );
+
+        // Get count for new and updated array designs
+        Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
+        int newArrayCount = ( newArrayDesigns != null ) ? newArrayDesigns.size() : 0;
+        Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
+        int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
+
+        boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0
+                || newBioMaterialCount > 0 );
+        boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
+        String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
+        date = date.replace( '-', ' ' );
+
+        summary.put( "updateDate", date );
+        summary.put( "drawNewColumn", drawNewColumn );
+        summary.put( "drawUpdatedColumn", drawUpdatedColumn );
+        if ( newBioMaterialCount != 0 )
+            summary.put( "newBioMaterialCount", ( long ) newBioMaterialCount );
+        if ( newArrayCount != 0 )
+            summary.put( "newArrayDesignCount", ( long ) newArrayCount );
+        if ( updatedArrayCount != 0 )
+            summary.put( "updatedArrayDesignCount", ( long ) updatedArrayCount );
+        if ( newExpressionExperimentCount != 0 )
+            summary.put( "newExpressionExperimentCount", newExpressionExperimentCount );
+        if ( updatedExpressionExperimentCount != 0 )
+            summary.put( "updatedExpressionExperimentCount", updatedExpressionExperimentCount );
+        if ( newExpressionExperimentCount != 0 )
+            summary.put( "newExpressionExperimentIds", newExpressionExperimentIds );
+        if ( updatedExpressionExperimentCount != 0 )
+            summary.put( "updatedExpressionExperimentIds", updatedExpressionExperimentIds );
 
         summary.put( "bioMaterialCount", bioMaterialCount );
         summary.put( "arrayDesignCount", arrayDesignCount );
 
         summary.put( "expressionExperimentCount", expressionExperimentCount );
+
+        if ( sw.getTime( TimeUnit.MILLISECONDS ) > 1000 ) {
+            log.info( "Retrieving EE summary took " + sw.getTime( TimeUnit.MILLISECONDS ) + " ms (" +
+                    "counting: " + countTimer.getTime() + " ms, " +
+                    "report: " + reportTimer.getTime() + " ms)." );
+        }
 
         return summary;
     }
