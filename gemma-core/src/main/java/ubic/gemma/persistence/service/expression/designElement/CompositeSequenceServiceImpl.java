@@ -42,6 +42,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -97,17 +98,18 @@ public class CompositeSequenceServiceImpl
         return vo;
     }
 
-    /**
-     * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
-     */
     @Override
     @Transactional(readOnly = true)
     public CompositeSequenceValueObject loadValueObjectWithoutGeneMappingSummary( CompositeSequence cs ) {
-        CompositeSequenceValueObject vo = super.loadValueObject( cs );
-        // Not passing the vo since that would create data redundancy in the returned structure
-        vo.setGeneMappingSummaries(
-                this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
-        return vo;
+        return super.loadValueObject( cs );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompositeSequenceValueObject> loadValueObjectsWithoutGeneMappingSummary( Collection<CompositeSequence> compositeSequences ) {
+        return compositeSequences.stream()
+                .map( this::loadValueObjectWithoutGeneMappingSummary )
+                .collect( Collectors.toList() );
     }
 
     @Override
