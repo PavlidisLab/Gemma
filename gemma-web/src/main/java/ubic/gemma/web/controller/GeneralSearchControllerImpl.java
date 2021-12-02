@@ -237,6 +237,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     case 'N':
                         csc.resultType( ExpressionExperimentSet.class );
                         break;
+                    case 'H':
+                    case 'B':
+                        // FIXME: these two are passed by the frontend, but obviously not supported
+                        break;
+                    case ',':
+                        break;
                     default:
                         // TODO: 400 Bad Request error?
                         log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
