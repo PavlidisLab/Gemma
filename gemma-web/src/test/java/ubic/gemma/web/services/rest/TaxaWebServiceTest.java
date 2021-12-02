@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,10 +17,14 @@ import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TaxaWebServiceTest extends BaseSpringWebTest {
+
+    @Autowired
+    private TaxonService taxonService;
 
     @Autowired
     private TaxaWebService taxaWebService;
@@ -29,13 +34,17 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() {
-        taxon = testHelper.getTestPersistentTaxon();
+        taxon = new Taxon();
+        taxon.setNcbiId( RandomUtils.nextInt() );
+        taxon.setCommonName( "common_name_" + RandomUtils.nextInt() );
+        taxon.setScientificName( "scientific_name_" + randomName() );
+        taxon.setIsGenesUsable( false );
+        taxon = taxonService.create( taxon );
     }
 
     @After
     public void tearDown() {
-        // TODO: we should remove it, but the taxon is actually a singleton used in other tests
-        // taxonService.remove( taxon );
+        taxonService.remove( taxon );
     }
 
     @Test
