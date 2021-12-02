@@ -1460,7 +1460,8 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        query.setCacheable( true );
+        // FIXME: caching does nto work for lazy relationship (accession + geeq)
+        // query.setCacheable( true );
 
         return query;
     }

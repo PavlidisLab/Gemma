@@ -1042,7 +1042,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
-        query.setCacheable( true );
+        // FIXME: caching does not work for relationships
+        // query.setCacheable( true );
 
         return query;
     }
