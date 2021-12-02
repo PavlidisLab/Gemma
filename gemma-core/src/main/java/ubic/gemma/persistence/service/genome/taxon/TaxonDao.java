@@ -46,7 +46,5 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
 
     Collection<Taxon> findTaxonUsedInEvidence();
 
-    void thaw( Taxon taxon );
-
     Taxon findByNcbiId( Integer ncbiId );
 }
