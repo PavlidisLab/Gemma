@@ -54,9 +54,9 @@ public class RssFeedController {
     @RequestMapping(value = { "/rssfeed" }, method = RequestMethod.GET)
     public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
-        WhatsNew wn = whatsNewService.retrieveReport();
+        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
         if ( wn == null ) {
-            wn = whatsNewService.getReport();
+            wn = whatsNewService.getWeeklyReport();
         }
 
         int updatedExperimentsCount = 0;

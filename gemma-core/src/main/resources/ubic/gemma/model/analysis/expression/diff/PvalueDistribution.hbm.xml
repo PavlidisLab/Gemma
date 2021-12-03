@@ -15,7 +15,7 @@
             <column name="NUM_BINS" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
         <property name="binCounts" type="byte[]">
-            <column name="BIN_COUNTS" not-null="true" unique="false" sql-type="MEDIUMBLOB"/>
+            <column name="BIN_COUNTS" not-null="true" unique="false" sql-type="BLOB"/>
         </property>
     </class>
 </hibernate-mapping>

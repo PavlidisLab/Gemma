@@ -42,6 +42,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -82,6 +83,33 @@ public class CompositeSequenceServiceImpl
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         return this.compositeSequenceDao.findByGene( gene );
+    }
+
+    /**
+     * Include gene mapping summary in the {@link CompositeSequenceValueObject}.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CompositeSequenceValueObject loadValueObject( CompositeSequence cs ) {
+        CompositeSequenceValueObject vo = super.loadValueObject( cs );
+        // Not passing the vo since that would create data redundancy in the returned structure
+        vo.setGeneMappingSummaries(
+                this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+        return vo;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompositeSequenceValueObject loadValueObjectWithoutGeneMappingSummary( CompositeSequence cs ) {
+        return super.loadValueObject( cs );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompositeSequenceValueObject> loadValueObjectsWithoutGeneMappingSummary( Collection<CompositeSequence> compositeSequences ) {
+        return compositeSequences.stream()
+                .map( this::loadValueObjectWithoutGeneMappingSummary )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -250,18 +278,6 @@ public class CompositeSequenceServiceImpl
         }
 
         this.compositeSequenceDao.remove( filteredSequence );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Slice<CompositeSequenceValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        Slice<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        for ( CompositeSequenceValueObject vo : vos ) {
-            // Not passing the vo since that would create data redundancy in the returned structure
-            vo.setGeneMappingSummaries(
-                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( vo.getId() ), null ) );
-        }
-        return vos;
     }
 
     /**

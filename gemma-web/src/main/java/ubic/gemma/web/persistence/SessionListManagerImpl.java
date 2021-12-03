@@ -152,7 +152,7 @@ public class SessionListManagerImpl implements SessionListManager {
     public Collection<ExpressionExperimentDetailsValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = this.getExperimentIdsInSet( id );
         Collection<ExpressionExperimentDetailsValueObject> result = expressionExperimentService
-                .loadDetailsValueObjects( null, eeids, null, 0, 0 );
+                .loadDetailsValueObjects( eeids );
         expressionExperimentReportService.populateReportInformation( result );
         return result;
     }

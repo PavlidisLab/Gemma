@@ -63,11 +63,13 @@ public class AuditEventServiceImpl implements AuditEventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date ) {
         return this.auditEventDao.getNewSinceDate( date );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Auditable> getUpdatedSinceDate( java.util.Date date ) {
         return this.auditEventDao.getUpdatedSinceDate( date );
     }

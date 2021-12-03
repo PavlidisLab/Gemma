@@ -22,8 +22,10 @@ import org.junit.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
+import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -42,6 +44,7 @@ import java.util.Map;
  *
  * @author pavlidis
  */
+@Category(GoldenPathTest.class)
 public class ProbeMapperTest extends TestCase {
 
     private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
@@ -149,7 +152,7 @@ public class ProbeMapperTest extends TestCase {
         tester.add( 100d );
         tester.add( 50d );
 
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" )) {
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
             BlatResultParser brp = new BlatResultParser();
             Taxon m = Taxon.Factory.newInstance();
             m.setCommonName( "mouse" );

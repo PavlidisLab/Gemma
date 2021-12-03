@@ -434,7 +434,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         for ( ArrayDesign ad : ads ) {
 
             Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-            taxonService.thaw( taxon );
             long cnt = arrayDesignService.numGenes( ad );
 
             /*

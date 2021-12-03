@@ -31,7 +31,6 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.visualization.DifferentialExpressionSearchTaskCommand;
-import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -152,7 +151,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-                .loadValueObjects( diffAnalyses.keySet(), false );
+                .loadValueObjectsByIds( diffAnalyses.keySet() );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
@@ -306,7 +305,7 @@ public class DifferentialExpressionSearchController {
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = expressionExperimentService
-                .loadDetailsValueObjects( null, ids, null, 0, 0 );
+                .loadDetailsValueObjects( ids );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

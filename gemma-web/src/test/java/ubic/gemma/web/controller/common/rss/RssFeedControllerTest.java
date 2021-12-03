@@ -52,14 +52,11 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
 
     @Before
     public void setup() {
-
-        WhatsNew wn = whatsNewService.retrieveReport();
-
         super.getTestPersistentExpressionExperiment();
         super.getTestPersistentExpressionExperiment();
 
         whatsNewService.generateWeeklyReport();
-        wn = whatsNewService.retrieveReport();
+        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
 
         Collection<ExpressionExperiment> updatedExperiments = wn.getUpdatedExpressionExperiments();
         Collection<ExpressionExperiment> newExperiments = wn.getNewExpressionExperiments();

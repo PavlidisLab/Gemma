@@ -3,7 +3,6 @@ package ubic.gemma.web.services.rest.util.args;
 import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -56,15 +55,10 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      * Obtain an {@link ObjectFilter} that restrict a query to this entity.
      * @param service
      * @return
-     * @throws MalformedArgException
      */
     public ObjectFilter[] getObjectFilters( S service ) throws MalformedArgException {
         if ( this.getValue() instanceof String ) {
-            try {
-                return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName(), ObjectFilter.Operator.eq, ( String ) this.getValue() ) };
-            } catch ( ObjectFilterException e ) {
-                throw new MalformedArgException( "", e );
-            }
+            return new ObjectFilter[] { service.getObjectFilter( this.getPropertyName(), ObjectFilter.Operator.eq, ( String ) this.getValue() ) };
         } else {
             throw new NotImplementedException( "Filtering with non-string values is not supported." );
         }

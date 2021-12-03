@@ -15,9 +15,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -52,14 +50,10 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     @Override
     public ObjectFilter[] getObjectFilters( TaxonService taxonService ) throws MalformedArgException {
-        try {
-            ObjectFilter commonNameFilter = taxonService.getObjectFilter( "commonName", ObjectFilter.Operator.eq, getValue() );
-            ObjectFilter scientificNameFilter = taxonService.getObjectFilter( "scientificName", ObjectFilter.Operator.eq, getValue() );
-            // this creates a disjunction clause in the HQL query
-            return new ObjectFilter[] { commonNameFilter, scientificNameFilter };
-        } catch ( ObjectFilterException e ) {
-            throw new MalformedArgException( "Could not create an object filter from this taxon.", e );
-        }
+        ObjectFilter commonNameFilter = taxonService.getObjectFilter( "commonName", ObjectFilter.Operator.eq, getValue() );
+        ObjectFilter scientificNameFilter = taxonService.getObjectFilter( "scientificName", ObjectFilter.Operator.eq, getValue() );
+        // this creates a disjunction clause in the HQL query
+        return new ObjectFilter[] { commonNameFilter, scientificNameFilter };
     }
 
     /**

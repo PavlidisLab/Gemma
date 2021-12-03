@@ -23,6 +23,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.FilteringService;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +32,7 @@ import java.util.Map;
 /**
  * @author paul
  */
-public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject> {
+public interface CharacteristicService extends BaseVoEnabledService<Characteristic, CharacteristicValueObject>, FilteringService<Characteristic> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.

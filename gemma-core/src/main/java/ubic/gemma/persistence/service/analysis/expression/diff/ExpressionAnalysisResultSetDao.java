@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringDao;
+import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
 import ubic.gemma.persistence.util.Filters;
@@ -41,7 +42,7 @@ import java.util.Map;
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, BaseVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject>, FilteringDao<ExpressionAnalysisResultSet> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
 

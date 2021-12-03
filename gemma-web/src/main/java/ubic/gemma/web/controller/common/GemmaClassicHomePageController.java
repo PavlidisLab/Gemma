@@ -111,7 +111,7 @@ public class GemmaClassicHomePageController {
             // eesPerTaxon.put( otherTaxa, otherTaxaEECount );
         }
 
-        WhatsNew wn = whatsNewService.retrieveReport();
+        WhatsNew wn = whatsNewService.getLatestWeeklyReport();
 
         stats.put( "bioAssayCount", bioAssayCount );
         stats.put( "arrayDesignCount", arrayDesignCount );

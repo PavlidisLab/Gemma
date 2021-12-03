@@ -1,14 +1,11 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import gemma.gsec.util.SecurityUtil;
-import lombok.SneakyThrows;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.ObjectFilterException;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
 import ubic.gemma.persistence.util.Filters;
@@ -27,8 +24,8 @@ import java.util.Map;
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
         extends AbstractQueryFilteringVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
-    protected AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
-        super( elementClass, sessionFactory );
+    protected AbstractCuratableDao( String objectAlias, Class<C> elementClass, SessionFactory sessionFactory ) {
+        super( objectAlias, elementClass, sessionFactory );
     }
 
     @Override
@@ -88,7 +85,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     /**
      * Restrict results to non-troubled curatable entities for non-administrators
      */
-    @SneakyThrows(ObjectFilterException.class)
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
         if ( !SecurityUtil.isUserAdmin() ) {
             filters.add( ObjectFilter.parseObjectFilter( objectAlias, "curationDetails.troubled", Boolean.class, ObjectFilter.Operator.eq, "false" ) );

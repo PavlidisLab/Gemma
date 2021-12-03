@@ -56,6 +56,7 @@
         <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="join">
             <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
+        <!-- eagerly fetch, and cached, thus a select -->
         <set name="phenotypes" lazy="false" fetch="select" cascade="all">
             <cache usage="read-write"/>
             <key foreign-key="CHARACTERISTIC_PHENOTYPE_ASSOCIATION_FKC">
@@ -63,6 +64,7 @@
             </key>
             <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
         </set>
+        <!-- eagerly fetch, and cached, thus a select -->
         <set name="phenotypeAssociationPublications" lazy="false" fetch="select" cascade="all">
             <cache usage="read-write"/>
             <key foreign-key="PHENOTYPE_ASSOCIATION_PUBLICATION_FKC">

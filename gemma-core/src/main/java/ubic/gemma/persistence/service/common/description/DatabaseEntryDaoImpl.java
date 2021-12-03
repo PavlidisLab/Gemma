@@ -26,8 +26,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 
 import java.util.EnumSet;
@@ -44,7 +44,7 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
 
     @Autowired
     public DatabaseEntryDaoImpl( SessionFactory sessionFactory ) {
-        super( DatabaseEntry.class, sessionFactory );
+        super( DatabaseEntryDao.OBJECT_ALIAS, DatabaseEntry.class, sessionFactory );
     }
 
     @Override
@@ -55,11 +55,6 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     @Override
     public DatabaseEntryValueObject loadValueObject( DatabaseEntry entity ) {
         return new DatabaseEntryValueObject( entity );
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_DATABASE_ENTRY_ALIAS;
     }
 
     @Override

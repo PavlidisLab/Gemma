@@ -49,7 +49,10 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
         vo.setLength( bs.getLength() );
         vo.setType( bs.getType() );
         vo.setFractionRepeats( bs.getFractionRepeats() );
-        vo.setTaxon( TaxonValueObject.fromEntity( bs.getTaxon() ) );
+        // FIXME: BioSequence returned by the SearchService might have a null taxon
+        if ( bs.getTaxon() != null ) {
+            vo.setTaxon( TaxonValueObject.fromEntity( bs.getTaxon() ) );
+        }
         return vo;
     }
 

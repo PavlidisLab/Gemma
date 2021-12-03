@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.designElement;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -30,6 +31,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,6 +73,16 @@ public interface CompositeSequenceService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
+
+    /**
+     * Alternative flavour of {@link #loadValueObject(Identifiable)} that excludes the costly gene-mapping summary.
+     */
+    CompositeSequenceValueObject loadValueObjectWithoutGeneMappingSummary( CompositeSequence cs );
+
+    /**
+     * Alternative flavour of {@link #loadValueObjects(Collection)} that excludes costly gene-mapping summaries.
+     */
+    List<CompositeSequenceValueObject> loadValueObjectsWithoutGeneMappingSummary( Collection<CompositeSequence> compositeSequences );
 
     Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 

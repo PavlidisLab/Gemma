@@ -59,9 +59,10 @@
                 <property name="numberOfElementsAnalyzed" type="java.lang.Integer">
                     <column name="NUMBER_OF_ELEMENTS_ANALYZED" not-null="false" unique="false" sql-type="INTEGER"/>
                 </property>
+                <!-- assumed available in DifferentialExpressionAnalysisValueObject -->
                 <many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet"
                              lazy="false"
-                             fetch="select">
+                             fetch="join">
                     <column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT"/>
                 </many-to-one>
                 <subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"

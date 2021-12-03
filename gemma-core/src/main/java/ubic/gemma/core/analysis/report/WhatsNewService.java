@@ -43,20 +43,20 @@ public interface WhatsNewService {
     void saveReport( Date date );
 
     /**
-     * @return new or updated objects from within one week ago.
-     */
-    WhatsNew getReport();
-
-    /**
      * @param date the date of the report
      * @return representing the updated or new objects.
      */
     WhatsNew getReport( Date date );
 
     /**
+     * @return new or updated objects from within one week ago.
+     */
+    WhatsNew getWeeklyReport();
+
+    /**
      * Retrieve the latest WhatsNew report.
      *
-     * @return WhatsNew the latest WhatsNew report cache.
+     * @return WhatsNew the latest WhatsNew report cache, or null if it hasn't been computed
      */
-    WhatsNew retrieveReport();
+    WhatsNew getLatestWeeklyReport();
 }

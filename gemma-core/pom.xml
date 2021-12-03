@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.27.4</version>
+        <version>1.27.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -25,7 +25,7 @@
                         <mkdir dir="target/schema"/>
                         <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
                                       output="${project.build.directory}/schema/gemma-ddl.sql"
-                                      config="${basedir}/src/main/resources/hibernate.cfg.xml">
+                                      config="${project.basedir}/src/main/resources/hibernate.cfg.xml">
                             <fileset dir="src/main/resources" includes="**/*.hbm.xml"/>
                         </schemaexport>
                     </target>
@@ -224,12 +224,12 @@
                                 <configuration>
                                     <url>${gemma.testdb.build.url}</url>
                                     <srcFiles>
-                                        <srcFile>target/schema/gemma-ddl.sql</srcFile>
-                                        <srcFile>target/schema/gsec-acl-ddl.sql</srcFile>
-                                        <scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
-                                        <srcFile>src/main/resources/sql/init-acls.sql</srcFile>
-                                        <scrFile>src/main/resources/sql/init-indices.sql</scrFile>
-                                        <srcFile>src/main/resources/sql/init-entities.sql</srcFile>
+                                        <srcFile>${project.build.directory}/schema/gemma-ddl.sql</srcFile>
+                                        <srcFile>${project.build.directory}/schema/gsec-acl-ddl.sql</srcFile>
+                                        <scrFile>${project.build.directory}/schema/sql/init-acl-indices.sql</scrFile>
+                                        <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
+                                        <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
+                                        <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
                                     </srcFiles>
                                     <onError>abort</onError>
                                 </configuration>

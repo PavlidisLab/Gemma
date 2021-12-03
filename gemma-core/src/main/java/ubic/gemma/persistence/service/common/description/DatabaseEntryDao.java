@@ -22,11 +22,14 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 /**
  * @see DatabaseEntry
  */
 public interface DatabaseEntryDao extends FilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject> {
+
+    String OBJECT_ALIAS = "accession";
 
     DatabaseEntry findByAccession( String accession );
 

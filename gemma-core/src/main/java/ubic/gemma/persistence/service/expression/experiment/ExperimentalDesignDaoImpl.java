@@ -63,6 +63,15 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     }
 
+    @Override
+    public ExperimentalDesign loadWithExperimentalFactors( Long id ) {
+        return ( ExperimentalDesign ) getSessionFactory().getCurrentSession().createQuery( "select ed from ExperimentalDesign ed "
+                        + "left join fetch ed.experimentalFactors "
+                        + "where ed.id = :id" )
+                .setParameter( "id", id )
+                .uniqueResult();
+    }
+
     /**
      * @see ExperimentalDesignDao#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */

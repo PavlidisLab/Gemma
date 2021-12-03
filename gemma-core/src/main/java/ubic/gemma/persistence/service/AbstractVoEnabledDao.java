@@ -15,6 +15,14 @@ import java.util.stream.Collectors;
 public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractDao<O> implements BaseVoEnabledDao<O, VO> {
 
+    /**
+     * Amount of time in milliseconds after which a query (including post-processing) should be reported.
+     *
+     * If there is no way to perform a given query under this amount of time, consider paginating results or optimizing
+     * how Hibernate entities are loaded or cached.
+     */
+    protected static final int REPORT_SLOW_QUERY_AFTER_MS = 20;
+
     protected AbstractVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }

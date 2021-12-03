@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
@@ -34,6 +35,7 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
+import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -60,6 +62,7 @@ import static org.junit.Assert.*;
  *
  * @author keshav
  */
+@Category(GoldenPathTest.class)
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
     private final String arrayAccession = "GPL96";

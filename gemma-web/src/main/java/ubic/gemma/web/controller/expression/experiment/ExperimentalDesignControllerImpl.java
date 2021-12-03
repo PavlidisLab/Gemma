@@ -129,7 +129,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     public void createExperimentalFactor( EntityDelegator e, ExperimentalFactorValueObject efvo ) {
         if ( e == null || e.getId() == null )
             return;
-        ExperimentalDesign ed = experimentalDesignService.load( e.getId() );
+        ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.fromString( efvo.getType() ) );

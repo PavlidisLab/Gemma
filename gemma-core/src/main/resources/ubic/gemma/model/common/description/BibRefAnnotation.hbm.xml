@@ -21,6 +21,7 @@
         <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeading"
                   discriminator-value="MedicalSubjectHeading"
                   abstract="false">
+            <!-- eagerly cached, thus a select -->
             <set name="qualifiers" lazy="false" fetch="select" cascade="all">
                 <cache usage="read-write"/>
                 <key foreign-key="MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC">

@@ -108,6 +108,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             this.color = c.getValue();
         }
 
+        // no need to initialize them to know if the entities exist
         this.isMergee = ad.getMergedInto() != null;
         this.isAffymetrixAltCdf = ad.getAlternativeTo() != null;
     }

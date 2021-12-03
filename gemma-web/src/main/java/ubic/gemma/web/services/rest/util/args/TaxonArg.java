@@ -1,22 +1,18 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.ws.rs.NotFoundException;
 import java.util.Collection;
@@ -80,7 +76,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
         if ( filters == null ) {
             filters = new Filters();
         }
-        filters.add( new ObjectFilter( ObjectFilter.DAO_TAXON_ALIAS, "id", Long.class, ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId() ) );
+        filters.add( taxonService.getObjectFilter( "id", ObjectFilter.Operator.eq, this.getEntity( taxonService ).getId().toString() ) );
         return expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset, limit );
     }
 

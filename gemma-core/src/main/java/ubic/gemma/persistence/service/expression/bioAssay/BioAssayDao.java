@@ -22,6 +22,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +31,8 @@ import java.util.List;
  * @see BioAssay
  */
 public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObject> {
+
+    String OBJECT_ALIAS = "ba";
 
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 

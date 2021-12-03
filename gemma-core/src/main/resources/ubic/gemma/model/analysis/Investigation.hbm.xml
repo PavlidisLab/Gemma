@@ -24,7 +24,7 @@
 					sql-type="text"/>
 		</property>
 		<set name="characteristics" lazy="true" fetch="select" cascade="all">
-			<!-- <cache usage="read-write" /> -->
+			<cache usage="read-write"/>
 			<key foreign-key="CHARACTERISTIC_INVESTIGATION_FKC">
 				<column name="INVESTIGATION_FK" sql-type="BIGINT"/>
 			</key>
@@ -111,6 +111,7 @@
 							 lazy="proxy" fetch="select">
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
+				<!-- This is assumed readily available in AbstractCuratableValueObject -->
 				<many-to-one name="curationDetails"
 							 class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all"
 							 lazy="false" fetch="join">
@@ -147,6 +148,7 @@
 			</subclass>
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet"
 					  discriminator-value="ExpressionExperimentSubSet" abstract="false">
+				<!-- this is assumed readily available in ExpressionExperimentSubSetValueObject -->
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
 							 cascade="none" lazy="false" fetch="join">
 					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT"/>

@@ -527,7 +527,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
-            taxonService.thaw( t );
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
