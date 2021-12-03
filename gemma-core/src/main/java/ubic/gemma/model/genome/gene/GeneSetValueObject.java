@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
+import ubic.gemma.model.IdentifiableValueObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +32,7 @@ import java.util.HashSet;
  *
  * @author kelsey
  */
-public class GeneSetValueObject implements SecureValueObject {
+public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
@@ -49,10 +50,10 @@ public class GeneSetValueObject implements SecureValueObject {
         }
         return result;
     }
+
     private boolean currentUserIsOwner = false;
     private String description;
     private Collection<Long> geneIds = new HashSet<>();
-    private Long id;
 
     private boolean isPublic;
     private boolean isShared;
@@ -76,8 +77,7 @@ public class GeneSetValueObject implements SecureValueObject {
      * @param id id
      */
     public GeneSetValueObject( Long id ) {
-        super();
-        this.id = id;
+        super( id );
     }
 
     @Override
@@ -104,11 +104,6 @@ public class GeneSetValueObject implements SecureValueObject {
 
     public Collection<Long> getGeneIds() {
         return this.geneIds;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
     }
 
     @Override
@@ -173,10 +168,6 @@ public class GeneSetValueObject implements SecureValueObject {
 
     public void setGeneIds( Collection<Long> geneMembers ) {
         this.geneIds = geneMembers;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     @Override

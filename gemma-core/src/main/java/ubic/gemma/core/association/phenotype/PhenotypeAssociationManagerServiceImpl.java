@@ -421,14 +421,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
-        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             return Collections.emptyList();
         }
 
-        for ( SearchResult sr : geneSearchResults ) {
+        for ( SearchResult<Gene> sr : geneSearchResults ) {
             Gene g = geneService.load( sr.getResultId() );
             if ( g == null ) {
                 log.warn( "No gene matching search result " + sr );

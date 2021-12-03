@@ -48,6 +48,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -295,16 +296,16 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<Long> filter( String searchString ) {
 
-        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResultsMap = searchService
                 .search( SearchSettings.expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
 
-        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+        List<SearchResult<? extends Identifiable>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
-        for ( SearchResult s : searchResults ) {
+        for ( SearchResult<?> s : searchResults ) {
             ids.add( s.getResultId() );
         }
 

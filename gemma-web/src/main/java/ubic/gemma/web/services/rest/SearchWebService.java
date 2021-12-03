@@ -9,17 +9,15 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
-import ubic.gemma.web.services.rest.util.args.OffsetArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
@@ -51,7 +49,6 @@ public class SearchWebService {
 
     /**
      * Search everything subject to taxon and platform constraints.
-     * @return
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
@@ -64,9 +61,9 @@ public class SearchWebService {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
         }
-        Map<String, Class<?>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
+        Map<String, Class<? extends Identifiable>> supportedResultTypesByName = searchService.getSupportedResultTypes().stream()
                 .collect( Collectors.toMap( Class::getName, identity() ) );
-        Collection<Class<?>> resultTypesCls;
+        Collection<Class<? extends Identifiable>> resultTypesCls;
         if ( resultTypes == null || resultTypes.isEmpty() ) {
             // include everything
             resultTypesCls = supportedResultTypesByName.values();
@@ -75,7 +72,7 @@ public class SearchWebService {
             resultTypesCls = resultTypes.stream().map( supportedResultTypesByName::get ).collect( Collectors.toSet() );
         } else {
             throw new BadRequestException( String.format( "Unsupported result type(s). Ensure that your results are among: %s.",
-                    supportedResultTypesByName.keySet().stream().collect( Collectors.joining( ", " ) ) ) );
+                    String.join( ", ", supportedResultTypesByName.keySet() ) ) );
         }
 
         SearchSettings searchSettings = SearchSettings.builder()
@@ -89,9 +86,10 @@ public class SearchWebService {
         // convert the response to search results of VOs
         return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
                 .flatMap( List::stream )
+                .map( searchService::loadValueObject )
                 .sorted() // SearchResults are sorted by descending score order
                 .limit( limit.getValue( 100 ) ) // results are limited by class, so there might be more results than expected when unraveling everything
-                .map( result -> new SearchResultValueObject( result, searchService.convertSearchResultObjectToValueObject( result ) ) )
+                .map( SearchResultValueObject::new )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
 
@@ -125,7 +123,7 @@ public class SearchWebService {
      * Representation of {@link SearchResult} for the RESTful API.
      */
     @Data
-    public class SearchResultValueObject {
+    public static class SearchResultValueObject<T extends IdentifiableValueObject<? extends Identifiable>> {
 
         private final Long resultId;
 
@@ -133,13 +131,13 @@ public class SearchWebService {
 
         private final Double score;
 
-        private final Object resultObject;
+        private final T resultObject;
 
-        public SearchResultValueObject( SearchResult searchResult, Object resultObject ) {
+        public SearchResultValueObject( SearchResult<T> searchResult ) {
             this.resultId = searchResult.getResultId();
             this.resultType = searchResult.getResultClass().getName();
+            this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
-            this.resultObject = resultObject;
         }
     }
 

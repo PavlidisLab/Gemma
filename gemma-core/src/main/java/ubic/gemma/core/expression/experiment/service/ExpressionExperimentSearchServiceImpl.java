@@ -29,6 +29,7 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -43,6 +44,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Handles searching for experiments and experiment sets
@@ -82,7 +84,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
-        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings, ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
             ExpressionExperimentSearchServiceImpl.log.info( "No experiments for search: " + query );
@@ -92,7 +94,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
-                .loadValueObjectsByIds( EntityUtils.getIds( experimentSearchResults ), true );
+                .loadValueObjectsByIds( experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), true );
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
@@ -129,7 +131,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             return this.searchExperimentsAndExperimentGroupBlankQuery( taxonId );
         }
 
-        Map<Class<?>, List<SearchResult>> results = this.initialSearch( query, taxonId );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = this.initialSearch( query, taxonId );
 
         List<SearchResultDisplayObject> experimentSets = this.getExpressionExperimentSetResults( results );
         List<SearchResultDisplayObject> experiments = this.getExpressionExperimentResults( results );
@@ -250,9 +252,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentResults(
-            Map<Class<?>, List<SearchResult>> results ) {
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results ) {
         // get all expressionExperiment results and convert result object into a value object
-        List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
+        List<SearchResult<? extends Identifiable>> srEEs = results.get( ExpressionExperiment.class );
         if ( srEEs == null ) {
             srEEs = new ArrayList<>();
         }
@@ -271,7 +273,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults(
-            Map<Class<?>, List<SearchResult>> results ) {
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results ) {
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
@@ -291,7 +293,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentSets;
     }
 
-    private Map<Class<?>, List<SearchResult>> initialSearch( String query, Long taxonId ) {
+    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> initialSearch( String query, Long taxonId ) {
         SearchSettings settings = SearchSettings.builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )

@@ -18,17 +18,19 @@
  */
 package ubic.gemma.core.search;
 
+import lombok.NonNull;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ReflectionUtil;
 
 /**
  * @author paul
  */
-public class SearchResult<T> implements Comparable<SearchResult<T>> {
+public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<? extends Identifiable>> {
 
-    private Class<T> resultClass;
+    private final Class<? extends Identifiable> resultClass;
 
-    private Long objectId;
+    private Long resultId;
 
     private String highlightedText;
 
@@ -36,38 +38,39 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
 
     private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
 
-    /**
-     *
-     * @param searchResult
-     */
-    public SearchResult( T searchResult ) {
-        if ( searchResult == null )
+    public SearchResult( @NonNull T resultObject ) {
+        if ( resultObject == null )
             throw new IllegalArgumentException( "Search result cannot be null" );
-        this.resultObject = searchResult; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( searchResult.getClass() );
-        this.objectId = EntityUtils.getId( resultObject );
+        this.resultId = resultObject.getId();
+        this.resultObject = resultObject; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
+        this.resultClass = ( Class<? extends Identifiable> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
     }
 
-    public SearchResult( T searchResult, double score ) {
+    public SearchResult( @NonNull T searchResult, double score ) {
         this( searchResult );
         this.score = score;
     }
 
-    public SearchResult( T searchResult, double score, String matchingText ) {
+    public SearchResult( @NonNull T searchResult, double score, String matchingText ) {
         this( searchResult );
         this.score = score;
         this.highlightedText = matchingText;
     }
 
-    public SearchResult( Class<T> entityClass, Long entityId, double score, String matchingText ) {
+    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull Long entityId, double score, String matchingText ) {
         this.resultClass = entityClass;
-        this.objectId = entityId;
+        this.resultId = entityId;
         this.score = score;
         this.highlightedText = matchingText;
+    }
+
+    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull T entity, double score, String matchingText ) {
+        this( entityClass, entity.getId(), score, matchingText );
+        this.resultObject = entity;
     }
 
     @Override
-    public int compareTo( SearchResult<T> o ) {
+    public int compareTo( SearchResult<?> o ) {
         return -this.score.compareTo( o.getScore() );
     }
 
@@ -83,10 +86,14 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
      * @return the id for the underlying result entity.
      */
     public Long getResultId() {
-        return objectId;
+        return resultId;
     }
 
-    public Class<T> getResultClass() {
+    public void setResultId( Long resultId ) {
+        this.resultId = resultId;
+    }
+
+    public Class<? extends Identifiable> getResultClass() {
         return resultClass;
     }
 
@@ -100,10 +107,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
      */
     public void setResultObject( T resultObject ) {
         this.resultObject = resultObject;
-        if ( resultObject != null ) {
-            this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
-            this.objectId = EntityUtils.getId( resultObject );
-        }
+        this.resultId = resultObject != null ? EntityUtils.getId( resultObject ) : null;
     }
 
     public Double getScore() {
@@ -118,7 +122,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( objectId == null ) ? 0 : objectId.hashCode() );
+        result = prime * result + ( ( resultId == null ) ? 0 : resultId.hashCode() );
         result = prime * result + ( ( resultClass == null ) ? 0 : resultClass.getName().hashCode() );
         return result;
     }
@@ -132,10 +136,10 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
         if ( this.getClass() != obj.getClass() )
             return false;
         final SearchResult<T> other = ( SearchResult<T> ) obj;
-        if ( objectId == null ) {
-            if ( other.objectId != null )
+        if ( resultId == null ) {
+            if ( other.resultId != null )
                 return false;
-        } else if ( !objectId.equals( other.objectId ) )
+        } else if ( !resultId.equals( other.resultId ) )
             return false;
         if ( resultClass == null ) {
             return other.resultClass == null;
@@ -145,7 +149,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
 
     @Override
     public String toString() {
-        return this.getResultClass().getSimpleName() + "[ID=" + this.getResultId() + "] matched in: "
+        return resultClass.getSimpleName() + "[ID=" + this.resultId + "] matched in: "
                 + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 }

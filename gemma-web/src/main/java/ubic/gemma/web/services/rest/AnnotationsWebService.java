@@ -28,6 +28,7 @@ import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchS
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -205,8 +206,8 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
-            Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
-            List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.search( settings, false, false );
+            List<SearchResult<?>> eeResults = results.get( ExpressionExperiment.class );
 
             if ( eeResults == null ) {
                 return new HashSet<>(); // No terms found for the current term means the intersection will be empty.

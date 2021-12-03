@@ -38,6 +38,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -46,7 +47,6 @@ import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -120,7 +120,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .withDoHighlighting( true );
 
         searchTimer.start();
-        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( searchSettings );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults = searchService.search( searchSettings );
         searchTimer.stop();
 
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
@@ -128,7 +128,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         List<SearchResult> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
-                List<SearchResult> results = searchResults.get( clazz );
+                List<SearchResult<?>> results = searchResults.get( clazz );
 
                 if ( results.size() == 0 )
                     continue;
@@ -141,7 +141,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
-                Collections.sort( results );
+                results = results.stream().sorted().collect( Collectors.toList() );
                 this.fillValueObjects( clazz, results, searchSettings );
                 finalResults.addAll( results );
             }
@@ -263,8 +263,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Deprecated
     @Override
     @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
-            throws Exception {
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
         if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
             SearchSettings searchSettings = this.formBackingObject( request );
             return this.doSearch( request, response, searchSettings, errors );
@@ -291,9 +290,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @param settings
      */
     @SuppressWarnings("unchecked")
-    private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
+    private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
         StopWatch timer = StopWatch.createStarted();
-        Collection<?> vos;
+        Collection<? extends Identifiable> vos;
 
         Collection<Long> ids = new ArrayList<>();
         for ( SearchResult r : results ) {
@@ -356,7 +355,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             // bug 3475: if there are search results but they are all removed because they are troubled, then results
             // has ExpressionExperiments in
             // it causing front end errors, if vos is empty make sure to get rid of all search results
-            for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
+            for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
                 it.next();
                 it.remove();
             }
@@ -365,9 +364,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         // retained objects...
-        Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
+        Map<Long, Identifiable> idMap = EntityUtils.getIdMap( vos );
 
-        for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
+        for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();
             if ( !idMap.containsKey( sr.getResultId() ) ) {
                 it.remove();
@@ -414,14 +413,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     //    }
 
     private void populateTaxonReferenceData( Map<String, List<?>> mapping ) {
-        List<Taxon> taxa = new ArrayList<>();
-        taxa.addAll( taxonService.loadAll() );
-        Collections.sort( taxa, new Comparator<Taxon>() {
-            @Override
-            public int compare( Taxon o1, Taxon o2 ) {
-                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-            }
-        } );
+        List<Taxon> taxa = new ArrayList<>( taxonService.loadAll() );
+        taxa.sort( Comparator.comparing( Taxon::getScientificName ) );
         mapping.put( "taxa", taxa );
     }
 
@@ -443,8 +436,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .build();
     }
 
-    private static Set<Class<?>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
-        Set<Class<?>> ret = new HashSet<>();
+    private static Set<Class<? extends Identifiable>> resultTypesFromVo( SearchSettingsValueObject valueObject ) {
+        Set<Class<? extends Identifiable>> ret = new HashSet<>();
         if ( valueObject.getSearchExperiments() ) {
             ret.add( ExpressionExperiment.class );
         }

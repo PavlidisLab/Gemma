@@ -67,6 +67,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -1003,10 +1004,10 @@ public class OntologyServiceImpl implements OntologyService {
                 .taxon( taxon )
                 .resultType( Gene.class )
                 .build();
-        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, false, false );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> geneResults = this.searchService.search( ss, false, false );
 
         if ( geneResults.containsKey( Gene.class ) ) {
-            for ( SearchResult sr : geneResults.get( Gene.class ) ) {
+            for ( SearchResult<?> sr : geneResults.get( Gene.class ) ) {
                 if ( !sr.getResultClass().isAssignableFrom( Gene.class ) ) {
                     throw new IllegalStateException( "Expected a gene search result, got a " + sr.getResultClass() );
                 }

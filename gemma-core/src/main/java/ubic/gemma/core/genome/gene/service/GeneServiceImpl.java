@@ -31,6 +31,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -351,9 +352,9 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
                     .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
                     .resultType( ExpressionExperiment.class )
                     .build();
-            Map<Class<?>, List<SearchResult>> r = searchService.search( s );
+            Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> r = searchService.search( s );
             if ( r.containsKey( ExpressionExperiment.class ) ) {
-                List<SearchResult> hits = r.get( ExpressionExperiment.class );
+                List<SearchResult<?>> hits = r.get( ExpressionExperiment.class );
                 gvo.setAssociatedExperimentCount( hits.size() );
             }
         }
@@ -490,7 +491,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
@@ -499,8 +500,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
-        for ( SearchResult sr : geneSearchResults ) {
-            Gene g = ( Gene ) sr.getResultObject();
+        for ( SearchResult<Gene> sr : geneSearchResults ) {
+            Gene g = sr.getResultObject();
             g = this.thaw( g );
             genes.add( g );
             log.debug( "Gene search result: " + g.getOfficialSymbol() );

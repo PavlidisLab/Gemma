@@ -18,12 +18,10 @@
  */
 package ubic.gemma.model.common.search;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-import lombok.With;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -42,6 +40,7 @@ import java.util.Set;
 @Data
 @Builder
 @With
+@ToString(of = { "query", "taxon", "platformConstraint", "resultTypes" })
 public class SearchSettings implements Serializable {
 
     /**
@@ -138,7 +137,7 @@ public class SearchSettings implements Serializable {
      * Entities to retrieve.
      */
     @Singular
-    private Set<Class<?>> resultTypes;
+    private Set<Class<? extends Identifiable>> resultTypes;
 
     /* optional search constraints */
     private ArrayDesign platformConstraint;
@@ -221,11 +220,5 @@ public class SearchSettings implements Serializable {
      */
     public boolean hasResultType( Class<?> cls ) {
         return resultTypes.contains( cls );
-    }
-
-    @Override
-    public String toString() {
-        String tax = this.getTaxon() != null ? " [" + this.getTaxon().getCommonName() + "]" : "";
-        return this.getQuery() + tax;
     }
 }

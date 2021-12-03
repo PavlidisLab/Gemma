@@ -19,7 +19,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -28,7 +27,6 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,8 +95,8 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchEverything() {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
-        when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
-        when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
         SearchWebService.SearchResultResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ) );
@@ -123,8 +121,8 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void testSearchByTaxon() {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
-        when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ) );
         verify( taxonService ).findByNcbiId( 9606 );
     }
@@ -132,7 +130,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByArrayDesign() {
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
-        when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ) );
         verify( arrayDesignService ).load( 1L );
     }

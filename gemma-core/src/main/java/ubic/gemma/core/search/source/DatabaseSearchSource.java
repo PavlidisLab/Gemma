@@ -14,6 +14,8 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -27,7 +29,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -47,13 +49,6 @@ import java.util.regex.Pattern;
 @CommonsLog
 public class DatabaseSearchSource implements SearchSource {
 
-    /**
-     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
-     * came from text associated with one of its biomaterials,
-     * the score is penalized by this amount (or, this is just the actual score used)
-     */
-    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
-
     @Autowired
     private BioSequenceService bioSequenceService;
     @Autowired
@@ -68,10 +63,8 @@ public class DatabaseSearchSource implements SearchSource {
     private GeneSetService geneSetService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    // TODO: use the service
     @Autowired
-    private TaxonDao taxonDao;
+    private TaxonService taxonService;
 
     /**
      * Searches the DB for array designs which have composite sequences whose names match the given search string.
@@ -79,7 +72,7 @@ public class DatabaseSearchSource implements SearchSource {
      * on access control list (ACL) permissions.
      */
     @Override
-    public Collection<SearchResult> searchArrayDesign( SearchSettings settings ) {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -99,16 +92,16 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Array Design Composite Sequence DB search for " + settings + " took " + watch.getTime()
                             + " ms" + " found " + adSet.size() + " Ads" );
 
-        return this.dbHitsToSearchResult( adSet, null );
+        return this.dbHitsToSearchResult( adSet );
     }
 
     @Override
-    public Collection<SearchResult> searchBibliographicReference( SearchSettings settings ) {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) {
         throw new NotImplementedException( "Database search for bibliographic reference is not implemented." );
     }
 
     @Override
-    public Collection<SearchResult> searchExperimentSet( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) {
         throw new NotImplementedException( "Database search for expression experiment set is not implemented." );
     }
 
@@ -116,7 +109,7 @@ public class DatabaseSearchSource implements SearchSource {
      * A database search for biosequences. Biosequence names are already indexed by compass...
      */
     @Override
-    public Collection<SearchResult> searchBioSequence( SearchSettings settings, Collection<SearchResult> previousGeneSearchResults ) {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -132,7 +125,7 @@ public class DatabaseSearchSource implements SearchSource {
 
         Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
         // bioSequenceService.thawRawAndProcessed( bs );
-        Collection<SearchResult> bioSequenceList = new HashSet<>( this.dbHitsToSearchResult( bs, null ) );
+        Collection<SearchResult<BioSequence>> bioSequenceList = new HashSet<>( this.dbHitsToSearchResult( bs ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -143,18 +136,36 @@ public class DatabaseSearchSource implements SearchSource {
         return bioSequenceList;
     }
 
+    @Override
+    public Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings, Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+        return new HashSet<>( this.searchBioSequence( settings ) );
+    }
+
+    @Override
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
+        Set<Gene> geneSet = new HashSet<>();
+        Collection<CompositeSequence> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
+        return this.dbHitsToSearchResult( matchedCs );
+    }
+
     /**
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult> searchCompositeSequence( SearchSettings settings ) {
+    public Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings ) {
+        Set<Gene> geneSet = new HashSet<>();
+        Collection<CompositeSequence> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
+        Collection<SearchResult> combinedResults = new HashSet<>();
+        combinedResults.addAll( this.dbHitsToSearchResult( geneSet ) );
+        combinedResults.addAll( this.dbHitsToSearchResult( matchedCs ) );
+        return combinedResults;
+    }
 
+    private Collection<CompositeSequence> searchCompositeSequenceAndPopulateGenes( SearchSettings settings, Set<Gene> geneSet ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
         StopWatch watch = StopWatch.createStarted();
-
-        Set<Gene> geneSet = new HashSet<>();
 
         String searchString = settings.getQuery();
         ArrayDesign ad = settings.getPlatformConstraint();
@@ -188,12 +199,9 @@ public class DatabaseSearchSource implements SearchSource {
         /*
          * In case the query _is_ a gene
          */
-        Collection<SearchResult> rawGeneResults = this.searchGene( settings );
-        for ( SearchResult searchResult : rawGeneResults ) {
-            Object j = searchResult.getResultObject();
-            if ( Gene.class.isAssignableFrom( j.getClass() ) ) {
-                geneSet.add( ( Gene ) j );
-            }
+        Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings );
+        for ( SearchResult<Gene> searchResult : rawGeneResults ) {
+            geneSet.add( searchResult.getResultObject() );
         }
 
         for ( Gene g : geneSet ) {
@@ -215,11 +223,7 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime() + " ms, "
                             + geneSet.size() + " items." );
 
-        Collection<SearchResult> results = this.dbHitsToSearchResult( geneSet, null );
-
-        results.addAll( this.dbHitsToSearchResult( matchedCs, null ) );
-
-        return results;
+        return matchedCs;
     }
 
     /**
@@ -229,7 +233,7 @@ public class DatabaseSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult> searchExpressionExperiment( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
@@ -296,13 +300,13 @@ public class DatabaseSearchSource implements SearchSource {
      * tables
      */
     @Override
-    public Collection<SearchResult> searchGene( SearchSettings settings ) {
+    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
 
         StopWatch watch = StopWatch.createStarted();
 
-        String searchString = null;
+        String searchString;
         if ( settings.isTermQuery() ) {
             // then we can get the NCBI ID, maybe.
             searchString = StringUtils.substringAfterLast( settings.getQuery(), "/" );
@@ -313,7 +317,7 @@ public class DatabaseSearchSource implements SearchSource {
         if ( StringUtils.isBlank( searchString ) )
             return new HashSet<>();
 
-        Collection<SearchResult> results = new HashSet<>();
+        Collection<SearchResult<Gene>> results = new HashSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -325,15 +329,15 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( this.dbHitToSearchResult( result ) );
+            results.add( this.dbHitToSearchResult( result, null ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( this.dbHitToSearchResult( result ) );
+                results.add( this.dbHitToSearchResult( result, null ) );
             }
         }
         if ( results.size() > 0 ) {
-            this.filterByTaxon( settings, results, true );
+            this.filterByTaxon( settings, results );
             watch.stop();
             if ( watch.getTime() > 1000 )
                 DatabaseSearchSource.log
@@ -390,55 +394,42 @@ public class DatabaseSearchSource implements SearchSource {
                     .info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
                             + geneSet.size() + " genes" );
 
-        results = this.dbHitsToSearchResult( geneSet, null );
-        this.filterByTaxon( settings, results, true );
+        results = this.dbHitsToSearchResult( geneSet );
+        this.filterByTaxon( settings, results );
         return results;
     }
 
     @Override
-    public Collection<SearchResult> searchGeneSet( SearchSettings settings ) {
-        return null;
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
+        if ( !settings.getUseDatabase() )
+            return new HashSet<>();
+        throw new NotImplementedException( "Searching by gene set from the database is not supported." );
     }
 
     /**
      * Find phenotypes.
      */
     @Override
-    public Collection<SearchResult> searchPhenotype( SearchSettings settings ) {
+    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) {
+        if ( !settings.getUseDatabase() )
+            return new HashSet<>();
         return this.dbHitsToSearchResult(
-                this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ), null );
+                this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
     }
 
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private Collection<SearchResult> dbHitsToSearchResult( Collection<?> entities, String matchText ) {
-        return this.dbHitsToSearchResult( entities, null, matchText );
-    }
-
-    /**
-     * Convert hits from database searches into SearchResults.
-     *
-     * @param entities
-     * @param compassHitDerivedFrom Can be null. The SearchResult that these entities were derived from. For example, if
-     *                              you
-     *                              compass-searched for genes, and then used the genes to get sequences from the
-     *                              database, the gene is compassHitsDerivedFrom. If null, we treat this as a direct
-     *                              hit.
-     * @param matchText             used in highlighting, if compassHitDerivedFrom is null. The highlighted text from
-     *                              compassHitsDerivedFrom is used otherwise.
-     */
-    private List<SearchResult> dbHitsToSearchResult( Collection<?> entities, SearchResult compassHitDerivedFrom,
-            String matchText ) {
+    private <T extends Identifiable> List<SearchResult<T>> dbHitsToSearchResult( Collection<T> entities ) {
         StopWatch watch = StopWatch.createStarted();
-        List<SearchResult> results = new ArrayList<>();
-        for ( Object e : entities ) {
+        List<SearchResult<T>> results = new ArrayList<>();
+        for ( T e : entities ) {
             if ( e == null ) {
                 if ( DatabaseSearchSource.log.isDebugEnabled() )
                     DatabaseSearchSource.log.debug( "Null search result object" );
                 continue;
             }
-            SearchResult esr = this.dbHitToSearchResult( compassHitDerivedFrom, e, matchText );
+            SearchResult<T> esr = this.dbHitToSearchResult( e, null );
             results.add( esr );
         }
         if ( watch.getTime() > 1000 ) {
@@ -450,43 +441,28 @@ public class DatabaseSearchSource implements SearchSource {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private List<SearchResult> dbHitsToSearchResult( Map<?, String> entities ) {
-        List<SearchResult> results = new ArrayList<>();
-        for ( Object e : entities.keySet() ) {
-            SearchResult esr = this.dbHitToSearchResult( null, e, entities.get( e ) );
+    private <T extends Identifiable> List<SearchResult<T>> dbHitsToSearchResult( Map<T, String> entities ) {
+        List<SearchResult<T>> results = new ArrayList<>( entities.size() );
+        for ( T e : entities.keySet() ) {
+            SearchResult<T> esr = this.dbHitToSearchResult( e, entities.get( e ) );
             results.add( esr );
         }
         return results;
     }
 
-    private SearchResult dbHitToSearchResult( Object e ) {
-        return this.dbHitToSearchResult( null, e, null );
-    }
-
     /**
      * @param text that matched the query (for highlighting)
      */
-    private SearchResult dbHitToSearchResult( SearchResult compassHitDerivedFrom, Object e, String text ) {
-        SearchResult esr;
-        if ( compassHitDerivedFrom != null && text == null ) {
-            esr = new SearchResult( e, compassHitDerivedFrom.getScore() * DatabaseSearchSource.INDIRECT_DB_HIT_PENALTY );
-            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-        } else {
-            esr = new SearchResult( e, 1.0, text );
-        }
-        log.debug( esr );
-        return esr;
+    private <T extends Identifiable> SearchResult<T> dbHitToSearchResult( T e, String text ) {
+        return new SearchResult<>( e, 1.0, text );
     }
 
     /**
      * We only use this if we are not already filtering during the search (which is faster if the results will be large
      * without the filter)
      *
-     * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results will get
-     *                            filtered out Results with no taxon associated will also get removed.
      */
-    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results,
-            boolean excludeWithoutTaxon ) {
+    private <T extends Identifiable> void filterByTaxon( SearchSettings settings, Collection<SearchResult<T>> results ) {
         if ( settings.getTaxon() == null ) {
             return;
         }
@@ -496,9 +472,9 @@ public class DatabaseSearchSource implements SearchSource {
         if ( results == null )
             return;
 
-        for ( SearchResult sr : results ) {
+        for ( SearchResult<T> sr : results ) {
 
-            Object o = sr.getResultObject();
+            T o = sr.getResultObject();
             try {
 
                 Taxon currentTaxon;
@@ -521,7 +497,7 @@ public class DatabaseSearchSource implements SearchSource {
 
                 } else if ( o instanceof CharacteristicValueObject ) {
                     CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
-                    currentTaxon = taxonDao.findByCommonName( charVO.getTaxon() );
+                    currentTaxon = taxonService.findByCommonName( charVO.getTaxon() );
 
                 } else {
                     Method m = o.getClass().getMethod( "getTaxon" );
@@ -544,12 +520,10 @@ public class DatabaseSearchSource implements SearchSource {
                  * In case of a programming error where the results don't have a taxon at all, we assume we should
                  * filter them out but issue a warning.
                  */
-                if ( excludeWithoutTaxon ) {
-                    toRemove.add( sr );
-                    DatabaseSearchSource.log
-                            .warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: "
-                                    + e );
-                }
+                toRemove.add( sr );
+                DatabaseSearchSource.log
+                        .warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: "
+                                + e );
 
             }
         }

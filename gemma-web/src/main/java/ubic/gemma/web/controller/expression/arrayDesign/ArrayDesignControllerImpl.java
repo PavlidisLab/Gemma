@@ -262,8 +262,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
-                .get( ArrayDesign.class );
+        Collection<SearchResult<ArrayDesign>> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ), ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
@@ -281,7 +280,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                             "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
-        for ( SearchResult ad : searchResults ) {
+        for ( SearchResult<ArrayDesign> ad : searchResults ) {
             list.append( ad.getResultId() ).append( "," );
         }
 

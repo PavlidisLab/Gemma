@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -231,14 +232,14 @@ public class BibliographicReferenceServiceImpl
         SearchSettings ss = SearchSettings.bibliographicReferenceSearch( settings.getQuery() );
 
         //noinspection unchecked
-        List<BibliographicReference> resultEntities = searchService
+        List<SearchResult<BibliographicReference>> resultEntities = searchService
                 .search( ss, BibliographicReference.class );
 
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
         // only return associations with the selected entity types.
-        for ( BibliographicReference entity : resultEntities ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
+        for ( SearchResult<BibliographicReference> entity : resultEntities ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity.getResultObject() );
 
             if ( settings.getSearchPhenotypes() || settings.getSearchBibrefs() ) {
                 this.populateBibliographicPhenotypes( vo );
@@ -248,7 +249,7 @@ public class BibliographicReferenceServiceImpl
             }
 
             if ( settings.getSearchExperiments() || settings.getSearchBibrefs() ) {
-                this.populateRelatedExperiments( entity, vo );
+                this.populateRelatedExperiments( entity.getResultObject(), vo );
                 if ( !vo.getExperiments().isEmpty() || settings.getSearchBibrefs() ) {
                     results.add( vo );
                 }
@@ -267,13 +268,13 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
         //noinspection unchecked
-        List<BibliographicReference> resultEntities = searchService
+        List<SearchResult<BibliographicReference>> resultEntities = searchService
                 .search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
-        for ( BibliographicReference entity : resultEntities ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
+        for ( SearchResult<BibliographicReference> entity : resultEntities ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity.getResultObject() );
             this.populateBibliographicPhenotypes( vo );
-            this.populateRelatedExperiments( entity, vo );
+            this.populateRelatedExperiments( entity.getResultObject(), vo );
             results.add( vo );
         }
 

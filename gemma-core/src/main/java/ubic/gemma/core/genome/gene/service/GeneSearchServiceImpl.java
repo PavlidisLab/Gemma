@@ -33,6 +33,7 @@ import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -43,6 +44,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service for searching genes (and gene sets)
@@ -170,7 +172,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
-        Map<Class<?>, List<SearchResult>> results = searchService.speedSearch( settings );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = searchService.speedSearch( settings );
 
         List<SearchResult> geneSetSearchResults = new ArrayList<>();
         List<SearchResult> geneSearchResults = new ArrayList<>();
@@ -356,9 +358,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
+            List<SearchResult<Gene>> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class ).stream()
+                    .map( r -> ( SearchResult<Gene> ) r )
+                    .collect( Collectors.toList() );
 
-            if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
+            if ( geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.
                 queryToGenes.put( queryAsKey, null );
             } else if ( geneSearchResults.size() == 1 ) { // Just one result so add it
