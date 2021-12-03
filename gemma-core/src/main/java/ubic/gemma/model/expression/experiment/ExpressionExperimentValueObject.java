@@ -8,6 +8,8 @@ import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Objects;
@@ -71,18 +73,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.name = ee.getName();
         this.source = ee.getSource();
         this.description = ee.getDescription();
-        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
-                ee.getBioAssays().size() :
-                null;
+
+        // accession
         if ( ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalUri = ee.getAccession().getExternalDatabase().getWebUri();
         }
-        this.experimentalDesign =
-                ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ?
-                        ee.getExperimentalDesign().getId() :
-                        null;
 
         // EE
         this.metadata = ee.getMetadata();
@@ -93,22 +90,19 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             this.taxonId = ee.getTaxon().getId();
         }
 
-        // AD
-        // FIXME: row[10] contains the taxon common name!
-        // Object technology = row[10];
-        // if ( technology != null ) {
-        //     this.technologyType = technology.toString();
-        // }
-
-        // 12-15 used in call to super
-
         // Counts
-        this.bioAssayCount = ee.getNumberOfSamples();
-        //  this.arrayDesignCount = ( ( Long ) row[17] ).intValue();
-        //  this.bioMaterialCount = ( ( Long ) row[19] ).intValue();
+        if ( ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ) {
+            this.bioAssayCount = ee.getBioAssays().size();
+            // this is available too because AD are eagerly fetched
+            this.arrayDesignCount = ( int ) ee.getBioAssays().stream().map( BioAssay::getArrayDesignUsed ).count();
+        } else {
+            // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
+            this.bioAssayCount = ee.getNumberOfSamples();
+            this.arrayDesignCount = null; // the number of AD is unknown, unfortunately
+        }
 
-        // Other
-        if ( ee.getExperimentalDesign() != null ) {
+        // ED
+        if ( ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
@@ -116,9 +110,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         batchEffect = ee.getBatchEffect();
         batchConfound = ee.getBatchConfound();
 
-        // 24-25 used in call to super.
-
-        // Geeq: for administrators, create an admin geeq VO. Normal geeq VO otherwise.
+        // GEEQ: for administrators, create an admin geeq VO. Normal GEEQ VO otherwise.
         if ( ee.getGeeq() != null && Hibernate.isInitialized( ee.getGeeq() ) ) {
             geeq = SecurityUtil.isUserAdmin() ?
                     new GeeqAdminValueObject( ee.getGeeq() ) :
@@ -126,8 +118,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else {
             geeq = null;
         }
-
-        // 29: other parts
     }
 
     /**

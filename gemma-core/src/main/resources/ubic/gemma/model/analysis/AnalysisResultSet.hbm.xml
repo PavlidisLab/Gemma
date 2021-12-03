@@ -55,6 +55,7 @@
                              lazy="proxy" fetch="select">
                     <column name="PVALUE_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
                 </many-to-one>
+                <!-- eager for proactive caching -->
                 <set name="hitListSizes" lazy="false" fetch="select" cascade="all">
                     <cache usage="read-write"/>
                     <key foreign-key="HIT_LIST_SIZE_RESULT_SET_FKC">

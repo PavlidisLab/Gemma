@@ -184,7 +184,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
                 .getAnalysesByExperimentIds( ids, offset, limit );
 
         Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
-                .loadDetailsValueObjects( null, analysesByExperimentIds.keySet(), null, 0, 0 ) );
+                .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 

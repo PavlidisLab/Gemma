@@ -20,7 +20,6 @@ package ubic.gemma.model.expression.designElement;
 
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.IdentifiableValueObject;
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 import java.io.Serializable;
@@ -50,19 +49,10 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
-        this( cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject( cs.getArrayDesign() ) );
-    }
-
-    public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesignVo ) {
-        this( describable.getId(), describable.getName(), describable.getDescription(), arrayDesignVo );
-    }
-
-    public CompositeSequenceValueObject( Long id, String name, String description,
-            ArrayDesignValueObject arrayDesign ) {
-        super( id );
-        this.name = name;
-        this.description = description;
-        this.arrayDesign = arrayDesign;
+        super( cs.getId() );
+        this.name = cs.getName();
+        this.description = cs.getDescription();
+        this.arrayDesign = new ArrayDesignValueObject( cs.getArrayDesign() );
     }
 
     @Override

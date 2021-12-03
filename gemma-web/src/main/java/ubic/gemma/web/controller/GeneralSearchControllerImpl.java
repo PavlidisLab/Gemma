@@ -67,6 +67,7 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -101,7 +102,9 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
     @Override
     public JsonReaderResponse<SearchResult> ajaxSearch( SearchSettingsValueObject settingsValueObject ) {
-        StopWatch watch = new StopWatch();
+        StopWatch timer = new StopWatch();
+        StopWatch searchTimer = new StopWatch();
+        StopWatch fillVosTimer = new StopWatch();
 
         if ( settingsValueObject == null || StringUtils.isBlank( settingsValueObject.getQuery() ) || StringUtils
                 .isBlank( settingsValueObject.getQuery().replaceAll( "\\*", "" ) ) ) {
@@ -111,23 +114,17 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             throw new IllegalArgumentException( "Query '" + settingsValueObject + "' was invalid" );
         }
 
+        timer.start();
+
         SearchSettings searchSettings = searchSettingsFromVo( settingsValueObject )
                 .withDoHighlighting( true );
 
-        watch.start();
+        searchTimer.start();
         Map<Class<?>, List<SearchResult>> searchResults = searchService.search( searchSettings );
-        watch.stop();
+        searchTimer.stop();
 
-        if ( watch.getTime() > 500 ) {
-            BaseFormController.log.info( "Search service work on: " + searchSettings + " took " + watch.getTime() + " ms" );
-        }
-
-        /*
-         * FIXME sort by the number of hits per class, so smallest number of hits is at the top.
-         */
-        watch.reset();
-        watch.start();
-
+        // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
+        fillVosTimer.start();
         List<SearchResult> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
@@ -137,6 +134,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     continue;
 
                 BaseFormController.log
+
                         .info( "Search for: " + searchSettings + "; result: " + results.size() + " " + clazz.getSimpleName()
                                 + "s" );
 
@@ -148,10 +146,15 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 finalResults.addAll( results );
             }
         }
+        fillVosTimer.stop();
 
-        if ( watch.getTime() > 500 ) {
+        timer.stop();
+
+        if ( timer.getTime() > 500 ) {
             BaseFormController.log
-                    .info( "Final unpacking of results for query:" + searchSettings + " took " + watch.getTime() + " ms" );
+                    .info( "Searching for query: " + searchSettings + " took " + timer.getTime() + " ms ("
+                            + "searching: " + searchTimer.getTime() + " ms, "
+                            + "filling VOs: " + fillVosTimer.getTime() + " ms)." );
         }
 
         return new JsonReaderResponse<>( finalResults );
@@ -234,6 +237,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     case 'N':
                         csc.resultType( ExpressionExperimentSet.class );
                         break;
+                    case 'H':
+                    case 'B':
+                        // FIXME: these two are passed by the frontend, but obviously not supported
+                        break;
+                    case ',':
+                        break;
                     default:
                         // TODO: 400 Bad Request error?
                         log.warn( String.format( "Unsupported value for scope: %c.", scope1 ) );
@@ -283,8 +292,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+        StopWatch timer = StopWatch.createStarted();
         Collection<?> vos;
 
         Collection<Long> ids = new ArrayList<>();
@@ -293,7 +301,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = expressionExperimentService.loadValueObjects( ids, false );
+            vos = expressionExperimentService.loadValueObjectsByIds( ids );
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledEes( ( Collection<ExpressionExperimentValueObject> ) vos );
             }
@@ -305,13 +313,11 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
             }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            Collection<CompositeSequenceValueObject> css = new ArrayList<>();
-            for ( SearchResult sr : results ) {
-                CompositeSequenceValueObject csvo = compositeSequenceService
-                        .loadValueObject( ( CompositeSequence ) sr.getResultObject() );
-                css.add( csvo );
-            }
-            vos = css;
+            Collection<CompositeSequence> compositeSequences = results.stream().map( SearchResult::getResultObject )
+                    .map( o -> ( CompositeSequence ) o )
+                    .collect( Collectors.toSet() );
+            vos = compositeSequenceService
+                    .loadValueObjectsWithoutGeneMappingSummary( compositeSequences );
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
             Collection<BibliographicReference> bss = bibliographicReferenceService
                     .load( ids );
@@ -370,8 +376,10 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             sr.setResultObject( idMap.get( sr.getResultId() ) );
         }
 
-        if ( timer.getTime() > 1000 ) {
-            BaseFormController.log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
+        timer.stop();
+
+        if ( timer.getTime() > 200 ) {
+            BaseFormController.log.info( "Value object conversion for " + ids.size() + " " + entityClass + " after search took " + timer.getTime() + " ms." );
         }
     }
 

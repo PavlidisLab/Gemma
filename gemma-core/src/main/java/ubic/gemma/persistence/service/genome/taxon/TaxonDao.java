@@ -32,6 +32,8 @@ import java.util.List;
  */
 public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject> {
 
+    String OBJECT_ALIAS = "taxon";
+
     Taxon findByCommonName( String commonName );
 
     /**
@@ -43,8 +45,6 @@ public interface TaxonDao extends FilteringVoEnabledDao<Taxon, TaxonValueObject>
     Taxon findByScientificName( String scientificName );
 
     Collection<Taxon> findTaxonUsedInEvidence();
-
-    void thaw( Taxon taxon );
 
     Taxon findByNcbiId( Integer ncbiId );
 }

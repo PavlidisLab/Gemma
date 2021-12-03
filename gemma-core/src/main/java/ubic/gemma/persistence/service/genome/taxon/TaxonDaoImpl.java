@@ -25,10 +25,12 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filters;
 
 import java.sql.Connection;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -40,7 +42,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
-        super( Taxon.class, sessionFactory );
+        super( TaxonDao.OBJECT_ALIAS, Taxon.class, sessionFactory );
     }
 
     @Override
@@ -109,52 +111,26 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    public void thaw( final Taxon taxon ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                TaxonDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( taxon );
-                Hibernate.initialize( taxon.getExternalDatabase() );
-                TaxonDaoImpl.this.getSession().evict( taxon );
-            }
-        } );
-    }
-
-    @Override
     public Taxon findByNcbiId( Integer ncbiId ) {
         return this.findOneByProperty( "ncbiId", ncbiId );
     }
 
     @Override
     public TaxonValueObject loadValueObject( Taxon entity ) {
-        this.thaw( entity );
         return new TaxonValueObject( entity );
     }
 
     @Override
-    protected TaxonValueObject processLoadValueObjectsQueryResult( Object result ) {
-        Object[] row = ( Object[] ) result;
-        TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
-        if ( row[2] != null ) {
-            vo.setExternalDatabase( new ExternalDatabaseValueObject( ( ExternalDatabase ) row[2] ) );
-        }
-        return vo;
-    }
-
-    @Override
     protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
-
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + getObjectAlias() + ".id as id, " // 0
-                + getObjectAlias() + ", " // 1
-                + "ED " // 2
-                + "from Taxon as " + getObjectAlias() + " " // taxon
-                + "left join " + getObjectAlias() + ".externalDatabase as ED " // external db
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+        //language=HQL
+        String queryString = MessageFormat.format( "select {0} "
+                + "from Taxon as {0} " // taxon
+                + "left join {0}.externalDatabase as ED " // external db
+                + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + getObjectAlias() + ".id ";
-        queryString += ObjectFilterQueryUtils.formOrderByProperty( sort.getOrderBy(), sort.getDirection() );
+        queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
@@ -166,10 +142,11 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     @Override
     protected Query getCountValueObjectsQuery( Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select count(distinct " + getObjectAlias() + ".id) "
-                + "from Taxon as " + getObjectAlias() + " " // taxon
-                + "left join " + getObjectAlias() + ".externalDatabase as ED " // external db
-                + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
+        //language=HQL
+        String queryString = MessageFormat.format( "select count({0}) "
+                + "from Taxon as {0} " // taxon
+                + "left join {0}.externalDatabase as ED " // external db
+                + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
 
@@ -178,10 +155,5 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
 
         return query;
-    }
-
-    @Override
-    public String getObjectAlias() {
-        return ObjectFilter.DAO_TAXON_ALIAS;
     }
 }

@@ -23,6 +23,7 @@
             <column name="DESCRIPTION" not-null="false" unique="false"
                     sql-type="text"/>
         </property>
+        <!-- eagerly fetch and cached, thus a select -->
         <set name="characteristics" lazy="false" fetch="select" cascade="all">
             <cache usage="read-write"/>
             <key foreign-key="CHARACTERISTIC_GENE_SET_FKC">

@@ -22,14 +22,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import org.apache.commons.lang3.ClassUtils;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
-import ubic.gemma.persistence.service.ObjectFilterException;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
@@ -41,14 +46,10 @@ import java.util.stream.Collectors;
 @ToString
 public class ObjectFilter {
 
-    public static final String DAO_EE_ALIAS = "ee";
-    public static final String DAO_AD_ALIAS = "ad";
-    public static final String DAO_TAXON_ALIAS = "taxon";
-    public static final String DAO_PROBE_ALIAS = "probe";
-    public static final String DAO_GENE_ALIAS = "gene";
-    public static final String DAO_CHARACTERISTIC_ALIAS = "ch";
-    public static final String DAO_BIOASSAY_ALIAS = "ba";
-    public static final String DAO_DATABASE_ENTRY_ALIAS = "accession";
+    /**
+     * This is only the date part of the ISO 8601 standard.
+     */
+    private static DateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd" );
 
     /**
      * Provide all the supported type conversion for parsing required values.
@@ -66,31 +67,33 @@ public class ObjectFilter {
         addConverter( Float.class, Float::parseFloat );
         addConverter( Long.class, Long::parseLong );
         addConverter( Integer.class, Integer::parseInt );
+        addConverter( Date.class, s -> {
+            try {
+                return DATE_FORMAT.parse( s );
+            } catch ( ParseException e ) {
+                throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
+            }
+        } );
     }
 
     /**
      * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
      *
-     * @param objectAlias   alias of the relevant object to use in the final HQL query
      * @param propertyName  property name of the object
      * @param propertyType  the type of the property that will be checked, you can use the {@link EntityUtils#getDeclaredFieldType(String, Class)}
      *                      utility to obtain that type conveniently
      * @param operator      operator for this filter, see {@link Operator} for more details about available operations
      * @param requiredValue required value
+     * @throws IllegalArgumentException if
      */
-    public static ObjectFilter parseObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws ObjectFilterException {
-        return new ObjectFilter( objectAlias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
+    public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
+        return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
     }
 
 
     /**
      * Creates a new ObjectFilter with a value of type that the given requiredValue object is.
      *
-     * @param  objectAlias              The alias of the object in the query. See the DAO for the filtered object to see
-     *                                  what
-     *                                  the alias in the query is. E.g for
-     *                                  {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
-     *                                  the alias is 'ee'
      * @param  propertyName             the name of a property that will be checked.
      * @param  operator                 the operator that will be used to compare the value of the object. The
      *                                  requiredValue will be the right operand of the given operator.
@@ -106,8 +109,8 @@ public class ObjectFilter {
      * @throws IllegalArgumentException if the given operator is the "in" operator but the
      *                                  given requiredValue is not an instance of Iterable.
      */
-    public static ObjectFilter parseObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws ObjectFilterException {
-        return new ObjectFilter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
+    public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
+        return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
     }
 
     public enum Operator {
@@ -122,7 +125,7 @@ public class ObjectFilter {
         notEq( "!=", false, null ),
         like( "like", true, String.class ),
         lessThan( "<", true, null ),
-        greaterThan( ">=", true, null ),
+        greaterThan( ">", true, null ),
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
         in( "in", true, Collection.class );
@@ -162,7 +165,7 @@ public class ObjectFilter {
          * This is package-private on purpose and is only meant for{@link ObjectFilterQueryUtils#formRestrictionClause(Filters)}.
          */
         String getSqlToken() {
-            return token;
+            return sqlToken;
         }
 
         public boolean isNonNullRequired() {
@@ -210,8 +213,9 @@ public class ObjectFilter {
         // if an operator expects a collection as RHS, then the type of the elements in that collection must absolutely
         // match the propertyType
         // for example, ad.id in ("a", 1, NULL) must be invalid if id is of type Long
-        if ( operator.getRequiredType() != null && Collection.class.isAssignableFrom( operator.getRequiredType() ) ) {
-            if ( !( ( Collection<?> ) requiredValue ).stream().allMatch( rv -> rv.getClass().isAssignableFrom( propertyType ) ) ) {
+        if ( requiredValue != null && operator.getRequiredType() != null && Collection.class.isAssignableFrom( operator.getRequiredType() ) ) {
+            Collection<?> requiredCollection = ( Collection<?> ) requiredValue;
+            if ( !requiredCollection.stream().allMatch( rv -> rv.getClass().isAssignableFrom( propertyType ) ) ) {
                 throw new IllegalArgumentException( "All elements in requiredValue " + requiredType + " must be assignable from " + propertyType.getName() + "." );
             }
         }
@@ -224,29 +228,21 @@ public class ObjectFilter {
      * @param  pt  the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
      */
-    private static Object parseRequiredValue( String rv, Class<?> pt ) throws ObjectFilterException {
-        try {
-            if ( isCollection( rv ) ) {
-                // convert individual elements
-                return parseCollection( rv ).stream()
-                        .map( item -> parseItem( item, pt ) )
-                        .collect( Collectors.toList() );
-            } else {
-                return parseItem( rv, pt );
-            }
-        } catch ( IllegalArgumentException | ConversionFailedException e ) {
-            throw new ObjectFilterException( "Could not parse required value '" + rv + "'.", e );
+    private static Object parseRequiredValue( String rv, Class<?> pt ) throws IllegalArgumentException {
+        if ( isCollection( rv ) ) {
+            // convert individual elements
+            return parseCollection( rv ).stream()
+                    .map( item -> parseItem( item, pt ) )
+                    .collect( Collectors.toList() );
+        } else {
+            return parseItem( rv, pt );
         }
     }
 
-    private static Object parseRequiredValues( Collection<String> requiredValues, Class<?> pt ) throws ObjectFilterException {
-        try {
-            return requiredValues.stream()
-                    .map( item -> parseItem( item, pt ) )
-                    .collect( Collectors.toList() );
-        } catch ( IllegalArgumentException e ) {
-            throw new ObjectFilterException( "Could not parse one or more required values.", e );
-        }
+    private static Object parseRequiredValues( Collection<String> requiredValues, Class<?> pt ) throws IllegalArgumentException {
+        return requiredValues.stream()
+                .map( item -> parseItem( item, pt ) )
+                .collect( Collectors.toList() );
     }
 
     private static boolean isCollection( String value ) {
@@ -266,18 +262,11 @@ public class ObjectFilter {
                 .split( "\\s*,\\s*" ) );
     }
 
-    /**
-     *
-     * @param  rv required value
-     * @param  pt property type
-     * @return converted object
-     * @throws IllegalArgumentException if the type is not supported
-     */
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
-        if ( conversionService.canConvert( String.class, pt ) ) {
+        try {
             return conversionService.convert( rv, pt );
-        } else {
-            throw new IllegalArgumentException( "Property type not supported (" + pt + ")." );
+        } catch ( ConversionException e ) {
+            throw new IllegalArgumentException( e );
         }
     }
 }

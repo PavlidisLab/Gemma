@@ -135,20 +135,23 @@ public class AnnotationsWebService {
         }
 
         // If there are filters other than the search query, intersect the results.
-        if ( filter.getObjectFilters( expressionExperimentService ) != null || offset.getValue() != 0 || limit.getValue() != 0 || !sort.getFieldForClass( ExpressionExperiment.class )
-                .equals( "id" ) || !sort.isAsc() ) {
-            // Converting list to string that will be parsed out again - not ideal, but is currently the best way to do
+        if ( filter.getObjectFilters( expressionExperimentService ) != null ||
+                offset.getValue() != 0 ||
+                limit.getValue() != 0 ||
+                !sort.getValue().getOrderBy().equals( "id" ) ||
+                sort.getValue().getDirection() != SortArg.Sort.Direction.ASC ) {
+
             // this without cluttering the code.
             Filters filters = filter.getObjectFilters( expressionExperimentService );
             if ( filters == null ) {
                 filters = new Filters();
             }
             filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
-            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getValueForClass( ExpressionExperiment.class ), offset.getValue(), limit.getValue() ) );
+            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
         }
 
         // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjects( foundIds, false ) ) );
+        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
     }
 
     /**
@@ -185,7 +188,7 @@ public class AnnotationsWebService {
 
         return Responder.paginate( taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                 filters, offset.getValue(),
-                limit.getValue(), sort.getValueForClass( ExpressionExperiment.class ) ) );
+                limit.getValue(), sort.getSort( expressionExperimentService ) ) );
     }
 
     /**

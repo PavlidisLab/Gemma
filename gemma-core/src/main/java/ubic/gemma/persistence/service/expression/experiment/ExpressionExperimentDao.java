@@ -14,6 +14,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -32,6 +33,8 @@ import java.util.Map;
 public interface ExpressionExperimentDao
         extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
         FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject> {
+
+    String OBJECT_ALIAS = "ee";
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
@@ -121,38 +124,36 @@ public interface ExpressionExperimentDao
 
     Taxon getTaxon( BioAssaySet ee );
 
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
-
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
-
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
-            Taxon taxon );
+    /**
+     * This is a specialized flavour of {@link #loadDetailsValueObjects(Filters, Sort, int, int)} for detailed EE VOs.
+     */
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit );
 
     /**
      * Special method for front-end access. This is partly redundant with loadValueObjectsPreFilter; however, it fills
      * in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param orderField the field to order the results by.
-     * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @param limit      max to return
-     * @param start      offset
+     * @param ids        only list specific ids, or null to ignore
+     * @param taxon      only list EEs in the specified taxon, or null to ignore
+     * @param sort       the field to order the results by.
+     * @param offset     offset
+     * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
+
+    /**
+     * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.
+     */
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids );
 
     Collection<ExpressionExperiment> loadLackingFactors();
 
     Collection<ExpressionExperiment> loadLackingTags();
 
-    ExpressionExperimentValueObject loadValueObject( Long eeId );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
 
-    List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
-
-    Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
-            Collection<Long> ids );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 

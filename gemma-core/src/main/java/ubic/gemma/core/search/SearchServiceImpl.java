@@ -45,12 +45,10 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -61,6 +59,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
@@ -152,6 +151,8 @@ public class SearchServiceImpl implements SearchService {
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     // TODO: use services instead of DAO here
     @Autowired
@@ -306,7 +307,7 @@ public class SearchServiceImpl implements SearchService {
         } else if ( resultObject instanceof ExpressionExperiment ) {
             return expressionExperimentService.loadValueObject( ( ExpressionExperiment ) resultObject );
         } else if ( resultObject instanceof CompositeSequence ) {
-            return new CompositeSequenceValueObject( ( CompositeSequence ) resultObject );
+            return compositeSequenceService.loadValueObjectWithoutGeneMappingSummary( ( CompositeSequence ) resultObject );
         } else if ( resultObject instanceof IdentifiableValueObject ) {
             // FIXME: apparently, some search sources return VOs!
             return resultObject;

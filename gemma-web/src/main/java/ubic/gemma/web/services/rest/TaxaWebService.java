@@ -15,6 +15,7 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.SneakyThrows;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -118,7 +117,8 @@ public class TaxaWebService {
     ) {
         Filters filters = new Filters();
         filters.add( taxaArg.getObjectFilters( taxonService ) );
-        return Responder.respond( taxonService.loadValueObjectsPreFilter( filters, Sort.by( "id" ) ) );
+        Sort sort = taxonService.getSort( "id", null );
+        return Responder.respond( taxonService.loadValueObjectsPreFilter( filters, sort ) );
     }
 
     /**
@@ -231,7 +231,7 @@ public class TaxaWebService {
     ) {
         return Responder.paginate(
                 taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters( expressionExperimentService ),
-                        offset.getValue(), limit.getValue(), sort.getValueForClass( Taxon.class ) ) );
+                        offset.getValue(), limit.getValue(), sort.getSort( taxonService ) ) );
     }
 
     /**

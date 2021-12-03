@@ -18,12 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -113,109 +108,84 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     public Map<Class<?>, Map<String, Collection<Long>>> findExperimentsByUris( Collection<String> uriStrings, Taxon t, int limit ) {
         Map<Class<?>, Map<String, Collection<Long>>> result = new HashMap<>();
 
+        if ( uriStrings.isEmpty() )
+            return result;
+
         // Note that the limit isn't strictly adhered to; we just stop querying when we have enough. We avoid duplicates
-
-        String taxonClause = " ";
-        if ( t != null ) {
-            taxonClause = " and ee.taxon = :t";
-        }
-
-        Collection<Long> seenIDs = new HashSet<>();
+        Query q;
+        Set<Long> seenIDs = new HashSet<>();
 
         // direct associations
-        int total = 0;
-        Query q = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, c.valueUri from ExpressionExperiment ee "
-                + "join ee.characteristics c where c.valueUri in (:uriStrings) " + taxonClause )
-                .setParameterList( "uriStrings", uriStrings );
-        if ( t != null ) q.setParameter( "t", t );
+        // language=HQL
+        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri from ExpressionExperiment ee "
+                + "join ee.characteristics c", uriStrings, t, seenIDs );
+        result.put( ExpressionExperiment.class, toEEsByUri( q.list(), seenIDs ) );
 
-        List<Object[]> r = q.list();
-        if ( !r.isEmpty() ) {
-            Map<String, Collection<Long>> c = new HashMap<>();
-
-            for ( Object[] o : r ) {
-                Long eeID = ( Long ) o[0];
-
-                if ( seenIDs.contains( eeID ) ) continue;
-
-                String uri = ( String ) o[1];
-
-                if ( !c.containsKey( uri ) ) {
-                    c.put( uri, new HashSet<Long>() );
-                }
-                c.get( uri ).add( eeID );
-                seenIDs.add( eeID );
-
-            }
-
-            result.put( ExpressionExperiment.class, c );
-
-        }
-
-        total += r.size();
-        if ( limit > 0 && total >= limit ) {
+        if ( limit > 0 && seenIDs.size() >= limit ) {
             return result;
         }
 
         // via experimental factor
-        q = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, c.valueUri  from ExpressionExperiment ee "
-                + " join ee.experimentalDesign ed join ed.experimentalFactors ef "
-                + " join ef.factorValues fv join fv.characteristics c where c.valueUri  in (:uriStrings) " + taxonClause )
-                .setParameterList( "uriStrings", uriStrings );
-        if ( t != null ) q.setParameter( "t", t );
+        // language=HQL
+        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri from ExpressionExperiment ee "
+                + "join ee.experimentalDesign ed join ed.experimentalFactors ef "
+                + "join ef.factorValues fv join fv.characteristics c", uriStrings, t, seenIDs );
+        result.put( FactorValue.class, toEEsByUri( q.list(), seenIDs ) );
 
-        r = q.list();
-        if ( !r.isEmpty() ) {
-            Map<String, Collection<Long>> c = new HashMap<>();
-
-            for ( Object[] o : r ) {
-                Long eeID = ( Long ) o[0];
-                if ( seenIDs.contains( eeID ) ) continue;
-                String uri = ( String ) o[1];
-
-                if ( !c.containsKey( uri ) ) {
-                    c.put( uri, new HashSet<Long>() );
-                }
-                c.get( uri ).add( eeID );
-                seenIDs.add( eeID );
-
-            }
-            result.put( FactorValue.class, c );
-        }
-
-        total += r.size();
-        if ( limit > 0 && total >= limit ) {
+        if ( limit > 0 && seenIDs.size() >= limit ) {
             return result;
         }
 
         // via biomaterial
-        q = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, c.valueUri  from ExpressionExperiment ee "
-                + " join ee.bioAssays ba join ba.sampleUsed bm join bm.characteristics c where c.valueUri in (:uriStrings) " + taxonClause )
-                .setParameterList( "uriStrings", uriStrings );
-        if ( t != null ) q.setParameter( "t", t );
-
-        r = q.list();
-        if ( !r.isEmpty() ) {
-            Map<String, Collection<Long>> c = new HashMap<>();
-
-            for ( Object[] o : r ) {
-                Long eeID = ( Long ) o[0];
-                if ( seenIDs.contains( eeID ) ) continue;
-
-                String uri = ( String ) o[1];
-
-                if ( !c.containsKey( uri ) ) {
-                    c.put( uri, new HashSet<Long>() );
-                }
-                c.get( uri ).add( eeID );
-                seenIDs.add( eeID );
-
-            }
-            result.put( BioMaterial.class, c );
-        }
+        // language=HQL
+        q = this.getEEsByUriQuery( "select distinct ee.id, c.valueUri  from ExpressionExperiment ee "
+                        + "join ee.bioAssays ba join ba.sampleUsed bm join bm.characteristics c",
+                uriStrings, t, seenIDs );
+        result.put( BioMaterial.class, toEEsByUri( q.list(), seenIDs ) );
 
         return result;
+    }
 
+    private Query getEEsByUriQuery( String query, Collection<String> uriStrings, Taxon t, Set<Long> seenIDs ) {
+        query += " where c.valueUri in (:uriStrings) ";
+
+        // don't retrieve EE IDs that we have already fetched otherwise
+        if ( !seenIDs.isEmpty() ) {
+            query += "and ee.id not in (:seenids) ";
+        }
+
+        // by taxon
+        if ( t != null ) {
+            query += "and ee.taxon = :t";
+        }
+
+        Query q = getSessionFactory().getCurrentSession().createQuery( query );
+        q.setParameterList( "uriStrings", uriStrings );
+        if ( !seenIDs.isEmpty() )
+            q.setParameterList( "seenids", seenIDs );
+        if ( t != null )
+            q.setParameter( "t", t );
+        return q;
+    }
+
+    private Map<String, Collection<Long>> toEEsByUri( List<Object[]> r, Set<Long> seenIDs ) {
+        if ( r.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Map<String, Collection<Long>> c = new HashMap<>();
+        for ( Object[] o : r ) {
+            Long eeID = ( Long ) o[0];
+            if ( seenIDs.contains( eeID ) ) continue;
+
+            String uri = ( String ) o[1];
+
+            if ( !c.containsKey( uri ) ) {
+                c.put( uri, new HashSet<>() );
+            }
+            c.get( uri ).add( eeID );
+            seenIDs.add( eeID );
+        }
+        return c;
     }
 
     @Override

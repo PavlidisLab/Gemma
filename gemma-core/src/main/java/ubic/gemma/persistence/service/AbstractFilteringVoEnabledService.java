@@ -3,10 +3,7 @@ package ubic.gemma.persistence.service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,23 +22,32 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public String getObjectAlias() {
-        return voDao.getObjectAlias();
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) {
+        try {
+            return ObjectFilter.parseObjectFilter( voDao.getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, voDao.getElementClass() ), operator, value );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
+        }
     }
 
     @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws ObjectFilterException {
-        return voDao.getObjectFilter( property, operator, value );
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) {
+        try {
+            return ObjectFilter.parseObjectFilter( voDao.getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, voDao.getElementClass() ), operator, values );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
+        }
     }
 
     @Override
-    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws ObjectFilterException {
-        return voDao.getObjectFilter( property, operator, values );
-    }
-
-    @Override
-    public Sort getSort( String property, Sort.Direction direction ) throws NoSuchFieldException {
-        return voDao.getSort( property, direction );
+    public Sort getSort( String property, Sort.Direction direction ) {
+        // this only serves as a pre-condition to ensure that the property exists
+        try {
+            EntityUtils.getDeclaredField( voDao.getElementClass(), property );
+            return Sort.by( voDao.getObjectAlias(), property, direction );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( "Could not resolve property " + property + " on " + voDao.getElementClass().getName() + ".", e );
+        }
     }
 
     @Override

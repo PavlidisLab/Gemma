@@ -1,14 +1,12 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import ubic.gemma.persistence.service.FilteringVoEnabledService;
-import ubic.gemma.persistence.service.ObjectFilterException;
+import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
@@ -26,7 +24,7 @@ public class FilterArgTest {
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
-    private FilteringVoEnabledService mockVoService;
+    private FilteringService mockVoService;
 
     @Test
     public void testEmptyFilter() {
@@ -34,7 +32,6 @@ public class FilterArgTest {
     }
 
     @Before
-    @SneakyThrows(ObjectFilterException.class)
     public void setUp() {
         when( mockVoService.getObjectFilter( any(), any(), any( String.class ) ) )
                 .thenAnswer( arg -> ObjectFilter.parseObjectFilter( "alias", arg.getArgument( 0, String.class ),

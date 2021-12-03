@@ -92,7 +92,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
-                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
+                .loadValueObjectsByIds( EntityUtils.getIds( experimentSearchResults ), true );
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
@@ -262,7 +262,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             eeIds.add( sr.getResultId() );
         }
 
-        Collection<ExpressionExperimentValueObject> eevos = expressionExperimentService.loadValueObjects( eeIds, true );
+        Collection<ExpressionExperimentValueObject> eevos = expressionExperimentService.loadValueObjectsByIds( eeIds, true );
         List<SearchResultDisplayObject> experiments = new ArrayList<>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             experiments.add( new SearchResultDisplayObject( eevo ) );

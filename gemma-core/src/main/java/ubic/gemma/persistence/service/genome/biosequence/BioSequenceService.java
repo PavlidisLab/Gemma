@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.genome.biosequence;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
@@ -76,5 +77,5 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     BioSequence thaw( BioSequence bs );
 
-    BioSequence findByCompositeSequence( Long id );
+    BioSequence findByCompositeSequence( CompositeSequence compositeSequence );
 }

@@ -169,11 +169,4 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
         AbstractService.log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
         return taxaWithArrays;
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( final Taxon taxon ) {
-        this.taxonDao.thaw( taxon );
-    }
-
 }

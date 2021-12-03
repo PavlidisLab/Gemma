@@ -426,37 +426,21 @@ public interface ExpressionExperimentService
     List<ExpressionExperimentValueObject> loadAllValueObjects();
 
     /**
-     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(List, String, boolean, int, int) for
+     * @see FilteringVoEnabledDao#loadValueObjectsPreFilter(Filters, Sort, int, int) for
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( Sort sort );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( Sort sort,
-            Taxon taxon );
-
     /**
-     * Special method for front-end access
-     *
-     * @param orderField the field to order the results by e.g. curationDetails.lastUpdated
-     * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids given (default = null)
-     * @param taxon      only list experiments within specific taxon (default = null)
-     * @param limit      limit of how many results to give; default no limit.
-     * @param start      offset how many results to skip (for paging); default 0.
-     * @return a list of EE details VOs representing experiments matching the given arguments.
+     * @see ExpressionExperimentDao#loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Sort sort,
-            Collection<Long> ids, Taxon taxon, int limit, int start );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
@@ -470,11 +454,10 @@ public interface ExpressionExperimentService
      * @return value objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadValueObjectsOrdered( Sort sort,
-            Collection<Long> ids );
+    List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.

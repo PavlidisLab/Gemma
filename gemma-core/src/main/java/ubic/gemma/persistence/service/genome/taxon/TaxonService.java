@@ -82,6 +82,4 @@ public interface TaxonService extends FilteringVoEnabledService<Taxon, TaxonValu
      * @return List of taxa with array designs in gemma
      */
     Collection<TaxonValueObject> getTaxaWithArrays();
-
-    void thaw( Taxon taxon );
 }

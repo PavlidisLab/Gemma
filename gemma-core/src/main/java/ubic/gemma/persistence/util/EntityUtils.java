@@ -166,8 +166,8 @@ public class EntityUtils {
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
-    public static Collection<Long> getIds( Collection<? extends Identifiable> entities ) {
-        Collection<Long> r = new ArrayList<>( entities.size() );
+    public static List<Long> getIds( Collection<? extends Identifiable> entities ) {
+        List<Long> r = new ArrayList<>( entities.size() );
         for ( Identifiable i : entities ) {
             r.add( i.getId() );
         }
@@ -180,9 +180,8 @@ public class EntityUtils {
      * @param entity entity
      * @return a collection with one item in it.
      */
-    public static Collection<Long> getIds( Object entity ) {
-        Collection<Long> r;
-        r = new HashSet<>();
+    public static List<Long> getIds( Object entity ) {
+        List<Long> r = new ArrayList<>( 1 );
         r.add( EntityUtils.getId( entity ) );
         return r;
     }
@@ -263,7 +262,7 @@ public class EntityUtils {
         // will be empty if anonymous
         //noinspection unchecked
         Collection<String> groups = sess.createQuery(
-                "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                        "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                 .setParameter( "user", userName ).list();
 
         Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedClass.getName() )
@@ -358,7 +357,7 @@ public class EntityUtils {
         if ( sqlQuery.contains( ":groups" ) ) {
             //noinspection unchecked
             Collection<String> groups = sessionFactory.getCurrentSession().createQuery(
-                    "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                            "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                     .setParameter( "user", userName ).list();
             queryObject.setParameterList( "groups", groups );
         }

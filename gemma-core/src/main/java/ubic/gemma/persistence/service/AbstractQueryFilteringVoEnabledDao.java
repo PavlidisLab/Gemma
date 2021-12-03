@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -11,17 +10,21 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
+ * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Query} API.
  *
- * @see ubic.gemma.persistence.util.ObjectFilterQueryUtils for utilities to generate HQL clauses from
+ * @see ubic.gemma.persistence.util.ObjectFilterQueryUtils for utilities to generate HQL clauses from a {@link Filters}
  * @see ubic.gemma.persistence.util.AclQueryUtils for utilities to generate ACL clauses to filter VOs by ACL at the
  * database-level
  * @see AbstractCriteriaFilteringVoEnabledDao as an alternative
+ *
+ * @author poirigui
  */
 public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
 
@@ -30,15 +33,15 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      */
     protected enum QueryHint {
         /**
-         * Indicate that all elements are fetched (i.e. no offset/limit will be applied on the query).
+         * Indicate that the elements of the query will be paginated with {@link Query#setFirstResult(int)} and {@link Query#setMaxResults(int)}.
          *
-         * This is useful to queries that want to use 'join fetch' on one-to-many or many-to-many relationships.
+         * This is useful to queries that perform 'join fetch' on one-to-many and many-to-many relationships.
          */
-        FETCH_ALL,
+        PAGINATED
     }
 
-    protected AbstractQueryFilteringVoEnabledDao( Class<O> elementClass, SessionFactory sessionFactory ) {
-        super( elementClass, sessionFactory );
+    protected AbstractQueryFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
+        super( objectAlias, elementClass, sessionFactory );
     }
 
     /**
@@ -76,12 +79,11 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public Slice<VO> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        StopWatch stopWatch = StopWatch.createStarted();
 
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
-        if ( offset <= 0 && limit <= 0 ) {
-            hints.add( QueryHint.FETCH_ALL );
+        if ( offset > 0 || limit > 0 ) {
+            hints.add( QueryHint.PAGINATED );
         }
 
         Query query = this.getLoadValueObjectsQuery( filters, sort, hints );
@@ -94,19 +96,28 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
             query.setMaxResults( limit );
 
         //noinspection unchecked
+        StopWatch queryStopWatch = StopWatch.createStarted();
         List<?> list = query.list();
+        queryStopWatch.stop();
 
+        StopWatch postProcessingStopWatch = StopWatch.createStarted();
         List<VO> vos = list.stream()
                 .map( this::processLoadValueObjectsQueryResult )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
+        postProcessingStopWatch.stop();
 
+        StopWatch countingStopWatch = StopWatch.createStarted();
         Long totalElements = ( Long ) totalElementsQuery.uniqueResult();
+        countingStopWatch.stop();
 
         stopWatch.stop();
 
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
-            log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
+            log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms "
+                    + "(querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "counting: " + countingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
         }
 
         return new Slice<>( vos, sort, offset, limit, totalElements );
@@ -114,24 +125,31 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
     @Override
     public List<VO> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        StopWatch stopWatch = StopWatch.createStarted();
+        StopWatch queryStopWatch = StopWatch.create();
+        StopWatch postProcessingStopWatch = StopWatch.create();
 
-        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.of( QueryHint.FETCH_ALL ) );
+        Query query = this.getLoadValueObjectsQuery( filters, sort, EnumSet.noneOf( QueryHint.class ) );
 
-        //noinspection unchecked
+        queryStopWatch.start();
         List<?> list = query.list();
+        queryStopWatch.stop();
 
-        try {
-            return list.stream()
-                    .map( this::processLoadValueObjectsQueryResult )
-                    .filter( Objects::nonNull )
-                    .collect( Collectors.toList() );
-        } finally {
-            stopWatch.stop();
-            if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
-                log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms." );
-            }
+        postProcessingStopWatch.start();
+        List<VO> vos = list.stream()
+                .map( this::processLoadValueObjectsQueryResult )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+        postProcessingStopWatch.stop();
+
+        stopWatch.stop();
+
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+            log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms ("
+                    + "querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
+                    + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
         }
+
+        return vos;
     }
 }

@@ -31,6 +31,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Sort;
 
 import java.util.*;
 
@@ -122,4 +125,31 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
         return this.characteristicDao.findByCategory( query );
     }
 
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) throws IllegalArgumentException {
+        try {
+            return ObjectFilter.parseObjectFilter( CharacteristicDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, value );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
+
+    @Override
+    public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
+        try {
+            return ObjectFilter.parseObjectFilter( CharacteristicDao.OBJECT_ALIAS, property, EntityUtils.getDeclaredFieldType( property, Characteristic.class ), operator, values );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
+
+    @Override
+    public Sort getSort( String property, Sort.Direction direction ) throws IllegalArgumentException {
+        try {
+            EntityUtils.getDeclaredFieldType( property, Characteristic.class );
+            return Sort.by( CharacteristicDao.OBJECT_ALIAS, property, direction );
+        } catch ( NoSuchFieldException e ) {
+            throw new IllegalArgumentException( e );
+        }
+    }
 }

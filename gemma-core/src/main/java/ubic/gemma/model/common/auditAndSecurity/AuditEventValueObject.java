@@ -76,10 +76,13 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
     }
 
     public String getActionName() {
-        if ( this.getAction().equals( "C" ) ) {
+        if ( getAction() == null ) {
+            return null;
+        } else if ( this.getAction().equals( "C" ) ) {
             return "Create";
+        } else {
+            return "Update";
         }
-        return "Update";
     }
 
     public java.util.Date getDate() {

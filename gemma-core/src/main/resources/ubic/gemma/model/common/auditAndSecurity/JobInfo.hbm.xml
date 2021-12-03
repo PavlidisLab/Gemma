@@ -30,7 +30,7 @@
             <column name="DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
         </property>
         <property name="messages" type="org.springframework.orm.hibernate3.support.ClobStringType">
-            <column name="MESSAGES" not-null="false" unique="false" sql-type="text"/>
+            <column name="MESSAGES" not-null="false" unique="false" sql-type="longtext"/>
         </property>
         <property name="taskId" type="java.lang.String">
             <column name="TASK_ID" not-null="false" unique="false" sql-type="VARCHAR(255)"/>

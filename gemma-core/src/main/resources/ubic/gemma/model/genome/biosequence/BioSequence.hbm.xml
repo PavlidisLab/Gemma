@@ -24,7 +24,7 @@
 		</property>
 		<property name="sequence" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="SEQUENCE" not-null="false" unique="false"
-				sql-type="text" />
+				sql-type="longtext" />
 		</property>
 		<property name="isApproximateLength" type="java.lang.Boolean">
 			<column name="IS_APPROXIMATE_LENGTH" not-null="false" unique="false" sql-type="TINYINT" />
@@ -49,6 +49,7 @@
 			cascade="all" lazy="false" fetch="join">
 			<column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
+		<!-- assumed readily available in BioSequenceValueObject -->
 		<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="join">
 			<column name="TAXON_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>

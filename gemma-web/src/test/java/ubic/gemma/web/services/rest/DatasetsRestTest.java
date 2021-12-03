@@ -9,9 +9,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -123,7 +122,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
-                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
@@ -147,7 +146,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
-                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
@@ -171,7 +170,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         assertThat( filterArg.getObjectFilters( expressionExperimentService ) )
                 .extracting( of -> of[0] )
                 .first()
-                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
@@ -198,11 +197,11 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 ) )
                 .hasSize( 2 );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[0] )
-                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
         assertThat( filterArg.getObjectFilters( expressionExperimentService ).get( 0 )[1] )
-                .hasFieldOrPropertyWithValue( "objectAlias", ObjectFilter.DAO_EE_ALIAS )
+                .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
          */

@@ -22,6 +22,8 @@ import org.junit.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.util.Settings;
@@ -33,6 +35,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@Category(GoldenPathTest.class)
 public class GoldenPathQueryTest extends TestCase {
 
     private static final Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );

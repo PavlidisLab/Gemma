@@ -20,10 +20,12 @@ package ubic.gemma.core.analysis.report;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -72,6 +74,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
      * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
      */
     @Override
+    @Transactional(readOnly = true)
     public void saveReport( Date date ) {
         WhatsNew wn = this.getReport( date );
         this.initDirectories();
@@ -79,14 +82,7 @@ public class WhatsNewServiceImpl implements WhatsNewService {
     }
 
     @Override
-    public WhatsNew getReport() {
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addWeeks( date, -1 );
-        return this.getReport( date );
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
 
@@ -116,13 +112,18 @@ public class WhatsNewServiceImpl implements WhatsNewService {
         return wn;
     }
 
-    /**
-     * Retrieve the latest WhatsNew report.
-     *
-     * @return WhatsNew the latest WhatsNew report cache.
-     */
     @Override
-    public WhatsNew retrieveReport() {
+    @Transactional(readOnly = true)
+    public WhatsNew getWeeklyReport() {
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+        return this.getReport( date );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WhatsNew getLatestWeeklyReport() {
         WhatsNew wn = new WhatsNew();
         try {
             File newObjects = new File(
@@ -135,7 +136,12 @@ public class WhatsNewServiceImpl implements WhatsNewService {
                 return null;
             }
 
+            StopWatch timer = StopWatch.createStarted();
+            StopWatch loadNewObjectsTimer = StopWatch.create();
+            StopWatch loadUpdatedObjectsTimer = StopWatch.create();
+
             // load up all new objects
+            loadNewObjectsTimer.start();
             if ( newObjects.exists() ) {
                 Collection<AuditableObject> aos = this.loadAuditableObjects( newObjects );
                 Map<String, List<AuditableObject>> aosByType = aos.stream()
@@ -148,8 +154,10 @@ public class WhatsNewServiceImpl implements WhatsNewService {
                     wn.addNewObjects( objects );
                 }
             }
+            loadNewObjectsTimer.stop();
 
             // load up all updated objects
+            loadUpdatedObjectsTimer.start();
             if ( updatedObjects.exists() ) {
                 Collection<AuditableObject> aos = this.loadAuditableObjects( updatedObjects );
                 Map<String, List<AuditableObject>> aosByType = aos.stream()
@@ -173,10 +181,22 @@ public class WhatsNewServiceImpl implements WhatsNewService {
                     wn.addUpdatedObjects( objects );
                 }
             }
+            loadUpdatedObjectsTimer.stop();
+
             // build total, new and updated counts by taxon to display in data summary widget on front page
+            StopWatch funkyMapGenerationTimer = StopWatch.createStarted();
             wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
             wn.setUpdatedEEIdsPerTaxon(
                     this.getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments() ) );
+            funkyMapGenerationTimer.stop();
+            timer.stop();
+
+            if ( timer.getTime() > 500 ) {
+                log.info( "Retrieving report took " + timer.getTime() + "ms ("
+                        + "loading new: " + loadNewObjectsTimer.getTime() + " ms, "
+                        + "loading updated: " + loadUpdatedObjectsTimer.getTime() + " ms, "
+                        + "ee by taxon map creation: " + funkyMapGenerationTimer.getTime() + "ms)." );
+            }
 
         } catch ( Throwable e ) {
             WhatsNewServiceImpl.log.error( e, e );

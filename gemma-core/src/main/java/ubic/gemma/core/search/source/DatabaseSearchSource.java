@@ -205,8 +205,8 @@ public class DatabaseSearchSource implements SearchSource {
         }
 
         // search by associated genes.
-        for ( CompositeSequence sequence : matchedCs ) {
-            geneSet.addAll( compositeSequenceService.getGenes( sequence ) );
+        for ( Collection<Gene> genes : compositeSequenceService.getGenes( matchedCs ).values() ) {
+            geneSet.addAll( genes );
         }
 
         watch.stop();

@@ -200,7 +200,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    protected Criteria getLoadValueObjectsCriteria( Filters objectFilters ) {
+    protected Criteria getLoadValueObjectsCriteria( Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
@@ -210,7 +210,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createAlias( "ef.factorValues", "fv", Criteria.LEFT_JOIN );
 
         // apply filtering
-        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( objectFilters ) );
+        query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
 
         // apply the ACL on the associated EE
         query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );

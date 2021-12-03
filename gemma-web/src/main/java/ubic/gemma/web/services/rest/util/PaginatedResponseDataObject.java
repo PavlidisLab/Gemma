@@ -25,7 +25,7 @@ public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> 
 
     private final Integer limit;
 
-    private final Sort sort;
+    private final SortValueObject sort;
 
     private final Long totalElements;
 
@@ -36,7 +36,7 @@ public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> 
         super( payload );
         this.offset = payload.getOffset();
         this.limit = payload.getLimit();
-        this.sort = payload.getSort();
+        this.sort = payload.getSort() != null ? new SortValueObject( payload.getSort() ) : null;
         this.totalElements = payload.getTotalElements();
     }
 
@@ -48,7 +48,7 @@ public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> 
         return limit;
     }
 
-    public Sort getSort() {
+    public SortValueObject getSort() {
         return sort;
     }
 
