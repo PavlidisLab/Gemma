@@ -25,7 +25,6 @@ import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,6 +76,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Before
     public void setUp() {
         gene = new Gene();
+        gene.setId( 1L );
         gene.setOfficialSymbol( "BRCA1" );
         taxon = new Taxon();
         gene.setTaxon( taxon );
@@ -96,7 +96,10 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     public void testSearchEverything() {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
-        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
+            SearchResult searchResult = args.getArgument( 0, SearchResult.class );
+            return new SearchResult<>( Gene.class, new GeneValueObject( ( Gene ) searchResult.getResultObject() ), searchResult.getScore(), searchResult.getHighlightedText() );
+        } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
         SearchWebService.SearchResultResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ) );
@@ -122,15 +125,21 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByTaxon() {
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
-        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
+            SearchResult searchResult = args.getArgument( 0, SearchResult.class );
+            return new SearchResult<>( Gene.class, new GeneValueObject( ( Gene ) searchResult.getResultObject() ), searchResult.getScore(), searchResult.getHighlightedText() );
+        } );
         searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null, LimitArg.valueOf( "20" ) );
         verify( taxonService ).findByNcbiId( 9606 );
     }
 
     @Test
     public void testSearchByArrayDesign() {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
-        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
+        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
+        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
+            SearchResult searchResult = args.getArgument( 0, SearchResult.class );
+            return new SearchResult<>( Gene.class, new GeneValueObject( ( Gene ) searchResult.getResultObject() ), searchResult.getScore(), searchResult.getHighlightedText() );
+        } );
         searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null, LimitArg.valueOf( "20" ) );
         verify( arrayDesignService ).load( 1L );
     }
@@ -157,6 +166,6 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenUnsupportedResultTypeIsProvided() {
-        searchWebService.search( "brain", null, null, Arrays.asList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ) );
+        searchWebService.search( "brain", null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ), LimitArg.valueOf( "20" ) );
     }
 }
