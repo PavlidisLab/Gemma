@@ -237,9 +237,8 @@ public class BibliographicReferenceServiceImpl
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException {
         SearchSettings ss = SearchSettings.bibliographicReferenceSearch( settings.getQuery() );
 
-        //noinspection unchecked
-        List<SearchResult<BibliographicReference>> resultEntities = searchService
-                .search( ss, BibliographicReference.class );
+        List<SearchResult<BibliographicReference>> resultEntities = searchService.search( ss )
+                .getByResultObjectType( BibliographicReference.class );
 
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
@@ -277,7 +276,8 @@ public class BibliographicReferenceServiceImpl
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) throws SearchException {
         List<SearchResult<BibliographicReference>> resultEntities = searchService
-                .search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
+                .search( SearchSettings.bibliographicReferenceSearch( query ) )
+                .getByResultObjectType( BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
         for ( SearchResult<BibliographicReference> sr : resultEntities ) {
             BibliographicReference entity = sr.getResultObject();

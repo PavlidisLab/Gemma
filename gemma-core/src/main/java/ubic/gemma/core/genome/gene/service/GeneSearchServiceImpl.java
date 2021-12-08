@@ -31,7 +31,6 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.*;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.*;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -173,7 +172,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
-        SearchService.SearchResultMap results = searchService.speedSearch( settings );
+        SearchService.SearchResultMap results = searchService.search( settings.withMode( SearchSettings.SearchMode.FAST ) );
 
         List<SearchResult<GeneSet>> geneSetSearchResults = new ArrayList<>();
         List<SearchResult<Gene>> geneSearchResults = new ArrayList<>();
@@ -181,14 +180,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         boolean exactGeneSymbolMatch = false;
         if ( !results.isEmpty() ) {
             if ( settings.hasResultType( GeneSet.class ) ) {
-                geneSetSearchResults.addAll( results.get( GeneSet.class ) );
+                geneSetSearchResults.addAll( results.getByResultObjectType( GeneSet.class ) );
             }
             if ( settings.hasResultType( Gene.class ) ) {
-                geneSearchResults.addAll( results.get( Gene.class ) );
+                geneSearchResults.addAll( results.getByResultObjectType( Gene.class ) );
             }
 
             // Check to see if we have an exact match, if so, return earlier abstaining from doing other searches
-            for ( SearchResult<Gene> geneResult : results.get( Gene.class ) ) {
+            for ( SearchResult<Gene> geneResult : results.getByResultObjectType( Gene.class ) ) {
                 Gene g = geneResult.getResultObject();
                 // aliases too?
                 if ( g != null && g.getOfficialSymbol() != null && g.getOfficialSymbol().startsWith( query.trim() ) ) {
@@ -369,7 +368,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult<Gene>> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
+            List<SearchResult<Gene>> geneSearchResults = searchService.search( settings.withMode( SearchSettings.SearchMode.FAST ) ).getByResultObjectType( Gene.class );
 
             if ( geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.

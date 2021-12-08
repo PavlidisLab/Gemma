@@ -58,9 +58,9 @@ public class CompositeSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         // FIXME: use searchWith
-        Set<SearchResult<? extends Identifiable>> results = new HashSet<>();
+        Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
             results.addAll( source.searchBioSequenceAndGene( settings, previousGeneSearchResults ) );
         }
@@ -73,9 +73,9 @@ public class CompositeSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException {
         // FIXME: use searchWith
-        Set<SearchResult<? extends Identifiable>> results = new HashSet<>();
+        Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
             results.addAll( source.searchCompositeSequenceAndGene( settings ) );
         }

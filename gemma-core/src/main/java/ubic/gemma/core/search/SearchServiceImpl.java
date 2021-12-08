@@ -29,22 +29,21 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
-import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.CompositeSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
@@ -53,29 +52,32 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUtils;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -106,25 +108,39 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     private static class SearchResultMapImpl extends LinkedMultiValueMap<Class<? extends Identifiable>, SearchResult<?>> implements SearchResultMap {
 
-        @Nonnull
         @Override
-        public <T extends Identifiable> List<SearchResult<T>> get( Class<T> searchResultType ) {
-            List<SearchResult<?>> results = this.getOrDefault( searchResultType, Collections.emptyList() );
+        public List<SearchResult<?>> getByResultType( Class<? extends Identifiable> searchResultType ) {
+            return getOrDefault( searchResultType, Collections.emptyList() );
+        }
+
+        @Override
+        public <T extends Identifiable> List<SearchResult<T>> getByResultObjectType( Class<T> clazz ) {
             //noinspection unchecked
-            return results.stream()
-                    .filter( e -> searchResultType.isAssignableFrom( e.getResultType() ) )
+            return values().stream().flatMap( List::stream )
+                    .filter( e -> e.getResultObject() == null || clazz.isInstance( e.getResultObject() ) )
                     .map( e -> ( SearchResult<T> ) e )
                     .collect( Collectors.toList() );
         }
 
+        @Override
+        public Set<Class<? extends Identifiable>> getResultTypes() {
+            return keySet();
+        }
+
+        @Override
+        public List<SearchResult<?>> toList() {
+            return values().stream()
+                    .flatMap( List::stream )
+                    .collect( Collectors.toList() );
+        }
+
         private <T extends Identifiable> void add( SearchResult<T> searchResult ) {
-            assert searchResult.getResultObject() == null || searchResult.getResultType().isAssignableFrom( searchResult.getResultObject().getClass() );
             super.add( searchResult.getResultType(), searchResult );
         }
 
         private <T extends Identifiable> void addAll( Collection<SearchResult<T>> searchResult ) {
             for ( SearchResult<T> sr : searchResult ) {
-                this.add( sr.getResultType(), sr );
+                this.add( sr );
             }
         }
     }
@@ -163,34 +179,25 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Autowired
     private CharacteristicService characteristicService;
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private ExpressionExperimentSetService experimentSetService;
-    @Autowired
     private GeneSearchService geneSearchService;
     @Autowired
     private GeneService geneService;
     @Autowired
-    private GeneSetService geneSetService;
-    @Autowired
     private OntologyService ontologyService;
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-    @Autowired
-    private BioSequenceService bioSequenceService;
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
 
     // TODO: use services instead of DAO here
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
     @Autowired
     private TaxonService taxonService;
-    @Autowired
-    private BibliographicReferenceService bibliographicReferenceService;
 
-    private final Set<Class<? extends Identifiable>> supportedResultTypes = new HashSet<>();
-    private final ConfigurableConversionService resultObjectConversionService = new GenericConversionService();
+    @Autowired
+    private ConversionService valueObjectConversionService;
+
+    private final Map<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> supportedResultTypes = new HashMap<>();
+
 
     /**
      * A composite search source.
@@ -203,36 +210,13 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     @Override
     @Transactional(readOnly = true)
     public SearchResultMap search( SearchSettings settings ) throws SearchException {
-        return doSearch( settings );
-    }
-
-    /*
-     * This is only used for gene and gene-set searches?
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public SearchResultMap speedSearch( SearchSettings settings ) throws SearchException {
-        return doSearch( settings.withMode( SearchSettings.SearchMode.FAST ) );
-    }
-
-    /*
-     * Many calls will end up here.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public SearchResultMap search( SearchSettings settings, boolean fillObjects,
-            boolean webSpeedSearch ) throws SearchException {
-        return doSearch( settings.withFillResults( fillObjects ).withMode( webSpeedSearch ? SearchSettings.SearchMode.FAST : SearchSettings.SearchMode.NORMAL ) );
-    }
-
-    private SearchResultMap doSearch( SearchSettings settings ) throws SearchException {
-        if ( !supportedResultTypes.containsAll( settings.getResultTypes() ) ) {
-            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes ) + "." );
+        if ( !supportedResultTypes.keySet().containsAll( settings.getResultTypes() ) ) {
+            throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes.keySet() ) + "." );
         }
 
         StopWatch timer = StopWatch.createStarted();
 
-        SearchResultMap results;
+        SearchResultMapImpl results;
         if ( settings.isTermQuery() ) {
             // we only attempt an ontology search if the uri looks remotely like a url.
             results = this.ontologyUriSearch( settings );
@@ -240,7 +224,12 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             results = this.generalSearch( settings );
         }
 
-        if ( !settings.isFillResults() ) {
+        if ( settings.isFillResults() ) {
+            for ( Map.Entry<Class<? extends Identifiable>, List<SearchResult<?>>> e : results.entrySet() ) {
+                fillSearchResultsIfMissing( e.getKey(), e.getValue().stream().map( sr -> ( SearchResult<?> ) sr ).collect( Collectors.toList() ) );
+                e.getValue().removeIf( sr -> sr.getResultObject() == null );
+            }
+        } else {
             results.forEach( ( k, v ) -> v.forEach( sr -> sr.setResultObject( null ) ) );
         }
 
@@ -257,82 +246,128 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      */
 
     @Override
-    @Transactional(readOnly = true)
-    public <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass ) throws SearchException {
-        // only search for the requested class
-        settings = settings.withResultTypes( Collections.singleton( resultClass ) );
-        // Note: resultClass is guaranteed to exist in the returned mapping
-        return this.search( settings ).get( resultClass );
-    }
-
-    @Override
     public Set<Class<? extends Identifiable>> getSupportedResultTypes() {
-        return supportedResultTypes;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException {
-        // null if a valid state if the original result is provisional, then we return a provisional VO
-        T resultObject = searchResult.getResultObject();
-        U convertedResultObject = null;
-        if ( resultObject != null ) {
-            try {
-                //noinspection unchecked
-                convertedResultObject = ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class );
-            } catch ( ConverterNotFoundException e ) {
-                throw new IllegalArgumentException( "Result type " + searchResult.getResultType() + " is not supported for VO conversion.", e );
-            }
-        }
-        return SearchResult.from( searchResult, convertedResultObject );
+        return supportedResultTypes.keySet();
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         searchSource = new CompositeSearchSource( Arrays.asList( databaseSearchSource, compassSearchSource ) );
         initializeSupportedResultTypes();
-        initializeResultObjectConversionService();
         this.initializeNameToTaxonMap();
     }
 
     private void initializeSupportedResultTypes() {
-        supportedResultTypes.add( ArrayDesign.class );
-        supportedResultTypes.add( BibliographicReference.class );
-        supportedResultTypes.add( BioSequence.class );
-        supportedResultTypes.add( CompositeSequence.class );
-        supportedResultTypes.add( ExpressionExperiment.class );
-        supportedResultTypes.add( ExpressionExperimentSet.class );
-        supportedResultTypes.add( Gene.class );
-        supportedResultTypes.add( GeneSet.class );
-        supportedResultTypes.add( PhenotypeAssociation.class );
+        supportedResultTypes.put( ArrayDesign.class, ArrayDesignValueObject.class );
+        supportedResultTypes.put( BibliographicReference.class, BibliographicReferenceValueObject.class );
+        supportedResultTypes.put( BioSequence.class, BioSequenceValueObject.class );
+        supportedResultTypes.put( CompositeSequence.class, CompositeSequenceValueObject.class );
+        supportedResultTypes.put( ExpressionExperiment.class, ExpressionExperimentValueObject.class );
+        supportedResultTypes.put( ExpressionExperimentSet.class, ExpressionExperimentSetValueObject.class );
+        supportedResultTypes.put( Gene.class, GeneValueObject.class );
+        supportedResultTypes.put( GeneSet.class, GeneSetValueObject.class );
+        for ( Map.Entry<Class<? extends Identifiable>, Class<? extends IdentifiableValueObject<?>>> e : supportedResultTypes.entrySet() ) {
+            Assert.isTrue( valueObjectConversionService.canConvert( Long.class, e.getValue() ),
+                    String.format( "Must be able to convert from %s to %s.", e.getKey().getName(), e.getValue().getName() ) );
+            Assert.isTrue( valueObjectConversionService.canConvert( e.getKey(), e.getValue() ),
+                    String.format( "Must be able to convert from %s to %s.", e.getKey().getName(), e.getValue().getName() ) );
+        }
+        supportedResultTypes.put( PhenotypeAssociation.class, CharacteristicValueObject.class );
     }
 
-    private void initializeResultObjectConversionService() {
-        resultObjectConversionService.addConverter( ArrayDesign.class, IdentifiableValueObject.class, o -> {
-            ArrayDesign ad = ( ArrayDesign ) o;
-            // this is a work-around for Compass-loaded AD which do not have a primary taxon loaded, although it is a
-            // mandatory property
-            if ( ad.getPrimaryTaxon() == null ) {
-                return arrayDesignService.loadValueObjectById( ad.getId() );
-            } else {
-                return arrayDesignService.loadValueObject( ad );
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException {
+        try {
+            // null sf a valid state if the original result is provisional, the converter is capable of retrieving the VO by ID
+            T resultObject = searchResult.getResultObject();
+            //noinspection unchecked
+            return SearchResult.from( searchResult, ( U ) valueObjectConversionService.convert(
+                    resultObject != null ? resultObject : searchResult.getResultId(),
+                    supportedResultTypes.get( searchResult.getResultType() ) ) );
+        } catch ( ConverterNotFoundException e ) {
+            throw new IllegalArgumentException( "Result type " + searchResult.getResultType() + " is not supported for VO conversion.", e );
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjects( Collection<SearchResult<?>> searchResults ) throws IllegalArgumentException {
+        // regroup by type so that we can apply efficient array conversion
+        Map<Class<? extends Identifiable>, List<SearchResult<?>>> searchResultsByType = searchResults.stream()
+                .collect( Collectors.groupingBy( SearchResult::getResultType, Collectors.toList() ) );
+        // TODO: implement retain missing VOs
+        return searchResultsByType.entrySet().stream()
+                .map( l -> this.loadValueObjectsOfSameType( l.getValue(), l.getKey() ) )
+                .flatMap( List::stream )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * Perform optimized VO conversion on collections of the same type.
+     */
+    private List<SearchResult<? extends IdentifiableValueObject<?>>> loadValueObjectsOfSameType( List<SearchResult<?>> results, Class<? extends Identifiable> resultType ) {
+        List<? extends Identifiable> entities = results.stream()
+                .map( SearchResult::getResultObject )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+
+        List<Long> entitiesIds = results.stream()
+                .filter( sr -> sr.getResultObject() == null )
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toList() );
+
+        // convert entities to VOs
+        List<IdentifiableValueObject<?>> entitiesVos = new ArrayList<>( entities.size() );
+        try {
+            //noinspection unchecked
+            entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
+                    valueObjectConversionService.convert( entities,
+                            TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( entities.iterator().next().getClass() ) ),
+                            TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
+            // FIXME: PhenotypeAssociation does not support conversion from IDs, but once it does or if it's removed,
+            //        then we don't need to check isEmpty()
+            if ( !entitiesIds.isEmpty() ) {
+                //noinspection unchecked
+                entitiesVos.addAll( ( List<IdentifiableValueObject<?>> )
+                        valueObjectConversionService.convert( entitiesIds,
+                                TypeDescriptor.collection( Collection.class, TypeDescriptor.valueOf( Long.class ) ),
+                                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
             }
-        } );
-        addVoConverter( BibliographicReference.class, bibliographicReferenceService );
-        addVoConverter( BioSequence.class, bioSequenceService );
-        // FIXME: this is used for phenotypes, but really we should be using {@link PhenotypeAssociation}
-        resultObjectConversionService.addConverter( CharacteristicValueObject.class, IdentifiableValueObject.class, o -> o );
-        addVoConverter( CompositeSequence.class, compositeSequenceService );
-        addVoConverter( ExpressionExperiment.class, expressionExperimentService );
-        addVoConverter( ExpressionExperimentSet.class, experimentSetService );
-        addVoConverter( Gene.class, geneService );
-        // FIXME: GeneSetService does not implement BaseVoEnabledService
-        resultObjectConversionService.addConverter( GeneSet.class, IdentifiableValueObject.class, o -> geneSetService.loadValueObject( ( GeneSet ) o ) );
-    }
+        } catch ( ConverterNotFoundException e ) {
+            throw new IllegalArgumentException( "Conversion of collections of " + resultType.getName() + " to VOs is not supported.", e );
+        }
 
-    private <O extends Identifiable, VO extends IdentifiableValueObject<O>> void addVoConverter( Class<O> fromClass, BaseVoEnabledService<O, VO> service ) {
-        //noinspection unchecked
-        resultObjectConversionService.addConverter( fromClass, IdentifiableValueObject.class, o -> service.loadValueObject( ( O ) o ) );
+        // unfortunately, there's no guarantee that convert preserve the order of its input, nor all of its elements
+        // this is especially true with ACLs filtering
+        Map<Long, IdentifiableValueObject<?>> entityVosById = EntityUtils.getIdMap( entitiesVos );
+
+        // reassemble everything
+        List<SearchResult<? extends IdentifiableValueObject<?>>> resultsVo = new ArrayList<>( results.size() );
+
+        Set<SearchResult<?>> notRetained = new HashSet<>();
+        for ( SearchResult<?> sr : results ) {
+            if ( entityVosById.containsKey( sr.getResultId() ) ) {
+                resultsVo.add( SearchResult.from( sr, entityVosById.get( sr.getResultId() ) ) );
+            } else if ( sr.getResultObject() == null ) {
+                if ( sr.getHighlightedText() != null ) {
+                    resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getHighlightedText(), sr.getSource() ) );
+                } else {
+                    resultsVo.add( SearchResult.from( sr.getResultType(), sr.getResultId(), sr.getScore(), sr.getSource() ) );
+                }
+            } else {
+                // this happens if the VO was filtered out after VO conversion (i.e. via ACL) or uninitialized
+                // I think it's a bit risky to add it given the possibility that the result might be missing because of
+                // an ACL rule, but I think it's fine since we only expose the ID.
+                notRetained.add( sr );
+            }
+        }
+
+        if ( !notRetained.isEmpty() ) {
+            log.warn( String.format( "%d %s results were not retained while performing bulk VO conversion.",
+                    notRetained.size(), resultType.getSimpleName() ) );
+        }
+
+        return resultsVo;
     }
 
     /**
@@ -1109,7 +1144,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                 gss.setTaxon( settings.getTaxon() );
                 gss.setQuery( geneUri );
                 // FIXME: there should be a nicer, typed way of doing ontology searches
-                results.addAll( ontologyUriSearch( gss ).get( ExpressionExperiment.class ) );
+                results.addAll( ontologyUriSearch( gss ).getByResultObjectType( ExpressionExperiment.class ) );
             }
         }
 
@@ -1200,7 +1235,10 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             }
         }
 
-        if ( !settings.isFillResults() ) {
+        if ( settings.isFillResults() ) {
+            fillSearchResultsIfMissing( ExpressionExperiment.class, results );
+            results.removeIf( sr -> sr.getResultObject() == null );
+        } else {
             results.forEach( sr -> sr.setResultObject( null ) );
         }
 
@@ -1268,7 +1306,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for objects tagged with
      * those terms (if isUseCharacte = true)
      */
-    private SearchResultMap generalSearch( SearchSettings settings ) throws SearchException {
+    private SearchResultMapImpl generalSearch( SearchSettings settings ) throws SearchException {
         // If nothing to search return nothing.
         if ( StringUtils.isBlank( settings.getQuery() ) ) {
             return new SearchResultMapImpl();
@@ -1379,7 +1417,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * @return map of result entity class (e.g. BioSequence or ExpressionExperiment) to SearchResult
      * @see SearchResult#getResultType()
      */
-    private static SearchResultMap groupAndSortResultsByType(
+    private static SearchResultMapImpl groupAndSortResultsByType(
             LinkedHashSet<SearchResult<?>> rawResults,
             SearchSettings settings ) {
 
@@ -1388,7 +1426,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         // Get the top N results for each class.
         for ( SearchResult<?> sr : sortedRawResults ) {
-            if ( !isFilled( results.get( sr.getResultType() ), settings ) ) {
+            if ( settings.getMaxResults() < 1 || results.size() < settings.getMaxResults() ) {
                 results.add( sr );
             }
         }
@@ -1420,7 +1458,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     /**
      * @return results, if the settings.termUri is populated. This includes gene uris.
      */
-    private SearchResultMap ontologyUriSearch( SearchSettings settings ) throws SearchException {
+    private SearchResultMapImpl ontologyUriSearch( SearchSettings settings ) throws SearchException {
         SearchResultMapImpl results = new SearchResultMapImpl();
 
         // 1st check to see if the query is a URI (from an ontology).
@@ -1569,5 +1607,27 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             throw new IllegalArgumentException( "Search results are already fully filled, have to checked the collection with isFilled()?" );
         }
         return settings.getMaxResults() > 0 ? settings.getMaxResults() - results.size() : -1;
+    }
+
+    private <T extends Identifiable> void fillSearchResultsIfMissing( Class<?> resultType, Collection<SearchResult<T>> result ) {
+        Set<Long> ids = new HashSet<>( result.size() );
+        for ( SearchResult<T> sr : result ) {
+            if ( sr.getResultObject() == null ) {
+                ids.add( sr.getResultId() );
+            }
+        }
+
+        //noinspection unchecked
+        List<T> entities = ( List<T> ) valueObjectConversionService.convert( ids,
+                TypeDescriptor.collection( Set.class, TypeDescriptor.valueOf( Long.class ) ),
+                TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( resultType ) ) );
+
+        Map<Long, T> entitiesById = EntityUtils.getIdMap( entities );
+
+        for ( SearchResult<T> sr : result ) {
+            if ( entitiesById.containsKey( sr.getResultId() ) ) {
+                sr.setResultObject( entitiesById.get( sr.getResultId() ) );
+            }
+        }
     }
 }

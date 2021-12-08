@@ -41,18 +41,17 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.Assert.*;
 
 /**
@@ -165,7 +164,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        List<SearchResult<ExpressionExperiment>> eer = found.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> eer = found.getByResultObjectType( ExpressionExperiment.class );
         assertFalse( eer.isEmpty() );
 
         for ( SearchResult<ExpressionExperiment> sr : eer ) {
@@ -189,7 +188,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult<Gene> sr : found.get( Gene.class ) ) {
+        for ( SearchResult<Gene> sr : found.getByResultObjectType( Gene.class ) ) {
             if ( gene.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -224,7 +223,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
-        for ( SearchResult<BibliographicReference> sr : found.get( BibliographicReference.class ) ) {
+        for ( SearchResult<BibliographicReference> sr : found.getByResultObjectType( BibliographicReference.class ) ) {
             if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -258,7 +257,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
 
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
-        for ( SearchResult<BibliographicReference> sr : found.get( BibliographicReference.class ) ) {
+        for ( SearchResult<BibliographicReference> sr : found.getByResultObjectType( BibliographicReference.class ) ) {
             if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
@@ -317,7 +316,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult<ExpressionExperiment> sr : found.get( ExpressionExperiment.class ) ) {
+        for ( SearchResult<ExpressionExperiment> sr : found.getByResultObjectType( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
                 return;
             }
@@ -341,7 +340,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         SearchService.SearchResultMap found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult<ExpressionExperiment> sr : found.get( ExpressionExperiment.class ) ) {
+        for ( SearchResult<ExpressionExperiment> sr : found.getByResultObjectType( ExpressionExperiment.class ) ) {
             if ( sr.getResultId().equals( ee.getId() ) ) {
                 return;
             }
@@ -356,7 +355,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .query( SearchServiceIntegrationTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )
                 .build();
-        List<SearchResult<ExpressionExperiment>> results = searchService.search( settings, ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> results = searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
         assertThat( results )
                 .hasSize( 1 );
         SearchResult<IdentifiableValueObject<ExpressionExperiment>> resultVo = searchService.loadValueObject( results.get( 0 ) );
@@ -367,5 +366,22 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .isEqualTo( ee.getId() );
         assertThat( resultVo.getResultObject() )
                 .isNotNull();
+    }
+
+    @Test
+    public void testLoadValueObjects() throws SearchException {
+        SearchSettings settings = SearchSettings.builder()
+                .query( SearchServiceIntegrationTest.SPINAL_CORD )
+                .resultType( ExpressionExperiment.class )
+                .build();
+        // FIXME: this has to be re-wrapped because loadValueObjects can work on collections of mixed result types, it
+        //        would be nice however not to have to do that
+        List<SearchResult<?>> results = new ArrayList<>( searchService.search( settings ).getByResultType( ExpressionExperiment.class ) );
+        assertThat( results ).hasSize( 1 );
+        List<SearchResult<? extends IdentifiableValueObject<?>>> resultVo = searchService.loadValueObjects( results );
+        // ensure that the resultType is preserved
+        assertThat( resultVo )
+                .extracting( "resultType", "resultId", "resultObject" )
+                .containsOnly( tuple( ExpressionExperiment.class, ee.getId(), new ExpressionExperimentValueObject( ee ) ) );
     }
 }

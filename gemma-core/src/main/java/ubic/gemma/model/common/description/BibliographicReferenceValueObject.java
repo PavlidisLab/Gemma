@@ -72,7 +72,9 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         super( ref );
         this.abstractText = ref.getAbstractText();
         this.authorList = ref.getAuthorList();
-        this.pubAccession = ref.getPubAccession().getAccession();
+        if ( ref.getPubAccession() != null ) {
+            this.pubAccession = ref.getPubAccession().getAccession();
+        }
         this.publicationDate = ref.getPublicationDate();
         this.publisher = ref.getPublisher();
         this.pages = ref.getPages();

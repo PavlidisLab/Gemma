@@ -425,7 +425,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings, Gene.class );
+        List<SearchResult<Gene>> geneSearchResults = this.searchService.search( settings ).getByResultObjectType( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

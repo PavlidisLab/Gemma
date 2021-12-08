@@ -37,7 +37,7 @@ public interface SearchSource {
      * @deprecated use {@link #searchBioSequence(SearchSettings)} (SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings,
+    Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
             @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
 
     @SuppressWarnings("unused")
@@ -52,7 +52,7 @@ public interface SearchSource {
      * @deprecated use {@link #searchCompositeSequence(SearchSettings)} instead
      */
     @Deprecated
-    Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
+    Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
 
     Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
 

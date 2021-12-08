@@ -25,7 +25,9 @@ import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -105,17 +107,14 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     public void testSearchEverything() throws SearchException {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.values() ).thenReturn( Collections.singleton( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) ) );
+        when( srm.toList() ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
         when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( srm );
-        when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
+        when( searchService.loadValueObjects( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
-            SearchResult<Gene> searchResult = args.getArgument( 0, SearchResult.class );
-            SearchResult<GeneValueObject> sr = SearchResult.from( searchResult.getResultType(), searchResult.getResultId(), searchResult.getScore(), "test object" );
-            sr.setHighlightedText( searchResult.getHighlightedText() );
-            if ( searchResult.getResultObject() != null ) {
-                sr.setResultObject( new GeneValueObject( searchResult.getResultObject() ) );
-            }
-            return sr;
+            Collection<SearchResult<Gene>> searchResult = args.getArgument( 0, Collection.class );
+            return searchResult.stream()
+                    .map( sr -> SearchResult.from( sr, new GeneValueObject( sr.getResultObject() ) ) )
+                    .collect( Collectors.toList() );
         } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
@@ -142,7 +141,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByTaxon() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
+        when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked
@@ -161,7 +160,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testSearchByArrayDesign() throws SearchException {
         SearchService.SearchResultMap srm = mock( SearchService.SearchResultMap.class );
-        when( srm.get( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
+        when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.singletonList( SearchResult.from( Gene.class, gene, 1.0, "test object" ) ) );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             //noinspection unchecked

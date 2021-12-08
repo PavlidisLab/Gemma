@@ -151,7 +151,7 @@ public class DatabaseSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+    public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) {
         return new HashSet<>( this.searchBioSequence( settings ) );
     }
 
@@ -164,7 +164,7 @@ public class DatabaseSearchSource implements SearchSource {
      * Search the DB for composite sequences and the genes that are matched to them.
      */
     @Override
-    public Collection<SearchResult<? extends Identifiable>> searchCompositeSequenceAndGene( SearchSettings settings ) {
+    public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings ) {
         Set<SearchResult<Gene>> geneSet = new SearchResultSet<>();
         Collection<SearchResult<CompositeSequence>> matchedCs = this.searchCompositeSequenceAndPopulateGenes( settings, geneSet );
         Collection<SearchResult<?>> combinedResults = new HashSet<>();

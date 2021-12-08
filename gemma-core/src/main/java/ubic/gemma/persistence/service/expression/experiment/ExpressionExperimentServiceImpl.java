@@ -300,7 +300,7 @@ public class ExpressionExperimentServiceImpl
 
         assert searchResultsMap != null;
 
-        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.getByResultObjectType( ExpressionExperiment.class );
 
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 

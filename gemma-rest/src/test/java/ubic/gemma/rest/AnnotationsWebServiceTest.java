@@ -114,8 +114,11 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
     public void testSearchTaxonDatasets() throws SearchException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );
-        when( searchService.search( any( SearchSettings.class ), eq( ExpressionExperiment.class ) ) )
+        SearchService.SearchResultMap mockedSrMap = mock( SearchService.SearchResultMap.class );
+        when( mockedSrMap.getByResultObjectType( ExpressionExperiment.class ) )
                 .thenReturn( Collections.singletonList( SearchResult.from( ExpressionExperiment.class, ee, 1.0, "test object" ) ) );
+        when( searchService.search( any( SearchSettings.class ) ) )
+                .thenReturn( mockedSrMap );
         when( taxonService.getFilter( eq( "commonName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "commonName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
         when( taxonService.getFilter( eq( "scientificName" ), eq( Filter.Operator.eq ), any( String.class ) ) ).thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 2, String.class ), a.getArgument( 0 ) ) );
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
@@ -137,7 +140,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 10000L );
-        verify( searchService ).search( any( SearchSettings.class ), eq( ExpressionExperiment.class ) );
+        verify( searchService ).search( any( SearchSettings.class ) );
         verify( taxonService ).getFilter( "commonName", Filter.Operator.eq, "human" );
         verify( taxonService ).getFilter( "scientificName", Filter.Operator.eq, "human" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.in, Collections.singletonList( "1" ) );

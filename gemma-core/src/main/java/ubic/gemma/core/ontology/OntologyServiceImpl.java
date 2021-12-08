@@ -849,9 +849,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .taxon( taxon )
                 .resultType( Gene.class )
                 .build();
-        SearchService.SearchResultMap geneResults = this.searchService.search( ss, true, false );
+        SearchService.SearchResultMap geneResults = this.searchService.search( ss.withFillResults( true ).withMode( SearchSettings.SearchMode.NORMAL ) );
 
-        for ( SearchResult<Gene> sr : geneResults.get( Gene.class ) ) {
+        for ( SearchResult<Gene> sr : geneResults.getByResultObjectType( Gene.class ) ) {
             if ( sr.getResultObject() == null ) {
                 log.warn( String.format( "There is no gene with ID=%d (in response to search for %s) - index out of date?",
                         sr.getResultId(), queryString ) );
