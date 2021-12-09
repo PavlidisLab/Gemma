@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,6 +73,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     @Transactional(readOnly = true)
     public Collection<T> load( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( //language=none // Prevents unresolvable missing value warnings.
