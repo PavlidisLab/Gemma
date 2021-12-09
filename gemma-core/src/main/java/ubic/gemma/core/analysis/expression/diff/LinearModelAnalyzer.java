@@ -20,8 +20,8 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.TransformerUtils;
+import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;

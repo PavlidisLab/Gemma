@@ -18,8 +18,8 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -193,13 +193,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
 
-        CollectionUtils.filter( a, new Predicate() {
-            @Override
-            public boolean evaluate( Object arg0 ) {
-                //noinspection SuspiciousMethodCalls // this is perfectly fine since we are passing this directly into the filter
-                return events.containsKey( arg0 );
-            }
-        } );
+        CollectionUtils.filter( a, events::containsKey );
 
     }
 
@@ -211,13 +205,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
         AbstractDao.log.info( "Phase I: " + timer.getTime() + "ms" );
 
-        CollectionUtils.filter( a, new Predicate() {
-            @Override
-            public boolean evaluate( Object arg0 ) {
-                //noinspection SuspiciousMethodCalls // this is perfectly fine since we are passing this directly into the filter
-                return !events.containsKey( arg0 );
-            }
-        } );
+        CollectionUtils.filter( a, ( Predicate<Auditable> ) arg0 -> !events.containsKey( arg0 ) );
 
     }
 
