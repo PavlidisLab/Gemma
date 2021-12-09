@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;

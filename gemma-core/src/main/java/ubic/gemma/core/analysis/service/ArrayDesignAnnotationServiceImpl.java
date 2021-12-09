@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.iterators.TransformIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

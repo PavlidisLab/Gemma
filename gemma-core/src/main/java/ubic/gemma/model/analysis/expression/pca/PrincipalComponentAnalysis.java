@@ -18,8 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
@@ -27,10 +26,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 
 import javax.persistence.Transient;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
 
@@ -130,12 +126,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
             result.set( index, dA );
         }
 
-        CollectionUtils.filter( result, new Predicate() {
-            @Override
-            public boolean evaluate( Object object ) {
-                return object != null;
-            }
-        } );
+        CollectionUtils.filter( result, Objects::nonNull );
         return result;
     }
 

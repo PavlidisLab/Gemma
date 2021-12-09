@@ -21,7 +21,7 @@ package ubic.gemma.core.analysis.expression.coexpression.links;
 import cern.colt.bitvector.BitMatrix;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;

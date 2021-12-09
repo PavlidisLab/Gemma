@@ -18,8 +18,8 @@
  */
 package ubic.gemma.core.security.audit;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -40,12 +40,7 @@ public class AuditableUtilImpl implements AuditableUtil {
             return;
         }
 
-        CollectionUtils.filter( valueObjects, new Predicate() {
-            @Override
-            public boolean evaluate( Object vo ) {
-                return !( ( ArrayDesignValueObject ) vo ).getTroubled();
-            }
-        } );
+        CollectionUtils.filter( valueObjects, vo -> !vo.getTroubled() );
     }
 
     @Override
@@ -54,12 +49,7 @@ public class AuditableUtilImpl implements AuditableUtil {
             return;
         }
 
-        CollectionUtils.filter( eevos, new Predicate() {
-            @Override
-            public boolean evaluate( Object e ) {
-                return !( ( ExpressionExperimentValueObject ) e ).getTroubled();
-            }
-        } );
+        CollectionUtils.filter( eevos, vo -> !vo.getTroubled() );
     }
 
 }

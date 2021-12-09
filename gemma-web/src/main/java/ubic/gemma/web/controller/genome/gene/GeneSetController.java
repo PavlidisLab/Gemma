@@ -19,8 +19,8 @@
 package ubic.gemma.web.controller.genome.gene;
 
 import gemma.gsec.SecurityService;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -205,11 +205,11 @@ public class GeneSetController {
         Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( new GeneSetValueObject( groupId ) );
 
         if ( limit != null && limit > 0 && limit < genesInGroup.size() ) {
-            return CollectionUtils.select( genesInGroup, new Predicate() {
+            return CollectionUtils.select( genesInGroup, new Predicate<GeneValueObject>() {
                 int i = 0;
 
                 @Override
-                public boolean evaluate( Object object ) {
+                public boolean evaluate( GeneValueObject object ) {
                     return i++ < limit;
                 }
             } );
