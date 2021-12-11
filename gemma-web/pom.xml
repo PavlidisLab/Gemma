@@ -340,6 +340,13 @@
 			<version>${swagger.version}</version>
 		</dependency>
 
+		<!-- logging -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-web</artifactId>
+			<version>${log4j2.version}</version>
+		</dependency>
+
 		<!-- JSP -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
