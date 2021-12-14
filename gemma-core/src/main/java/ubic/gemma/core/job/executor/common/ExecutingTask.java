@@ -15,7 +15,6 @@
 package ubic.gemma.core.job.executor.common;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -56,7 +55,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
 
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( this.taskId, lifecycleHandler::onProgress ) ) {
+        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
             SecurityContextHolder.getContext().setAuthentication( taskCommand.getAuthentication() );
             result = this.task.execute();

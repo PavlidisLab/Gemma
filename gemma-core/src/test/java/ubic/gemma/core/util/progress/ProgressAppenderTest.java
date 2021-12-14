@@ -58,7 +58,7 @@ public class ProgressAppenderTest {
     @Test
     public void testProgressLogging() {
         // create a region where the task executes that the update callback is responsive to logs
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId, updates::add ) ) {
+        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( updates::add ) ) {
             String expectedValue = "la de da";
             log.info( expectedValue );
 
@@ -82,16 +82,16 @@ public class ProgressAppenderTest {
         ProgressUpdateAppender.ProgressUpdateCallback progressUpdateCallback = ( message ) -> {
             // if this is set here, the ProcessUpdateAppender might recurse, so we must ensure that there is no
             // current context
-            assertNull( ProgressUpdateAppender.TaskContext.currentTaskId() );
+            assertNull( ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
             log.info( "This message should not be picked up." );
             reached.set( true );
         };
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId, progressUpdateCallback ) ) {
-            assertEquals( taskId, ProgressUpdateAppender.TaskContext.currentTaskId() );
+        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( progressUpdateCallback ) ) {
+            assertEquals( progressUpdateContext, ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
             log.info( "la da de" );
         }
         assertTrue( reached.get() );
-        assertNull( ProgressUpdateAppender.TaskContext.currentTaskId() );
+        assertNull( ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
     }
 
 }
