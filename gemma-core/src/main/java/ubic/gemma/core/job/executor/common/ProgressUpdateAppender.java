@@ -18,13 +18,10 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import org.apache.log4j.*;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -44,14 +41,6 @@ public class ProgressUpdateAppender extends AppenderSkeleton {
 
     private static final ConcurrentMap<String, ProgressUpdateCallback> progressUpdateCallbackByTaskId = new ConcurrentHashMap<>();
 
-    public static void setProgressUpdateCallback( String taskId, ProgressUpdateCallback callback ) {
-        progressUpdateCallbackByTaskId.put( taskId, callback );
-    }
-
-    public static void removeProgressUpdateCallback( String taskId ) {
-        progressUpdateCallbackByTaskId.remove( taskId );
-    }
-
     @Override
     protected void append( LoggingEvent event ) {
         String taskId = ( String ) event.getMDC( MDC_TASK_ID_KEY );
@@ -61,7 +50,7 @@ public class ProgressUpdateAppender extends AppenderSkeleton {
         if ( callback != null ) {
             Object oldTaskId = MDC.get( MDC_TASK_ID_KEY );
             MDC.remove( MDC_TASK_ID_KEY );
-            callback.addProgressUpdate( event.getRenderedMessage() );
+            callback.onProgressUpdate( event.getRenderedMessage() );
             MDC.put( MDC_TASK_ID_KEY, oldTaskId );
         }
     }
@@ -82,19 +71,21 @@ public class ProgressUpdateAppender extends AppenderSkeleton {
      */
     public static class TaskContext implements AutoCloseable {
 
-        public static TaskContext currentContext() {
-            String taskId = ( String ) MDC.get( ProgressUpdateAppender.MDC_TASK_ID_KEY );
-            return taskId != null ? new TaskContext( taskId ) : null;
+        public static String currentTaskId() {
+            return ( String ) MDC.get( ProgressUpdateAppender.MDC_TASK_ID_KEY );
         }
 
         private final String taskId;
+        private final ProgressUpdateCallback progressUpdateCallback;
 
-        public TaskContext( String taskId ) {
+        public TaskContext( String taskId, ProgressUpdateCallback progressUpdateCallback ) {
             this.taskId = taskId;
+            this.progressUpdateCallback = progressUpdateCallback;
             init();
         }
 
         private void init() {
+            progressUpdateCallbackByTaskId.put( taskId, progressUpdateCallback );
             MDC.put( ProgressUpdateAppender.MDC_TASK_ID_KEY, this.taskId );
         }
 
@@ -105,6 +96,11 @@ public class ProgressUpdateAppender extends AppenderSkeleton {
         @Override
         public void close() {
             MDC.remove( ProgressUpdateAppender.MDC_TASK_ID_KEY );
+            progressUpdateCallbackByTaskId.remove( taskId );
         }
+    }
+
+    public interface ProgressUpdateCallback {
+        void onProgressUpdate( String message );
     }
 }

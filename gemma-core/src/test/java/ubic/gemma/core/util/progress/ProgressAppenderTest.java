@@ -57,10 +57,8 @@ public class ProgressAppenderTest {
 
     @Test
     public void testProgressLogging() {
-        ProgressUpdateAppender.setProgressUpdateCallback( taskId, updates::add );
-
         // create a region where the task executes that the update callback is responsive to logs
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId ) ) {
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId, updates::add ) ) {
             String expectedValue = "la de da";
             log.info( expectedValue );
 
@@ -76,27 +74,24 @@ public class ProgressAppenderTest {
         // this is outside the context, so it should not be picked up
         log.info( "da de di do du" );
         assertEquals( "listenToMe", updates.peekLast() );
-
-        ProgressUpdateAppender.removeProgressUpdateCallback( taskId );
     }
 
     @Test
     public void testLoggingInProgressUpdateCallbackDoesNotResultInLoggingRecursion() {
         AtomicBoolean reached = new AtomicBoolean( false );
-        ProgressUpdateAppender.setProgressUpdateCallback( taskId,
-                message -> {
-                    // if this is set here, the ProcessUpdateAppender might recurse, so we must ensure that there is no
-                    // current context
-                    assertNull( ProgressUpdateAppender.TaskContext.currentContext() );
-                    log.info( "This message should not be picked up." );
-                    reached.set( true );
-                }
-        );
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId ) ) {
+        ProgressUpdateAppender.ProgressUpdateCallback progressUpdateCallback = ( message ) -> {
+            // if this is set here, the ProcessUpdateAppender might recurse, so we must ensure that there is no
+            // current context
+            assertNull( ProgressUpdateAppender.TaskContext.currentTaskId() );
+            log.info( "This message should not be picked up." );
+            reached.set( true );
+        };
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId, progressUpdateCallback ) ) {
+            assertEquals( taskId, ProgressUpdateAppender.TaskContext.currentTaskId() );
             log.info( "la da de" );
         }
         assertTrue( reached.get() );
-        ProgressUpdateAppender.removeProgressUpdateCallback( taskId );
+        assertNull( ProgressUpdateAppender.TaskContext.currentTaskId() );
     }
 
 }

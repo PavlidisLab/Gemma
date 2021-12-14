@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.job.executor.common;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -31,9 +33,9 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     private final Task<T, ?> task;
     private final String taskId;
     private final TaskCommand taskCommand;
+
     // Does not survive serialization.
-    private transient ProgressUpdateCallback progressUpdateCallback;
-    private transient TaskLifecycleHandler statusCallback;
+    private transient TaskLifecycleHandler lifecycleHandler;
 
     public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
         this.task = task;
@@ -44,53 +46,72 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     @SuppressWarnings("unchecked")
     @Override
     public final T call() {
-        T result = null;
+        T result;
 
-        if ( progressUpdateCallback != null ) {
-            ProgressUpdateAppender.setProgressUpdateCallback( this.taskId, progressUpdateCallback );
+        if ( lifecycleHandler == null ) {
+            throw new IllegalStateException( "No lifecycle handler has been configured for this executing task." );
         }
 
-        statusCallback.onStart();
+        lifecycleHandler.onStart();
 
-        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( this.taskId ) ) {
+        Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
+
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( this.taskId, lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
-            SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
+            SecurityContextHolder.getContext().setAuthentication( taskCommand.getAuthentication() );
             result = this.task.execute();
         } catch ( Throwable e ) {
             // result is an exception
             result = ( T ) new TaskResult( taskId );
             result.setException( e );
         } finally {
-            // SecurityContext is cleared at this point.
-            SecurityContextHolder.clearContext();
+            // restore the previous security context
+            SecurityContextHolder.getContext().setAuthentication( previousAuthentication );
         }
 
         if ( result.getException() == null ) {
-            statusCallback.onFinish();
+            lifecycleHandler.onSuccess();
         } else {
-            statusCallback.onFailure( result.getException() );
+            lifecycleHandler.onFailure( result.getException() );
         }
 
-        ProgressUpdateAppender.removeProgressUpdateCallback( this.taskId );
+        lifecycleHandler.onComplete();
 
         return result;
-
     }
 
-    public void setProgressUpdateCallback( ProgressUpdateCallback callback ) {
-        this.progressUpdateCallback = callback;
-    }
-
-    public void setStatusCallback( TaskLifecycleHandler statusCallback ) {
-        this.statusCallback = statusCallback;
+    public void setLifecycleHandler( TaskLifecycleHandler lifecycleHandler ) {
+        this.lifecycleHandler = lifecycleHandler;
     }
 
     // These hooks are used to update status of the running task.
     public interface TaskLifecycleHandler {
+
+        /**
+         * Whenever the task execution begins.
+         */
+        void onStart();
+
+        /**
+         * When progress is made on the task.
+         * @param message
+         */
+        void onProgress( String message );
+
+        /**
+         * On failure.
+         * @param e
+         */
         void onFailure( Throwable e );
 
-        void onFinish();
+        /**
+         * On successful completion.
+         */
+        void onSuccess();
 
-        void onStart();
+        /**
+         * On completion, regardless of failure.
+         */
+        void onComplete();
     }
 }

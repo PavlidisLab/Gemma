@@ -42,7 +42,6 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
@@ -110,7 +109,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
         final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand );
 
-        executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
+        executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
             @Override
             public void onFailure( Throwable e ) {
                 TaskRunningServiceImpl.log.error( e, e );
@@ -118,13 +117,23 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             }
 
             @Override
-            public void onFinish() {
+            public void onSuccess() {
                 submittedTask.updateStatus( SubmittedTask.Status.COMPLETED, new Date() );
+            }
+
+            @Override
+            public void onComplete() {
+
             }
 
             @Override
             public void onStart() {
                 submittedTask.updateStatus( SubmittedTask.Status.RUNNING, new Date() );
+            }
+
+            @Override
+            public void onProgress( String message ) {
+
             }
         } );
 
@@ -169,8 +178,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
         checkNotNull( taskCommand.getTaskId(), "Must have taskId." );
-        checkNotNull( taskCommand.getSecurityContext(), "Must have SecurityContext." );
-        checkNotNull( taskCommand.getSecurityContext().getAuthentication(), "Must have Authentication." );
+        checkNotNull( taskCommand.getAuthentication(), "Must have Authentication." );
     }
 
     private SubmittedTask<TaskResult> constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
