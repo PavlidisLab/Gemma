@@ -133,7 +133,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
             @Override
             public void onProgress( String message ) {
-
+                submittedTask.getProgressUpdates().add( message );
             }
         } );
 
