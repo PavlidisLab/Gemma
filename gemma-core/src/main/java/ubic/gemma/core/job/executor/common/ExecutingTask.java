@@ -32,9 +32,8 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     private final String taskId;
     private final TaskCommand taskCommand;
     // Does not survive serialization.
+    private transient ProgressUpdateCallback progressUpdateCallback;
     private transient TaskLifecycleHandler statusCallback;
-    private transient ProgressUpdateAppender progressAppender;
-    private Throwable taskExecutionException;
 
     public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
         this.task = task;
@@ -45,50 +44,45 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     @SuppressWarnings("unchecked")
     @Override
     public final T call() {
-        this.setup();
-        // From here we are running as user who submitted the task.
+        T result = null;
+
+        if ( progressUpdateCallback != null ) {
+            ProgressUpdateAppender.setProgressUpdateCallback( this.taskId, progressUpdateCallback );
+        }
 
         statusCallback.onStart();
 
-        T result = null;
-        try {
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( this.taskId ) ) {
+            // From here we are running as user who submitted the task.
+            SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
             result = this.task.execute();
         } catch ( Throwable e ) {
-            statusCallback.onFailure( e );
-            taskExecutionException = e;
+            // result is an exception
+            result = ( T ) new TaskResult( taskId );
+            result.setException( e );
         } finally {
-            this.cleanup();
+            // SecurityContext is cleared at this point.
+            SecurityContextHolder.clearContext();
         }
-        // SecurityContext is cleared at this point.
 
-        if ( taskExecutionException == null ) {
+        if ( result.getException() == null ) {
             statusCallback.onFinish();
-            return result;
+        } else {
+            statusCallback.onFailure( result.getException() );
         }
-        result = ( T ) new TaskResult( taskId );
-        result.setException( taskExecutionException );
+
+        ProgressUpdateAppender.removeProgressUpdateCallback( this.taskId );
+
         return result;
 
     }
 
-    public void setProgressAppender( ProgressUpdateAppender progressAppender ) {
-        this.progressAppender = progressAppender;
+    public void setProgressUpdateCallback( ProgressUpdateCallback callback ) {
+        this.progressUpdateCallback = callback;
     }
 
     public void setStatusCallback( TaskLifecycleHandler statusCallback ) {
         this.statusCallback = statusCallback;
-    }
-
-    private void cleanup() {
-        SecurityContextHolder.clearContext();
-
-        progressAppender.tearDown();
-    }
-
-    private void setup() {
-        progressAppender.initialize();
-
-        SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
     }
 
     // These hooks are used to update status of the running task.

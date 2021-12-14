@@ -88,18 +88,15 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
                 .constructSubmittedTaskRemote( taskCommand, taskId, localProgressUpdates );
 
         // Called from log appender that's attached to 'ubic.basecode' and 'ubic.gemma' loggers.
-        final ProgressUpdateCallback progressUpdateCallback = new ProgressUpdateCallback() {
-            @Override
-            public void addProgressUpdate( String message ) {
-                submittedTask.addProgressUpdate( message );
-                // Keep progress updates locally as well.
-                localProgressUpdates.add( message );
-            }
+        final ProgressUpdateCallback progressUpdateCallback = message -> {
+            submittedTask.addProgressUpdate( message );
+            // Keep progress updates locally as well.
+            localProgressUpdates.add( message );
         };
 
         @SuppressWarnings("unchecked") final ExecutingTask<TaskResult> executingTask = ( ExecutingTask<TaskResult> ) new ExecutingTask<>(
                 task, taskCommand );
-        executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, progressUpdateCallback ) );
+        executingTask.setProgressUpdateCallback( progressUpdateCallback );
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
             @Override
             public void onFailure( Throwable e ) {

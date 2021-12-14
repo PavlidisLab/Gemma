@@ -18,22 +18,21 @@
  */
 package ubic.gemma.core.util.progress;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
-import org.junit.After;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.core.job.executor.common.LogBasedProgressAppender;
-import ubic.gemma.core.job.executor.common.ProgressUpdateCallback;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.job.executor.common.ProgressUpdateAppender;
 
 import java.util.Deque;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
@@ -41,56 +40,63 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author pavlidis
  */
-public class ProgressAppenderTest extends BaseSpringContextTest {
+public class ProgressAppenderTest {
+
+    private static Log log = LogFactory.getLog( ProgressAppenderTest.class );
 
     private final Deque<String> updates = new LinkedBlockingDeque<>();
-    private LogBasedProgressAppender progressAppender;
-    // Used to put things back as they were after the test.
-    private Level oldLevel;
-    private Logger log4jLogger;
+
+    /* fixtures */
+    private final String taskId = "randomtaskidF";
 
     @Before
-    public void setup() {
-
-        String loggerName = "ubic.gemma";
-        log4jLogger = LogManager.exists( loggerName );
-
-        progressAppender = new LogBasedProgressAppender( "randomtaskidF", new ProgressUpdateCallback() {
-            @Override
-            public void addProgressUpdate( String message ) {
-                updates.add( message );
-            }
-        } );
-        log4jLogger.addAppender( progressAppender );
-
-        oldLevel = log4jLogger.getLevel();
-
-        log4jLogger.setLevel( Level.INFO );
-    }
-
-    @After
-    public void teardown() {
-        log4jLogger.setLevel( oldLevel );
+    public void setUp() {
+        Assume.assumeTrue( "This test must be run with -Dlog4j1.compatibility=true",
+                Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
     }
 
     @Test
     public void testProgressLogging() {
-        progressAppender.initialize();
-        assertTrue( "MDC should be set.", MDC.get( "taskId" ) != null );
+        ProgressUpdateAppender.setProgressUpdateCallback( taskId, updates::add );
 
-        String expectedValue = "la de da";
-        log.info( expectedValue );
+        // create a region where the task executes that the update callback is responsive to logs
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId ) ) {
+            String expectedValue = "la de da";
+            log.info( expectedValue );
 
-        assertEquals( expectedValue, updates.peekLast() );
+            assertEquals( expectedValue, updates.peekLast() );
 
-        log.debug( "pay no attention" ); // should not update the description.
-        assertEquals( expectedValue, updates.peekLast() );
+            log.debug( "pay no attention" ); // should not update the description.
+            assertEquals( expectedValue, updates.peekLast() );
 
-        log.warn( "listenToMe" );
+            log.warn( "listenToMe" );
+            assertEquals( "listenToMe", updates.peekLast() );
+        }
+
+        // this is outside the context, so it should not be picked up
+        log.info( "da de di do du" );
         assertEquals( "listenToMe", updates.peekLast() );
 
-        progressAppender.close();
-        assertTrue( "MDC should be cleaned up.", MDC.get( "taskId" ) == null );
+        ProgressUpdateAppender.removeProgressUpdateCallback( taskId );
+    }
+
+    @Test
+    public void testLoggingInProgressUpdateCallbackDoesNotResultInLoggingRecursion() {
+        AtomicBoolean reached = new AtomicBoolean( false );
+        ProgressUpdateAppender.setProgressUpdateCallback( taskId,
+                message -> {
+                    // if this is set here, the ProcessUpdateAppender might recurse, so we must ensure that there is no
+                    // current context
+                    assertNull( ProgressUpdateAppender.TaskContext.currentContext() );
+                    log.info( "This message should not be picked up." );
+                    reached.set( true );
+                }
+        );
+        try ( ProgressUpdateAppender.TaskContext taskContext = new ProgressUpdateAppender.TaskContext( taskId ) ) {
+            log.info( "la da de" );
+        }
+        assertTrue( reached.get() );
+        ProgressUpdateAppender.removeProgressUpdateCallback( taskId );
     }
 
 }

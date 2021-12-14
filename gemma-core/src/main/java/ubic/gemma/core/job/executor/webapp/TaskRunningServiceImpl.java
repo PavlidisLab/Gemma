@@ -128,15 +128,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             }
         } );
 
-        executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, new ProgressUpdateCallback() {
-            private final Queue<String> progressUpdates = submittedTask.getProgressUpdates();
-
-            @Override
-            public void addProgressUpdate( String message ) {
-                progressUpdates.add( message );
-            }
-        } ) );
-
         ListenableFuture<TaskResult> future = executorService.submit( executingTask );
         submittedTask.setFuture( future );
 
