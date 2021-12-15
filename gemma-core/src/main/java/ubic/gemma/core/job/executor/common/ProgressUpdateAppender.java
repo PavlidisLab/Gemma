@@ -38,6 +38,9 @@ public class ProgressUpdateAppender extends AppenderSkeleton {
 
     @Override
     protected void append( LoggingEvent event ) {
+        if ( !isAsSevereAsThreshold( event.getLevel() ) ) {
+            return;
+        }
         ProgressUpdateContext progressUpdateContext = ( ProgressUpdateContext ) MDC.get( MDC_CURRENT_PROGRESS_UPDATE_CONTEXT_KEY );
         if ( progressUpdateContext == null )
             return;
