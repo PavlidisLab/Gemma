@@ -631,7 +631,7 @@
 		<tomcat.version>8.5.72</tomcat.version>
 		<mysql.version>8.0.27</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
-		<log4j2.version>2.15.0</log4j2.version>
+		<log4j2.version>2.16.0</log4j2.version>
 		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
 </project>
