@@ -121,7 +121,8 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         return super.isDone();
     }
 
-    @SuppressWarnings("unused") // Possible external use
+    @SuppressWarnings("unused")
+        // Possible external use
     ListenableFuture<T> getFuture() {
         return future;
     }

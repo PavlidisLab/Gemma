@@ -16,99 +16,45 @@ package ubic.gemma.core.job;
 
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.job.executor.common.ExecutingTask;
-import ubic.gemma.core.job.executor.common.ProgressUpdateAppender;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author anton
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    private final AtomicBoolean onStartRan = new AtomicBoolean( false );
-    private final AtomicBoolean onFailureRan = new AtomicBoolean( false );
-    private final AtomicBoolean onFinishRan = new AtomicBoolean( false );
-    private final AtomicBoolean appenderInitialized = new AtomicBoolean( false );
-    private final AtomicBoolean appenderTakenDown = new AtomicBoolean( false );
-    private final ProgressUpdateAppender progressAppender = new ProgressUpdateAppender() {
-        @Override
-        public void initialize() {
-            appenderInitialized.set( true );
-        }
-
-        @Override
-        public void tearDown() {
-            appenderTakenDown.set( true );
-        }
-    };
-    private final ExecutingTask.TaskLifecycleHandler statusUpdateHandler = new ExecutingTask.TaskLifecycleHandler() {
-        @Override
-        public void onFailure( Throwable e ) {
-            onFailureRan.set( true );
-        }
-
-        @Override
-        public void onFinish() {
-            onFinishRan.set( true );
-        }
-
-        @Override
-        public void onStart() {
-            onStartRan.set( true );
-        }
-    };
     @Autowired
     UserManager userManager;
-    private SecurityContext securityContextAfterInitialize;
-    private SecurityContext securityContextAfterFinish;
-    private final ExecutingTask.TaskLifecycleHandler statusSecurityContextCheckerHandler = new ExecutingTask.TaskLifecycleHandler() {
-        @Override
-        public void onFailure( Throwable e ) {
-            securityContextAfterFinish = SecurityContextHolder.getContext();
-        }
-
-        @Override
-        public void onFinish() {
-            securityContextAfterFinish = SecurityContextHolder.getContext();
-        }
-
-        @Override
-        public void onStart() {
-            securityContextAfterInitialize = SecurityContextHolder.getContext();
-        }
-    };
-    private SecurityContext securityContextAfterFail;
 
     @Before
     public void setUp() {
-        onStartRan.set( false );
-        onFailureRan.set( false );
-        onFinishRan.set( false );
-
-        appenderInitialized.set( false );
-        appenderTakenDown.set( false );
-
-        securityContextAfterInitialize = null;
-        securityContextAfterFinish = null;
-        securityContextAfterFail = null;
+        Assume.assumeTrue( "These tests must be run with -Dlog4j1.compatibility=true",
+                Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
     }
 
     @Test
@@ -118,26 +64,27 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         task.setTaskCommand( taskCommand );
 
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
-        executingTask.setProgressAppender( progressAppender );
-        executingTask.setStatusCallback( statusUpdateHandler );
+        ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
+        executingTask.setLifecycleHandler( lifecycleHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<TaskResult> future = executorService.submit( executingTask );
+
+        TaskResult taskResult = null;
         try {
-            TaskResult taskResult = future.get();
-            Throwable exception = taskResult.getException();
-            assertEquals( AccessDeniedException.class, exception.getClass() );
-            assertEquals( "Test!", exception.getMessage() );
+            taskResult = future.get();
         } catch ( InterruptedException | ExecutionException e ) {
+            e.printStackTrace();
             fail();
         }
+        Throwable exception = taskResult.getException();
+        assertEquals( AccessDeniedException.class, exception.getClass() );
+        assertEquals( "Test!", exception.getMessage() );
 
-        assertTrue( appenderInitialized.get() );
-        assertTrue( appenderTakenDown.get() );
-
-        assertTrue( onStartRan.get() );
-        assertFalse( onFinishRan.get() );
-        assertTrue( onFailureRan.get() );
+        verify( lifecycleHandler ).onStart();
+        verify( lifecycleHandler ).onProgress( "Executing a failing task." );
+        verify( lifecycleHandler ).onFailure( any( Throwable.class ) );
+        verify( lifecycleHandler ).onComplete();
     }
 
     // TODO: Test security context under different failure scenarios
@@ -151,23 +98,22 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         task.setTaskCommand( taskCommand );
 
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
-        executingTask.setProgressAppender( progressAppender );
-        executingTask.setStatusCallback( statusUpdateHandler );
+        ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
+        executingTask.setLifecycleHandler( lifecycleHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<TaskResult> future = executorService.submit( executingTask );
         this.tryGetAnswer( future );
 
-        assertTrue( appenderInitialized.get() );
-        assertTrue( appenderTakenDown.get() );
-
-        assertTrue( onStartRan.get() );
-        assertTrue( onFinishRan.get() );
-        assertFalse( onFailureRan.get() );
+        verify( lifecycleHandler ).onStart();
+        verify( lifecycleHandler ).onProgress( "Executing a success task." );
+        verify( lifecycleHandler ).onSuccess();
+        verify( lifecycleHandler ).onComplete();
     }
 
     @Test
     public void testSecurityContextManagement() {
+
         try {
             this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
         } catch ( UsernameNotFoundException e ) {
@@ -178,22 +124,58 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
         this.runAsUser( "ExecutingTaskTestUser" );
         TaskCommand taskCommand = new TaskCommand();
+        Authentication executingUserAuth = SecurityContextHolder.getContext().getAuthentication();
+
         this.runAsAdmin();
+        Authentication launchingUserAuth = SecurityContextHolder.getContext().getAuthentication();
+
+        assertNotSame( executingUserAuth, launchingUserAuth );
 
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
+        final Authentication[] authenticationAfterInitialize = new Authentication[1];
+        final Authentication[] authenticationDuringProgress = new Authentication[1];
+        final Authentication[] authenticationAfterSuccess = new Authentication[1];
+        final Authentication[] authenticationAfterComplete = new Authentication[1];
+
         ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
-        executingTask.setProgressAppender( progressAppender );
-        executingTask.setStatusCallback( statusSecurityContextCheckerHandler );
+        executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
+
+            @Override
+            public void onStart() {
+                authenticationAfterInitialize[0] = SecurityContextHolder.getContext().getAuthentication();
+            }
+
+            @Override
+            public void onProgress( String message ) {
+                authenticationDuringProgress[0] = SecurityContextHolder.getContext().getAuthentication();
+            }
+
+            @Override
+            public void onFailure( Throwable e ) {
+                fail();
+            }
+
+            @Override
+            public void onSuccess() {
+                authenticationAfterComplete[0] = SecurityContextHolder.getContext().getAuthentication();
+            }
+
+            @Override
+            public void onComplete() {
+                authenticationAfterSuccess[0] = SecurityContextHolder.getContext().getAuthentication();
+            }
+        } );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<TaskResult> future = executorService.submit( executingTask );
         this.tryGetAnswer( future );
 
-        assertEquals( taskCommand.getSecurityContext(), securityContextAfterInitialize );
-        assertNotSame( taskCommand.getSecurityContext(), securityContextAfterFinish );
-        assertEquals( null, securityContextAfterFail );
+        assertSame( launchingUserAuth, authenticationAfterInitialize[0] );
+        assertSame( launchingUserAuth, authenticationAfterSuccess[0] );
+        assertSame( launchingUserAuth, authenticationAfterComplete[0] );
+        assertSame( executingUserAuth, authenticationDuringProgress[0] );
     }
 
     private void tryGetAnswer( Future<TaskResult> future ) {
@@ -208,16 +190,22 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     private static class FailureTestTask extends AbstractTask<TaskResult, TaskCommand> {
 
+        private static Log log = LogFactory.getLog( FailureTestTask.class );
+
         @Override
         public TaskResult execute() {
+            log.info( "Executing a failing task." );
             throw new AccessDeniedException( "Test!" );
         }
     }
 
     private static class SuccessTestTask extends AbstractTask<TaskResult, TaskCommand> {
 
+        private static Log log = LogFactory.getLog( SuccessTestTask.class );
+
         @Override
         public TaskResult execute() {
+            log.info( "Executing a success task." );
             return new TaskResult( this.getTaskCommand(), "SUCCESS" );
         }
     }
