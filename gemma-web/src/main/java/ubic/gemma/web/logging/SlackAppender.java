@@ -29,7 +29,7 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
 
             // attach a stacktrace if available
             if ( loggingEvent.getThrowableInformation() != null )
-                request.attachments( Arrays.asList( stacktraceAsAtatchment( loggingEvent ) ) );
+                request.attachments( Arrays.asList( stacktraceAsAttachment( loggingEvent ) ) );
 
             Slack.getInstance().methods( token ).chatPostMessage( request.build() );
         } catch ( IOException | SlackApiException e ) {
@@ -54,10 +54,11 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
         this.channel = channel;
     }
 
-    private static Attachment stacktraceAsAtatchment( LoggingEvent loggingEvent ) {
+    private static Attachment stacktraceAsAttachment( LoggingEvent loggingEvent ) {
         return Attachment.builder()
                 .title( ExceptionUtils.getMessage( loggingEvent.getThrowableInformation().getThrowable() ) )
                 .text( ExceptionUtils.getStackTrace( loggingEvent.getThrowableInformation().getThrowable() ) )
+                .fallback( "Error stacktrace" )
                 .build();
     }
 }

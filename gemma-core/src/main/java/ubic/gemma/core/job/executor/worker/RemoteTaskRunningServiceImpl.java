@@ -87,20 +87,10 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         final SubmittedTaskRemote submittedTask = this
                 .constructSubmittedTaskRemote( taskCommand, taskId, localProgressUpdates );
 
-        // Called from log appender that's attached to 'ubic.basecode' and 'ubic.gemma' loggers.
-        final ProgressUpdateCallback progressUpdateCallback = new ProgressUpdateCallback() {
-            @Override
-            public void addProgressUpdate( String message ) {
-                submittedTask.addProgressUpdate( message );
-                // Keep progress updates locally as well.
-                localProgressUpdates.add( message );
-            }
-        };
 
         @SuppressWarnings("unchecked") final ExecutingTask<TaskResult> executingTask = ( ExecutingTask<TaskResult> ) new ExecutingTask<>(
                 task, taskCommand );
-        executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, progressUpdateCallback ) );
-        executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
+        executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
             @Override
             public void onFailure( Throwable e ) {
                 RemoteTaskRunningServiceImpl.log.error( e, e );
@@ -108,13 +98,26 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
 
             @Override
-            public void onFinish() {
+            public void onSuccess() {
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.COMPLETED ) );
+            }
+
+            @Override
+            public void onComplete() {
+
             }
 
             @Override
             public void onStart() {
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.RUNNING ) );
+            }
+
+            @Override
+            public void onProgress( String message ) {
+                // Called from log appender that's attached to 'ubic.basecode' and 'ubic.gemma' loggers.
+                submittedTask.addProgressUpdate( message );
+                // Keep progress updates locally as well.
+                localProgressUpdates.add( message );
             }
         } );
 
