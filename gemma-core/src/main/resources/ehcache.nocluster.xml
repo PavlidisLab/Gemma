@@ -45,7 +45,7 @@
            timeToLiveSeconds="1200" overflowToDisk="false"/>
     <cache name="gemma.gsec.acl.domain.AclObjectIdentity" maxElementsInMemory="10000" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
-    <cache name="gemma.gsec.acl.domain.AclObjectIdentity.entries" maxElementsInMemory="10" timeToIdleSeconds="1200"
+    <cache name="gemma.gsec.acl.domain.AclObjectIdentity.entries" maxElementsInMemory="100" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200" overflowToDisk="false"/>
 
     <!-- Gemma -->

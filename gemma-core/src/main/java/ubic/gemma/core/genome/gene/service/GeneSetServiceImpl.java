@@ -552,11 +552,7 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     @Transactional(readOnly = true)
     public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<>();
-        for ( Long id : ids ) {
-            vos.add( this.getValueObject( id ) );
-        }
-        return vos;
+        return geneSetValueObjectHelper.convertToValueObjects( this.load( ids ) );
     }
 
     private void checkGeneList( GeneSet gset, Collection<GeneSetMember> updatedGenelist, Collection<Gene> genes ) {

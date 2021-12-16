@@ -46,9 +46,6 @@ public class ProgressAppenderTest {
 
     private final Deque<String> updates = new LinkedBlockingDeque<>();
 
-    /* fixtures */
-    private final String taskId = "randomtaskidF";
-
     @Before
     public void setUp() {
         Assume.assumeTrue( "This test must be run with -Dlog4j1.compatibility=true",
@@ -93,5 +90,4 @@ public class ProgressAppenderTest {
         assertTrue( reached.get() );
         assertNull( ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
     }
-
 }
