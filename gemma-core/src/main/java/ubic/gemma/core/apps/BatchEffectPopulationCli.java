@@ -55,7 +55,6 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
                 if ( !force && this.noNeedToRun( bas, BatchInformationFetchingEvent.class ) ) {
                     AbstractCLI.log.info( "Can't or don't need to run " + bas );
-                    addErrorObject( bas, "Can't or don't need to run; use -force to override");
                     continue;
                 }
 

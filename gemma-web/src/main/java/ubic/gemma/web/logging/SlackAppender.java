@@ -22,6 +22,9 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
 
     @Override
     protected void append( LoggingEvent loggingEvent ) {
+        if ( !isAsSevereAsThreshold( loggingEvent.getLevel() ) ) {
+            return;
+        }
         try {
             ChatPostMessageRequest.ChatPostMessageRequestBuilder request = ChatPostMessageRequest.builder()
                     .channel( channel )

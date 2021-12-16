@@ -44,6 +44,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
+    /**
+     * Batch size to reach before flushing the Hibernate session.
+     *
+     * See https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html for more details.
+     */
+    private static final int BATCH_SIZE = 100;
+
     protected final Class<T> elementClass;
 
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
@@ -56,8 +63,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         int i = 0;
         for ( T t : entities ) {
             this.create( t );
-            if ( ++i % 100 == 0 )
+            if ( ++i % BATCH_SIZE == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
+                this.getSessionFactory().getCurrentSession().clear();
+            }
         }
         return entities;
     }
@@ -129,8 +138,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     @Transactional
     public void update( Collection<T> entities ) {
+        int i = 0;
         for ( T entity : entities ) {
             this.update( entity );
+            if ( ++i % BATCH_SIZE == 0 ) {
+                this.getSessionFactory().getCurrentSession().flush();
+                this.getSessionFactory().getCurrentSession().clear();
+            }
         }
     }
 
