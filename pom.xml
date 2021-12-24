@@ -13,6 +13,11 @@
 		<name>Pavlidis lab, Michael Smith Laboratories and Department of Psychiatry, University of British Columbia</name>
 		<url>https://pavlab.msl.ubc.ca/</url>
 	</organization>
+	<parent>
+		<groupId>ubc.pavlab</groupId>
+		<artifactId>pavlab-starter-parent</artifactId>
+		<version>1.0</version>
+	</parent>
 	<modules>
 		<module>gemma-core</module>
 		<module>gemma-web</module>
@@ -129,7 +134,6 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.2</version>
 		</dependency>
 
 		<dependency>
@@ -209,13 +213,10 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<version>${hibernate.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
@@ -232,22 +233,17 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>${mysql.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.9.0</version>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Caching (version is dictated by hibernate-ehcache) -->
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-core</artifactId>
-			<version>2.4.3</version>
 		</dependency>
 
 		<!-- Distributed tasks (Spring JMS + ActiveMQ) -->
@@ -331,7 +327,6 @@
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -393,27 +388,22 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-1.2-api</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 
 		<!-- Test -->
@@ -426,8 +416,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.2</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.takari.junit</groupId>
@@ -444,28 +432,20 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>4.0.0</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-inline</artifactId>
-			<version>4.0.0</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.21.0</version>
-			<scope>test</scope>
 		</dependency>
 
 		<!-- Development tools -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.22</version>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -473,23 +453,6 @@
 			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
-				<version>1.16.0</version>
-				<configuration>
-					<!-- Do not push to remote -->
-					<pushRemote>false</pushRemote>
-					<verbose>true</verbose>
-					<!-- Branch naming schemes -->
-					<gitFlowConfig>
-						<productionBranch>master</productionBranch>
-						<developmentBranch>development</developmentBranch>
-						<releaseBranchPrefix>release-</releaseBranchPrefix>
-						<origin>origin</origin>
-						<!-- Unused for releasing -->
-						<featureBranchPrefix>feature-</featureBranchPrefix>
-						<hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
-						<supportBranchPrefix>support-</supportBranchPrefix>
-					</gitFlowConfig>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -533,22 +496,6 @@
 			</extension>
 		</extensions>
 	</build>
-	<repositories>
-		<repository>
-			<id>pavlab</id>
-			<name>PavLab</name>
-			<url>https://maven2.pavlab.msl.ubc.ca/</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</repository>
-	</repositories>
 	<profiles>
 		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
@@ -629,15 +576,10 @@
 		<gsec.version>0.0.7</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<hibernate.version>3.6.10.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.13.0</jackson.version>
 		<swagger.version>2.1.11</swagger.version>
 		<jawr.version>3.9</jawr.version>
-		<tomcat.version>8.5.72</tomcat.version>
-		<mysql.version>8.0.27</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
-		<log4j2.version>2.16.0</log4j2.version>
-		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
 </project>
