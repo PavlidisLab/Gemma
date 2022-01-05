@@ -30,6 +30,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,6 +52,7 @@ import static org.junit.Assert.*;
 /**
  * @author ptan
  */
+@Category(GeoTest.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private static final ByteArrayConverter bac = new ByteArrayConverter();
