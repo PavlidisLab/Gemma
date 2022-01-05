@@ -496,6 +496,22 @@
 			</extension>
 		</extensions>
 	</build>
+	<repositories>
+		<repository>
+			<id>pavlab</id>
+			<name>PavLab</name>
+			<url>https://maven2.pavlab.msl.ubc.ca/</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+		</repository>
+	</repositories>
 	<profiles>
 		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
