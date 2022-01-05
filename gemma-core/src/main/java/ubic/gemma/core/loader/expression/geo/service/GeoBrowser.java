@@ -635,8 +635,13 @@ public class GeoBrowser {
             log.error( "Could not parse data: " + searchUrl, e );
         }
 
-        if ( records.isEmpty() && rawRecords == 0 ) {
-            GeoBrowser.log.warn( "No records obtained" );
+        if ( records.isEmpty() && rawRecords != 0 ) {
+            /*
+               When there are raw records, all that happened is we filtered them all out.
+             */
+            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + rawRecords );
+        } else if ( rawRecords == 0 ) {
+            log.warn( "No records received at all" ); // could be the very beginning ...
             log.warn( "Query was " + searchUrl );
             log.warn( "Fetch was " + fetchUrl );
         } else {
@@ -888,7 +893,7 @@ public class GeoBrowser {
     private void getMeshHeadings( GeoRecord record ) throws IOException {
         try {
             Collection<String> meshheadings = new ArrayList<>();
-            List<String> idlist = Arrays.asList( record.getPubMedIds().split( "\\s+" ) );
+            List<String> idlist = Arrays.asList( record.getPubMedIds().split( "[,\\s]+" ) );
             List<Integer> idints = new ArrayList<>();
             for ( String s : idlist ) {
                 try {
