@@ -91,7 +91,7 @@ public class PubMedXMLParser {
         }
     }
 
-    public Collection<BibliographicReference> parse( InputStream is ) {
+    public Collection<BibliographicReference> parse( InputStream is ) throws IOException {
 
         try {
             //            if ( is.available() == 0 ) {
@@ -107,7 +107,7 @@ public class PubMedXMLParser {
             PubMedXMLParser.log.debug( "done parsing" );
             return this.extractBibRefs( document );
         } catch ( IOException | SAXException | ParserConfigurationException e ) {
-            throw new RuntimeException( e );
+            throw new IOException( e );
         }
     }
 
