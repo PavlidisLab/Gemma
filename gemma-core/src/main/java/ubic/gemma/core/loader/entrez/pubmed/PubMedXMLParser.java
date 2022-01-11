@@ -707,6 +707,7 @@ public class PubMedXMLParser {
                 case "OtherAbstract":
                 case "Suffix":
                 case "SupplMeshList": //hmm.
+                case "GeneralNote":
                     break;
                 default:
                     log.warn( "Unrecognized node name " + name );
