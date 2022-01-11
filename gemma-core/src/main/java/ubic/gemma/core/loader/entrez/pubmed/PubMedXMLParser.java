@@ -192,11 +192,11 @@ public class PubMedXMLParser {
 
             result.add( bibRef );
 
-            if ( i > 1 && i % 1000 == 0 ) {
+            if ( i >= 100 && i % 1000 == 0 ) {
                 PubMedXMLParser.log.info( "Processed " + i + " articles" );
             }
         }
-        if ( i > 1 )
+        if ( i >= 100 )
             PubMedXMLParser.log.info( "Processed " + i + " articles" );
 
         return result;
@@ -366,11 +366,11 @@ public class PubMedXMLParser {
 
             result.add( bibRef );
 
-            if ( i > 0 && i % 1000 == 0 ) {
+            if ( i >= 100 && i % 1000 == 0 ) {
                 PubMedXMLParser.log.info( "Processed " + i + " books" );
             }
         }
-        PubMedXMLParser.log.info( "Processed " + i + " books" );
+        if (i >= 100) PubMedXMLParser.log.info( "Processed " + i + " books" );
         return result;
     }
 
