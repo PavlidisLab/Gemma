@@ -708,6 +708,7 @@ public class PubMedXMLParser {
                 case "Suffix":
                 case "SupplMeshList": //hmm.
                 case "GeneralNote":
+                case "NumberOfReferences":
                     break;
                 default:
                     log.warn( "Unrecognized node name " + name );
