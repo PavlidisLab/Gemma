@@ -297,7 +297,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 .setSkipHeaderRecord( false )
                 .setCommentMarker( '#' ).build()
                 .parse( new InputStreamReader( new ByteArrayInputStream( byteArrayOutputStream.toByteArray() ) ) );
-        assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "pvalue", "corrected_pvalue", "rank" ) );
+        assertEquals( reader.getHeaderNames(), Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
         CSVRecord record = reader.iterator().next();
         assertEquals( record.get( "pvalue" ), "1E0" );
         assertEquals( record.get( "corrected_pvalue" ), "1E-4" );
