@@ -17,3 +17,6 @@ indent_size=3
 
 [CompositeSequence.hbm.xml]
 indent_size=3
+
+[applicationContext-hibernate.xml]
+indent_style=tab
