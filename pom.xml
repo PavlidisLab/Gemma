@@ -632,7 +632,7 @@
 		<hibernate.version>3.6.10.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.13.0</jackson.version>
-		<swagger.version>2.1.11</swagger.version>
+		<swagger.version>2.1.12</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<tomcat.version>8.5.72</tomcat.version>
 		<mysql.version>8.0.27</mysql.version>
