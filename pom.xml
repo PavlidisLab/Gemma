@@ -348,6 +348,14 @@
 			<artifactId>commons-collections4</artifactId>
 			<version>4.4</version>
 		</dependency>
+		<!-- We don't use this directly thus the runtime scope, but some of our dependencies (hibernate-core, velocity)
+		indirectly import a vulnerable version of this package (see CVE-2015-6420 and CVE-2017-15708) -->
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.2</version>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
