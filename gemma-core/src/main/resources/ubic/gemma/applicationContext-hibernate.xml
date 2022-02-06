@@ -58,8 +58,8 @@
 		<property name="lobHandler" ref="defaultLobHandler"/>
 		<property name="mappingLocations">
 			<list>
-				<value>classpath:gemma/gsec/model/**/*.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/**/*.hbm.xml</value>
+				<value>classpath*:gemma/gsec/model/**/*.hbm.xml</value>
+				<value>classpath*:ubic/gemma/model/**/*.hbm.xml</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">
