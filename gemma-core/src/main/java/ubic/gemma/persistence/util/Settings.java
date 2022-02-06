@@ -122,7 +122,7 @@ public class Settings {
         }
 
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "version.properties" );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( "ubic/gemma/version.properties" );
 
             Settings.config.addConfiguration( pc );
         } catch ( ConfigurationException e ) {
