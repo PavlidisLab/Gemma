@@ -39,7 +39,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <echo append="false" file="${project.build.directory}/classes/version.properties">
+                                <echo append="false" file="${project.build.directory}/classes/ubic/gemma/version.properties">
                                     gemma.version=${project.version} built ${maven.build.timestamp}
                                 </echo>
                             </target>
