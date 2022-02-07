@@ -66,7 +66,7 @@ public class PubMedService {
         }
     }
 
-    private void loadFromFile( InputStream f ) {
+    private void loadFromFile( InputStream f ) throws IOException {
         PubMedXMLParser p = new PubMedXMLParser();
         Collection<BibliographicReference> refs = p.parse( f );
         PubMedService.log.info( "Persisting " + refs.size() );

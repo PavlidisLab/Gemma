@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -50,6 +52,12 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
         databaseEntryDao.create( de );
         DatabaseEntry actualReturn = databaseEntryDao.find( de );
         assertEquals( de, actualReturn );
+    }
+
+    @Test
+    @Transactional
+    public void testLoadWithEmptyCollection() {
+        assertEquals(Collections.emptyList(), databaseEntryDao.load( Collections.emptySet() ));
     }
 
 }

@@ -24,13 +24,11 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
                 .map( this::formatExperimentalFactor )
                 .collect( Collectors.joining( ", " ) ) + "]";
 
-        List<String> header = new ArrayList<>();
-
         // add the basic columns
-        header.addAll( Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "pvalue", "corrected_pvalue", "rank" ) );
+        List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name", "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name", "pvalue", "corrected_pvalue", "rank" ) );
 
         // we need to peek in the contrast result to understand factor value interactions
-        // i.e. interaction between genotype and timepoint might result in a contrast_male_3h column, although we would
+        // i.e. interaction between genotype and time point might result in a contrast_male_3h column, although we would
         // use factor value IDs in the actual column name which might result in something like contrast_1292_2938
         final Collection<ContrastResult> firstContrastResults = analysisResultSet.getResults().stream()
                 .findFirst()
@@ -53,25 +51,25 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
         } );
 
         CSVPrinter printer = getTsvFormatBuilder( "Experimental factors: " + experimentalFactorsMetadata )
-                .setHeader( header.toArray( new String[header.size()] ) )
+                .setHeader( header.toArray( new String[0] ) )
                 .build()
                 .print( appendable );
         for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
-            final List<Object> record = new ArrayList<>();
             final List<Gene> genes = result2Genes.getOrDefault( analysisResult, Collections.emptyList() );
-            record.addAll( Arrays.asList( analysisResult.getId(),
+            final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),
                     analysisResult.getProbe().getId(),
                     analysisResult.getProbe().getName(),
                     genes.stream().map( Gene::getId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
                     genes.stream().map( Gene::getName ).collect( Collectors.joining( getSubDelimiter() ) ),
                     genes.stream().map( Gene::getNcbiGeneId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
                     genes.stream().map( Gene::getOfficialSymbol ).collect( Collectors.joining( getSubDelimiter() ) ),
+                    genes.stream().map( Gene::getOfficialName ).collect( Collectors.joining( getSubDelimiter() ) ),
                     format( analysisResult.getPvalue() ),
                     format( analysisResult.getCorrectedPvalue() ),
                     format( analysisResult.getRank() ) ) );
-            analysisResult.getContrasts().stream().sorted( contrastResultComparator ).forEachOrdered( contrastResult -> {
-                record.addAll( Arrays.asList( format( contrastResult.getLogFoldChange() ), format( contrastResult.getTstat() ), format( contrastResult.getPvalue() ) ) );
-            } );
+            analysisResult.getContrasts().stream()
+                    .sorted( contrastResultComparator )
+                    .forEachOrdered( contrastResult -> record.addAll( Arrays.asList( format( contrastResult.getLogFoldChange() ), format( contrastResult.getTstat() ), format( contrastResult.getPvalue() ) ) ) );
             printer.printRecord( record );
         }
 

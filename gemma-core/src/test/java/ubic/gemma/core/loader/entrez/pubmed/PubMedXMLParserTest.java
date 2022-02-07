@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -60,7 +61,7 @@ public class PubMedXMLParserTest {
     }
 
     @Test
-    public void testParse() {
+    public void testParse() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
 
@@ -75,13 +76,13 @@ public class PubMedXMLParserTest {
             assertNotNull( br.getPages() );
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseBook() {
+    public void testParseBook() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -108,7 +109,7 @@ public class PubMedXMLParserTest {
                     .startsWith( "This Institute of Medicine (IOM) study grew out of discussions" ) );
             assertTrue( br.getAbstractText().endsWith( "interested general public." ) );
 
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
@@ -117,7 +118,7 @@ public class PubMedXMLParserTest {
      * Test uses 2030131
      */
     @Test
-    public void testParseBookArticle() {
+    public void testParseBookArticle() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -141,13 +142,13 @@ public class PubMedXMLParserTest {
             assertTrue( br.getAbstractText().endsWith(
                     "offering custom prenatal testing if the disease-causing mutations in a family are known." ) );
 
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseMesh() {
+    public void testParseMesh() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -160,7 +161,7 @@ public class PubMedXMLParserTest {
             // log.info( " qualifier: " + q.getTerm() + " " + q.getIsMajorTopic() );
             // }
             // }
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
@@ -198,13 +199,13 @@ public class PubMedXMLParserTest {
             assertEquals( expectedNumberofKeywords, actualNumberofKeywords );
             assertEquals( expectedNumberofCompounds, actualNumberofCompounds );
 
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseMultipartAbstract() {
+    public void testParseMultipartAbstract() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
 
@@ -218,7 +219,7 @@ public class PubMedXMLParserTest {
             assertTrue(
                     br.getAbstractText().contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
             PubMedXMLParserTest.log.info( br.getAbstractText() );
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
@@ -227,7 +228,7 @@ public class PubMedXMLParserTest {
      * PMID 7914452 is an example of a retracted article.
      */
     @Test
-    public void testParseRetracted() {
+    public void testParseRetracted() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
 
@@ -240,12 +241,12 @@ public class PubMedXMLParserTest {
 
             assertTrue( br.getRetracted() );
 
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             this.logOrThrowException( e );
         }
     }
 
-    private void logOrThrowException( RuntimeException e ) {
+    private void logOrThrowException( IOException e ) throws IOException {
         if ( e.getCause() instanceof java.net.ConnectException ) {
             PubMedXMLParserTest.log.warn( "Test skipped due to connection exception" );
         } else if ( e.getCause() instanceof java.net.UnknownHostException ) {

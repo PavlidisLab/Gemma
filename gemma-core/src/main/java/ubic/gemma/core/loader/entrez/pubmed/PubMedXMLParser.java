@@ -91,7 +91,7 @@ public class PubMedXMLParser {
         }
     }
 
-    public Collection<BibliographicReference> parse( InputStream is ) {
+    public Collection<BibliographicReference> parse( InputStream is ) throws IOException {
 
         try {
             //            if ( is.available() == 0 ) {
@@ -107,7 +107,7 @@ public class PubMedXMLParser {
             PubMedXMLParser.log.debug( "done parsing" );
             return this.extractBibRefs( document );
         } catch ( IOException | SAXException | ParserConfigurationException e ) {
-            throw new RuntimeException( e );
+            throw new IOException( e );
         }
     }
 
@@ -192,11 +192,11 @@ public class PubMedXMLParser {
 
             result.add( bibRef );
 
-            if ( i > 1 && i % 1000 == 0 ) {
+            if ( i >= 100 && i % 1000 == 0 ) {
                 PubMedXMLParser.log.info( "Processed " + i + " articles" );
             }
         }
-        if ( i > 1 )
+        if ( i >= 100 )
             PubMedXMLParser.log.info( "Processed " + i + " articles" );
 
         return result;
@@ -366,11 +366,11 @@ public class PubMedXMLParser {
 
             result.add( bibRef );
 
-            if ( i > 0 && i % 1000 == 0 ) {
+            if ( i >= 100 && i % 1000 == 0 ) {
                 PubMedXMLParser.log.info( "Processed " + i + " books" );
             }
         }
-        PubMedXMLParser.log.info( "Processed " + i + " books" );
+        if (i >= 100) PubMedXMLParser.log.info( "Processed " + i + " books" );
         return result;
     }
 
@@ -707,6 +707,8 @@ public class PubMedXMLParser {
                 case "OtherAbstract":
                 case "Suffix":
                 case "SupplMeshList": //hmm.
+                case "GeneralNote":
+                case "NumberOfReferences":
                     break;
                 default:
                     log.warn( "Unrecognized node name " + name );

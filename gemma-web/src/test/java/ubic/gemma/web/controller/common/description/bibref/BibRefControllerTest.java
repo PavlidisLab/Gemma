@@ -77,7 +77,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             br = brs.findOrCreate( br );
 
             assert br.getId() != null;
-        } catch ( RuntimeException e ) {
+        } catch ( IOException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
                 log.warn( "Test skipped due to connection exception" );
                 return;

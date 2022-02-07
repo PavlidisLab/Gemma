@@ -48,7 +48,8 @@ import java.util.*;
 public class GeoGrabberCli extends AbstractCLIContextCLI {
 
     private static final int NCBI_CHUNK_SIZE = 100;
-    private static final int MAX_RETRIES = 5;
+    private static final int MAX_RETRIES = 3; // on failures
+    private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 20; // stop condition when we stop seeing useful records
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
@@ -212,7 +213,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
             }
             log.info( allowedTaxa.size() + " Taxa considered usable" );
             int retries = 0;
-
+            int numSkippedChunks = 0;
             boolean reachedRewindPoint = ( startDate == null && startFrom == null );
 
             while ( keepGoing ) {
@@ -235,19 +236,16 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                     }
 
                     if ( recs == null || recs.isEmpty() ) {
-                        // this doesn't happen any more, in my experience
-                        AbstractCLI.log.info( "No records received for start=" + start );
-                        retries++;
+                        // When this happens, the issue is that we filtered out all the results. So we should just ignore and keep going.
+                        AbstractCLI.log.info( "No records received for start=" + start + ", advancing" );
+                        numSkippedChunks++;
 
-                        if ( retries > MAX_RETRIES ) {
-                            AbstractCLI.log.info( "Too many failures, giving up" );
+                        // repeated empty results can just mean we ran out of records.
+                        if (numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
+                            log.info("Have already skipped " + numSkippedChunks + " chunks, still no records: bailing");
                             break;
                         }
-
-                        try {
-                            Thread.sleep( 500 );
-                        } catch ( InterruptedException ignored ) {
-                        }
+                        start += NCBI_CHUNK_SIZE;
                         continue;
                     }
                 } catch ( IOException e ) {
@@ -263,6 +261,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                 }
 
                 retries = 0;
+                numSkippedChunks = 0;
 
                 log.debug( "Retrieved " + recs.size() ); // we skip ones that are not using taxa of interest
                 start += NCBI_CHUNK_SIZE; // this seems the best way to avoid hitting them more than once.

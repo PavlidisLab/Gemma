@@ -5,7 +5,7 @@ openAPI:
     - url: /rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.4.0
+    version: 2.4.1
     description: |
       This website documents the usage of the [Gemma REST API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well
@@ -19,8 +19,10 @@ openAPI:
       Please read these in full before continuing to use this webpage or any other part of the Gemma system.
     termsOfService: https://pavlidislab.github.io/Gemma/terms.html
     contact:
+      name: Pavlidis Lab Support
       email: pavlab-support@msl.ubc.ca
+      url: https://pavlab.msl.ubc.ca/
   security:
     - basicAuth: []
-    - cookieAuth: []
+    - cookieAuth: [] # this is meant for client that reuse their JSESSIONID from Gemma website
     - {} # this corresponds to anonymous authentication
