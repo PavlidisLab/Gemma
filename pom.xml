@@ -626,5 +626,6 @@
 		<swagger.version>2.1.12</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
+		<slack.version>1.18.0</slack.version>
 	</properties>
 </project>
