@@ -265,7 +265,7 @@
             <version>1.7</version>
         </dependency>
 
-        <!-- Lucene (version is synced with baseCode -->
+        <!-- Lucene (version is synced with baseCode) -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
@@ -277,7 +277,7 @@
             <version>${lucene.version}</version>
         </dependency>
 
-        <!-- Jena -->
+        <!-- Jena (version is synced with baseCode) -->
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
@@ -376,7 +376,7 @@
             <version>1.7.4</version>
         </dependency>
         <!-- bit array -->
-        <!-- it can't be updated though because the binary format has changed and we store those in the database -->
+        <!-- it can't be updated though because the binary format has changed, and we store those in the database -->
         <dependency>
             <groupId>com.googlecode.javaewah</groupId>
             <artifactId>JavaEWAH</artifactId>
