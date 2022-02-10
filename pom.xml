@@ -18,6 +18,10 @@
 		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
+	<scm>
+		<connection>scm:git:https://github.com/PavlidisLab/Gemma.git</connection>
+		<url>https://github.com/PavlidisLab/Gemma</url>
+	</scm>
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/PavlidisLab/Gemma/issues</url>
