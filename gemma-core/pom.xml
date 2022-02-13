@@ -15,21 +15,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.0.0</version>
-                <configuration>
-                    <target>
-                        <taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
-                            <classpath>
-                                <path refid="maven.dependency.classpath"/>
-                            </classpath>
-                        </taskdef>
-                        <mkdir dir="target/schema"/>
-                        <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-                                      output="${project.build.directory}/schema/gemma-ddl.sql"
-                                      config="${project.basedir}/src/main/resources/hibernate.cfg.xml">
-                            <fileset dir="src/main/resources" includes="**/*.hbm.xml"/>
-                        </schemaexport>
-                    </target>
-                </configuration>
                 <executions>
                     <execution>
                         <id>version-file</id>
@@ -46,12 +31,31 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>schema-export</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
+                        <configuration>
+                            <target>
+                                <taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"/>
+                                <mkdir dir="${project.build.directory}/schema"/>
+                                <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+                                         output="${project.build.directory}/schema/gemma-ddl.sql"
+                                         config="${project.basedir}/src/main/resources/hibernate.cfg.xml">
+                                    <fileset dir="${project.basedir}/src/main/resources" includes="**/*.hbm.xml"/>
+                                </schemaexport>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-core</artifactId>
+                        <version>${hibernate.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
