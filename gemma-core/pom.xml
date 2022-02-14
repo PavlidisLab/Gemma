@@ -171,14 +171,6 @@
                                             <outputDirectory>${project.build.directory}/schema</outputDirectory>
                                             <includes>**/*.sql</includes>
                                         </artifactItem>
-                                        <artifactItem>
-                                            <groupId>gemma</groupId>
-                                            <artifactId>gemma-model</artifactId>
-                                            <version>1.10.1</version>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/schema</outputDirectory>
-                                            <includes>**/*.sql</includes>
-                                        </artifactItem>
                                     </artifactItems>
                                 </configuration>
                             </execution>
