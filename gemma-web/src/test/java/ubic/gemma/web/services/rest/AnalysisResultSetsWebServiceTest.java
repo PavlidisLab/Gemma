@@ -124,7 +124,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWhenNoDatasetsAreProvidedThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
@@ -142,7 +142,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWithFilters() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
@@ -160,7 +160,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWithFiltersAndCollections() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id in (" + this.dears.getId() + ")" ),
                 OffsetArg.valueOf( "0" ),
@@ -178,7 +178,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWithInvalidFilters() {
         HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( BadRequestException.class, () -> service.findAll( null,
+        assertThrows( BadRequestException.class, () -> service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id2 = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
@@ -191,7 +191,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
         DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
-        ResponseDataObject<?> result = service.findAll(
+        ResponseDataObject<?> result = service.getResultSets(
                 datasets,
                 null,
                 FilterArg.valueOf( "" ),
@@ -208,7 +208,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWhenDatasetDoesNotExistThenRaise404NotFound() {
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSets(
                 DatasetArrayArg.valueOf( "GEO123124" ),
                 null,
                 null,
@@ -222,7 +222,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findAll( null,
+        ResponseDataObject<?> result = service.getResultSets( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
@@ -238,7 +238,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindAllWhenDatabaseEntryDoesNotExistThenRaise404NotFound() {
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findAll(
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSets(
                 null,
                 DatabaseEntryArrayArg.valueOf( "GEO123124,GEO1213121" ),
                 null,
@@ -252,7 +252,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdThenReturn200Success() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
+        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), false );
         assertEquals( response.getStatus(), 200 );
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
@@ -263,7 +263,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdWhenExcludeResultsThenReturn200Success() {
         HttpServletResponse response = new MockHttpServletResponse();
-        ResponseDataObject<?> result = service.findById( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
+        ResponseDataObject<?> result = service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), true );
         assertEquals( response.getStatus(), 200 );
         ExpressionAnalysisResultSetValueObject dearsVo = ( ExpressionAnalysisResultSetValueObject ) result.getData();
         assertEquals( dearsVo.getId(), dears.getId() );
@@ -274,21 +274,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdWhenInvalidIdentifierThenThrowMalformedArgException() {
         HttpServletResponse response = new MockHttpServletResponse();
-        assertThrows( MalformedArgException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
+        assertThrows( MalformedArgException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( "alksdok102" ), false ) );
     }
 
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
         HttpServletResponse response = new MockHttpServletResponse();
-        NotFoundException e = assertThrows( NotFoundException.class, () -> service.findById( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
+        NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindByIdToTsv() throws IOException {
         HttpServletResponse response = new MockHttpServletResponse();
-        StreamingOutput result = service.findByIdToTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
+        StreamingOutput result = service.getResultSetToTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ), response );
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         result.write( byteArrayOutputStream );
         byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );

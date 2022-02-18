@@ -84,7 +84,7 @@ public class PlatformsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> all( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatforms( // Params:
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -111,7 +111,7 @@ public class PlatformsWebService {
     @Path("/{platform}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all platforms matching a set of platform identifiers")
-    public PaginatedResponseDataObject<ArrayDesignValueObject> platforms( // Params:
+    public PaginatedResponseDataObject<ArrayDesignValueObject> getPlatformsByIds( // Params:
             @PathParam("platform") PlatformArrayArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -143,7 +143,7 @@ public class PlatformsWebService {
     @Path("/{platform}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all experiments within a given platform")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> platformDatasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> getPlatformDatasets( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -168,7 +168,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the composite sequences for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElements( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElements( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -196,7 +196,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the selected composite sequences for a given platform")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> platformElement( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getPlatformElement( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -225,7 +225,7 @@ public class PlatformsWebService {
     @Path("/{platform}/elements/{probe}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the genes associated to a probe in a given platform")
-    public PaginatedResponseDataObject<GeneValueObject> platformElementGenes( // Params:
+    public PaginatedResponseDataObject<GeneValueObject> getPlatformElementGenes( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Required
             @PathParam("probe") CompositeSequenceArg<Object> probeArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -250,7 +250,7 @@ public class PlatformsWebService {
     @Path("/{platform}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a given platform")
-    public Response platformAnnotations( // Params:
+    public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {

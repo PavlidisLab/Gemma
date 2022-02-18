@@ -55,7 +55,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testAll() {
         PaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
-                .all( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
+                .getDatasets( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
                         SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 5 )
@@ -68,7 +68,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Test
     public void testSome() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
                                 .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
@@ -84,7 +84,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     @Category(SlowTest.class)
     public void testSomeById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.datasets( DatasetArrayArg.valueOf(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
                                 .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
@@ -102,7 +102,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     @Category(SlowTest.class)
     public void testAllFilterById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -125,7 +125,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getId() ) );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -149,7 +149,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", ees.get( 0 ).getShortName() );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -173,7 +173,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", ExpressionExperimentDao.OBJECT_ALIAS )
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 0 ).getShortName() ) );
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -205,7 +205,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 .hasFieldOrPropertyWithValue( "propertyName", "shortName" )
                 .hasFieldOrPropertyWithValue( "requiredValue", Collections.singletonList( ees.get( 1 ).getShortName() ) );
          */
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.all(
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasets(
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
@@ -222,7 +222,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testAllWithTooLargeLimit() {
         assertThatThrownBy( () -> {
-            datasetsWebService.all( FilterArg.valueOf( "" ),
+            datasetsWebService.getDatasets( FilterArg.valueOf( "" ),
                     OffsetArg.valueOf( "0" ),
                     LimitArg.valueOf( "101" ),
                     SortArg.valueOf( "+id" ),
@@ -233,7 +233,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     @Category(SlowTest.class)
     public void testFilterByGeeqPublicationScore() {
-        datasetsWebService.all( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
+        datasetsWebService.getDatasets( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),

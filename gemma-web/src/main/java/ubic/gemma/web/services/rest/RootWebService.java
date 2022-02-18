@@ -81,7 +81,7 @@ public class RootWebService {
     @Path("/users/{uname}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasRole('GROUP_USER')")
-    @Operation(summary = "Retrieve the user information associated to the authenticated session")
+    @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
     public ResponseDataObject<UserValueObject> loadUser( // Params:
             @PathParam("uname") String uName, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.

@@ -77,7 +77,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> findAll(
+    public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSets(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg filters,
@@ -107,7 +107,7 @@ public class AnalysisResultSetsWebService {
     @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
-    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> findById(
+    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
@@ -133,7 +133,7 @@ public class AnalysisResultSetsWebService {
     @Path("/{analysisResultSet}")
     @Produces("text/tab-separated-values; charset=UTF-8; qs=0.9")
     @Operation(summary = "Retrieve a single analysis result set by its identifier")
-    public StreamingOutput findByIdToTsv(
+    public StreamingOutput getResultSetToTsv(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
         final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );

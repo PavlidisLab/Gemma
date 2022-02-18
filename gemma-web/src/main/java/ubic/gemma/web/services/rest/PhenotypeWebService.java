@@ -36,7 +36,7 @@ import java.util.Set;
 /**
  * RESTful interface for phenotypes.
  * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
- * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, BoolArg, HttpServletResponse)}.
+ * see {@link TaxaWebService#getTaxonPhenotypes(TaxonArg, BoolArg, BoolArg, HttpServletResponse)}.
  *
  * @author tesarst
  */
@@ -72,7 +72,7 @@ public class PhenotypeWebService {
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all the evidence from a given external database name")
-    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> evidence( // Params:
+    public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> getPhenotypeEvidence( // Params:
             @QueryParam("database") StringArg database, // required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") LimitArg limit, // Opt.
@@ -93,7 +93,7 @@ public class PhenotypeWebService {
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all phenotype data dumps")
-    public ResponseDataObject<Set<DumpsValueObject>> dumps( // Params:
+    public ResponseDataObject<Set<DumpsValueObject>> getPhenotypeDumps( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
         return Responder.respond( this.phenotypeAssociationManagerService.helpFindAllDumps() );

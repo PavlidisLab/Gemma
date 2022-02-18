@@ -23,7 +23,6 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -96,7 +95,7 @@ public class GeneWebService {
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve genes matching a gene identifier")
-    public ResponseDataObject<List<GeneValueObject>> genes( // Params:
+    public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
             @PathParam("genes") GeneArrayArg genes, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -116,7 +115,7 @@ public class GeneWebService {
     @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the evidence for a given gene")
-    public ResponseDataObject<List<GeneEvidenceValueObject>> geneEvidence( // Params:
+    public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -134,7 +133,7 @@ public class GeneWebService {
     @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the physical locations of a given gene")
-    public ResponseDataObject<List<PhysicalLocationValueObject>> geneLocations( // Params:
+    public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -151,7 +150,7 @@ public class GeneWebService {
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> geneProbes( // Params:
+    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
@@ -172,7 +171,7 @@ public class GeneWebService {
     @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the GO terms associated to a gene")
-    public ResponseDataObject<List<GeneOntologyTermValueObject>> genesGoTerms( // Params:
+    public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -191,7 +190,7 @@ public class GeneWebService {
     @Path("/{gene}/coexpression")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the coexpression of two given genes")
-    public ResponseDataObject<List<CoexpressionValueObjectExt>> geneCoexpression( // Params:
+    public ResponseDataObject<List<CoexpressionValueObjectExt>> getGeneGeneCoexpression( // Params:
             @PathParam("gene") final GeneArg<Object> geneArg, // Required
             @QueryParam("with") final GeneArg<Object> with, // Required
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100

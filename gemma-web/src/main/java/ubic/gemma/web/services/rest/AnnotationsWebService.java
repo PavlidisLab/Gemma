@@ -99,7 +99,7 @@ public class AnnotationsWebService {
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags")
-    public ResponseDataObject<List<AnnotationSearchResultValueObject>> search( // Params:
+    public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
@@ -121,7 +121,7 @@ public class AnnotationsWebService {
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets associated to an annotation tags search")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> datasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -164,7 +164,7 @@ public class AnnotationsWebService {
     @Path("/{taxonArg}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
-    public PaginatedResponseDataObject<ExpressionExperimentValueObject> taxonDatasets( // Params:
+    public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
