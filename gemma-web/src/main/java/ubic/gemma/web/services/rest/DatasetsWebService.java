@@ -200,7 +200,7 @@ public class DatasetsWebService {
     @Path("/{datasetArg}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the main differential analysis of a dataset")
-    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialAnalysis( // Params:
+    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20

@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class RootWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an object with basic API information")
-    public ResponseDataObject<ApiInfoValueObject> all( // Params:
+    public ResponseDataObject<ApiInfoValueObject> getApiInfo( // Params:
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context final ServletConfig servletConfig ) {
         return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), APIDOCS_URL ) );
