@@ -80,14 +80,6 @@ import java.util.List;
  */
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
-    /**
-     * An empty filter singleton.
-     * @deprecated don't use that, a missing filter argument should be represented by the 'null' value and an empty
-     * string would produce an empty list of {@link ObjectFilter} anyway.
-     */
-    @Deprecated
-    public static final FilterArg EMPTY_FILTER = new FilterArg( null, null, null );
-
     public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
     private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
     private static final String ERROR_MSG_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
@@ -238,7 +230,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
     @SuppressWarnings("unused")
     public static FilterArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) )
-            return EMPTY_FILTER;
+            return null;
 
         List<String[]> propertyNames = new LinkedList<>();
         List<String[]> propertyValues = new LinkedList<>();

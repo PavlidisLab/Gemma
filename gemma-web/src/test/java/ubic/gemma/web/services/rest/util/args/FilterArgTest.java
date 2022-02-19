@@ -28,7 +28,7 @@ public class FilterArgTest {
 
     @Test
     public void testEmptyFilter() {
-        assertThat( FilterArg.valueOf( null ) ).isSameAs( FilterArg.EMPTY_FILTER );
+        assertThat( FilterArg.valueOf( null ) ).isNull();
     }
 
     @Before
