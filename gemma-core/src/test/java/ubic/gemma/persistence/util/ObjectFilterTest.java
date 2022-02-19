@@ -25,10 +25,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -66,7 +63,17 @@ public class ObjectFilterTest {
     @Test
     public void testParseDate() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01" );
-        assertThat( of.getRequiredValue() ).isEqualTo( new GregorianCalendar( 2021, 10 - 1, 1 ).getTime() );
+        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1 );
+        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
+    }
+
+    @Test
+    public void testParseDateTime() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01T22:00:03Z" );
+        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1, 22, 0, 3 );
+        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
     }
 
     @Test

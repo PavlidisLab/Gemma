@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.util;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +51,7 @@ public class ObjectFilter {
     /**
      * This is only the date part of the ISO 8601 standard.
      */
-    private static DateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd" );
+    private static DateFormat DATE_FORMAT = new StdDateFormat();
 
     /**
      * Provide all the supported type conversion for parsing required values.
