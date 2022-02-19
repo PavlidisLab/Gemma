@@ -7,6 +7,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 /**
@@ -42,9 +43,11 @@ public abstract class AbstractEntityArg<T, O extends Identifiable, S extends Fil
      *
      * @param service the service to use for the value object retrieval.
      * @return an object whose identifier matches the value of this mutable argument.
-     * @throws NotFoundException if the service cannot provide the entity
+     * @throws NotFoundException   if the service cannot provide the entity
+     * @throws BadRequestException if the service lacks the ability of providing the entity, which is typically due to
+     *                             an incomplete request
      */
-    public abstract O getEntity( S service ) throws NotFoundException;
+    public abstract O getEntity( S service ) throws NotFoundException, BadRequestException;
 
     /**
      * Obtain an {@link ObjectFilter} that restrict a query to this entity.

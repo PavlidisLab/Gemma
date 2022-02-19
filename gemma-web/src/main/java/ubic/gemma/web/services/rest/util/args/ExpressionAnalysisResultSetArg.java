@@ -18,11 +18,11 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
 
     @Override
     public ExpressionAnalysisResultSet getEntity( ExpressionAnalysisResultSetService service ) {
-        return service.loadWithExperimentAnalyzed( getValue() );
+        return checkEntity( service.loadWithExperimentAnalyzed( getValue() ) );
     }
 
     public ExpressionAnalysisResultSet getEntityWithContrastsAndResults( ExpressionAnalysisResultSetService service ) {
-        return service.loadWithResultsAndContrasts( getValue() );
+        return checkEntity( service.loadWithResultsAndContrasts( getValue() ) );
     }
 
     public static ExpressionAnalysisResultSetArg valueOf( String s ) {

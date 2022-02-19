@@ -7,6 +7,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -66,7 +67,7 @@ public class GeneSymbolArg extends GeneArg<String> {
         if ( gene == null )
             return null;
         if ( !gene.getTaxon().equals( taxon ) ) {
-            throw new IllegalArgumentException( "Taxon does not match gene's taxon." );
+            throw new BadRequestException( "Taxon does not match gene's taxon." );
         }
         return geneService.getPhysicalLocationsValueObjects( gene );
     }

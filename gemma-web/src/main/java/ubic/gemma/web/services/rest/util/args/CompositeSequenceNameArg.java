@@ -4,9 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
+import javax.ws.rs.BadRequestException;
+
 /**
- * Composite Sequence argument for CS name.
- * ArrayDesign property has to be populated via parent class setter before getPersistentObject is called!
+ * Composite Sequence argument for CS name. ArrayDesign property has to be populated via parent class setter before
+ * getPersistentObject is called!
  *
  * @author tesarst
  */
@@ -20,7 +22,7 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
     @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
         if ( arrayDesign == null )
-            throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
+            throw new BadRequestException( "Platform not set for composite sequence retrieval" );
         return checkEntity( this.getValue() == null ? null : service.findByName( arrayDesign, this.getValue() ) );
     }
 
