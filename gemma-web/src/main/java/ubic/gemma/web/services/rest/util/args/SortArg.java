@@ -38,17 +38,8 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
     }
 
     /**
-     * Constructor used to create an instance that instead of returning the sort values, informs that the received
-     * string was not well-formed.
-     *
-     * @param errorMessage the malformed original string argument.
-     */
-    private SortArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
-    }
-
-    /**
      * Obtain the {@link Sort} underlying this argument.
+     *
      * @param service a {@link FilteringService} that knows how to build a sort object
      * @return the sorting object in question
      * @throws MalformedArgException in case the orderBy property cannot be applied for the given class, or if the
@@ -76,13 +67,13 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      * throw a {@link javax.ws.rs.BadRequestException}, if the given string was not well-formed.
      */
     @SuppressWarnings("unused")
-    public static SortArg valueOf( final String s ) {
+    public static SortArg valueOf( final String s ) throws MalformedArgException {
         try {
             Sort.Direction direction = parseDirection( s.charAt( 0 ) );
             String orderBy = direction == null ? s : s.substring( 1 );
             return new SortArg( orderBy, direction );
         } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
-            return new SortArg( String.format( ERROR_MSG, s ), e );
+            throw new MalformedArgException( String.format( ERROR_MSG, s ), e );
         }
     }
 

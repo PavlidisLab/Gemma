@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
  * Represents an expression analysis result set identifier.
@@ -13,10 +14,6 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
 
     private ExpressionAnalysisResultSetArg( long value ) {
         super( ExpressionAnalysisResultSet.class, value );
-    }
-
-    public ExpressionAnalysisResultSetArg( String message, Throwable cause ) {
-        super( ExpressionAnalysisResultSet.class, message, cause );
     }
 
     @Override
@@ -32,7 +29,7 @@ public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, Expr
         try {
             return new ExpressionAnalysisResultSetArg( Long.parseLong( s ) );
         } catch ( NumberFormatException e ) {
-            return new ExpressionAnalysisResultSetArg( "Could not parse expression analysis result set identifier.", e );
+            throw new MalformedArgException( String.format( "Could not parse expression analysis result set identifier %s.", s ), e );
         }
     }
 }

@@ -16,6 +16,7 @@ public class FilterArgParseException extends Exception {
         this.part = part;
     }
 
+    @SuppressWarnings("unused")
     public FilterArgParseException( String message ) {
         super( message );
         this.part = null;

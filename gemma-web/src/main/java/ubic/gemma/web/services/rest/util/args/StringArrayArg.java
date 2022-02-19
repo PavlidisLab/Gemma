@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -20,23 +21,18 @@ public class StringArrayArg extends AbstractArrayArg<String> {
         super( values );
     }
 
-    public StringArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param  s the request arrayString argument
+     * @param s the request arrayString argument
      * @return an instance of ArrayStringArg representing array of strings from the input string, or a malformed
-     *           ArrayStringArg that will throw an
-     *           {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not be converted into an
-     *           array of strings.
+     * ArrayStringArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the input
+     * String can not be converted into an array of strings.
      */
     @SuppressWarnings("unused")
     public static StringArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new StringArrayArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
+            throw new MalformedArgException( String.format( ERROR_MSG, s ), new IllegalArgumentException(
                     "Provide a string that contains at least one character, or several strings separated by a comma (',') character." ) );
         }
         return new StringArrayArg( StringUtils.splitAndTrim( s ) );

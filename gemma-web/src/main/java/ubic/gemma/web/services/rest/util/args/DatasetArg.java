@@ -13,6 +13,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.List;
 import java.util.Set;
@@ -32,10 +33,6 @@ public abstract class DatasetArg<T>
         super( ExpressionExperiment.class, value );
     }
 
-    protected DatasetArg( String message, Throwable cause ) {
-        super( ExpressionExperiment.class, message, cause );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -43,9 +40,9 @@ public abstract class DatasetArg<T>
      * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static DatasetArg<?> valueOf( final String s ) {
+    public static DatasetArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new DatasetStringArg( "Dataset identifier cannot be null or empty.", null );
+            throw new MalformedArgException( "Dataset identifier cannot be null or empty." );
         }
         try {
             return new DatasetIdArg( Long.parseLong( s.trim() ) );

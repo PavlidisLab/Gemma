@@ -20,8 +20,6 @@ import java.util.List;
 @Schema(type = "string")
 public class GeneSymbolArg extends GeneArg<String> {
 
-    private static final String ID_NAME = "Official Symbol";
-
     GeneSymbolArg( String s ) {
         super( s );
     }
@@ -73,8 +71,4 @@ public class GeneSymbolArg extends GeneArg<String> {
         return geneService.getPhysicalLocationsValueObjects( gene );
     }
 
-    @Override
-    String getIdentifierName() {
-        return ID_NAME;
-    }
 }

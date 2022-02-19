@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -18,22 +19,18 @@ public class GeneArrayArg extends AbstractEntityArrayArg<String, Gene, GeneServi
         super( GeneArg.class, values );
     }
 
-    private GeneArrayArg( String errorMessage, Exception exception ) {
-        super( GeneArg.class, errorMessage, exception );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request arrayGene argument
-     * @return an instance of ArrayGeneArg representing an array of Gene identifiers from the input string,
-     * or a malformed ArrayGeneArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the
-     * input String can not be converted into an array of Gene identifiers.
+     * @return an instance of ArrayGeneArg representing an array of Gene identifiers from the input string, or a
+     * malformed ArrayGeneArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if
+     * the input String can not be converted into an array of Gene identifiers.
      */
     @SuppressWarnings("unused")
     public static GeneArrayArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new GeneArrayArg( String.format( GeneArrayArg.ERROR_MSG, s ),
+            throw new MalformedArgException( String.format( GeneArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( GeneArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new GeneArrayArg( StringUtils.splitAndTrim( s ) );

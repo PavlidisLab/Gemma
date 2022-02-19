@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -18,22 +19,18 @@ public class PlatformArrayArg extends AbstractEntityArrayArg<String, ArrayDesign
         super( PlatformArg.class, values );
     }
 
-    private PlatformArrayArg( String errorMessage, Exception exception ) {
-        super( PlatformArg.class, errorMessage, exception );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request arrayPlatform argument
-     * @return an instance of ArrayPlatformArg representing an array of Platform identifiers from the input string,
-     * or a malformed ArrayPlatformArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its
-     * value, if the input String can not be converted into an array of Platform identifiers.
+     * @return an instance of ArrayPlatformArg representing an array of Platform identifiers from the input string, or a
+     * malformed ArrayPlatformArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value,
+     * if the input String can not be converted into an array of Platform identifiers.
      */
     @SuppressWarnings("unused")
-    public static PlatformArrayArg valueOf( final String s ) {
+    public static PlatformArrayArg valueOf( final String s ) throws MalformedArgException {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new PlatformArrayArg( String.format( PlatformArrayArg.ERROR_MSG, s ),
+            throw new MalformedArgException( String.format( PlatformArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( PlatformArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new PlatformArrayArg( StringUtils.splitAndTrim( s ) );

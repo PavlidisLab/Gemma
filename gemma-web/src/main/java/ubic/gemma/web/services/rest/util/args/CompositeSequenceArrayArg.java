@@ -8,6 +8,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -26,24 +27,19 @@ public class CompositeSequenceArrayArg
         super( CompositeSequenceArg.class, values );
     }
 
-    private CompositeSequenceArrayArg( String errorMessage, Exception exception ) {
-        super( CompositeSequenceArg.class, errorMessage, exception );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param  s the request arrayCompositeSequence argument
-     * @return an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from
-     *           the input string,
-     *           or a malformed ArrayCompositeSequenceArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing
-     *           its value, if the
-     *           input String can not be converted into an array of CompositeSequence identifiers.
+     * @param s the request arrayCompositeSequence argument
+     * @return an instance of ArrayCompositeSequenceArg representing an array of CompositeSequence identifiers from the
+     * input string, or a malformed ArrayCompositeSequenceArg that will throw an {@link javax.ws.rs.BadRequestException}
+     * when accessing its value, if the input String can not be converted into an array of CompositeSequence
+     * identifiers.
      */
     @SuppressWarnings("unused")
-    public static CompositeSequenceArrayArg valueOf( final String s ) {
+    public static CompositeSequenceArrayArg valueOf( final String s ) throws MalformedArgException {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new CompositeSequenceArrayArg( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
+            throw new MalformedArgException( String.format( CompositeSequenceArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( CompositeSequenceArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new CompositeSequenceArrayArg( StringUtils.splitAndTrim( s ) );

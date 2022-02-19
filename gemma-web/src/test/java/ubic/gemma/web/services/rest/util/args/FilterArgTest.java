@@ -29,13 +29,14 @@ public class FilterArgTest {
 
     @Test
     public void testNullFilter() {
-        assertThat( FilterArg.valueOf( null ) ).isNull();
+        Filters filters = FilterArg.valueOf( null ).getObjectFilters( mockVoService );
+        assertThat( filters.isEmpty() ).isTrue();
     }
 
     @Test
     public void testEmptyFilter() {
         Filters filters = FilterArg.valueOf( "" ).getObjectFilters( mockVoService );
-        assertThat( filters.isEmpty() );
+        assertThat( filters.isEmpty() ).isTrue();
     }
 
     @Before
@@ -60,10 +61,7 @@ public class FilterArgTest {
 
     @Test
     public void testStringCannotContainSpace() {
-        FilterArg filters = FilterArg.valueOf( "a = bcd d" );
-        assertThat( filters ).isNotNull();
-        assertThat( filters.isMalformed() );
-        assertThatThrownBy( () -> filters.getObjectFilters( mockVoService ) )
+        assertThatThrownBy( () -> FilterArg.valueOf( "a = bcd d" ) )
                 .isInstanceOf( MalformedArgException.class )
                 .hasCauseInstanceOf( FilterArgParseException.class )
                 .extracting( "cause" )
@@ -72,10 +70,7 @@ public class FilterArgTest {
 
     @Test
     public void testParseInvalidOperator() {
-        FilterArg filters = FilterArg.valueOf( "a ~= bcd d" );
-        assertThat( filters ).isNotNull();
-        assertThat( filters.isMalformed() );
-        assertThatThrownBy( () -> filters.getObjectFilters( mockVoService ) )
+        assertThatThrownBy( () -> FilterArg.valueOf( "a ~= bcd d" ) )
                 .isInstanceOf( MalformedArgException.class )
                 .hasCauseInstanceOf( FilterArgParseException.class )
                 .extracting( "cause" )

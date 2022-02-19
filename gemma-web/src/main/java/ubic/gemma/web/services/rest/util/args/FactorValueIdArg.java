@@ -15,10 +15,6 @@ public class FactorValueIdArg extends FactorValueArg<Long> {
         super( value );
     }
 
-    public FactorValueIdArg( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
     @Override
     public FactorValue getEntity( FactorValueService service ) {
         return checkEntity( service.load( this.getValue() ) );

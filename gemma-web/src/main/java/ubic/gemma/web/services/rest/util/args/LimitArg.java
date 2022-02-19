@@ -21,13 +21,8 @@ public class LimitArg extends AbstractArg<Integer> {
         super( value );
     }
 
-    public LimitArg( String errorMessage, Throwable cause ) {
-        super( errorMessage, cause );
-    }
-
     /**
      * Obtain the value of the limit ensuring that it is smaller than {@link #MAXIMUM}
-     * @return
      */
     @Override
     public Integer getValue() {
@@ -53,21 +48,22 @@ public class LimitArg extends AbstractArg<Integer> {
 
     /**
      * Obtain the value of the limit, explicitly disregarding the maximum defined by {@link #MAXIMUM}.
+     *
      * @return
      */
     public Integer getValueNoMaximum() {
         return super.getValue();
     }
 
-    public static LimitArg valueOf( String s ) {
+    public static LimitArg valueOf( String s ) throws MalformedArgException {
         int limit;
         try {
             limit = Integer.parseInt( s );
         } catch ( NumberFormatException e ) {
-            return new LimitArg( "The provided limit is not a valid number.", e );
+            throw new MalformedArgException( "The provided limit is not a valid number.", e );
         }
         if ( limit < 1 ) {
-            return new LimitArg( "The provided limit must be greater than one.", null );
+            throw new MalformedArgException( "The provided limit must be greater than one.", null );
         }
         return new LimitArg( limit );
     }

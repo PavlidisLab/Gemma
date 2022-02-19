@@ -33,10 +33,6 @@ public class TaxonStringArg extends TaxonArg<String> {
         super( s );
     }
 
-    TaxonStringArg( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
     @Override
     public Taxon getEntity( TaxonService service ) {
         return checkEntity( this.getValue() == null ? null : this.tryAllNameProperties( service ) );

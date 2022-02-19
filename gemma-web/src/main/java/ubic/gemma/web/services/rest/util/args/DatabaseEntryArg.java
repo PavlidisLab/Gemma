@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.NotFoundException;
 
@@ -20,20 +21,17 @@ public abstract class DatabaseEntryArg<T>
         super( DatabaseEntry.class, value );
     }
 
-    protected DatabaseEntryArg( String message, Throwable cause ) {
-        super( DatabaseEntry.class, message, cause );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request database entry argument
-     * @return instance of appropriate implementation of DatabaseEntryArg based on the actual Type the argument represents.
+     * @return instance of appropriate implementation of DatabaseEntryArg based on the actual Type the argument
+     * represents.
      */
     @SuppressWarnings("unused")
-    public static DatabaseEntryArg<?> valueOf( final String s ) {
+    public static DatabaseEntryArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new DatabaseEntryStringArg( "Database entry cannot be null or empty.", null );
+            throw new MalformedArgException( "Database entry cannot be null or empty." );
         }
         try {
             return new DatabaseEntryIdArg( Long.parseLong( s.trim() ) );

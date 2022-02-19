@@ -12,8 +12,6 @@ import ubic.gemma.model.genome.Gene;
 @Schema(type = "string")
 public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
-    private static final String ID_NAME = "Ensembl ID";
-
     /**
      * @param s intentionally primitive type, so the value property can never be null.
      */
@@ -31,8 +29,4 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
         return "ensemblId";
     }
 
-    @Override
-    String getIdentifierName() {
-        return ID_NAME;
-    }
 }

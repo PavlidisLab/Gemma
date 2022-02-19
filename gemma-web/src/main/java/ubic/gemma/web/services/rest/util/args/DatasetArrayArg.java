@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.services.rest.util.StringUtils;
 
 import java.util.List;
@@ -19,22 +20,18 @@ public class DatasetArrayArg
         super( DatasetArg.class, values );
     }
 
-    private DatasetArrayArg( String errorMessage, Exception exception ) {
-        super( DatasetArg.class, errorMessage, exception );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request arrayDataset argument
-     * @return an instance of ArrayDatasetArg representing an array of Dataset identifiers from the input string,
-     * or a malformed ArrayDatasetArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the
-     * input String can not be converted into an array of Dataset identifiers.
+     * @return an instance of ArrayDatasetArg representing an array of Dataset identifiers from the input string, or a
+     * malformed ArrayDatasetArg that will throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if
+     * the input String can not be converted into an array of Dataset identifiers.
      */
     @SuppressWarnings("unused")
-    public static DatasetArrayArg valueOf( final String s ) {
+    public static DatasetArrayArg valueOf( final String s ) throws MalformedArgException {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new DatasetArrayArg( String.format( DatasetArrayArg.ERROR_MSG, s ),
+            throw new MalformedArgException( String.format( DatasetArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatasetArrayArg.ERROR_MSG_DETAIL ) );
         }
         return new DatasetArrayArg( StringUtils.splitAndTrim( s ) );

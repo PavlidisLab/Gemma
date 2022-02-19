@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
  * Mutable argument type base class for Composite Sequence arguments.
@@ -21,10 +22,6 @@ public abstract class CompositeSequenceArg<T>
         super( CompositeSequence.class, arg );
     }
 
-    protected CompositeSequenceArg( String message, Throwable cause ) {
-        super( CompositeSequence.class, message, cause );
-    }
-
     /**
      * Used by RS to parse value of request parameters.
      *
@@ -32,9 +29,9 @@ public abstract class CompositeSequenceArg<T>
      * @return instance of CompositeSequenceArg.
      */
     @SuppressWarnings("unused")
-    public static CompositeSequenceArg<?> valueOf( final String s ) {
+    public static CompositeSequenceArg<?> valueOf( final String s ) throws MalformedArgException {
         if ( StringUtils.isBlank( s ) ) {
-            return new CompositeSequenceIdArg( "Composite sequence identifier cannot be null or empty.", null );
+            throw new MalformedArgException( "Composite sequence identifier cannot be null or empty.", null );
         }
         try {
             return new CompositeSequenceIdArg( Long.parseLong( s.trim() ) );

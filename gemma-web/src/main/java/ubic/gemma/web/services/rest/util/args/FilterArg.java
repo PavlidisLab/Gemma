@@ -14,7 +14,6 @@
  */
 package ubic.gemma.web.services.rest.util.args;
 
-import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
@@ -104,10 +103,6 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
         super( new Filter( propertyNames, propertyValues, propertyOperators ) );
     }
 
-    private FilterArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
-    }
-
     /**
      * Create a {@link Filters} that can be used as a filter parameter for service value object retrieval.
      *
@@ -171,13 +166,10 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      */
     @SuppressWarnings("unused")
     public static FilterArg valueOf( final String s ) {
-        if ( s == null ) {
-            return null;
-        }
         try {
             return parseFilterString( s );
         } catch ( FilterArgParseException e ) {
-            return new FilterArg( "The filter query is not correctly formed.", e );
+            throw new MalformedArgException( String.format( "The filter query '%s' is not correctly formed.", s ), e );
         }
     }
 

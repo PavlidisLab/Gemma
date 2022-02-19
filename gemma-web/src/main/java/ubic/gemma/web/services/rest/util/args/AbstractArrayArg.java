@@ -8,13 +8,10 @@ import java.util.List;
  * @author tesarst
  */
 public abstract class AbstractArrayArg<T> extends AbstractArg<List<T>> {
-    static final String ERROR_MSG = "Value '%s' can not converted to an array of ";
+
+    protected static final String ERROR_MSG = "Value '%s' can not converted to an array of ";
 
     protected AbstractArrayArg( List<T> values ) {
         super( values );
-    }
-
-    protected AbstractArrayArg( String errorMessage, Exception exception ) {
-        super( errorMessage, exception );
     }
 }

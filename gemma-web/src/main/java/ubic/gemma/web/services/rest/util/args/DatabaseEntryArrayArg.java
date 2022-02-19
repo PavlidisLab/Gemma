@@ -1,13 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
-import ubic.gemma.web.services.rest.util.StringUtils;
+import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.List;
+
+import static ubic.gemma.web.services.rest.util.StringUtils.splitAndTrim;
 
 @ArraySchema(schema = @Schema(implementation = DatabaseEntryArg.class))
 public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<String, DatabaseEntry, DatabaseEntryService> {
@@ -19,15 +21,11 @@ public class DatabaseEntryArrayArg extends AbstractEntityArrayArg<String, Databa
         super( DatabaseEntryArg.class, values );
     }
 
-    public DatabaseEntryArrayArg( String format, IllegalArgumentException e ) {
-        super( DatabaseEntryArg.class, format, e );
-    }
-
-    public static DatabaseEntryArrayArg valueOf( final String s ) {
-        if ( Strings.isNullOrEmpty( s ) ) {
-            return new DatabaseEntryArrayArg( String.format( DatabaseEntryArrayArg.ERROR_MSG, s ),
+    public static DatabaseEntryArrayArg valueOf( final String s ) throws MalformedArgException {
+        if ( StringUtils.isBlank( s ) ) {
+            throw new MalformedArgException( String.format( DatabaseEntryArrayArg.ERROR_MSG, s ),
                     new IllegalArgumentException( DatabaseEntryArrayArg.ERROR_MSG_DETAIL ) );
         }
-        return new DatabaseEntryArrayArg( StringUtils.splitAndTrim( s ) );
+        return new DatabaseEntryArrayArg( splitAndTrim( s ) );
     }
 }
