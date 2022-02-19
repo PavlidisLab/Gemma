@@ -15,6 +15,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
@@ -170,8 +171,9 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
      */
     @SuppressWarnings("unused")
     public static FilterArg valueOf( final String s ) {
-        if ( Strings.isNullOrEmpty( s ) )
+        if ( s == null ) {
             return null;
+        }
         try {
             return parseFilterString( s );
         } catch ( FilterArgParseException e ) {
@@ -190,7 +192,7 @@ public class FilterArg extends AbstractArg<FilterArg.Filter> {
         List<ObjectFilter.Operator[]> propertyOperators = new LinkedList<>();
 
         // TODO: have a nicer way to tokenize the filter
-        String[] parts = s.split( "\\s*,?\\s+" );
+        String[] parts = StringUtils.isBlank( s ) ? new String[0] : s.split( "\\s*,?\\s+" );
 
         List<String> propertyNamesDisjunction = new LinkedList<>();
         List<ObjectFilter.Operator> propertyOperatorsDisjunction = new LinkedList<>();

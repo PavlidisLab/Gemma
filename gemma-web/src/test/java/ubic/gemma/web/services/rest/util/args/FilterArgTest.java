@@ -28,8 +28,14 @@ public class FilterArgTest {
     private FilteringService mockVoService;
 
     @Test
-    public void testEmptyFilter() {
+    public void testNullFilter() {
         assertThat( FilterArg.valueOf( null ) ).isNull();
+    }
+
+    @Test
+    public void testEmptyFilter() {
+        Filters filters = FilterArg.valueOf( "" ).getObjectFilters( mockVoService );
+        assertThat( filters.isEmpty() );
     }
 
     @Before
