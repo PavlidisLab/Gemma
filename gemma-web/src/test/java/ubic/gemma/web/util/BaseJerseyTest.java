@@ -7,6 +7,7 @@ import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Before;
+import org.junit.experimental.categories.Category;
 import org.springframework.mock.web.MockServletConfig;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.authentication.ProviderManager;
@@ -18,6 +19,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
+import ubic.gemma.core.util.test.category.SpringContextTest;
 
 import javax.ws.rs.core.Application;
 import java.util.Arrays;
@@ -32,6 +34,7 @@ import java.util.Arrays;
  *
  * @author poirigui
  */
+@Category(SpringContextTest.class)
 public abstract class BaseJerseyTest extends JerseyTest {
 
     /**

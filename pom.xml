@@ -483,7 +483,32 @@
 						<exclude>**/*Abstract*</exclude>
 						<exclude>**/*IntegrationTest.java</exclude>
 					</excludes>
+					<excludedGroups>ubic.gemma.core.util.test.category.SpringContextTest,${excludedGroups}</excludedGroups>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.22.2</version>
+				<configuration>
+					<argLine>-Dlog4j1.compatibility=true</argLine>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+					<excludes>
+						<exclude>**/*Abstract*</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
+					<groups>ubic.gemma.core.util.test.category.SpringContextTest</groups>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -616,5 +641,7 @@
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.23.0</slack.version>
+		<!-- this ensures that -DexcludedGroups works properly -->
+		<excludedGroups/>
 	</properties>
 </project>

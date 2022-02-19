@@ -41,6 +41,7 @@
 				<version>2.0</version>
 				<executions>
 					<execution>
+						<phase>integration-test</phase>
 						<goals>
 							<goal>test</goal>
 						</goals>

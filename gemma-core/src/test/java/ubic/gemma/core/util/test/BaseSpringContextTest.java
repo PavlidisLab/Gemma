@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.springframework.beans.factory.InitializingBean;
@@ -46,6 +47,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
+import ubic.gemma.core.util.test.category.SpringContextTest;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -78,6 +80,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@Category(SpringContextTest.class)
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
         "classpath*:gemma/gsec/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
