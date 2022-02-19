@@ -6,7 +6,6 @@ import org.hibernate.QueryException;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.services.rest.util.args.FilterArg;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
@@ -31,7 +30,7 @@ public class QueryExceptionMapper implements ExceptionMapper<QueryException> {
     public Response toResponse( QueryException e ) {
         log.error( "Unknown query exception while serving request: ", e );
         WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                FilterArg.ERROR_MSG_MALFORMED_REQUEST );
+                "Entity does not contain the given property, or the provided value can not be converted to the property type." );
         return Response.status( error.getStatus() ).entity( new ResponseErrorObject( error, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
     }
 }

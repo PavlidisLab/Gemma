@@ -32,11 +32,10 @@ import org.springframework.core.convert.support.GenericConversionService;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -131,6 +130,21 @@ public class ObjectFilter {
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
         in( "in", true, Collection.class );
+
+        /**
+         * Retrieve an {@link Operator} from a given token.
+         *
+         * @return an {@link Optional} containing the operator matched in a case-insensitive manner if found, otherwise
+         * {@link Optional#empty()}.
+         */
+        public static Optional<Operator> fromToken( String token ) {
+            for ( Operator o : values() ) {
+                if ( o.token.equalsIgnoreCase( token ) ) {
+                    return Optional.of( o );
+                }
+            }
+            return Optional.empty();
+        }
 
         /**
          * Token used when parsing object filter input.

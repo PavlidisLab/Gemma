@@ -12,6 +12,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,9 +53,36 @@ public class FilterArgTest {
     }
 
     @Test
+    public void testStringCannotContainSpace() {
+        FilterArg filters = FilterArg.valueOf( "a = bcd d" );
+        assertThat( filters ).isNotNull();
+        assertThat( filters.isMalformed() );
+        assertThatThrownBy( () -> filters.getObjectFilters( mockVoService ) )
+                .isInstanceOf( MalformedArgException.class )
+                .hasCauseInstanceOf( FilterArgParseException.class )
+                .extracting( "cause" )
+                .hasFieldOrPropertyWithValue( "part", Optional.of( 3 ) );
+    }
+
+    @Test
+    public void testParseInvalidOperator() {
+        FilterArg filters = FilterArg.valueOf( "a ~= bcd d" );
+        assertThat( filters ).isNotNull();
+        assertThat( filters.isMalformed() );
+        assertThatThrownBy( () -> filters.getObjectFilters( mockVoService ) )
+                .isInstanceOf( MalformedArgException.class )
+                .hasCauseInstanceOf( FilterArgParseException.class )
+                .extracting( "cause" )
+                .hasFieldOrPropertyWithValue( "part", Optional.of( 1 ) );
+    }
+
+    @Test
     public void testInvalidFilter() {
         assertThatThrownBy( () -> FilterArg.valueOf( "a =b" ).getObjectFilters( mockVoService ) )
-                .isInstanceOf( MalformedArgException.class );
+                .isInstanceOf( MalformedArgException.class )
+                .hasCauseInstanceOf( FilterArgParseException.class )
+                .extracting( "cause" )
+                .hasFieldOrPropertyWithValue( "part", Optional.of( 0 ) );
     }
 
     @Test
@@ -65,11 +93,13 @@ public class FilterArgTest {
                 .extracting( of -> of[0] )
                 .first()
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
         assertThat( filters )
                 .extracting( of -> of[0] )
                 .last()
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
     }
 
@@ -82,20 +112,24 @@ public class FilterArgTest {
 
         assertThat( filters.iterator().next()[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( filters.iterator().next()[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
         FilterArg.valueOf( "a = b or c = d" ).getObjectFilters( mockVoService );
 
         assertThat( filters.iterator().next()[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( filters.iterator().next()[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
     }
 
@@ -113,19 +147,23 @@ public class FilterArgTest {
                 .hasSize( 2 );
         assertThat( of[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "a" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "b" );
 
         assertThat( of[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "g" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "h" );
 
         of = iterator.next();
         assertThat( of[0] )
                 .hasFieldOrPropertyWithValue( "propertyName", "c" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "d" );
 
         assertThat( of[1] )
                 .hasFieldOrPropertyWithValue( "propertyName", "e" )
+                .hasFieldOrPropertyWithValue( "operator", ObjectFilter.Operator.eq )
                 .hasFieldOrPropertyWithValue( "requiredValue", "f" );
     }
 }

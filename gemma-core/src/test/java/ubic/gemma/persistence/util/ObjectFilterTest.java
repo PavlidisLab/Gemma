@@ -77,8 +77,26 @@ public class ObjectFilterTest {
     }
 
     @Test
+    public void testParseDateTimeWithoutZuluSuffix() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.greaterOrEq, "2021-10-01T22:00:03" );
+        Calendar calendar = new GregorianCalendar( 2021, Calendar.OCTOBER, 1, 22, 0, 3 );
+        calendar.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        assertThat( of.getRequiredValue() ).isEqualTo( calendar.getTime() );
+    }
+
+    @Test
     public void testParseCollectionOfDates() {
         ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.in, "(2021-10-01, 2021-10-02)" );
+    }
+
+    @Test
+    public void testParseCollectionOfDateTimes() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.in, "(2021-10-01T00:00:01, 2021-10-02T01:00:00Z)" );
+    }
+
+    @Test
+    public void testParseMixtureOfDateAndDateTime() {
+        ObjectFilter of = ObjectFilter.parseObjectFilter( "ee", "lastUpdated", Date.class, ObjectFilter.Operator.in, "(2021-10-01, 2021-10-02T01:00:00Z)" );
     }
 
     @Test
