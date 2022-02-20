@@ -16,10 +16,12 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -231,6 +233,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
                 try {
                     Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
                     ee = ( ExpressionExperiment ) results.iterator().next();
+                } catch ( AccessDeniedException e ) {
+                    // see https://github.com/PavlidisLab/Gemma/issues/206
+                    Assume.assumeNoException( e );
                 } catch ( AlreadyExistsInSystemException e ) {
                     throw new IllegalStateException( "Need to remove this data set before test is run" );
                 }
