@@ -15,11 +15,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 /**
@@ -47,13 +45,13 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
      */
     public ubic.gemma.persistence.util.Sort getSort( FilteringService service ) throws MalformedArgException {
         ubic.gemma.persistence.util.Sort.Direction direction = null;
-        if ( this.getValue().getDirection().equals( Sort.Direction.ASC ) ) {
+        if ( this.getValue().direction.equals( Sort.Direction.ASC ) ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.ASC;
-        } else if ( this.getValue().getDirection().equals( Sort.Direction.DESC ) ) {
+        } else if ( this.getValue().direction.equals( Sort.Direction.DESC ) ) {
             direction = ubic.gemma.persistence.util.Sort.Direction.DESC;
         }
         try {
-            return service.getSort( this.getValue().getOrderBy(), direction );
+            return service.getSort( this.getValue().orderBy, direction );
         } catch ( IllegalArgumentException e ) {
             throw new MalformedArgException( e );
         }
@@ -93,13 +91,12 @@ public class SortArg extends AbstractArg<SortArg.Sort> {
         }
     }
 
-    @Data
     public static class Sort {
 
         private final String orderBy;
         private final Direction direction;
 
-        public Sort( String orderBy, Direction direction ) {
+        private Sort( String orderBy, Direction direction ) {
             if ( StringUtils.isBlank( orderBy ) ) {
                 throw new IllegalArgumentException( "The 'orderBy' attribute cannot be blank or empty." );
             }

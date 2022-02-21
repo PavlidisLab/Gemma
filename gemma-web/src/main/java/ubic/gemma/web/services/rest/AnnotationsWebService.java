@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -111,7 +112,7 @@ public class AnnotationsWebService {
 
     /**
      * Does a search for datasets containing characteristics matching the given string.
-     * If filter, offset, limit or sort parameters are provided.
+     * If filterArg, offset, limit or sortArg parameters are provided.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of dataset that match the search query.
@@ -123,10 +124,10 @@ public class AnnotationsWebService {
     @Operation(summary = "Retrieve datasets associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
+            @QueryParam("filter") @DefaultValue("") FilterArg filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg sortArg, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
@@ -135,24 +136,27 @@ public class AnnotationsWebService {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
         }
 
-        // If there are filters other than the search query, intersect the results.
-        if ( filter.getObjectFilters( expressionExperimentService ) != null ||
-                offset.getValue() != 0 ||
-                limit.getValue() != 0 ||
-                !sort.getValue().getOrderBy().equals( "id" ) ||
-                sort.getValue().getDirection() != SortArg.Sort.Direction.ASC ) {
+        Filters filters = filterArg.getObjectFilters( expressionExperimentService );
+        Sort sort = sortArg.getSort( expressionExperimentService );
 
-            // this without cluttering the code.
-            Filters filters = filter.getObjectFilters( expressionExperimentService );
-            if ( filters == null ) {
-                filters = new Filters();
-            }
-            filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
-            return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort.getSort( expressionExperimentService ), offset.getValue(), limit.getValue() ) );
+        if ( filters == null
+                && offset.getValue() == 0
+                && foundIds.size() < limit.getValue()
+                && sort.getPropertyName().equals( "id" )
+                && sort.getDirection() == Sort.Direction.ASC ) {
+            // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
+            return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
+
         }
 
-        // Otherwise there is no need to go the pre-filter path since we already know exactly what IDs we want.
-        return Responder.paginate( Slice.fromList( expressionExperimentService.loadValueObjectsByIds( foundIds ) ) );
+        // FIXME: this is not necessary since FilterArg.valueOf("") returns an empty Filters object
+        if ( filters == null ) {
+            filters = new Filters();
+        }
+
+        // If there are filters other than the search query, intersect the results.
+        filters.add( DatasetArrayArg.valueOf( StringUtils.join( foundIds, ',' ) ).getObjectFilters( expressionExperimentService ) );
+        return Responder.paginate( expressionExperimentService.loadValueObjectsPreFilter( filters, sort, offset.getValue(), limit.getValue() ) );
     }
 
     /**
