@@ -39,8 +39,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Created by tesarst on 14/07/17.
- * Provides necessary information to filter a database query by a value of a specific object property.
+ * Holds the necessary information to filter an entity with a property, operator and right-hand side value.
+ *
+ * @author tesarst
+ * @author poirigui
  */
 @Getter
 @EqualsAndHashCode
@@ -50,7 +52,7 @@ public class ObjectFilter {
     /**
      * This is only the date part of the ISO 8601 standard.
      */
-    private static DateFormat DATE_FORMAT = new StdDateFormat();
+    private static final DateFormat DATE_FORMAT = new StdDateFormat();
 
     /**
      * Provide all the supported type conversion for parsing required values.
@@ -78,14 +80,13 @@ public class ObjectFilter {
     }
 
     /**
-     * Creates a new ObjectFilter with a value parsed from a String into a given propertyType.
+     * Parse an ObjectFilter where the right-hand side is a scalar.
      *
-     * @param propertyName  property name of the object
-     * @param propertyType  the type of the property that will be checked, you can use the {@link EntityUtils#getDeclaredFieldType(String, Class)}
-     *                      utility to obtain that type conveniently
-     * @param operator      operator for this filter, see {@link Operator} for more details about available operations
-     * @param requiredValue required value
-     * @throws IllegalArgumentException if
+     * @param requiredValue a right-hand side to be parsed according to the propertyType and operator
+     * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
+     *                                  {@link ConversionException} when attempting to convert the requiredValue to the
+     *                                  desired propertyType.
+     * @see #ObjectFilter(String, String, Class, Operator, Object)
      */
     public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, String requiredValue ) throws IllegalArgumentException {
         return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValue( requiredValue, propertyType ) );
@@ -93,22 +94,16 @@ public class ObjectFilter {
 
 
     /**
-     * Creates a new ObjectFilter with a value of type that the given requiredValue object is.
+     * Parse an ObjectFilter where the right-hand side is a {@link Collection} of scalar right-hand side to be parsed.
      *
-     * @param  propertyName             the name of a property that will be checked.
-     * @param  operator                 the operator that will be used to compare the value of the object. The
-     *                                  requiredValue will be the right operand of the given operator.
-     *                                  Demonstration in pseudo-code: if( object.value lessThan requiredValue) return
-     *                                  object.
-     *                                  The {@link Operator#in} operator means that the given requiredValue is
-     *                                  expected to be a {@link Collection}, and the checked property has to be equal to
-     *                                  at least one of the values contained within that <i>List</i>.
-     *                                  The {@link Operator#like} operator must be provided a {@link String} as
-     *                                  requiredValue
-     * @param  requiredValues           the value that the property will be checked for. Null objects are not allowed
-     *                                  for operators "lessThan", "greaterThan" and "in".
-     * @throws IllegalArgumentException if the given operator is the "in" operator but the
-     *                                  given requiredValue is not an instance of Iterable.
+     * If you need to parse a collection held in a {@link String} (i.e. <code>"(1,2,3,4)"</code>), you should use
+     * {@link #parseObjectFilter(String, String, Class, Operator, String)} instead.
+     *
+     * @param requiredValues a collection of right-hand side to be parsed
+     * @throws IllegalArgumentException if the right-hand side cannot be parsed, which is generally caused by a
+     *                                  {@link ConversionException} when attempting to convert the requiredValue to the
+     *                                  desired propertyType.
+     * @see #ObjectFilter(String, String, Class, Operator, Object)
      */
     public static ObjectFilter parseObjectFilter( String alias, String propertyName, Class<?> propertyType, Operator operator, Collection<String> requiredValues ) throws IllegalArgumentException {
         return new ObjectFilter( alias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ) );
@@ -199,6 +194,19 @@ public class ObjectFilter {
     private final Operator operator;
     private final Object requiredValue;
 
+    /**
+     * Create a new ObjectFilter.
+     *
+     * If you need to parse the right-hand side, consider using {@link #parseObjectFilter(String, String, Class, Operator, String)}
+     * for a scalar or {@link #parseObjectFilter(String, String, Class, Operator, Collection)} for a collection type.
+     *
+     * @param objectAlias   the alias that refers to the entity subject to the filter
+     * @param propertyName  the property in the entity
+     * @param propertyType  the type of the property, which can be conveniently retrieved with {@link EntityUtils#getDeclaredFieldType(String, Class)}.
+     * @param operator      a valid operator for the property and the requiredValue
+     * @param requiredValue a required value, or null to perform a null-check (i.e. <code>objectAlias.propertyName is null</code>)
+     * @throws IllegalArgumentException if the type of the requiredValue does not match the propertyType
+     */
     public ObjectFilter( String objectAlias, String propertyName, Class<?> propertyType, Operator operator, Object requiredValue ) throws IllegalArgumentException {
         this.objectAlias = objectAlias;
         this.propertyName = propertyName;
@@ -240,8 +248,8 @@ public class ObjectFilter {
     /**
      * Converts the given value to be of the given property type. For primitive number types, the wrapper class is used.
      *
-     * @param  rv the Object to be converted into the desired type.
-     * @param  pt  the type that the given value should be converted to.
+     * @param rv the Object to be converted into the desired type.
+     * @param pt the type that the given value should be converted to.
      * @return and Object of requested type, containing the given value converted to the new type.
      */
     private static Object parseRequiredValue( String rv, Class<?> pt ) throws IllegalArgumentException {

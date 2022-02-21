@@ -66,7 +66,7 @@ import java.util.List;
  * <code>property1 &lt; value1 AND property2 like value2</code>
  *
  * If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal form (CNF)
- * without any parentheses. Every AND keyword separates blocks of disjunctions.
+ * without any parentheses. Every AND conjunctions separates blocks of OR disjunctions.
  *
  * Example:
  * <code>p1 = v1 OR p1 != v2 AND p2 &lt;=v2 AND p3 &gt; v3 OR p3 &lt; v4</code>
@@ -81,7 +81,7 @@ import java.util.List;
  *
  * Breaking the CNF results in an error.
  *
- * Filter "curationDetails.troubled" will be ignored if user is not an administrator.
+ * The available properties on an entity can be restricted by the service layer via {@link FilteringService#getObjectFilter(String, ObjectFilter.Operator, String)}.
  *
  * @author tesarst
  * @see Filters
