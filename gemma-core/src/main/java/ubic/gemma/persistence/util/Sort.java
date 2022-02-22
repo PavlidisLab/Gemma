@@ -6,21 +6,23 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Represents a directed sort by a property.
  */
-@Getter
-@EqualsAndHashCode
-@ToString
+@Data
 public class Sort {
 
     /**
-     * Factory to create a {@link Sort} elegantly.
-     * @see Sort#Sort(String, String, Direction)
+     * Create a {@link Sort} for a given alias, property and direction.
+     *
+     * @param alias        an alias in the query, or null to refer to the root entity (not recommended though, since this
+     *                     could result in an ambiguous query)
+     * @param propertyName a property of objectAlias to order by
+     * @param direction    a direction, or null for default
      */
     public static Sort by( String alias, String propertyName, Direction direction ) {
         return new Sort( alias, propertyName, direction );
     }
 
     /**
-     * Shortcut to provide orderBy without passing a null direction to {@link #by(String, String, Direction)}.
+     * Create a {@link Sort} with the default direction for the property.
      */
     public static Sort by( String alias, String propertyName ) {
         return by( alias, propertyName, null );
@@ -37,15 +39,7 @@ public class Sort {
     private final String propertyName;
     private final Direction direction;
 
-    /**
-     * Create a new sort object.
-     *
-     * @param objectAlias an alias in the query, or null to refer to the root entity (not recommended though, since this
-     *                    could result in an ambiguous query)
-     * @param propertyName     a property of objectAlias to order by
-     * @param direction   a direction, or null for default
-     */
-    public Sort( String objectAlias, String propertyName, Direction direction ) {
+    private Sort( String objectAlias, String propertyName, Direction direction ) {
         if ( objectAlias != null && StringUtils.isBlank( objectAlias ) ) {
             throw new IllegalArgumentException( "The object alias must be either null or non-empty." );
         }
