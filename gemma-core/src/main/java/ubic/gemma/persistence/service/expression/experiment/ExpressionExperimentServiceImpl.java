@@ -1152,33 +1152,18 @@ public class ExpressionExperimentServiceImpl
      * {@inheritDoc}
      */
     @Override
-    public ObjectFilter getObjectFilter( String propertyName, ObjectFilter.Operator operator, String requiredValue ) {
-        try {
-            AliasPropertyNameType ap = getAliasForProperty( propertyName );
-            return ObjectFilter.parseObjectFilter( ap.getObjectAlias(), ap.propertyName, ap.propertyType, operator, requiredValue );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
+    protected String getPropertyAlias( String propertyName ) throws NoSuchFieldException {
+        return getAliasForProperty( propertyName ).objectAlias;
     }
 
     @Override
-    public ObjectFilter getObjectFilter( String propertyName, ObjectFilter.Operator operator, Collection<String> requiredValues ) {
-        try {
-            AliasPropertyNameType ap = getAliasForProperty( propertyName );
-            return ObjectFilter.parseObjectFilter( ap.getObjectAlias(), ap.propertyName, ap.propertyType, operator, requiredValues );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
+    protected String getPropertyName( String propertyName ) throws NoSuchFieldException {
+        return getAliasForProperty( propertyName ).propertyName;
     }
 
     @Override
-    public Sort getSort( String propertyName, Sort.Direction direction ) {
-        try {
-            AliasPropertyNameType ap = getAliasForProperty( propertyName );
-            return Sort.by( ap.getObjectAlias(), ap.getPropertyName(), direction );
-        } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( e );
-        }
+    protected Class<?> getPropertyType( String propertyName ) throws NoSuchFieldException {
+        return getAliasForProperty( propertyName ).propertyType;
     }
 
     private AliasPropertyNameType getAliasForProperty( String propertyName ) throws NoSuchFieldException {

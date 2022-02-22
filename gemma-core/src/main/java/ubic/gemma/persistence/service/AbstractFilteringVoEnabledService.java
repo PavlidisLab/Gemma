@@ -24,7 +24,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, String value ) {
         try {
-            return ObjectFilter.parseObjectFilter( voDao.getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, voDao.getElementClass() ), operator, value );
+            return ObjectFilter.parseObjectFilter( getPropertyAlias( property ), getPropertyName( property ), getPropertyType( property ), operator, value );
         } catch ( NoSuchFieldException e ) {
             throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
         }
@@ -33,7 +33,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Override
     public ObjectFilter getObjectFilter( String property, ObjectFilter.Operator operator, Collection<String> values ) {
         try {
-            return ObjectFilter.parseObjectFilter( voDao.getObjectAlias(), property, EntityUtils.getDeclaredFieldType( property, voDao.getElementClass() ), operator, values );
+            return ObjectFilter.parseObjectFilter( getPropertyAlias( property ), getPropertyName( property ), getPropertyType( property ), operator, values );
         } catch ( NoSuchFieldException e ) {
             throw new IllegalArgumentException( "Could not create object filter for " + property + " on " + voDao.getElementClass().getName() + ".", e );
         }
@@ -41,12 +41,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     public Sort getSort( String property, Sort.Direction direction ) {
-        // this only serves as a pre-condition to ensure that the property exists
+        // this only serves as a pre-condition to ensure that the propertyName exists
         try {
-            EntityUtils.getDeclaredField( voDao.getElementClass(), property );
-            return Sort.by( voDao.getObjectAlias(), property, direction );
+            return Sort.by( getPropertyAlias( property ), getPropertyName( property ), direction );
         } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( "Could not resolve property " + property + " on " + voDao.getElementClass().getName() + ".", e );
+            throw new IllegalArgumentException( "Could not resolve propertyName " + property + " on " + voDao.getElementClass().getName() + ".", e );
         }
     }
 
@@ -62,4 +61,39 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         return voDao.loadValueObjectsPreFilter( filters, sort );
     }
 
+    /**
+     * Obtain the alias that refers to the entity.
+     *
+     * Defaults to {@link FilteringVoEnabledDao#getElementClass()}.
+     *
+     * @throws NoSuchFieldException if no such propertyName exists in {@link O}
+     */
+    protected String getPropertyAlias( String propertyName ) throws NoSuchFieldException {
+        EntityUtils.getDeclaredField( voDao.getElementClass(), propertyName );
+        return voDao.getObjectAlias();
+    }
+
+    /**
+     * Obtain the propertyName on {@link O} that correspond to the passed propertyName name.
+     *
+     * Defaults to the propertyName name itself.
+     *
+     * @throws NoSuchFieldException if no such propertyName exists in {@link O}
+     */
+    protected String getPropertyName( String propertyName ) throws NoSuchFieldException {
+        EntityUtils.getDeclaredField( voDao.getElementClass(), propertyName );
+        return propertyName;
+    }
+
+    /**
+     * Obtain the propertyName type on {@link O} that correspond to the passed propertyName name.
+     *
+     * Defaults to {@link EntityUtils#getDeclaredFieldType(String, Class)} invoked with {@link #getPropertyName(String)}
+     * and {@link FilteringVoEnabledDao#getElementClass()}.
+     *
+     * @throws NoSuchFieldException if no such propertyName exists in {@link O}
+     */
+    protected Class<?> getPropertyType( String propertyName ) throws NoSuchFieldException {
+        return EntityUtils.getDeclaredFieldType( getPropertyName( propertyName ), voDao.getElementClass() );
+    }
 }
