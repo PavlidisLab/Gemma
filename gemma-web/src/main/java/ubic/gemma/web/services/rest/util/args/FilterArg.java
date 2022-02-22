@@ -14,6 +14,8 @@
  */
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
@@ -88,6 +90,8 @@ import java.util.List;
  * @see ObjectFilter
  * @see ObjectFilter.Operator
  */
+@Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation.",
+        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/index.html"))
 public class FilterArg extends AbstractArg<FilterArg.Filter> {
 
     /**

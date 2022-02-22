@@ -25,7 +25,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", pattern = "^(\\+|-?)(\\w+)$", description = "Order results by the given property and direction. The '+' sign indicate ascending order whereas the '-' indicate descending.")
 public class SortArg extends AbstractArg<SortArg.Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "

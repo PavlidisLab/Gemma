@@ -7,7 +7,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
 /**
  * Argument used to represent an offset.
  */
-@Schema(type = "integer", minimum = "0")
+@Schema(type = "integer", minimum = "0", description = "Indicate the offset of the first retrieved result.")
 public class OffsetArg extends AbstractArg<Integer> {
 
     private OffsetArg( @NonNull Integer value ) {
