@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Swagger UI</title>
+    <title>Gemma RESTful API documentation</title>
     <link rel="stylesheet" type="text/css" href="swagger-ui.css"/>
 </head>
 <body>
@@ -10,15 +10,14 @@
 <script src="swagger-ui-bundle.js"></script>
 <script>
     window.onload = function () {
-        const ui = SwaggerUIBundle({
+        window.ui = SwaggerUIBundle({
             url: '/rest/v2/openapi.json',
             dom_id: '#swagger-ui',
             deepLinking: true,
             presets: [
-                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.apis
             ]
         });
-        window.ui = ui;
     };
 </script>
 </body>
