@@ -5,24 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
-import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
-import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.web.services.rest.util.args.Arg;
 
 import java.util.Iterator;
 
 /**
- * Convert {@link Arg}
+ * Resolve {@link Arg} parameters' schema.
  *
  * @author poirigui
  */
-@CommonsLog
-public class ArgModelConverter extends ModelResolver {
+public class ArgModelResolver extends ModelResolver {
 
-    public ArgModelConverter( ObjectMapper mapper ) {
+    public ArgModelResolver( ObjectMapper mapper ) {
         super( mapper );
     }
 

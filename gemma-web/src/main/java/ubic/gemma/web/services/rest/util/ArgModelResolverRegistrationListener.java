@@ -9,15 +9,15 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
 /**
- * Register the {@link ArgModelConverter} to Swagger's {@link io.swagger.v3.core.converter.ModelConverters} singleton.
+ * Register the {@link ArgModelResolver} to Swagger's {@link io.swagger.v3.core.converter.ModelConverters} singleton.
  *
  * @author poirigui
  */
 @CommonsLog
 @WebListener
-public class ArgModelConverterRegistrationListener implements ServletContextListener {
+public class ArgModelResolverRegistrationListener implements ServletContextListener {
 
-    private final ArgModelConverter argModelConverter = new ArgModelConverter( Json.mapper() );
+    private final ArgModelResolver argModelConverter = new ArgModelResolver( Json.mapper() );
 
     @Override
     public void contextInitialized( ServletContextEvent servletContextEvent ) {
