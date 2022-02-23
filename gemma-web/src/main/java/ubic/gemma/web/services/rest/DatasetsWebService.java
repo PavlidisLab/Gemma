@@ -197,11 +197,11 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg}/analyses/differential")
+    @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the main differential analysis of a dataset")
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalysis( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
