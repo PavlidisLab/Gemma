@@ -14,6 +14,7 @@
  */
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -23,7 +24,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  *
  * @author tesarst
  */
-@Schema(type = "integer", format = "int64")
+@Schema(type = "integer", format = "int64", description = "An NCBI taxon identifier.",
+        externalDocs = @ExternalDocumentation(url = "https://www.ncbi.nlm.nih.gov/taxonomy"))
 public class TaxonNcbiIdArg extends TaxonArg<Integer> {
 
     /**

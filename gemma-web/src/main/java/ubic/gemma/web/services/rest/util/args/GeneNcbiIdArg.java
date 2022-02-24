@@ -9,7 +9,7 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "An NCBI gene identifier.")
 public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     /**

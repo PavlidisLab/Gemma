@@ -12,7 +12,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(subTypes = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
+@Schema(oneOf = { CompositeSequenceIdArg.class, CompositeSequenceNameArg.class })
 public abstract class CompositeSequenceArg<T>
         extends AbstractEntityArg<T, CompositeSequence, CompositeSequenceService> {
 

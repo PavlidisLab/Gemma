@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
  *
  * @author poirigui
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "The value of a factor value.")
 public class FactorValueValueArg extends FactorValueArg<String> {
 
     public FactorValueValueArg( String value ) {

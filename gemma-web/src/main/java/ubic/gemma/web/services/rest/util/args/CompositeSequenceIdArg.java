@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * Composite Sequence argument for CS ID.
  */
-@Schema(type = "integer", format = "int64")
+@Schema(type = "integer", format = "int64", description = "A composite sequence numerical identifier.")
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {

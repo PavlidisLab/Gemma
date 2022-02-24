@@ -9,7 +9,7 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "An Ensembl gene identifier which typically starts with 'ENSG'.")
 public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
     /**

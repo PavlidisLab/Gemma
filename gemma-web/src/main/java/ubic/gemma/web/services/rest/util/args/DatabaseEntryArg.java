@@ -13,7 +13,7 @@ import javax.ws.rs.NotFoundException;
  *
  * @author tesarst
  */
-@Schema(subTypes = { DatabaseEntryIdArg.class, DatabaseEntryStringArg.class })
+@Schema(oneOf = { DatabaseEntryIdArg.class, DatabaseEntryStringArg.class })
 public abstract class DatabaseEntryArg<T>
         extends AbstractEntityArg<T, DatabaseEntry, DatabaseEntryService> {
 

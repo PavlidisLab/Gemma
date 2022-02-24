@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
@@ -18,7 +19,8 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "An official gene symbol approved by HGNC.",
+        externalDocs = @ExternalDocumentation(url = "https://www.genenames.org/"))
 public class GeneSymbolArg extends GeneArg<String> {
 
     GeneSymbolArg( String s ) {

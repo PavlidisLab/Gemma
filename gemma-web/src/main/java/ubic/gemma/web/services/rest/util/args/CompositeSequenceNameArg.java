@@ -12,7 +12,7 @@ import javax.ws.rs.BadRequestException;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "A composite sequence name.")
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {

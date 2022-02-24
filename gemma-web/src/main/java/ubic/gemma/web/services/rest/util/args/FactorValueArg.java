@@ -15,7 +15,7 @@ import javax.ws.rs.NotFoundException;
  *
  * @author poirigui
  */
-@Schema(subTypes = { FactorValueIdArg.class, FactorValueValueArg.class })
+@Schema(oneOf = { FactorValueIdArg.class, FactorValueValueArg.class })
 public abstract class FactorValueArg<A> extends AbstractEntityArg<A, FactorValue, FactorValueService> {
 
     protected FactorValueArg( A value ) {

@@ -16,7 +16,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(subTypes = { PlatformIdArg.class, PlatformStringArg.class })
+@Schema(oneOf = { PlatformIdArg.class, PlatformStringArg.class })
 public abstract class PlatformArg<T> extends AbstractEntityArg<T, ArrayDesign, ArrayDesignService> {
 
     protected PlatformArg( T value ) {

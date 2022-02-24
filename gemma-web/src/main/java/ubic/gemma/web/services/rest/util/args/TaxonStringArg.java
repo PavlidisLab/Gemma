@@ -26,7 +26,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(type = "string")
+@Schema(type = "string", description = "A taxon identifier that matches either its scientific or common name.")
 public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
@@ -55,7 +55,7 @@ public class TaxonStringArg extends TaxonArg<String> {
     /**
      * Tries to retrieve a Taxon based on its names.
      *
-     * @param  service the TaxonService that handles the search.
+     * @param service the TaxonService that handles the search.
      * @return Taxon or null if no taxon with any property matching this#value was found.
      */
     private Taxon tryAllNameProperties( TaxonService service ) {

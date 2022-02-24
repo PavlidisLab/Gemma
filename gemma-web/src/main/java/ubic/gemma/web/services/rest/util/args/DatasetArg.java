@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  *
  * @author tesarst
  */
-@Schema(subTypes = { DatasetIdArg.class, DatasetStringArg.class })
+@Schema(oneOf = { DatasetIdArg.class, DatasetStringArg.class })
 @CommonsLog
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {

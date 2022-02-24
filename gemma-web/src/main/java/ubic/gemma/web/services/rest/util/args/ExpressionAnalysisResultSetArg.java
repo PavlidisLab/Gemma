@@ -9,7 +9,7 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  * Represents an expression analysis result set identifier.
  */
 @Schema(type = "integer",
-        description = "Represents an expression analysis result set identifier")
+        description = "An expression analysis result set numerical identifier.")
 public class ExpressionAnalysisResultSetArg extends AbstractEntityArg<Long, ExpressionAnalysisResultSet, ExpressionAnalysisResultSetService> {
 
     private ExpressionAnalysisResultSetArg( long value ) {

@@ -9,7 +9,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  *
  * @author tesarst
  */
-@Schema(type = "integer", format = "int64")
+@Schema(type = "integer", format = "int64", description = "A platform numerical identifier.")
 public class PlatformIdArg extends PlatformArg<Long> {
 
     /**
