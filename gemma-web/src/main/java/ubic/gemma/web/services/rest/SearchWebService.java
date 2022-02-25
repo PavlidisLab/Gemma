@@ -1,6 +1,9 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +52,8 @@ public class SearchWebService {
 
     /**
      * Search everything subject to taxon and platform constraints.
+     *
+     * Naming the schema in for the result types is necessary so that it can be resolved in {@link ubic.gemma.web.services.rest.swagger.resolvers.SearchResultTypeAllowableValuesResolver}.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
@@ -56,7 +61,7 @@ public class SearchWebService {
     public SearchResultResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
-            @QueryParam("resultTypes") List<String> resultTypes,
+            @Parameter(array = @ArraySchema(schema = @Schema(name = "resultTypes"))) @QueryParam("resultTypes") List<String> resultTypes,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );
