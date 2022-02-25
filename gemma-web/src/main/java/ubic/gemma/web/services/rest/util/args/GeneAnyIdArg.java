@@ -1,6 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
@@ -17,7 +16,6 @@ import java.util.List;
  * @param <T> the type of the Gene Identifier.
  * @author tesarst
  */
-@Schema(oneOf = { GeneEnsemblIdArg.class, GeneNcbiIdArg.class, GeneSymbolArg.class })
 public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 
     GeneAnyIdArg( T value ) {
