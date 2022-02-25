@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
@@ -9,7 +10,8 @@ import ubic.gemma.model.genome.Gene;
  *
  * @author tesarst
  */
-@Schema(type = "string", description = "An NCBI gene identifier.")
+@Schema(type = "string", description = "An NCBI gene identifier.",
+        externalDocs = @ExternalDocumentation(url = "https://www.ncbi.nlm.nih.gov/gene"))
 public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     /**
