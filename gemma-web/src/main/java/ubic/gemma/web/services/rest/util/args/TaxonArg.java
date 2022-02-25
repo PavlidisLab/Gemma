@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -24,7 +23,7 @@ import java.util.List;
  *
  * @author tesarst
  */
-@Schema(oneOf = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonStringArg.class })
+@Schema(oneOf = { TaxonIdArg.class, TaxonNcbiIdArg.class, TaxonNameArg.class })
 public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonService> {
 
     /**
@@ -51,7 +50,7 @@ public abstract class TaxonArg<T> extends AbstractEntityArg<T, Taxon, TaxonServi
             long id = Long.parseLong( s.trim() );
             return id > TaxonArg.MIN_NCBI_ID ? new TaxonNcbiIdArg( ( int ) id ) : new TaxonIdArg( id );
         } catch ( NumberFormatException e ) {
-            return new TaxonStringArg( s );
+            return new TaxonNameArg( s );
         }
     }
 

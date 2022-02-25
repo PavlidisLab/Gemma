@@ -27,9 +27,9 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  * @author tesarst
  */
 @Schema(type = "string", description = "A taxon identifier that matches either its scientific or common name.")
-public class TaxonStringArg extends TaxonArg<String> {
+public class TaxonNameArg extends TaxonArg<String> {
 
-    TaxonStringArg( String s ) {
+    TaxonNameArg( String s ) {
         super( s );
     }
 
