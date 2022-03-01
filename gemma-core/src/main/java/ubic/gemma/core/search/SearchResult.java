@@ -106,6 +106,9 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * @throws IllegalArgumentException if the provided result object IDs differs from {@link #getResultId()}.
      */
     public void setResultObject( @NonNull T resultObject ) {
+        if ( resultObject.getId() == null ) {
+            throw new IllegalArgumentException( "The result object ID cannot be null." );
+        }
         if ( resultObject.getId() != this.resultId ) {
             throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
         }
