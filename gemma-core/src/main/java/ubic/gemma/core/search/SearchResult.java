@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.search;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -26,11 +27,12 @@ import ubic.gemma.persistence.util.ReflectionUtil;
 /**
  * @author paul
  */
+@EqualsAndHashCode(of = { "resultClass", "resultId" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<? extends Identifiable>> {
 
     private final Class<? extends Identifiable> resultClass;
 
-    private Long resultId;
+    private final long resultId;
 
     private String highlightedText;
 
@@ -39,8 +41,9 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
 
     public SearchResult( @NonNull T resultObject ) {
-        if ( resultObject == null )
-            throw new IllegalArgumentException( "Search result cannot be null" );
+        if ( resultObject.getId() == null ) {
+            throw new IllegalArgumentException( "Result object ID cannot be null." );
+        }
         this.resultId = resultObject.getId();
         this.resultObject = resultObject; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
         this.resultClass = ( Class<? extends Identifiable> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
@@ -85,12 +88,8 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * @return the id for the underlying result entity.
      */
-    public Long getResultId() {
+    public long getResultId() {
         return resultId;
-    }
-
-    public void setResultId( Long resultId ) {
-        this.resultId = resultId;
     }
 
     public Class<? extends Identifiable> getResultClass() {
@@ -102,12 +101,22 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     }
 
     /**
-     * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
-     *                     overwritten.
+     * Set the result object.
+     *
+     * @throws IllegalArgumentException if the provided result object IDs differs from {@link #getResultId()}.
      */
-    public void setResultObject( T resultObject ) {
+    public void setResultObject( @NonNull T resultObject ) {
+        if ( resultObject.getId() != this.resultId ) {
+            throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
+        }
         this.resultObject = resultObject;
-        this.resultId = resultObject != null ? EntityUtils.getId( resultObject ) : null;
+    }
+
+    /**
+     * Clear the result object.
+     */
+    public void clearResultObject() {
+        this.resultObject = null;
     }
 
     public Double getScore() {
@@ -116,35 +125,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
 
     public void setScore( Double score ) {
         this.score = score;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( resultId == null ) ? 0 : resultId.hashCode() );
-        result = prime * result + ( ( resultClass == null ) ? 0 : resultClass.getName().hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        final SearchResult<T> other = ( SearchResult<T> ) obj;
-        if ( resultId == null ) {
-            if ( other.resultId != null )
-                return false;
-        } else if ( !resultId.equals( other.resultId ) )
-            return false;
-        if ( resultClass == null ) {
-            return other.resultClass == null;
-        }
-        return resultClass.getName().equals( other.resultClass.getName() );
     }
 
     @Override

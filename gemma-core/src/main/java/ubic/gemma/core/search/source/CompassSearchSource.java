@@ -393,6 +393,10 @@ public class CompassSearchSource implements SearchSource {
                     CompassSearchSource.log.debug( "Null search result object" );
                 continue;
             }
+            if ( e.getId() == null ) {
+                log.warn( "Search result object with null ID." );
+                continue;
+            }
             SearchResult<T> esr = this.dbHitToSearchResult( compassHitDerivedFrom, e );
             results.add( esr );
         }

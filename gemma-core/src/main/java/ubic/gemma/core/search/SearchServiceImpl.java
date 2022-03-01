@@ -1037,6 +1037,9 @@ public class SearchServiceImpl implements SearchService {
                     log.debug( "Null search result object" );
                 continue;
             }
+            if ( e.getId() == null ) {
+                log.warn( "Search result object with null ID." );
+            }
             SearchResult<T> esr = this.dbHitToSearchResult( e, matchText );
             results.add( esr );
         }
@@ -1618,7 +1621,7 @@ public class SearchServiceImpl implements SearchService {
             //   }
         } else {
             for ( SearchResult<?> sr : rawResults ) {
-                sr.setResultObject( null );
+                sr.clearResultObject();
             }
         }
 
