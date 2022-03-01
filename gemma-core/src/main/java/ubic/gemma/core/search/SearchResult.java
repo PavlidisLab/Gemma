@@ -88,7 +88,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     /**
      * @return the id for the underlying result entity.
      */
-    public long getResultId() {
+    public Long getResultId() {
         return resultId;
     }
 
