@@ -15,7 +15,11 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -40,10 +44,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.web.services.rest.util.ArgUtils;
-import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -163,7 +164,9 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the platform of a dataset")
+    @Operation(summary = "Retrieve the platform of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
@@ -181,7 +184,9 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the samples of a dataset")
+    @Operation(summary = "Retrieve the samples of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("factorValues") FactorValueArrayArg factorValues,
@@ -199,7 +204,9 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the main differential analysis of a dataset")
+    @Operation(summary = "Retrieve the main differential analysis of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalysis( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -221,7 +228,9 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the annotations analysis of a dataset")
+    @Operation(summary = "Retrieve the annotations analysis of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -238,8 +247,10 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}/data")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression data of a dataset")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve the expression data of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
@@ -257,8 +268,10 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}/design")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the design of a dataset")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve the design of a dataset", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -295,7 +308,9 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data")
+    @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -461,8 +476,10 @@ public class DatasetsWebService {
         if ( file == null || !file.exists() ) {
             throw new NotFoundException( String.format( error, shortName ) );
         }
+        // we remove the .gz extension because we use HTTP Content-Encoding
         return Response.ok( file )
-                .header( "Content-Disposition", "attachment; filename=" + file.getName() )
+                .header( "Content-Encoding", "gzip" )
+                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
                 .build();
     }
 

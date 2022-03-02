@@ -19,6 +19,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.services.rest.swagger.resolvers.SearchResultTypeAllowableValuesModelResolver;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
@@ -43,6 +44,12 @@ import static java.util.function.Function.identity;
 @CommonsLog
 public class SearchWebService {
 
+    /**
+     * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg)}'s
+     * fourth argument.
+     */
+    public static final String RESULT_TYPES_SCHEMA_NAME = "resultTypes";
+
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -53,7 +60,7 @@ public class SearchWebService {
     /**
      * Search everything subject to taxon and platform constraints.
      *
-     * Naming the schema in for the result types is necessary so that it can be resolved in {@link ubic.gemma.web.services.rest.swagger.resolvers.SearchResultTypeAllowableValuesResolver}.
+     * Naming the schema in for the result types is necessary so that it can be resolved in {@link SearchResultTypeAllowableValuesModelResolver}.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
@@ -61,7 +68,7 @@ public class SearchWebService {
     public SearchResultResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
-            @Parameter(array = @ArraySchema(schema = @Schema(name = "resultTypes"))) @QueryParam("resultTypes") List<String> resultTypes,
+            @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit ) {
         if ( StringUtils.isBlank( query ) ) {
             throw new BadRequestException( "A non-empty query must be supplied." );

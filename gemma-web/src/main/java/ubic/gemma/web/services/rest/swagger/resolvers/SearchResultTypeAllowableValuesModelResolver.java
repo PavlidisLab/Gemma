@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.web.services.rest.SearchWebService;
 import ubic.gemma.web.services.rest.util.args.LimitArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @Component
-@CommonsLog
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SearchResultTypeAllowableValuesModelResolver extends ModelResolver {
 
@@ -43,12 +42,8 @@ public class SearchResultTypeAllowableValuesModelResolver extends ModelResolver 
 
     @Override
     protected List<String> resolveAllowableValues( Annotated a, Annotation[] annotations, Schema schema ) {
-        // FIXME: use a more stringent way of matching this parameter
-        if ( schema != null ) {
-            log.info( schema.name() );
-            if ( schema.name().equals( "resultTypes" ) ) {
-                return searchService.getSupportedResultTypes().stream().map( Class::getName ).collect( Collectors.toList() );
-            }
+        if ( schema != null && schema.name().equals( SearchWebService.RESULT_TYPES_SCHEMA_NAME ) ) {
+            return searchService.getSupportedResultTypes().stream().map( Class::getName ).collect( Collectors.toList() );
         }
         return super.resolveAllowableValues( a, annotations, schema );
     }

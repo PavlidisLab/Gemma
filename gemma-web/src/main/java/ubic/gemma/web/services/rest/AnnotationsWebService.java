@@ -20,6 +20,7 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +100,8 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Search for annotation tags")
+    @Operation(summary = "Search for annotation tags", responses = {
+            @ApiResponse(responseCode = "400", description = "The search query is empty.") })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.

@@ -15,6 +15,7 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.web.services.rest.util.MediaTypeUtils;
 import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -248,7 +250,7 @@ public class PlatformsWebService {
      */
     @GET
     @Path("/{platform}/annotations")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the annotations of a given platform")
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg, // Optional, default null
@@ -279,7 +281,10 @@ public class PlatformsWebService {
             }
         }
 
-        return Response.ok( file ).header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
+        return Response.ok( file )
+                .header( "Content-Encoding", "gzip" )
+                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
+                .build();
     }
 
 }

@@ -10,7 +10,11 @@ import ubic.gemma.web.services.rest.util.MalformedArgException;
  *
  * @author tesarst
  */
-@Schema(type = "string", oneOf = {}, description = "An option for gene expression level consolidation.")
+@Schema(type = "string", allowableValues = {
+        ExperimentExpressionLevelsValueObject.OPT_PICK_MAX,
+        ExperimentExpressionLevelsValueObject.OPT_PICK_VAR,
+        ExperimentExpressionLevelsValueObject.OPT_AVG },
+        description = "An option for gene expression level consolidation.")
 public class ExpLevelConsolidationArg extends AbstractArg<String> {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 

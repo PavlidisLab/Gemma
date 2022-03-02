@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -39,9 +38,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.annotations.GZIP;
-import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -62,7 +59,7 @@ import java.util.stream.Collectors;
 @Path("/resultSets")
 public class AnalysisResultSetsWebService {
 
-    private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = "text/tab-separated-values; charset=UTF-8; qs=0.9";
+    private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 + "; qs=0.9";
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -130,9 +127,11 @@ public class AnalysisResultSetsWebService {
     @Path("/{analysisResultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", responses = {
-            @ApiResponse(content = {
+            @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE, examples = { @ExampleObject(value = TSV_EXAMPLE) }) }) })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE, examples = { @ExampleObject(value = TSV_EXAMPLE) }) }),
+            @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
             @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
