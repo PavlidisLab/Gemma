@@ -20,6 +20,7 @@ package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -128,8 +129,10 @@ public class AnalysisResultSetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", responses = {
             @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = MediaType.APPLICATION_JSON),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE, examples = { @ExampleObject(value = TSV_EXAMPLE) }) }),
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExpressionAnalysisResultSetValueObject")),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE,
+                            schema = @Schema(type = "string", format = "binary"),
+                            examples = { @ExampleObject(value = TSV_EXAMPLE) }) }),
             @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
