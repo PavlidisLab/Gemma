@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.web.services.rest.swagger.CustomModelConverter;
 import ubic.gemma.web.services.rest.util.args.Arg;
 
+import java.lang.reflect.Modifier;
 import java.util.Iterator;
 
 /**
@@ -40,7 +41,14 @@ public class ArgModelResolver extends ModelResolver implements CustomModelConver
         if ( Arg.class.isAssignableFrom( t.getRawClass() ) ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
             // definitions in the class's Schema annotation
-            return super.resolve( new AnnotatedType( ( t.getRawClass() ) ), context, chain );
+            Schema resolvedSchema = super.resolve( new AnnotatedType( ( t.getRawClass() ) ), context, chain );
+            // There's a bug with abstract class such as TaxonArg and GeneArg that result in the schema containing 'type'
+            // and 'properties' fields instead of solely emiting the oneOf
+            if ( Modifier.isAbstract( t.getRawClass().getModifiers() ) ) {
+                return resolvedSchema.type( null ).properties( null );
+            } else {
+                return resolvedSchema;
+            }
         }
         if ( chain.hasNext() ) {
             return chain.next().resolve( type, context, chain );
