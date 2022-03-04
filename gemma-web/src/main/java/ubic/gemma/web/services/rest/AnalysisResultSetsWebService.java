@@ -20,7 +20,6 @@ package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -125,7 +124,7 @@ public class AnalysisResultSetsWebService {
      */
     @GZIP
     @GET
-    @Path("/{analysisResultSet}")
+    @Path("/{resultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", responses = {
             @ApiResponse(responseCode = "200", content = {
@@ -136,7 +135,7 @@ public class AnalysisResultSetsWebService {
             @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
-            @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {
             ExpressionAnalysisResultSet ears = analysisResultSet.getEntity( expressionAnalysisResultSetService );
@@ -161,11 +160,11 @@ public class AnalysisResultSetsWebService {
      */
     @GZIP
     @GET
-    @Path("/{analysisResultSet}")
+    @Path("/{resultSet}")
     @Produces(TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", hidden = true)
     public StreamingOutput getResultSetToTsv(
-            @PathParam("analysisResultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Context final HttpServletResponse servlet ) {
         final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
         if ( ears == null ) {
