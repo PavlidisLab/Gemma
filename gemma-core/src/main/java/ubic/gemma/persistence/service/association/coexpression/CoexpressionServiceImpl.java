@@ -52,11 +52,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Autowired
     private CoexpressionDao coexpressionDao;
 
-    @Autowired
-    private CoexpressionQueryQueue coexpressionQueryQueue;
+    // @Autowired
+    // private CoexpressionQueryQueue coexpressionQueryQueue;
 
-    @Autowired
-    private CoexpressionCache coexpressionCache;
+    // @Autowired
+    // private CoexpressionCache coexpressionCache;
 
     @Autowired
     private ExpressionExperimentDao experimentDao;
@@ -82,12 +82,12 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         this.coexpressionDao.createOrUpdate( bioAssaySet, links, c, genesTested );
 
         // remove these from the queue, in case they are there.
-        Collection<Long> genes = new HashSet<>();
-        for ( NonPersistentNonOrderedCoexpLink link : links ) {
-            genes.add( link.getFirstGene() );
-            genes.add( link.getSecondGene() );
-        }
-        this.coexpressionQueryQueue.removeFromQueue( genes );
+        // Collection<Long> genes = new HashSet<>();
+        // for ( NonPersistentNonOrderedCoexpLink link : links ) {
+        //     genes.add( link.getFirstGene() );
+        //     genes.add( link.getSecondGene() );
+        // }
+        // this.coexpressionQueryQueue.removeFromQueue( genes );
     }
 
     @Override
@@ -102,9 +102,9 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         List<CoexpressionValueObject> results = this.coexpressionDao
                 .findCoexpressionRelationships( gene, bas, maxResults, quick );
 
-        if ( quick || maxResults > 0 ) {
-            this.coexpressionQueryQueue.addToFullQueryQueue( gene );
-        }
+        // if ( quick || maxResults > 0 ) {
+        //     this.coexpressionQueryQueue.addToFullQueryQueue( gene );
+        // }
 
         return results;
     }
@@ -133,7 +133,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
         // since we require these links occur in all the given data sets, we assume we should cache (if not there
         // already) - don't bother checking 'quick' and 'maxResults'.
-        this.possiblyAddToCacheQueue( results );
+        // this.possiblyAddToCacheQueue( results );
 
         return results;
     }
@@ -141,25 +141,20 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao
+        // if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
+        //     this.possiblyAddToCacheQueue( results );
+        // }
+        return this.coexpressionDao
                 .findCoexpressionRelationships( t, genes, bas, stringency, maxResults, quick );
-
-        if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
-            this.possiblyAddToCacheQueue( results );
-        }
-
-        return results;
     }
 
     @Override
     public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao
-                .findInterCoexpressionRelationships( t, genes, bas, stringency, quick );
-
         // these are always candidates for queuing since the constraint on genes is done at the query level.
-        this.possiblyAddToCacheQueue( results );
-        return results;
+        // this.possiblyAddToCacheQueue( results );
+        return this.coexpressionDao
+                .findInterCoexpressionRelationships( t, genes, bas, stringency, quick );
     }
 
     @Override
@@ -264,26 +259,26 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     /**
      * Check for results which were not in the cache, and which were not cached; make sure we fully query them.
      */
-    private void possiblyAddToCacheQueue( Map<Long, List<CoexpressionValueObject>> links ) {
+    // private void possiblyAddToCacheQueue( Map<Long, List<CoexpressionValueObject>> links ) {
 
-        if ( !coexpressionCache.isEnabled() )
-            return;
+    //     if ( !coexpressionCache.isEnabled() )
+    //         return;
 
-        Set<Long> toQueue = new HashSet<>();
-        for ( Long id : links.keySet() ) {
-            for ( CoexpressionValueObject link : links.get( id ) ) {
-                if ( link.isFromCache() ) {
-                    continue;
-                }
-                toQueue.add( link.getQueryGeneId() );
-            }
-        }
-        if ( !toQueue.isEmpty() ) {
-            CoexpressionServiceImpl.log.info( "Queuing " + toQueue.size() + " genes for coexpression cache warm" );
-            coexpressionQueryQueue.addToFullQueryQueue( toQueue );
-        }
+    //     Set<Long> toQueue = new HashSet<>();
+    //     for ( Long id : links.keySet() ) {
+    //         for ( CoexpressionValueObject link : links.get( id ) ) {
+    //             if ( link.isFromCache() ) {
+    //                 continue;
+    //             }
+    //             toQueue.add( link.getQueryGeneId() );
+    //         }
+    //     }
+    //     if ( !toQueue.isEmpty() ) {
+    //         CoexpressionServiceImpl.log.info( "Queuing " + toQueue.size() + " genes for coexpression cache warm" );
+    //         coexpressionQueryQueue.addToFullQueryQueue( toQueue );
+    //     }
 
-    }
+    // }
 
     private GeneCoexpressionNodeDegreeValueObject updateNodeDegree( Gene gene ) {
         GeneCoexpressionNodeDegree nd = this.geneCoexpressionNodeDegreeDao.findOrCreate( gene );

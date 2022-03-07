@@ -23,11 +23,9 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
@@ -38,8 +36,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * @author Paul
  */
-@Repository
-@Lazy
+// @Repository
 class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements CoexpressionQueryQueue {
 
     private static final int QUEUE_SIZE = 1000;
