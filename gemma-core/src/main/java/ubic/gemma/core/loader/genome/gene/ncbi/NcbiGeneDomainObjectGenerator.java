@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
@@ -58,8 +59,10 @@ public class NcbiGeneDomainObjectGenerator {
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
     private Integer startingNcbiId = null;
+    private final TaskExecutor taskExecutor;
 
-    public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa ) {
+    public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa, TaskExecutor taskExecutor ) {
+        this.taskExecutor = taskExecutor;
 
         if ( taxa != null ) {
             this.supportedTaxa = new HashMap<>();
@@ -191,8 +194,8 @@ public class NcbiGeneDomainObjectGenerator {
 
             //
             NcbiGeneDomainObjectGenerator.log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
-            try (InputStream is = FileTools
-                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() )) {
+            try ( InputStream is = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() ) ) {
                 infoParser.parse( is );
             }
         } catch ( IOException e ) {
@@ -247,7 +250,7 @@ public class NcbiGeneDomainObjectGenerator {
         // all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
-        Thread parseThread = new Thread( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
             public void run() {
                 try {
@@ -261,9 +264,7 @@ public class NcbiGeneDomainObjectGenerator {
                 NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
                 producerDone.set( true );
             }
-        }, "gene2accession parser" );
-
-        parseThread.start();
+        } );
 
         // 1c) As elements get added to BlockingQueue, NCBIGeneConverter
         // consumes

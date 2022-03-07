@@ -23,6 +23,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,6 +48,8 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
     private CoexpressionDao coexpressionDao;
     @Autowired
     private GeneDao geneDao;
+    @Autowired
+    private TaskExecutor taskExecutor;
 
     @Autowired
     public CoexpressionQueryQueueImpl( SessionFactory sessionFactory ) {
@@ -88,7 +91,7 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
         super.initDao();
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        Thread loadThread = new Thread( new Runnable() {
+        taskExecutor.execute(new Runnable() {
 
             private final int MAX_WARNINGS = 5;
 
@@ -128,9 +131,7 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
                 }
             }
 
-        }, "Fetching coexpression for recently used genes" );
-        loadThread.setDaemon( true );
-        loadThread.start();
+        });
     }
 
     private void queryForCache( QueuedGene gene ) {

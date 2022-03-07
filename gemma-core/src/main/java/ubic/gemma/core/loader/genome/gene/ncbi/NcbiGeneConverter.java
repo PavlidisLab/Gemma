@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
@@ -63,8 +64,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
+    private final TaskExecutor taskExecutor;
+
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
+
+    public NcbiGeneConverter( TaskExecutor taskExecutor ) {
+        this.taskExecutor = taskExecutor;
+    }
 
     /**
      * @return the genBank
@@ -239,7 +246,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        Thread convertThread = new Thread( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
@@ -268,9 +275,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 }
                 producerDone.set( true );
             }
-        }, "Converter" );
-
-        convertThread.start();
+        });
     }
 
     public boolean isProducerDone() {

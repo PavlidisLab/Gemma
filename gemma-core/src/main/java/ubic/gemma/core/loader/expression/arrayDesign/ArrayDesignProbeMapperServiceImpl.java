@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -91,6 +92,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final GeneService geneService;
     private final Persister persisterHelper;
     private final ProbeMapper probeMapper;
+    private final TaskExecutor taskExecutor;
 
     @Autowired
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
@@ -98,7 +100,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
             ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultService blatResultService,
             CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
-            GeneProductService geneProductService, GeneService geneService, Persister persisterHelper ) {
+            GeneProductService geneProductService, GeneService geneService, Persister persisterHelper, TaskExecutor taskExecutor ) {
         this.annotationAssociationService = annotationAssociationService;
         this.arrayDesignAnnotationService = arrayDesignAnnotationService;
         this.arrayDesignReportService = arrayDesignReportService;
@@ -111,6 +113,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.geneProductService = geneProductService;
         this.geneService = geneService;
         this.persisterHelper = persisterHelper;
+        this.taskExecutor = taskExecutor;
     }
 
     @Override
@@ -516,16 +519,14 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
 
-        Thread loadThread = new Thread( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist );
             }
 
-        }, "PersistBlatAssociations" );
-
-        loadThread.start();
+        });
 
     }
 
