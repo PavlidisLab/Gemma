@@ -257,7 +257,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the expression data of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "202", description = "The dataset expression matrix is empty."),
+            @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetExpression( // Params:
@@ -271,7 +271,7 @@ public class DatasetsWebService {
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
-            // TODO: handle other cases of filtering issue, this i
+            // TODO: handle other cases of filtering issue
             throw new RuntimeException( e );
         }
     }
