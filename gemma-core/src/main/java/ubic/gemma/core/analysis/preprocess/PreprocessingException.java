@@ -17,9 +17,12 @@ package ubic.gemma.core.analysis.preprocess;
 /**
  * Allows us to catch preprocessing errors and handle them correctly.
  *
+ * The main kind of preprocessing exceptions are {@link ubic.gemma.core.analysis.preprocess.filter.FilteringException}
+ * and {@link ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException}.
+ *
  * @author Paul
  */
-public class PreprocessingException extends Throwable {
+public class PreprocessingException extends Exception {
 
     private static final long serialVersionUID = -8463478950898408838L;
 
@@ -31,4 +34,7 @@ public class PreprocessingException extends Throwable {
         super( message );
     }
 
+    public PreprocessingException( String message, Throwable cause ) {
+        super( message, cause );
+    }
 }

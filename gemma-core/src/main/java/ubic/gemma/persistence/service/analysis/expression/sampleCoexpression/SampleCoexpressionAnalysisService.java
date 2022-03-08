@@ -15,6 +15,8 @@
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,7 +33,7 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to load the raw coexpression matrix for.
      * @return the full, non-regressed matrix. If the matrix is not available event after attempted computation, returns null.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException;
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment and converts the regressed coexpression matrix
@@ -43,7 +45,7 @@ public interface SampleCoexpressionAnalysisService {
      * @return sample correlation matrix with major factors regressed out, if such matrix exists for the given experiment.
      * If not, the full non-regressed matrix is returned. If no matrix is available event after attempted computation, returns null.
      */
-    DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException;
 
     /**
      * Loads the analysis containing the coexpression matrices for the given experiment. If the analysis does not
@@ -53,7 +55,7 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to load the analysis for.
      * @return the sample correlation analysis containing both full and regressed sample correlation matrices.
      */
-    SampleCoexpressionAnalysis load( ExpressionExperiment ee );
+    SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException;
 
     /**
      * @param ee the experiment.
@@ -68,7 +70,7 @@ public interface SampleCoexpressionAnalysisService {
      * @param ee the experiment to create a sample correlation matrix for.
      * @return the analysis object containing several types of sample correlation matrices.
      */
-    SampleCoexpressionAnalysis compute( ExpressionExperiment ee );
+    SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException;
 
     /**
      * Removes all coexpression matrices for the given experiment.

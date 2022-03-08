@@ -33,6 +33,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -1184,7 +1186,14 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        Collection<OutlierDetails> outliers = null;
+        try {
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            outliers = Collections.emptySet();
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
+        }
         count = outliers.size();
 
         if ( count > 0 )
@@ -1665,7 +1674,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) {
+    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
         ExpressionExperiment ee;
         ee = expressionExperimentService.load( id );
         ee = expressionExperimentService.thawLiter( ee );

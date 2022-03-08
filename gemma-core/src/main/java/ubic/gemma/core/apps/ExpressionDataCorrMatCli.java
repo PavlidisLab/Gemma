@@ -20,6 +20,8 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -69,7 +71,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         addSuccessObject( ee, "Successfully processed " + ee.getShortName() );
     }
 
-    private void processExperiment( ExpressionExperiment ee ) {
+    private void processExperiment( ExpressionExperiment ee ) throws FilteringException {
         if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
         }

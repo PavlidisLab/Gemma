@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;

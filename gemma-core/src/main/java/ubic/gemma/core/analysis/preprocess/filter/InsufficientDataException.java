@@ -23,7 +23,7 @@ package ubic.gemma.core.analysis.preprocess.filter;
  *
  * @author paul
  */
-public class InsufficientDataException extends RuntimeException {
+public class InsufficientDataException extends FilteringException {
 
     private static final long serialVersionUID = 1L;
 

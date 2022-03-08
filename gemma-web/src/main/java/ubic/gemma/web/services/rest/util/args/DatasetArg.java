@@ -5,6 +5,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -15,6 +17,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,10 +77,18 @@ public abstract class DatasetArg<T>
     public List<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
-        Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
-                .map( OutlierDetails::getBioAssay )
-                .map( BioAssay::getId )
-                .collect( Collectors.toSet() );
+        Set<Long> predictedOutlierBioAssayIds = null;
+        try {
+            predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+                    .map( OutlierDetails::getBioAssay )
+                    .map( BioAssay::getId )
+                    .collect( Collectors.toSet() );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            // there are no rows left in the data matrix, thus no outliers ;o
+            predictedOutlierBioAssayIds = Collections.emptySet();
+        } catch ( FilteringException e ) {
+            throw new RuntimeException( e );
+        }
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
         for ( BioAssayValueObject vo : bioAssayValueObjects ) {
             vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );

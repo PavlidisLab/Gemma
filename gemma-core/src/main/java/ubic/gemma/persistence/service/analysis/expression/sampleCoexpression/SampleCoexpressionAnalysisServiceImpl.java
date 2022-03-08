@@ -31,6 +31,8 @@ import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -91,12 +93,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
-    public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
-    public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException {
         SampleCoexpressionAnalysis analysis = this.load( ee );
         SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
         if ( matrix == null ) {
@@ -108,7 +110,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
-    public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
+    public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
@@ -130,7 +132,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
-    public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) {
+    public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
@@ -209,7 +211,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
@@ -246,7 +248,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         if ( vectors == null || vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -269,7 +271,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
         FilterConfig fConfig = new FilterConfig();
         fConfig.setIgnoreMinimumRowsThreshold( true );
         fConfig.setIgnoreMinimumSampleThreshold( true );

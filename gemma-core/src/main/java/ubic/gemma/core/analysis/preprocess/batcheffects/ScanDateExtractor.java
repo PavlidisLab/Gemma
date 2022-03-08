@@ -25,6 +25,6 @@ import java.util.Date;
  */
 public interface ScanDateExtractor {
 
-    Date extract( InputStream is ) throws IOException;
+    Date extract( InputStream is ) throws IOException, UnsupportedRawdataFileFormatException;
 
 }

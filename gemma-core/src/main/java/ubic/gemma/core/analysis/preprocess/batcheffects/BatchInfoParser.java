@@ -140,7 +140,7 @@ public class BatchInfoParser {
                 BioMaterial bm = ba.getSampleUsed();
                 result.put( bm, d );
 
-            } catch ( RuntimeException | IOException e ) {
+            } catch ( RuntimeException | IOException | UnsupportedRawdataFileFormatException e ) {
                 BatchInfoParser.log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
                 missingDate.add( f );
             }
@@ -161,7 +161,7 @@ public class BatchInfoParser {
         return result;
     }
 
-    private void locateExtractor( ArrayDesign arrayDesignUsed, BioAssay ba, File f ) {
+    private void locateExtractor( ArrayDesign arrayDesignUsed, BioAssay ba, File f ) throws UnsupportedRawdataFileFormatException {
         String providerName =
                 arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider().getName();
         if ( providerName.equalsIgnoreCase( "affymetrix" ) || arrayDesignUsed.getName().toLowerCase()

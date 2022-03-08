@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -255,6 +257,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the expression data of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                     schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "202", description = "The dataset expression matrix is empty."),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetExpression( // Params:
@@ -263,7 +266,14 @@ public class DatasetsWebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
-        return this.outputDataFile( ee, filterData.getValue() );
+        try {
+            return this.outputDataFile( ee, filterData.getValue() );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            return Response.noContent().build();
+        } catch ( FilteringException e ) {
+            // TODO: handle other cases of filtering issue, this i
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -469,7 +479,7 @@ public class DatasetsWebService {
         );
     }
 
-    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) throws FilteringException {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
         return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );

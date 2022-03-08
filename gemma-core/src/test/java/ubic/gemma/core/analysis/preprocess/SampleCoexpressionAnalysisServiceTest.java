@@ -17,6 +17,8 @@ package ubic.gemma.core.analysis.preprocess;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,7 +39,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Test
-    public void test() {
+    public void test() throws FilteringException {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
         processedExpressionDataVectorService.computeProcessedExpressionData( ee );

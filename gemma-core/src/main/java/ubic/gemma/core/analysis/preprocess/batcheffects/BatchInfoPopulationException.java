@@ -14,11 +14,13 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+
 /**
  * Used to indicate a problem with the population of batch information for a given
  * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}.
  */
-public class BatchInfoPopulationException extends Exception {
+public class BatchInfoPopulationException extends PreprocessingException {
 
     private static final long serialVersionUID = -1770591991479420212L;
 
