@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.core.apps.ShellDelegatingBlat;
@@ -89,7 +89,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     private ArrayDesignSequenceProcessingService sequenceProcessingService;
 
     @Autowired
-    private TaskExecutor taskExecutor;
+    private AsyncTaskExecutor taskExecutor;
 
     @After
     public void cleanup() {
