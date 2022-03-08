@@ -96,6 +96,8 @@
     <servlet>
         <servlet-name>gemma</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <!-- this is always after the JAWR servlets are loaded -->
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <!-- Defines the Spring-WS MessageDispatcherServlet -->
@@ -107,6 +109,7 @@
             <param-name>transformWsdlLocations</param-name>
             <param-value>false</param-value>
         </init-param>
+        <load-on-startup>0</load-on-startup>
     </servlet>
 
     <servlet>
@@ -121,6 +124,7 @@
             <param-name>openApi.configuration.location</param-name>
             <param-value>/WEB-INF/classes/openapi-configuration.yaml</param-value>
         </init-param>
+        <load-on-startup>0</load-on-startup>
     </servlet>
 
     <servlet>
