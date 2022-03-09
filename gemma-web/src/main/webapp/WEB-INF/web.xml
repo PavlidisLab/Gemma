@@ -28,7 +28,7 @@
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>
-            classpath*:gemma/gsec/applicationContext-*.xml,classpath*:/ubic/gemma/applicationContext-*.xml,classpath*:/ubic/gemma/dataSource.xml
+            classpath*:gemma/gsec/applicationContext-*.xml,classpath*:ubic/gemma/applicationContext-*.xml,classpath:ubic/gemma/dataSource.xml
         </param-value>
     </context-param>
 

@@ -81,7 +81,7 @@ import java.util.List;
  */
 @SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-*.xml",
-        "classpath*:gemma/gsec/applicationContext-*.xml", "classpath*:ubic/gemma/testDataSource.xml" })
+        "classpath*:gemma/gsec/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
     protected static final int RANDOM_STRING_LENGTH = 10;
