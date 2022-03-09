@@ -614,7 +614,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
-        this.getSession().evict( existingBioSequence );
+        this.getSessionFactory().getCurrentSession().evict( existingBioSequence );
         bioSequenceDao.update( existingBioSequence ); // also tried merge, without the update, doesn't work.
         return existingBioSequence;
 
@@ -647,7 +647,7 @@ abstract public class GenomePersister extends CommonPersister {
          * This allows stale data to exist in this Session, but flushing prematurely causes constraint violations.
          * Probably we should fix this some other way.
          */
-        this.getSession().setFlushMode( FlushMode.COMMIT );
+        this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
         return this.updateGene( existingGene, gene );
 

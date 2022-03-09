@@ -23,6 +23,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -94,7 +95,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
             }
             return ( BioAssay ) result;
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 
@@ -136,16 +137,17 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
             this.getSessionFactory().getCurrentSession().doWork( new Work() {
                 @Override
                 public void execute( Connection connection ) {
-                    BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+                    Session session = getSessionFactory().getCurrentSession();
+                    session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
                     Hibernate.initialize( bioAssay.getArrayDesignUsed() );
                     Hibernate.initialize( bioAssay.getOriginalPlatform() );
                     BioMaterial bm = bioAssay.getSampleUsed();
-                    BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
+                    session.buildLockRequest( LockOptions.NONE ).lock( bm );
                     Hibernate.initialize( bm );
                     Hibernate.initialize( bm.getBioAssaysUsedIn() );
                     Hibernate.initialize( bm.getFactorValues() );
-                    BioAssayDaoImpl.this.getSession().evict( bm );
-                    BioAssayDaoImpl.this.getSession().evict( bioAssay );
+                    session.evict( bm );
+                    session.evict( bioAssay );
                 }
             } );
         } catch ( Throwable th ) {

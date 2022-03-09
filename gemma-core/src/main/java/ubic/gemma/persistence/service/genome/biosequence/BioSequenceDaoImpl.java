@@ -149,7 +149,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 

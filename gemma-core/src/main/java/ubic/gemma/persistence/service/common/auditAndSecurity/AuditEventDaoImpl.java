@@ -282,7 +282,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             //noinspection unchecked
             result.addAll( queryObject.list() );
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 
