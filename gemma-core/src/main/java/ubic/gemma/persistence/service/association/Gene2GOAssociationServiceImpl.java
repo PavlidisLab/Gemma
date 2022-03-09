@@ -32,7 +32,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.util.CacheUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,11 +60,9 @@ public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssoci
 
     @Override
     public void afterPropertiesSet() {
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        cacheManager.addCache( gene2goCache );
         this.gene2goCache = CacheUtils
-                .createOrLoadCache( cacheManager, Gene2GOAssociationServiceImpl.G2G_CACHE_NAME, terracottaEnabled, 5000,
-                        false, false, 1000, 500, false );
+                .createOrLoadCache( cacheManager, Gene2GOAssociationServiceImpl.G2G_CACHE_NAME, 5000,
+                        false, false, 1000, 500 );
 
     }
 

@@ -552,9 +552,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     protected void initDao() {
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        CacheUtils.createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, terracottaEnabled, 500000, false,
-                false, 0, 0, false );
+        CacheUtils.createOrLoadCache( cacheManager, GeneDaoImpl.G2CS_CACHE_NAME, 500000, false,
+                false, 0, 0 );
     }
 
     /**

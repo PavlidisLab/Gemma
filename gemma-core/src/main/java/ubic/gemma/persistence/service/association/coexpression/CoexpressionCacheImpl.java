@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.Settings;
@@ -58,15 +57,13 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             Settings.getBoolean( "gemma.cache.gene2gene.enabled", true ) );
     private Cache cache;
     @Autowired
-    private EhCacheManagerFactoryBean cacheManagerFactory;
+    private CacheManager cacheManager;
 
     /**
      * Initialize the cache; if it already exists it will not be recreated.
      */
     @Override
     public void afterPropertiesSet() {
-        CacheManager cacheManager = cacheManagerFactory.getObject();
-        assert cacheManager != null;
         int maxElements = Settings.getInt( "gemma.cache.gene2gene.maxelements",
                 CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = Settings.getInt( "gemma.cache.gene2gene.timetolive",
@@ -77,12 +74,9 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
                 CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
         boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
                 CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
-
         this.cache = CacheUtils
-                .createOrLoadCache( cacheManager, CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME, terracottaEnabled,
-                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
+                .createOrLoadCache( cacheManager, CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME,
+                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive );
     }
 
     @Override

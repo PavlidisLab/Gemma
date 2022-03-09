@@ -351,12 +351,10 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private void initializeCache() throws CacheException {
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         this.childTermCache = CacheUtils
-                .createOrLoadCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME, terracottaEnabled,
+                .createOrLoadCache( cacheManager, SearchServiceImpl.ONTOLOGY_CHILDREN_CACHE_NAME,
                         SearchServiceImpl.ONTOLOGY_INFO_CACHE_SIZE, false, false,
-                        SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE,
-                        false );
+                        SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE );
     }
 
     /**

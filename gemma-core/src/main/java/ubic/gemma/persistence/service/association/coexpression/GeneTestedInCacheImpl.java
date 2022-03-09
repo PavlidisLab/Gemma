@@ -64,13 +64,11 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
                 GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_OVERFLOW_TO_DISK );
         boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
                 GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         this.cache = CacheUtils
                 .createOrLoadCache( cacheManager, GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_NAME,
-                        terracottaEnabled, GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_MAX_ELEMENTS,
-                        overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
+                        GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_MAX_ELEMENTS,
+                        overFlowToDisk, eternal, timeToIdle, timeToLive );
     }
 
     @Override

@@ -22,9 +22,6 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.config.*;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
@@ -32,6 +29,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.Serializable;
@@ -162,61 +160,14 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
         boolean eternal = Settings.getBoolean( "gemma.cache.diffex.eternal",
                 DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.diffex.usedisk",
                 DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
-        if ( !cacheManager.cacheExists( DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE ) ) {
-            /*
-             * See TerracottaConfiguration.
-             */
-            int diskExpiryThreadIntervalSeconds = 600;
-            int maxElementsOnDisk = 10000;
-            boolean terracottaCoherentReads = false;
-            boolean clearOnFlush = false;
-
-            if ( terracottaEnabled ) {
-
-                CacheConfiguration config = new CacheConfiguration(
-                        DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE, maxElements );
-                config.setStatistics( false );
-                config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setEternal( eternal );
-                config.setTimeToIdleSeconds( timeToIdle );
-                config.setMaxElementsOnDisk( maxElementsOnDisk );
-                config.addTerracotta( new TerracottaConfiguration() );
-                //noinspection ConstantConditions // Better readability
-                config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
-                //noinspection ConstantConditions // Better readability
-                config.clearOnFlush( clearOnFlush );
-                config.setTimeToLiveSeconds( timeToLive );
-                config.getTerracottaConfiguration().setClustered( true );
-                config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
-                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
-                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
-                nonstopConfiguration.addTimeoutBehavior( tobc );
-                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
-                this.cache = new Cache( config );
-                this.topHitsCache = new Cache( config );
-                this.topHitsCache.setName( DifferentialExpressionResultCacheImpl.TOP_HIT_CACHE_NAME_BASE );
-
-            } else {
-                this.cache = new Cache( DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE, maxElements,
-                        MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
-                        diskPersistent, diskExpiryThreadIntervalSeconds, null );
-                this.topHitsCache = new Cache( DifferentialExpressionResultCacheImpl.TOP_HIT_CACHE_NAME_BASE,
-                        maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive,
-                        timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
-            }
-
-            cacheManager.addCache( cache );
-            cacheManager.addCache( topHitsCache );
-        }
-
+        this.cache = CacheUtils.createOrLoadCache( cacheManager, DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE,
+                maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive );
+        this.topHitsCache = CacheUtils.createOrLoadCache( cacheManager, DifferentialExpressionResultCacheImpl.TOP_HIT_CACHE_NAME_BASE,
+                maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive );
     }
-
 }
 
 class CacheKey implements Serializable {
