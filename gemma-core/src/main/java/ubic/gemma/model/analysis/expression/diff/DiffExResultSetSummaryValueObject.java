@@ -60,9 +60,6 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private Double qValue;
 
-    @Deprecated
-    private Long resultSetId;
-
     private Double threshold;
 
     private Integer upregulatedCount;
@@ -209,7 +206,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
      */
     @Deprecated
     public Long getResultSetId() {
-        return resultSetId;
+        return id;
     }
 
     /**
@@ -217,7 +214,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
      */
     @Deprecated
     public void setResultSetId( Long resultSetId ) {
-        this.resultSetId = resultSetId;
+        this.id = resultSetId;
     }
 
     public Double getThreshold() {
@@ -240,7 +237,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( int ) ( resultSetId ^ ( resultSetId >>> 32 ) );
+        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
         return result;
     }
 
@@ -256,7 +253,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
             return false;
         }
         DiffExResultSetSummaryValueObject other = ( DiffExResultSetSummaryValueObject ) obj;
-        return Objects.equals( resultSetId, other.resultSetId );
+        return Objects.equals( id, other.id );
     }
 
     public void setExperimentalFactorsByValueObject( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
