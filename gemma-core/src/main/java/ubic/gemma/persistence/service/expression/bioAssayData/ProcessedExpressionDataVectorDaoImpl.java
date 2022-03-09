@@ -502,7 +502,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                             new ExpressionDataDoubleMatrix( rawPreferredDataVectors ) );
             preferredDataVectors.addAll( matrix.toRawDataVectors() );
             preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
-            this.getSession().update( preferredMaskedDataQuantitationType );
+            this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         } else {
             preferredDataVectors.addAll( rawPreferredDataVectors );
         }

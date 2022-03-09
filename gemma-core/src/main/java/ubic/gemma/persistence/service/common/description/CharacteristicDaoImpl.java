@@ -78,7 +78,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     public Collection<? extends Characteristic> findByCategory( String query ) {
 
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct char from Characteristic as char where char.category like :search" )
                 .setParameter( "search", query + "%" ).list();
     }
