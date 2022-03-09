@@ -126,16 +126,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
-     * the Gemma spring context. See SpringContextUtil; an example path is "classpath*:/myproject/applicationContext-mine.xml".
-     *
-     * @return string[]
-     */
-    protected String[] getAdditionalSpringConfigLocations() {
-        return null;
-    }
-
-    /**
      * Convenience method to obtain instance of any bean by name.
      *
      * @param <T>  the bean class type
@@ -225,8 +215,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     protected void createSpringContext( CommandLine commandLine ) {
 
-        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false /* webapp */,
-                this.getAdditionalSpringConfigLocations() );
+        ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false, null );
 
         /*
          * Guarantee that the security settings are uniform throughout the application (all threads).

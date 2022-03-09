@@ -104,9 +104,4 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         return arrayDesign;
     }
 
-    @Override
-    protected String[] getAdditionalSpringConfigLocations() {
-        return new String[]{"classpath*:ubic/gemma/cliContext-component-scan.xml"};
-    }
-
 }
