@@ -120,7 +120,7 @@ public class DifferentialExpressionAnalysisController {
         }
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     public String refreshStats( Long eeId, Long id ) {
@@ -135,7 +135,7 @@ public class DifferentialExpressionAnalysisController {
         }
         this.experimentReportService.evictFromCache( ee.getId() );
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh );
-        return taskRunningService.submitLocalTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     /**
@@ -157,7 +157,7 @@ public class DifferentialExpressionAnalysisController {
         DifferentialExpressionAnalysisRemoveTaskCommand cmd = new DifferentialExpressionAnalysisRemoveTaskCommand( ee,
                 toRemove );
         this.experimentReportService.evictFromCache( ee.getId() );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     /**
@@ -182,7 +182,7 @@ public class DifferentialExpressionAnalysisController {
                 ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     /**
@@ -260,6 +260,6 @@ public class DifferentialExpressionAnalysisController {
 
         DifferentialExpressionAnalysisController.log.info( "Initializing analysis" );
         this.experimentReportService.evictFromCache( ee.getId() );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 }

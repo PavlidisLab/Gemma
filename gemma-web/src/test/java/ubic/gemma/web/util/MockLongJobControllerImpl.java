@@ -44,7 +44,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
 
     @Override
     public String runJob( TaskCommand command ) {
-        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
+        return taskRunningService.submitTask( new WasteOfTime( command ) );
     }
 
     static class WasteOfTime extends AbstractTask<TaskResult, TaskCommand> {

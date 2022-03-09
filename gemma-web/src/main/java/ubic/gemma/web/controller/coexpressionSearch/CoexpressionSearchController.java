@@ -83,7 +83,7 @@ public class CoexpressionSearchController {
     public String doBackgroundCoexSearch( CoexpressionSearchCommand searchOptions ) {
         CoexSearchTaskCommand options = new CoexSearchTaskCommand( searchOptions );
         CoexpressionSearchTask job = new CoexpressionSearchTask( options );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     /**

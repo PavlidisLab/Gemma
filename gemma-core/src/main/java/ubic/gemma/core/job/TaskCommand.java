@@ -46,10 +46,6 @@ public class TaskCommand implements Serializable {
     public static final int MAX_QUEUING_MINUTES = 60 * 2;
     private static final long serialVersionUID = 1L;
     /**
-     * For tasks that use too much resources and must be run remotely.
-     */
-    protected boolean remoteOnly;
-    /**
      * Should an email be sent to the user when the job is done?
      */
     private boolean emailAlert = false;
@@ -184,13 +180,5 @@ public class TaskCommand implements Serializable {
 
     public void setEmailAlert( boolean emailAlert ) {
         this.emailAlert = emailAlert;
-    }
-
-    public boolean isRemoteOnly() {
-        return remoteOnly;
-    }
-
-    public void setRemoteOnly( boolean remoteOnly ) {
-        this.remoteOnly = remoteOnly;
     }
 }

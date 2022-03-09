@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
@@ -174,7 +173,7 @@ public class ExpressionExperimentDataFetchController {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setExpressionExperimentId( eeId );
         CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     /**
@@ -183,7 +182,7 @@ public class ExpressionExperimentDataFetchController {
      */
     public String getDataFile( ExpressionExperimentDataFetchCommand command ) {
         DataWriterJob job = new DataWriterJob( command );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     /**
@@ -194,7 +193,7 @@ public class ExpressionExperimentDataFetchController {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
         tc.setAnalysisId( analysisId );
         DiffExpressionDataWriterTask job = new DiffExpressionDataWriterTask( tc );
-        return taskRunningService.submitLocalTask( job );
+        return taskRunningService.submitTask( job );
     }
 
     public File getOutputFile( String filename ) {

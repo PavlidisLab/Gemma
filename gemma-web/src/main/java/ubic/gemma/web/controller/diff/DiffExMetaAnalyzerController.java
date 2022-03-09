@@ -59,7 +59,7 @@ public class DiffExMetaAnalyzerController {
 
     public String analyzeResultSets( Collection<Long> analysisResultSetIds ) {
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     public BaseValueObject findDetailMetaAnalysisById( Long id ) {
@@ -102,7 +102,7 @@ public class DiffExMetaAnalyzerController {
         boolean persist = StringUtils.isNotBlank( name );
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, name, description,
                 persist );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     @RequestMapping(value = { "/metaAnalysisManager.html" })

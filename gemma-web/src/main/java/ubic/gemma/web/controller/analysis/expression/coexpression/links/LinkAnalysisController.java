@@ -58,6 +58,6 @@ public class LinkAnalysisController {
         FilterConfig fc = new FilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( ee, lac, fc );
 
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 }

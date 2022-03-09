@@ -44,7 +44,6 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = ee;
         this.filterConfig = fg;
         this.linkAnalysisConfig = lac;
-        this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.coexp" );
     }
 
     public ExpressionExperiment getExpressionExperiment() {

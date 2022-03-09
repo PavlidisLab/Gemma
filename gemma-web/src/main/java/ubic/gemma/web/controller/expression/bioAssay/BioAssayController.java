@@ -94,12 +94,12 @@ public class BioAssayController {
 
     @SuppressWarnings("unused") // Is used in EEManager.js
     public String markOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
+        return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids ) );
     }
 
     @SuppressWarnings("unused") // Is used in EEManager.js
     public String unmarkOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
+        return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
     @RequestMapping(value = { "/showBioAssay.html", "/" })

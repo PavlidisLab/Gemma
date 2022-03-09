@@ -629,7 +629,6 @@
         <dwr:remote javascript="SystemMonitorController">
             <dwr:include method="getHibernateStatus"/>
             <dwr:include method="getCacheStatus"/>
-            <dwr:include method="getJMSBrokerStatus"/>
             <dwr:include method="clearCache"/>
             <dwr:include method="clearAllCaches"/>
             <dwr:include method="resetHibernateStatus"/>

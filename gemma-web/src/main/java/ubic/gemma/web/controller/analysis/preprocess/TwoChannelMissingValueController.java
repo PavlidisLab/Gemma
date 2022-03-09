@@ -54,7 +54,7 @@ public class TwoChannelMissingValueController {
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
         experimentReportService.evictFromCache( id );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
 }

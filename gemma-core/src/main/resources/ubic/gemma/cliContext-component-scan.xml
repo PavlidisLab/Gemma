@@ -10,7 +10,6 @@
       <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
       <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.search\.indexer\..*" />
       <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.job\.progress\..*" />
-      <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.infrastructure\.jms\..*" />
       <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.job\.executor\..*" />
    </context:component-scan>
 

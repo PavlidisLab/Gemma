@@ -45,7 +45,7 @@ public class PreprocessController {
 
     /**
      * Update the processed data vectors as well as diagnostics
-     * 
+     *
      * @param  id of the experiment
      * @return    status
      */
@@ -61,12 +61,12 @@ public class PreprocessController {
 
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         experimentReportService.evictFromCache( id );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     /**
      * Only update the daignostics
-     * 
+     *
      * @param  id of experiment
      * @return    status
      */
@@ -83,7 +83,7 @@ public class PreprocessController {
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
         cmd.setDiagnosticsOnly( true );
         experimentReportService.evictFromCache( id );
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
 }

@@ -238,7 +238,7 @@ public class CharacteristicBrowserController {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( chars );
         c.setRemove( true );
-        taskRunningService.submitLocalTask( c );
+        taskRunningService.submitTaskCommand( c );
     }
 
     /**
@@ -249,7 +249,7 @@ public class CharacteristicBrowserController {
         CharacteristicUpdateCommand c = new CharacteristicUpdateCommand();
         c.setAnnotationValueObjects( avos );
         c.setRemove( false );
-        taskRunningService.submitLocalTask( c );
+        taskRunningService.submitTaskCommand( c );
     }
 
     /**

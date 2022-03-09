@@ -44,14 +44,14 @@ public class ExpressionExperimentReportGenerationController {
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
 
-        return taskRunningService.submitLocalTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
     public String runAll() {
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( true );
 
-        return taskRunningService.submitLocalTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
 
     }
 

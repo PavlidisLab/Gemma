@@ -56,7 +56,7 @@ public class ExpressionExperimentLoadController {
             throw new IllegalArgumentException( "Must provide an accession" );
         }
 
-        return taskRunningService.submitRemoteTask( command );
+        return taskRunningService.submitTaskCommand( command );
     }
 
     @RequestMapping("/admin/loadExpressionExperiment.html")

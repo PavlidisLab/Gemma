@@ -33,6 +33,8 @@ public interface TaskRunningService {
      */
     Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
 
+    <T extends Task> String submitTask( T task );
+
     /**
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks
      * can be cancelled with cancelTask().
@@ -42,16 +44,5 @@ public interface TaskRunningService {
      * @param <C>         task command implementation
      * @return string
      */
-    <C extends TaskCommand> String submitLocalTask( C taskCommand );
-
-    <T extends Task> String submitLocalTask( T task );
-
-    /**
-     * Run task remotely if possible, otherwise run locally.
-     *
-     * @param taskCommand task command
-     * @param <C>         task command implementation
-     * @return string
-     */
-    <C extends TaskCommand> String submitRemoteTask( C taskCommand );
+    <C extends TaskCommand> String submitTaskCommand( C taskCommand );
 }

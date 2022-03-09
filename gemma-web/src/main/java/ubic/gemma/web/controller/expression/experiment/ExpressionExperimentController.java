@@ -240,7 +240,7 @@ public class ExpressionExperimentController {
         if ( id == null )
             return null;
         RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     /**
@@ -818,7 +818,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     public String removePrimaryPublication( Long eeId ) {
         RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     /**
@@ -1122,7 +1122,7 @@ public class ExpressionExperimentController {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
         UpdatePubMed task = new UpdatePubMed( command );
-        return taskRunningService.submitLocalTask( task );
+        return taskRunningService.submitTask( task );
     }
 
     @RequestMapping("/downloadExpressionExperimentList.html")

@@ -47,7 +47,7 @@ public class ArrayDesignRepeatScanController {
         ad = arrayDesignService.thawLite( ad );
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
-        return taskRunningService.submitRemoteTask( cmd );
+        return taskRunningService.submitTaskCommand( cmd );
     }
 
 }
