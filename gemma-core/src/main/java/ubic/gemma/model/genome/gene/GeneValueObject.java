@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.genome.gene;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -46,6 +47,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     private Integer associatedExperimentCount = 0;
     private Integer compositeSequenceCount = 0; // number of probes
+    @JsonIgnore
     private String description;
     private Collection<GeneSetValueObject> geneSets = null;
     private Collection<GeneValueObject> homologues = null;
@@ -55,6 +57,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     private Boolean isQuery = true;
     private Double multifunctionalityRank = 0.0;
+    @JsonIgnore
     private String name;
     private Integer ncbiId;
     private String ensemblId;
