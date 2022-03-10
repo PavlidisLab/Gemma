@@ -48,7 +48,7 @@ public class SearchWebService {
      * Name used in the OpenAPI schema to identify result types as per {@link #search(String, TaxonArg, PlatformArg, List, LimitArg)}'s
      * fourth argument.
      */
-    public static final String RESULT_TYPES_SCHEMA_NAME = "resultTypes";
+    public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
 
     @Autowired
     private SearchService searchService;
