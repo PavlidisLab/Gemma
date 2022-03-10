@@ -1,9 +1,11 @@
 package ubic.gemma.web.logging;
 
 import com.slack.api.Slack;
+import com.slack.api.SlackConfig;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
@@ -14,10 +16,13 @@ import java.util.Arrays;
 
 public class SlackAppender extends AppenderSkeleton implements Appender {
 
+    private final Slack slackInstance;
+
     private String token;
     private String channel;
 
     public SlackAppender() {
+        slackInstance = new Slack();
     }
 
     @Override
@@ -34,14 +39,16 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
             if ( loggingEvent.getThrowableInformation() != null )
                 request.attachments( Arrays.asList( stacktraceAsAttachment( loggingEvent ) ) );
 
-            Slack.getInstance().methods( token ).chatPostMessage( request.build() );
+            slackInstance.methods( token ).chatPostMessage( request.build() );
         } catch ( IOException | SlackApiException e ) {
             errorHandler.error( String.format( "Failed to send logging event to Slack channel %s.", channel ), e, 0, loggingEvent );
         }
     }
 
     @Override
+    @SneakyThrows
     public void close() {
+        slackInstance.close();
     }
 
     @Override
