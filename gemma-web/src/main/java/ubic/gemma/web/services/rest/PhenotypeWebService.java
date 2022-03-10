@@ -71,7 +71,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all the evidence from a given external database name")
+    @Operation(summary = "Retrieve all the evidence from a given external database name", hidden = true)
     public ResponseDataObject<Set<EvidenceValueObject<? extends PhenotypeAssociation>>> getPhenotypeEvidence( // Params:
             @QueryParam("database") StringArg database, // required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
@@ -92,7 +92,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all phenotype data dumps")
+    @Operation(summary = "Retrieve all phenotype data dumps", hidden = true)
     public ResponseDataObject<Set<DumpsValueObject>> getPhenotypeDumps( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {

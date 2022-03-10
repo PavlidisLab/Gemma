@@ -114,7 +114,7 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the evidence for a given gene")
+    @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
