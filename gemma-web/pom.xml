@@ -266,6 +266,7 @@
 		</dependency>
 
 		<!-- Jersey -->
+		<!-- This is the latest with Spring 3 support -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
