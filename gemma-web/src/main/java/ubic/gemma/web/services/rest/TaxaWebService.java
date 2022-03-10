@@ -178,7 +178,7 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve evidences for a given gene and taxon")
+    @Operation(summary = "Retrieve evidences for a given gene and taxon", hidden = true)
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGenesEvidenceInTaxon( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @PathParam("gene") GeneArg<Object> geneArg, // Required
@@ -251,7 +251,7 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/phenotypes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the phenotypes for a given taxon")
+    @Operation(summary = "Retrieve the phenotypes for a given taxon", hidden = true)
     public ResponseDataObject<Collection<?>> getTaxonPhenotypes( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
@@ -278,7 +278,7 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/phenotypes/candidates")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon")
+    @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon", hidden = true)
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
             @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
             @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
