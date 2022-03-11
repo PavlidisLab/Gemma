@@ -47,6 +47,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     private Integer associatedExperimentCount = 0;
     private Integer compositeSequenceCount = 0; // number of probes
+    @JsonIgnore
     private String description;
     private Collection<GeneSetValueObject> geneSets = null;
     private Collection<GeneValueObject> homologues = null;
