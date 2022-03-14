@@ -4,7 +4,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -51,8 +50,7 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
@@ -63,8 +61,7 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
         PaginatedResponseDataObject<ExpressionExperimentValueObject> response = platformsWebService.getPlatformDatasets(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "20" ),
-                new MockHttpServletResponse() );
+                LimitArg.valueOf( "20" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
@@ -78,8 +75,7 @@ public class PlatformsWebServiceTest extends BaseSpringWebTest {
         PaginatedResponseDataObject<CompositeSequenceValueObject> response = platformsWebService.getPlatformElements(
                 PlatformArg.valueOf( this.arrayDesign.getId().toString() ),
                 OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "20" ),
-                new MockHttpServletResponse() );
+                LimitArg.valueOf( "20" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );

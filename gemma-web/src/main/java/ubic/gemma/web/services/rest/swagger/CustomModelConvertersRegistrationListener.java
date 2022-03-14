@@ -1,12 +1,9 @@
 package ubic.gemma.web.services.rest.swagger;
 
-import cern.colt.list.AbstractBooleanList;
-import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverters;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.annotation.Order;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.ServletContextEvent;

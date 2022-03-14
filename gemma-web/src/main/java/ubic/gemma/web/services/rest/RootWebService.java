@@ -64,7 +64,7 @@ public class RootWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an object with basic API information")
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( // Params:
-            @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
+            // The servlet response, needed for response code setting.
             @Context final ServletConfig servletConfig ) {
         return Responder.respond( new ApiInfoValueObject( MSG_WELCOME, OpenApiUtils.getOpenApi( servletConfig ), APIDOCS_URL ) );
     }

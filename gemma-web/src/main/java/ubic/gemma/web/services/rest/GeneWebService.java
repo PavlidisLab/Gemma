@@ -35,9 +35,7 @@ import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,8 +94,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve genes matching a gene identifier")
     public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
-            @PathParam("genes") GeneArrayArg genes, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @PathParam("genes") GeneArrayArg genes // Required
     ) {
         SortArg sort = SortArg.valueOf( "+id" );
         Filters filters = new Filters();
@@ -116,8 +113,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @PathParam("gene") GeneArg<Object> geneArg // Required
     ) {
         return Responder
                 .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
@@ -134,8 +130,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the physical locations of a given gene")
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @PathParam("gene") GeneArg<Object> geneArg // Required
     ) {
         return Responder.respond( geneArg.getGeneLocation( geneService ) );
     }
@@ -153,8 +148,7 @@ public class GeneWebService {
     public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<Object> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
         return Responder.paginate( compositeSequenceService
                 .loadValueObjectsForGene( geneArg.getEntity( geneService ), offset.getValue(),
@@ -172,8 +166,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the GO terms associated to a gene")
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @PathParam("gene") GeneArg<Object> geneArg // Required
     ) {
         return Responder.respond( geneArg.getGoTerms( geneService, geneOntologyService ) );
     }
@@ -194,8 +187,7 @@ public class GeneWebService {
             @PathParam("gene") final GeneArg<Object> geneArg, // Required
             @QueryParam("with") final GeneArg<Object> with, // Required
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("stringency") @DefaultValue("1") IntArg stringency // Optional, default 1
     ) {
         ArgUtils.requiredArg( with, "with" );
         return Responder

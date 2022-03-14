@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -56,7 +55,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     public void testAll() {
         PaginatedResponseDataObject<ExpressionExperimentValueObject> response = datasetsWebService
                 .getDatasets( FilterArg.valueOf( "" ), OffsetArg.valueOf( "5" ), LimitArg.valueOf( "5" ),
-                        SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+                        SortArg.valueOf( "+id" ) );
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 5 )
                 .hasFieldOrPropertyWithValue( "limit", 5 )
@@ -71,7 +70,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
                                 .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 2 )
@@ -87,7 +86,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
                                 .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
+                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 2 )
@@ -106,8 +105,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 FilterArg.valueOf( "id = " + ees.get( 0 ).getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 1 )
@@ -129,8 +128,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 1 )
@@ -153,8 +152,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 1 )
@@ -177,8 +176,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 1 )
@@ -209,8 +208,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 filterArg,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
         assertThat( response.getData() )
                 .isNotNull()
                 .asList().hasSize( 2 );
@@ -225,8 +224,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
             datasetsWebService.getDatasets( FilterArg.valueOf( "" ),
                     OffsetArg.valueOf( "0" ),
                     LimitArg.valueOf( "101" ),
-                    SortArg.valueOf( "+id" ),
-                    new MockHttpServletResponse() );
+                    SortArg.valueOf( "+id" )
+            );
         } ).isInstanceOf( MalformedArgException.class );
     }
 
@@ -236,7 +235,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         datasetsWebService.getDatasets( FilterArg.valueOf( "geeq.sScorePublication <= 1.0" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" )
+        );
     }
 }

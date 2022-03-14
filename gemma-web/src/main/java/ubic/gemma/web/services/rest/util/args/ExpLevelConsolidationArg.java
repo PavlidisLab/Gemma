@@ -32,8 +32,6 @@ public class ExpLevelConsolidationArg extends AbstractArg<String> {
      */
     @SuppressWarnings("unused")
     public static ExpLevelConsolidationArg valueOf( final String s ) {
-        if ( StringUtils.isBlank( s ) )
-            return null; // TODO: it might be useful to raise a MalformedArgException in this case
         if ( !( s.equals( ExperimentExpressionLevelsValueObject.OPT_PICK_MAX ) || s
                 .equals( ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) || s
                 .equals( ExperimentExpressionLevelsValueObject.OPT_AVG ) ) ) {
@@ -41,7 +39,7 @@ public class ExpLevelConsolidationArg extends AbstractArg<String> {
                     new IllegalArgumentException(
                             "The consolidate option has to be one of: " + ExperimentExpressionLevelsValueObject.OPT_AVG
                                     + ", " + ExperimentExpressionLevelsValueObject.OPT_PICK_MAX + ", "
-                                    + ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) );
+                                    + ExperimentExpressionLevelsValueObject.OPT_PICK_VAR + "." ) );
         }
         return new ExpLevelConsolidationArg( s );
     }

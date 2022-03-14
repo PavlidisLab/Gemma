@@ -5,7 +5,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -47,25 +46,25 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testTaxonById() {
-        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( String.valueOf( taxon.getId() ) ), new MockHttpServletResponse() );
+        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( String.valueOf( taxon.getId() ) ) );
         assertThat( response.getData() ).hasSize( 1 );
     }
 
     @Test
     public void testTaxonByNcbiId() {
-        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( String.valueOf( taxon.getNcbiId() ) ), new MockHttpServletResponse() );
+        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( String.valueOf( taxon.getNcbiId() ) ) );
         assertThat( response.getData() ).hasSize( 1 );
     }
 
     @Test
     public void testTaxonByCommonName() {
-        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( taxon.getCommonName() ), new MockHttpServletResponse() );
+        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( taxon.getCommonName() ) );
         assertThat( response.getData() ).hasSize( 1 );
     }
 
     @Test
     public void testTaxonByScientificName() {
-        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( taxon.getScientificName() ), new MockHttpServletResponse() );
+        ResponseDataObject<List<TaxonValueObject>> response = taxaWebService.getTaxaByIds( TaxonArrayArg.valueOf( taxon.getScientificName() ) );
         assertThat( response.getData() ).hasSize( 1 );
     }
 
@@ -76,8 +75,7 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "20" ),
-                SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+                SortArg.valueOf( "+id" ) );
         assertThat( response.getData() ).isEmpty();
     }
 }
