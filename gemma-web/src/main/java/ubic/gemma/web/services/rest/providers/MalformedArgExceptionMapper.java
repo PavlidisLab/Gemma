@@ -8,6 +8,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -26,6 +27,7 @@ public class MalformedArgExceptionMapper implements ExceptionMapper<MalformedArg
             WellComposedErrorBody.addExceptionFields( body, e.getCause() );
         }
         return Response.status( body.getStatus() )
+                .type( MediaType.APPLICATION_JSON_TYPE )
                 .entity( new ResponseErrorObject( body, OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }

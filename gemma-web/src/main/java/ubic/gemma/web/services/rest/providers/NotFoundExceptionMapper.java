@@ -7,6 +7,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.servlet.ServletConfig;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -33,6 +34,7 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
             WellComposedErrorBody.addExceptionFields( errorBody, e.getCause() );
         }
         return Response.fromResponse( e.getResponse() )
+                .type( MediaType.APPLICATION_JSON_TYPE )
                 .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }

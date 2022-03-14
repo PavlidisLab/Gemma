@@ -7,6 +7,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -30,6 +31,8 @@ public class UnhandledExceptionMapper implements ExceptionMapper<Throwable> {
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
         // we don't display the stacktrace for this kind of exception
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, throwable.getMessage() );
-        return Response.status( code ).entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
+        return Response.status( code )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
     }
 }

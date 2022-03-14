@@ -7,6 +7,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.servlet.ServletConfig;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -24,8 +25,10 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
 
     @Override
     public Response toResponse( WebApplicationException e ) {
-        return Response.fromResponse( e.getResponse() ).entity( new ResponseErrorObject(
-                new WellComposedErrorBody( Response.Status.fromStatusCode( e.getResponse().getStatus() ),
-                        e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
+        return Response.fromResponse( e.getResponse() )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .entity( new ResponseErrorObject(
+                        new WellComposedErrorBody( Response.Status.fromStatusCode( e.getResponse().getStatus() ),
+                                e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
     }
 }

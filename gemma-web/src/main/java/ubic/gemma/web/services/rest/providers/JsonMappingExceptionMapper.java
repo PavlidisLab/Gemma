@@ -9,6 +9,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -31,6 +32,8 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
         log.error( "Exception during JSON mapping: ", exception );
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, exception.getMessage() );
-        return Response.status( code ).entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
+        return Response.status( code )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();
     }
 }

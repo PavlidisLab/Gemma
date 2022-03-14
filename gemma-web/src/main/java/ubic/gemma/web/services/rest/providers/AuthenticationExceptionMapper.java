@@ -11,6 +11,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -30,8 +31,9 @@ public class AuthenticationExceptionMapper implements ExceptionMapper<Authentica
     public Response toResponse( AuthenticationException e ) {
         log.error( "Failed to authenticate user: ", e );
         // for security reasons, we don't include the error object in the response entity
-        return Response.status( Response.Status.FORBIDDEN ).entity(
-                        new ResponseErrorObject( new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) )
+        return Response.status( Response.Status.FORBIDDEN )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .entity( new ResponseErrorObject( new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }
 }
