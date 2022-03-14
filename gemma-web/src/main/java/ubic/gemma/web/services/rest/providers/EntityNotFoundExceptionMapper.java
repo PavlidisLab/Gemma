@@ -9,6 +9,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -25,6 +26,7 @@ public class EntityNotFoundExceptionMapper implements ExceptionMapper<EntityNotF
     @Override
     public Response toResponse( EntityNotFoundException e ) {
         return Response.status( Response.Status.NOT_FOUND )
+                .type( MediaType.APPLICATION_JSON_TYPE )
                 .entity( new ResponseErrorObject( new WellComposedErrorBody( Response.Status.NOT_FOUND, e.getMessage() ), OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }
