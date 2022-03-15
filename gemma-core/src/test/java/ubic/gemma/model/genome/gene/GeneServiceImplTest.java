@@ -55,6 +55,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
+        super.setUp();
 
         geneDaoMock = createMock( GeneDaoImpl.class );
         svc = new GeneServiceImpl( geneDaoMock );

@@ -59,7 +59,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     private String groupName = null;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.groupName = RandomStringUtils.randomAlphabetic( 6 );
 
         /*

@@ -62,7 +62,8 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.cleanup();
     }
 

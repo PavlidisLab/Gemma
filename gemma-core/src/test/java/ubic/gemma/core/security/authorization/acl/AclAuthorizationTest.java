@@ -52,11 +52,11 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
     private final String arrayDesignName =
-            "AD_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "AD_" + RandomStringUtils.randomAlphabetic( 10 );
     private final String compositeSequenceName1 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
     private final String compositeSequenceName2 =
-            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+            "Design Element_" + RandomStringUtils.randomAlphabetic( 10 );
     private final ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     private ArrayDesign arrayDesign;
     @Autowired
@@ -71,7 +71,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     private CompositeSequenceService compositeSequenceService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( arrayDesignName );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,8 @@ public class BioMaterialServiceTest extends BaseSpringContextTest {
     private BioMaterialService bioMaterialService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         log.info( "Starting setup" );
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();

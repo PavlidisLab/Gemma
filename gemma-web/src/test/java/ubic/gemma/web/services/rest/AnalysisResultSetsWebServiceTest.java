@@ -74,7 +74,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     private DatabaseEntry databaseEntry2;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         ee = getTestPersistentBasicExpressionExperiment();
 
         dea = new DifferentialExpressionAnalysis();

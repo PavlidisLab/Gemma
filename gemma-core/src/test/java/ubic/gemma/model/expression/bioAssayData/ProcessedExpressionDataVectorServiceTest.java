@@ -72,6 +72,8 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     private ArrayDesignService arrayDesignService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    TwoChannelMissingValues tcmv;
 
     @After
     public void after() {
@@ -95,7 +97,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
      * .
      */
     @Test
-    @Category( SlowTest.class )
+    @Category(SlowTest.class)
     public void testGetProcessedDataMatrices() {
 
         if ( ees == null ) {
@@ -136,7 +138,6 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                     .fetchAndLoad( "GSE432", false, true, false );
             ee = results.iterator().next();
 
-            TwoChannelMissingValues tcmv = this.getBean( TwoChannelMissingValues.class );
             tcmv.computeMissingValues( ee, 1.5, null );
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {

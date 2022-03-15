@@ -28,6 +28,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     @Autowired
     AnalysisSelectionAndExecutionService analysis = null;
+    @Autowired
     private DiffExAnalyzer analyzer;
 
     /*
@@ -40,8 +41,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Test
     public void testDetermineAnalysisA() {
         this.configureMocks();
-        analyzer = this.getBean( DiffExAnalyzer.class );
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
     /*
@@ -55,8 +54,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
         this.configureMocks();
-        analyzer = this.getBean( DiffExAnalyzer.class );
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
     private void configureMocks() {

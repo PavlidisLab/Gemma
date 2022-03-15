@@ -51,7 +51,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     private int size;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         auditable = ArrayDesign.Factory.newInstance();
         auditable.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );

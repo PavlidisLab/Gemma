@@ -54,6 +54,8 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
     CompositeSequenceService compositeSequenceService;
     @Autowired
     GeneService geneService;
+    @Autowired
+    RawExpressionDataVectorService rawService;
     private ExpressionExperiment newee = null;
 
     @After
@@ -86,8 +88,6 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         expressionExperimentService.update( newee );
 
         newee = this.expressionExperimentService.thawLite( newee );
-
-        RawExpressionDataVectorService rawService = this.getBean( RawExpressionDataVectorService.class );
 
         QuantitationType qt = null;
         for ( QuantitationType q : newee.getQuantitationTypes() ) {

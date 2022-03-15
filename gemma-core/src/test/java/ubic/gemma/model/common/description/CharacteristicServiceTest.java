@@ -60,7 +60,8 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private Characteristic eeChar2;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
@@ -111,7 +112,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( BaseSpringContextTest.RANDOM_STRING_LENGTH ) );
+            c.setValue( RandomStringUtils.randomNumeric( 10 ) );
             characteristicService.create( c );
             chars.add( c );
         }

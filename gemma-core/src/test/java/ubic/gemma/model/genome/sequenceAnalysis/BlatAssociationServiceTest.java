@@ -67,7 +67,8 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     private GeneService geneService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         int numSequencesToCreate = 20;
         for ( int i = 0; i < numSequencesToCreate; i++ ) {

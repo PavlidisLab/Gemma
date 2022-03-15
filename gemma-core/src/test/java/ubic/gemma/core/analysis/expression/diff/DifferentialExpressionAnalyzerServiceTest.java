@@ -52,6 +52,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -97,7 +98,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private AclTestUtils aclTestUtils;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
 
@@ -265,8 +267,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.thawLite( ee );
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" ) ) {
             assertNotNull( is );
             experimentalDesignImporter.importDesign( ee, is );
         }

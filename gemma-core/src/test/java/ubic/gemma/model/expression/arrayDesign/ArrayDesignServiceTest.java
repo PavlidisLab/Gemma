@@ -64,7 +64,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     private SecurityService securityService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         // Create Array design, don't persist it.
         ad = ArrayDesign.Factory.newInstance();

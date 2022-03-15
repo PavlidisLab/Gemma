@@ -90,7 +90,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     private OutlierFlaggingService sampleRemoveService;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         Collection<ArrayDesign> ads = new HashSet<>();
 

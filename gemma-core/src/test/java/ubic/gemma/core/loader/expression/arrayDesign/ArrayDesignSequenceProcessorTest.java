@@ -58,8 +58,12 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     private ArrayDesignService arrayDesignService;
     private Taxon taxon;
 
+    @Autowired
+    private GeoService geoService;
+
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         taxon = taxonService.findByCommonName( "mouse" );
 
@@ -130,7 +134,6 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
             return;
         }
 
-        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
         @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
@@ -157,7 +160,6 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
 
-        GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
 
         @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService

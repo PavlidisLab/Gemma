@@ -55,7 +55,8 @@ public class SignupControllerTest extends BaseSpringWebTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         ReCaptcha mockReCaptcha = Mockito.mock( ReCaptcha.class );
 

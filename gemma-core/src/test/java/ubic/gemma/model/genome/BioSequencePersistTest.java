@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -36,6 +37,9 @@ import static org.junit.Assert.assertNotNull;
  *
  */
 public class BioSequencePersistTest extends BaseSpringContextTest {
+
+    @Autowired
+    BioSequenceService bss;
 
     private BioSequence bs;
 
@@ -62,7 +66,6 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
     @After
     public void onTearDownInTransaction() {
-        BioSequenceService bss = this.getBean( BioSequenceService.class );
         bss.remove( bs );
     }
 

@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,8 +45,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * 
- * 
+ *
+ *
  * @author paul
  */
 public class SplitExperimentTest extends BaseSpringContextTest {
@@ -74,7 +74,8 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     private Collection<ExpressionExperiment> results;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         ee = null;
         results = new HashSet<>();
     }

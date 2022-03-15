@@ -49,7 +49,8 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         gene2GOAssociationService.removeAll();
         gene2GOAssLoader = new NCBIGene2GOAssociationLoader( taskExecutor );
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );

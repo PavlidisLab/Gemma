@@ -52,7 +52,9 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     private ExpressionExperimentDao eeDao;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         svc = new ExpressionExperimentServiceImpl( eeDao );
 
         nobody = User.Factory.newInstance();

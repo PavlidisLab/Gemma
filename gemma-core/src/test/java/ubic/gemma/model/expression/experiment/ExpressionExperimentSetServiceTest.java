@@ -56,7 +56,8 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentSet eeSetAutoGen = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         // need persistent entities so that experiment's taxon can be
         // queried from database during methods being tested

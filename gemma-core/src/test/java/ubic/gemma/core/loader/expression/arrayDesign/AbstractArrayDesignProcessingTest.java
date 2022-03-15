@@ -48,6 +48,9 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
     @Autowired
     private GeneService geneService;
 
+    @Autowired
+    private GeoService geoService;
+
     public ArrayDesign getAd() {
         return ad;
     }
@@ -59,7 +62,6 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         if ( ad == null ) {
 
             // first load small twoc-color
-            GeoService geoService = this.getBean( GeoService.class );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             try {

@@ -59,7 +59,8 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     private String userName;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.ee = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePublic( ee );
         this.eeId = ee.getId();

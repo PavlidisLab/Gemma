@@ -69,7 +69,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     private AclTestUtils aclTestUtils;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
 
         // admin

@@ -18,21 +18,20 @@
  */
 package ubic.gemma.core.util.test;
 
-import org.junit.Rule;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
+import org.junit.Before;
+import org.junit.Rule;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -60,6 +59,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.sql.DataSource;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
@@ -73,38 +73,11 @@ import java.util.List;
         "classpath*:gemma/gsec/applicationContext-*.xml", "classpath:ubic/gemma/testDataSource.xml" })
 public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
-    protected static final int RANDOM_STRING_LENGTH = 10;
-    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
-
+    /* shared fixtures */
     private static ArrayDesign readOnlyAd = null;
-
     private static ExpressionExperiment readOnlyEe = null;
-    protected final HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
-    };
+
     protected final Log log = LogFactory.getLog( this.getClass() );
-    @Autowired
-    protected ExternalDatabaseService externalDatabaseService;
-    @Autowired
-    protected Persister persisterHelper;
-
-    /**
-     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
-     */
-    protected JdbcTemplate simpleJdbcTemplate;
-
-    @Autowired
-    protected TaxonService taxonService;
-
-    @Autowired
-    protected PersistentDummyObjectHelper testHelper;
-
-    @Autowired
-    private SessionFactory sessionFactory;
-
-    @Autowired
-    private AuthenticationTestingUtil authenticationTestingUtil;
-
-    private String sqlScriptEncoding;
 
     /**
      * This allows the usage of {@link org.mockito.Mock} annotation to create mocks.
@@ -112,11 +85,41 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
 
+    /**
+     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
+     */
+    protected JdbcTemplate jdbcTemplate;
+
+    /**
+     * The data source as defined in testDataSource.xml
+     */
+    @Autowired
+    private DataSource dataSource;
+    @Autowired
+    protected ExternalDatabaseService externalDatabaseService;
+    @Autowired
+    protected Persister persisterHelper;
+    @Autowired
+    protected TaxonService taxonService;
+    @Autowired
+    protected PersistentDummyObjectHelper testHelper;
+    @Autowired
+    private SessionFactory sessionFactory;
+    @Autowired
+    private AuthenticationTestingUtil authenticationTestingUtil;
+
     @Override
     final public void afterPropertiesSet() {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-        hibernateSupport.setSessionFactory( sessionFactory );
-        this.runAsAdmin();
+        this.jdbcTemplate = new JdbcTemplate( dataSource );
+    }
+
+    /**
+     * The default is to grant an administrator authority to the current user.
+     */
+    @Before
+    public void setUp() throws Exception {
+        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
     }
 
     /**
@@ -145,30 +148,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * Set the DataSource, typically provided via Dependency Injection.
-     *
-     * @param dataSource data source
-     */
-    @Autowired
-    public void setDataSource( DataSource dataSource ) {
-        this.simpleJdbcTemplate = new JdbcTemplate( dataSource );
-    }
-
-    /**
      * @param persisterHelper the persisterHelper to set
      */
     public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * Specify the encoding for SQL scripts, if different from the platform encoding.
-     *
-     * @param sqlScriptEncoding encoding
-     * @see #executeSqlScript
-     */
-    public void setSqlScriptEncoding( String sqlScriptEncoding ) {
-        this.sqlScriptEncoding = sqlScriptEncoding;
     }
 
     public void setTaxonService( TaxonService taxonService ) {
@@ -192,7 +175,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return the number of rows in the table
      */
     protected int countRowsInTable( String tableName ) {
-        return JdbcTestUtils.countRowsInTable( this.simpleJdbcTemplate, tableName );
+        return JdbcTestUtils.countRowsInTable( this.jdbcTemplate, tableName );
     }
 
     /**
@@ -202,7 +185,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return the total number of rows deleted from all specified tables
      */
     protected int deleteFromTables( String... names ) {
-        return JdbcTestUtils.deleteFromTables( this.simpleJdbcTemplate, names );
+        return JdbcTestUtils.deleteFromTables( this.jdbcTemplate, names );
     }
 
     /**
@@ -218,29 +201,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
         Resource resource = this.applicationContext.getResource( sqlResourcePath );
         JdbcTestUtils
-                .executeSqlScript( this.simpleJdbcTemplate, new EncodedResource( resource, this.sqlScriptEncoding ),
+                .executeSqlScript( this.jdbcTemplate, new EncodedResource( resource, StandardCharsets.UTF_8 ),
                         continueOnError );
-    }
-
-    protected <T> T getBean( Class<T> t ) {
-        return this.applicationContext.getBean( t );
-    }
-
-    /**
-     * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
-     * tests by injection instead.
-     *
-     * @param name name
-     * @param t    type
-     * @param <T>  javadoc plugin is very obnoxious lately.
-     * @return bean
-     */
-    protected <T> T getBean( String name, Class<T> t ) {
-        try {
-            return this.applicationContext.getBean( name, t );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     protected Gene getTestPersistentGene() {

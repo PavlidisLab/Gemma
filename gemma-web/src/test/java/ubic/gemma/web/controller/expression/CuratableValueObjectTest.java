@@ -65,6 +65,8 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() throws Exception {
+        super.setUp();
+
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
         arrayDesign.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );

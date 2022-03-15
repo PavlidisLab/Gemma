@@ -84,7 +84,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private String geneNcbiId;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
 

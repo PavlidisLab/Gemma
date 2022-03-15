@@ -106,7 +106,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private Collection<ProcessedExpressionDataVector> vectors = null;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         try {
             if ( Settings.getBoolean( "gemma.linearmodels.useR" ) ) {

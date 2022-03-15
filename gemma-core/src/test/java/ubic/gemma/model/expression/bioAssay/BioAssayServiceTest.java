@@ -42,7 +42,8 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
     private BioAssayService bioAssayService;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 

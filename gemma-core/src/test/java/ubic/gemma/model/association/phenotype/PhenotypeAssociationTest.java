@@ -72,7 +72,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private Taxon humanTaxon = null;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         if ( !PhenotypeAssociationTest.dosLoaded ) {
             // fails if you have DO loaded

@@ -57,7 +57,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private AsyncTaskExecutor taskExecutor;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         clean();
     }
 

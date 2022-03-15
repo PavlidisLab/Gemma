@@ -87,7 +87,6 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
 
-        analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );
 
@@ -114,7 +113,8 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
 
         /*
          * this is an exon array data set that has the data present. It's an annoying choice for a test in that it

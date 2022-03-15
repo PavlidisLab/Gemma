@@ -63,7 +63,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     private boolean persisted = false;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
 
         if ( !persisted ) {
             ee = this.getTestPersistentCompleteExpressionExperiment( false );
@@ -143,12 +144,10 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetByTaxon() {
-        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
-
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
-        Taxon checkTaxon = eeService.getTaxon( list.iterator().next() );
+        Taxon checkTaxon = expressionExperimentService.getTaxon( list.iterator().next() );
         assertEquals( taxon, checkTaxon );
 
     }

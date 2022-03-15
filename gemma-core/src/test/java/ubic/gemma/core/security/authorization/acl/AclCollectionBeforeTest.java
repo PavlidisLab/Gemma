@@ -63,7 +63,8 @@ public class AclCollectionBeforeTest extends BaseSpringContextTest {
     private Collection<BioAssaySet> ees;
 
     @Before
-    public final void setup() {
+    public final void setUp() throws Exception {
+        super.setUp();
 
         one = super.getTestPersistentBasicExpressionExperiment();
         two = super.getTestPersistentBasicExpressionExperiment();
