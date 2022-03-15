@@ -46,8 +46,9 @@ public abstract class BaseJerseyTest extends JerseyTest {
         authenticationTestingUtil = applicationContext.getBean( AuthenticationTestingUtil.class );
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         return new ResourceConfig()
-                .packages( "ubic.gemma.web.services.rest" )
-                .property( "contextConfig", applicationContext );
+                .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.web.services.rest" )
+                .property( "contextConfig", applicationContext )
+                .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" );
     }
 
     @Before
