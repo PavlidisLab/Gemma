@@ -12,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 import ubic.gemma.core.util.test.AuthenticationTestingUtil;
-import ubic.gemma.core.util.test.AuthenticationTestingUtilImpl;
 
 import javax.ws.rs.core.Application;
 
@@ -44,7 +43,7 @@ public abstract class BaseJerseyTest extends JerseyTest {
     @Override
     public Application configure() {
         applicationContext = prepareWebApplicationContext();
-        authenticationTestingUtil = applicationContext.getBean( AuthenticationTestingUtilImpl.class );
+        authenticationTestingUtil = applicationContext.getBean( AuthenticationTestingUtil.class );
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         return new ResourceConfig()
                 .packages( "ubic.gemma.web.services.rest" )
