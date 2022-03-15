@@ -1,16 +1,18 @@
 package ubic.gemma.web.util;
 
-import gemma.gsec.authentication.UserManager;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.junit.Before;
 import org.springframework.mock.web.MockServletConfig;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 import ubic.gemma.core.util.test.AuthenticationTestingUtil;
+import ubic.gemma.core.util.test.AuthenticationTestingUtilImpl;
 
 import javax.ws.rs.core.Application;
 
@@ -24,13 +26,15 @@ import javax.ws.rs.core.Application;
  *
  * @author poirigui
  */
-public abstract class BaseSpringWebJerseyTest extends JerseyTest {
+public abstract class BaseJerseyTest extends JerseyTest {
 
     /**
      * The {@link WebApplicationContext} that is being used by the container. You can use it to inject specific beans
      * for testing purposes.
      */
     protected WebApplicationContext applicationContext;
+
+    protected AuthenticationTestingUtil authenticationTestingUtil;
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
@@ -40,9 +44,18 @@ public abstract class BaseSpringWebJerseyTest extends JerseyTest {
     @Override
     public Application configure() {
         applicationContext = prepareWebApplicationContext();
+        authenticationTestingUtil = applicationContext.getBean( AuthenticationTestingUtilImpl.class );
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         return new ResourceConfig()
                 .packages( "ubic.gemma.web.services.rest" )
                 .property( "contextConfig", applicationContext );
+    }
+
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        authenticationTestingUtil.grantAdminAuthority( applicationContext );
     }
 
     private WebApplicationContext prepareWebApplicationContext() {
@@ -54,9 +67,6 @@ public abstract class BaseSpringWebJerseyTest extends JerseyTest {
         applicationContext.setServletConfig( new MockServletConfig() );
         applicationContext.setServletContext( new MockServletContext() );
         applicationContext.refresh();
-        // setup basic credentials
-        AuthenticationTestingUtil authenticationTestingUtil = new AuthenticationTestingUtil( applicationContext.getBean( UserManager.class ) );
-        authenticationTestingUtil.grantAdminAuthority( applicationContext );
         return applicationContext;
     }
 }

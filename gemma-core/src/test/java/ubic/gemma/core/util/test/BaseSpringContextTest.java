@@ -98,6 +98,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     protected PersistentDummyObjectHelper testHelper;
 
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    @Autowired
     private AuthenticationTestingUtil authenticationTestingUtil;
 
     private String sqlScriptEncoding;
@@ -111,12 +115,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Override
     final public void afterPropertiesSet() {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
-        hibernateSupport.setSessionFactory( this.getBean( SessionFactory.class ) );
-
-        this.authenticationTestingUtil = new AuthenticationTestingUtil( this.getBean( UserManager.class ) );
-
+        hibernateSupport.setSessionFactory( sessionFactory );
         this.runAsAdmin();
-
     }
 
     /**

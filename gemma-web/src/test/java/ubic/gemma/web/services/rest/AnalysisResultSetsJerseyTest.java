@@ -2,7 +2,7 @@ package ubic.gemma.web.services.rest;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.Test;
-import ubic.gemma.web.util.BaseSpringWebJerseyTest;
+import ubic.gemma.web.util.BaseJerseyTest;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @CommonsLog
-public class AnalysisResultSetsJerseyTest extends BaseSpringWebJerseyTest {
+public class AnalysisResultSetsJerseyTest extends BaseJerseyTest {
 
     @Test
     public void testGetResultSets() {
