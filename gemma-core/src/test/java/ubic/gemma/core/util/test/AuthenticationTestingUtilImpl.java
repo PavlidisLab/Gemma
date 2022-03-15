@@ -3,11 +3,8 @@ package ubic.gemma.core.util.test;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.TestingAuthenticationProvider;
-import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,10 +18,13 @@ import java.util.List;
 @Component
 public final class AuthenticationTestingUtilImpl implements AuthenticationTestingUtil {
 
+
+    private final ProviderManager providerManager;
     private final UserManager userManager;
 
     @Autowired
-    public AuthenticationTestingUtilImpl( UserManager userManager ) {
+    public AuthenticationTestingUtilImpl( @Qualifier("authenticationManager") AuthenticationManager providerManager, UserManager userManager ) {
+        this.providerManager = ( ProviderManager ) providerManager;
         this.userManager = userManager;
     }
 
@@ -39,8 +39,7 @@ public final class AuthenticationTestingUtilImpl implements AuthenticationTestin
      * @param ctx context
      */
     @Override
-    public void grantAdminAuthority( ApplicationContext ctx ) {
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+    public void grantAdminAuthority() {
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         // Grant all roles to test user.
@@ -54,8 +53,7 @@ public final class AuthenticationTestingUtilImpl implements AuthenticationTestin
     }
 
     @Override
-    public void logOut( ApplicationContext ctx ) {
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+    public void logOut() {
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
@@ -75,13 +73,12 @@ public final class AuthenticationTestingUtilImpl implements AuthenticationTestin
      * @param username user name
      */
     @Override
-    public void switchToUser( ApplicationContext ctx, String username ) {
+    public void switchToUser( String username ) {
 
         UserDetails user = userManager.loadUserByUsername( username );
 
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>( user.getAuthorities() );
 
-        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
         TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", grantedAuthorities );

@@ -55,7 +55,7 @@ public abstract class BaseJerseyTest extends JerseyTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        authenticationTestingUtil.grantAdminAuthority( applicationContext );
+        authenticationTestingUtil.grantAdminAuthority();
     }
 
     private WebApplicationContext prepareWebApplicationContext() {

@@ -119,7 +119,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     @Before
     public void setUp() throws Exception {
-        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+        authenticationTestingUtil.grantAdminAuthority();
     }
 
     /**
@@ -491,7 +491,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * runAsUser). This gets called before each test, no need to run it yourself otherwise.
      */
     protected final void runAsAdmin() {
-        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+        authenticationTestingUtil.grantAdminAuthority();
     }
 
     /**
@@ -500,11 +500,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @param userName user name
      */
     protected final void runAsUser( String userName ) {
-        authenticationTestingUtil.switchToUser( this.applicationContext, userName );
+        authenticationTestingUtil.switchToUser( userName );
     }
 
     protected final void runAsAnonymous() {
-        authenticationTestingUtil.logOut( this.applicationContext );
+        authenticationTestingUtil.logOut();
     }
 
     /**
