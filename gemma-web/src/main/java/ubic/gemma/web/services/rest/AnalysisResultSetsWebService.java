@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 /**
  * Endpoint for {@link ubic.gemma.model.analysis.AnalysisResultSet}
  */
-@Service("analysisResultSetWebService")
+@Service
 @Path("/resultSets")
 public class AnalysisResultSetsWebService {
 
