@@ -38,7 +38,8 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     private ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         // FIXME: this should not be necessary, but other tests are not cleaning up their fixtures
         expressionExperimentService.remove( expressionExperimentService.loadAll() );
         for ( int i = 0; i < 10; i++ ) {
