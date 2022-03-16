@@ -170,7 +170,13 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
+    /**
+     * @deprecated never use this method, you can use {@link #removeProcessedDataVectors(ExpressionExperiment)}
+     * instead, or clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()} directly. The relationship is
+     * actually managed by Hibernate.
+     */
     @Override
+    @Deprecated
     void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
 
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
