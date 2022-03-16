@@ -94,6 +94,11 @@ public interface BaseDao<T> {
     void remove( T entity );
 
     /**
+     * Remove all entities from persistent storage.
+     */
+    void removeAll();
+
+    /**
      * @param entities Update the entities. Not supported if the entities are immutable.
      */
     void update( Collection<T> entities );
