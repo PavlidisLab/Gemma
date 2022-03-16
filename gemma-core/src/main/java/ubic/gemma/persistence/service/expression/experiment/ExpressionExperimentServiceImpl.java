@@ -931,10 +931,8 @@ public class ExpressionExperimentServiceImpl
         for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
             qtsToRemove.add( oldV.getQuantitationType() );
         }
-        rawExpressionDataVectorDao.remove( eeToUpdate.getRawExpressionDataVectors() ); // should not be necessary
-        processedVectorService.remove( eeToUpdate.getProcessedExpressionDataVectors() ); // should not be necessary
-        eeToUpdate.getProcessedExpressionDataVectors().clear(); // this should be sufficient
-        eeToUpdate.getRawExpressionDataVectors().clear(); // should be sufficient
+        eeToUpdate.getProcessedExpressionDataVectors().clear();
+        eeToUpdate.getRawExpressionDataVectors().clear();
 
         // These QTs might still be getting used by the replaced vectors.
         for ( RawExpressionDataVector newVec : newVectors ) {
