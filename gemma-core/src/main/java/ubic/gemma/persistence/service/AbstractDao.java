@@ -136,6 +136,11 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    public void removeAll() {
+        this.remove( this.loadAll() );
+    }
+
+    @Override
     @Transactional
     public void update( Collection<T> entities ) {
         int i = 0;
