@@ -41,9 +41,7 @@ import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
@@ -88,8 +86,7 @@ public class AnalysisResultSetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg filters,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort,
-            @Context final HttpServletResponse servlet ) {
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort ) {
         Collection<BioAssaySet> ees = null;
         if ( datasets != null ) {
             ees = datasets.getEntities( expressionExperimentService ).stream()
@@ -164,8 +161,7 @@ public class AnalysisResultSetsWebService {
     @Produces(TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", hidden = true)
     public StreamingOutput getResultSetToTsv(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @Context final HttpServletResponse servlet ) {
+            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet ) {
         final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
