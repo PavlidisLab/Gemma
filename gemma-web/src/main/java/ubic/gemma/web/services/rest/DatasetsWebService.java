@@ -22,6 +22,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -49,10 +50,15 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -222,6 +228,32 @@ public class DatasetsWebService {
                 this.getDiffExVos( datasetArg.getEntity( expressionExperimentService ).getId(),
                         offset.getValue(), limit.getValue() )
         );
+    }
+
+    /**
+     * Retrieves the result sets of all the differential expression analyses of a dataset.
+     *
+     * This is actually performing a 303 See Other redirection to point the HTTP client to the corresponding result sets
+     * endpoint.
+     *
+     * @see AnalysisResultSetsWebService#getResultSets(DatasetArrayArg, DatabaseEntryArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)
+     */
+    @GET
+    @Path("/{dataset}/analyses/differential/resultSets")
+    @Operation(summary = "Retrieve the result sets of all differential analyses of a dataset", responses = {
+            @ApiResponse(responseCode = "302", description = "If the dataset is found, a redirection to the corresponding getResultSets operation."),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetDifferentialExpressionAnalysesResultSets(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Context HttpServletRequest request ) {
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        URI resultSetUri = ServletUriComponentsBuilder.fromServletMapping( request )
+                .path( "/resultSets" )
+                .queryParam( "datasets", ee.getId() )
+                .build().toUri();
+        return Response.status( Response.Status.FOUND )
+                .location( resultSetUri )
+                .build();
     }
 
     /**
