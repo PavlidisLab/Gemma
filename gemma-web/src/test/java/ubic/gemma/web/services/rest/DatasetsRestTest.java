@@ -41,7 +41,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     public void setUp() throws Exception {
         super.setUp();
         // FIXME: this should not be necessary, but other tests are not cleaning up their fixtures
-        expressionExperimentService.remove( expressionExperimentService.loadAll() );
+        expressionExperimentService.removeAll();
         for ( int i = 0; i < 10; i++ ) {
             ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
         }
