@@ -209,11 +209,11 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the main differential analysis of a dataset", responses = {
+    @Operation(summary = "Retrieve the differential analyses of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListDifferentialExpressionAnalysisValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalysis( // Params:
+    public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
