@@ -31,7 +31,6 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
@@ -103,6 +102,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Override
+    @Transactional(readOnly = true)
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<>();
@@ -137,6 +137,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
             Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
             List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults ) {
@@ -202,6 +203,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
 
     @Override
+    @Transactional(readOnly = true)
     public void deleteAllFiles( ExpressionExperiment ee ) {
         ee = this.expressionExperimentService.thawLite( ee );
 
@@ -230,18 +232,17 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) {
         DifferentialExpressionAnalysis analysis = this.differentialExpressionAnalysisService.load( analysisId );
         return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
     }
 
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
+    private File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
         return this.getOutputFile( ee, filtered, true, false );
     }
 
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary ) {
+    private File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary ) {
         String filteredAdd = "";
         if ( !filtered ) {
             filteredAdd = ".unfilt";
@@ -266,14 +267,12 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         return this.getOutputFile( filename, temporary );
     }
 
-    @Override
-    public File getOutputFile( String filename ) {
+    private File getOutputFile( String filename ) {
         return this.getOutputFile( filename, false );
 
     }
 
-    @Override
-    public File getOutputFile( String filename, boolean temporary ) {
+    private File getOutputFile( String filename, boolean temporary ) {
         String fullFilePath;
         if ( temporary ) {
             fullFilePath = ExpressionDataFileService.TMP_DATA_DIR + filename;
@@ -291,6 +290,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         File f = new File( fileName );
@@ -298,6 +298,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis,
             DifferentialExpressionAnalysisConfig config ) throws IOException {
         Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
@@ -344,6 +345,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = expressionExperimentService.thawLite( ee );
@@ -364,6 +366,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
         try {
             File f = this.getOutputFile( ee, filtered );
@@ -381,6 +384,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
@@ -410,6 +414,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
         ee = expressionExperimentService.thawLite( ee );
         try {
@@ -428,6 +433,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) {
 
         ee = this.expressionExperimentService.thawLite( ee );
@@ -445,6 +451,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException {
 
         try {
@@ -465,6 +472,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     }
 
     @Override
+    @Transactional(readOnly = true)
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
