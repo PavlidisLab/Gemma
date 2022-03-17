@@ -110,7 +110,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private GeeqService geeqService;
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PreprocessingException.class)
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
         ee = expressionExperimentService.thaw( ee );
@@ -131,7 +131,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Only used for TwoChannelMissingValueCLI? Possibly redundant? FIXME
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PreprocessingException.class)
     public void processLight( ExpressionExperiment ee ) throws PreprocessingException {
         try {
             // we dont do processForMissingValues missing values
@@ -149,7 +149,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * updated
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PreprocessingException.class)
     public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
         String detail = null;
@@ -277,7 +277,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * @param ee
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = PreprocessingException.class)
     public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
         this.processForSampleCorrelation( ee );
         this.processForMeanVarianceRelation( ee );
