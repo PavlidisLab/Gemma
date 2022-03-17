@@ -2,17 +2,12 @@ package ubic.gemma.persistence.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.aspectj.bridge.MessageUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Base for all services handling DAO access.

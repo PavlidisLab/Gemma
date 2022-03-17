@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service;
 
-import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,10 +30,8 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
