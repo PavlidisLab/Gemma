@@ -88,12 +88,15 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public List<T> load( @NonNull Collection<Long> ids ) {
-        // ensure that IDs are unique so that elements cannot be repeated in different partitions
-        ids = new HashSet<>( ids );
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        // ensure that IDs are unique to avoid creating needlessly long expressions
+        List<Long> distinctIds = ids.stream().distinct().collect( Collectors.toList() );
         //noinspection unchecked
         return ( List<T> ) this.getSessionFactory().getCurrentSession()
                 .createCriteria( elementClass )
-                .add( Restrictions.in( "id", ids ) )
+                .add( Restrictions.in( "id", distinctIds ) )
                 .list();
     }
 
