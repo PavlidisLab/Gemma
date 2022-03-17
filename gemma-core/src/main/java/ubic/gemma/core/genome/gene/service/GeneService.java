@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -196,15 +197,19 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
      * @return thaw the Aliases, very light version
      */
     @Deprecated
+    @CheckReturnValue
     Gene thawAliases( Gene gene );
 
     @Deprecated
+    @CheckReturnValue
     Collection<Gene> thawLite( Collection<Gene> genes );
 
     @Deprecated
+    @CheckReturnValue
     Gene thawLite( Gene gene );
 
     @Deprecated
+    @CheckReturnValue
     Gene thawLiter( Gene gene );
 
     Collection<GeneValueObject> searchGenes( String query, Long taxonId );
