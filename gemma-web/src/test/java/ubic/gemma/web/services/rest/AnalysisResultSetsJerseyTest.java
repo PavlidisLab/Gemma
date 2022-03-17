@@ -3,13 +3,19 @@ package ubic.gemma.web.services.rest;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.apachecommons.CommonsLog;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseJerseyTest;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,6 +29,24 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @CommonsLog
 public class AnalysisResultSetsJerseyTest extends BaseJerseyTest {
+
+    private ExpressionExperimentService expressionExperimentService;
+
+    /* fixture */
+    private ExpressionExperiment ee;
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        expressionExperimentService = applicationContext.getBean( ExpressionExperimentService.class );
+        ee = ExpressionExperiment.Factory.newInstance();
+        ee = expressionExperimentService.create( ee );
+    }
+
+    @After
+    public void tearDown() {
+        expressionExperimentService.remove( ee );
+    }
 
     @Test
     public void testGetResultSets() {
@@ -60,5 +84,12 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyTest {
         InputStream reader = ( InputStream ) response.getEntity();
         OpenAPI openAPI = Json.mapper().readValue( reader, OpenAPI.class );
         assertThat( openAPI.getInfo().getTitle() ).isEqualTo( "Gemma RESTful API" );
+    }
+
+    @Test
+    public void testRedirection() {
+        Response response = target( "/datasets/" + ee.getId() + "/analyses/differential/resultSets" ).request().get();
+        assertThat( response.getStatus() ).isEqualTo( 302 );
+        assertThat( response.getLocation() ).isEqualTo( URI.create( "/resultSets?datasets=" + ee.getId() ) );
     }
 }

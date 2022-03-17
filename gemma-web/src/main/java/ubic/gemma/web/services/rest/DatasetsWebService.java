@@ -233,7 +233,7 @@ public class DatasetsWebService {
     /**
      * Retrieves the result sets of all the differential expression analyses of a dataset.
      *
-     * This is actually performing a 303 See Other redirection to point the HTTP client to the corresponding result sets
+     * This is actually performing a 302 Found redirection to point the HTTP client to the corresponding result sets
      * endpoint.
      *
      * @see AnalysisResultSetsWebService#getResultSets(DatasetArrayArg, DatabaseEntryArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)
