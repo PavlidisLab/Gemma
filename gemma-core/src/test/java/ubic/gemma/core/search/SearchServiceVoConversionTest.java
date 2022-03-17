@@ -30,6 +30,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao;
+import ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -166,8 +167,8 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         }
 
         @Bean
-        public BlacklistedEntityDao blacklistedEntityDao() {
-            return mock( BlacklistedEntityDao.class );
+        public BlacklistedEntityService blacklistedEntityService() {
+            return mock( BlacklistedEntityService.class );
         }
 
         @Bean
