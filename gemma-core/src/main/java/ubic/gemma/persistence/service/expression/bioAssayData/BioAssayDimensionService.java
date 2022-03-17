@@ -23,6 +23,8 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
+
 /**
  * @author Paul
  */
@@ -42,9 +44,11 @@ public interface BioAssayDimensionService
     void remove( BioAssayDimension bioAssayDimension );
 
     @Deprecated
+    @CheckReturnValue
     BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
     @Override
     @Deprecated
+    @CheckReturnValue
     BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
 }

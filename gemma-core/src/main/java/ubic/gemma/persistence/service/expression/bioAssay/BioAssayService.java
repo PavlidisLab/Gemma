@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.FilteringService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -102,11 +103,13 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
 
     @Override
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     BioAssay thaw( BioAssay bioAssay );
 
     @Override
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<BioAssay> thaw( Collection<BioAssay> bioAssays );
 

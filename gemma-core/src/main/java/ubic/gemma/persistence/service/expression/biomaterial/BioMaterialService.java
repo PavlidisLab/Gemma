@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +84,13 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
 
     @Override
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     BioMaterial thaw( BioMaterial bioMaterial );
 
     @Override
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 

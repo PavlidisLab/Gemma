@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -372,7 +373,9 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     /**
      * @deprecated use {@link #loadAndThaw} instead
      */
+    @Override
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
@@ -385,6 +388,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @return AD
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
@@ -392,6 +396,7 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      * @deprecated use {@link #loadAndThawLite(Long)} instead
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 

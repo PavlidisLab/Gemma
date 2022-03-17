@@ -163,7 +163,7 @@ public class DifferentialExpressionSearchController {
             Collection<DifferentialExpressionAnalysis> analyses = diffAnalyses.get( id );
 
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thaw( analysis );
 
                 Collection<ExperimentalFactor> factors = new HashSet<>();
                 for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {

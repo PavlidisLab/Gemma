@@ -618,7 +618,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
-        this.thawLiter( ee );
+        ee = this.thawLiter( ee );
 
         BatchEffectDetails details = new BatchEffectDetails( this.checkBatchFetchStatus( ee ),
                 this.getHasBeenBatchCorrected( ee ), this.checkIfSingleBatch( ee ) );

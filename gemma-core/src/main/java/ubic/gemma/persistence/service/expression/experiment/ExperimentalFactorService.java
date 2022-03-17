@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 
@@ -80,6 +81,8 @@ public interface ExperimentalFactorService
      * @param ef
      * @return
      */
+    @Override
     @Deprecated
+    @CheckReturnValue
     ExperimentalFactor thaw( ExperimentalFactor ef );
 }

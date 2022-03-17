@@ -275,7 +275,7 @@ public class PersistentDummyObjectHelper {
 
         Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
 
-        eeService.thaw( prototype );
+        prototype = eeService.thaw( prototype );
         Set<RawExpressionDataVector> vectors = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = this.getBioAssays( bioMaterials, ad );

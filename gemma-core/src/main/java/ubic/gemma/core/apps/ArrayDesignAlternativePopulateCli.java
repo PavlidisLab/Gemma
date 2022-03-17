@@ -98,7 +98,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractCLIContextCLI {
                 if ( fromAD.equals( toAD ) )
                     continue; // no need to self-map?
 
-                arrayDesignService.thawLite( fromAD );
+                fromAD = arrayDesignService.thawLite( fromAD );
                 if ( fromAD.getAlternativeTo() != null ) {
                     log.info( "Already has an alternative mapped: " + from );
                     continue;

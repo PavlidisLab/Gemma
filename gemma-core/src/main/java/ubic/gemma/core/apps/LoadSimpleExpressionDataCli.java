@@ -273,7 +273,9 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
             this.configureQuantitationType( fields, metaData );
 
             ExpressionExperiment ee = eeLoaderService.create( metaData, data );
-            this.eeService.thawLite( ee );
+            // FIXME: is that really necessary?
+            //noinspection UnusedAssignment
+            ee = this.eeService.thawLite( ee );
         }
     }
 

@@ -392,8 +392,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( mdvo );
 
         for ( IncludedResultSetInfoValueObject gdemairsivo : mdvo.getIncludedResultSetsInfo() ) {
-            this.differentialExpressionAnalysisService
+            DifferentialExpressionAnalysis dea = this.differentialExpressionAnalysisService
                     .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
+            assertEquals( gdemairsivo.getAnalysisId(), dea.getId() );
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {

@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
 
@@ -133,6 +134,7 @@ public interface BaseService<O extends Identifiable> {
      *             session.
      */
     @Deprecated
+    @CheckReturnValue
     List<O> thaw( Collection<O> entities );
 
     /**
@@ -142,5 +144,6 @@ public interface BaseService<O extends Identifiable> {
      *             session.
      */
     @Deprecated
+    @CheckReturnValue
     O thaw( O entity );
 }

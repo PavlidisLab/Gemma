@@ -317,7 +317,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             zipOut.closeEntry();
 
             if ( analysis.getId() != null ) // might be transient if using -nodb from CLI
-                differentialExpressionAnalysisService.thaw( analysis );
+                analysis = differentialExpressionAnalysisService.thaw( analysis );
 
             // Add a file for each result set with contrasts information.
             int i = 0;
@@ -870,7 +870,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( analysis.getId() != null ) // It might not be a persistent analysis: using -nodb
-            differentialExpressionAnalysisService.thaw( analysis );
+            analysis = differentialExpressionAnalysisService.thaw( analysis );
 
         StringBuilder buf = new StringBuilder();
 

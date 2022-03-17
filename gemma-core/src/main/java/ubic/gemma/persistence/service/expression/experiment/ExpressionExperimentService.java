@@ -42,6 +42,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
+import javax.annotation.CheckReturnValue;
 import java.util.*;
 
 /**
@@ -517,6 +518,7 @@ public interface ExpressionExperimentService
      * @deprecated use {@link #loadAndThaw(Long)} instead
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
@@ -524,6 +526,7 @@ public interface ExpressionExperimentService
      * @deprecated use {@link #loadAndThawBioAssays(Long)} instead
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
@@ -536,6 +539,7 @@ public interface ExpressionExperimentService
      * @return thawed experiment
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
@@ -543,6 +547,7 @@ public interface ExpressionExperimentService
      * @deprecated use {@link #loadAndThawLiter(Long)} instead
      */
     @Deprecated
+    @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 

@@ -275,7 +275,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 AbstractCLI.log.warn( shortName + " not found" );
                 continue;
             }
-            eeService.thawLite( expressionExperiment );
+            expressionExperiment = eeService.thawLite( expressionExperiment );
             expressionExperiments.add( expressionExperiment );
         }
         if ( expressionExperiments.size() == 0 ) {
