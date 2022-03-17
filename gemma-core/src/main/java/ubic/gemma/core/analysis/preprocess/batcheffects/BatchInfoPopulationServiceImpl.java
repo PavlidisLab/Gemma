@@ -127,7 +127,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = BatchInfoPopulationException.class)
     public void fillBatchInformation( ExpressionExperiment ee, boolean force ) throws BatchInfoPopulationException {
 
         boolean isRNASeq = expressionExperimentService.isRNASeq( ee );
