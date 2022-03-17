@@ -139,7 +139,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
-    @Deprecated
     @Transactional(readOnly = true)
     public List<O> thaw( final Collection<O> identifiables ) {
         List<O> result = this.load( EntityUtils.getIds( identifiables ) );
@@ -148,7 +147,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
-    @Deprecated
     @Transactional(readOnly = true)
     public O thaw( O identifiable ) {
         O result = this.load( identifiable.getId() );
