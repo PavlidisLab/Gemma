@@ -254,7 +254,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
      * @return expression ranks based on computed intensities
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public ExpressionExperiment updateRanks( ExpressionExperiment ee ) {
 
         ee = expressionExperimentDao.load( ee.getId() );
