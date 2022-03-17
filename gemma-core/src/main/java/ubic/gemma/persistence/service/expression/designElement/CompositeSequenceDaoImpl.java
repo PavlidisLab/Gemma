@@ -518,7 +518,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         GeneProduct geneProduct = bs2gp.getGeneProduct();
                         if ( geneProduct != null && geneProduct.getGene() != null ) {
                             Gene g = geneProduct.getGene();
-                            g.getAliases().size();
+                            Hibernate.initialize( g.getAliases() );
                             session.evict( g );
                             session.evict( geneProduct );
                         }

@@ -28,7 +28,7 @@ public class SearchSettingsTest {
         searchSettings.setQuery( "http://example.ca/" );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
         assertThat( searchSettings.getRawQuery() ).isEqualTo( "http://example.ca/" );
-        assertThat( searchSettings.isTermQuery() );
+        assertThat( searchSettings.isTermQuery() ).isTrue();
         assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
     }
 
@@ -38,7 +38,7 @@ public class SearchSettingsTest {
         searchSettings.setQuery( " http://example.ca/ " );
         assertThat( searchSettings.getQuery() ).isEqualTo( "http://example.ca/" );
         assertThat( searchSettings.getRawQuery() ).isEqualTo( " http://example.ca/ " );
-        assertThat( searchSettings.isTermQuery() );
+        assertThat( searchSettings.isTermQuery() ).isTrue();
         assertThat( searchSettings.getTermUri() ).isEqualTo( "http://example.ca/" );
     }
 

@@ -16,6 +16,7 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.jdbc.Work;
@@ -139,7 +140,7 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
         session.update( association.getGeneProduct() );
         session.update( association.getGeneProduct().getGene() );
         session.update( association.getGeneProduct().getGene().getPhysicalLocation() );
-        association.getGeneProduct().getGene().getProducts().size();
+        Hibernate.initialize( association.getGeneProduct().getGene().getProducts() );
         session.update( association.getBioSequence() );
         //noinspection ResultOfMethodCallIgnored called so that the collection is initialised.
         association.getBioSequence().getSequenceDatabaseEntry();

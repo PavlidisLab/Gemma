@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FileUploadUtilTest {
 
@@ -51,7 +52,7 @@ public class FileUploadUtilTest {
         assert ( copiedFile.exists() );
         assertEquals( expectedSize, copiedFile.length() );
 
-        copiedFile.delete();
+        assertTrue( copiedFile.delete() );
     }
 
 }

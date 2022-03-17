@@ -340,7 +340,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             return null;
 
         // OLDTODO: only load file if it is not out of date
-        try (InputStream is = new FileInputStream( path + fileName )) {
+        try ( InputStream is = new FileInputStream( path + fileName ) ) {
             return this.readReport( is );
         }
     }
@@ -364,8 +364,12 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             File file = new File( path, fullFileName );
 
             if ( !file.exists() ) {
-                new File( path ).mkdirs(); // in case of the subdirs doesn't exisit.
-                try (FileOutputStream out = new FileOutputStream( path + fullFileName )) {
+                // in case of the subdirs doesn't exisit.
+                if ( !new File( path ).mkdirs() ) {
+                    log.error( "Could not create directories structure for " + file );
+                    return;
+                }
+                try ( FileOutputStream out = new FileOutputStream( path + fullFileName ) ) {
                     OutputFormat format = new OutputFormat( document );
                     format.setIndenting( true );
                     // to generate a file output use fileoutputstream
@@ -384,7 +388,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
                         + ", already exists.  A new report was not created." );
 
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "Failed to generate a report to " + filename + ".", e );
         }
 
     }

@@ -167,12 +167,11 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         File outputFile = new File( outputFileName );
         log.info( "Writing output to " + outputFile.getPath() );
 
-        if ( outputFile.exists() ) {
-            log.warn( "Overwriting existing file ..." );
+        if ( !outputFile.createNewFile() ) {
+            log.warn( "Overwriting existing file..." );
+            // FIXME: is this really necessary?
             Thread.sleep( 500 );
         }
-
-        outputFile.createNewFile();
 
         if ( getPlatforms ) {
             Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms();

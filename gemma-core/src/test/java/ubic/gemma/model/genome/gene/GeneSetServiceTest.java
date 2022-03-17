@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -211,7 +212,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         session.update( gset );
-        gset.getMembers().size();
+        Hibernate.initialize( gset.getMembers() );
         session.close();
 
         gmember = GeneSetMember.Factory.newInstance();
@@ -230,7 +231,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         session.update( gset );
-        gset.getMembers().size();
+        Hibernate.initialize( gset.getMembers() );
         session.close();
 
         assertEquals( 2, gset.getMembers().size() );
@@ -244,7 +245,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         // make sure members collection is initialized
         session = sessionFactory.openSession();
         session.update( gset );
-        gset.getMembers().size();
+        Hibernate.initialize( gset.getMembers() );
         session.close();
 
         assertEquals( 1, gset.getMembers().size() );
