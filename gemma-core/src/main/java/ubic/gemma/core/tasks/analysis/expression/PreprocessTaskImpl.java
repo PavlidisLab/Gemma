@@ -39,14 +39,15 @@ public class PreprocessTaskImpl
     @Override
     public TaskResult execute() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
-        if ( taskCommand.diagnosticsOnly() ) {
-            preprocessorService.processDiagnostics( ee );
-            return new TaskResult( taskCommand, "Diagnostics updated" );
-        }
 
         try {
-            preprocessorService.process( ee );
-            return new TaskResult( taskCommand, "Preprocessing completed" );
+            if ( taskCommand.diagnosticsOnly() ) {
+                preprocessorService.processDiagnostics( ee );
+                return new TaskResult( taskCommand, "Diagnostics updated" );
+            } else {
+                preprocessorService.process( ee );
+                return new TaskResult( taskCommand, "Preprocessing completed" );
+            }
         } catch ( PreprocessingException e ) {
             return new TaskResult( taskCommand, "Failed: " + e.getMessage() );
         }
