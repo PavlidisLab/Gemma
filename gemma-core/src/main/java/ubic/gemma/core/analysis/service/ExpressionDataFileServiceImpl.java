@@ -397,7 +397,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             ExpressionDataFileServiceImpl.log
                     .info( "Creating new quantitation type expression data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
             Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
             Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
 
@@ -484,7 +484,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
             ExpressionDataFileServiceImpl.log.info( "Creating new quantitation type  JSON data file: " + f.getName() );
 
-            Collection<DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findRawAndProcessed( type );
 
             if ( vectors.size() == 0 ) {
                 ExpressionDataFileServiceImpl.log.warn( "No vectors for " + type );
@@ -1092,7 +1092,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
         return file;
     }
 
-    private void writeJson( File file, Collection<DesignElementDataVector> vectors ) throws IOException {
+    private void writeJson( File file, Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
         ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
@@ -1131,7 +1131,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
 
     }
 
-    private void writeVectors( File file, Collection<DesignElementDataVector> vectors,
+    private void writeVectors( File file, Collection<? extends DesignElementDataVector> vectors,
             Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         this.rawExpressionDataVectorService.thawRawAndProcessed( vectors );
 

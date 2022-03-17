@@ -328,7 +328,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
             ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
 
-            Collection<DesignElementDataVector> vs = new HashSet<>( vectors );
+            Collection<? extends DesignElementDataVector> vs = new HashSet<>( vectors );
             rawExpressionDataVectorService.thawRawAndProcessed( vs );
             ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();

@@ -36,56 +36,13 @@ import java.util.List;
 @Repository
 public interface DesignElementDataVectorDao<T extends DesignElementDataVector> extends BaseDao<T> {
 
-    void removeRawAndProcessed( Collection<DesignElementDataVector> vectors );
+    void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors );
 
-    Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
 
-    Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
+    Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
 
-    void thawRawAndProcessed( Collection<DesignElementDataVector> designElementDataVectors );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds from the
-     * passed in <code>entities</code> collection
-     *
-     * @param entities the collection of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector instances to
-     *                 create.
-     * @return the created instances.
-     */
-    @Override
-    List<T> create( Collection<T> entities );
-
-    /**
-     * @param designElementDataVector DE data vector
-     * @return Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
-     * persistent store.
-     */
-    @Override
-    T create( T designElementDataVector );
-
-    /**
-     * @param id id
-     * @return Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
-     */
-    @Override
-    T load( Long id );
-
-    /**
-     * Loads all entities of type {@link DesignElementDataVector}.
-     *
-     * @return the loaded entities.
-     */
-    @Override
-    List<T> loadAll();
-
-    void thaw( Collection<T> designElementDataVectors );
-
-    /**
-     * @param designElementDataVector Thaws associations of the given DesignElementDataVector
-     */
-    @SuppressWarnings("unused")
-    // Possible external use
-    void thaw( T designElementDataVector );
+    void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     Collection<T> find( BioAssayDimension bioAssayDimension );
 

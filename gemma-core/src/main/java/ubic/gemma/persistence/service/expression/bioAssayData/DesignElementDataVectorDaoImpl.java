@@ -48,24 +48,24 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    public final void removeRawAndProcessed( Collection<DesignElementDataVector> vectors ) {
+    public final void removeRawAndProcessed( Collection<? extends DesignElementDataVector> vectors ) {
         for ( DesignElementDataVector v : vectors ) {
             this.getSessionFactory().getCurrentSession().delete( v );
         }
     }
 
     @Override
-    public final Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
+    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
         return this.findRawAndProcessed( "bioAssayDimension", dim );
     }
 
     @Override
-    public final Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
+    public final Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
         return this.findRawAndProcessed( "quantitationType", qt );
     }
 
     @Override
-    public void thawRawAndProcessed( Collection<DesignElementDataVector> designElementDataVectors ) {
+    public void thawRawAndProcessed( Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         if ( designElementDataVectors == null )
             return;
 
@@ -173,9 +173,9 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
-    public void thaw( Collection<T> designElementDataVectors ) {
+    public void thaw( List<T> designElementDataVectors ) {
         //noinspection unchecked // Doesnt matter which implementation it is
-        this.thawRawAndProcessed( ( Collection<DesignElementDataVector> ) designElementDataVectors );
+        this.thawRawAndProcessed( designElementDataVectors );
     }
 
     @Override
@@ -270,7 +270,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         return dedv2genes;
     }
 
-    private Collection<DesignElementDataVector> findRawAndProcessed( String propName, Object value ) {
+    private Collection<? extends DesignElementDataVector> findRawAndProcessed( String propName, Object value ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession()
                 .createCriteria( DesignElementDataVector.class );
         criteria.add( Restrictions.eq( propName, value ) );

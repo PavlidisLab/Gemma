@@ -22,19 +22,19 @@ public abstract class DesignElementDataVectorServiceImpl<T extends DesignElement
 
     @Override
     @Transactional(readOnly = true)
-    public void thawRawAndProcessed( Collection<DesignElementDataVector> vectors ) {
+    public void thawRawAndProcessed( Collection<? extends DesignElementDataVector> vectors ) {
         this.designElementDataVectorDao.thawRawAndProcessed( vectors );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
+    public Collection<? extends DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim ) {
         return this.designElementDataVectorDao.findRawAndProcessed( dim );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
+    public Collection<? extends DesignElementDataVector> findRawAndProcessed( QuantitationType qt ) {
         return this.designElementDataVectorDao.findRawAndProcessed( qt );
     }
 
