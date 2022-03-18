@@ -104,13 +104,17 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
     @Override
     public void thaw( GeneProduct existing ) {
-        Hibernate.initialize( existing.getGene() );
-        Hibernate.initialize( existing.getGene().getTaxon() );
-        Hibernate.initialize( existing.getGene().getAliases() );
-        Hibernate.initialize( existing.getPhysicalLocation() );
-        Hibernate.initialize( existing.getPhysicalLocation().getChromosome() );
-        Hibernate.initialize( existing.getPhysicalLocation().getChromosome().getTaxon() );
         Hibernate.initialize( existing.getAccessions() );
+        if ( existing.getGene() != null ) {
+            Hibernate.initialize( existing.getGene() );
+            Hibernate.initialize( existing.getGene().getTaxon() );
+            Hibernate.initialize( existing.getGene().getAliases() );
+        }
+        if ( existing.getPhysicalLocation() != null ) {
+            Hibernate.initialize( existing.getPhysicalLocation() );
+            Hibernate.initialize( existing.getPhysicalLocation().getChromosome() );
+            Hibernate.initialize( existing.getPhysicalLocation().getChromosome().getTaxon() );
+        }
     }
 
     @Override
