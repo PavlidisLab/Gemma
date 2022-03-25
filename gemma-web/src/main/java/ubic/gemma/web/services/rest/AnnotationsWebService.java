@@ -23,8 +23,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
@@ -49,9 +49,7 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
@@ -107,8 +105,7 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
             @ApiResponse(responseCode = "400", description = "The search query is empty.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations( // Params:
-            @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
         if ( query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query empty." );
@@ -133,8 +130,7 @@ public class AnnotationsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sortArg, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sortArg // Optional, default +id
     ) {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 
@@ -166,9 +162,8 @@ public class AnnotationsWebService {
     }
 
     /**
-     * Same as this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse) but
-     * also filters by taxon.
-     * see this#datasets(ArrayStringArg, DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse).
+     * Same as {@link #searchDatasets(StringArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)} but also filters by
+     * taxon.
      */
     @GET
     @Path("/{taxon}/search/{query}/datasets")
@@ -180,8 +175,7 @@ public class AnnotationsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
         Collection<Long> foundIds = this.searchEEs( query.getValue() );
 

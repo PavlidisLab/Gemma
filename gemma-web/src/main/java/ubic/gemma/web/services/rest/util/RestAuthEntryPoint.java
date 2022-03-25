@@ -17,9 +17,11 @@ package ubic.gemma.web.services.rest.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.OpenAPI;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;
@@ -30,25 +32,32 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 /**
- * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication failure.
+ * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
  */
-@SecurityScheme(name = "restBasicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
+@Component
 public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConfigAware {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private ServletConfig servletConfig;
+
+    @Autowired
+    public RestAuthEntryPoint( ObjectMapper objectMapper ) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
             final AuthenticationException authException ) throws IOException {
+        OpenAPI openAPI = OpenApiUtils.getOpenApi( servletConfig );
+        String realm = openAPI.getInfo().getTitle();
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );
-        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) );
+        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, openAPI );
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
-        response.addHeader( "WWW-Authenticate", "xBasic realm=Gemma RESTful API" );
+        response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );
         response.sendError( HttpServletResponse.SC_UNAUTHORIZED, objectMapper.writeValueAsString( errorObject ) );
     }
 

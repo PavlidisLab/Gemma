@@ -50,9 +50,7 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -179,7 +177,6 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListArrayDesignValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
             @PathParam("dataset") DatasetArg<Object> datasetArg // Required
     ) {
