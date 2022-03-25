@@ -20,11 +20,9 @@ import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.util.Collection;
 
 /**
@@ -70,32 +68,23 @@ public class RootWebService {
     }
 
     /**
-     * Retrieves user information. This method is pre-authorized, which means that a session login (via basic http auth)
-     * is executed before this code is called. This method then checks that the given username match the
-     * user logged in the current session, and if so, creates a response with the logged in user information.
+     * Retrieve user information.
      *
-     * @param uName the username
+     * This method only works for authenticated users (via basic HTTP auth or their JSESSIONID cookie as specified by
+     * the {@link SecurityScheme} annotation on this class. If the current authenticated user is an administrator, any
+     * user can be retrieved with this endpoint, otherwise only the current user is accessible.
+     *
+     * @param username the username
      */
     @GET
-    @Path("/users/{uname}")
+    @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasRole('GROUP_USER')")
+    @PreAuthorize("(isAuthenticated() && principal.username == #username) || hasRole('GROUP_ADMIN')")
     @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
-    public ResponseDataObject<UserValueObject> loadUser( // Params:
-            @PathParam("uname") String uName, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    public ResponseDataObject<UserValueObject> getUser( // Params:
+            @PathParam("username") String username // Required
     ) {
-        return this.checkUser( uName, sr );
-    }
-
-    private ResponseDataObject<UserValueObject> checkUser( String uName, HttpServletResponse sr ) throws AccessDeniedException {
-        User user = userManager.getCurrentUser();
-
-        // Check the logged in user is the one we are retrieving the info for
-        if ( !user.getUserName().equals( uName ) ) {
-            Response.Status code = Response.Status.FORBIDDEN;
-            throw new AccessDeniedException( ERROR_MSG_USER_INFO_ACCESS );
-        }
+        User user = userManager.findByUserName( username );
 
         // Convert to a VO and check for admin
         UserValueObject uvo = new UserValueObject( user );

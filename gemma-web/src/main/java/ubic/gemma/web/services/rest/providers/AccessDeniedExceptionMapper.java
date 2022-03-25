@@ -20,14 +20,11 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDeniedException> {
 
-    private static Log log = LogFactory.getLog( AccessDeniedExceptionMapper.class.getName() );
-
     @Context
     private ServletConfig servletConfig;
 
     @Override
     public Response toResponse( AccessDeniedException e ) {
-        log.error( "Exception during authentication:", e );
         // for security reasons, we don't include the error object in the response entity
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() );
         return Response.status( Response.Status.FORBIDDEN )
