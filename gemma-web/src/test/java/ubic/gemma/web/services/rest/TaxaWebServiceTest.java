@@ -30,7 +30,8 @@ public class TaxaWebServiceTest extends BaseSpringWebTest {
     private Taxon taxon;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         taxon = new Taxon();
         taxon.setNcbiId( RandomUtils.nextInt() );
         taxon.setCommonName( "common_name_" + RandomUtils.nextInt() );
