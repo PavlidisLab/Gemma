@@ -20,3 +20,6 @@ indent_size=3
 
 [applicationContext-hibernate.xml]
 indent_style=tab
+
+[gemma-web/**/applicationContext-security.xml]
+indent_style=tab

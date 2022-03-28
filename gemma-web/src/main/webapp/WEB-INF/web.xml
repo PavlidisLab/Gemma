@@ -60,6 +60,12 @@
         <filter-class>com.opensymphony.sitemesh.webapp.SiteMeshFilter</filter-class>
     </filter>
 
+    <!-- CORS -->
+    <filter>
+        <filter-name>cors</filter-name>
+        <filter-class>ubic.gemma.web.services.rest.servlet.CorsFilter</filter-class>
+    </filter>
+
     <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
@@ -77,6 +83,11 @@
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
         <servlet-name>gemma</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
     <listener>
