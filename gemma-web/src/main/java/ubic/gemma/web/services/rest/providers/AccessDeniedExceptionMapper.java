@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.providers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;

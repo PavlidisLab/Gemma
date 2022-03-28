@@ -1,10 +1,11 @@
-package ubic.gemma.web.services.rest.swagger;
+package ubic.gemma.web.services.rest.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.swagger.v3.core.util.Json;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import ubic.gemma.web.services.rest.swagger.CustomModelConverter;
 
 /**
  * Configure the various beans injected in Swagger's components relating to Jackson's JSON serialization.

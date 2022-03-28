@@ -12,9 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.web.services.rest.util;
-
-import org.springframework.stereotype.Component;
+package ubic.gemma.web.services.rest.servlet;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
@@ -22,8 +20,9 @@ import java.io.IOException;
 
 /**
  * Filter for adding CORS headers to the RESTful API responses.
+ * <p>
+ * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
-@Component
 public class CorsFilter implements Filter {
 
     public CorsFilter() {

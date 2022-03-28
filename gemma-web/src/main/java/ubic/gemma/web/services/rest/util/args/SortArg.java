@@ -15,7 +15,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;

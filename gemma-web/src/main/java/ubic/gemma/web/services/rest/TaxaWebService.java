@@ -33,12 +33,17 @@ import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static ubic.gemma.web.services.rest.util.ArgUtils.requiredArg;
 

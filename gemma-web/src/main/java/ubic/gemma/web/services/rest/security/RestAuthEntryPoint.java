@@ -12,17 +12,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.web.services.rest.util;
+package ubic.gemma.web.services.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.ServletConfigAware;
+import ubic.gemma.web.services.rest.util.OpenApiUtils;
+import ubic.gemma.web.services.rest.util.ResponseErrorObject;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +34,8 @@ import java.io.IOException;
 
 /**
  * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
+ * <p>
+ * This is used in applicationContext-ws-rest.xml as part of Spring Security HTTP configuration.
  */
 @Component
 public class RestAuthEntryPoint implements AuthenticationEntryPoint, ServletConfigAware {

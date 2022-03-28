@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.providers;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;

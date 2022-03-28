@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 

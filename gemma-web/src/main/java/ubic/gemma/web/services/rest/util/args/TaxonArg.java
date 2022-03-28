@@ -11,7 +11,10 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
 import javax.ws.rs.NotFoundException;

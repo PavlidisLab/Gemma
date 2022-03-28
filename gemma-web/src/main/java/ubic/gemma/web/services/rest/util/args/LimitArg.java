@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.NonNull;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import javax.ws.rs.BadRequestException;
-
 /**
  * Argument used to represent a limit.
  */

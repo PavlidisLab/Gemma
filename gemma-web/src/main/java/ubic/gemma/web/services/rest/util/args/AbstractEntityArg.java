@@ -4,7 +4,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.MalformedArgException;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.ws.rs.BadRequestException;

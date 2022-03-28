@@ -2,13 +2,9 @@ package ubic.gemma.web.services.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
-
-import javax.ws.rs.NotFoundException;
 
 /**
  * Represents an API arguments that maps to a {@link FactorValue} by its ID or name.

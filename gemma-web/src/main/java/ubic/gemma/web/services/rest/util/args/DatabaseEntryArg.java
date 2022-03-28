@@ -6,8 +6,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.web.services.rest.util.MalformedArgException;
 
-import javax.ws.rs.NotFoundException;
-
 /**
  * Mutable argument type base class for DatabaseEntry API.
  *
