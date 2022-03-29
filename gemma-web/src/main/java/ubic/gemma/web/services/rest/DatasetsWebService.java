@@ -23,6 +23,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -244,8 +245,14 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context HttpServletRequest request ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
-        URI resultSetUri = ServletUriComponentsBuilder.fromServletMapping( request )
-                .path( "/resultSets" )
+        UriComponentsBuilder uriComponents;
+        // this is only for testing because Jersey inmemory container lacks a servlet context
+        if ( request != null ) {
+            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request );
+        } else {
+            uriComponents = UriComponentsBuilder.newInstance();
+        }
+        URI resultSetUri = uriComponents.path( "/resultSets" )
                 .queryParam( "datasets", ee.getId() )
                 .build().toUri();
         return Response.status( Response.Status.FOUND )
