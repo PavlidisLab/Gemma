@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.27.10</version>
+	<version>1.27.11</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -18,6 +18,10 @@
 		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
+	<scm>
+		<connection>scm:git:https://github.com/PavlidisLab/Gemma.git</connection>
+		<url>https://github.com/PavlidisLab/Gemma</url>
+	</scm>
 	<issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/PavlidisLab/Gemma/issues</url>
@@ -344,9 +348,17 @@
 			<version>1.9.4</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
+		<!-- We don't use this directly thus the runtime scope, but some of our dependencies (hibernate-core, velocity)
+		indirectly import a vulnerable version of this package (see CVE-2015-6420 and CVE-2017-15708) -->
+		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>3.2.2</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -371,7 +383,7 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
-		<!-- XML and XSLT -->
+		<!-- XML, XSLT and XPath -->
 		<dependency>
 			<groupId>xml-apis</groupId>
 			<artifactId>xml-apis</artifactId>
@@ -383,6 +395,7 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.10.0</version>
 		</dependency>
+		<!-- This is also used at runtime by taglibs-standard-impl in gemma-web -->
 		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
@@ -470,6 +483,26 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>enforce-maven</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>[3.1.1,)</version>
+								</requireMavenVersion>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
@@ -637,7 +670,7 @@
 		<tomcat.version>8.5.72</tomcat.version>
 		<mysql.version>8.0.28</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
-		<log4j2.version>2.17.1</log4j2.version>
+		<log4j2.version>2.17.2</log4j2.version>
 		<slf4j.version>1.7.32</slf4j.version>
 		<slack.version>1.18.0</slack.version>
 	</properties>

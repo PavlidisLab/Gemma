@@ -118,8 +118,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( Collection<T> entities ) {
+        int i = 0;
         for ( T e : entities ) {
             this.remove( e );
+            if ( ++i % BATCH_SIZE == 0 ) {
+                this.getSessionFactory().getCurrentSession().flush();
+                this.getSessionFactory().getCurrentSession().clear();
+            }
         }
     }
 
@@ -133,6 +138,11 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public void remove( T entity ) {
         if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().delete( entity );
+    }
+
+    @Override
+    public void removeAll() {
+        this.remove( this.loadAll() );
     }
 
     @Override

@@ -57,8 +57,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
         Option expOption = Option.builder( "e" ).required().hasArg().argName( "Expression experiment name" )
                 .desc(
-                        "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
-                                + "and if this option is omitted, the tool will be applied to all expression experiments." )
+                        "Expression experiment short name" )
                 .longOpt( "experiment" ).build();
 
         options.addOption( expOption );

@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -76,6 +77,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     @Override
+    @Transactional
     public ArrayDesign addElements( ArrayDesign targetPlatform ) {
 
         if ( !targetPlatform.getCompositeSequences().isEmpty() ) {
@@ -125,6 +127,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     @Override
+    @Transactional
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform ) {
         return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
@@ -140,6 +143,7 @@ public class GeoServiceImpl extends AbstractGeoService {
      * </ol>
      */
     @Override
+    @Transactional
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 

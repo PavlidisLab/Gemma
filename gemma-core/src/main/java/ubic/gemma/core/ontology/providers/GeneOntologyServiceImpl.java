@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jena.larq.IndexLARQ;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.AnnotationProperty;
@@ -132,6 +133,9 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private final Collection<SearchIndex> indices = new HashSet<>();
 
     private OntModel model;
+
+    @Autowired
+    private TaskExecutor taskExecutor;
 
     /**
      * Cache of go term -> parent terms
@@ -816,7 +820,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( GeneOntologyServiceImpl.running.get() )
             return;
 
-        Thread loadThread = new Thread( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
             public void run() {
                 GeneOntologyServiceImpl.running.set( true );
@@ -844,8 +848,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             }
 
         } );
-
-        loadThread.start();
 
     }
 

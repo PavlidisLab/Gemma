@@ -63,7 +63,7 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
             }
             return ( Unit ) result;
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 }

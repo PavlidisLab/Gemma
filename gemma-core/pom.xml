@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.27.10</version>
+        <version>1.27.11</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -14,22 +14,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.7</version>
-                <configuration>
-                    <target>
-                        <taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
-                            <classpath>
-                                <path refid="maven.dependency.classpath"/>
-                            </classpath>
-                        </taskdef>
-                        <mkdir dir="target/schema"/>
-                        <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-                                      output="${project.build.directory}/schema/gemma-ddl.sql"
-                                      config="${project.basedir}/src/main/resources/hibernate.cfg.xml">
-                            <fileset dir="src/main/resources" includes="**/*.hbm.xml"/>
-                        </schemaexport>
-                    </target>
-                </configuration>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <id>version-file</id>
@@ -46,12 +31,31 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>schema-export</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
+                        <configuration>
+                            <target>
+                                <taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask"/>
+                                <mkdir dir="${project.build.directory}/schema"/>
+                                <schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+                                         output="${project.build.directory}/schema/gemma-ddl.sql"
+                                         config="${project.basedir}/src/main/resources/hibernate.cfg.xml">
+                                    <fileset dir="${project.basedir}/src/main/resources" includes="**/*.hbm.xml"/>
+                                </schemaexport>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-core</artifactId>
+                        <version>${hibernate.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -120,7 +124,7 @@
                                     <pluginExecutionFilter>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-antrun-plugin</artifactId>
-                                        <versionRange>[1.7,)</versionRange>
+                                        <versionRange>[3.0.0,)</versionRange>
                                         <goals>
                                             <goal>run</goal>
                                         </goals>
@@ -150,7 +154,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
-                        <version>3.2.0</version>
+                        <version>3.1.2</version>
                         <executions>
                             <execution>
                                 <phase>process-resources</phase>
@@ -163,14 +167,6 @@
                                             <groupId>pavlab</groupId>
                                             <artifactId>gemma-gsec</artifactId>
                                             <version>${gsec.version}</version>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/schema</outputDirectory>
-                                            <includes>**/*.sql</includes>
-                                        </artifactItem>
-                                        <artifactItem>
-                                            <groupId>gemma</groupId>
-                                            <artifactId>gemma-model</artifactId>
-                                            <version>1.10.1</version>
                                             <overWrite>true</overWrite>
                                             <outputDirectory>${project.build.directory}/schema</outputDirectory>
                                             <includes>**/*.sql</includes>
@@ -264,7 +260,7 @@
             <version>1.7</version>
         </dependency>
 
-        <!-- Lucene (version is synced with baseCode -->
+        <!-- Lucene (version is synced with baseCode) -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
@@ -276,7 +272,7 @@
             <version>${lucene.version}</version>
         </dependency>
 
-        <!-- Jena -->
+        <!-- Jena (version is synced with baseCode) -->
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
@@ -375,7 +371,7 @@
             <version>1.7.4</version>
         </dependency>
         <!-- bit array -->
-        <!-- it can't be updated though because the binary format has changed and we store those in the database -->
+        <!-- it can't be updated though because the binary format has changed, and we store those in the database -->
         <dependency>
             <groupId>com.googlecode.javaewah</groupId>
             <artifactId>JavaEWAH</artifactId>

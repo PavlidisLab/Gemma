@@ -73,7 +73,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 
@@ -86,7 +86,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 
@@ -198,7 +198,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
             AbstractDao.log.debug( "Found: " + result );
             return ( GeneProduct ) result;
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
     }
 

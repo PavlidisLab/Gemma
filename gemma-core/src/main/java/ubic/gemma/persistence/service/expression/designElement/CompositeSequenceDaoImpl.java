@@ -155,7 +155,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             compositeSequences = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
         return compositeSequences;
     }
@@ -173,7 +173,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             compositeSequences = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
         return compositeSequences;
     }

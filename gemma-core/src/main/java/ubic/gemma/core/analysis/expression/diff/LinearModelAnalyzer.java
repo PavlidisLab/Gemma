@@ -20,14 +20,17 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.TransformerUtils;
+import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -139,6 +142,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return reorderedDim;
     }
+
+    @Autowired
+    private AsyncTaskExecutor taskExecutor;
 
     /**
      * Determine if any factor should be treated as the intercept term.
@@ -1432,9 +1438,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
             final Map<String, LinearModelSummary> rawResults, final DoubleMatrix1D librarySize,
             final DifferentialExpressionAnalysisConfig config ) {
-        ExecutorService service = Executors.newSingleThreadExecutor();
 
-        Future<?> f = service.submit( new Runnable() {
+        Future<?> f = taskExecutor.submit( new Runnable() {
             @Override
             public void run() {
                 StopWatch timer = new StopWatch();
@@ -1476,7 +1481,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
         } );
 
-        service.shutdown();
         return f;
     }
 }

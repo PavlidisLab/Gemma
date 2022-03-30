@@ -92,6 +92,11 @@ public interface BaseService<O extends Identifiable> {
     void remove( O entity );
 
     /**
+     * Remove all entities from the persistent storage.
+     */
+    void removeAll();
+
+    /**
      * Updates all entities in the given collection in the persistent storage.
      *
      * @param entities the entities to be updated.

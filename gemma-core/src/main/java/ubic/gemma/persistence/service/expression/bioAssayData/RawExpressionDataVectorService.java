@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
@@ -28,17 +29,26 @@ import java.util.Collection;
  */
 public interface RawExpressionDataVectorService extends DesignElementDataVectorService<RawExpressionDataVector> {
 
-  
     @Override
     @Secured({ "GROUP_ADMIN" })
     RawExpressionDataVector load( Long id );
 
+    /**
+     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
+     * directly. The relationship is actually managed by Hibernate.
+     */
     @Override
     @Secured({ "GROUP_ADMIN" })
+    @Deprecated
     void remove( Collection<RawExpressionDataVector> vectors );
 
+    /**
+     * @deprecated never use this method, instead clear {@link ExpressionExperiment#getProcessedExpressionDataVectors()}
+     * directly. The relationship is actually managed by Hibernate.
+     */
     @Override
     @Secured({ "GROUP_ADMIN" })
+    @Deprecated
     void remove( RawExpressionDataVector designElementDataVector );
 
     @Override

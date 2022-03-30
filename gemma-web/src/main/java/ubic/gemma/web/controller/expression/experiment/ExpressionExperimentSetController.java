@@ -18,8 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,12 +179,11 @@ public class ExpressionExperimentSetController extends BaseController {
                 .getExperimentValueObjectsInSet( groupId );
 
         if ( limit != null && limit > 0 && limit < experimentInSet.size() ) {
-            //noinspection unchecked
-            return CollectionUtils.select( experimentInSet, new Predicate() {
+            return CollectionUtils.select( experimentInSet, new Predicate<ExpressionExperimentDetailsValueObject>() {
                 int i = 0;
 
                 @Override
-                public boolean evaluate( Object object ) {
+                public boolean evaluate( ExpressionExperimentDetailsValueObject object ) {
                     return i++ < limit;
                 }
             } );

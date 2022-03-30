@@ -57,7 +57,7 @@
     <!-- Page decoration -->
     <filter>
         <filter-name>sitemesh</filter-name>
-        <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
+        <filter-class>com.opensymphony.sitemesh.webapp.SiteMeshFilter</filter-class>
     </filter>
 
     <!-- Spring Security -->
@@ -91,14 +91,13 @@
     <listener>
         <listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
     </listener>
-    <listener><!-- this may not be necessary, see http://ehcache.org/documentation/user-guide/shutdown -->
-        <listener-class>net.sf.ehcache.constructs.web.ShutdownListener</listener-class>
-    </listener>
 
     <!-- Dispatch Servlet Configuration -->
     <servlet>
         <servlet-name>gemma</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <!-- this is always after the JAWR servlets are loaded -->
+        <load-on-startup>2</load-on-startup>
     </servlet>
 
     <!-- Defines the Spring-WS MessageDispatcherServlet -->
@@ -110,6 +109,7 @@
             <param-name>transformWsdlLocations</param-name>
             <param-value>false</param-value>
         </init-param>
+        <load-on-startup>0</load-on-startup>
     </servlet>
 
     <servlet>
@@ -124,6 +124,7 @@
             <param-name>openApi.configuration.location</param-name>
             <param-value>/WEB-INF/classes/openapi-configuration.yaml</param-value>
         </init-param>
+        <load-on-startup>0</load-on-startup>
     </servlet>
 
     <servlet>

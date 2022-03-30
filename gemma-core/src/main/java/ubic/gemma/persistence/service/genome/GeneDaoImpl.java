@@ -242,7 +242,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             compSeq = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            throw getHibernateTemplate().convertHibernateAccessException( ex );
         }
         return compSeq;
     }
@@ -295,7 +295,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
                         + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        List r = this.getSession().createQuery( queryString ).setParameter( "id", id ).list();
+        List r = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
         return ( ( Long ) r.iterator().next() ).intValue();
 
     }
