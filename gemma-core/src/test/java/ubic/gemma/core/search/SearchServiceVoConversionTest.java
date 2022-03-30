@@ -216,7 +216,7 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
 
     @After
     public void tearDown() {
-        reset( arrayDesignService, expressionExperimentService );
+        reset( arrayDesignService, expressionExperimentService, geneSetService );
     }
 
     @Test
