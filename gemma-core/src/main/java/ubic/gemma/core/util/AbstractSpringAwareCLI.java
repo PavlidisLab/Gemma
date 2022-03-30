@@ -301,6 +301,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         // prompt the user for his password
-        return String.valueOf( System.console().readPassword( "Password: " ) );
+        if ( System.console() != null ) {
+            return String.valueOf( System.console().readPassword( "Password: " ) );
+        } else {
+            throw new IllegalArgumentException( "Could not read the password from the console. Please provide either " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variables." );
+        }
     }
 }
