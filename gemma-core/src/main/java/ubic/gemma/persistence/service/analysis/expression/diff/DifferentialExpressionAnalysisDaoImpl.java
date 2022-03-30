@@ -388,15 +388,22 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
          */
         //noinspection unchecked
         Collection<DifferentialExpressionAnalysis> hits = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from DifferentialExpressionAnalysis a join fetch a.experimentAnalyzed e join"
-                        + " fetch a.resultSets rs join fetch rs.hitListSizes where e.id in (:eeids)" )
-                .setParameterList( "eeids", expressionExperimentIds ).setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 ).list();
+                        "select distinct a from DifferentialExpressionAnalysis a "
+                                + "join fetch a.experimentAnalyzed e "
+                                + "where e.id in (:eeIds)" )
+                .setParameterList( "eeIds", expressionExperimentIds )
+                .setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 )
+                .list();
 
-        /*
-         * FIXME the above query yields a warning
-         * "firstResult/maxResults specified with collection fetch; applying in memory!"
-         */
+        // initialize result sets and hit list sizes
+        // this is necessary because the DEA VO constructor will ignore uninitialized associations
+        for ( DifferentialExpressionAnalysis hit : hits ) {
+            Hibernate.initialize( hit.getResultSets() );
+            for ( ExpressionAnalysisResultSet rs : hit.getResultSets() ) {
+                Hibernate.initialize( rs.getHitListSizes() );
+            }
+        }
 
         Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
         List<Object[]> fvs;
