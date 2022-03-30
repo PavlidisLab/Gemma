@@ -179,7 +179,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         return Responder.respond( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ) );
     }
@@ -198,7 +198,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("factorValues") FactorValueArrayArg factorValues
     ) {
         return Responder.respond( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ) );
@@ -218,7 +218,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
@@ -274,7 +274,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         return Responder.respond( datasetArg.getAnnotations( expressionExperimentService ) );
     }
@@ -296,7 +296,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetExpression( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg, // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") BoolArg filterData // Optional, default false
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
@@ -325,7 +325,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDesignFile( ee );
@@ -343,7 +343,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
     public ResponseDataObject<Boolean> getDatasetHasBatch( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return Responder.respond( this.auditEventService.hasEvent( ee, BatchInformationFetchingEvent.class ) );
@@ -363,7 +363,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
-            @PathParam("dataset") DatasetArg<Object> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
         return Responder.respond( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() )

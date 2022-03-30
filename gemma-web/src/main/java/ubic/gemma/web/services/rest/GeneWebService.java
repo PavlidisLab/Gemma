@@ -113,7 +113,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the evidence for a given gene", hidden = true)
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return Responder
                 .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
@@ -130,7 +130,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the physical locations of a given gene")
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return Responder.respond( geneArg.getGeneLocation( geneService ) );
     }
@@ -146,7 +146,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the probes associated to a genes")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg, // Required
+            @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
     ) {
@@ -166,7 +166,7 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the GO terms associated to a gene")
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return Responder.respond( geneArg.getGoTerms( geneService, geneOntologyService ) );
     }
@@ -184,8 +184,8 @@ public class GeneWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the coexpression of two given genes")
     public ResponseDataObject<List<CoexpressionValueObjectExt>> getGeneGeneCoexpression( // Params:
-            @PathParam("gene") final GeneArg<Object> geneArg, // Required
-            @QueryParam("with") final GeneArg<Object> with, // Required
+            @PathParam("gene") final GeneArg<?> geneArg, // Required
+            @QueryParam("with") final GeneArg<?> with, // Required
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency // Optional, default 1
     ) {

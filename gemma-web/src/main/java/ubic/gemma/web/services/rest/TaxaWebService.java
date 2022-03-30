@@ -134,7 +134,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve genes overlapping a given region in a taxon")
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesOverlappingChromosome( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("chromosome") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
             @QueryParam("start") LongArg start, // Required
@@ -158,8 +158,8 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all genes in a given taxon")
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenes( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return Responder.respond( geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg ) );
     }
@@ -177,8 +177,8 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve evidences for a given gene and taxon", hidden = true)
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGenesEvidenceInTaxon( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
         return Responder
@@ -198,8 +198,8 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve physical locations for a given gene and taxon")
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocationsInTaxon( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
-            @PathParam("gene") GeneArg<Object> geneArg // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
         return Responder.respond( geneArg.getGeneLocation( geneService, taxon ) );
@@ -247,7 +247,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the phenotypes for a given taxon", hidden = true)
     public ResponseDataObject<Collection<?>> getTaxonPhenotypes( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
             @QueryParam("tree") @DefaultValue("false") BoolArg tree // Optional, default false
     ) {
@@ -273,7 +273,7 @@ public class TaxaWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the candidate gens for a given set of phenotypes and taxon", hidden = true)
     public ResponseDataObject<Set<GeneEvidenceValueObject>> findCandidateGenesInTaxon( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("phenotypes") StringArrayArg phenotypes, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly // Optional, default false
     ) {

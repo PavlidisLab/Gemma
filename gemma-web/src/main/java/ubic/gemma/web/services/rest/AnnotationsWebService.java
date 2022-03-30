@@ -170,7 +170,7 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<Object> taxonArg, // Required
+            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

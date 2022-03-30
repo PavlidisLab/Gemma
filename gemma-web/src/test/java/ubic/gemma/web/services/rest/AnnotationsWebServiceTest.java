@@ -107,7 +107,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         when( expressionExperimentService.loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC ) ), eq( 0 ), eq( 20 ) ) )
                 .thenReturn( Slice.fromList( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) ) );
         annotationsWebService.searchTaxonDatasets(
-                ( TaxonArg<Object> ) TaxonArg.valueOf( "human" ),
+                TaxonArg.valueOf( "human" ),
                 StringArrayArg.valueOf( "bipolar" ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
