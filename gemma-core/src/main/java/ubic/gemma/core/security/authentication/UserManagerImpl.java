@@ -21,11 +21,6 @@ package ubic.gemma.core.security.authentication;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserExistsException;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-import gemma.gsec.model.UserGroup;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -48,8 +43,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
@@ -115,10 +114,10 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public Collection<String> findAllUsers() {
-        Collection<User> users = userService.loadAll();
+        Collection<gemma.gsec.model.User> users = userService.loadAll();
 
         List<String> result = new ArrayList<>();
-        for ( User u : users ) {
+        for ( gemma.gsec.model.User u : users ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -157,9 +156,9 @@ public class UserManagerImpl implements UserManager {
         }
 
         User u = this.loadUser( userName );
-        Collection<UserGroup> groups = userService.findGroupsForUser( u );
+        Collection<gemma.gsec.model.UserGroup> groups = userService.findGroupsForUser( u );
 
-        for ( UserGroup g : groups ) {
+        for ( gemma.gsec.model.UserGroup g : groups ) {
             result.add( g.getName() );
         }
 
@@ -204,10 +203,11 @@ public class UserManagerImpl implements UserManager {
         return userService.groupExists( groupName );
     }
 
-    @SuppressWarnings("unchecked") // Weird construct in gsec
     @Override
-    public Collection<gemma.gsec.model.User> loadAll() {
-        return new ArrayList<>( this.userService.loadAll() );
+    public Collection<User> loadAll() {
+        return this.userService.loadAll().stream()
+                .map( u -> ( User ) u )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -364,10 +364,10 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public List<String> findAllGroups() {
-        Collection<UserGroup> groups = userService.listAvailableGroups();
+        Collection<gemma.gsec.model.UserGroup> groups = userService.listAvailableGroups();
 
         List<String> result = new ArrayList<>();
-        for ( UserGroup group : groups ) {
+        for ( gemma.gsec.model.UserGroup group : groups ) {
             result.add( group.getName() );
         }
         return result;
@@ -466,7 +466,7 @@ public class UserManagerImpl implements UserManager {
             }
         }
 
-        GroupAuthority auth = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
+        GroupAuthority auth = GroupAuthority.Factory.newInstance();
         auth.setAuthority( authority.getAuthority() );
 
         g.getAuthorities().add( auth );
@@ -551,10 +551,10 @@ public class UserManagerImpl implements UserManager {
     }
 
     private List<GrantedAuthority> loadGroupAuthorities( User user ) {
-        Collection<GroupAuthority> authorities = userService.loadGroupAuthorities( user );
+        Collection<gemma.gsec.model.GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
         List<GrantedAuthority> result = new ArrayList<>();
-        for ( GroupAuthority ga : authorities ) {
+        for ( gemma.gsec.model.GroupAuthority ga : authorities ) {
             String roleName = this.getRolePrefix() + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );
         }

@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest;
 
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -12,6 +10,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;

@@ -21,7 +21,6 @@ package ubic.gemma.core.security.authorization.acl;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -32,6 +31,7 @@ import org.springframework.security.acls.model.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;

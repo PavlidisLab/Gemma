@@ -20,12 +20,12 @@ package ubic.gemma.web.controller.security;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;

@@ -1,7 +1,6 @@
 package ubic.gemma.core.util.test;
 
 import gemma.gsec.AuthorityConstants;
-import gemma.gsec.authentication.UserManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.*;
@@ -10,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.security.authentication.UserManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.authentication.LoginDetailsValueObject;
 import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import gemma.gsec.util.JSONUtil;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +28,7 @@ import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;

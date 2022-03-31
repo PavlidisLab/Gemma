@@ -19,7 +19,6 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import gemma.gsec.model.User;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
