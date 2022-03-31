@@ -14,7 +14,6 @@ import java.util.Collection;
 public interface UserService extends gemma.gsec.authentication.UserService {
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     User findByUserName( String s );
 
     @Override
@@ -28,4 +27,8 @@ public interface UserService extends gemma.gsec.authentication.UserService {
     @Override
     @Secured({ "GROUP_ADMIN" })
     User create( gemma.gsec.model.User user ) throws UserExistsException;
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    UserGroup create( gemma.gsec.model.UserGroup userGroup );
 }
