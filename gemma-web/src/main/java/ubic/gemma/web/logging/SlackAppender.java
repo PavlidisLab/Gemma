@@ -1,7 +1,6 @@
 package ubic.gemma.web.logging;
 
 import com.slack.api.Slack;
-import com.slack.api.SlackConfig;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
@@ -12,7 +11,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 
 public class SlackAppender extends AppenderSkeleton implements Appender {
 
@@ -37,7 +36,7 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
 
             // attach a stacktrace if available
             if ( loggingEvent.getThrowableInformation() != null )
-                request.attachments( Arrays.asList( stacktraceAsAttachment( loggingEvent ) ) );
+                request.attachments( Collections.singletonList( stacktraceAsAttachment( loggingEvent ) ) );
 
             slackInstance.methods( token ).chatPostMessage( request.build() );
         } catch ( IOException | SlackApiException e ) {
@@ -67,8 +66,8 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
     private static Attachment stacktraceAsAttachment( LoggingEvent loggingEvent ) {
         return Attachment.builder()
                 .title( ExceptionUtils.getMessage( loggingEvent.getThrowableInformation().getThrowable() ) )
-                .text( ExceptionUtils.getStackTrace( loggingEvent.getThrowableInformation().getThrowable() ) )
-                .fallback( "Error stacktrace" )
+                .text( "```" + ExceptionUtils.getStackTrace( loggingEvent.getThrowableInformation().getThrowable() ) + "```" )
+                .fallback( "This attachment normally contains an error stacktrace." )
                 .build();
     }
 }
