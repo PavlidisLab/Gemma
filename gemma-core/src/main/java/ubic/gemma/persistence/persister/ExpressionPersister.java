@@ -374,16 +374,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
 
-        if ( factorValue.getCharacteristics().size() > 0 ) {
-            if ( factorValue.getMeasurement() != null ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
-        } else if ( factorValue.getValue() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getCharacteristics().size() > 0 ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
+        if ( factorValue.getCharacteristics().size() > 0 && factorValue.getMeasurement() != null ) {
+            throw new IllegalStateException(
+                    "FactorValue can only have one of ontology entry or measurement." );
         }
 
         // measurement will cascade, but not unit.
