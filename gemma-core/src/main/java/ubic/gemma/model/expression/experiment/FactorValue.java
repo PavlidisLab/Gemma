@@ -38,6 +38,10 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
      */
     private static final long serialVersionUID = -3783172994360698631L;
     private ExpressionExperiment securityOwner = null;
+    /**
+     * Use {@link #characteristics} instead.
+     */
+    @Deprecated
     private String value;
     private Boolean isBaseline;
     private Long id;
@@ -175,10 +179,18 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.measurement = measurement;
     }
 
+    /**
+     * @deprecated use {@link #getCharacteristics()} instead.
+     */
+    @Deprecated
     public String getValue() {
         return this.value;
     }
 
+    /**
+     * @deprecated use {@link #setCharacteristics(Collection)} ()} instead.
+     */
+    @Deprecated
     public void setValue( String value ) {
         this.value = value;
     }
