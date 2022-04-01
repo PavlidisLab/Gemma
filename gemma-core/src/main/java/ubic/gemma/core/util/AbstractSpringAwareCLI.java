@@ -289,7 +289,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private String getPassword( CommandLine commandLine ) {
         if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
-            log.warn( "Using the " + PASSWORD_OPTION + " CLI option is highly discouraged. Consider instead passing  a " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variable." );
             return commandLine.getOptionValue( PASSWORD_OPTION );
         }
 
