@@ -53,7 +53,15 @@ import java.util.List;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    /**
+     * @deprecated Use {@link #USERNAME_ENV} instead.
+     */
+    @Deprecated
     private static final String USERNAME_OPTION = "u";
+    /**
+     * @deprecated Use {@link #PASSWORD_ENV} or {@link #PASSWORD_CMD_ENV} instead.
+     */
+    @Deprecated
     private static final String PASSWORD_OPTION = "p";
 
     /**
@@ -89,10 +97,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void buildStandardOptions( Options options ) {
         super.buildStandardOptions( options );
         options.addOption( Option.builder( USERNAME_OPTION ).argName( "user" ).longOpt( "user" ).hasArg()
-                .desc( "User name for accessing the system (optional for some tools)" )
+                .desc( "User name for accessing the system (optional for some tools, deprecated: use $GEMMA_USER instead)" )
                 .build() );
         options.addOption( Option.builder( PASSWORD_OPTION ).argName( "passwd" ).longOpt( "password" ).hasArg()
-                .desc( "Password for accessing the system (optional for some tools)" )
+                .desc( "Password for accessing the system (optional for some tools, deprecated: use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead)" )
                 .build() );
     }
 
@@ -233,6 +241,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
          * Allow security settings (authorization etc) in a given context to be passed into spawned threads
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
+
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            log.warn( "Usage of the -" + USERNAME_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_USERNAME instead." );
+        }
+
+        if ( commandLine.hasOption( PASSWORD_OPTION ) ) {
+            log.warn( "Usage of the -" + PASSWORD_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_PASSWORD or $GEMMA_PASSWORD_CMD instead." );
+        }
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
         if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {
