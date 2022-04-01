@@ -374,16 +374,23 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         factorValue.setExperimentalFactor( this.persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
 
+        // validate categorical v.s. continuous factor values
+        FactorType factorType = factorValue.getExperimentalFactor().getType();
+        if ( factorType.equals( FactorType.CONTINUOUS ) && factorValue.getMeasurement() == null ) {
+            throw new IllegalStateException( "Continuous factor value must have a measurement." );
+        } else if ( factorType.equals( FactorType.CATEGORICAL ) && factorValue.getCharacteristics().isEmpty() ) {
+            throw new IllegalStateException( "Categorical factor value must have at least one characteristic." );
+        }
+
+        // sanity check
         if ( factorValue.getCharacteristics().size() > 0 && factorValue.getMeasurement() != null ) {
-            throw new IllegalStateException(
-                    "FactorValue can only have one of ontology entry or measurement." );
+            throw new IllegalStateException( "FactorValue can only have one of ontology entry or measurement." );
         }
 
         // measurement will cascade, but not unit.
         if ( factorValue.getMeasurement() != null && factorValue.getMeasurement().getUnit() != null ) {
             factorValue.getMeasurement().setUnit( this.persistUnit( factorValue.getMeasurement().getUnit() ) );
         }
-
     }
 
     private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vector,
