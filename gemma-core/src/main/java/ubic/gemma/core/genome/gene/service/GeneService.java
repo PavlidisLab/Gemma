@@ -19,6 +19,7 @@
 package ubic.gemma.core.genome.gene.service;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -205,5 +206,5 @@ public interface GeneService extends FilteringVoEnabledService<Gene, GeneValueOb
 
     Gene thawLiter( Gene gene );
 
-    Collection<GeneValueObject> searchGenes( String query, Long taxonId );
+    Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException;
 }

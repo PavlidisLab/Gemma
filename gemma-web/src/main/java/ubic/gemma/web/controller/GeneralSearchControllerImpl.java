@@ -33,6 +33,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
@@ -46,7 +47,6 @@ import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -120,7 +120,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .withDoHighlighting( true );
 
         searchTimer.start();
-        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( searchSettings );
+        Map<Class<?>, List<SearchResult<?>>> searchResults;
+        try {
+            searchResults = searchService.search( searchSettings );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
         searchTimer.stop();
 
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.
@@ -128,7 +133,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         List<SearchResult> finalResults = new ArrayList<>();
         if ( searchResults != null ) {
             for ( Class<?> clazz : searchResults.keySet() ) {
-                List<SearchResult> results = searchResults.get( clazz );
+                List<SearchResult<?>> results = searchResults.get( clazz );
 
                 if ( results.size() == 0 )
                     continue;
@@ -141,7 +146,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
-                Collections.sort( results );
+                results.sort( SearchResult.getComparator() );
                 this.fillValueObjects( clazz, results, searchSettings );
                 finalResults.addAll( results );
             }
@@ -291,7 +296,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * @param settings
      */
     @SuppressWarnings("unchecked")
-    private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
+    private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
         StopWatch timer = StopWatch.createStarted();
         Collection<?> vos;
 
@@ -356,7 +361,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             // bug 3475: if there are search results but they are all removed because they are troubled, then results
             // has ExpressionExperiments in
             // it causing front end errors, if vos is empty make sure to get rid of all search results
-            for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
+            for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
                 it.next();
                 it.remove();
             }
@@ -367,7 +372,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         // retained objects...
         Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
 
-        for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
+        for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();
             if ( !idMap.containsKey( sr.getResultId() ) ) {
                 it.remove();

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -106,7 +107,7 @@ public class AnnotationController {
      * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
      *                important use case.
      */
-    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
+    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) throws SearchException {
         if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<>();
         }

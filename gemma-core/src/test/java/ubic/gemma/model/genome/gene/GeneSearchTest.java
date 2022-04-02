@@ -22,6 +22,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
@@ -41,7 +42,7 @@ public class GeneSearchTest extends BaseSpringContextTest {
     private GeneService geneService = null;
 
     @Test
-    public void testSearchGenes() {
+    public void testSearchGenes() throws SearchException {
         Gene gene = Gene.Factory.newInstance();
 
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );

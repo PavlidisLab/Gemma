@@ -21,10 +21,20 @@ package ubic.gemma.core.search;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ReflectionUtil;
 
+import java.util.Comparator;
+
 /**
  * @author paul
  */
 public class SearchResult<T> implements Comparable<SearchResult<T>> {
+
+    /**
+     * Comparator to be used in conjunction with {@link java.util.List#sort} when dealing with collections of mixed
+     * search results.
+     */
+    public static Comparator<SearchResult<?>> getComparator() {
+        return ( a, b ) -> -a.score.compareTo( b.score );
+    }
 
     private Class<T> resultClass;
 
@@ -68,7 +78,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
 
     @Override
     public int compareTo( SearchResult<T> o ) {
-        return -this.score.compareTo( o.getScore() );
+        return -this.score.compareTo( o.score );
     }
 
     public String getHighlightedText() {

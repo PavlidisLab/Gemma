@@ -19,6 +19,7 @@
 package ubic.gemma.core.annotation.reference;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -123,9 +124,9 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
-    List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
+    List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException;
 
-    List<BibliographicReferenceValueObject> search( String query );
+    List<BibliographicReferenceValueObject> search( String query ) throws SearchException;
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 

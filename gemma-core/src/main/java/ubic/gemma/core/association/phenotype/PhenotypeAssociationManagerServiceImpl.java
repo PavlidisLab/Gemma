@@ -38,6 +38,7 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
@@ -407,7 +408,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
+    public List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) throws SearchException {
 
         if ( query == null || query.length() == 0 ) {
             throw new IllegalArgumentException( "No search query provided" );
@@ -421,7 +422,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
-        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<?>> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

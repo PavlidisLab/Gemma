@@ -29,6 +29,7 @@ import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -76,7 +77,12 @@ public class CompositeSequenceController extends BaseController {
             mav.getModel().put( "message", "No search critera provided" );
             // return showAll( request, response );
         } else {
-            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = search( filter, arid );
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = null;
+            try {
+                compositeSequenceSummary = search( filter, arid );
+            } catch ( SearchException e ) {
+                throw new IllegalArgumentException( "Invalid search settings.", e );
+            }
 
             if ( ( compositeSequenceSummary == null ) || ( compositeSequenceSummary.size() == 0 ) ) {
                 mav.getModel().put( "message", "Your search yielded no results" );
@@ -138,7 +144,7 @@ public class CompositeSequenceController extends BaseController {
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
 
         // unnecessary see https://github.com/PavlidisLab/Gemma/issues/176
-   //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
+        //     compositeSequenceService.thaw( Collections.singletonList( cs ) );
 
         log.debug( "Finished processing AJAX call: getGeneMappingSummary" );
         return compositeSequenceService.getGeneMappingSummary( cs.getBiologicalCharacteristic(),
@@ -150,7 +156,7 @@ public class CompositeSequenceController extends BaseController {
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
-    public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
+    public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) throws SearchException {
 
         if ( StringUtils.isBlank( searchString ) ) {
             return new HashSet<>();
@@ -162,13 +168,13 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<?>, List<SearchResult>> search = searchService
+        Map<Class<?>, List<SearchResult<?>>> search = searchService
                 .search( SearchSettings.compositeSequenceSearch( searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<>();
         if ( search.containsKey( CompositeSequence.class ) ) {
 
-            Collection<SearchResult> searchResults = search.get( CompositeSequence.class );
+            Collection<SearchResult<?>> searchResults = search.get( CompositeSequence.class );
 
             for ( SearchResult sr : searchResults ) {
                 CompositeSequence cs = ( CompositeSequence ) sr.getResultObject();

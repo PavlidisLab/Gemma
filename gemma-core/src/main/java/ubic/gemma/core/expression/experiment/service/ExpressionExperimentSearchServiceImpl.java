@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
@@ -79,10 +80,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) throws SearchException {
 
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
-        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
+        List<SearchResult<?>> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
             ExpressionExperimentSearchServiceImpl.log.info( "No experiments for search: " + query );
@@ -99,7 +100,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) throws SearchException {
 
         Set<ExpressionExperimentValueObject> all = new HashSet<>();
         Set<ExpressionExperimentValueObject> prev = null;
@@ -119,7 +120,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
+    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException {
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
@@ -129,7 +130,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             return this.searchExperimentsAndExperimentGroupBlankQuery( taxonId );
         }
 
-        Map<Class<?>, List<SearchResult>> results = this.initialSearch( query, taxonId );
+        Map<Class<?>, List<SearchResult<?>>> results = this.initialSearch( query, taxonId );
 
         List<SearchResultDisplayObject> experimentSets = this.getExpressionExperimentSetResults( results );
         List<SearchResultDisplayObject> experiments = this.getExpressionExperimentResults( results );
@@ -250,9 +251,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentResults(
-            Map<Class<?>, List<SearchResult>> results ) {
+            Map<Class<?>, List<SearchResult<?>>> results ) {
         // get all expressionExperiment results and convert result object into a value object
-        List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
+        List<SearchResult<?>> srEEs = results.get( ExpressionExperiment.class );
         if ( srEEs == null ) {
             srEEs = new ArrayList<>();
         }
@@ -271,7 +272,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults(
-            Map<Class<?>, List<SearchResult>> results ) {
+            Map<Class<?>, List<SearchResult<?>>> results ) {
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
@@ -291,7 +292,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentSets;
     }
 
-    private Map<Class<?>, List<SearchResult>> initialSearch( String query, Long taxonId ) {
+    private Map<Class<?>, List<SearchResult<?>>> initialSearch( String query, Long taxonId ) throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )

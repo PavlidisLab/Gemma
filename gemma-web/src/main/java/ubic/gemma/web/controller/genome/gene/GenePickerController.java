@@ -27,6 +27,7 @@ import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -64,7 +65,7 @@ public class GenePickerController {
      * AJAX
      *
      * @param  geneIds gene ids
-     * @return         collection of gene entity objects; duplicates will be resolved.
+     * @return collection of gene entity objects; duplicates will be resolved.
      */
     public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
         if ( geneIds == null || geneIds.isEmpty() ) {
@@ -80,7 +81,7 @@ public class GenePickerController {
      *
      * @param  goId    GO id that must be in the format "GO_#######"
      * @param  taxonId must not be null and must correspond to a taxon
-     * @return         Collection empty if goId was blank or taxonId didn't correspond to a taxon
+     * @return Collection empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
 
@@ -98,7 +99,7 @@ public class GenePickerController {
      *
      * @param  goId    GO id that must be in the format "GO_#######"
      * @param  taxonId must not be null and must correspond to a taxon
-     * @return         GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
+     * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public GOGroupValueObject getGeneSetByGOId( String goId, Long taxonId ) {
 
@@ -160,10 +161,14 @@ public class GenePickerController {
      *
      * @param  query   query
      * @param  taxonId taxon id
-     * @return         Collection of Gene entity objects
+     * @return Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
-        return geneService.searchGenes( query, taxonId );
+        try {
+            return geneService.searchGenes( query, taxonId );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
     /**
@@ -171,7 +176,7 @@ public class GenePickerController {
      *
      * @param  query   query
      * @param  taxonId can be null
-     * @return         Collection of SearchResultDisplayObject
+     * @return Collection of SearchResultDisplayObject
      */
     public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
 
@@ -196,7 +201,11 @@ public class GenePickerController {
         // maintain order: session sets first
         Collection<SearchResultDisplayObject> results = new ArrayList<>();
         results.addAll( sessionSets );
-        results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
+        try {
+            results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
 
         for ( SearchResultDisplayObject r : results ) {
             r.setOriginalQuery( query );
@@ -210,11 +219,16 @@ public class GenePickerController {
      *
      * @param  query   query
      * @param  taxonId taxon id
-     * @return         Collection of Gene entity objects
+     * @return Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
 
-        Collection<GeneValueObject> geneValueObjects = this.geneService.searchGenes( query, taxonId );
+        Collection<GeneValueObject> geneValueObjects = null;
+        try {
+            geneValueObjects = this.geneService.searchGenes( query, taxonId );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
 
         Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<>();
 
@@ -232,10 +246,14 @@ public class GenePickerController {
      *
      * @param  query   A list of gene names (symbols), one per line.
      * @param  taxonId taxon id
-     * @return         collection of gene value objects
+     * @return collection of gene value objects
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
-        return geneSearchService.searchMultipleGenes( query, taxonId );
+        try {
+            return geneSearchService.searchMultipleGenes( query, taxonId );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
     /**
@@ -243,10 +261,14 @@ public class GenePickerController {
      *
      * @param  query   A list of gene names (symbols), one per line.
      * @param  taxonId taxon id
-     * @return         map with each gene-query as a key and a collection of the search-results as the value
+     * @return map with each gene-query as a key and a collection of the search-results as the value
      */
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
-        return geneSearchService.searchMultipleGenesGetMap( query, taxonId );
+        try {
+            return geneSearchService.searchMultipleGenesGetMap( query, taxonId );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
 }

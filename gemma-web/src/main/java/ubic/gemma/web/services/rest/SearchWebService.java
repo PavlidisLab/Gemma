@@ -7,15 +7,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -82,11 +81,15 @@ public class SearchWebService {
                 .build();
 
         // convert the response to search results of VOs
-        return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
-                .flatMap( List::stream )
-                .sorted() // SearchResults are sorted by descending score order
-                .map( result -> new SearchResultValueObject( result, searchService.convertSearchResultObjectToValueObject( result ) ) )
-                .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+        try {
+            return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
+                    .flatMap( List::stream )
+                    .sorted() // SearchResults are sorted by descending score order
+                    .map( result -> new SearchResultValueObject( result, searchService.convertSearchResultObjectToValueObject( result ) ) )
+                    .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
     }
 
     /**

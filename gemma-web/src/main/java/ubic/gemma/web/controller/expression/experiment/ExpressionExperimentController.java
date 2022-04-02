@@ -45,6 +45,7 @@ import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.tasks.AbstractTask;
@@ -265,7 +266,12 @@ public class ExpressionExperimentController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<Long> ids = expressionExperimentService.filter( searchString );
+        Collection<Long> ids;
+        try {
+            ids = expressionExperimentService.filter( searchString );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
 
         if ( ids.isEmpty() ) {
 
@@ -302,7 +308,11 @@ public class ExpressionExperimentController {
      */
     public Collection<Long> find( String query, Long taxonId ) {
         ExpressionExperimentController.log.info( "Search: query='" + query + "' taxon=" + taxonId );
-        return searchService.searchExpressionExperiments( query, taxonId );
+        try {
+            return searchService.searchExpressionExperiments( query, taxonId );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
     /**
@@ -850,8 +860,12 @@ public class ExpressionExperimentController {
         // keep sets in proper order (session-bound groups first)
         Collections.sort( sessionSets );
         displayResults.addAll( sessionSets );
-        displayResults
-                .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
+        try {
+            displayResults
+                    .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
 
         for ( SearchResultDisplayObject r : displayResults ) {
             r.setOriginalQuery( query );
@@ -867,9 +881,11 @@ public class ExpressionExperimentController {
      * @return Collection of expression experiment entity objects
      */
     public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
-
-        return expressionExperimentSearchService.searchExpressionExperiments( query );
-
+        try {
+            return expressionExperimentSearchService.searchExpressionExperiments( query );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
     /**

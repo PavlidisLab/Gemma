@@ -10,22 +10,22 @@ import java.util.Collection;
  */
 public interface SearchSource {
 
-    Collection<SearchResult> searchArrayDesign( SearchSettings settings );
+    Collection<SearchResult<?>> searchArrayDesign( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchBibliographicReference( SearchSettings settings );
+    Collection<SearchResult<?>> searchBibliographicReference( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchExperimentSet( SearchSettings settings );
+    Collection<SearchResult<?>> searchExperimentSet( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchBioSequence( SearchSettings settings,
-            Collection<SearchResult> previousGeneSearchResults );
+    Collection<SearchResult<?>> searchBioSequence( SearchSettings settings,
+            Collection<SearchResult<?>> previousGeneSearchResults ) throws SearchException;
 
-    Collection<SearchResult> searchCompositeSequence( SearchSettings settings );
+    Collection<SearchResult<?>> searchCompositeSequence( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchExpressionExperiment( SearchSettings settings );
+    Collection<SearchResult<?>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchGene( SearchSettings settings );
+    Collection<SearchResult<?>> searchGene( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchGeneSet( SearchSettings settings );
+    Collection<SearchResult<?>> searchGeneSet( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult> searchPhenotype( SearchSettings settings );
+    Collection<SearchResult<?>> searchPhenotype( SearchSettings settings );
 }

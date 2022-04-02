@@ -45,6 +45,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServi
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -293,14 +294,14 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> filter( String searchString ) {
+    public Collection<Long> filter( String searchString ) throws SearchException {
 
-        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService
+        Map<Class<?>, List<SearchResult<?>>> searchResultsMap = searchService
                 .search( SearchSettings.expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
 
-        Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
+        Collection<SearchResult<?>> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
         Collection<Long> ids = new ArrayList<>( searchResults.size() );
 

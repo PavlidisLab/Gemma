@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.genome.gene.service;
 
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -46,7 +47,7 @@ public interface GeneSearchService {
 
     Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
 
-    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId );
+    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException;
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
@@ -56,7 +57,7 @@ public interface GeneSearchService {
      * @return collection of gene value objects
      * @throws IOException when there are IO problems
      */
-    Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
+    Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException, SearchException;
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
@@ -65,6 +66,6 @@ public interface GeneSearchService {
      * @param taxonId taxon id
      * @return query with match. Null values means nothing was found for that key (query)
      */
-    Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId );
+    Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) throws SearchException;
 
 }

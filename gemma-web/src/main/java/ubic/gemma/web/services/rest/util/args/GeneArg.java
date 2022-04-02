@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
@@ -76,7 +77,7 @@ public abstract class GeneArg<T> extends AbstractEntityArg<T, Gene, GeneService>
      * @return collection of gene evidence VOs matching the criteria, or an error response, if there is an error.
      */
     public List<GeneEvidenceValueObject> getGeneEvidence( GeneService geneService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) {
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) throws SearchException {
         Gene gene = this.getEntity( geneService );
         return phenotypeAssociationManagerService
                 .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
