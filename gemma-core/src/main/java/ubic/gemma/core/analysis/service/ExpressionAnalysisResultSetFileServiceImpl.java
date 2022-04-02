@@ -92,7 +92,8 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractTsvFileS
     }
 
     private String formatMeasurement( Measurement measurement ) {
-        return measurement.getValue() + measurement.getUnit().getUnitNameCV();
+        return measurement.getValue()
+                + ( measurement.getUnit() != null ? measurement.getUnit().getUnitNameCV() : "" );
     }
 
     private String formatCharacteristics( Collection<Characteristic> characteristics ) {
