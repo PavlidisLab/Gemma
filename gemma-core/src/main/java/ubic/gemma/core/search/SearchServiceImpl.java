@@ -88,13 +88,6 @@ import java.util.*;
 @CommonsLog
 public class SearchServiceImpl implements SearchService {
 
-    /**
-     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
-     * came from text associated with one of its biomaterials,
-     * the score is penalized by this amount (or, this is just the actual score used)
-     */
-    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
-
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private static final String NCBI_GENE = "ncbi_gene";
@@ -1006,22 +999,6 @@ public class SearchServiceImpl implements SearchService {
      * Convert hits from database searches into SearchResults.
      */
     private Collection<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities, String matchText ) {
-        return this.dbHitsToSearchResult( entities, null, matchText );
-    }
-
-    /**
-     * Convert hits from database searches into SearchResults.
-     *
-     * @param compassHitDerivedFrom Can be null. The SearchResult that these entities were derived from. For example, if
-     *                              you
-     *                              compass-searched for genes, and then used the genes to get sequences from the
-     *                              database, the gene is compassHitsDerivedFrom. If null, we treat this as a direct
-     *                              hit.
-     * @param matchText             used in highlighting, if compassHitDerivedFrom is null. The highlighted text from
-     *                              compassHitsDerivedFrom is used otherwise.
-     */
-    private List<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities, SearchResult<?> compassHitDerivedFrom,
-            String matchText ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<?>> results = new ArrayList<>();
         for ( Identifiable e : entities ) {
@@ -1030,28 +1007,13 @@ public class SearchServiceImpl implements SearchService {
                     log.debug( "Null search result object" );
                 continue;
             }
-            SearchResult esr = this.dbHitToSearchResult( compassHitDerivedFrom, e, matchText );
+            SearchResult esr = new SearchResult<>( e, 1.0, matchText );
             results.add( esr );
         }
         if ( watch.getTime() > 1000 ) {
             log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
         }
         return results;
-    }
-
-    /**
-     * @param text that matched the query (for highlighting)
-     */
-    private SearchResult dbHitToSearchResult( SearchResult<?> compassHitDerivedFrom, Identifiable e, String text ) {
-        SearchResult esr;
-        if ( compassHitDerivedFrom != null && text == null ) {
-            esr = new SearchResult<>( e, compassHitDerivedFrom.getScore() * SearchServiceImpl.INDIRECT_DB_HIT_PENALTY );
-            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-        } else {
-            esr = new SearchResult<>( e, 1.0, text );
-        }
-        log.debug( esr );
-        return esr;
     }
 
     //    private void debugParentFetch( Map<Characteristic, Object> parentMap ) {
