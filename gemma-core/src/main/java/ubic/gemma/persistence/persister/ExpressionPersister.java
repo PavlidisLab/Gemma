@@ -270,16 +270,16 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         bioAssay.setArrayDesignUsed( arrayDesignUsed );
 
-        boolean hadFactors = false;
         BioMaterial material = bioAssay.getSampleUsed();
+        Collection<FactorValue> savedFactorValues = new HashSet<>();
         for ( FactorValue factorValue : material.getFactorValues() ) {
             // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
             this.fillInFactorValueAssociations( factorValue );
-            this.persistFactorValue( factorValue );
-            hadFactors = true;
+            savedFactorValues.add( this.persistFactorValue( factorValue ) );
         }
+        material.setFactorValues( savedFactorValues );
 
-        if ( hadFactors )
+        if ( !savedFactorValues.isEmpty() )
             AbstractPersister.log.debug( "factor values done" );
 
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
@@ -508,17 +508,18 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     /**
      * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
      */
-    private void persistFactorValue( FactorValue factorValue ) {
-        if ( factorValue == null )
-            return;
+    private FactorValue persistFactorValue( FactorValue factorValue ) {
+        if ( factorValue == null ) {
+            throw new IllegalArgumentException( "Factor value cannot be null." );
+        }
         if ( !this.isTransient( factorValue ) )
-            return;
+            return factorValue;
         if ( this.isTransient( factorValue.getExperimentalFactor() ) ) {
             throw new IllegalArgumentException(
                     "You must fill in the experimental factor before persisting a factorvalue" );
         }
         this.fillInFactorValueAssociations( factorValue );
-        factorValueDao.findOrCreate( factorValue );
+        return factorValueDao.findOrCreate( factorValue );
     }
 
     /**
