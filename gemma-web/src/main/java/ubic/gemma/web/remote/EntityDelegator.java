@@ -36,7 +36,7 @@ public class EntityDelegator {
     }
 
     public EntityDelegator( Object entity ) {
-        this.id = EntityUtils.getId( entity );
+        this.id = EntityUtils.getProperty( entity, "id" );
         this.classDelegatingFor = entity.getClass().getName();
     }
 

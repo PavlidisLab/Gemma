@@ -14,6 +14,7 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -404,10 +405,10 @@ public class DatabaseSearchSource implements SearchSource {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private List<SearchResult<?>> dbHitsToSearchResult( Collection<?> entities ) {
+    private List<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<?>> results = new ArrayList<>();
-        for ( Object e : entities ) {
+        for ( Identifiable e : entities ) {
             if ( e == null ) {
                 if ( DatabaseSearchSource.log.isDebugEnabled() )
                     DatabaseSearchSource.log.debug( "Null search result object" );
@@ -425,23 +426,23 @@ public class DatabaseSearchSource implements SearchSource {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private List<SearchResult<?>> dbHitsToSearchResult( Map<?, String> entities ) {
+    private List<SearchResult<?>> dbHitsToSearchResult( Map<? extends Identifiable, String> entities ) {
         List<SearchResult<?>> results = new ArrayList<>();
-        for ( Object e : entities.keySet() ) {
+        for ( Identifiable e : entities.keySet() ) {
             SearchResult esr = this.dbHitToSearchResult( e, entities.get( e ) );
             results.add( esr );
         }
         return results;
     }
 
-    private SearchResult dbHitToSearchResult( Object e ) {
+    private SearchResult dbHitToSearchResult( Identifiable e ) {
         return this.dbHitToSearchResult( e, null );
     }
 
     /**
      * @param text that matched the query (for highlighting)
      */
-    private SearchResult<?> dbHitToSearchResult( Object e, String text ) {
+    private SearchResult<?> dbHitToSearchResult( Identifiable e, String text ) {
         SearchResult<?> esr = new SearchResult<>( e, 1.0, text );
         log.debug( esr );
         return esr;

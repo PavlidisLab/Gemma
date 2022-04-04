@@ -88,7 +88,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindCoexpressionRelationships() {
 
-        Collection<Long> ees = EntityUtils.getIds( ee );
+        Collection<Long> ees = Collections.singleton( ee.getId() );
         Collection<CoexpressionValueObject> results = g2gCoexpressionService.findCoexpressionRelationships( firstGene,
                 ees, 1, 100, true );
         assertEquals( 1, results.size() );

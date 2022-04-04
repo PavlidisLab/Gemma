@@ -36,7 +36,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
         return ( a, b ) -> -a.score.compareTo( b.score );
     }
 
-    private Class<T> resultClass;
+    private Class<? super T> resultClass;
 
     private Long objectId;
 
@@ -54,8 +54,9 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
         if ( searchResult == null )
             throw new IllegalArgumentException( "Search result cannot be null" );
         this.resultObject = searchResult; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( searchResult.getClass() );
-        this.objectId = EntityUtils.getId( resultObject );
+        //noinspection unchecked
+        this.resultClass = ( Class<? super T> ) ReflectionUtil.getBaseForImpl( searchResult.getClass() );
+        this.objectId = EntityUtils.getProperty( resultObject, "id" );
     }
 
     public SearchResult( T searchResult, double score ) {
@@ -69,7 +70,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
         this.highlightedText = matchingText;
     }
 
-    public SearchResult( Class<T> entityClass, Long entityId, double score, String matchingText ) {
+    public SearchResult( Class<? super T> entityClass, Long entityId, double score, String matchingText ) {
         this.resultClass = entityClass;
         this.objectId = entityId;
         this.score = score;
@@ -96,7 +97,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
         return objectId;
     }
 
-    public Class<T> getResultClass() {
+    public Class<? super T> getResultClass() {
         return resultClass;
     }
 
@@ -111,8 +112,9 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
     public void setResultObject( T resultObject ) {
         this.resultObject = resultObject;
         if ( resultObject != null ) {
-            this.resultClass = ( Class<T> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
-            this.objectId = EntityUtils.getId( resultObject );
+            //noinspection unchecked
+            this.resultClass = ( Class<? super T> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+            this.objectId = EntityUtils.getProperty( resultObject, "id" );
         }
     }
 
@@ -141,6 +143,7 @@ public class SearchResult<T> implements Comparable<SearchResult<T>> {
             return false;
         if ( this.getClass() != obj.getClass() )
             return false;
+        //noinspection unchecked
         final SearchResult<T> other = ( SearchResult<T> ) obj;
         if ( objectId == null ) {
             if ( other.objectId != null )

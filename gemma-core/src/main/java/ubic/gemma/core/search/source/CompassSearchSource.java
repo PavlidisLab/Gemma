@@ -23,9 +23,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Compass-based search source.
@@ -350,9 +350,12 @@ public class CompassSearchSource implements SearchSource {
             return unfilteredResults;
 
         Collection<SearchResult<?>> filteredResults = new HashSet<>();
-        Collection<Long> eeIds = this.expressionExperimentService
-                .filterByTaxon( EntityUtils.getIds( unfilteredResults ), t );
-        for ( SearchResult sr : unfilteredResults ) {
+        Collection<Long> eeIds = unfilteredResults.stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
+        eeIds = this.expressionExperimentService
+                .filterByTaxon( eeIds, t );
+        for ( SearchResult<?> sr : unfilteredResults ) {
             if ( eeIds.contains( sr.getResultId() ) ) {
                 filteredResults.add( sr );
             }
@@ -374,7 +377,7 @@ public class CompassSearchSource implements SearchSource {
                     CompassSearchSource.log.debug( "Null search result object" );
                 continue;
             }
-            SearchResult esr = this.dbHitToSearchResult( compassHitDerivedFrom, e );
+            SearchResult<?> esr = this.dbHitToSearchResult( compassHitDerivedFrom, e );
             results.add( esr );
         }
         if ( watch.getTime() > 1000 ) {

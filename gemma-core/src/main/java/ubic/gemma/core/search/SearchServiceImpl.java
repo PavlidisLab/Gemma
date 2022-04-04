@@ -43,6 +43,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.BlacklistedEntity;
@@ -1004,7 +1005,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * Convert hits from database searches into SearchResults.
      */
-    private Collection<SearchResult<?>> dbHitsToSearchResult( Collection<?> entities, String matchText ) {
+    private Collection<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities, String matchText ) {
         return this.dbHitsToSearchResult( entities, null, matchText );
     }
 
@@ -1019,11 +1020,11 @@ public class SearchServiceImpl implements SearchService {
      * @param matchText             used in highlighting, if compassHitDerivedFrom is null. The highlighted text from
      *                              compassHitsDerivedFrom is used otherwise.
      */
-    private List<SearchResult<?>> dbHitsToSearchResult( Collection<?> entities, SearchResult compassHitDerivedFrom,
+    private List<SearchResult<?>> dbHitsToSearchResult( Collection<? extends Identifiable> entities, SearchResult<?> compassHitDerivedFrom,
             String matchText ) {
         StopWatch watch = StopWatch.createStarted();
         List<SearchResult<?>> results = new ArrayList<>();
-        for ( Object e : entities ) {
+        for ( Identifiable e : entities ) {
             if ( e == null ) {
                 if ( log.isDebugEnabled() )
                     log.debug( "Null search result object" );
@@ -1041,7 +1042,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * @param text that matched the query (for highlighting)
      */
-    private SearchResult dbHitToSearchResult( SearchResult compassHitDerivedFrom, Object e, String text ) {
+    private SearchResult dbHitToSearchResult( SearchResult<?> compassHitDerivedFrom, Identifiable e, String text ) {
         SearchResult esr;
         if ( compassHitDerivedFrom != null && text == null ) {
             esr = new SearchResult<>( e, compassHitDerivedFrom.getScore() * SearchServiceImpl.INDIRECT_DB_HIT_PENALTY );

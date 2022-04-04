@@ -76,7 +76,7 @@ public class BioAssayController {
         ee = this.eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
             result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );

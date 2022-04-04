@@ -39,6 +39,7 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -298,7 +299,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult<?>> results, SearchSettings settings ) {
         StopWatch timer = StopWatch.createStarted();
-        Collection<?> vos;
+        Collection<? extends Identifiable> vos;
 
         Collection<Long> ids = new ArrayList<>();
         for ( SearchResult r : results ) {
@@ -370,7 +371,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         // retained objects...
-        Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
+        Map<Long, ? extends Identifiable> idMap = EntityUtils.getIdMap( vos );
 
         for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();

@@ -25,8 +25,11 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.hibernate.*;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Sid;
@@ -34,9 +37,13 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author paul
@@ -66,124 +73,84 @@ public class EntityUtils {
     }
 
     /**
-     * Expert only. Put the given entity into the Session, with LockMode.NONE
-     * Based on idea from https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826
-     *
-     * @param session Hibernate Session (use factory.getCurrentSession())
-     * @param obj     the entity
-     * @param clazz   the class type of the persisted entity. Don't use obj.getClass() as this might return a proxy type.
-     * @param id      identifier of the obj
+     * @param entities entities
+     * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
+     * implement the Identifiable interface.
      */
-    public static void attach( Session session, Object obj, Class<?> clazz, Long id ) {
-        if ( obj == null || id == null )
-            return;
-        if ( !session.isOpen() )
-            throw new IllegalArgumentException( "Illegal attempt to use a closed session" );
-        if ( !session.contains( obj ) ) {
-
-            Object oldObj = session.get( clazz, id );
-
-            if ( oldObj != null ) {
-                session.evict( oldObj );
-            }
-        }
-        session.buildLockRequest( LockOptions.NONE ).lock( obj );
-    }
-
-    public static Long getId( Object entity ) {
-        return EntityUtils.getId( entity, "getId" );
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static Long getId( Object entity, String methodName ) {
-        try {
-            Method m = entity.getClass().getMethod( methodName );
-            return ( Long ) m.invoke( entity );
-        } catch ( SecurityException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e ) {
-            throw new RuntimeException( e );
-        }
+    public static <T extends Identifiable> List<Long> getIds( Collection<T> entities ) {
+        return entities.stream().map( Identifiable::getId ).collect( Collectors.toList() );
     }
 
     /**
      * Given a set of entities, create a map of their ids to the entities.
      *
+     * Note: If more than one entity share the same ID, there is no guarantee on which will be kept in the final
+     * mapping.
+     *
      * @param entities where id is called "id"
      * @param <T>      the type
      * @return the created map
      */
-    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
+    public static <T extends Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
         Map<Long, T> result = new HashMap<>();
-
-        for ( T object : entities ) {
-            result.put( EntityUtils.getId( object, "getId" ), object );
+        for ( T entity : entities ) {
+            result.put( entity.getId(), entity );
         }
-
         return result;
-
     }
 
     /**
-     * @param methodName     accessor e.g. "getId"
-     * @param <T>            the type
-     * @param entities       entities
-     * @param nestedProperty nested property
-     * @return the created map
+     * Get a property of an entity object via its getter.
+     *
+     * @param entity       the entity
+     * @param propertyName name of the property
+     * @param <T>          type of the property
+     * @return the return value of the getter for the property
+     * @see PropertyUtils#getProperty(Object, String)
      */
-    public static <T> Map<Long, T> getNestedIdMap( Collection<? extends T> entities, String nestedProperty,
-            String methodName ) {
-        Map<Long, T> result = new HashMap<>();
-
-        for ( T object : entities ) {
-            try {
-                result.put( EntityUtils.getId( FieldUtils.readField( object, nestedProperty, true ), methodName ),
-                        object );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            }
+    public static <T> T getProperty( Object entity, String propertyName ) {
+        try {
+            //noinspection unchecked
+            return ( T ) PropertyUtils.getProperty( entity, propertyName );
+        } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
+            throw new RuntimeException( e );
         }
-
-        return result;
     }
 
     /**
-     * @param methodName accessor e.g. "getId"
-     * @param entities   entities
+     * Group entities by their property.
+     *
+     * @param entities     entities
+     * @param propertyName property name (e.g. "id")
      * @param <T>        the type
      * @return the created map
+     * @see #getProperty(Object, String)
      */
-    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String methodName ) {
-        Map<Long, T> result = new HashMap<>();
-
+    public static <S, T> Map<S, T> getPropertyMap( Collection<? extends T> entities, String propertyName ) {
+        Map<S, T> result = new HashMap<>();
         for ( T object : entities ) {
-            result.put( EntityUtils.getId( object, methodName ), object );
+            result.put( EntityUtils.getProperty( object, propertyName ), object );
         }
-
         return result;
     }
 
     /**
-     * @param entities entities
-     * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
-     * implement the Identifiable interface.
-     */
-    public static List<Long> getIds( Collection<? extends Identifiable> entities ) {
-        List<Long> r = new ArrayList<>( entities.size() );
-        for ( Identifiable i : entities ) {
-            r.add( i.getId() );
-        }
-        return r;
-    }
-
-    /**
-     * Convenience method for pushing an ID into a collection (encapsulates a common idiom)
+     * Group entities by their property using a nested property.
      *
-     * @param entity entity
-     * @return a collection with one item in it.
+     * @param entities       entities
+     * @param nestedProperty nested property
+     * @param propertyName   property name (e.g. "id")
+     * @param <T>            the type
+     * @return the created map
+     * @see #getProperty(Object, String)
      */
-    public static List<Long> getIds( Object entity ) {
-        List<Long> r = new ArrayList<>( 1 );
-        r.add( EntityUtils.getId( entity ) );
-        return r;
+    public static <S, T> Map<S, T> getNestedPropertyMap( Collection<T> entities, String nestedProperty,
+            String propertyName ) {
+        Map<S, T> result = new HashMap<>();
+        for ( T object : entities ) {
+            result.put( EntityUtils.getProperty( EntityUtils.getProperty( object, nestedProperty ), propertyName ), object );
+        }
+        return result;
     }
 
     public static Class<?> getImplClass( Class<?> type ) {

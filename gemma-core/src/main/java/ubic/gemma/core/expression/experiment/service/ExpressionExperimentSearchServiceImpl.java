@@ -44,6 +44,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Handles searching for experiments and experiment sets
@@ -92,8 +93,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
+        List<Long> eeIds = experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
-                .loadValueObjectsByIds( EntityUtils.getIds( experimentSearchResults ), true );
+                .loadValueObjectsByIds( eeIds, true );
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
