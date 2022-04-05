@@ -72,6 +72,8 @@ import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -204,13 +206,9 @@ public class SearchServiceImpl implements SearchService {
             throw new IllegalArgumentException( "The search settings contains unsupported result types." );
         }
 
-        //        Element element = searchResultCache.get( settings );
-        //        if ( element != null ) {
-        //            return ( Map<Class<?>, List<SearchResult>> ) ( element.getObjectValue() );
-        //        }
+        StopWatch timer = StopWatch.createStarted();
 
         Map<Class<?>, List<SearchResult<?>>> results;
-
         if ( settings.isTermQuery() ) {
             // we only attempt an ontology search if the uri looks remotely like a url.
             results = this.ontologyUriSearch( settings );
@@ -219,7 +217,10 @@ public class SearchServiceImpl implements SearchService {
 
         }
 
-        searchResultCache.put( new Element( settings, results ) );
+        Integer totalResults = results.values().stream().map( Collection::size ).reduce( 0, Integer::sum );
+        if ( totalResults > 0 ) {
+            log.info( "Search for " + settings + " yielded " + totalResults + " results in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
+        }
 
         return results;
 
@@ -342,14 +343,6 @@ public class SearchServiceImpl implements SearchService {
                         SearchServiceImpl.ONTOLOGY_INFO_CACHE_SIZE, false, false,
                         SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_IDLE, SearchServiceImpl.ONTOLOGY_CACHE_TIME_TO_DIE,
                         false );
-
-        // TODO: refactor the configuration.
-        this.searchResultCache = CacheUtils
-                .createOrLoadCache( cacheManager, "searchResultsCache", terracottaEnabled,
-                        200, false, false,
-                        100, 100,
-                        false );
-
     }
 
     /**
@@ -1260,7 +1253,6 @@ public class SearchServiceImpl implements SearchService {
      */
     private Map<Class<?>, List<SearchResult<?>>> generalSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) throws SearchException {
-
         settings = SearchSettingsStringUtils.processSettings( settings, this.nameToTaxonMap );
 
         List<SearchResult<?>> rawResults = new ArrayList<>();
@@ -1283,10 +1275,6 @@ public class SearchServiceImpl implements SearchService {
         Map<Class<?>, List<SearchResult<?>>> sortedLimitedResults = this
                 .getSortedLimitedResults( settings, rawResults, fillObjects );
 
-        if ( rawResults.size() > 0 ) {
-            SearchServiceImpl.log
-                    .info( "search for: " + settings.getQuery() + " yielded " + rawResults.size() + " raw results (final tally may be filtered)" );
-        }
         return sortedLimitedResults;
     }
 
@@ -1676,7 +1664,6 @@ public class SearchServiceImpl implements SearchService {
             Collection<SearchResult<?>> hits = this.characteristicEESearchTerm( uriString, settings.getTaxon(), settings.getMaxResults() );
             results.put( ExpressionExperiment.class, new ArrayList<>() );
             results.get( ExpressionExperiment.class ).addAll( hits );
-
         }
 
         return results;

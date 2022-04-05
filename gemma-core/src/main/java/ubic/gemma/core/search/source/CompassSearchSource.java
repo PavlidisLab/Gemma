@@ -292,55 +292,44 @@ public class CompassSearchSource implements SearchSource {
      * @return collection of SearchResult. These *do not* contain the actual entities, just their IDs and class.
      */
     private Collection<SearchResult<?>> getSearchResults( CompassHits hits ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+        StopWatch timer = StopWatch.createStarted();
         Collection<SearchResult<?>> results = new HashSet<>();
+        int maxHits = Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() );
         /*
          * Note that hits come in decreasing score order.
          */
-        for ( int i = 0, len = Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() ); i < len; i++ ) {
-
-            SearchResult r = new SearchResult<>( hits.data( i ) );
-
+        for ( int i = 0; i < maxHits; i++ ) {
             // FIXME: score is generally (always?) NaN
             double score = hits.score( i );
             if ( Double.isNaN( score ) ) {
                 score = 1.0;
             }
-
             /*
              * Always give compass hits a lower score, so they can be differentiated from exact database hits.
              */
-            r.setScore( score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR );
-
-            this.getHighlightedText( hits, i, r );
-
-            results.add( r );
+            results.add( new SearchResult<>( hits.data( i ), score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, this.getHighlightedText( hits, i ) ) );
         }
 
         if ( timer.getTime() > 100 ) {
-            CompassSearchSource.log.info( results.size() + " hits retrieved (out of " + Math
-                    .min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
-                    + timer
-                    .getTime()
-                    + "ms" );
-        }
-        if ( timer.getTime() > 5000 ) {
-            CompassSearchSource.log
-                    .info( "****Extremely long Lucene Search processing! " + results.size() + " hits retrieved (out of "
-                            + Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
-                            + timer.getTime() + "ms" );
+            String message = results.size() + " hits retrieved (out of " + hits.getLength() + " raw hits tested) in "
+                    + timer.getTime() + "ms for "
+                    + hits.getQuery();
+            if ( timer.getTime() > 5000 ) {
+                CompassSearchSource.log.warn( message );
+            } else {
+                CompassSearchSource.log.info( message );
+            }
         }
 
         return results;
     }
 
-    private void getHighlightedText( CompassHits hits, int i, SearchResult r ) {
+    private String getHighlightedText( CompassHits hits, int i ) {
         CompassHighlightedText highlightedText = hits.highlightedText( i );
         if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
-            r.setHighlightedText( highlightedText.getHighlightedText() );
+            return highlightedText.getHighlightedText();
         } else {
-            r.setHighlightedText( HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE );
+            return HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE;
         }
     }
 

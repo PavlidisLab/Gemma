@@ -225,7 +225,18 @@ public class SearchSettings implements Serializable {
 
     @Override
     public String toString() {
-        String tax = this.getTaxon() != null ? " [" + this.getTaxon().getCommonName() + "]" : "";
-        return this.getQuery() + tax;
+        StringBuilder b = new StringBuilder();
+        if ( this.isTermQuery() ) {
+            b.append( "term: " ).append( '"' ).append( this.getQuery() ).append( '"' );
+        } else {
+            b.append( "full-text query: " ).append( '"' ).append( this.getQuery() ).append( '"' );
+        }
+        if ( this.taxon != null ) {
+            b.append( ", taxon: " ).append( this.taxon.getCommonName() );
+        }
+        if ( this.platformConstraint != null ) {
+            b.append( ", platform: " ).append( this.platformConstraint.getShortName() );
+        }
+        return b.toString();
     }
 }
