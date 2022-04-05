@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.core.search.SearchService;
@@ -81,7 +82,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) throws SearchException {
 
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
         List<SearchResult<ExpressionExperiment>> experimentSearchResults = searchService.search( settings, ExpressionExperiment.class );
@@ -93,6 +94,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
+        List<Long> eeIds = experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
                 .loadValueObjectsByIds( experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), true );
         ExpressionExperimentSearchServiceImpl.log
@@ -101,7 +103,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) throws SearchException {
 
         Set<ExpressionExperimentValueObject> all = new HashSet<>();
         Set<ExpressionExperimentValueObject> prev = null;
@@ -121,7 +123,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
+    public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException {
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 

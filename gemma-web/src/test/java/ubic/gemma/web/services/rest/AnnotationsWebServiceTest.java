@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -98,7 +99,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
     }
 
     @Test
-    public void testSearchTaxonDatasets() {
+    public void testSearchTaxonDatasets() throws SearchException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );
         when( searchService.search( any( SearchSettings.class ), eq( false ), eq( false ) ) )

@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.Identifiable;
@@ -132,7 +133,12 @@ public class AnnotationsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sortArg // Optional, default +id
     ) {
-        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+        Collection<Long> foundIds;
+        try {
+            foundIds = this.searchEEs( query.getValue() );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
 
         if ( foundIds.isEmpty() ) {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
@@ -177,7 +183,12 @@ public class AnnotationsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
-        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+        Collection<Long> foundIds = null;
+        try {
+            foundIds = this.searchEEs( query.getValue() );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
 
         if ( foundIds.isEmpty() ) {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
@@ -202,7 +213,7 @@ public class AnnotationsWebService {
      * @param values the values that the datasets should match.
      * @return set of IDs that satisfy all given search values.
      */
-    private Collection<Long> searchEEs( List<String> values ) {
+    private Collection<Long> searchEEs( List<String> values ) throws SearchException {
         Set<Long> ids = new HashSet<>();
         boolean firstRun = true;
         for ( String value : values ) {

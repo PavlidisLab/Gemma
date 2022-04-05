@@ -26,6 +26,7 @@ import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -484,7 +485,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * @return Collection of Gene entity objects
      */
     @Override
-    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
+    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
 
         Taxon taxon = null;
         if ( taxonId != null ) {

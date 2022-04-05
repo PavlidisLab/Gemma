@@ -20,6 +20,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -91,7 +92,7 @@ public interface OntologyService extends InitializingBean {
      * @param  givenQueryString query string
      * @return                  characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon );
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws SearchException;
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic

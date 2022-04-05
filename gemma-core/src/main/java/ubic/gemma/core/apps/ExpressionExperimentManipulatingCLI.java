@@ -24,6 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -42,10 +43,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -184,7 +182,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             }
         } else if ( commandLine.hasOption( 'q' ) ) {
             AbstractCLI.log.info( "Processing all experiments that match query " + commandLine.getOptionValue( 'q' ) );
-            this.expressionExperiments = this.findExpressionExperimentsByQuery( commandLine.getOptionValue( 'q' ) );
+            try {
+                this.expressionExperiments = this.findExpressionExperimentsByQuery( commandLine.getOptionValue( 'q' ) );
+            } catch ( SearchException e ) {
+                log.error( "Failed to retrieve EEs for the passed query via -q.", e );
+            }
         } else if ( taxon != null ) {
             if ( !commandLine.hasOption( "dataFile" ) ) {
                 AbstractCLI.log.info( "Processing all experiments for " + taxon.getCommonName() );
@@ -305,7 +307,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     /**
      * Use the search engine to locate expression experiments.
      */
-    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
+    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) throws SearchException {
         Set<BioAssaySet> ees = new HashSet<>();
 
         // explicitly support one case

@@ -21,7 +21,6 @@ package ubic.gemma.core.search;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ReflectionUtil;
 
 /**

@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -228,7 +229,7 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
+    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException {
         SearchSettings ss = SearchSettings.bibliographicReferenceSearch( settings.getQuery() );
 
         //noinspection unchecked
@@ -266,7 +267,7 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<BibliographicReferenceValueObject> search( String query ) {
+    public List<BibliographicReferenceValueObject> search( String query ) throws SearchException {
         //noinspection unchecked
         List<SearchResult<BibliographicReference>> resultEntities = searchService
                 .search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );

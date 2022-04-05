@@ -19,13 +19,13 @@ import java.util.Collection;
  */
 public interface SearchSource {
 
-    Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings );
+    Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings );
+    Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings );
+    Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings );
+    Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException;
 
     /**
      * Search for biosequence and, unfortunately genes.
@@ -39,9 +39,9 @@ public interface SearchSource {
     @Deprecated
     @SuppressWarnings("unused")
     Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings,
-            Collection<SearchResult<Gene>> previousGeneSearchResults );
+            Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException;
 
-    Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings );
+    Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException;
 
     /**
      * Search for composite sequences and, unfortunately, genes.
@@ -53,13 +53,13 @@ public interface SearchSource {
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
      */
     @Deprecated
-    Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings );
+    Collection<SearchResult> searchCompositeSequenceAndGene( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings );
+    Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<Gene>> searchGene( SearchSettings settings );
+    Collection<SearchResult<Gene>> searchGene( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings );
+    Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException;
 
     Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings );
 }

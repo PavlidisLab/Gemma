@@ -181,7 +181,7 @@ public class DatabaseSearchSource implements SearchSource {
         }
 
         /*
-         * Search by bioseqence
+         * Search by biosequence
          */
         if ( matchedCs.isEmpty() ) {
             Collection<CompositeSequence> csViaBioSeq = compositeSequenceService.findByBioSequenceName( searchString );
@@ -359,7 +359,7 @@ public class DatabaseSearchSource implements SearchSource {
         // search' situations. If we do wildcards on very short queries we get too many results.
         Collection<Gene> geneSet = new HashSet<>();
         if ( searchString.length() <= 2 ) {
-            // case 0: we got no result syet, or user entered a very short string. We search only for exact matches.
+            // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
             geneSet.addAll( geneService.findByOfficialSymbolInexact( exactString ) );
         } else if ( inexactString.endsWith( "%" ) ) {
             // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
@@ -507,7 +507,7 @@ public class DatabaseSearchSource implements SearchSource {
                 if ( currentTaxon == null || !currentTaxon.getId().equals( t.getId() ) ) {
                     if ( currentTaxon == null ) {
                         // Sanity check for bad data in db (could happen if EE has no samples). Can happen that
-                        // searchResults have a vaild getTaxon method
+                        // searchResults have a valid getTaxon method
                         // but the method returns null (shouldn't make it this far)
                         DatabaseSearchSource.log.debug( "Object has getTaxon method but it returns null. Obj is: " + o );
                     }

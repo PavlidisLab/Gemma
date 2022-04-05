@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 /**
@@ -26,6 +27,7 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to look for, and create if not found.
      * @return the entity retrieved from the persistent storage, either found or created.
      */
+    @CheckReturnValue
     O findOrCreate( O entity );
 
     /**

@@ -31,7 +31,6 @@ import ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditions
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -569,7 +568,7 @@ public class DifferentialExpressionSearchTaskImpl
 
         int i = 0;
         Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils
-                .getIdMap( resultSets, "getResultSetId" );
+                .getPropertyMap( resultSets, "resultSetId" );
 
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 

@@ -33,6 +33,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
@@ -364,7 +365,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         // retained objects...
-        Map<Long, Identifiable> idMap = EntityUtils.getIdMap( vos );
+        Map<Long, ? extends Identifiable> idMap = EntityUtils.getIdMap( vos );
 
         for ( Iterator<SearchResult<?>> it = results.iterator(); it.hasNext(); ) {
             SearchResult sr = it.next();

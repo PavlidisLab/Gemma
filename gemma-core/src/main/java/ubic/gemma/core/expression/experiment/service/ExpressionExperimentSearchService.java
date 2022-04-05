@@ -15,6 +15,7 @@
 package ubic.gemma.core.expression.experiment.service;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
@@ -31,14 +32,14 @@ public interface ExpressionExperimentSearchService {
      * @return Collection of expression experiment entity objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query );
+    Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) throws SearchException;
 
     /**
      * @param value the term values
      * @return Collection of expression experiment VOs for EEs that are associated with all the given terms.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> value );
+    Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> value ) throws SearchException;
 
     /**
      * does not include session bound sets
@@ -47,7 +48,7 @@ public interface ExpressionExperimentSearchService {
      * @param taxonId if the search should not be limited by taxon, pass in null
      * @return Collection of SearchResultDisplayObjects
      */
-    List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId );
+    List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException;
 
     List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId );
 

@@ -82,7 +82,7 @@ public class BioAssayController {
         } catch ( FilteringException e ) {
             throw new RuntimeException( e );
         }
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedPropertyMap( outliers, "bioAssay", "id" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
             result.add( new BioAssayValueObject( assay, false, outlierMap.containsKey( assay.getId() ) ) );

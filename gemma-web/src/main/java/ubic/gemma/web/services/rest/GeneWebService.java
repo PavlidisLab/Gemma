@@ -22,6 +22,7 @@ import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchSe
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
@@ -115,8 +116,12 @@ public class GeneWebService {
     public ResponseDataObject<List<GeneEvidenceValueObject>> getGeneEvidence( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return Responder
-                .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
+        try {
+            return Responder
+                    .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ) );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
     }
 
     /**

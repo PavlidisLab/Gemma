@@ -29,10 +29,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.genome.gene.*;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
@@ -134,7 +131,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
+    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException {
         Taxon taxon = null;
         String taxonName = "";
         if ( taxonId != null ) {
@@ -308,7 +305,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
+    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException, SearchException {
 
         BufferedReader reader = new BufferedReader( new StringReader( query ) );
         String line;
@@ -328,7 +325,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) throws SearchException {
         Taxon taxon = taxonService.load( taxonId );
 
         if ( taxon == null )

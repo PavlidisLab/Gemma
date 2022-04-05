@@ -14,6 +14,7 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -28,9 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,7 +46,7 @@ import java.util.stream.Collectors;
 public class CompassSearchSource implements SearchSource {
 
     /**
-     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
+     * Penalty applied to score on hits for entities that derive from an association. For example, if a hit to an EE
      * came from text associated with one of its biomaterials,
      * the score is penalized by this amount (or, this is just the actual score used)
      */
@@ -95,11 +94,8 @@ public class CompassSearchSource implements SearchSource {
     @Autowired
     @Qualifier("compassProbe")
     private Compass compassProbe;
-
     @Autowired
     private BioSequenceService bioSequenceService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * A Compass search on array designs.
@@ -107,22 +103,22 @@ public class CompassSearchSource implements SearchSource {
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) {
+    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassArray, settings, ArrayDesign.class );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) {
+    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassBibliographic, settings, BibliographicReference.class );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassExperimentSet, settings, ExpressionExperimentSet.class );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) {
+    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassBiosequence, settings, BioSequence.class );
     }
 
@@ -135,7 +131,7 @@ public class CompassSearchSource implements SearchSource {
      */
     @Override
     public Collection<SearchResult> searchBioSequenceAndGene( SearchSettings settings,
-            Collection<SearchResult<Gene>> previousGeneSearchResults ) {
+            Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
         Collection<SearchResult> results = new HashSet<>( this.compassSearch( compassBiosequence, settings, BioSequence.class ) );
 
         // FIXME: incorporate the genes in the biosequence results (breaks generics)
@@ -164,36 +160,36 @@ public class CompassSearchSource implements SearchSource {
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) {
+    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassProbe, settings, CompositeSequence.class );
     }
 
     @Override
-    public Collection<SearchResult> searchCompositeSequenceAndGene( final SearchSettings settings ) {
+    public Collection<SearchResult> searchCompositeSequenceAndGene( final SearchSettings settings ) throws SearchException {
         return this.searchBioSequence( settings ).stream()
                 .map( o -> ( SearchResult ) o )
                 .collect( Collectors.toList() );
     }
 
     /**
-     * A compass search on expressionExperiments. The reults are filtered by taxon so that our limits are meaningfully
+     * A compass search on expressionExperiments. The results are filtered by taxon so that our limits are meaningfully
      * applied to next stages of the querying.
      *
      * @return {@link Collection}
      */
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) {
+    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings ) throws SearchException {
         Collection<SearchResult<ExpressionExperiment>> unfilteredResults = this.compassSearch( compassExpression, settings, ExpressionExperiment.class );
         return filterExperimentHitsByTaxon( unfilteredResults, settings.getTaxon() );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( final SearchSettings settings ) {
+    public Collection<SearchResult<Gene>> searchGene( final SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassGene, settings, Gene.class );
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) {
+    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException {
         return this.compassSearch( compassGeneSet, settings, GeneSet.class );
     }
 
@@ -205,18 +201,25 @@ public class CompassSearchSource implements SearchSource {
     /**
      * Generic method for searching Lucene indices for entities (excluding ontology terms, which use the OntologySearch)
      */
-    private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass bean, final SearchSettings settings, Class<T> clazz ) {
+    private <T extends Identifiable> Set<SearchResult<T>> compassSearch( Compass bean, final SearchSettings settings, Class<T> clazz ) throws SearchException {
 
         if ( !settings.getUseIndices() )
             return new HashSet<>();
 
         CompassTemplate template = new CompassTemplate( bean );
-        Set<SearchResult<T>> searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz ) );
+        Set<SearchResult<T>> searchResults;
+        try {
+            searchResults = template.execute( session -> CompassSearchSource.this.performSearch( settings, session, clazz ) );
+        } catch ( CompassException e ) {
+            throw new SearchException( "Could not perform the search request.", e );
+        }
+
         if ( CompassSearchSource.log.isDebugEnabled() ) {
             CompassSearchSource.log
                     .debug( "Compass search via " + bean.getSettings().getSetting( "compass.name" ) + " : " + settings
                             + " -> " + searchResults.size() + " hits" );
         }
+
         return searchResults;
     }
 
@@ -240,7 +243,7 @@ public class CompassSearchSource implements SearchSource {
 
         CompassHits hits = compassQuery.hits();
 
-        // highlighting.
+        // highlighting, if desired & supported by Compass (always!)
         if ( settings.isDoHighlighting() ) {
             if ( session instanceof InternalCompassSession ) {
                 // always ...
@@ -312,11 +315,8 @@ public class CompassSearchSource implements SearchSource {
         for ( int i = 0; i < maxHits; i++ ) {
             Object resultObject = hits.data( i );
 
-            SearchResult<T> r;
-            if ( hitsClass.isAssignableFrom( resultObject.getClass() ) ) {
-                //noinspection unchecked
-                r = new SearchResult<>( ( T ) resultObject );
-            } else {
+            // check if result object is of expected type
+            if ( !hitsClass.isAssignableFrom( resultObject.getClass() ) ) {
                 log.warn( "Incompatible result from compass: " + resultObject );
                 continue;
             }
@@ -328,38 +328,32 @@ public class CompassSearchSource implements SearchSource {
             }
 
             /*
-             * Always give compass hits a lower score so they can be differentiated from exact database hits.
+             * Always give compass hits a lower score, so they can be differentiated from exact database hits.
              */
-            r.setScore( score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR );
-
-            this.getHighlightedText( hits, i, r );
-
-            results.add( r );
+            //noinspection unchecked
+            results.add( new SearchResult<>( ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, this.getHighlightedText( hits, i ) ) );
         }
 
         if ( timer.getTime() > 100 ) {
-            CompassSearchSource.log.info( results.size() + " hits retrieved (out of " + Math
-                    .min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
-                    + timer
-                    .getTime()
-                    + "ms" );
-        }
-        if ( timer.getTime() > 5000 ) {
-            CompassSearchSource.log
-                    .info( "****Extremely long Lucene Search processing! " + results.size() + " hits retrieved (out of "
-                            + Math.min( CompassSearchSource.MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in "
-                            + timer.getTime() + "ms" );
+            String message = results.size() + " hits retrieved (out of " + hits.getLength() + " raw hits tested) in "
+                    + timer.getTime() + "ms for "
+                    + hits.getQuery();
+            if ( timer.getTime() > 5000 ) {
+                CompassSearchSource.log.warn( message );
+            } else {
+                CompassSearchSource.log.info( message );
+            }
         }
 
         return results;
     }
 
-    private void getHighlightedText( CompassHits hits, int i, SearchResult r ) {
+    private String getHighlightedText( CompassHits hits, int i ) {
         CompassHighlightedText highlightedText = hits.highlightedText( i );
         if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
-            r.setHighlightedText( highlightedText.getHighlightedText() );
+            return highlightedText.getHighlightedText();
         } else {
-            r.setHighlightedText( HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE );
+            return HIGHLIGHT_TEXT_NOT_AVAILABLE_MESSAGE;
         }
     }
 
@@ -370,8 +364,7 @@ public class CompassSearchSource implements SearchSource {
             return unfilteredResults;
 
         Collection<SearchResult<ExpressionExperiment>> filteredResults = new HashSet<>();
-        Collection<Long> eeIds = this.expressionExperimentService
-                .filterByTaxon( EntityUtils.getIds( unfilteredResults ), t );
+        Collection<Long> eeIds = unfilteredResults.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
         for ( SearchResult<ExpressionExperiment> sr : unfilteredResults ) {
             if ( eeIds.contains( sr.getResultId() ) ) {
                 filteredResults.add( sr );

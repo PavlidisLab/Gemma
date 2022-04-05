@@ -3,26 +3,22 @@ package ubic.gemma.web.logging;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
-import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNotNull;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.*;
 
 public class SlackAppenderTest {
 
-    private static Log log = LogFactory.getLog( SlackAppenderTest.class );
+    private static final Log log = LogFactory.getLog( SlackAppenderTest.class );
 
     private Slack mockedSlack;
 

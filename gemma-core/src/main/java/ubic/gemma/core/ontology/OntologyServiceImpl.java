@@ -64,6 +64,7 @@ import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -378,7 +379,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws SearchException {
 
         if ( StringUtils.isBlank( givenQueryString ) )
             return null;
@@ -997,7 +998,7 @@ public class OntologyServiceImpl implements OntologyService {
      * @param searchResults added to this
      */
     private void searchForGenes( String queryString, Taxon taxon,
-            Collection<CharacteristicValueObject> searchResults ) {
+            Collection<CharacteristicValueObject> searchResults ) throws SearchException {
 
         SearchSettings ss = SearchSettings.builder()
                 .query( queryString )

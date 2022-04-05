@@ -89,7 +89,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     public boolean isTransient( Object entity ) {
         if ( entity == null )
             return true;
-        Long id = EntityUtils.getId( entity );
+        Long id = EntityUtils.getProperty( entity, "id" );
 
         if ( id == null )
             return true; // assume.

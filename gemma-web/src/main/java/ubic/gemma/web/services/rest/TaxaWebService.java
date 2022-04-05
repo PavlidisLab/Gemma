@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -181,8 +182,12 @@ public class TaxaWebService {
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Taxon taxon = taxonArg.getEntity( taxonService );
-        return Responder
-                .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ) );
+        try {
+            return Responder
+                    .respond( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ) );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
     }
 
     /**

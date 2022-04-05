@@ -78,7 +78,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**
      * A search of experiments only. At least one of the arguments must be non-null.
@@ -88,7 +88,7 @@ public interface SearchService {
      *                 taxon are returned.
      * @return Collection of ids.
      */
-    Collection<Long> searchExpressionExperiments( String query, Long taxonId );
+    Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
 
     /**
      * Search results for a specific class.
