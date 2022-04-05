@@ -40,6 +40,7 @@ import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -73,7 +74,6 @@ import ubic.gemma.persistence.util.Settings;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database.
@@ -346,22 +346,6 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
-     * Add results.
-     *  @param rawResults To add to
-     * @param newResults To be added*/
-    private void accreteResults( List<SearchResult<?>> rawResults, Collection<SearchResult<?>> newResults ) {
-        for ( SearchResult sr : newResults ) {
-            if ( !rawResults.contains( sr ) ) {
-                /*
-                 * We do this because we don't want to clobber results, when the same object comes up more than once in
-                 * different searches.
-                 */
-                rawResults.add( sr );
-            }
-        }
-    }
-
-    /**
      * Checks whether settings have the search genes flag and does the search if needed.
      *
      * @param results the results to which should any new results be accreted.
@@ -369,7 +353,7 @@ public class SearchServiceImpl implements SearchService {
     private void accreteResultsGenes( List<SearchResult<?>> results, SearchSettings settings, boolean webSpeedSearch ) throws SearchException {
         if ( settings.hasResultType( Gene.class ) ) {
             Collection<SearchResult<?>> genes = this.getGenesFromSettings( settings, webSpeedSearch );
-            this.accreteResults( results, genes );
+            ListUtils.addAllNewElements( results, genes );
         }
     }
 
@@ -392,45 +376,45 @@ public class SearchServiceImpl implements SearchService {
         Collection<SearchResult<?>> compositeSequences = null;
         if ( settings.hasResultType( CompositeSequence.class ) ) {
             compositeSequences = this.compositeSequenceSearch( settings );
-            this.accreteResults( results, compositeSequences );
+            ListUtils.addAllNewElements( results, compositeSequences );
         }
 
         if ( settings.hasResultType( ArrayDesign.class ) ) {
             Collection<SearchResult<?>> foundADs = this.arrayDesignSearch( settings, compositeSequences );
-            this.accreteResults( results, foundADs );
+            ListUtils.addAllNewElements( results, foundADs );
         }
 
         if ( settings.hasResultType( BioSequence.class ) ) {
             Collection<SearchResult<?>> genes = this.getGenesFromSettings( settings, webSpeedSearch );
 
             Collection<SearchResult<?>> bioSequences = this.bioSequenceSearch( settings, genes );
-            this.accreteResults( results, bioSequences );
+            ListUtils.addAllNewElements( results, bioSequences );
         }
 
         if ( settings.getUseGo() ) {
             Collection<SearchResult<?>> ontologyGenes = this.dbHitsToSearchResult(
                     geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" );
-            this.accreteResults( results, ontologyGenes );
+            ListUtils.addAllNewElements( results, ontologyGenes );
         }
 
         if ( settings.hasResultType( BibliographicReference.class ) ) {
             Collection<SearchResult<?>> bibliographicReferences = this.compassSearchSource.searchBibliographicReference( settings );
-            this.accreteResults( results, bibliographicReferences );
+            ListUtils.addAllNewElements( results, bibliographicReferences );
         }
 
         if ( settings.hasResultType( GeneSet.class ) ) {
             Collection<SearchResult<?>> geneSets = this.geneSetSearch( settings );
-            this.accreteResults( results, geneSets );
+            ListUtils.addAllNewElements( results, geneSets );
         }
 
         if ( settings.hasResultType( ExpressionExperimentSet.class ) ) {
             Collection<SearchResult<?>> experimentSets = this.experimentSetSearch( settings );
-            this.accreteResults( results, experimentSets );
+            ListUtils.addAllNewElements( results, experimentSets );
         }
 
         if ( settings.hasResultType( PhenotypeAssociation.class ) ) {
             Collection<SearchResult<?>> phenotypes = this.databaseSearchSource.searchPhenotype( settings );
-            this.accreteResults( results, phenotypes );
+            ListUtils.addAllNewElements( results, phenotypes );
         }
 
         return results;
