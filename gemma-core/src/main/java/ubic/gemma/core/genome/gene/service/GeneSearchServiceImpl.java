@@ -29,10 +29,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.genome.gene.*;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -132,7 +129,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
+    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException {
         Taxon taxon = null;
         String taxonName = "";
         if ( taxonId != null ) {
@@ -170,7 +167,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
-        Map<Class<?>, List<SearchResult>> results = searchService.speedSearch( settings );
+        Map<Class<?>, List<SearchResult<?>>> results = searchService.speedSearch( settings );
 
         List<SearchResult> geneSetSearchResults = new ArrayList<>();
         List<SearchResult> geneSearchResults = new ArrayList<>();
@@ -306,7 +303,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
+    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException, SearchException {
 
         BufferedReader reader = new BufferedReader( new StringReader( query ) );
         String line;
@@ -326,7 +323,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     @Override
-    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) throws SearchException {
         Taxon taxon = taxonService.load( taxonId );
 
         if ( taxon == null )
@@ -356,7 +353,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
+            List<SearchResult<?>> geneSearchResults = searchService.speedSearch( settings ).get( Gene.class );
 
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.

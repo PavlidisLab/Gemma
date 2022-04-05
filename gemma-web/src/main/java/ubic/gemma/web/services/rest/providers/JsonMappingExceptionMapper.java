@@ -3,11 +3,14 @@ package ubic.gemma.web.services.rest.providers;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.checkerframework.checker.units.qual.C;
 import ubic.gemma.web.services.rest.util.OpenApiUtils;
 import ubic.gemma.web.services.rest.util.ResponseErrorObject;
+import ubic.gemma.web.services.rest.util.ServletUtils;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -21,14 +24,17 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
 
-    private static Log log = LogFactory.getLog( JsonMappingExceptionMapper.class.getName() );
+    private static final Log log = LogFactory.getLog( JsonMappingExceptionMapper.class.getName() );
+
+    @Context
+    private HttpServletRequest request;
 
     @Context
     private ServletConfig servletConfig;
 
     @Override
     public Response toResponse( JsonMappingException exception ) {
-        log.error( "Exception during JSON mapping: ", exception );
+        log.error( "Exception during JSON mapping for request: " + ServletUtils.summarizeRequest( request ) + ".", exception );
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, exception.getMessage() );
         return Response.status( code ).entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) ).build();

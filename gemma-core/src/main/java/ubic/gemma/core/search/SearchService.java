@@ -41,7 +41,7 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
+    Map<Class<?>, List<SearchResult<?>>> search( SearchSettings settings ) throws SearchException;
 
     /**
      * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting
@@ -52,7 +52,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
      */
-    Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings );
+    Map<Class<?>, List<SearchResult<?>>> speedSearch( SearchSettings settings ) throws SearchException;
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -74,7 +74,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security
      *                        considerations.
      */
-    Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
+    Map<Class<?>, List<SearchResult<?>>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch ) throws SearchException;
 
     /**
      * A search of experiments only. At least one of the arguments must be non-null.
@@ -84,7 +84,7 @@ public interface SearchService {
      *                 taxon are returned.
      * @return Collection of ids.
      */
-    Collection<Long> searchExpressionExperiments( String query, Long taxonId );
+    Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
 
     /**
      * convenience method to return only search results from one class
@@ -95,7 +95,7 @@ public interface SearchService {
      * @param  resultClass class
      * @return only search results from one class
      */
-    <T> List<T> search( SearchSettings settings, Class<T> resultClass );
+    <T> List<T> search( SearchSettings settings, Class<T> resultClass ) throws SearchException;
 
     /**
      * Returns a set of supported result types.

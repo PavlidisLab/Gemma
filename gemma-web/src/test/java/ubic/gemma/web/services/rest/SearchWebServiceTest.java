@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.web.WebAppConfiguration;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -23,7 +24,6 @@ import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -92,8 +92,8 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchEverything() {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
+    public void testSearchEverything() throws SearchException {
+        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         ResponseDataObject<List<SearchWebService.SearchResultValueObject>> searchResults = searchWebService.search( "BRCA1", null, null, null );
         assertThat( searchResults.getData() )
@@ -106,16 +106,16 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchByTaxon() {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
+    public void testSearchByTaxon() throws SearchException {
+        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         searchWebService.search( "BRCA1", TaxonArg.valueOf( "9606" ), null, null );
         verify( taxonService ).findByNcbiId( 9606 );
     }
 
     @Test
-    public void testSearchByArrayDesign() {
-        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult( gene ) ) ) );
+    public void testSearchByArrayDesign() throws SearchException {
+        when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.convertSearchResultObjectToValueObject( any() ) ).thenAnswer( args -> new GeneValueObject( ( Gene ) args.getArgument( 0, SearchResult.class ).getResultObject() ) );
         searchWebService.search( "BRCA1", null, PlatformArg.valueOf( "1" ), null );
         verify( arrayDesignService ).load( 1L );
@@ -143,6 +143,6 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
 
     @Test(expected = BadRequestException.class)
     public void testSearchWhenUnsupportedResultTypeIsProvided() {
-        searchWebService.search( "brain", null, null, Arrays.asList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ) );
+        searchWebService.search( "brain", null, null, Collections.singletonList( "ubic.gemma.model.expression.designElement.CompositeSequence2" ) );
     }
 }

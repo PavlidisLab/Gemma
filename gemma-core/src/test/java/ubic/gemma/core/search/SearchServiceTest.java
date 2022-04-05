@@ -143,7 +143,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * are found, -- requires LARQ index.
      */
     @Test
-    public void testGeneralSearch4Brain() {
+    public void testGeneralSearch4Brain() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -160,10 +160,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Collection<OntologyTerm> ontologyhits = ontologyService.findTerms( "brain" );
         assertTrue( !ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
-        List<SearchResult> eer = found.get( ExpressionExperiment.class );
+        List<SearchResult<?>> eer = found.get( ExpressionExperiment.class );
         assertTrue( !eer.isEmpty() );
 
         for ( SearchResult sr : eer ) {
@@ -181,7 +181,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Tests that gene uris get handled correctly
      */
     @Test
-    public void testGeneUriSearch() {
+    public void testGeneUriSearch() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -191,7 +191,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .query( SearchServiceTest.GENE_URI + this.geneNcbiId )
                 .resultType( Gene.class )
                 .build();
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( Gene.class ) ) {
@@ -208,7 +208,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblems() {
+    public void testSearchByBibRefIdProblems() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -231,7 +231,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
@@ -244,7 +244,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchByBibRefIdProblemsB() {
+    public void testSearchByBibRefIdProblemsB() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -267,7 +267,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .resultType( BibliographicReference.class )
                 .build();
 
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
@@ -328,7 +328,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Test we find EE tagged with a child term that matches the given uri.
      */
     @Test
-    public void testURIChildSearch() {
+    public void testURIChildSearch() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -339,7 +339,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 // 'spinal cord'.
                 .resultType( ExpressionExperiment.class )
                 .build();
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
@@ -356,7 +356,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Does the search engine correctly match the spinal cord URI and find objects directly tagged with that URI
      */
     @Test
-    public void testURISearch() {
+    public void testURISearch() throws SearchException {
         try {
             this.setup();
         } catch ( Exception e ) {
@@ -369,7 +369,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .useCharacteristics( true )
                 .build();
-        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        Map<Class<?>, List<SearchResult<?>>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {

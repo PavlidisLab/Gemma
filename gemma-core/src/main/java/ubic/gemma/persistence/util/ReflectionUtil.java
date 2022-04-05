@@ -33,7 +33,7 @@ public class ReflectionUtil {
      * @param cls class
      * @return base object for Impl; for example, for a FooImpl.class it returns Foo.class.
      */
-    public static Class<?> getBaseForImpl( Class<?> cls ) {
+    public static <T> Class<? super T> getBaseForImpl( Class<T> cls ) {
         if ( cls.getName().endsWith( "Impl" ) ) {
             return cls.getSuperclass();
         }

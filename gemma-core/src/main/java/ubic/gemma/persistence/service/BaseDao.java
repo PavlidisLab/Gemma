@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 
 /**
@@ -123,5 +124,6 @@ public interface BaseDao<T> {
      * @param entity the entity to look for and persist if not found.
      * @return the given entity, guaranteed to be representing an entity present in the persistent storage.
      */
+    @CheckReturnValue
     T findOrCreate( T entity );
 }

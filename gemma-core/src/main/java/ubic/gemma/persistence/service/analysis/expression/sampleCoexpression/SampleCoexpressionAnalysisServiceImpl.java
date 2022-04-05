@@ -19,7 +19,8 @@ import cern.colt.matrix.DoubleMatrix2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -56,7 +57,7 @@ import java.util.*;
  *
  * @author paul
  */
-@Component
+@Service
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger( SampleCoexpressionAnalysisServiceImpl.class );
@@ -91,11 +92,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
+    @Transactional(readOnly = true)
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
+    @Transactional
     public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) {
         SampleCoexpressionAnalysis analysis = this.load( ee );
         SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
@@ -108,6 +111,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -125,11 +129,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasAnalysis( ExpressionExperiment ee ) {
         return sampleCoexpressionAnalysisDao.load( ee ) != null;
     }
 
     @Override
+    @Transactional
     public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -150,6 +156,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
     }

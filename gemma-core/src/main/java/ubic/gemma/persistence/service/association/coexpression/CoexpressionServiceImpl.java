@@ -114,7 +114,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             int maxResults, boolean quick ) {
         assert gene != null;
         Map<Long, List<CoexpressionValueObject>> r = this
-                .findCoexpressionRelationships( gene.getTaxon(), EntityUtils.getIds( gene ), bas, stringency,
+                .findCoexpressionRelationships( gene.getTaxon(), Collections.singleton( gene.getId() ), bas, stringency,
                         maxResults, quick );
         return r.containsKey( gene.getId() ) ? r.get( gene.getId() ) : new ArrayList<CoexpressionValueObject>();
     }
@@ -279,7 +279,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     //     }
 
     // }
-
     private GeneCoexpressionNodeDegreeValueObject updateNodeDegree( Gene gene ) {
         GeneCoexpressionNodeDegree nd = this.geneCoexpressionNodeDegreeDao.findOrCreate( gene );
         return this.coexpressionDao.updateNodeDegree( gene, nd );

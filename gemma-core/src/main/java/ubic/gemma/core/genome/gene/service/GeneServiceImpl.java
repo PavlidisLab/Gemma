@@ -26,6 +26,7 @@ import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -351,10 +352,15 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
                     .query( "http://purl.org/commons/record/ncbi_gene/" + gvo.getNcbiId() )
                     .resultType( ExpressionExperiment.class )
                     .build();
-            Map<Class<?>, List<SearchResult>> r = searchService.search( s );
-            if ( r.containsKey( ExpressionExperiment.class ) ) {
-                List<SearchResult> hits = r.get( ExpressionExperiment.class );
-                gvo.setAssociatedExperimentCount( hits.size() );
+            Map<Class<?>, List<SearchResult<?>>> r = null;
+            try {
+                r = searchService.search( s );
+                if ( r.containsKey( ExpressionExperiment.class ) ) {
+                    List<SearchResult<?>> hits = r.get( ExpressionExperiment.class );
+                    gvo.setAssociatedExperimentCount( hits.size() );
+                }
+            } catch ( SearchException e ) {
+                log.error( "Failed to retrieve associated EE count for " + gene + ".", e );
             }
         }
 
@@ -483,14 +489,14 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
      * @return Collection of Gene entity objects
      */
     @Override
-    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
+    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) throws SearchException {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
+        List<SearchResult<?>> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

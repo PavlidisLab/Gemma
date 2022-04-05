@@ -304,7 +304,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Session session = this.getSessionFactory().getCurrentSession();
 
         Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = EntityUtils
-                .getIdMap( resultSets, "getResultSetId" );
+                .getPropertyMap( resultSets, "resultSetId" );
 
         Map<Long, Collection<Long>> foundInCache = this.fillFromCache( results, resultSetIdsMap.keySet(), geneIds );
 

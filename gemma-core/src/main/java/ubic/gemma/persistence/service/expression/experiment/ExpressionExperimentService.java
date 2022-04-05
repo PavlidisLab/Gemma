@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -88,7 +89,7 @@ public interface ExpressionExperimentService
      * @param searchString search string
      * @return collection of ids or an empty collection.
      */
-    Collection<Long> filter( String searchString );
+    Collection<Long> filter( String searchString ) throws SearchException;
 
     /**
      * Remove IDs of Experiments that are not from the given taxon.

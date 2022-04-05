@@ -28,6 +28,7 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -211,14 +212,17 @@ public class UserFormMultiActionController extends BaseController {
 
             jsonText = "{success:true}";
 
+        } catch ( AuthenticationException e ) {
+            log.info( "Password could not be reset due to an authentication-related error.", e );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
         } catch ( Exception e ) {
-            log.error( e, e );
+            log.error( "Unexpected exception when attempting to change password.", e );
             jsonText = jsonUtil.getJSONErrorMessage( e );
         } finally {
             try {
                 jsonUtil.writeToResponse( jsonText );
             } catch ( IOException e ) {
-                e.printStackTrace();
+                log.error( "Failed to write JSON response.", e );
             }
         }
     }

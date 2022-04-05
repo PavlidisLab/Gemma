@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
+import ubic.gemma.model.common.Identifiable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +32,7 @@ import java.util.HashSet;
  *
  * @author kelsey
  */
-public class GeneSetValueObject implements SecureValueObject {
+public class GeneSetValueObject implements Identifiable, SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
@@ -49,6 +50,7 @@ public class GeneSetValueObject implements SecureValueObject {
         }
         return result;
     }
+
     private boolean currentUserIsOwner = false;
     private String description;
     private Collection<Long> geneIds = new HashSet<>();

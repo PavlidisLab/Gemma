@@ -37,6 +37,7 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.security.audit.AuditableUtil;
@@ -262,8 +263,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
-                .get( ArrayDesign.class );
+        List<SearchResult<?>> searchResults = null;
+        try {
+            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
+                    .get( ArrayDesign.class );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )

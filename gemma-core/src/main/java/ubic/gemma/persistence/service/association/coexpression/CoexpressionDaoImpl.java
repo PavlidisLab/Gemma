@@ -1253,7 +1253,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private List<CoexpressionValueObject> getCoexpression( Gene gene ) {
 
         // DO NOT change this to use the alternative method getCoexpressionFromDbViaGenes2
-        Map<Long, List<CoexpressionValueObject>> r = this.getCoexpressionFromDbViaGenes( EntityUtils.getIds( gene ),
+        Map<Long, List<CoexpressionValueObject>> r = this.getCoexpressionFromDbViaGenes( Collections.singleton( gene.getId() ),
                 CoexpressionQueryUtils.getGeneLinkClassName( gene ) );
 
         List<CoexpressionValueObject> rr = r.get( gene.getId() );
@@ -1968,7 +1968,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 Collection<Long> g = it.next();
                 q.setParameterList( "genes", g );
                 List<GeneCoexpressionTestedIn> list = q.list();
-                Map<Long, GeneCoexpressionTestedIn> idMap = EntityUtils.getIdMap( list, "getGeneId" );
+                Map<Long, GeneCoexpressionTestedIn> idMap = EntityUtils.getPropertyMap( list, "geneId" );
                 geneTestedInCache.cache( idMap );
                 gcTestedIn.putAll( idMap );
                 ++n;

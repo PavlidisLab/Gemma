@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -128,7 +129,12 @@ public class AnnotationsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+        Collection<Long> foundIds;
+        try {
+            foundIds = this.searchEEs( query.getValue() );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
 
         if ( foundIds.isEmpty() ) {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
@@ -172,7 +178,12 @@ public class AnnotationsWebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Collection<Long> foundIds = this.searchEEs( query.getValue() );
+        Collection<Long> foundIds = null;
+        try {
+            foundIds = this.searchEEs( query.getValue() );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings.", e );
+        }
 
         if ( foundIds.isEmpty() ) {
             return Responder.paginate( Slice.fromList( Collections.emptyList() ) );
@@ -197,7 +208,7 @@ public class AnnotationsWebService {
      * @param values the values that the datasets should match.
      * @return set of IDs that satisfy all given search values.
      */
-    private Collection<Long> searchEEs( List<String> values ) {
+    private Collection<Long> searchEEs( List<String> values ) throws SearchException {
         Set<Long> ids = new HashSet<>();
         boolean firstRun = true;
         for ( String value : values ) {
@@ -205,8 +216,8 @@ public class AnnotationsWebService {
 
             SearchSettings settings = SearchSettings.expressionExperimentSearch( value );
 
-            Map<Class<?>, List<SearchResult>> results = searchService.search( settings, false, false );
-            List<SearchResult> eeResults = results.get( ExpressionExperiment.class );
+            Map<Class<?>, List<SearchResult<?>>> results = searchService.search( settings, false, false );
+            List<SearchResult<?>> eeResults = results.get( ExpressionExperiment.class );
 
             if ( eeResults == null ) {
                 return new HashSet<>(); // No terms found for the current term means the intersection will be empty.

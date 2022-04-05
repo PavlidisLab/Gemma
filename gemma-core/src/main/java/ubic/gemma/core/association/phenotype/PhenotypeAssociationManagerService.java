@@ -16,6 +16,7 @@ package ubic.gemma.core.association.phenotype;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -147,7 +148,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  taxonId can be null to not constrain by taxon
      * @return         list of Genes
      */
-    List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
+    List<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) throws SearchException;
 
     /**
      * Load an evidence

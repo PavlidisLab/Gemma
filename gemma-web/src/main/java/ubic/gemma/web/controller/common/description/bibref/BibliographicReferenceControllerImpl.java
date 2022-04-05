@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -188,9 +189,12 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
-        List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
-
-        return new JsonReaderResponse<>( vos, vos.size() );
+        try {
+            List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
+            return new JsonReaderResponse<>( vos, vos.size() );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings.", e );
+        }
     }
 
     @Override
