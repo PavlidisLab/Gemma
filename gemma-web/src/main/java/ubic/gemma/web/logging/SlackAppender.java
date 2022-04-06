@@ -66,7 +66,7 @@ public class SlackAppender extends AppenderSkeleton implements Appender {
     private static Attachment stacktraceAsAttachment( LoggingEvent loggingEvent ) {
         return Attachment.builder()
                 .title( ExceptionUtils.getMessage( loggingEvent.getThrowableInformation().getThrowable() ) )
-                .text( "```" + ExceptionUtils.getStackTrace( loggingEvent.getThrowableInformation().getThrowable() ) + "```" )
+                .text( ExceptionUtils.getStackTrace( loggingEvent.getThrowableInformation().getThrowable() ) )
                 .fallback( "This attachment normally contains an error stacktrace." )
                 .build();
     }
