@@ -121,7 +121,12 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 .withDoHighlighting( true );
 
         searchTimer.start();
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults = searchService.search( searchSettings );
+        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults;
+        try {
+            searchResults = searchService.search( searchSettings );
+        } catch ( SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search settings " + searchSettings + ".", e );
+        }
         searchTimer.stop();
 
         // FIXME: sort by the number of hits per class, so the smallest number of hits is at the top.

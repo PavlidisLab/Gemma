@@ -96,9 +96,17 @@ public class SearchWebService {
                 .maxResults( limit.getValue( 100 ) )
                 .build();
 
+        List<SearchResult<? extends Identifiable>> searchResults;
+        try {
+            searchResults = searchService.search( searchSettings ).values().stream()
+                    .flatMap( List::stream )
+                    .collect( Collectors.toList() );
+        } catch ( SearchException e ) {
+            throw new BadRequestException( "Invalid search settings: " + searchSettings + ".", e );
+        }
+
         // convert the response to search results of VOs
-        return new SearchResultResponseDataObject( searchService.search( searchSettings ).values().stream()
-                .flatMap( List::stream )
+        return new SearchResultsResponseDataObject( searchResults.stream()
                 .map( searchService::loadValueObject )
                 .sorted() // SearchResults are sorted by descending score order
                 .limit( limit.getValue( 100 ) ) // results are limited by class, so there might be more results than expected when unraveling everything

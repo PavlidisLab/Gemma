@@ -45,7 +45,7 @@ public interface SearchService {
      * @param  settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings );
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings ) throws SearchException;
 
     /**
      * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting
@@ -56,7 +56,7 @@ public interface SearchService {
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see             #search(SearchSettings)
      */
-    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings );
+    Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings ) throws SearchException;
 
     /**
      * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
@@ -104,7 +104,7 @@ public interface SearchService {
      * @param  resultClass the result type class from which the type is inferred
      * @return only search results from one class
      */
-    <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass );
+    <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass ) throws SearchException;
 
     /**
      * Returns a set of supported result types.

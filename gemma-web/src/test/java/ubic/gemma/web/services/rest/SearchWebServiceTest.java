@@ -94,7 +94,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchEverything() {
+    public void testSearchEverything() throws SearchException {
         ArgumentCaptor<SearchSettings> searchSettingsArgumentCaptor = ArgumentCaptor.forClass( SearchSettings.class );
         when( searchService.search( searchSettingsArgumentCaptor.capture() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
@@ -103,7 +103,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
         } );
         when( searchService.getSupportedResultTypes() ).thenReturn( Collections.singleton( Gene.class ) );
 
-        SearchWebService.SearchResultResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ) );
+        SearchWebService.SearchResultsResponseDataObject searchResults = searchWebService.search( "BRCA1", null, null, null, LimitArg.valueOf( "20" ) );
 
         assertThat( searchSettingsArgumentCaptor.getValue() )
                 .hasFieldOrPropertyWithValue( "query", "BRCA1" )
@@ -124,7 +124,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchByTaxon() {
+    public void testSearchByTaxon() throws SearchException {
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             SearchResult searchResult = args.getArgument( 0, SearchResult.class );
@@ -135,7 +135,7 @@ public class SearchWebServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchByArrayDesign() {
+    public void testSearchByArrayDesign() throws SearchException {
         when( searchService.search( any() ) ).thenReturn( Collections.singletonMap( Gene.class, Collections.singletonList( new SearchResult<>( gene ) ) ) );
         when( searchService.loadValueObject( any() ) ).thenAnswer( args -> {
             SearchResult searchResult = args.getArgument( 0, SearchResult.class );

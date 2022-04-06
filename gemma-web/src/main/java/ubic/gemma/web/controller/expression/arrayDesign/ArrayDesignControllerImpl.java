@@ -263,7 +263,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     .addObject( "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult<ArrayDesign>> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ), ArrayDesign.class );
+        Collection<SearchResult<ArrayDesign>> searchResults = null;
+        try {
+            searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ), ArrayDesign.class );
+        } catch ( SearchException e ) {
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+                    .addObject( "message", "Invalid search settings: " + e.getMessage() );
+        }
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )

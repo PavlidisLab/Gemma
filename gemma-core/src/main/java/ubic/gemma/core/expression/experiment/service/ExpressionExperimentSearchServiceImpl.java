@@ -295,7 +295,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentSets;
     }
 
-    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> initialSearch( String query, Long taxonId ) {
+    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> initialSearch( String query, Long taxonId ) throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )

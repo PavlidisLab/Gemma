@@ -142,7 +142,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * are found, -- requires LARQ index.
      */
     @Test
-    public void testGeneralSearch4Brain() {
+    public void testGeneralSearch4Brain() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( "Brain" ) // should hit 'cavity of brain'.
                 .resultType( ExpressionExperiment.class )
@@ -173,7 +173,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Tests that gene uris get handled correctly
      */
     @Test
-    public void testGeneUriSearch() {
+    public void testGeneUriSearch() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.GENE_URI + this.geneNcbiId )
                 .resultType( Gene.class )
@@ -192,7 +192,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testSearchByBibRefIdProblems() {
+    public void testSearchByBibRefIdProblems() throws SearchException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -222,7 +222,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchByBibRefIdProblemsB() {
+    public void testSearchByBibRefIdProblemsB() throws SearchException {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -292,7 +292,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Test we find EE tagged with a child term that matches the given uri.
      */
     @Test
-    public void testURIChildSearch() {
+    public void testURIChildSearch() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( "http://purl.obolibrary.org/obo/FMA_83153" ) // OrganComponent of Neuraxis; superclass of
                 // 'spinal cord'.
@@ -314,7 +314,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
      * Does the search engine correctly match the spinal cord URI and find objects directly tagged with that URI
      */
     @Test
-    public void testURISearch() {
+    public void testURISearch() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )
@@ -335,7 +335,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testLoadValueObject() {
+    public void testLoadValueObject() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )
@@ -354,7 +354,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testLoadValueObjects() {
+    public void testLoadValueObjects() throws SearchException {
         SearchSettings settings = SearchSettings.builder()
                 .query( SearchServiceTest.SPINAL_CORD )
                 .resultType( ExpressionExperiment.class )

@@ -169,19 +169,8 @@ public class SearchServiceImpl implements SearchService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings ) {
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults = new HashMap<>();
-        try {
-            searchResults = this.search( settings, true /* fill objects */, false /* web speed search */ );
-
-        } catch ( org.compass.core.engine.SearchEngineQueryParseException qpe ) {
-            SearchServiceImpl.log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
-
-        } catch ( Exception e ) {
-            SearchServiceImpl.log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
-        }
-
-        return searchResults;
+    public Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> search( SearchSettings settings ) throws SearchException {
+        return this.search( settings, true /* fill objects */, false /* web speed search */ );
     }
 
     /*
@@ -189,19 +178,8 @@ public class SearchServiceImpl implements SearchService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings ) {
-        Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> searchResults = new HashMap<>();
-        try {
-            searchResults = this.search( settings, true, true );
-
-        } catch ( org.compass.core.engine.SearchEngineQueryParseException qpe ) {
-            SearchServiceImpl.log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
-
-        } catch ( Exception e ) {
-            SearchServiceImpl.log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
-        }
-
-        return searchResults;
+    public Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> speedSearch( SearchSettings settings ) throws SearchException {
+        return this.search( settings, true, true );
     }
 
     /*
@@ -271,7 +249,7 @@ public class SearchServiceImpl implements SearchService {
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass ) {
+    public <T extends Identifiable> List<SearchResult<T>> search( SearchSettings settings, Class<T> resultClass ) throws SearchException {
         // only search for the requested class
         settings = settings.withResultTypes( Collections.singleton( resultClass ) );
 
