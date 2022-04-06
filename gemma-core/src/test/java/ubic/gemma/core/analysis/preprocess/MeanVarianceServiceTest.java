@@ -14,12 +14,12 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
-import org.junit.Before;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -74,46 +74,17 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
     private QuantitationType qt;
 
-    @Before
-    public void setUp() throws Exception {
-        ee = eeService.findByShortName( "GSE2982" );
-        if ( ee != null ) {
-            eeService.remove( ee );
-        }
-
-        geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
-
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
-
-        // scale is not correctly recorded.
-        ee = ( ExpressionExperiment ) results.iterator().next();
-        qt = this.createOrUpdateQt( ScaleType.LOG2 );
-
-        // not parsed properly
-        ArrayDesign ad = eeService.getArrayDesignsUsed( ee ).iterator().next();
-        ad.setTechnologyType( TechnologyType.TWOCOLOR );
-        arrayDesignService.update( ad );
-
-        qt.setIsNormalized( true );
-        quantitationTypeService.update( qt );
-
-        // important bit, need to createProcessedVectors manually before using it
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
-    }
-
     @After
     public void after() {
-        try {
+        if ( ee != null ) {
             eeService.remove( ee );
-        } catch ( Exception ignored ) {
-
         }
     }
 
     @Test
     @Category(SlowTest.class)
-    final public void testServiceCreateTwoColor() {
+    final public void testServiceCreateTwoColor() throws Exception {
+        ee = prepareGSE2892();
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
@@ -163,7 +134,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    final public void testServiceCreateOneColor() {
+    final public void testServiceCreateOneColor() throws Exception {
+        ee = prepareGSE2892();
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
@@ -214,29 +186,18 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // so it doesn't look for soft files
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        boolean bad;
 
-        do {
-            try {
-                bad = false;
-                ee = eeService.findByShortName( "GSE29006" );
-                if ( ee != null ) {
-                    eeService.remove( ee );
-                }
+        assertNull( eeService.findByShortName( "GSE29006" ) );
 
-                assertNull( eeService.findByShortName( "GSE29006" ) );
-
-                try {
-                    Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
-                    ee = ( ExpressionExperiment ) results.iterator().next();
-                } catch ( AlreadyExistsInSystemException e ) {
-                    throw new IllegalStateException( "Need to remove this data set before test is run" );
-                }
-
-            } catch ( ObjectNotFoundException e ) {
-                bad = true;
-            }
-        } while ( bad ); // This is to fight an odd race condition that does not seem to occur in production, see git issue #45
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AccessDeniedException e ) {
+            // see https://github.com/PavlidisLab/Gemma/issues/206
+            Assume.assumeNoException( e );
+        } catch ( AlreadyExistsInSystemException e ) {
+            throw new IllegalStateException( "Need to remove this data set before test is run" );
+        }
 
         ee = eeService.thaw( ee );
 
@@ -245,11 +206,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass()
+        try ( InputStream countData = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" )) {
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" ) ) {
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
             DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
@@ -305,7 +266,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    final public void testServiceCreateExistingEe() {
+    final public void testServiceCreateExistingEe() throws Exception {
+        ee = prepareGSE2892();
 
         // no MeanVarianceRelation exists yet
         ee = eeService.load( ee.getId() );
@@ -357,5 +319,31 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         }
 
         return qt;
+    }
+
+    private ExpressionExperiment prepareGSE2892() throws Exception {
+        assertNull( eeService.findByShortName( "GSE2982" ) );
+
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
+
+        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
+
+        // scale is not correctly recorded.
+        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
+        qt = this.createOrUpdateQt( ScaleType.LOG2 );
+
+        // not parsed properly
+        ArrayDesign ad = eeService.getArrayDesignsUsed( ee ).iterator().next();
+        ad.setTechnologyType( TechnologyType.TWOCOLOR );
+        arrayDesignService.update( ad );
+
+        qt.setIsNormalized( true );
+        quantitationTypeService.update( qt );
+
+        // important bit, need to createProcessedVectors manually before using it
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+
+        return ee;
     }
 }
