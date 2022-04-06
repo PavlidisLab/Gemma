@@ -78,25 +78,14 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Autowired
     private ExpressionDataMatrixService dataMatrixService;
 
+    private ExpressionExperiment ee;
     private ArrayDesign targetArrayDesign;
 
     @After
     public void tearDown() {
-        ExpressionExperiment e1 = experimentService.findByShortName( "GSE29006" );
-        if ( e1 != null ) {
-            experimentService.remove( e1 );
+        if ( ee != null ) {
+            experimentService.remove( ee );
         }
-
-        ExpressionExperiment e2 = experimentService.findByShortName( "GSE19166" );
-        if ( e2 != null ) {
-            experimentService.remove( e2 );
-        }
-
-        ExpressionExperiment e3 = experimentService.findByShortName( "GSE37646" );
-        if ( e3 != null ) {
-            experimentService.remove( e3 );
-        }
-
         if ( targetArrayDesign != null )
             arrayDesignService.remove( targetArrayDesign );
 
@@ -110,7 +99,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          * Load a regular data set that has no data. Platform is (basically) irrelevant.
          */
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
-        ExpressionExperiment ee;
 
         // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
@@ -221,7 +209,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     public void testLoadRNASeqData() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        ExpressionExperiment ee;
 
         // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
@@ -244,11 +231,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrix<String, String> countMatrix;
         DoubleMatrix<String, String> rpkmMatrix;
-        try (InputStream countData = this.getClass()
+        try ( InputStream countData = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" )) {
+                        "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" ) ) {
             countMatrix = reader.read( countData );
             rpkmMatrix = reader.read( rpkmData );
         }
@@ -303,7 +290,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( 6, v.getBioAssays().size() );
 
         }
-        assertTrue( !dataVectorService.getProcessedDataVectors( experimentService.load( ee.getId() ) ).isEmpty() );
+        assertFalse( dataVectorService.getProcessedDataVectors( experimentService.load( ee.getId() ) ).isEmpty() );
 
         // Call it again to test that we don't leak QTs
         dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
@@ -321,12 +308,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        ExpressionExperiment ee = experimentService.findByShortName( "GSE29006" );
-        if ( ee != null ) {
-            experimentService.remove( ee );
-        }
 
-        assertTrue( experimentService.findByShortName( "GSE29006" ) == null );
+        assertNull( experimentService.findByShortName( "GSE29006" ) );
 
         // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
@@ -347,11 +330,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass()
+        try ( InputStream countData = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" )) {
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" ) ) {
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
             DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
