@@ -87,7 +87,9 @@ public interface SearchService {
      * @param  taxonId can be null; if non-null, used to filter results. If query is blank, all experiments for the
      *                 taxon are returned.
      * @return Collection of ids.
+     * @deprecated use {@link #search(SearchSettings, Class)} with {@link ExpressionExperiment#getClass()} instead.
      */
+    @Deprecated
     Collection<Long> searchExpressionExperiments( String query, Long taxonId ) throws SearchException;
 
     /**
