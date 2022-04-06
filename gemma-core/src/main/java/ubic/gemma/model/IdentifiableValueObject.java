@@ -2,6 +2,8 @@ package ubic.gemma.model;
 
 import ubic.gemma.model.common.Identifiable;
 
+import java.util.Objects;
+
 /**
  * Created by tesarst on 31/05/17.
  * Interface for value objects representing persistent objects
@@ -50,6 +52,6 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
 
     @Override
     public int hashCode() {
-        return 31 * id.hashCode();
+        return 31 * Objects.hashCode( id );
     }
 }
