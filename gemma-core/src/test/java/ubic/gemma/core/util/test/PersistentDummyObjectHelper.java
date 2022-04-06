@@ -861,12 +861,17 @@ public class PersistentDummyObjectHelper {
             fv.setValue( "Factor value " + RandomStringUtils
                     .randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             fv.setExperimentalFactor( ef );
+            fv.setCharacteristics( Collections.singleton( getTestCharacteristic( "name" + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
             fvCol.add( fv );
         }
 
         allFactorValues.addAll( fvCol );
 
         return fvCol;
+    }
+
+    protected Characteristic getTestCharacteristic( String name, String value ) {
+        return Characteristic.Factory.newInstance( name, null, value, null, null, null, null );
     }
 
     private Collection<QuantitationType> addQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
