@@ -78,6 +78,7 @@ import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -214,12 +215,19 @@ public class SearchServiceImpl implements SearchService {
             throw new IllegalArgumentException( "The search settings contains unsupported result types:" + Sets.difference( settings.getResultTypes(), supportedResultTypes ) + "." );
         }
 
+        StopWatch timer = StopWatch.createStarted();
+
         Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results;
         if ( settings.isTermQuery() ) {
             // we only attempt an ontology search if the uri looks remotely like a url.
             results = this.ontologyUriSearch( settings );
         } else {
             results = this.generalSearch( settings, fillObjects, webSpeedSearch );
+        }
+
+        Integer totalResults = results.values().stream().map( Collection::size ).reduce( 0, Integer::sum );
+        if ( totalResults > 0 ) {
+            log.info( "Search for " + settings + " yielded " + totalResults + " results in " + timer.getTime( TimeUnit.MILLISECONDS ) + " ms." );
         }
 
         return results;
