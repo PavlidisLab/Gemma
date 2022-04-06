@@ -86,7 +86,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     final public void testServiceCreateTwoColor() throws Exception {
-        ee = prepareGSE2892();
+        prepareGSE2892();
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
@@ -137,7 +137,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     final public void testServiceCreateOneColor() throws Exception {
-        ee = prepareGSE2892();
+        prepareGSE2892();
 
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
@@ -269,7 +269,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     final public void testServiceCreateExistingEe() throws Exception {
-        ee = prepareGSE2892();
+        prepareGSE2892();
 
         // no MeanVarianceRelation exists yet
         ee = eeService.load( ee.getId() );
@@ -323,7 +323,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         return qt;
     }
 
-    private ExpressionExperiment prepareGSE2892() throws Exception {
+    private void prepareGSE2892() throws Exception {
         assertNull( eeService.findByShortName( "GSE2982" ) );
 
         geoService.setGeoDomainObjectGenerator(
@@ -332,7 +332,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
 
         // scale is not correctly recorded.
-        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
+        ee = ( ExpressionExperiment ) results.iterator().next();
         qt = this.createOrUpdateQt( ScaleType.LOG2 );
 
         // not parsed properly
@@ -345,7 +345,5 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // important bit, need to createProcessedVectors manually before using it
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
-
-        return ee;
     }
 }
