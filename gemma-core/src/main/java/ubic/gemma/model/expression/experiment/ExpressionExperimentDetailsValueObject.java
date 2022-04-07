@@ -91,12 +91,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String secondaryExternalDatabase;
     private String secondaryExternalUri;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ExpressionExperimentDetailsValueObject() {
-    }
-
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
         super( ee );
     }

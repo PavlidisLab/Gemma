@@ -20,31 +20,18 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 
-import java.util.SortedSet;
-
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GenericEvidenceValueObject extends EvidenceValueObject<GenericEvidence> {
 
     private static final long serialVersionUID = 754768748091915831L;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public GenericEvidenceValueObject() {
-    }
-
+    @Deprecated
     public GenericEvidenceValueObject( Long id ) {
         super( id );
     }
 
     public GenericEvidenceValueObject( GenericEvidence genericEvidence ) {
         super( genericEvidence );
-    }
-
-    public GenericEvidenceValueObject( Long id, Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
-            String description, String evidenceCode, boolean isNegativeEvidence,
-            EvidenceSourceValueObject evidenceSource ) {
-        super( id, geneNCBI, phenotypes, description, evidenceCode, isNegativeEvidence, evidenceSource );
     }
 
 }

@@ -8,7 +8,6 @@ import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -46,18 +45,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     private String technologyType;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    protected ExpressionExperimentValueObject() {
-    }
-
-    protected ExpressionExperimentValueObject( Long id ) {
-        super( id );
-    }
-
     public ExpressionExperimentValueObject( Long id, String shortName, String name ) {
-        this.id = id;
+        super( id );
         this.shortName = shortName;
         this.name = name;
     }
@@ -167,19 +156,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.suitableForDEA = vo.getSuitableForDEA();
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( !this.getClass().isAssignableFrom( obj.getClass() ) )
-            return false;
-        ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
-        if ( id == null ) {
-            return other.id == null;
-        } else
-            return id.equals( other.id );
+    @Deprecated
+    public ExpressionExperimentValueObject( Long id ) {
+        super( id );
     }
 
     public String getAccession() {
@@ -297,14 +276,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( this.currentUserIsOwner == null )
             return false;
         return this.currentUserIsOwner;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * ( result + ( ( id == null ) ? 0 : id.hashCode() ) );
-        return result;
     }
 
     public void setAccession( String accession ) {

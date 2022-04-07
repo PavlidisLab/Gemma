@@ -171,7 +171,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         assert taxon != null;
         // slow? would it be faster to just findByName and then restrict taxon?
         List<?> result = this.getSessionFactory().getCurrentSession().createQuery(
-                "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
+                        "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
                 .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
         if ( timer.getTime() > 500 )
             AbstractDao.log
@@ -197,7 +197,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     /**
      * Retrieve taxa for genesets
-     * 
+     *
      * @param  ids
      * @return
      */
@@ -205,8 +205,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         // fast
         //noinspection unchecked
         List<Object[]> q = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gs.id, t from GeneSet gs join gs.members m"
-                        + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
+                        "select distinct gs.id, t from GeneSet gs join gs.members m"
+                                + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
                 .setParameterList( "ids", ids ).list();
 
         Map<Long, Taxon> result = new HashMap<>();
@@ -225,7 +225,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.genome.gene.GeneSetDao#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
@@ -238,7 +238,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 session.buildLockRequest( LockOptions.NONE ).lock( geneSet );
                 Hibernate.initialize( geneSet );
                 Hibernate.initialize( geneSet.getMembers() );
-                for(GeneSetMember gsm : geneSet.getMembers() ) {
+                for ( GeneSetMember gsm : geneSet.getMembers() ) {
                     Hibernate.initialize( gsm.getGene() );
                 }
                 return null;
@@ -248,11 +248,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     private DatabaseBackedGeneSetValueObject fillValueObject( GeneSet geneSet, Taxon taxon, Long membersCount ) {
-        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject();
+        DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject( geneSet );
         dvo.setSize( membersCount.intValue() );
-        dvo.setId( geneSet.getId() );
-        dvo.setName( geneSet.getName() );
-        dvo.setDescription( geneSet.getDescription() );
         if ( taxon != null ) {
             dvo.setTaxonId( taxon.getId() );
             dvo.setTaxonName( taxon.getCommonName() );

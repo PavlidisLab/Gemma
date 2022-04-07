@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
@@ -36,6 +37,7 @@ import java.util.TreeSet;
  * @author nicolas
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
+@EqualsAndHashCode(of = { "phenotypes", "evidenceSource", "geneNCBI", "phenotypeAssPubVO" }, callSuper = false)
 public class EvidenceValueObject<E extends PhenotypeAssociation> extends IdentifiableValueObject<E>
         implements Comparable<EvidenceValueObject<E>>, Serializable {
 
@@ -47,7 +49,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     private String className = "";
     private Set<CharacteristicValueObject> phenotypes = null;
     private EvidenceSourceValueObject evidenceSource = null;
-    private String externalUrl = "";
+    private final String externalUrl = "";
     // last modified date of the evidence
     private Long lastUpdated = null;
     // security for the evidence
@@ -66,16 +68,11 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     private Set<PhenotypeAssPubValueObject> phenotypeAssPubVO = new HashSet<>();
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public EvidenceValueObject() {
-    }
-
-    public EvidenceValueObject( Long id ) {
+    protected EvidenceValueObject( Long id ) {
         super( id );
     }
 
+    @Deprecated
     protected EvidenceValueObject( Long id, Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource ) {
@@ -93,8 +90,8 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
      *
      * @param phenotypeAssociation phenotype association
      */
-    protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
-        super( phenotypeAssociation.getId() );
+    protected EvidenceValueObject( E phenotypeAssociation ) {
+        super( phenotypeAssociation );
         this.className = this.getClass().getSimpleName();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
@@ -158,57 +155,8 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        @SuppressWarnings("unchecked")
-        EvidenceValueObject<E> other = ( EvidenceValueObject<E> ) obj;
-
-        if ( this.phenotypes.size() != other.phenotypes.size() ) {
-            return false;
-        }
-
-        //noinspection unchecked
-        Set<String> otherPhenotypesValueUri = other.getPhenotypesValueUri();
-
-        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
-            if ( !otherPhenotypesValueUri.contains( characteristicValueObject.getValueUri() ) ) {
-                return false;
-            }
-        }
-
-        if ( this.evidenceSource == null ) {
-            if ( other.evidenceSource != null )
-                return false;
-        } else if ( !this.evidenceSource.equals( other.evidenceSource ) )
-            return false;
-
-        if ( this.geneNCBI == null ) {
-            if ( other.geneNCBI != null )
-                return false;
-        } else if ( !this.geneNCBI.equals( other.geneNCBI ) )
-            return false;
-
-        if ( this.phenotypeAssPubVO.size() != other.phenotypeAssPubVO.size() ) {
-            return false;
-        }
-
-        for ( PhenotypeAssPubValueObject vo : this.phenotypeAssPubVO ) {
-            if ( !other.phenotypeAssPubVO.contains( vo ) ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    @Override
     public String toString() {
-        return "EvidenceValueObject [id=" + id + ", description=" + description + ", evidenceCode=" + evidenceCode
+        return "EvidenceValueObject [id=" + getId() + ", description=" + description + ", evidenceCode=" + evidenceCode
                 + ", isNegativeEvidence=" + isNegativeEvidence + ", className=" + className + ", phenotypes="
                 + phenotypes + ", evidenceSource=" + evidenceSource + ", externalUrl=" + externalUrl + ", lastUpdated="
                 + lastUpdated + ", evidenceSecurityValueObject=" + evidenceSecurityValueObject + ", geneId=" + geneId
@@ -216,23 +164,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
                 + geneOfficialName + ", taxonCommonName=" + taxonCommonName + ", isHomologueEvidence="
                 + isHomologueEvidence + ", containQueryPhenotype=" + containQueryPhenotype + ", scoreValueObject="
                 + scoreValueObject + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-
-        if ( this.phenotypes != null ) {
-            for ( CharacteristicValueObject phenotype : this.phenotypes ) {
-                result = result + phenotype.hashCode();
-            }
-        }
-
-        result = result + ( ( this.evidenceSource == null ) ? 0 : this.evidenceSource.hashCode() );
-        result = result + ( ( this.geneNCBI == null ) ? 0 : this.geneNCBI.hashCode() );
-
-        return prime * result;
     }
 
     public String getClassName() {
@@ -421,7 +352,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
             return PhenotypeMappingType.INFERRED_XREF;
         } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
             return PhenotypeMappingType.INFERRED_CURATED;
-        } else if (  phenotypeMapping.equalsIgnoreCase( "Direct" ) ) {
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Direct" ) ) {
             return PhenotypeMappingType.DIRECT;
         }
         return null;

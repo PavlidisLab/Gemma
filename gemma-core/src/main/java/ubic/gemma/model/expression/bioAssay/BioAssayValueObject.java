@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -29,9 +30,11 @@ import java.util.HashSet;
  * @author Paul
  */
 @SuppressWarnings("unused") // ValueObject accessed from JS
+@EqualsAndHashCode(of = { "name" }, callSuper = true)
 public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
 
     private static final long serialVersionUID = 9164284536309673585L;
+
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
         Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {
@@ -39,6 +42,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         }
         return result;
     }
+
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";
@@ -58,28 +62,18 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public BioAssayValueObject() {
-    }
-
     public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
-        super( bioAssay.getId() );
+        super( bioAssay );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        this.arrayDesign = new ArrayDesignValueObject( ad.getId() );
-        arrayDesign.setShortName( ad.getShortName() );
-        arrayDesign.setName( ad.getName() );
+        this.arrayDesign = new ArrayDesignValueObject( ad );
 
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            this.originalPlatform = new ArrayDesignValueObject( op.getId() );
-            this.originalPlatform.setShortName( op.getShortName() );
-            this.originalPlatform.setName( op.getName() );
+            this.originalPlatform = new ArrayDesignValueObject( op );
         }
 
         this.processingDate = bioAssay.getProcessingDate();
@@ -111,27 +105,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
     public BioAssayValueObject( Long id ) {
         super( id );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioAssayValueObject other = ( BioAssayValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-
-        if ( name == null ) {
-            return other.name == null;
-        }
-        return name.equals( other.name );
     }
 
     public DatabaseEntryValueObject getAccession() {
@@ -184,17 +157,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
     public Boolean getUserFlaggedOutlier() {
         return userFlaggedOutlier;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        if ( id == null ) {
-            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        }
-        return result;
     }
 
     public boolean isOutlier() {
@@ -259,7 +221,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
     @Override
     public String toString() {
-        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
+        return "BioAssayVO [" + ( getId() != null ? "id=" + getId() + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
                 + ( description != null ? "description=" + description : "" ) + "]";
     }
 }

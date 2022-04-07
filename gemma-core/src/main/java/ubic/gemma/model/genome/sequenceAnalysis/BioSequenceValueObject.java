@@ -1,5 +1,6 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@EqualsAndHashCode(of = { "sequenceDatabaseEntry", "name", "type" }, callSuper = true)
 public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence> {
 
     private String description;
@@ -20,14 +22,8 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     private TaxonValueObject taxon;
     private ubic.gemma.model.genome.biosequence.SequenceType type;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public BioSequenceValueObject() {
-    }
-
-    private BioSequenceValueObject( Long id ) {
-        super( id );
+    private BioSequenceValueObject( BioSequence bioSequence ) {
+        super( bioSequence );
     }
 
     public static Collection<BioSequenceValueObject> fromEntities( Collection<BioSequence> bsList ) {
@@ -39,7 +35,7 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     }
 
     public static BioSequenceValueObject fromEntity( BioSequence bs ) {
-        BioSequenceValueObject vo = new BioSequenceValueObject( bs.getId() );
+        BioSequenceValueObject vo = new BioSequenceValueObject( bs );
         vo.setName( bs.getName() );
         vo.setDescription( bs.getDescription() );
         vo.setSequence( bs.getSequence() );
@@ -54,39 +50,6 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
             vo.setTaxon( TaxonValueObject.fromEntity( bs.getTaxon() ) );
         }
         return vo;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioSequenceValueObject other = ( BioSequenceValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-
-        if ( sequenceDatabaseEntry == null ) {
-            if ( other.sequenceDatabaseEntry != null )
-                return false;
-        } else if ( !sequenceDatabaseEntry.equals( other.sequenceDatabaseEntry ) )
-            return false;
-
-        if ( name == null ) {
-            if ( other.name != null )
-                return false;
-        } else if ( !name.equals( other.name ) )
-            return false;
-
-        if ( type == null ) {
-            return other.type == null;
-        } else
-            return type.equals( other.type );
     }
 
     public String getDescription() {
@@ -152,19 +115,4 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     public void setType( ubic.gemma.model.genome.biosequence.SequenceType type ) {
         this.type = type;
     }
-
-    @Override
-    public int hashCode() {
-
-        if ( id != null )
-            return id.hashCode();
-        final int prime = 31;
-        int result = 1;
-
-        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        result = prime * result + ( ( sequenceDatabaseEntry == null ) ? 0 : sequenceDatabaseEntry.hashCode() );
-        result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
-        return result;
-    }
-
 }

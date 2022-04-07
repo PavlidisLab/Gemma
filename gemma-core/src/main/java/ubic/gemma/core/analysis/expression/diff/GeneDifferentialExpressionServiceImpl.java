@@ -55,36 +55,11 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
     @Override
     public ExperimentalFactorValueObject configExperimentalFactorValueObject( ExperimentalFactor ef ) {
-        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject( ef.getId() );
-        efvo.setName( ef.getName() );
-        efvo.setDescription( ef.getDescription() );
-        Characteristic category = ef.getCategory();
-        if ( category != null ) {
-            efvo.setCategory( category.getCategory() );
-            efvo.setCategoryUri( category.getCategoryUri() );
-        }
-        Collection<FactorValue> fvs = ef.getFactorValues();
-        StringBuilder factorValuesAsString = new StringBuilder( StringUtils.EMPTY );
-
-        for ( FactorValue fv : fvs ) {
-            String fvName = fv.toString();
-            if ( StringUtils.isNotBlank( fvName ) ) {
-                factorValuesAsString.append( fvName ).append( GeneDifferentialExpressionServiceImpl.FV_SEP );
-            }
-        }
-
-        /* clean up the start and end of the string */
-        factorValuesAsString = new StringBuilder(
-                StringUtils.remove( factorValuesAsString.toString(), ef.getName() + ":" ) );
-        factorValuesAsString = new StringBuilder( StringUtils
-                .removeEnd( factorValuesAsString.toString(), GeneDifferentialExpressionServiceImpl.FV_SEP ) );
-
+        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject( ef );
         /*
          * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client.
          */
-        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString.toString(), 50 ) + ")" );
-
-        efvo.setFactorValues( factorValuesAsString.toString() );
+        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( efvo.getFactorValues(), 50 ) + ")" );
         return efvo;
     }
 

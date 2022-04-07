@@ -20,10 +20,10 @@
 package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.io.Serializable;
@@ -36,6 +36,7 @@ import java.util.Objects;
  * @author kelsey
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possibly used in front end
+@EqualsAndHashCode(of = { "ncbiId", "officialSymbol", "taxonId" }, callSuper = true)
 public class GeneValueObject extends IdentifiableValueObject<Gene> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -83,12 +84,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Long taxonId;
     private String taxonScientificName;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public GeneValueObject() {
-    }
-
+    @Deprecated
     public GeneValueObject( Long id ) {
         super( id );
     }
@@ -99,7 +95,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * @param gene gene
      */
     public GeneValueObject( Gene gene ) {
-        super( gene.getId() );
+        super( gene );
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
@@ -121,33 +117,17 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), null, otherBean.getNcbiId(), otherBean.getOfficialSymbol(),
-                otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(),
-                otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
-    }
-
-    public GeneValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId, String officialSymbol,
-            String officialName, String description, Double score, Long taxonId, String taxonScientificName,
-            String taxonCommonName ) {
-        super( id );
-        this.name = name;
-        this.ncbiId = ncbiId;
-        this.officialSymbol = officialSymbol;
-        this.officialName = officialName;
-        this.description = description;
-        this.score = score;
-        this.taxonId = taxonId;
-        this.taxonScientificName = taxonScientificName;
-        this.taxonCommonName = taxonCommonName;
-        this.aliases = aliases;
-    }
-
-    public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
-        super( geneId );
-        this.officialSymbol = geneSymbol;
-        this.officialName = geneOfficialName;
-        this.taxonId = taxon.getId();
-        this.taxonCommonName = taxon.getCommonName();
+        super( otherBean );
+        this.name = otherBean.getName();
+        this.ncbiId = otherBean.getNcbiId();
+        this.officialSymbol = otherBean.getOfficialSymbol();
+        this.officialName = otherBean.getOfficialName();
+        this.description = otherBean.getDescription();
+        this.score = otherBean.getScore();
+        this.taxonId = otherBean.getTaxonId();
+        this.taxonScientificName = otherBean.getTaxonScientificName();
+        this.taxonCommonName = otherBean.getTaxonCommonName();
+        this.aliases = null;
     }
 
     /**
@@ -199,50 +179,8 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-
-        if ( id != null )
-            return id.hashCode();
-        if ( ncbiId != null )
-            return ncbiId.hashCode();
-        result = prime * result + ( ( officialSymbol == null ) ? 0 : officialSymbol.hashCode() );
-        result = prime * result + ( ( taxonId == null ) ? 0 : taxonId.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        GeneValueObject other = ( GeneValueObject ) obj;
-
-        if ( id != null ) {
-            return other.id != null && ( Objects.equals( this.id, other.id ) );
-        }
-        if ( ncbiId != null ) {
-            return other.ncbiId != null && Objects.equals( this.ncbiId, other.ncbiId );
-        }
-
-        if ( officialSymbol == null ) {
-            if ( other.officialSymbol != null )
-                return false;
-        } else if ( !officialSymbol.equals( other.officialSymbol ) )
-            return false;
-        if ( taxonId == null ) {
-            return other.taxonId == null;
-        } else
-            return taxonId.equals( other.taxonId );
-    }
-
-    @Override
     public String toString() {
-        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + ( officialSymbol != null ?
+        return "GeneValueObject [" + ( getId() != null ? "id=" + getId() + ", " : "" ) + ( officialSymbol != null ?
                 "officialSymbol=" + officialSymbol + ", " :
                 "" ) + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
     }

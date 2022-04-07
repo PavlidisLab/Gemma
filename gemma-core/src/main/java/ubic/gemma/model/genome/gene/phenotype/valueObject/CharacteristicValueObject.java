@@ -22,10 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * ValueObject wrapper for a Characteristic
@@ -67,18 +64,12 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String value = "";
     private String valueUri = null;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public CharacteristicValueObject() {
-    }
-
     public CharacteristicValueObject( Long id ) {
         super( id );
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
-        super( characteristic.getId() );
+        super( characteristic );
         {
             this.valueUri = characteristic.getValueUri();
             if ( this.valueUri != null )
@@ -90,11 +81,12 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
         if ( this.value == null ) {
             CharacteristicValueObject.log
-                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    .warn( "Characteristic with null value. Id: " + this.getId() + " cat: " + this.category + " cat uri: "
                             + this.categoryUri );
         }
     }
 
+    @Deprecated
     public CharacteristicValueObject( Long id, String valueUri ) {
         super( id );
         this.valueUri = valueUri;
@@ -102,7 +94,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         if ( StringUtils.isNotBlank( this.urlId ) ) {
             try {
                 // we don't always populate from the database, give it an id anyway
-                this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
+                this.setId( new Long( this.urlId.replaceAll( "[^\\d.]", "" ) ) );
             } catch ( Exception e ) {
                 CharacteristicValueObject.log
                         .error( "Problem making an id for Phenotype: " + this.urlId + ": " + e.getMessage() );
@@ -110,16 +102,18 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         }
     }
 
+    @Deprecated
     public CharacteristicValueObject( Long id, String value, String valueUri ) {
         this( id, valueUri );
         this.value = value;
         if ( this.value == null ) {
             CharacteristicValueObject.log
-                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    .warn( "Characteristic with null value. Id: " + this.getId() + " cat: " + this.category + " cat uri: "
                             + this.categoryUri );
         }
     }
 
+    @Deprecated
     public CharacteristicValueObject( Long id, String value, String category, String valueUri, String categoryUri ) {
         this( id, value, valueUri );
         this.category = category;
@@ -144,20 +138,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        if ( this.valueUri != null ) {
-            result = prime * result + this.valueUri.hashCode();
-        } else if ( this.value != null ) {
-            result = prime * result + this.value.hashCode();
-        } else {
-            result = prime * result + this.id.hashCode();
-        }
-        return result;
-    }
-
-    @Override
     public int compareTo( CharacteristicValueObject o ) {
         return ComparisonChain.start()
                 .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
@@ -167,26 +147,26 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
+    public boolean equals( Object other ) {
+        CharacteristicValueObject otherC = ( CharacteristicValueObject ) other;
+        if ( this == other )
             return true;
-        if ( obj == null )
+        if ( other == null )
             return false;
-        if ( this.getClass() != obj.getClass() )
+        if ( this.getClass() != other.getClass() )
             return false;
-        CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
-        if ( this.valueUri == null ) {
-            if ( other.valueUri != null )
-                return false;
-        } else {
-            return this.valueUri.equals( other.valueUri );
-        }
+        if ( this.valueUri != null )
+            return Objects.equals( this.valueUri, otherC.valueUri );
+        return Objects.equals( this.value, otherC.value );
+    }
 
-        if ( this.value == null ) {
-            return other.value == null;
-        }
-        return this.value.equals( other.value );
-
+    @Override
+    public int hashCode() {
+        if ( this.valueUri != null )
+            return Objects.hashCode( this.valueUri );
+        if ( this.value != null )
+            return Objects.hashCode( this.value );
+        return super.hashCode();
     }
 
     @Override

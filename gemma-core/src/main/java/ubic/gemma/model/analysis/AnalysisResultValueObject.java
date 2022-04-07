@@ -21,6 +21,9 @@ package ubic.gemma.model.analysis;
 /**
  * Wraps an {@link AnalysisResult} to expose it on the public API.
  *
+ * This is intentionally not subclassing {@link ubic.gemma.model.IdentifiableValueObject} because the ID is currently
+ * irrelevant to the frontend or external users.
+ *
  * @param <A> type of {@link AnalysisResult} being wrapped by this value object
  */
 public abstract class AnalysisResultValueObject<A extends AnalysisResult> {

@@ -201,15 +201,12 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         ee.setId( 12L );
         gs = new GeneSet();
         gs.setId( 13L );
-        phenotypeAssociation = new CharacteristicValueObject();
-        phenotypeAssociation.setId( 14L );
+        phenotypeAssociation = new CharacteristicValueObject( 14L );
         when( arrayDesignService.loadValueObject( any( ArrayDesign.class ) ) ).thenAnswer( a -> new ArrayDesignValueObject( a.getArgument( 0, ArrayDesign.class ) ) );
         when( expressionExperimentService.loadValueObject( any( ExpressionExperiment.class ) ) ).thenAnswer( a -> new ExpressionExperimentValueObject( a.getArgument( 0, ExpressionExperiment.class ) ) );
         when( geneSetService.loadValueObject( any( GeneSet.class ) ) ).thenAnswer( a -> {
             GeneSet geneSet = a.getArgument( 0, GeneSet.class );
-            DatabaseBackedGeneSetValueObject dbgsvo = new DatabaseBackedGeneSetValueObject();
-            dbgsvo.setId( geneSet.getId() );
-            return dbgsvo;
+            return new DatabaseBackedGeneSetValueObject( geneSet );
         } );
     }
 

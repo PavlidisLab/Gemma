@@ -8,6 +8,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
@@ -26,30 +27,21 @@ import org.apache.commons.lang3.StringUtils;
  * @author tesarst
  */
 @SuppressWarnings("unused") // Used in json serialization
+@EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
 public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    private Boolean isBaseline;
+    private final Boolean isBaseline;
     private Collection<CharacteristicBasicValueObject> characteristics;
-    private CharacteristicBasicValueObject experimentalFactorCategory;
+    private final CharacteristicBasicValueObject experimentalFactorCategory;
     private MeasurementValueObject measurement;
-    private String fvValue;
-    private String fvSummary;
-    private Long experimentalFactorId;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public FactorValueBasicValueObject() {
-    }
-
-    public FactorValueBasicValueObject( Long id ) {
-        super( id );
-    }
+    private final String fvValue;
+    private final String fvSummary;
+    private final Long experimentalFactorId;
 
     public FactorValueBasicValueObject( FactorValue fv ) {
-        super( fv.getId() );
+        super( fv );
         this.fvSummary = getSummaryString( fv );
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
         this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
@@ -69,20 +61,6 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         this.experimentalFactorCategory = new CharacteristicBasicValueObject(
                 fv.getExperimentalFactor().getCategory() );
 
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        FactorValueBasicValueObject other = ( FactorValueBasicValueObject ) obj;
-
-        if ( characteristics != null && other.characteristics != null ) {
-            return characteristics.equals( other.characteristics ) && id.equals( other.id );
-        }
-        return characteristics == null && other.characteristics == null && id.equals( other.id );
     }
 
     @Override

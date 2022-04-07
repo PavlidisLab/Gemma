@@ -46,12 +46,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
 
     private String otherIssues;
 
-    /**
-     * Required when using the class as a spring bean
-     */
-    public GeeqAdminValueObject() {
-    }
-
     public GeeqAdminValueObject( Object[] row ) {
         super( row );
         this.detectedQualityScore = ( double ) row[1];

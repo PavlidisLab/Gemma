@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
 import java.io.Serializable;
@@ -30,6 +31,7 @@ import java.util.HashSet;
  * @author paul et al
  */
 @SuppressWarnings("unused") // Used in front end
+@EqualsAndHashCode(of = { "shortName" }, callSuper = true)
 public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -76,12 +78,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     private String technologyType;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ArrayDesignValueObject() {
-    }
-
+    @Deprecated
     public ArrayDesignValueObject( Long id ) {
         super( id );
     }
@@ -145,27 +142,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = arrayDesignValueObject.technologyType;
         this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
         this.blackListed = arrayDesignValueObject.blackListed;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        ArrayDesignValueObject other = ( ArrayDesignValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) {
-                return false;
-            }
-        } else if ( !id.equals( other.id ) )
-            return false;
-        if ( shortName == null ) {
-            return other.shortName == null;
-        }
-        return shortName.equals( other.shortName );
+        this.switchedExpressionExperimentCount = arrayDesignValueObject.switchedExpressionExperimentCount;
     }
 
     public Boolean getBlackListed() {
@@ -304,17 +281,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public String getTechnologyType() {
         return this.technologyType;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        if ( id == null ) {
-            result = prime * result + ( ( shortName == null ) ? 0 : shortName.hashCode() );
-        }
-        return result;
     }
 
     public void setBlackListed( Boolean blackListed ) {

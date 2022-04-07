@@ -37,12 +37,15 @@
 
 package ubic.gemma.core.genome.gene;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Collection;
 
 /**
  * @author tvrossum
  */
 @SuppressWarnings("unused") // Possible external use
+@EqualsAndHashCode(of = { "goId" }, callSuper = false)
 public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -185326197992950287L;
@@ -77,32 +80,6 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setModified( false );
         this.setGoId( goId );
         this.setSearchTerm( searchTerm );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( goId == null ) ? 0 : goId.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( !super.equals( obj ) ) {
-            return false;
-        }
-        if ( this.getClass() != obj.getClass() ) {
-            return false;
-        }
-        GOGroupValueObject other = ( GOGroupValueObject ) obj;
-        if ( goId == null ) {
-            return other.goId == null;
-        }
-        return goId.equals( other.goId );
     }
 
     /**

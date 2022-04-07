@@ -220,9 +220,8 @@ public class CompositeSequenceServiceImpl
                 /*
                  * Make a dummy blat result
                  */
-                blatResult = new BlatResultValueObject();
+                blatResult = new BlatResultValueObject( biologicalCharacteristic.getId() );
                 blatResult.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
-                blatResult.setId( biologicalCharacteristic.getId() );
             }
 
             if ( blatResult == null ) {

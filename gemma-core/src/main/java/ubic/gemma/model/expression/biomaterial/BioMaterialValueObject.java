@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -36,6 +37,7 @@ import java.util.*;
  * @author lukem
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@EqualsAndHashCode(of = { "name" }, callSuper = true)
 public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
 
     private static final String CHARACTERISTIC_DELIMITER = "::::";
@@ -64,23 +66,18 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private boolean basicFVs;
     private Date assayProcessingDate;
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "BioMaterialValueObject{" +
                 "assayName='" + assayName + '\'' +
-                ", id=" + id +
+                ", id=" + getId() +
                 '}';
     }
 
     /*
-    * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
+     * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
      */
     private Map<String, String> characteristicValues = new HashMap<>();
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public BioMaterialValueObject() {
-    }
 
     public BioMaterialValueObject( Long id ) {
         super( id );
@@ -91,7 +88,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
-        super( bm.getId() );
+        super( bm );
         this.name = bm.getName();
         this.description = bm.getDescription();
 
@@ -127,11 +124,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         }
 
         // used for display of characteristics in the biomaterial experimental design editor view.
-        for(Characteristic c : bm.getCharacteristics()) {
-            if  (StringUtils.isBlank( c.getCategory() )) {
+        for ( Characteristic c : bm.getCharacteristics() ) {
+            if ( StringUtils.isBlank( c.getCategory() ) ) {
                 continue;
             }
-            this.characteristicValues.put(c.getCategory(), c.getValue());
+            this.characteristicValues.put( c.getCategory(), c.getValue() );
         }
     }
 
@@ -144,39 +141,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayProcessingDate = ba.getProcessingDate();
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioMaterialValueObject other = ( BioMaterialValueObject ) obj;
-
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else
-            return id.equals( other.id ) && id.equals( other.id );
-
-        if ( name == null ) {
-            return other.name == null;
-        } else
-            return name.equals( other.name );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-
-        if ( id == null )
-            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
     }
 
     public String getAssayDescription() {

@@ -8,6 +8,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -18,12 +19,13 @@ import java.io.Serializable;
  * the objects for client display, there is only one characteristic associated here.
  * Note: this used to be called FactorValueObject and now replaces the old FactorValueValueObject. Confusing!
  *
- * @author     Paul
+ * @author Paul
  * @deprecated aim towards using the FactorValueBasicValueObject. This one is confusing. Once usage of this
  *             type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
  */
 @Deprecated
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@EqualsAndHashCode(of = { "charId", "value" }, callSuper = true)
 public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
@@ -42,18 +44,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     private Boolean isBaseline = false;
     private boolean measurement = false;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public FactorValueValueObject() {
-    }
-
-    public FactorValueValueObject( Long id ) {
-        super( id );
-    }
-
     public FactorValueValueObject( FactorValue fv ) {
-        super( fv.getId() );
+        super( fv );
         if ( fv.getCharacteristics().size() == 1 ) {
             this.init( fv, fv.getCharacteristics().iterator().next() );
         } else if ( fv.getCharacteristics().size() > 1 ) {
@@ -73,38 +65,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      *                   confuses things.
      *                   If c is null, the plain "value" is used.
      * @param      value value
-     * @deprecated       see class deprecated note
+     * @deprecated see class deprecated note
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
-        super( value.getId() );
+        super( value );
         this.init( value, c );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        FactorValueValueObject other = ( FactorValueValueObject ) obj;
-        if ( charId == null ) {
-            if ( other.charId != null )
-                return false;
-        } else if ( !charId.equals( other.charId ) )
-            return false;
-
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else
-            return id.equals( other.id ) && id.equals( other.id );
-
-        if ( value == null ) {
-            return other.value == null;
-        } else
-            return value.equals( other.value );
     }
 
     @Override
@@ -196,20 +161,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
 
     public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-
-        if ( id == null ) {
-            result = prime * result + ( ( charId == null ) ? 0 : charId.hashCode() );
-
-            result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
-        }
-        return result;
     }
 
     public boolean isMeasurement() {

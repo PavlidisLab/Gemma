@@ -70,12 +70,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private boolean batchCorrected;
 
     /**
-     * Required when using the class as a spring bean
+     * @deprecated use a {@link Geeq} entity to initialize this VO. You can even let Hibernate do this for you with
+     * {@link org.hibernate.SQLQuery#addEntity(String, Class)}} .
      */
-    @SuppressWarnings("WeakerAccess") //Spring needs it to be public
-    public GeeqValueObject() {
-    }
-
+    @Deprecated
     public GeeqValueObject( Object[] row ) {
         super( ( Long ) row[0] );
 
@@ -107,7 +105,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     }
 
     public GeeqValueObject( Geeq g ) {
-        super( g.getId() );
+        super( g );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
                 g.isManualQualityOverride() );
         this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),

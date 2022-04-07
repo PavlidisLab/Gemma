@@ -28,12 +28,6 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     protected String curationNote;
     protected AuditEventValueObject lastNoteUpdateEvent;
 
-    /**
-     * Required when using the implementing classes as a spring beans.
-     */
-    public AbstractCuratableValueObject() {
-    }
-
     protected AbstractCuratableValueObject( Long id ) {
         super( id );
     }

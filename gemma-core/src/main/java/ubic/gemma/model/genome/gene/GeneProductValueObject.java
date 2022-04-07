@@ -36,12 +36,6 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     @Deprecated
     private Long nucleotideEnd;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public GeneProductValueObject() {
-    }
-
     public GeneProductValueObject( Long id ) {
         super( id );
     }
@@ -53,7 +47,7 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
      * @param entity the GeneProduct to load the values from.
      */
     public GeneProductValueObject( GeneProduct entity ) {
-        super( entity.getId() );
+        super( entity );
         this.name = entity.getName();
         this.ncbiId = entity.getNcbiGi();
         if ( entity.getPhysicalLocation() != null ) {

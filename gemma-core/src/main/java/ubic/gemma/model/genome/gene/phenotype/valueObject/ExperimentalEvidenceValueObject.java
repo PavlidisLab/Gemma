@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,25 +18,20 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.util.Collection;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
-
+@EqualsAndHashCode(of = { "experimentCharacteristics" }, callSuper = false)
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject<ExperimentalEvidence> {
 
     private static final long serialVersionUID = 4243531745086284715L;
     private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<>();
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ExperimentalEvidenceValueObject() {
-    }
-
+    @Deprecated
     public ExperimentalEvidenceValueObject( Long id ) {
         super( id );
     }
@@ -57,38 +52,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
 
             }
         }
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( !super.equals( obj ) )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-
-        if ( this.experimentCharacteristics.size() != other.experimentCharacteristics.size() ) {
-            return false;
-        }
-        for ( CharacteristicValueObject characteristicValueObject : this.experimentCharacteristics ) {
-            if ( !other.experimentCharacteristics.contains( characteristicValueObject ) ) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        for ( CharacteristicValueObject phenotype : this.experimentCharacteristics ) {
-            result = prime * result + phenotype.hashCode();
-        }
-
-        return result;
     }
 
     public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
