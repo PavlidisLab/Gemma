@@ -92,7 +92,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
