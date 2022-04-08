@@ -94,11 +94,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
+    @Transactional
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) throws FilteringException {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
+    @Transactional
     public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) throws FilteringException {
         SampleCoexpressionAnalysis analysis = this.load( ee );
         SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
@@ -111,6 +113,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -134,6 +137,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
+    @Transactional
     public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) throws FilteringException {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
