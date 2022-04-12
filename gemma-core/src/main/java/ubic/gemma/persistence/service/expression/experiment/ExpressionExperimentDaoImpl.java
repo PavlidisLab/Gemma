@@ -1290,6 +1290,7 @@ public class ExpressionExperimentDaoImpl
 
             session.update( ee );
             session.flush();
+            session.clear();
 
             AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
             for ( BioAssayDimension dim : dims ) {
@@ -1299,6 +1300,7 @@ public class ExpressionExperimentDaoImpl
             }
             //   dims.clear();
             session.flush();
+            session.clear();
 
             AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
 
@@ -1323,6 +1325,8 @@ public class ExpressionExperimentDaoImpl
             log.info( ".... flush and final deletion ..." );
 
             session.flush();
+            session.clear();
+
             session.delete( ee );
 
             AbstractDao.log.info( "Deleted " + ee );
@@ -1601,6 +1605,7 @@ public class ExpressionExperimentDaoImpl
             session.delete( dv );
             if ( ++count % 1000 == 0 ) {
                 session.flush();
+                session.clear();
             }
             // put back...
             dv.setBioAssayDimension( bad );
@@ -1626,6 +1631,7 @@ public class ExpressionExperimentDaoImpl
             session.delete( dv );
             if ( ++count % 1000 == 0 ) {
                 session.flush();
+                session.clear();
             }
             if ( count % 20000 == 0 ) {
                 AbstractDao.log.info( count + " processed design Element data vectors deleted" );
