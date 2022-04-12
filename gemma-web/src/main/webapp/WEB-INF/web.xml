@@ -226,6 +226,13 @@
         <url-pattern>*.swf</url-pattern>
     </servlet-mapping>
 
+    <!-- a few static resources to be delivered by Tomcat -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/robots.txt</url-pattern>
+        <url-pattern>/sitemap.xml</url-pattern>
+    </servlet-mapping>
+
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>

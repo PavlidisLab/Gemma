@@ -66,7 +66,7 @@ public class SearchWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma.")
-    public SearchResultResponseDataObject search( @QueryParam("query") String query,
+    public SearchResultsResponseDataObject search( @QueryParam("query") String query,
             @QueryParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
@@ -162,14 +162,14 @@ public class SearchWebService {
         }
     }
 
-    public static class SearchResultResponseDataObject extends ResponseDataObject<List<SearchResultValueObject>> {
+    public static class SearchResultsResponseDataObject extends ResponseDataObject<List<SearchResultValueObject>> {
 
         private final SearchSettingsValueObject searchSettings;
 
         /**
          * @param payload the data to be serialised and returned as the response payload.
          */
-        public SearchResultResponseDataObject( List<SearchResultValueObject> payload, SearchSettingsValueObject searchSettings ) {
+        public SearchResultsResponseDataObject( List<SearchResultValueObject> payload, SearchSettingsValueObject searchSettings ) {
             super( payload );
             this.searchSettings = searchSettings;
         }

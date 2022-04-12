@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://gemma.msl.ubc.ca/sitemap.xml
