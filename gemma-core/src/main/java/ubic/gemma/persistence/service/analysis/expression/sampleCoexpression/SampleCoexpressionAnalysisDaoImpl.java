@@ -51,10 +51,4 @@ class SampleCoexpressionAnalysisDaoImpl extends AnalysisDaoBase<SampleCoexpressi
         return r.iterator().next();
 
     }
-
-    @Override
-    public SampleCoexpressionAnalysis create( SampleCoexpressionAnalysis entity ) {
-        this.getSessionFactory().getCurrentSession().flush();
-        return super.create( entity );
-    }
 }
