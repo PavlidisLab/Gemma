@@ -1,5 +1,4 @@
 # Terms usable as 'categories' in Gemma Characteristics.
-
 # See bug 4272 for discussion of deprecated terms
 # Usable for all places we use categories:
 http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
@@ -9,17 +8,14 @@ http://www.ebi.ac.uk/efo/EFO_0000324	cell type
 http://www.ebi.ac.uk/efo/EFO_0000352	clinical history
 http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
 http://www.ebi.ac.uk/efo/EFO_0000408	disease
+http://purl.obolibrary.org/obo/TGEMO_00101  disease model
 http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
 http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
-# no longer allowed:
-#http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
 http://www.ebi.ac.uk/efo/EFO_0000513	genotype
 http://www.ebi.ac.uk/efo/EFO_0000523	growth condition
 http://www.ebi.ac.uk/efo/EFO_0000635	organism part
 http://www.ebi.ac.uk/efo/EFO_0000651	phenotype
-# deprecated, see bug 4317 
-#http://www.ebi.ac.uk/efo/EFO_0000695	sex 
 http://purl.obolibrary.org/obo/PATO_0000047	biological sex
 http://www.ebi.ac.uk/efo/EFO_0000727	treatment
 http://www.ebi.ac.uk/efo/EFO_0001702	temperature
@@ -64,3 +60,7 @@ http://www.ebi.ac.uk/efo/EFO_0001426	study design
 #http://www.ebi.ac.uk/efo/EFO_0000659	ploidy
 #http://www.ebi.ac.uk/efo/EFO_0001444	measurement
 #http://www.ebi.ac.uk/efo/EFO_0002694	experimental process
+# no longer allowed:
+#http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
+# deprecated, see bug 4317
+#http://www.ebi.ac.uk/efo/EFO_0000695	sex
