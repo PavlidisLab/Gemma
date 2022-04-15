@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2015 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ import ubic.basecode.util.Configuration;
  * @author paul
  */
 public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
-    private static final String ONTOLOGY_URL = "url.gemmaOntology";
+    public static final String GEMMA_ONTOLOGY_URL_CONFIG = "url.gemmaOntology";
 
     @Override
     protected String getOntologyName() {
@@ -37,7 +37,7 @@ public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
 
     @Override
     protected String getOntologyUrl() {
-        return Configuration.getString( ONTOLOGY_URL );
+        return Configuration.getString( GEMMA_ONTOLOGY_URL_CONFIG );
     }
 
 }
