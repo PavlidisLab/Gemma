@@ -1,39 +1,18 @@
 package ubic.gemma.web.controller;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.web.servlet.view.RedirectView;
-import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ContextConfiguration
-public class OntologyControllerTest extends AbstractJUnit4SpringContextTests {
-
-    @Configuration
-    public static class OntologyControllerTestContextConfiguration {
-
-        @Bean
-        public OntologyController ontologyController() {
-            return new OntologyController();
-        }
-
-        @Bean
-        public GemmaOntologyService gemmaOntologyService() {
-            return new GemmaOntologyService();
-        }
-    }
-
-    @Autowired
-    private OntologyController ontologyController;
+public class OntologyControllerTest extends BaseSpringWebTest {
 
     @Test
-    public void testGetObo() {
-        RedirectView rv = ontologyController.getObo();
-        assertThat( rv.getUrl() ).isEqualTo( "https://raw.githubusercontent.com/PavlidisLab/TGEMO/master/TGEMO.OWL" );
+    public void testGetObo() throws Exception {
+        mvc.perform( get( "/ont/TGEMO.OWL" ) )
+                .andExpect( status().isFound() )
+                .andExpect( redirectedUrl( "https://raw.githubusercontent.com/PavlidisLab/TGEMO/master/TGEMO.OWL" ) );
     }
 }
