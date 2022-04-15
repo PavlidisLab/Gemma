@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.web.servlet.view.RedirectView;
+import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,6 +20,11 @@ public class OntologyControllerTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public OntologyController ontologyController() {
             return new OntologyController();
+        }
+
+        @Bean
+        public GemmaOntologyService gemmaOntologyService() {
+            return new GemmaOntologyService();
         }
     }
 
