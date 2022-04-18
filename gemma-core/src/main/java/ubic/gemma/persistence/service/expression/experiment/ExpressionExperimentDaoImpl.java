@@ -1064,19 +1064,7 @@ public class ExpressionExperimentDaoImpl
         // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
         // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
         detailsTimer.start();
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee, ad, op, ee.bioAssays.size from ExpressionExperiment as ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed ad "
-                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
-                        + "where ee in :eelist "
-                        + "group by ee, ad, op" )
-                .setParameterList( "eelist", expressionExperiments )
-                .setCacheable( true )
-                .list();
-        Map<ExpressionExperiment, List<Object[]>> detailsByEE = results.stream()
-                .collect( Collectors.groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
+        Map<ExpressionExperiment, List<Object[]>> detailsByEE = loadDetailsByEE( expressionExperiments );
         detailsTimer.stop();
 
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
@@ -1142,6 +1130,24 @@ public class ExpressionExperimentDaoImpl
         }
 
         return new Slice<>( vos, sort, offset, limit, totalElements );
+    }
+
+    private Map<ExpressionExperiment, List<Object[]>> loadDetailsByEE( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( expressionExperiments.isEmpty() )
+            return Collections.emptyMap();
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee, ad, op, ee.bioAssays.size from ExpressionExperiment as ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed ad "
+                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
+                        + "where ee in :eelist "
+                        + "group by ee, ad, op" )
+                .setParameterList( "eelist", expressionExperiments )
+                .setCacheable( true )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
     }
 
     @Override
