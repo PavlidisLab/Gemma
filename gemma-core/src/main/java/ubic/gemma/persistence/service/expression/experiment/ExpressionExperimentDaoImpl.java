@@ -32,7 +32,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.core.util.StopWatchMonitor;
+import ubic.gemma.core.util.StopWatchUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -1063,9 +1063,10 @@ public class ExpressionExperimentDaoImpl
         // fetch some extras details
         // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
         // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
-        detailsTimer.start();
-        Map<ExpressionExperiment, List<Object[]>> detailsByEE = loadDetailsByEE( expressionExperiments );
-        detailsTimer.stop();
+        Map<ExpressionExperiment, List<Object[]>> detailsByEE;
+        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( detailsTimer ) ) {
+            detailsByEE = loadDetailsByEE( expressionExperiments );
+        }
 
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
         for ( Object[] row : list ) {
@@ -1075,7 +1076,7 @@ public class ExpressionExperimentDaoImpl
             List<Object[]> details = detailsByEE.get( ee );
 
             ExpressionExperimentDetailsValueObject vo;
-            try ( StopWatchMonitor ignored = new StopWatchMonitor( voTimer ) ) {
+            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( voTimer ) ) {
                 vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
             }
 
@@ -1105,7 +1106,7 @@ public class ExpressionExperimentDaoImpl
             vo.setOriginalPlatforms( originalPlatformsVos );
 
             // other parts (maybe fetch in details query?)
-            try ( StopWatchMonitor ignored = new StopWatchMonitor( otherPartsTimer ) ) {
+            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( otherPartsTimer ) ) {
                 vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
             }
 
@@ -1113,7 +1114,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         StopWatch analysisInformationTimer = StopWatch.create();
-        try ( StopWatchMonitor ignored = new StopWatchMonitor( analysisInformationTimer ) ) {
+        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
             this.populateAnalysisInformation( vos );
         }
 
