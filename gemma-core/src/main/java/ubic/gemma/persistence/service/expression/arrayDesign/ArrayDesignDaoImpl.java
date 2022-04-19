@@ -159,7 +159,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "

@@ -1297,7 +1297,6 @@ public class ExpressionExperimentDaoImpl
 
             session.update( ee );
             session.flush();
-            session.clear();
 
             AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
             for ( BioAssayDimension dim : dims ) {
@@ -1307,7 +1306,6 @@ public class ExpressionExperimentDaoImpl
             }
             //   dims.clear();
             session.flush();
-            session.clear();
 
             AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
 
@@ -1332,8 +1330,6 @@ public class ExpressionExperimentDaoImpl
             log.info( ".... flush and final deletion ..." );
 
             session.flush();
-            session.clear();
-
             session.delete( ee );
 
             AbstractDao.log.info( "Deleted " + ee );
