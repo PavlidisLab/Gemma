@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,16 +19,12 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.*;
-
+import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import gemma.gsec.SecurityService;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -54,12 +50,14 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
+import java.util.*;
+
 /**
- * 
+ *
  * Split an experiment into multiple experiments. This is needed when a load EE (e.g. from GEO) is better represented as
- * two more more distinct experiments. The decision of what to split is based on curation guidelines documented
+ * two more distinct experiments. The decision of what to split is based on curation guidelines documented
  * elsewhere.
- * 
+ *
  * @author paul
  */
 @Service
@@ -93,12 +91,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#split(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public Collection<ExpressionExperiment> split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
+    public ExpressionExperimentSet split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
 
         toSplit = eeService.thawLite( toSplit );
 
@@ -131,9 +129,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     throw new UnsupportedOperationException( "Non-double values currently not supported for experiment split" );
                 }
 
-                Collection<RawExpressionDataVector> vecs = rawExpressionDataVectorService.find( qt );
-                rawExpressionDataVectorService.thaw( vecs );
-                if ( vecs.isEmpty() ) {
+                Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( qt );
+                rawExpressionDataVectorService.thaw( vectors );
+                if ( vectors.isEmpty() ) {
                     // this is okay if the data is processed, or if we have stray orphaned QTs
                     log.debug( "No raw vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
                     continue;
@@ -141,9 +139,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 if ( qt.getIsPreferred() ) {
                     foundPreferred = true;
                 }
-                log.info( vecs.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
+                log.info( vectors.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
-                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vecs ) );
+                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vectors ) );
             }
 
             if ( !foundPreferred ) {
@@ -209,7 +207,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                     BioAssay newBa = old2cloneBA.get( ba );
                     for ( FactorValue fv : bm.getFactorValues() ) {
                         if ( fv.equals( splitValue ) ) {
-                            // make a BioMaterial characteristic so we don't lose the information (might be redundant)
+                            // make a BioMaterial characteristic, so we don't lose the information (might be redundant)
                             for ( Characteristic c : fv.getCharacteristics() ) {
                                 newBa.getSampleUsed().getCharacteristics().add( this.cloneCharacteristic( c ) );
                             }
@@ -240,7 +238,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             split.getBioAssays().addAll( replaceBAs );
             split.setNumberOfSamples( replaceBAs.size() );
 
-            // remove unused factors and factorvalues from the design and biomaterials
+            // remove unused factors and factor values from the design and biomaterials
             Collection<ExperimentalFactor> toRemoveFactors = new HashSet<>();
             for ( ExperimentalFactor ef : split.getExperimentalDesign().getExperimentalFactors() ) {
                 Collection<FactorValue> toRemove = new HashSet<>();
@@ -275,7 +273,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
             }
 
-            // remove the unused/unneded factors from the ED
+            // remove the unused/unneeded factors from the ED
             if ( split.getExperimentalDesign().getExperimentalFactors().removeAll( toRemoveFactors ) ) {
                 log.info( toRemoveFactors.size() + " unused experimental factors dropped from split " + splitNumber );
             }
@@ -322,8 +320,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             if ( foundPreferred && postProcess ) {
                 try {
                     preprocessor.process( split );
-                } catch ( PreprocessingException e ) {
-                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
                 } catch ( Exception e ) {
                     log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
                 }
@@ -333,29 +329,28 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         }
 
         /*
-         * Create a new "experiment set" that groups them together (not sure we'll keep this)
+         * Create a new "experiment set" that groups them together (not sure if we'll keep this)
          */
         ExpressionExperimentSet g = ExpressionExperimentSet.Factory.newInstance();
         g.setDescription( "Parts of " + toSplit.getShortName() + " that were split on " + splitOn.getName() );
         g.setName( toSplit.getShortName() + " splits" );
         g.setTaxon( toSplit.getBioAssays().iterator().next().getSampleUsed().getSourceTaxon() );
         g.getExperiments().addAll( result );
-        this.expressionExperimentSetService.create( g );
+        g = this.expressionExperimentSetService.create( g );
 
         // remove useless data files
 
         dataFileService.deleteAllFiles( toSplit );
-        // Clean the source experiment? remove diff and coex analyses, PCA, correlation matrices, processed data vectors
+        // Clean the source experiment? remove diff and coexpression analyses, PCA, correlation matrices, processed data vectors
         // delete it?
         // eeService.remove(toSplit);
         // OR perhaps only
         securityService.makePrivate( toSplit );
         // Or mark it as troubled?
 
-        return result;
+        return g;
     }
 
-    @Transactional
     private void enforceOtherParts( Collection<ExpressionExperiment> result ) {
         // Enforce relation to other parts of the split.
         for ( ExpressionExperiment split : result ) {
@@ -366,11 +361,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         }
     }
 
-    /**
-     * @param  experimentalDesign
-     * @param  old2cloneFV
-     * @return                    non-persistent clone
-     */
     private ExperimentalDesign cloneExperimentalDesign( ExperimentalDesign experimentalDesign, Map<FactorValue, FactorValue> old2cloneFV ) {
         ExperimentalDesign clone = ExperimentalDesign.Factory.newInstance();
         clone.setDescription( experimentalDesign.getDescription() );
@@ -386,12 +376,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    /**
-     * @param  experimentalFactors
-     * @param  experimentalDesign
-     * @param  old2cloneFV
-     * @return                     non-persistent clones
-     */
     private Collection<ExperimentalFactor> cloneExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors, ExperimentalDesign ed,
             Map<FactorValue, FactorValue> old2cloneFV ) {
         Collection<ExperimentalFactor> result = new HashSet<>();
@@ -410,11 +394,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
-    /**
-     * @param  factorValues
-     * @param  old2cloneFV
-     * @return              non-persistent clone
-     */
     private Collection<FactorValue> cloneFactorValues( Collection<FactorValue> factorValues, ExperimentalFactor ef,
             Map<FactorValue, FactorValue> old2cloneFV ) {
         Collection<FactorValue> result = new HashSet<>();
@@ -432,10 +411,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
-    /**
-     * @param  measurement
-     * @return             non-persistent clone
-     */
     private Measurement cloneMeasurement( Measurement measurement ) {
 
         if ( measurement == null ) return null;
@@ -449,10 +424,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    /**
-     * @param  qt
-     * @return    clone
-     */
     private QuantitationType cloneQt( QuantitationType qt, ExpressionExperiment split ) {
         QuantitationType clone = QuantitationType.Factory.newInstance();
         clone.setDescription( qt.getDescription() + " (created for split: " + split.getShortName() + ")" );
@@ -473,37 +444,20 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    /**
-     * @param  ch
-     * @return    clones
-     */
     private Set<Characteristic> cloneCharacteristics( Collection<Characteristic> ch ) {
         Set<Characteristic> result = new HashSet<>();
         for ( Characteristic c : ch ) {
             Characteristic clone = cloneCharacteristic( c );
-
             result.add( clone );
-
         }
         return result;
     }
 
-    /**
-     * @param  c
-     * @return   clone
-     */
     private Characteristic cloneCharacteristic( Characteristic c ) {
-        Characteristic clone = Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
+        return Characteristic.Factory.newInstance( c.getName(), c.getDescription(), c.getValue(), c.getValueUri(),
                 c.getCategory(), c.getCategoryUri(), c.getEvidenceCode() );
-        return clone;
     }
 
-    /**
-     * Deeply clone a bioAssay
-     * 
-     * @param  ba
-     * @return    non-persistent clone
-     */
     private BioAssay cloneBioAssay( BioAssay ba ) {
         BioAssay clone = BioAssay.Factory.newInstance();
 
@@ -525,41 +479,25 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    /**
-     * @param  de databse entry
-     * @return    non-persistent clone
-     */
     private DatabaseEntry cloneAccession( DatabaseEntry de ) {
         if ( de == null ) return null;
         return DatabaseEntry.Factory.newInstance( de.getAccession(), de.getAccessionVersion(), de.getUri(),
                 de.getExternalDatabase() );
     }
 
-    /**
-     * @param  bm biomaterial
-     * @param  ba bioassay
-     * @return    non-persistent clone
-     */
     private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name so we don't confuse this with the previous one in 'findorcreate()';
+        clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );
         clone.setSourceTaxon( bm.getSourceTaxon() );
         clone.setTreatments( this.cloneTreatments( bm.getTreatments() ) );
         clone.getBioAssaysUsedIn().add( ba );
-        /*
-         * Factorvalues are done separately
-         */
-
+        // Factor values are done separately
         return clone;
     }
 
-    /**
-     * @param  treatments
-     * @return            non-persistent clones
-     */
     private Set<Treatment> cloneTreatments( Collection<Treatment> ts ) {
         Set<Treatment> result = new HashSet<>();
         for ( Treatment t : ts ) {
@@ -573,12 +511,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
-    /**
-     * 
-     * @param  samplesToUse (cloned)
-     * @param  ee
-     * @return              non-persistent populated BAD
-     */
     private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse, ExpressionExperiment ee ) {
 
         List<BioAssay> bioAssays = new ArrayList<>();
