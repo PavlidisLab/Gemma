@@ -67,15 +67,16 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
+        Collection<T> results = new ArrayList<>( entities.size() );
         int i = 0;
         for ( T t : entities ) {
-            this.create( t );
+            results.add( this.create( t ) );
             if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
         }
-        return entities;
+        return results;
     }
 
     @Override

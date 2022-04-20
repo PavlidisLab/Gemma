@@ -19,6 +19,7 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to be searched for
      * @return the version of entity retrieved from the persistent storage, if found.
      */
+    @CheckReturnValue
     O find( O entity );
 
     /**
@@ -37,6 +38,7 @@ public interface BaseService<O extends Identifiable> {
      * @return collection of objects referencing the persistent instances of given entities.
      */
     @SuppressWarnings("unused") // Consistency
+    @CheckReturnValue
     Collection<O> create( Collection<O> entities );
 
     /**
@@ -45,6 +47,7 @@ public interface BaseService<O extends Identifiable> {
      * @param entity the entity to be created.
      * @return object referencing the persistent instance of the given entity.
      */
+    @CheckReturnValue
     O create( O entity );
 
     /**

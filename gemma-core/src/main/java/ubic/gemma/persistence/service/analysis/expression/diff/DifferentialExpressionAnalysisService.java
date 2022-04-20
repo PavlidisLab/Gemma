@@ -62,7 +62,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
-    @SuppressWarnings("UnusedReturnValue") // Consistent with other services
     @Secured({ "GROUP_USER" })
     DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
