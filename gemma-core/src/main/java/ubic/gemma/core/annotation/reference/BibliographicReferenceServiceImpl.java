@@ -298,7 +298,7 @@ public class BibliographicReferenceServiceImpl
     private List<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
             Collection<BibliographicReference> bibRefs ) {
         if ( bibRefs.isEmpty() ) {
-            Collections.emptyList();
+            return Collections.emptyList();
         }
         Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
 
