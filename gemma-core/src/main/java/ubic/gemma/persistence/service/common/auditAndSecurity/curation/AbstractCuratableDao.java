@@ -39,8 +39,8 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
-    public C create( final C entity ) {
-        super.create( entity );
+    public C create( C entity ) {
+        entity = super.create( entity );
         if ( entity.getCurationDetails() == null ) {
             CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( this.getSessionFactory() );
             entity.setCurationDetails( curationDetailsDao.create() );

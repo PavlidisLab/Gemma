@@ -91,8 +91,7 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot create group with that name: " + userGroup.getName() );
         }
-        this.getHibernateTemplate().save( userGroup );
-        return userGroup;
+        return super.create( userGroup );
     }
 
     @Override
