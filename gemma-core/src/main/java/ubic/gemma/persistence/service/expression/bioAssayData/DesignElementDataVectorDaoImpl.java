@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.jdbc.Work;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -208,28 +208,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     @Override
+    @Transactional
     public Collection<T> create( final Collection<T> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( T entity : entities ) {
-                    DesignElementDataVectorDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override
+    @Transactional
     public void update( final Collection<T> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( T entity : entities ) {
-                    DesignElementDataVectorDaoImpl.this.update( entity );
-                }
-            }
-        } );
+        super.update( entities );
     }
 
     /**

@@ -21,9 +21,9 @@ package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -54,28 +54,15 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
     }
 
     @Override
+    @Transactional
     public Collection<BlatResult> create( final Collection<BlatResult> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BlatResult entity : entities ) {
-                    BlatResultDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override
+    @Transactional
     public void update( final Collection<BlatResult> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BlatResult entity : entities ) {
-                    BlatResultDaoImpl.this.update( entity );
-                }
-            }
-        } );
+        super.update( entities );
     }
 
     @Override

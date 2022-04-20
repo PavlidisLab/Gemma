@@ -24,9 +24,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -36,8 +36,10 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.sql.Connection;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author pavlidis
@@ -51,28 +53,15 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     }
 
     @Override
+    @Transactional
     public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BioAssay entity : entities ) {
-                    BioAssayDaoImpl.this.create( entity );
-                }
-            }
-        } );
-        return entities;
+        return super.create( entities );
     }
 
     @Override
+    @Transactional
     public void update( final Collection<BioAssay> entities ) {
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) {
-                for ( BioAssay entity : entities ) {
-                    BioAssayDaoImpl.this.update( entity );
-                }
-            }
-        } );
+        super.update( entities );
     }
 
     @Override
@@ -127,29 +116,25 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
+                        "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
                 .setParameter( "accession", accession ).list();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final BioAssay bioAssay ) {
         try {
-            this.getSessionFactory().getCurrentSession().doWork( new Work() {
-                @Override
-                public void execute( Connection connection ) {
-                    Session session = getSessionFactory().getCurrentSession();
-                    session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
-                    Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                    Hibernate.initialize( bioAssay.getOriginalPlatform() );
-                    BioMaterial bm = bioAssay.getSampleUsed();
-                    session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                    Hibernate.initialize( bm );
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    session.evict( bm );
-                    session.evict( bioAssay );
-                }
-            } );
+            Session session = getSessionFactory().getCurrentSession();
+            session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+            Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+            Hibernate.initialize( bioAssay.getOriginalPlatform() );
+            BioMaterial bm = bioAssay.getSampleUsed();
+            session.buildLockRequest( LockOptions.NONE ).lock( bm );
+            Hibernate.initialize( bm );
+            Hibernate.initialize( bm.getBioAssaysUsedIn() );
+            Hibernate.initialize( bm.getFactorValues() );
+            session.evict( bm );
+            session.evict( bioAssay );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'BioAssayDao.thawRawAndProcessed(BioAssay bioAssay)' --> " + th, th );
