@@ -21,7 +21,7 @@ package ubic.gemma.core.ontology.providers;
 
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
-import ubic.basecode.util.Configuration;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Ontology created for Gemma. See bug 4312
@@ -39,7 +39,7 @@ public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
 
     @Override
     public String getOntologyUrl() {
-        return Configuration.getString( GEMMA_ONTOLOGY_URL_CONFIG );
+        return Settings.getString( GEMMA_ONTOLOGY_URL_CONFIG );
     }
 
 }
