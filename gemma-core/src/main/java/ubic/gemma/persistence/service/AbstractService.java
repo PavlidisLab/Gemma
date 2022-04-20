@@ -45,6 +45,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
+    @OverridingMethodsMustInvokeSuper
     public O create( O entity ) {
         return mainDao.create( entity );
     }

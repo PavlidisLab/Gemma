@@ -1014,8 +1014,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public void remove( Long id ) {
-        final ExpressionExperiment ee = this.load( id );
+    public void remove( ExpressionExperiment ee ) {
+        // reload the EE as it might originate from a different session
+        ee = this.load( ee.getId() );
 
         if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
@@ -1059,7 +1060,7 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        this.expressionExperimentDao.remove( ee );
+        super.remove( ee );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
