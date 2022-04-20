@@ -46,13 +46,18 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
     /**
-     * Batch size to reach before flushing the Hibernate session.
+     * Default batch size to reach before flushing the Hibernate session.
+     *
+     * You should use {@link #setBatchSize(int)} to adjust this value to an optional one for the DAO. Large model should
+     * have a relatively small batch size to reduce memory usage.
      *
      * See https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html for more details.
      */
-    private static final int BATCH_SIZE = 100;
+    public static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<T> elementClass;
+
+    private int batchSize = DEFAULT_BATCH_SIZE;
 
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -64,7 +69,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         int i = 0;
         for ( T t : entities ) {
             this.create( t );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
@@ -123,7 +128,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         int i = 0;
         for ( T e : entities ) {
             this.remove( e );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
@@ -154,7 +159,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         int i = 0;
         for ( T entity : entities ) {
             this.update( entity );
-            if ( ++i % BATCH_SIZE == 0 ) {
+            if ( ++i % batchSize == 0 ) {
                 this.getSessionFactory().getCurrentSession().flush();
                 this.getSessionFactory().getCurrentSession().clear();
             }
@@ -256,4 +261,18 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         return criteria.list();
     }
 
+    /**
+     * Set the batch size for batched creation, update and deletions.
+     *
+     * Use {@link Integer#MAX_VALUE} to effectively disable batching and '1' to flush changes right away.
+     *
+     * @param batchSize a strictly positive number
+     */
+    @SuppressWarnings("unused")
+    protected final void setBatchSize( int batchSize ) {
+        if ( batchSize < 1 ) {
+            throw new IllegalArgumentException( "Batch size must be strictly positive." );
+        }
+        this.batchSize = batchSize;
+    }
 }
