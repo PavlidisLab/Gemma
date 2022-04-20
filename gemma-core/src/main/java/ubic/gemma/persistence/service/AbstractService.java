@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.Collection;
 
 /**
@@ -86,6 +87,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
+    @OverridingMethodsMustInvokeSuper
     public void remove( O entity ) {
         mainDao.remove( entity );
     }
@@ -104,6 +106,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
+    @OverridingMethodsMustInvokeSuper
     public void update( O entity ) {
         mainDao.update( entity );
     }

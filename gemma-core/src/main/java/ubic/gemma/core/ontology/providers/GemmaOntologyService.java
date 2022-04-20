@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2015 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,25 +19,27 @@
 
 package ubic.gemma.core.ontology.providers;
 
+import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
-import ubic.basecode.util.Configuration;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Ontology created for Gemma. See bug 4312
  *
  * @author paul
  */
+@Component
 public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
-    private static final String ONTOLOGY_URL = "url.gemmaOntology";
+    private static final String GEMMA_ONTOLOGY_URL_CONFIG = "url.gemmaOntology";
 
     @Override
-    protected String getOntologyName() {
+    public String getOntologyName() {
         return "gemmaOntology";
     }
 
     @Override
-    protected String getOntologyUrl() {
-        return Configuration.getString( ONTOLOGY_URL );
+    public String getOntologyUrl() {
+        return Settings.getString( GEMMA_ONTOLOGY_URL_CONFIG );
     }
 
 }

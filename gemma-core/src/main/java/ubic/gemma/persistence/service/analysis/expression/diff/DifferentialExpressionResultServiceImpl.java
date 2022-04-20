@@ -155,11 +155,4 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         this.DERDao.thaw( result );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
-        return this.DERDao.load( ids );
-    }
-
 }
