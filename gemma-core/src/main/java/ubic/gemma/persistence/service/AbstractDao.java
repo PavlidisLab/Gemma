@@ -48,7 +48,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     /**
      * Default batch size to reach before flushing the Hibernate session.
      *
-     * You should use {@link #setBatchSize(int)} to adjust this value to an optional one for the DAO. Large model should
+     * You should use {@link #setBatchSize(int)} to adjust this value to an optimal one for the DAO. Large model should
      * have a relatively small batch size to reduce memory usage.
      *
      * See https://docs.jboss.org/hibernate/core/3.6/reference/en-US/html/batch.html for more details.
