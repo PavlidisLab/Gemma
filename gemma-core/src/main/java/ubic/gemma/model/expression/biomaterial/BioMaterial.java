@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.persistence.Transient;
-import java.util.Collection;
+import java.util.Set;
 import java.util.HashSet;
 
 /**
@@ -41,25 +41,25 @@ public class BioMaterial extends Describable implements gemma.gsec.model.Secured
 
     private static final long serialVersionUID = 4374359557498220256L;
     private ubic.gemma.model.genome.Taxon sourceTaxon;
-    private Collection<FactorValue> factorValues = new HashSet<>();
-    private Collection<BioAssay> bioAssaysUsedIn = new HashSet<>();
-    private Collection<Treatment> treatments = new HashSet<>();
-    private Collection<Characteristic> characteristics = new HashSet<>();
+    private Set<FactorValue> factorValues = new HashSet<>();
+    private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
+    private Set<Treatment> treatments = new HashSet<>();
+    private Set<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry externalAccession;
 
-    public Collection<BioAssay> getBioAssaysUsedIn() {
+    public Set<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;
     }
 
-    public void setBioAssaysUsedIn( Collection<BioAssay> bioAssaysUsedIn ) {
+    public void setBioAssaysUsedIn( Set<BioAssay> bioAssaysUsedIn ) {
         this.bioAssaysUsedIn = bioAssaysUsedIn;
     }
 
-    public Collection<Characteristic> getCharacteristics() {
+    public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
     }
 
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+    public void setCharacteristics( Set<Characteristic> characteristics ) {
         this.characteristics = characteristics;
     }
 
@@ -81,11 +81,11 @@ public class BioMaterial extends Describable implements gemma.gsec.model.Secured
     /**
      * @return The values that this BioAssay is associated with for the experiment.
      */
-    public Collection<FactorValue> getFactorValues() {
+    public Set<FactorValue> getFactorValues() {
         return this.factorValues;
     }
 
-    public void setFactorValues( Collection<FactorValue> factorValues ) {
+    public void setFactorValues( Set<FactorValue> factorValues ) {
         this.factorValues = factorValues;
     }
 
@@ -103,11 +103,11 @@ public class BioMaterial extends Describable implements gemma.gsec.model.Secured
         this.sourceTaxon = sourceTaxon;
     }
 
-    public Collection<Treatment> getTreatments() {
+    public Set<Treatment> getTreatments() {
         return this.treatments;
     }
 
-    public void setTreatments( Collection<Treatment> treatments ) {
+    public void setTreatments( Set<Treatment> treatments ) {
         this.treatments = treatments;
     }
 

@@ -25,7 +25,7 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.persistence.Transient;
-import java.util.Collection;
+import java.util.Set;
 import java.util.HashSet;
 
 /**
@@ -39,10 +39,10 @@ public class ExperimentalFactor extends Describable implements SecuredChild {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4615731059510436891L;
-    private Collection<Characteristic> annotations = new HashSet<>();
+    private Set<Characteristic> annotations = new HashSet<>();
     private Characteristic category;
     private ExperimentalDesign experimentalDesign;
-    private Collection<FactorValue> factorValues = new HashSet<>();
+    private Set<FactorValue> factorValues = new HashSet<>();
     private ExpressionExperiment securityOwner;
     private FactorType type;
 
@@ -115,11 +115,11 @@ public class ExperimentalFactor extends Describable implements SecuredChild {
         this.securityOwner = securityOwner;
     }
 
-    public Collection<ubic.gemma.model.common.description.Characteristic> getAnnotations() {
+    public Set<ubic.gemma.model.common.description.Characteristic> getAnnotations() {
         return this.annotations;
     }
 
-    public void setAnnotations( Collection<Characteristic> annotations ) {
+    public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
     }
 
@@ -142,11 +142,11 @@ public class ExperimentalFactor extends Describable implements SecuredChild {
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
-    public Collection<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
+    public Set<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
         return this.factorValues;
     }
 
-    public void setFactorValues( Collection<FactorValue> factorValues ) {
+    public void setFactorValues( Set<FactorValue> factorValues ) {
         this.factorValues = factorValues;
     }
 

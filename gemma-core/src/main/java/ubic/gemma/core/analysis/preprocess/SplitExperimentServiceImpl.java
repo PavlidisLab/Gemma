@@ -19,12 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -482,8 +477,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * @param  ch
      * @return    clones
      */
-    private Collection<Characteristic> cloneCharacteristics( Collection<Characteristic> ch ) {
-        Collection<Characteristic> result = new HashSet<>();
+    private Set<Characteristic> cloneCharacteristics( Collection<Characteristic> ch ) {
+        Set<Characteristic> result = new HashSet<>();
         for ( Characteristic c : ch ) {
             Characteristic clone = cloneCharacteristic( c );
 
@@ -565,8 +560,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      * @param  treatments
      * @return            non-persistent clones
      */
-    private Collection<Treatment> cloneTreatments( Collection<Treatment> ts ) {
-        Collection<Treatment> result = new HashSet<>();
+    private Set<Treatment> cloneTreatments( Collection<Treatment> ts ) {
+        Set<Treatment> result = new HashSet<>();
         for ( Treatment t : ts ) {
             Treatment clone = Treatment.Factory.newInstance();
             clone.setDescription( t.getDescription() );

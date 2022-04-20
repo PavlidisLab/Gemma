@@ -30,6 +30,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +113,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         bioAssay.setSampleUsed( bioMaterial );
 
         // add bioAssay to bioMaterial
-        Collection<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
+        Set<BioAssay> currentBioAssays = bioMaterial.getBioAssaysUsedIn();
         currentBioAssays.add( bioAssay );
         bioMaterial.setBioAssaysUsedIn( currentBioAssays );
 
@@ -147,7 +148,7 @@ public class BioAssayServiceImpl extends AbstractVoEnabledService<BioAssay, BioA
         bioAssayTemp.setSampleUsed( currentBioMaterials );
 
         // Remove bioAssay from bioMaterial
-        Collection<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();
+        Set<BioAssay> currentBioAssays = biomaterialToBeRemoved.getBioAssaysUsedIn();
         currentBioAssays.remove( bioAssayTemp );
         biomaterialToBeRemoved.setBioAssaysUsedIn( currentBioAssays );
 

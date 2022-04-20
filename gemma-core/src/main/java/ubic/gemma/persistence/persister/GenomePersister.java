@@ -42,10 +42,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.SequenceBinUtils;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -426,7 +423,7 @@ abstract public class GenomePersister extends CommonPersister {
     private BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
         BlatResult blatResult = association.getBlatResult();
         if ( this.isTransient( blatResult ) ) {
-            blatResultDao.create( blatResult );
+            blatResult = blatResultDao.create( blatResult );
         }
         if ( AbstractPersister.log.isDebugEnabled() ) {
             AbstractPersister.log.debug( "Persisting " + association );
@@ -467,7 +464,7 @@ abstract public class GenomePersister extends CommonPersister {
             AbstractPersister.log.debug( "New gene: " + gene );
         gene = geneDao.create( gene );
 
-        Collection<GeneProduct> geneProductsForNewGene = new HashSet<>();
+        Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
         for ( GeneProduct product : tempGeneProduct ) {
             GeneProduct existingProduct = geneProductDao.find( product );
             if ( existingProduct != null ) {
@@ -499,8 +496,7 @@ abstract public class GenomePersister extends CommonPersister {
             // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
             // products are not persistent until the session is flushed, later. There might be a better way around this,
             // but so far as I know this is the only place this happens.
-            //noinspection unchecked
-            gene.setProducts( geneProductDao.create( gene.getProducts() ) );
+            gene.setProducts( new HashSet<>( geneProductDao.create( gene.getProducts() ) ) );
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {

@@ -170,9 +170,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     @Override
-    public Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
+    public Set<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
-        Collection<HitListSize> hitListSizes = new HashSet<>();
+        Set<HitListSize> hitListSizes = new HashSet<>();
         StopWatch timer = new StopWatch();
         timer.start();
         double maxThreshold = MathUtil.max( LinearModelAnalyzer.qValueThresholdsForHitLists );
@@ -1111,7 +1111,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
-        Collection<ExpressionAnalysisResultSet> resultSets = this
+        Set<ExpressionAnalysisResultSet> resultSets = this
                 .makeResultSets( label2Factors, baselineConditions, oneSampleTtest, expressionAnalysis, resultLists );
 
         expressionAnalysis.setResultSets( resultSets );
@@ -1274,7 +1274,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         return properDesignMatrix;
     }
 
-    private Collection<ExpressionAnalysisResultSet> makeResultSets(
+    private Set<ExpressionAnalysisResultSet> makeResultSets(
             final Map<String, Collection<ExperimentalFactor>> label2Factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
@@ -1288,11 +1288,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         LinearModelAnalyzer.log.info( "Processing " + resultLists.size() + " resultSets" );
         // StopWatch timer = new StopWatch();
         // timer.start();
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
+        Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
         for ( String fName : resultLists.keySet() ) {
             Collection<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
 
-            Collection<ExperimentalFactor> factorsUsed = new HashSet<>( label2Factors.get( fName ) );
+            Set<ExperimentalFactor> factorsUsed = new HashSet<>( label2Factors.get( fName ) );
 
             FactorValue baselineGroup = null;
             if ( !oneSampleTtest && factorsUsed.size() == 1 /* not interaction */ ) {
@@ -1301,7 +1301,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 baselineGroup = baselineConditions.get( factor );
             }
 
-            Collection<HitListSize> hitListSizes = this.computeHitListSizes( results, probeToGeneMap );
+            Set<HitListSize> hitListSizes = this.computeHitListSizes( results, probeToGeneMap );
 
             int numberOfProbesTested = results.size();
             int numberOfGenesTested = this.getNumberOfGenesTested( results, probeToGeneMap );

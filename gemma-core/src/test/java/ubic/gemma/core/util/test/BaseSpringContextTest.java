@@ -62,6 +62,7 @@ import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * subclass for tests that need the container and use the database
@@ -134,7 +135,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentGene( taxon );
     }
 
-    public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+    public Set<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
         return testHelper.getTestPersistentBioSequence2GeneProducts( bioSequence );
     }
 

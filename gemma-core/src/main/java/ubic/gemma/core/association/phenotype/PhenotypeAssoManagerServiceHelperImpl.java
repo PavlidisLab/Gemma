@@ -37,10 +37,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author nicolas
@@ -388,9 +385,9 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     /**
      * calls findOrCreateBibliographicReference for a Collection
      */
-    private Collection<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
+    private Set<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
 
-        Collection<BibliographicReference> bibliographicReferences = new HashSet<>();
+        Set<BibliographicReference> bibliographicReferences = new HashSet<>();
 
         if ( pubMedIds != null && !pubMedIds.isEmpty() ) {
             for ( String pubmedId : pubMedIds ) {

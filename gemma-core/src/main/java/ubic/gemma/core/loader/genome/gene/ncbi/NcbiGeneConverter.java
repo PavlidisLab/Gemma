@@ -231,7 +231,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         for ( NCBIGene2Accession acc : gene2accession ) {
             geneProducts.addAll( this.convert( acc, gene ) );
         }
-        gene.setProducts( geneProducts );
+        gene.setProducts( new HashSet<>( geneProducts ) );
 
         return gene;
     }

@@ -34,6 +34,7 @@ import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.easymock.EasyMock.*;
 
@@ -153,7 +154,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         gp5.setName( "wrong chromosome gp5" );
         gp5.setId( ( long ) 4567 );
 
-        Collection<GeneProduct> gps = new ArrayList<>();
+        Set<GeneProduct> gps = new HashSet<>();
         gps.add( gp1 );
         gps.add( gp2 );
         gps.add( gp4 );

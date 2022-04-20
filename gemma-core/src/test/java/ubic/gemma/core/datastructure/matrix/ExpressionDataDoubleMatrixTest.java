@@ -267,7 +267,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         de2.setArrayDesign( ad );
         vector2.setDesignElement( de2 );
 
-        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
+        Set<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 

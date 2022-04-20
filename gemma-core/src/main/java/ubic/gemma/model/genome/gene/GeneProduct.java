@@ -24,7 +24,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 
 import javax.persistence.Transient;
-import java.util.Collection;
+import java.util.Set;
 
 public class GeneProduct extends ChromosomeFeature {
 
@@ -33,12 +33,12 @@ public class GeneProduct extends ChromosomeFeature {
      */
     private static final long serialVersionUID = 8414732389521430535L;
     private String ncbiGi;
-    private Collection<DatabaseEntry> accessions = new java.util.HashSet<>();
+    private Set<DatabaseEntry> accessions = new java.util.HashSet<>();
     /**
      * Only used in transient instances in sequence analysis. The entity relation in the database is never used and will
      * be removed.
      */
-    private Collection<PhysicalLocation> exons = new java.util.HashSet<>();
+    private Set<PhysicalLocation> exons = new java.util.HashSet<>();
     private Gene gene;
 
     @Override
@@ -95,11 +95,11 @@ public class GeneProduct extends ChromosomeFeature {
 
     }
 
-    public Collection<DatabaseEntry> getAccessions() {
+    public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
 
-    public void setAccessions( Collection<DatabaseEntry> accessions ) {
+    public void setAccessions( Set<DatabaseEntry> accessions ) {
         this.accessions = accessions;
     }
 
@@ -109,7 +109,7 @@ public class GeneProduct extends ChromosomeFeature {
      * @return physical locations of exons
      */
     @Transient
-    public Collection<PhysicalLocation> getExons() {
+    public Set<PhysicalLocation> getExons() {
         return this.exons;
     }
 
@@ -119,7 +119,7 @@ public class GeneProduct extends ChromosomeFeature {
      * @param exons new physical locations of exons
      */
     @Transient
-    public void setExons( Collection<PhysicalLocation> exons ) {
+    public void setExons( Set<PhysicalLocation> exons ) {
         this.exons = exons;
     }
 

@@ -34,6 +34,8 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -207,7 +209,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene.setNcbiGeneId( id );
         gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
-        Collection<GeneAlias> aliases = new ArrayList<>();
+        Set<GeneAlias> aliases = new HashSet<>();
         GeneAlias alias = GeneAlias.Factory.newInstance();
         alias.setId( ( long ) 1 );
         alias.setAlias( "GRIN1" );

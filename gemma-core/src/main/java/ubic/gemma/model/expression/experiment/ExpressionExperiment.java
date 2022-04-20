@@ -16,6 +16,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxyHelper;
@@ -69,10 +70,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     /**
      * If this experiment was split off of a larger experiment, link to its relatives.
      */
-    private Collection<ExpressionExperiment> otherParts = new HashSet<>();
-    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
-    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
-    private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
+    private Set<ExpressionExperiment> otherParts = new HashSet<>();
+    private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
+    private Set<QuantitationType> quantitationTypes = new HashSet<>();
+    private Set<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
 
     private String source;
@@ -110,11 +111,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
-    public Collection<BioAssay> getBioAssays() {
-        return this.bioAssays;
-    }
-
-    @Override
     public CurationDetails getCurationDetails() {
         return this.curationDetails;
     }
@@ -143,19 +139,19 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.numberOfDataVectors;
     }
 
-    public Collection<ExpressionExperiment> getOtherParts() {
+    public Set<ExpressionExperiment> getOtherParts() {
         return otherParts;
     }
 
-    public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
+    public Set<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
         return this.processedExpressionDataVectors;
     }
 
-    public Collection<QuantitationType> getQuantitationTypes() {
+    public Set<QuantitationType> getQuantitationTypes() {
         return this.quantitationTypes;
     }
 
-    public Collection<RawExpressionDataVector> getRawExpressionDataVectors() {
+    public Set<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
     }
 
@@ -196,8 +192,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
+        super.setBioAssays( bioAssays );
         if ( bioAssays != null && Hibernate.isInitialized( bioAssays ) )
             this.numberOfSamples = bioAssays.size();
     }
@@ -228,20 +224,20 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.numberOfDataVectors = numberOfDataVectors;
     }
 
-    public void setOtherParts( Collection<ExpressionExperiment> otherParts ) {
+    public void setOtherParts( Set<ExpressionExperiment> otherParts ) {
         this.otherParts = otherParts;
     }
 
     public void setProcessedExpressionDataVectors(
-            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
+            Set<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
         this.processedExpressionDataVectors = processedExpressionDataVectors;
     }
 
-    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
+    public void setQuantitationTypes( Set<QuantitationType> quantitationTypes ) {
         this.quantitationTypes = quantitationTypes;
     }
 
-    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
+    public void setRawExpressionDataVectors( Set<RawExpressionDataVector> rawExpressionDataVectors ) {
         this.rawExpressionDataVectors = rawExpressionDataVectors;
     }
 

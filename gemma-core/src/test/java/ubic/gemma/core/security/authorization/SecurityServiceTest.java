@@ -86,7 +86,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( SecurityServiceTest.compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<>();
+        Set<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
 

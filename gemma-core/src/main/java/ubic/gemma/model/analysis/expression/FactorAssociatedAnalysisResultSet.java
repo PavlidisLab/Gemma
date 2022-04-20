@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult> extends AnalysisResultSet<R> {
 
@@ -32,7 +33,7 @@ public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult
      */
     private static final long serialVersionUID = 821072688513147160L;
 
-    private Collection<ExperimentalFactor> experimentalFactors = new HashSet<>();
+    private Set<ExperimentalFactor> experimentalFactors = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -42,11 +43,11 @@ public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult
     public FactorAssociatedAnalysisResultSet() {
     }
 
-    public Collection<ExperimentalFactor> getExperimentalFactors() {
+    public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }
 
-    public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+    public void setExperimentalFactors( Set<ExperimentalFactor> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
 

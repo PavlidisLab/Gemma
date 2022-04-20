@@ -612,7 +612,7 @@ public class OntologyServiceImpl implements OntologyService {
         Set<Characteristic> chars = new HashSet<>();
         chars.add( vc );
 
-        Collection<Characteristic> current = bm.getCharacteristics();
+        Set<Characteristic> current = bm.getCharacteristics();
         if ( current == null )
             current = new HashSet<>( chars );
         else

@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe), for one
@@ -44,7 +45,7 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
     private Double rank;
     private Integer correctedPValueBin;
     private Long id;
-    private Collection<ContrastResult> contrasts = new HashSet<>();
+    private Set<ContrastResult> contrasts = new HashSet<>();
     private ExpressionAnalysisResultSet resultSet;
     private CompositeSequence probe;
 
@@ -113,11 +114,11 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
      * @return Contrasts for this result. Depending on configuration, this might only be stored if the Result itself is
      * significant at some given threshold (e.g., nominal p-value of 0.05) (but default is to store everything)
      */
-    public Collection<ContrastResult> getContrasts() {
+    public Set<ContrastResult> getContrasts() {
         return this.contrasts;
     }
 
-    public void setContrasts( Collection<ContrastResult> contrasts ) {
+    public void setContrasts( Set<ContrastResult> contrasts ) {
         this.contrasts = contrasts;
     }
 

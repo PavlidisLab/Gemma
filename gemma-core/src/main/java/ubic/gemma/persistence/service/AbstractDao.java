@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

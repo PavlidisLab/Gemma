@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author keshav
@@ -85,7 +86,7 @@ public class BioMaterialController {
 
         for ( BioMaterial material : bms ) {
             Collection<FactorValue> oldValues = material.getFactorValues();
-            Collection<FactorValue> updatedValues = new HashSet<>();
+            Set<FactorValue> updatedValues = new HashSet<>();
 
             // Make sure that the BM doesn't have a FactorValue for the Factor
             // we are adding already

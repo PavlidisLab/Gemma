@@ -44,10 +44,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -100,23 +97,23 @@ public class SearchServiceTest extends BaseSpringContextTest {
         eeCharSpinalCord.setCategoryUri( SearchServiceTest.SPINAL_CORD );
         eeCharSpinalCord.setValue( "spinal cord" );
         eeCharSpinalCord.setValueUri( SearchServiceTest.SPINAL_CORD );
-        characteristicService.create( eeCharSpinalCord );
+        eeCharSpinalCord = characteristicService.create( eeCharSpinalCord );
 
         Characteristic eeCharGeneURI = Characteristic.Factory.newInstance();
         eeCharGeneURI.setCategory( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setCategoryUri( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValue( SearchServiceTest.GENE_URI );
         eeCharGeneURI.setValueUri( SearchServiceTest.GENE_URI );
-        characteristicService.create( eeCharGeneURI );
+        eeCharGeneURI = characteristicService.create( eeCharGeneURI );
 
         Characteristic eeCharCortexURI = Characteristic.Factory.newInstance();
         eeCharCortexURI.setCategory( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setCategoryUri( SearchServiceTest.BRAIN_CAVITY );
         eeCharCortexURI.setValue( "cavity of brain" );
         eeCharCortexURI.setValueUri( SearchServiceTest.BRAIN_CAVITY );
-        characteristicService.create( eeCharCortexURI );
+        eeCharCortexURI = characteristicService.create( eeCharCortexURI );
 
-        Collection<Characteristic> chars = new HashSet<>();
+        Set<Characteristic> chars = new HashSet<>();
         chars.add( eeCharSpinalCord );
         chars.add( eeCharGeneURI );
         chars.add( eeCharCortexURI );

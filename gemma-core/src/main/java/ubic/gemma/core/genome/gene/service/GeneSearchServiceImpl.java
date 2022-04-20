@@ -521,7 +521,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
                 newTaxonSet.setName( gs.getName() );
                 newTaxonSet.setDescription( gs.getDescription() );
-                Collection<GeneSetMember> members = new ArrayList<>();
+                Set<GeneSetMember> members = new HashSet<>();
                 members.add( geneMember );
 
                 newTaxonSet.setMembers( members );

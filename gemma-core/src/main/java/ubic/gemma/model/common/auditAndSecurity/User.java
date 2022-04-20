@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * A user of the software system, who is authenticated.
@@ -32,7 +33,7 @@ public class User extends Person implements gemma.gsec.model.User {
     private Boolean enabled;
     private String signupToken;
     private java.util.Date signupTokenDatestamp;
-    private Collection<JobInfo> jobs = new java.util.HashSet<>();
+    private Set<JobInfo> jobs = new java.util.HashSet<>();
 
     @Override
     public Boolean getEnabled() {
@@ -44,11 +45,11 @@ public class User extends Person implements gemma.gsec.model.User {
         this.enabled = enabled;
     }
 
-    public Collection<JobInfo> getJobs() {
+    public Set<JobInfo> getJobs() {
         return this.jobs;
     }
 
-    public void setJobs( Collection<JobInfo> jobs ) {
+    public void setJobs( Set<JobInfo> jobs ) {
         this.jobs = jobs;
     }
 

@@ -40,6 +40,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -148,7 +149,7 @@ public class AnnotationController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<Characteristic> current = ee.getCharacteristics();
+        Set<Characteristic> current = ee.getCharacteristics();
 
         Collection<Characteristic> found = new HashSet<>();
 
