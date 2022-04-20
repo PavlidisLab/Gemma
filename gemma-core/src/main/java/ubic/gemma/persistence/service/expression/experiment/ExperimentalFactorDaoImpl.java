@@ -93,7 +93,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
         }
 
         // remove the experimental factor this cascades to values.
-        session.delete( experimentalFactor );
+        super.remove( experimentalFactor );
     }
 
     @Override

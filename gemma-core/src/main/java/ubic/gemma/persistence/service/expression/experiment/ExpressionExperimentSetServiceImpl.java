@@ -361,13 +361,6 @@ public class ExpressionExperimentSetServiceImpl
         this.expressionExperimentSetDao.thaw( expressionExperimentSet );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
-        return this.expressionExperimentSetDao.load( ids );
-    }
-
     /**
      * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
      */
@@ -404,7 +397,7 @@ public class ExpressionExperimentSetServiceImpl
             throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
         }
 
-        this.expressionExperimentSetDao.update( expressionExperimentSet );
+        super.update( expressionExperimentSet );
     }
 
     private String getMasterSetName( Taxon taxon ) {

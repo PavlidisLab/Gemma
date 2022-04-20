@@ -457,7 +457,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( !associations.isEmpty() )
             this.getHibernateTemplate().deleteAll( associations );
 
-        this.getHibernateTemplate().delete( gene );
+        super.remove( gene );
     }
 
     @Override

@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -135,6 +136,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
+    @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
         if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().delete( entity );
@@ -160,6 +162,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     @Transactional
+    @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
         if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().update( entity );

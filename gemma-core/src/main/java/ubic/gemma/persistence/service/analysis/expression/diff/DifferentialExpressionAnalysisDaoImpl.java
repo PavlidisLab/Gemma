@@ -497,7 +497,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        session.delete( session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
+        super.remove( ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
 
         session.flush();
         session.clear();
@@ -510,7 +510,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid" )
+                        "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid" )
                 .setParameter( "eeid", id ).list() );
 
         /*

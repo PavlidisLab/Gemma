@@ -277,7 +277,7 @@ public class CompositeSequenceServiceImpl
                 filteredSequence.add( ( CompositeSequence ) sequence );
         }
 
-        this.compositeSequenceDao.remove( filteredSequence );
+        super.remove( filteredSequence );
     }
 
     /**
