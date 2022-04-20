@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -199,10 +200,10 @@ public class ExpressionExperimentDataFetchController {
     public File getOutputFile( String filename ) {
         String fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
         File f = new File( fullFilePath );
-        File parentDir = f.getParentFile();
-        if ( !parentDir.exists() ) {
-            //noinspection ResultOfMethodCallIgnored
-            parentDir.mkdirs();
+        try {
+            FileUtils.forceMkdirParent( f );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
         return f;
     }

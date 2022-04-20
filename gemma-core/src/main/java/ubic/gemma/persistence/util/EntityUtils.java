@@ -396,15 +396,6 @@ public class EntityUtils {
         return new boolean[] { isPublic, canWrite, isShared };
     }
 
-    public static void mkdirs( File parentDir ) {
-        if ( !parentDir.exists() ) {
-            if ( !parentDir.mkdirs() ) {
-                Exception e = new RuntimeException( "Could not mkdirs in " + parentDir.getPath() );
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static void createFile( File file ) throws IOException {
         if ( !file.createNewFile() ) {
             Exception e = new RuntimeException( "Could not create file " + file.getPath() );

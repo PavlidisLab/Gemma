@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.service;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -285,7 +286,13 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             return f;
         }
 
-        EntityUtils.mkdirs( f.getParentFile() );
+        // ensure the parent directory exists
+        try {
+            FileUtils.forceMkdirParent( f );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
         return f;
     }
 
@@ -838,8 +845,7 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
             EntityUtils.deleteFile( f );
         }
 
-        File parentDir = f.getParentFile();
-        EntityUtils.mkdirs( parentDir );
+        FileUtils.forceMkdirParent( f );
         EntityUtils.createFile( f );
         return f;
     }
