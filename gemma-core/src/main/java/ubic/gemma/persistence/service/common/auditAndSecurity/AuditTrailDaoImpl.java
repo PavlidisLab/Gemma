@@ -73,7 +73,7 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
              * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
              * defensive.
              */
-            logger.warn(
+            log.warn(
                     "AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created." );
             trail = AuditTrail.Factory.newInstance();
             auditable.setAuditTrail( trail );

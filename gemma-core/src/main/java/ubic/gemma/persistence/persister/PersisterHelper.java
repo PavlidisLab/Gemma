@@ -19,8 +19,6 @@
 package ubic.gemma.persistence.persister;
 
 import org.hibernate.FlushMode;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
@@ -36,11 +34,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  */
 @Service
 public class PersisterHelper extends RelationshipPersister {
-
-    @Autowired
-    public PersisterHelper( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
-    }
 
     @Override
     @Transactional

@@ -69,13 +69,14 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
     public BlatResult thaw( BlatResult blatResult ) {
         if ( blatResult.getId() == null )
             return blatResult;
-        return ( BlatResult ) this.getHibernateTemplate().findByNamedParam(
-                "select b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
-                        + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon left join fetch tc.sequence"
-                        + " left join fetch qs.taxon t "
-                        + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                        + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
-                .iterator().next();
+        return ( BlatResult ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
+                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon left join fetch tc.sequence"
+                                + " left join fetch qs.taxon t "
+                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase" + " where b.id = :id" )
+                .setParameter( "id", blatResult.getId() )
+                .uniqueResult();
     }
 
     @Override
@@ -83,13 +84,14 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
         if ( blatResults.isEmpty() )
             return blatResults;
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam(
-                "select distinct b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
-                        + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join tc.taxon left join fetch tc.sequence"
-                        + " left join fetch qs.taxon t "
-                        + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                        + " left join fetch s.externalDatabase" + " where b.id in ( :ids)", "ids",
-                EntityUtils.getIds( blatResults ) );
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct b from BlatResult b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
+                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join tc.taxon left join fetch tc.sequence"
+                                + " left join fetch qs.taxon t "
+                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase" + " where b.id in ( :ids)" )
+                .setParameter( "ids", EntityUtils.getIds( blatResults ) )
+                .list();
     }
 
     @SuppressWarnings("unchecked")

@@ -27,15 +27,12 @@ import org.hibernate.SessionFactory;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.CommonQueries;
 
 import java.util.*;
@@ -276,14 +273,10 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
-        try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "date", date );
-            //noinspection unchecked
-            result.addAll( queryObject.list() );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "date", date );
+        //noinspection unchecked
+        result.addAll( queryObject.list() );
     }
 
     private void putAllQrs( Map<Auditable, AuditEvent> result, List<?> qr, Map<AuditTrail, Auditable> atMap ) {
@@ -376,13 +369,12 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         StopWatch timer = new StopWatch();
         timer.start();
 
-        HibernateTemplate template = new HibernateTemplate( this.getSessionFactory() );
-        template.setCacheQueries( true );
-        template.setQueryCacheRegion( "org.hibernate.cache.StandardQueryCache" );
-
         for ( String clazz : classMap.keySet() ) {
             final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
-            List<?> res = template.findByNamedParam( trailQuery, "auditables", classMap.get( clazz ) );
+            List<?> res = getSessionFactory().getCurrentSession()
+                    .createQuery( trailQuery )
+                    .setParameter( "auditables", classMap.get( clazz ) )
+                    .list();
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
                 AuditTrail t = ( AuditTrail ) ar[1];

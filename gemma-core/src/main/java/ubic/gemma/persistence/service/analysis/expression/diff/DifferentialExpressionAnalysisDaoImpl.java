@@ -56,16 +56,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r "
                 + "join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
 
-        String[] paramNames = { "rs", "threshold" };
-        Object[] objectValues = { par, threshold };
-
-        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-
-        if ( qresult.isEmpty() ) {
-            AbstractDao.log.warn( "No count returned" );
-            return 0;
-        }
-        Long count = ( Long ) qresult.iterator().next();
+        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
+                .setParameter( "rs", par )
+                .setParameter( "threshold", threshold )
+                .uniqueResult();
 
         AbstractDao.log.debug( "Found " + count + " downregulated genes in result set (" + par.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
@@ -78,16 +72,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
 
-        String[] paramNames = { "rs", "threshold" };
-        Object[] objectValues = { ears, threshold };
-
-        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-
-        if ( qresult.isEmpty() ) {
-            AbstractDao.log.warn( "No count returned" );
-            return 0;
-        }
-        Long count = ( Long ) qresult.iterator().next();
+        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
+                .setParameter( "rs", ears )
+                .setParameter( "threshold", threshold )
+                .uniqueResult();
 
         AbstractDao.log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
@@ -100,16 +88,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r"
                 + " join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
 
-        String[] paramNames = { "rs", "threshold" };
-        Object[] objectValues = { par, threshold };
-
-        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-
-        if ( qresult.isEmpty() ) {
-            AbstractDao.log.warn( "No count returned" );
-            return 0;
-        }
-        Long count = ( Long ) qresult.iterator().next();
+        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
+                .setParameter( "rs", par )
+                .setParameter( "threshold", threshold )
+                .uniqueResult();
 
         AbstractDao.log.debug( "Found " + count + " upregulated genes in result set (" + par.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
@@ -127,11 +109,12 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet"
                 + " and r.correctedPvalue < :threshold";
 
-        String[] paramNames = { "gene", "resultSet", "threshold" };
-        Object[] objectValues = { gene, resultSet, threshold };
-
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
+        return this.getSessionFactory().getCurrentSession().createQuery( findByResultSet )
+                .setParameter( "gene", gene )
+                .setParameter( "resultSet", resultSet )
+                .setParameter( "threshold", threshold )
+                .list();
     }
 
     @Override
@@ -139,19 +122,19 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
 
         // subset factorValues factors.
         @SuppressWarnings("unchecked")
-        Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
-                                + " join ssf.experimentalFactor efa where efa = :ef ",
-                        "ef", ef );
+        Collection<DifferentialExpressionAnalysis> result = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
+                        + " join ssf.experimentalFactor efa where efa = :ef " )
+                .setParameter( "ef", ef )
+                .list();
 
         // factors used in the analysis.
         //noinspection unchecked
-        result.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from DifferentialExpressionAnalysis a join a.resultSets rs"
-                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ",
-                "ef",
-                ef ) );
+        result.addAll( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from DifferentialExpressionAnalysis a join a.resultSets rs"
+                        + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef " )
+                .setParameter( "ef", ef )
+                .list() );
 
         return result;
     }
@@ -164,7 +147,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         //language=HQL
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysis a"
                 + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
-        List<?> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
+        List<?> qresult = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameterList( "eeIds", investigationIds )
+                .list();
         for ( Object o : qresult ) {
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
@@ -244,8 +230,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 + " inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
 
         //noinspection unchecked
-        List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate()
-                .findByNamedParam( query, "ees", EntityUtils.getIds( experiments ) );
+        List<DifferentialExpressionAnalysis> r1 = this.getSessionFactory().getCurrentSession()
+                .createQuery( query )
+                .setParameterList( "ees", EntityUtils.getIds( experiments ) )
+                .list();
         int count = 0;
         for ( DifferentialExpressionAnalysis a : r1 ) {
             //noinspection SuspiciousMethodCalls // Ignoring subsets
@@ -275,8 +263,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 + " inner join fetch res.hitListSizes  "
                 + " join eess.sourceExperiment see join a.experimentAnalyzed ee  where eess=ee and see.id in (:ees) ";
         //noinspection unchecked
-        List<DifferentialExpressionAnalysis> r2 = this.getHibernateTemplate()
-                .findByNamedParam( q2, "ees", EntityUtils.getIds( experiments ) );
+        List<DifferentialExpressionAnalysis> r2 = this.getSessionFactory().getCurrentSession()
+                .createQuery( q2 )
+                .setParameterList( "ees", EntityUtils.getIds( experiments ) )
+                .list();
 
         if ( !r2.isEmpty() ) {
             count = 0;
@@ -313,7 +303,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         final String queryString = "select distinct e.id from DifferentialExpressionAnalysis a"
                 + " inner join a.experimentAnalyzed e where e.id in (:eeIds)";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", idsToFilter );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameterList( "eeIds", idsToFilter )
+                .list();
     }
 
     @Override
@@ -323,7 +316,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 + " as doa inner join doa.experimentAnalyzed as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "taxon", taxon )
+                .list();
     }
 
     @Override
@@ -606,8 +602,10 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         }
         if ( !ids.isEmpty() ) {
             //noinspection unchecked
-            result.addAll( this.getHibernateTemplate()
-                    .findByNamedParam( "from ExpressionExperiment e where e.id in (:ids)", "ids", ids ) );
+            result.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "from ExpressionExperiment e where e.id in (:ids)" )
+                    .setParameterList( "ids", ids )
+                    .list() );
         }
     }
 

@@ -25,8 +25,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
@@ -229,21 +229,15 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
      * @see ubic.gemma.persistence.service.genome.gene.GeneSetDao#thaw(ubic.gemma.model.genome.gene.GeneSet)
      */
     @Override
+    @Transactional(readOnly = true)
     public void thaw( final GeneSet geneSet ) {
         if ( geneSet == null || geneSet.getId() == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( geneSet );
-                Hibernate.initialize( geneSet );
-                Hibernate.initialize( geneSet.getMembers() );
-                for(GeneSetMember gsm : geneSet.getMembers() ) {
-                    Hibernate.initialize( gsm.getGene() );
-                }
-                return null;
-            }
-        } );
+        getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( geneSet );
+        Hibernate.initialize( geneSet );
+        Hibernate.initialize( geneSet.getMembers() );
+        for ( GeneSetMember gsm : geneSet.getMembers() ) {
+            Hibernate.initialize( gsm.getGene() );
+        }
 
     }
 

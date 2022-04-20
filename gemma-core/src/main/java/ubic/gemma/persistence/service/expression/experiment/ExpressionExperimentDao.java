@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
-        extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
+        extends CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>,
         FilteringVoEnabledDao<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     String OBJECT_ALIAS = "ee";

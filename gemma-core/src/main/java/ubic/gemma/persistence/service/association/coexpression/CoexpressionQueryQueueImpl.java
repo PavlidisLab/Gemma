@@ -19,12 +19,11 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.genome.Gene;
@@ -38,7 +37,7 @@ import java.util.concurrent.BlockingQueue;
  * @author Paul
  */
 // @Repository
-class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements CoexpressionQueryQueue {
+class CoexpressionQueryQueueImpl implements CoexpressionQueryQueue, InitializingBean {
 
     private static final int QUEUE_SIZE = 1000;
     private static final Logger log = LoggerFactory.getLogger( CoexpressionQueryQueueImpl.class );
@@ -50,11 +49,6 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
     private GeneDao geneDao;
     @Autowired
     private TaskExecutor taskExecutor;
-
-    @Autowired
-    public CoexpressionQueryQueueImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
-    }
 
     @Override
     public synchronized void addToFullQueryQueue( Collection<Long> geneIds ) {
@@ -87,11 +81,10 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
     }
 
     @Override
-    protected void initDao() throws Exception {
-        super.initDao();
+    public void afterPropertiesSet() throws Exception {
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        taskExecutor.execute(new Runnable() {
+        taskExecutor.execute( new Runnable() {
 
             private final int MAX_WARNINGS = 5;
 
@@ -131,7 +124,7 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
                 }
             }
 
-        });
+        } );
     }
 
     private void queryForCache( QueuedGene gene ) {

@@ -264,24 +264,20 @@ public class ExpressionExperimentDaoImpl
 
         Collection<Long> eeIds;
 
-        try {
-            Session session = this.getSessionFactory().getCurrentSession();
-            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-            queryObject.setLong( "geneID", gene.getId() );
-            queryObject.setDouble( "rank", rank );
-            queryObject.addScalar( "eeID", new LongType() );
-            ScrollableResults results = queryObject.scroll();
+        Session session = this.getSessionFactory().getCurrentSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.setLong( "geneID", gene.getId() );
+        queryObject.setDouble( "rank", rank );
+        queryObject.addScalar( "eeID", new LongType() );
+        ScrollableResults results = queryObject.scroll();
 
-            eeIds = new HashSet<>();
+        eeIds = new HashSet<>();
 
-            // Post Processing
-            while ( results.next() )
-                eeIds.add( results.getLong( 0 ) );
+        // Post Processing
+        while ( results.next() )
+            eeIds.add( results.getLong( 0 ) );
 
-            session.clear();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        session.clear();
 
         return this.load( eeIds );
     }

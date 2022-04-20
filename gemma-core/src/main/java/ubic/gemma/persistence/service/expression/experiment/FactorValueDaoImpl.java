@@ -80,9 +80,10 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
             }
         }
 
-        List<?> efs = this.getHibernateTemplate()
-                .findByNamedParam( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv", "fv",
-                        factorValue );
+        List<?> efs = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv" )
+                .setParameter( "fv", factorValue )
+                .list();
 
         ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
         ef.getFactorValues().remove( factorValue );
@@ -108,30 +109,13 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
 
     @Override
     public FactorValue find( FactorValue factorValue ) {
-        try {
-            Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
-            BusinessKey.checkKey( factorValue );
+        BusinessKey.checkKey( factorValue );
 
-            BusinessKey.createQueryObject( queryObject, factorValue );
+        BusinessKey.createQueryObject( queryObject, factorValue );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    this.debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            results.size() + " instances of '" + FactorValue.class.getName()
-                                    + "' was found when executing query for " + factorValue );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( FactorValue ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw getHibernateTemplate().convertHibernateAccessException( ex );
-        }
+        return ( FactorValue ) queryObject.uniqueResult();
     }
 
     @Override

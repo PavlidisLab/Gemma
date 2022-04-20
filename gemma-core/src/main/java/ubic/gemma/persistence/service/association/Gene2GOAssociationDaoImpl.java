@@ -148,15 +148,16 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         Session session = this.getSessionFactory().getCurrentSession();
 
         while ( true ) {
-            Query q = session.createQuery( "from Gene2GOAssociationImpl" );
+            Query q = session.createQuery( "from Gene2GOAssociation" );
             q.setMaxResults( 10000 );
-            List<?> list = q.list();
+            //noinspection unchecked
+            List<Gene2GOAssociation> list = q.list();
             if ( list.isEmpty() )
                 break;
 
             total += list.size();
 
-            this.getHibernateTemplate().deleteAll( list );
+            remove( list );
             AbstractDao.log.info( "Deleted " + total + " so far..." );
         }
 
@@ -168,7 +169,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         //language=HQL
         final String queryString = "select g.id, geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss join geneAss.gene g where g.id in (:genes)";
         Map<Gene, Collection<Characteristic>> results = new HashMap<>();
-        Query query = this.getHibernateTemplate().getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         query.setFetchSize( batch.size() );
         query.setParameterList( "genes", giMap.keySet() );
         List<?> o = query.list();

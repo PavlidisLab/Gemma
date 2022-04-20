@@ -183,7 +183,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     @Override
     public void thaw( T designElementDataVector ) {
-        Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
             session.buildLockRequest( LockOptions.NONE ).lock( seq );

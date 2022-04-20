@@ -71,14 +71,8 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
 
     @Override
     public void removeAuthority( UserGroup group, String authority ) {
-        for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
-                .hasNext(); ) {
-            gemma.gsec.model.GroupAuthority ga = iterator.next();
-            if ( ga.getAuthority().equals( authority ) ) {
-                iterator.remove();
-            }
-        }
-        this.getHibernateTemplate().update( group );
+        group.getAuthorities().removeIf( ga -> ga.getAuthority().equals( authority ) );
+        this.update( group );
     }
 
     @Override

@@ -13,7 +13,7 @@ import ubic.gemma.persistence.service.BaseDao;
  * Interface extracted from CurationDetailsDaoImpl to satisfy spring autowiring requirements.
  */
 @Transactional
-public interface CurationDetailsDao extends InitializingBean, BaseDao<CurationDetails> {
+public interface CurationDetailsDao extends BaseDao<CurationDetails> {
     @Override
     CurationDetails load( Long id );
 

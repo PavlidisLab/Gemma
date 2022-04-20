@@ -63,7 +63,11 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
 
         //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
-        List<ExpressionExperiment> results = this.getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+        //noinspection unchecked
+        List<ExpressionExperiment> results = getSessionFactory().getCurrentSession()
+                .createQuery( queryString )
+                .setParameter( "ed", ed )
+                .list();
 
         if ( results.isEmpty() ) {
             log.warn( "No expression experiment for experimental design " + ed );
