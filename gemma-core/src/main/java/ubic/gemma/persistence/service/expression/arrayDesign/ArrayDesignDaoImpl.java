@@ -775,7 +775,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             this.getSessionFactory().getCurrentSession().delete( cs );
         }
 
-        this.getSessionFactory().getCurrentSession().delete( arrayDesign );
+        super.remove( arrayDesign );
     }
 
     @Override

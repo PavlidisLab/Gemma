@@ -168,14 +168,6 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
     }
 
-    /**
-     * @see BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public BioMaterial findOrCreate( BioMaterial bioMaterial ) {
-        return this.bioMaterialDao.findOrCreate( bioMaterial );
-    }
-
     private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = this.load( bmvo.getId() );
 

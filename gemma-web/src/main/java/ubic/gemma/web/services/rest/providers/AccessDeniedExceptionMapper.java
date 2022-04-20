@@ -11,6 +11,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -35,6 +36,7 @@ public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDenied
         // for security reasons, we don't include the error object in the response entity
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.FORBIDDEN, e.getMessage() );
         return Response.status( Response.Status.FORBIDDEN )
+                .type( MediaType.APPLICATION_JSON_TYPE )
                 .entity( new ResponseErrorObject( errorBody, OpenApiUtils.getOpenApi( servletConfig ) ) )
                 .build();
     }

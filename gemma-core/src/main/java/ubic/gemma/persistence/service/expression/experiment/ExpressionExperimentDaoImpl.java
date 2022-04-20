@@ -32,7 +32,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.core.util.StopWatchMonitor;
+import ubic.gemma.core.util.StopWatchUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -1063,21 +1063,10 @@ public class ExpressionExperimentDaoImpl
         // fetch some extras details
         // we could make this a single query in getLoadValueObjectDetails, but performing a jointure with the bioAssays
         // and arrayDesignUsed is inefficient in the general case, so we only fetch what we need here
-        detailsTimer.start();
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee, ad, op, ee.bioAssays.size from ExpressionExperiment as ee "
-                        + "join ee.bioAssays ba "
-                        + "join ba.arrayDesignUsed ad "
-                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
-                        + "where ee in :eelist "
-                        + "group by ee, ad, op" )
-                .setParameterList( "eelist", expressionExperiments )
-                .setCacheable( true )
-                .list();
-        Map<ExpressionExperiment, List<Object[]>> detailsByEE = results.stream()
-                .collect( Collectors.groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
-        detailsTimer.stop();
+        Map<ExpressionExperiment, List<Object[]>> detailsByEE;
+        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( detailsTimer ) ) {
+            detailsByEE = loadDetailsByEE( expressionExperiments );
+        }
 
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
         for ( Object[] row : list ) {
@@ -1087,7 +1076,7 @@ public class ExpressionExperimentDaoImpl
             List<Object[]> details = detailsByEE.get( ee );
 
             ExpressionExperimentDetailsValueObject vo;
-            try ( StopWatchMonitor ignored = new StopWatchMonitor( voTimer ) ) {
+            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( voTimer ) ) {
                 vo = new ExpressionExperimentDetailsValueObject( ee, aoi, sid );
             }
 
@@ -1117,7 +1106,7 @@ public class ExpressionExperimentDaoImpl
             vo.setOriginalPlatforms( originalPlatformsVos );
 
             // other parts (maybe fetch in details query?)
-            try ( StopWatchMonitor ignored = new StopWatchMonitor( otherPartsTimer ) ) {
+            try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( otherPartsTimer ) ) {
                 vo.getOtherParts().addAll( ee.getOtherParts().stream().map( this::loadValueObject ).collect( Collectors.toList() ) );
             }
 
@@ -1125,7 +1114,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         StopWatch analysisInformationTimer = StopWatch.create();
-        try ( StopWatchMonitor ignored = new StopWatchMonitor( analysisInformationTimer ) ) {
+        try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
             this.populateAnalysisInformation( vos );
         }
 
@@ -1142,6 +1131,24 @@ public class ExpressionExperimentDaoImpl
         }
 
         return new Slice<>( vos, sort, offset, limit, totalElements );
+    }
+
+    private Map<ExpressionExperiment, List<Object[]>> loadDetailsByEE( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( expressionExperiments.isEmpty() )
+            return Collections.emptyMap();
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee, ad, op, ee.bioAssays.size from ExpressionExperiment as ee "
+                        + "join ee.bioAssays ba "
+                        + "join ba.arrayDesignUsed ad "
+                        + "left join ba.originalPlatform op " // not all bioAssays have an original platform
+                        + "where ee in :eelist "
+                        + "group by ee, ad, op" )
+                .setParameterList( "eelist", expressionExperiments )
+                .setCacheable( true )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy( row -> ( ExpressionExperiment ) row[0], Collectors.toList() ) );
     }
 
     @Override
@@ -1236,101 +1243,91 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public void remove( final ExpressionExperiment ee ) {
-
-        if ( ee == null )
-            throw new IllegalArgumentException();
-
-        log.info( "Deleting " + ee.getShortName() );
+    public void remove( @NonNull final ExpressionExperiment ee ) {
+        log.info( "Deleting " + ee.getShortName() + "..." );
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        try {
-            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
+        // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
-            // At this point, the ee is probably still in the session, as the service already has gotten it
-            // in this transaction.
-            session.flush();
-            session.clear();
+        // At this point, the ee is probably still in the session, as the service already has gotten it
+        // in this transaction.
+        session.flush();
+        session.clear();
 
-            log.debug( " ... clearing curation details associations" );
+        log.debug( " ... clearing curation details associations" );
 
-            // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but 
-            // this may be okay now with updated config - see CurationDetails.hbm.xml)
-            ee.getCurationDetails().setLastNeedsAttentionEvent( null );
-            ee.getCurationDetails().setLastNoteUpdateEvent( null );
-            ee.getCurationDetails().setLastTroubledEvent( null );
-            session.update( ee.getCurationDetails() );
+        // these are tied to the audit trail and will cause lock problems it we don't clear first (due to cascade=all on the curation details, but
+        // this may be okay now with updated config - see CurationDetails.hbm.xml)
+        ee.getCurationDetails().setLastNeedsAttentionEvent( null );
+        ee.getCurationDetails().setLastNoteUpdateEvent( null );
+        ee.getCurationDetails().setLastTroubledEvent( null );
+        session.update( ee.getCurationDetails() );
 
-            session.update( ee );
+        session.update( ee );
 
-            /*
-             * This will fail because of multiple cascade=all on audit events.
-             */
-            //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
+        /*
+         * This will fail because of multiple cascade=all on audit events.
+         */
+        //    session.buildLockRequest( LockOptions.NONE ).lock( ee );
 
-            Hibernate.initialize( ee.getAuditTrail() );
+        Hibernate.initialize( ee.getAuditTrail() );
 
-            Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
-            Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
+        Collection<BioAssayDimension> dims = this.getBioAssayDimensions( ee );
+        Collection<QuantitationType> qts = this.getQuantitationTypes( ee );
 
-            log.debug( " ... clearing vectors" );
+        log.debug( " ... clearing vectors" );
 
-            ee.getRawExpressionDataVectors().clear();
+        ee.getRawExpressionDataVectors().clear();
 
-            ee.getProcessedExpressionDataVectors().clear();
+        ee.getProcessedExpressionDataVectors().clear();
 
-            for ( ExpressionExperiment e : ee.getOtherParts() ) {
-                e.getOtherParts().remove( ee );
-                session.update( e );
-            }
-            ee.getOtherParts().clear();
-
-            log.debug( " ... calling update&flush" );
-
-            session.update( ee );
-            session.flush();
-
-            AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
-            for ( BioAssayDimension dim : dims ) {
-                dim.getBioAssays().clear();
-                session.update( dim );
-                session.delete( dim );
-            }
-            //   dims.clear();
-            session.flush();
-
-            AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
-
-            // keep to put back in the object.
-            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
-
-            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-            Collection<BioAssay> bioAssays = ee.getBioAssays();
-            this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
-
-            AbstractDao.log.debug( ".. Last bits ..." );
-
-            // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
-            for ( BioMaterial bm : bioMaterialsToDelete ) {
-                session.delete( bm );
-            }
-
-            for ( QuantitationType qt : qts ) {
-                session.delete( qt );
-            }
-
-            log.info( ".... flush and final deletion ..." );
-
-            session.flush();
-            session.delete( ee );
-
-            AbstractDao.log.info( "Deleted " + ee );
-        } catch ( Exception e ) {
-            AbstractDao.log.error( e );
-        } finally {
-            AbstractDao.log.info( "Finalising remove method." );
+        for ( ExpressionExperiment e : ee.getOtherParts() ) {
+            e.getOtherParts().remove( ee );
+            session.update( e );
         }
+        ee.getOtherParts().clear();
+
+        log.debug( " ... calling update&flush" );
+
+        session.update( ee );
+        session.flush();
+
+        AbstractDao.log.debug( "... removing " + dims.size() + " BioAssayDimensions ..." );
+        for ( BioAssayDimension dim : dims ) {
+            dim.getBioAssays().clear();
+            session.update( dim );
+            session.delete( dim );
+        }
+        //   dims.clear();
+        session.flush();
+
+        AbstractDao.log.debug( "... removing Bioassays and biomaterials ..." );
+
+        // keep to put back in the object.
+        Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
+
+        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
+
+        AbstractDao.log.debug( ".. Last bits ..." );
+
+        // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
+        for ( BioMaterial bm : bioMaterialsToDelete ) {
+            session.delete( bm );
+        }
+
+        for ( QuantitationType qt : qts ) {
+            session.delete( qt );
+        }
+
+        log.info( ".... flush and final deletion ..." );
+
+        session.flush();
+        super.remove( ee );
+
+        AbstractDao.log.info( "Deleted " + ee );
     }
 
     /**
@@ -1601,6 +1598,7 @@ public class ExpressionExperimentDaoImpl
             session.delete( dv );
             if ( ++count % 1000 == 0 ) {
                 session.flush();
+                session.clear();
             }
             // put back...
             dv.setBioAssayDimension( bad );
@@ -1626,6 +1624,7 @@ public class ExpressionExperimentDaoImpl
             session.delete( dv );
             if ( ++count % 1000 == 0 ) {
                 session.flush();
+                session.clear();
             }
             if ( count % 20000 == 0 ) {
                 AbstractDao.log.info( count + " processed design Element data vectors deleted" );

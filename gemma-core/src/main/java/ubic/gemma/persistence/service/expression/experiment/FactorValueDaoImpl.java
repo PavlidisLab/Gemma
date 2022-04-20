@@ -92,8 +92,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
         this.getSessionFactory().getCurrentSession().flush();
         this.getSessionFactory().getCurrentSession().clear();
 
-        this.getSessionFactory().getCurrentSession().delete( factorValue );
-
+        super.remove( factorValue );
     }
 
     @Override

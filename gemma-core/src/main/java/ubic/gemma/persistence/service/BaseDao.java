@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.Collection;
 
 /**

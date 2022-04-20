@@ -79,6 +79,6 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
             this.differentialExpressionAnalysisService.remove( de );
         }
 
-        this.expressionExperimentSubSetDao.remove( subset );
+        super.remove( subset );
     }
 }

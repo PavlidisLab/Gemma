@@ -18,9 +18,14 @@
  */
 package ubic.gemma.web.util;
 
+import org.junit.Before;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 /**
@@ -37,6 +42,16 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 @WebAppConfiguration
 @ContextConfiguration(locations = { "classpath*:WEB-INF/gemma-servlet.xml" })
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
+
+    @Autowired
+    protected WebApplicationContext applicationContext;
+
+    protected MockMvc mvc;
+
+    @Before
+    public void setUpMockMvc() {
+        mvc = MockMvcBuilders.webAppContextSetup( applicationContext ).build();
+    }
 
     public MockHttpServletRequest newGet( String url ) {
         return new MockHttpServletRequest( "GET", url );

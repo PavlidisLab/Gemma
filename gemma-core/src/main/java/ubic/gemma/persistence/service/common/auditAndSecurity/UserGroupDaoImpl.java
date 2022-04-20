@@ -101,20 +101,14 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public void remove( Long id ) {
-        UserGroup userGroup = this.load( id );
+    public void remove( UserGroup userGroup ) {
         // this check is done higher up as well...
         if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot remove group: " + userGroup );
         }
-        this.getSessionFactory().getCurrentSession().delete( userGroup );
-    }
-
-    @Override
-    public void remove( UserGroup userGroup ) {
-        this.remove( userGroup.getId() );
+        super.remove( userGroup );
     }
 
     @Override

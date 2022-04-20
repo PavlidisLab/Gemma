@@ -1013,12 +1013,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.findOrCreate( expressionExperiment );
-    }
-
-    @Override
-    @Transactional
     public void remove( Long id ) {
         final ExpressionExperiment ee = this.load( id );
 
@@ -1065,22 +1059,6 @@ public class ExpressionExperimentServiceImpl
         }
 
         this.expressionExperimentDao.remove( ee );
-    }
-
-    /**
-     * @see ExpressionExperimentService#remove(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void remove( ExpressionExperiment expressionExperiment ) {
-        // Can not call DAO directly since we have to do some service-layer level house keeping
-        this.remove( expressionExperiment.getId() );
-    }
-
-    @Override
-    @Transactional
-    public void update( ExpressionExperiment entity ) {
-        super.update( entity );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
