@@ -1333,19 +1333,6 @@ public class ExpressionExperimentDaoImpl
         AbstractDao.log.info( "Deleted " + ee );
     }
 
-    /**
-     * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
-     * keeping before you can
-     * remove the experiment. Attempting to call this method directly will likely result in
-     * org.hibernate.exception.ConstraintViolationException
-     */
-    @Override
-    @Deprecated
-    public void remove( Long id ) {
-        throw new NotImplementedException(
-                "Use the EEService.remove(ExpressionExperiment) instead, this method would not do what you want it to." );
-    }
-
     @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         return this.thaw( expressionExperiment, true );
