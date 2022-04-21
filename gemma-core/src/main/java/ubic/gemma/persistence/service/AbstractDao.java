@@ -96,7 +96,11 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
             return Collections.emptyList();
         }
         String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
-        List<Long> uniqueIds = ids.stream().distinct().sorted().collect( Collectors.toList() );
+        List<Long> uniqueIds = ids.stream()
+                .filter( Objects::nonNull )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
         Collection<T> results = new ArrayList<>( uniqueIds.size() );
         for ( List<Long> batch : ListUtils.partition( uniqueIds, 100 ) ) {
             //noinspection unchecked
