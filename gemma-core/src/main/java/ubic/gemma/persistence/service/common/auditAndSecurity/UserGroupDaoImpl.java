@@ -95,7 +95,7 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
     }
 
     @Override
-    public Integer countAll() {
+    public long countAll() {
         return this.loadAll().size();
     }
 

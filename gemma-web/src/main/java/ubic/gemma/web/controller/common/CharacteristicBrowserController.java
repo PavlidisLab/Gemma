@@ -74,7 +74,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
-        Integer count = characteristicService.countAll();
+        long count = characteristicService.countAll();
 
         List<AnnotationValueObject> results = new ArrayList<>();
 
@@ -127,7 +127,7 @@ public class CharacteristicBrowserController {
             results.add( avo );
         }
 
-        return new JsonReaderResponse<>( results, count );
+        return new JsonReaderResponse<>( results, ( int ) count );
     }
 
     private void populateClassValues( Characteristic c, AnnotationValueObject avo ) {
@@ -136,7 +136,7 @@ public class CharacteristicBrowserController {
         avo.setObjectClass( Characteristic.class.getSimpleName() );
     }
 
-    public Integer count() {
+    public Long count() {
         return characteristicService.countAll();
     }
 

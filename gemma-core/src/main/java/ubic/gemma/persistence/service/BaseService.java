@@ -78,7 +78,7 @@ public interface BaseService<O extends Identifiable> {
      */
     Collection<O> loadAll();
 
-    int countAll();
+    long countAll();
 
     /**
      * Removes all the given entities from persistent storage.

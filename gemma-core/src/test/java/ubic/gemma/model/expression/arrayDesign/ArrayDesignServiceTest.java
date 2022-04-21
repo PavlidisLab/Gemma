@@ -140,7 +140,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testCountAll() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Integer count = arrayDesignService.countAll();
+        long count = arrayDesignService.countAll();
         assertNotNull( count );
         assertTrue( count > 0 );
     }

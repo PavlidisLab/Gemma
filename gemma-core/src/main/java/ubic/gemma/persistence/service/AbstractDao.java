@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,11 +130,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    public Integer countAll() {
-        return ( ( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( //language=none // Prevents unresolvable missing value warnings.
-                        "select count(*) from " + elementClass.getSimpleName() )
-                .uniqueResult() ).intValue();
+    public long countAll() {
+        return ( Long ) this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+                .setProjection( Projections.rowCount() )
+                .uniqueResult();
     }
 
     @Override

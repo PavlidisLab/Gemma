@@ -98,7 +98,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
 
-        Integer count = this.bibliographicReferenceService.countAll();
+        long count = this.bibliographicReferenceService.countAll();
         List<BibliographicReference> records = this.getBatch( batch );
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
                 .getRelatedExperiments( records );
@@ -126,7 +126,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         }
 
-        return new JsonReaderResponse<>( valueObjects, count );
+        return new JsonReaderResponse<>( valueObjects, ( int ) count );
     }
 
     @Override

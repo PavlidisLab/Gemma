@@ -68,8 +68,7 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetCount() {
-        Integer count = bioAssayService.countAll();
-        assertNotNull( count );
+        long count = bioAssayService.countAll();
         assertTrue( count > 0 );
     }
 

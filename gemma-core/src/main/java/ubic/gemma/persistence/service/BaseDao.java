@@ -78,7 +78,7 @@ public interface BaseDao<T> {
      *
      * @return number that is the amount of instances currently accessible.
      */
-    Integer countAll();
+    long countAll();
 
     void remove( Collection<T> entities );
 

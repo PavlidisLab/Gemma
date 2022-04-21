@@ -72,7 +72,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public int countAll() {
+    public long countAll() {
         return this.mainDao.countAll();
     }
 

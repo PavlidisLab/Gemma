@@ -1181,9 +1181,9 @@ public class ExpressionExperimentController {
         Collection<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        int count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
+        long count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
 
-        return new JsonReaderResponse<>( records, count );
+        return new JsonReaderResponse<>( records, ( int ) count );
     }
 
     /**
