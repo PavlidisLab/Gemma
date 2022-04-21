@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
@@ -94,11 +96,16 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( //language=none // Prevents unresolvable missing value warnings.
-                        "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
+        List<Long> uniqueIds = ids.stream().distinct().sorted().collect( Collectors.toList() );
+        Collection<T> results = new ArrayList<>( uniqueIds.size() );
+        for ( List<Long> batch : ListUtils.partition( uniqueIds, batchSize ) ) {
+            //noinspection unchecked
+            results.addAll( this.getSessionFactory().getCurrentSession()
+                    .createCriteria( elementClass )
+                    .add( Restrictions.in( "ids", batch ) )
+                    .list() );
+        }
+        return results;
     }
 
     @SuppressWarnings("unchecked")
