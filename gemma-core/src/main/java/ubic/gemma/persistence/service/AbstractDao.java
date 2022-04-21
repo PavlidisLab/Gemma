@@ -28,7 +28,6 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.Serializable;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
 @Transactional
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
-    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
      * Default batch size to reach before flushing the Hibernate session.
@@ -163,7 +162,6 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    @Transactional
     public void update( Collection<T> entities ) {
         int i = 0;
         for ( T entity : entities ) {
@@ -176,7 +174,6 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    @Transactional
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
         if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
