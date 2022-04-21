@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -20,7 +19,7 @@ import java.util.Collection;
 @ParametersAreNonnullByDefault
 public abstract class AbstractService<O extends Identifiable> implements BaseService<O> {
 
-    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+    protected static final Log log = LogFactory.getLog( AbstractService.class );
 
     private final BaseDao<O> mainDao;
 
