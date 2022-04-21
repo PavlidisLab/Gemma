@@ -95,13 +95,14 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
+        String idPropertyName = getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
         List<Long> uniqueIds = ids.stream().distinct().sorted().collect( Collectors.toList() );
         Collection<T> results = new ArrayList<>( uniqueIds.size() );
         for ( List<Long> batch : ListUtils.partition( uniqueIds, batchSize ) ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
                     .createCriteria( elementClass )
-                    .add( Restrictions.in( "ids", batch ) )
+                    .add( Restrictions.in( idPropertyName, batch ) )
                     .list() );
         }
         return results;
