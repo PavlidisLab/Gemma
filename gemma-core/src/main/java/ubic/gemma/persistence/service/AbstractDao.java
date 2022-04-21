@@ -29,12 +29,11 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +42,7 @@ import java.util.stream.Collectors;
  * @author Anton, Nicolas
  */
 @Transactional
+@ParametersAreNonnullByDefault
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
@@ -115,7 +115,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public T load( Long id ) {
+    public T load( @Nullable Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
         return id == null ? null : ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
@@ -150,14 +150,15 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( Long id ) {
-        if ( id == null ) throw new IllegalArgumentException( "Id cannot be null" );
-        this.remove( this.load( id ) );
+        T entity = this.load( id );
+        if ( entity != null ) {
+            this.remove( entity );
+        }
     }
 
     @Override
     @OverridingMethodsMustInvokeSuper
     public void remove( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().delete( entity );
     }
 
@@ -181,21 +182,18 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     @OverridingMethodsMustInvokeSuper
     public void update( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         this.getSessionFactory().getCurrentSession().update( entity );
     }
 
     @Override
     @Transactional(readOnly = true)
     public T find( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         return this.load( entity.getId() );
     }
 
     @Override
     @Transactional
     public T findOrCreate( T entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
         T found = this.find( entity );
         return found == null ? this.create( entity ) : found;
     }
