@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -106,6 +108,24 @@ public class AbstractDaoTest {
         verify( session ).createCriteria( MyEntity.class );
         verify( mockCriteria ).add( argThat( criterion -> criterion.toString().equals( Restrictions.in( "id", ids ).toString() ) ) );
         verify( mockCriteria ).list();
+    }
+
+    @Test
+    public void testLoadByCollectionWithBatch() {
+        Criteria mockCriteria = mock( Criteria.class );
+        when( mockCriteria.add( any() ) ).thenReturn( mockCriteria );
+        when( session.createCriteria( MyEntity.class ) ).thenReturn( mockCriteria );
+        List<Long> ids = LongStream.range( 0, 200 ).boxed().collect( Collectors.toList() );
+
+        List<Long> batch1 = LongStream.range( 0, 100 ).boxed().collect( Collectors.toList() );
+        List<Long> batch2 = LongStream.range( 100, 200 ).boxed().collect( Collectors.toList() );
+
+        myDao.load( ids );
+
+        verify( session, times( 2 ) ).createCriteria( MyEntity.class );
+        verify( mockCriteria ).add( argThat( criterion -> criterion.toString().equals( Restrictions.in( "id", batch1 ).toString() ) ) );
+        verify( mockCriteria ).add( argThat( criterion -> criterion.toString().equals( Restrictions.in( "id", batch2 ).toString() ) ) );
+        verify( mockCriteria, times( 2 ) ).list();
     }
 
     private Collection<MyEntity> generateEntities( int count ) {
