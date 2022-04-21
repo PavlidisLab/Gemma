@@ -102,7 +102,6 @@ public class AbstractDaoTest {
         when( mockCriteria.add( any() ) ).thenReturn( mockCriteria );
         when( session.createCriteria( MyEntity.class ) ).thenReturn( mockCriteria );
         List<Long> ids = Arrays.asList( 1L, 2L, 3L, 4L, 5L );
-        myDao.setBatchSize( 10 );
         myDao.load( ids );
         verify( session ).createCriteria( MyEntity.class );
         verify( mockCriteria ).add( argThat( criterion -> criterion.toString().equals( Restrictions.in( "id", ids ).toString() ) ) );
