@@ -95,6 +95,10 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      */
     Collection<Characteristic> findByValue( String search );
 
+    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByValueUriOrValue( String search );
+
+    Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByValueUriOrValue( Collection<String> search );
+
     /**
      * @param  characteristics characteristics
      * @return                 a map of the specified characteristics to their annotated objects.

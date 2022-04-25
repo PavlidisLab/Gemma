@@ -76,6 +76,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -182,8 +183,7 @@ public class OntologyServiceImpl implements OntologyService {
 
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void countOccurrences( Collection<CharacteristicValueObject> searchResults,
+    private void countOccurrences( Collection<CharacteristicValueObject> searchResults,
             Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -192,22 +192,15 @@ public class OntologyServiceImpl implements OntologyService {
             uris.add( cvo.getValueUri() );
         }
 
-        Collection<Characteristic> existingCharacteristicsUsingTheseTerms = characteristicService.findByUri( uris );
-        for ( Characteristic c : existingCharacteristicsUsingTheseTerms ) {
+        Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> existingCharacteristicsUsingTheseTerms = characteristicService.countCharacteristicValueUriInByValueUriOrValue( uris );
+        for ( Map.Entry<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> c : existingCharacteristicsUsingTheseTerms.entrySet() ) {
             // count up number of usages; see bug 3897
-            String key = this.foundValueKey( c );
-            if ( previouslyUsedInSystem.containsKey( key ) ) {
-                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
-                continue;
+            String key = c.getKey();
+            if ( !previouslyUsedInSystem.containsKey( key ) ) {
+                if ( OntologyServiceImpl.log.isDebugEnabled() )
+                    OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ")" );
+                previouslyUsedInSystem.put( key, characteristicByValueCountToValueObject( c.getValue() ) );
             }
-            if ( OntologyServiceImpl.log.isDebugEnabled() )
-                OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ")" );
-            CharacteristicValueObject vo = new CharacteristicValueObject( c );
-            vo.setCategory( null );
-            vo.setCategoryUri( null ); // to avoid us counting separately by category.
-            vo.setAlreadyPresentInDatabase( true );
-            vo.incrementOccurrenceCount();
-            previouslyUsedInSystem.put( key, vo );
         }
 
         if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
@@ -322,7 +315,7 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService ontology : ontologyServices ) {
             Collection<OntologyTerm> found = ontology.findTerm( query );
             if ( found != null )
-                results.addAll( this.convert( new HashSet<OntologyResource>( found ) ) );
+                results.addAll( this.convert( new HashSet<>( found ) ) );
         }
 
         return results;
@@ -402,12 +395,19 @@ public class OntologyServiceImpl implements OntologyService {
 
         Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
 
+        StopWatch countOccurencesTimer = StopWatch.createStarted();
         this.countOccurrences( queryString, previouslyUsedInSystem );
+        countOccurencesTimer.stop();
+
+        StopWatch searchForGenesTimer = StopWatch.createStarted();
         this.searchForGenes( queryString, taxon, searchResults );
+        searchForGenesTimer.stop();
 
         for ( AbstractOntologyService service : this.ontologyServices ) {
             if ( !service.isOntologyLoaded() )
                 continue;
+
+            StopWatch ontServiceTimer = StopWatch.createStarted();
 
             try {
                 results = service.findResources( queryString );
@@ -417,10 +417,11 @@ public class OntologyServiceImpl implements OntologyService {
             if ( results == null || results.isEmpty() )
                 continue;
 
-            if ( OntologyServiceImpl.log.isDebugEnabled() )
-                OntologyServiceImpl.log
-                        .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
-                                + watch.getTime() + " ms" );
+            ontServiceTimer.stop();
+
+            OntologyServiceImpl.log
+                    .info( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
+                            + ontServiceTimer.getTime() + " ms" );
 
             searchResults.addAll( CharacteristicValueObject
                     .characteristic2CharacteristicVO( this.termsToCharacteristics( results ) ) );
@@ -430,21 +431,31 @@ public class OntologyServiceImpl implements OntologyService {
             }
         }
 
+        StopWatch countOccurrencesTimerAfter = StopWatch.createStarted();
         this.countOccurrences( searchResults, previouslyUsedInSystem );
+        countOccurrencesTimerAfter.stop();
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
+        StopWatch findGoTerms = StopWatch.createStarted();
         if ( searchResults.size() < OntologyServiceImpl.MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
             searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
                     this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
         }
+        findGoTerms.stop();
 
         // Sort the results rather elaborately.
         Collection<CharacteristicValueObject> sortedResults = this
                 .sort( previouslyUsedInSystem, searchResults, queryString );
 
+        watch.stop();
+
         if ( watch.getTime() > 1000 ) {
             OntologyServiceImpl.log
-                    .info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
+                    .info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + " ms "
+                            + "count occurrences: " + countOccurencesTimer.getTime() + " ms "
+                            + "search for genes: " + searchForGenesTimer.getTime() + " ms "
+                            + "count occurrences (after ont): " + countOccurrencesTimerAfter.getTime() + " ms "
+                            + "find GO terms: " + findGoTerms.getTime() );
         }
 
         return sortedResults;
@@ -659,7 +670,7 @@ public class OntologyServiceImpl implements OntologyService {
 
     @Override
     public void sort( List<CharacteristicValueObject> characteristics ) {
-        Collections.sort( characteristics, new CharacteristicComparator() );
+        characteristics.sort( new CharacteristicComparator() );
     }
 
     /**
@@ -817,27 +828,20 @@ public class OntologyServiceImpl implements OntologyService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
+        Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> foundChars = characteristicService.countCharacteristicValueLikeByValueUriOrValue( queryString );
 
         /*
          * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
          * is always ignored; remove duplicates.)
          */
-        for ( Characteristic characteristic : foundChars ) {
+        for ( Map.Entry<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> characteristicByValueCount : foundChars.entrySet() ) {
             // count up number of usages; see bug 3897
-            String key = this.foundValueKey( characteristic );
-            if ( previouslyUsedInSystem.containsKey( key ) ) {
-                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
-                continue;
+            String key = characteristicByValueCount.getKey();
+            if ( !previouslyUsedInSystem.containsKey( key ) ) {
+                if ( OntologyServiceImpl.log.isDebugEnabled() )
+                    OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ") for " + characteristicByValueCount );
+                previouslyUsedInSystem.put( key, characteristicByValueCountToValueObject( characteristicByValueCount.getValue() ) );
             }
-            if ( OntologyServiceImpl.log.isDebugEnabled() )
-                OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ") for " + characteristic );
-            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
-            vo.setCategory( null );
-            vo.setCategoryUri( null ); // to avoid us counting separately by category.
-            vo.setAlreadyPresentInDatabase( true );
-            vo.incrementOccurrenceCount();
-            previouslyUsedInSystem.put( key, vo );
         }
 
         if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
@@ -847,6 +851,15 @@ public class OntologyServiceImpl implements OntologyService {
                             + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
                             .size() );
 
+    }
+
+    private CharacteristicValueObject characteristicByValueCountToValueObject( CharacteristicDao.CharacteristicByValueUriOrValueCount characteristic ) {
+        CharacteristicValueObject vo = new CharacteristicValueObject( -1L, characteristic.getValue(), characteristic.getValueUri() );
+        vo.setCategory( null );
+        vo.setCategoryUri( null ); // to avoid us counting separately by category.
+        vo.setAlreadyPresentInDatabase( true );
+        vo.setNumTimesUsed( characteristic.getCount().intValue() );
+        return vo;
     }
 
     /**
@@ -1104,7 +1117,7 @@ public class OntologyServiceImpl implements OntologyService {
     /**
      * Sorts Characteristics in our preferred ordering
      */
-    private class CharacteristicComparator implements Comparator<CharacteristicValueObject> {
+    private static class CharacteristicComparator implements Comparator<CharacteristicValueObject> {
 
         @Override
         public int compare( CharacteristicValueObject o1, CharacteristicValueObject o2 ) {
