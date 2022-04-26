@@ -3,13 +3,10 @@ package ubic.gemma.persistence.service;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
-import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.ArgumentMatchers;
 import org.mockito.internal.verification.VerificationModeFactory;
 import ubic.gemma.model.common.Identifiable;
 
@@ -43,6 +40,7 @@ public class AbstractDaoTest {
 
         public MyDao( SessionFactory sessionFactory ) {
             super( MyEntity.class, sessionFactory );
+            setLoadBatchSize( 100 );
         }
     }
 

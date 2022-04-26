@@ -97,6 +97,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
         super( CompositeSequenceDao.OBJECT_ALIAS, CompositeSequence.class, sessionFactory );
+        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -593,39 +594,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     //        } );
     //
     //    }
-
-    @Override
-    public Collection<CompositeSequence> load( Collection<Long> ids ) {
-
-        if ( ids == null || ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-
-        //language=HQL
-        final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        int batchSize = 2000;
-        Collection<Long> batch = new HashSet<>();
-        Collection<CompositeSequence> results = new HashSet<>();
-        for ( Long id : ids ) {
-            batch.add( id );
-
-            if ( batch.size() == batchSize ) {
-                queryObject.setParameterList( "ids", batch );
-                //noinspection unchecked
-                results.addAll( queryObject.list() );
-                batch.clear();
-            }
-        }
-
-        // tail end.
-        if ( batch.size() > 0 ) {
-            queryObject.setParameterList( "ids", batch );
-            //noinspection unchecked
-            results.addAll( queryObject.list() );
-        }
-        return results;
-    }
 
     @Override
     public CompositeSequence find( CompositeSequence compositeSequence ) {

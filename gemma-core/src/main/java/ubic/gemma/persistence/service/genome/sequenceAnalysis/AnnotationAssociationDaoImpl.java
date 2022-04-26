@@ -44,6 +44,7 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Autowired
     public AnnotationAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( AnnotationAssociation.class, sessionFactory );
+        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -139,36 +140,6 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Transactional
     public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
         return super.create( entities );
-    }
-
-    @Override
-    public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-        int BATCH_SIZE = 2000;
-
-        //language=HQL
-        final String queryString = "select a from AnnotationAssociation a where a.id in (:ids)";
-        Collection<Long> batch = new HashSet<>();
-        Collection<AnnotationAssociation> results = new HashSet<>();
-
-        for ( Long id : ids ) {
-            batch.add( id );
-            if ( batch.size() == BATCH_SIZE ) {
-                //noinspection unchecked
-                results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "ids", batch ).list() );
-                batch.clear();
-            }
-        }
-        if ( batch.size() > 0 ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ids", batch ).list() );
-        }
-
-        return results;
     }
 
     @Override

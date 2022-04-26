@@ -49,6 +49,13 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     protected static final Log log = LogFactory.getLog( AbstractDao.class );
 
     /**
+     * Default batch size for loading data from the database using {@link #load(Collection)}.
+     *
+     * No batching is performed by default, thus {@link Integer#MAX_VALUE}.
+     */
+    public static final int DEFAULT_LOAD_BATCH_SIZE = Integer.MAX_VALUE;
+
+    /**
      * Default batch size to reach before flushing the Hibernate session.
      *
      * You should use {@link #setBatchSize(int)} to adjust this value to an optimal one for the DAO. Large model should
@@ -59,6 +66,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public static final int DEFAULT_BATCH_SIZE = 100;
 
     protected final Class<T> elementClass;
+
+    private int loadBatchSize = DEFAULT_LOAD_BATCH_SIZE;
 
     private int batchSize = DEFAULT_BATCH_SIZE;
 
@@ -103,7 +112,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
                 .sorted()
                 .collect( Collectors.toList() );
         Collection<T> results = new ArrayList<>( uniqueIds.size() );
-        for ( List<Long> batch : ListUtils.partition( uniqueIds, 100 ) ) {
+        for ( List<Long> batch : ListUtils.partition( uniqueIds, loadBatchSize ) ) {
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession()
                     .createCriteria( elementClass )
@@ -268,6 +277,20 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         criteria.add( Restrictions.eq( propertyName, propertyValue ) );
         //noinspection unchecked
         return criteria.list();
+    }
+
+    /**
+     * Set the batch size for loading entities using {@link #load(Collection)}.
+     *
+     * Use {@link Integer#MAX_VALUE} to effectively disable batching.
+     *
+     * @param loadBatchSize a strictly positive number
+     */
+    protected final void setLoadBatchSize( int loadBatchSize ) {
+        if ( loadBatchSize < 1 ) {
+            throw new IllegalArgumentException( "Batch size must be strictly positive." );
+        }
+        this.loadBatchSize = loadBatchSize;
     }
 
     /**

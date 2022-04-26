@@ -58,6 +58,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
         super( GeneDao.OBJECT_ALIAS, Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
+        setLoadBatchSize( 2000 );
     }
 
     @Override
@@ -416,33 +417,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                         "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();
-    }
-
-    @Override
-    public Collection<Gene> load( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-        int batchSize = 2000;
-        if ( ids.size() > batchSize ) {
-            AbstractDao.log.info( "Loading " + ids.size() + " genes ..." );
-        }
-
-        //language=HQL
-        final String queryString = "from Gene where id in (:ids)";
-        Collection<Gene> genes = new HashSet<>();
-
-        BatchIterator<Long> it = BatchIterator.batches( ids, batchSize );
-        for ( ; it.hasNext(); ) {
-            //noinspection unchecked
-            genes.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "ids", it.next() ) );
-        }
-
-        if ( ids.size() > batchSize ) {
-            AbstractDao.log.info( "... done" );
-        }
-
-        return genes;
     }
 
     @Override
