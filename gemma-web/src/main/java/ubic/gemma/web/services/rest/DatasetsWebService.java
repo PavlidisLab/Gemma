@@ -281,6 +281,22 @@ public class DatasetsWebService {
 
     /**
      * Retrieves the data for the given dataset.
+     * <p>
+     * The returned TSV format contains the following columns:
+     *
+     * <ul>
+     *     <li>Probe</li>
+     *     <li>Sequence</li>
+     *     <li>GeneSymbol (optional)</li>
+     *     <li>GeneName (optional)</li>
+     *     <li>GemmaId (optional)</li>
+     *     <li>NCBIid (optional)</li>
+     * </ul>
+     *
+     * followed by one column per sample.
+     * <p>
+     * <b>Note:</b> Additional gene information is only available if the corresponding platform's annotations has been dumped
+     * on-disk.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
