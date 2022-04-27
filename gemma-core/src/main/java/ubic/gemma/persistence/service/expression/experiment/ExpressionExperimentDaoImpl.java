@@ -1243,8 +1243,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public void remove( @NonNull final ExpressionExperiment ee ) {
+    public void remove( ExpressionExperiment ee ) {
         log.info( "Deleting " + ee.getShortName() + "..." );
+
+        // reload EE as deletion will not work if it came from a different session
+        ee = load( ee.getId() );
 
         Session session = this.getSessionFactory().getCurrentSession();
 
@@ -1309,7 +1312,7 @@ public class ExpressionExperimentDaoImpl
 
         Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
         Collection<BioAssay> bioAssays = ee.getBioAssays();
-        this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
+        this.removeBioAssays( copyOfRelations, bioMaterialsToDelete, bioAssays );
 
         AbstractDao.log.debug( ".. Last bits ..." );
 
@@ -1544,21 +1547,21 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
-    private void removeBioAssays( Session session, Map<BioAssay, BioMaterial> copyOfRelations,
+    private void removeBioAssays( Map<BioAssay, BioMaterial> copyOfRelations,
             Collection<BioMaterial> bioMaterialsToDelete, Collection<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
             // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
             // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
             BioMaterial biomaterial = ba.getSampleUsed();
 
-            if ( biomaterial == null )
-                continue; // shouldn't...
+            if ( biomaterial == null ) {
+                log.warn( "BioAssay " + ba + " has no associated BioMaterial when attempting to remove its parent ExpressionExperiment. It will be skipped for now." );
+                continue;
+            }
 
             bioMaterialsToDelete.add( biomaterial );
 
             copyOfRelations.put( ba, biomaterial );
-
-            session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
 
             Hibernate.initialize( biomaterial );
 
