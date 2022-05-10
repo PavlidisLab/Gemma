@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
 @Path("/resultSets")
 public class AnalysisResultSetsWebService {
 
-    private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 + "; qs=0.9";
+    private static final String TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9";
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
