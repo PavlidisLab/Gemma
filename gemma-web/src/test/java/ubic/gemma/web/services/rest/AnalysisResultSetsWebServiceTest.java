@@ -264,7 +264,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
     @Test
     public void testFindByIdToTsv() throws IOException {
-        StreamingOutput result = service.getResultSetToTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ) );
+        StreamingOutput result = service.getResultSetAsTsv( ExpressionAnalysisResultSetArg.valueOf( dears.getId().toString() ) );
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         result.write( byteArrayOutputStream );
         byteArrayOutputStream.toString( StandardCharsets.UTF_8.name() );

@@ -124,11 +124,8 @@ public class AnalysisResultSetsWebService {
     @Path("/{resultSet}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a single analysis result set by its identifier", responses = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExpressionAnalysisResultSetValueObject")),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE,
-                            schema = @Schema(type = "string", format = "binary"),
-                            examples = { @ExampleObject(value = TSV_EXAMPLE) }) }),
+            @ApiResponse(responseCode = "200",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExpressionAnalysisResultSetValueObject"))),
             @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
@@ -152,16 +149,21 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve an {@link AnalysisResultSet} in a tabular format.
      *
-     * This is hidden in the OpenAPI specification because it is defined as a negotiated content type in
-     * {@link #getResultSet(ExpressionAnalysisResultSetArg, Boolean)}.
+     * This is intentionally using a slightly different parameter name for the {@link Path} to create a distinct entry
+     * in the OpenAPI specification as a workaround to Swagger's codegen incapability to treat multiple media types per
+     * endpoint.
      */
     @GZIP
     @GET
-    @Path("/{resultSet}")
+    @Path("/{resultSet_}")
     @Produces(TEXT_TAB_SEPARATED_VALUE_Q9_MEDIA_TYPE)
-    @Operation(summary = "Retrieve a single analysis result set by its identifier", hidden = true)
-    public StreamingOutput getResultSetToTsv(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet ) {
+    @Operation(summary = "Retrieve a single analysis result set by its identifier as a tab-separated values", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, /* no need to show the q-value in the endpoint */
+                    schema = @Schema(type = "string", format = "binary"),
+                    examples = { @ExampleObject(value = TSV_EXAMPLE) })),
+            @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.") })
+    public StreamingOutput getResultSetAsTsv(
+            @PathParam("resultSet_") ExpressionAnalysisResultSetArg analysisResultSet ) {
         final ExpressionAnalysisResultSet ears = analysisResultSet.getEntityWithContrastsAndResults( expressionAnalysisResultSetService );
         if ( ears == null ) {
             throw new NotFoundException( "Could not find ExpressionAnalysisResultSet for " + analysisResultSet + "." );
