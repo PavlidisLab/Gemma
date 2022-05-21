@@ -258,7 +258,7 @@ public class PlatformsWebService {
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         if ( !file.exists() ) {
