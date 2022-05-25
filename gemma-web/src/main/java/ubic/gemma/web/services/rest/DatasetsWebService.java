@@ -198,8 +198,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("factorValues") FactorValueArrayArg factorValues
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         return Responder.respond( datasetArg.getSamples( expressionExperimentService, bioAssayService, outlierDetectionService ) );
     }
