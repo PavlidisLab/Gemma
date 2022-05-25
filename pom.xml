@@ -527,6 +527,7 @@
 						<hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
 						<supportBranchPrefix>support-</supportBranchPrefix>
 					</gitFlowConfig>
+					<skipTestProject>true</skipTestProject>
 				</configuration>
 			</plugin>
 			<plugin>
