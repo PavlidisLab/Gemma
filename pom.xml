@@ -604,7 +604,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<gsec.version>0.0.8</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
-		<spring.security.version>3.2.10.RELEASE</spring.security.version>
+		<spring.security.version>5.5.7</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.13.2</jackson.version>
 		<swagger.version>2.1.13</swagger.version>
