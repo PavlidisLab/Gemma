@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.report;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -151,8 +152,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         String reportDir = ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
         File reportDirF = new File( reportDir );
-        if ( !reportDirF.exists() ) {
-            EntityUtils.mkdirs( reportDirF );
+        try {
+            FileUtils.forceMkdir( reportDirF );
+        } catch ( IOException e ) {
+            log.error( "Failed to create report parent directory: " + reportDirF );
+            return;
         }
 
         String reportFileName =

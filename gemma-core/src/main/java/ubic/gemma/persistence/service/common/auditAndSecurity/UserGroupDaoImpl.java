@@ -101,6 +101,9 @@ public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGrou
 
     @Override
     public void remove( UserGroup userGroup ) {
+        // FIXME: this should not be necessary, but we have cases where the group are obtained from a different Hibernate
+        //  session
+        userGroup = this.load( userGroup.getId() );
         // this check is done higher up as well...
         if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()

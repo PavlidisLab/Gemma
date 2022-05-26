@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.collections4.iterators.TransformIterator;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -630,7 +631,9 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
             }
 
-            EntityUtils.mkdirs( f.getParentFile() );
+            // ensure the parent directory exists
+            FileUtils.forceMkdirParent( f );
+
             writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( f ) ) );
         }
         StringWriter buf = new StringWriter();

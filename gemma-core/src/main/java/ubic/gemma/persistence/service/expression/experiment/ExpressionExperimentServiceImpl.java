@@ -1013,10 +1013,22 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
+    public void remove( Long id ) {
+        ExpressionExperiment ee = this.load( id );
+        removeAssociations( ee );
+        super.remove( ee ); // save a reload in the DAO layer
+    }
+
+    @Override
+    @Transactional
     public void remove( ExpressionExperiment ee ) {
         // reload the EE as it might originate from a different session
         ee = this.load( ee.getId() );
+        removeAssociations( ee );
+        super.remove( ee );
+    }
 
+    private void removeAssociations( ExpressionExperiment ee ) {
         if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
@@ -1058,8 +1070,6 @@ public class ExpressionExperimentServiceImpl
                 this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
             }
         }
-
-        super.remove( ee );
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {

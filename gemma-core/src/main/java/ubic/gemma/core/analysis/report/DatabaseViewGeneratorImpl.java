@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.report;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +41,6 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.*;
 import java.util.Collection;
@@ -83,7 +83,13 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             return f;
         }
 
-        EntityUtils.mkdirs( f.getParentFile() );
+        // ensure the parent directory exists
+        try {
+            FileUtils.forceMkdirParent( f );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
         return f;
     }
 

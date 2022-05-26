@@ -18,11 +18,11 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,7 +173,7 @@ public abstract class AbstractFetcher implements Fetcher {
 
             if ( !( targetPath.exists() && targetPath.canRead() ) ) {
                 AbstractFetcher.log.warn( "Attempting to create directory '" + localBasePath + "'" );
-                EntityUtils.mkdirs( targetPath );
+                FileUtils.forceMkdir( targetPath );
             }
 
             if ( accession == null ) {
@@ -200,9 +200,9 @@ public abstract class AbstractFetcher implements Fetcher {
         if ( newDir == null ) {
             throw new IOException( "Could not create target directory, was null" );
         }
-        if ( !newDir.exists() && !newDir.mkdirs() ) {
-            throw new IOException( "Could not create target directory " + newDir.getAbsolutePath() );
-        }
+
+        FileUtils.forceMkdir( newDir );
+
         if ( !newDir.canWrite() ) {
             throw new IOException( "Cannot write to target directory " + newDir.getAbsolutePath() );
         }
