@@ -61,7 +61,7 @@ public class LimitArg extends AbstractArg<Integer> {
             throw new MalformedArgException( "The provided limit is not a valid number.", e );
         }
         if ( limit < 1 ) {
-            throw new MalformedArgException( "The provided limit must be greater than one.", null );
+            throw new MalformedArgException( "The provided limit must be greater than zero.", null );
         }
         return new LimitArg( limit );
     }
