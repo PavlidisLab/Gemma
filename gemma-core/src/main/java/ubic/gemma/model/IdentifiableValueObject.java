@@ -1,27 +1,20 @@
 package ubic.gemma.model;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.Identifiable;
-
-import java.util.Objects;
 
 /**
  * Created by tesarst on 31/05/17.
  * Interface for value objects representing persistent objects
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
+@EqualsAndHashCode(of = { "id" })
 public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable {
 
-    protected Long id = null;
-
-    /**
-     * Required when using the implementing classes as a spring beans.
-     */
-    public IdentifiableValueObject() {
-    }
+    private Long id;
 
     /**
      * Constructor that sets the common property of all identifiable objects, the ID.
-     *
      * @param id the id of the original object.
      */
     protected IdentifiableValueObject( Long id ) {
@@ -29,11 +22,11 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
     }
 
     protected IdentifiableValueObject( O identifiable ) {
-        this( identifiable.getId() );
+        this.id = identifiable.getId();
     }
 
     protected IdentifiableValueObject( IdentifiableValueObject vo ) {
-        this( vo.getId() );
+        this.id = vo.getId();
     }
 
     @Override
@@ -48,10 +41,5 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
      */
     final public void setId( Long id ) {
         this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * Objects.hashCode( id );
     }
 }

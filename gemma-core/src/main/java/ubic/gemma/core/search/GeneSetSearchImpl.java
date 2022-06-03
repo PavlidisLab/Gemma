@@ -249,7 +249,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
             Collection<Long> geneIds = EntityUtils.getIds( gvos );
 
-            GeneSetValueObject transientGeneSet = new GeneSetValueObject();
+            GeneSetValueObject transientGeneSet = new GeneSetValueObject( -1L );
 
             transientGeneSet.setName( this.uri2phenoID( uris.get( uri ) ) );
             transientGeneSet.setDescription( uris.get( uri ).getValue() );
@@ -299,7 +299,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-       // GeneSetSearchImpl.log.info( term );
+        // GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */

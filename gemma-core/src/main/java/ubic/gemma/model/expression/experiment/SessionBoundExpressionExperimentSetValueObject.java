@@ -49,13 +49,6 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     private boolean modified;
 
     /**
-     * Required when using the class as a spring bean.
-     */
-    @SuppressWarnings("WeakerAccess") // Required by Spring
-    public SessionBoundExpressionExperimentSetValueObject() {
-    }
-
-    /**
      * default constructor to satisfy java bean contract
      *
      * @param id id

@@ -45,18 +45,8 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
     private String detail;
     private AuditEventType eventType;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public AuditEventValueObject() {
-    }
-
-    public AuditEventValueObject( Long id ) {
-        super( id );
-    }
-
     public AuditEventValueObject( AuditEvent ae ) {
-        super( ae.getId() );
+        super( ae );
         if ( ae.getPerformer() != null )
             this.setPerformer( ae.getPerformer().getUserName() );
         if ( ae.getAction() != null )

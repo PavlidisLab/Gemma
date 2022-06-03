@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.genome.gene;
 
+import org.apache.commons.lang3.RandomUtils;
 import ubic.gemma.model.GemmaSessionBackedValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
@@ -35,9 +36,8 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
      */
     @SuppressWarnings("WeakerAccess") // Frontend use
     public SessionBoundGeneSetValueObject() {
-        super();
+        super( RandomUtils.nextLong() );
         this.setModified( false );
-        this.setId( new Long( this.hashCode() ) );
     }
 
     /**

@@ -52,22 +52,12 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private boolean retracted = false;
 
     /**
-     * Required when using the class as a spring bean.
-     */
-    public BibliographicReferenceValueObject() {
-    }
-
-    public BibliographicReferenceValueObject( Long id ) {
-        super( id );
-    }
-
-    /**
      * does not set related experiments field
      *
      * @param ref bib ref
      */
     public BibliographicReferenceValueObject( BibliographicReference ref ) {
-        super( ref.getId() );
+        super( ref );
         this.abstractText = ref.getAbstractText();
         this.authorList = ref.getAuthorList();
         this.pubAccession = ref.getPubAccession().getAccession();
@@ -83,23 +73,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
         this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
         this.retracted = ref.getRetracted();
-    }
-
-    public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
-            String pages, String pubAccession, String publication, Date publicationDate, String publisher, String title,
-            String volume, Collection<ExpressionExperimentValueObject> experiments ) {
-        super( id );
-        this.abstractText = abstractText;
-        this.authorList = authorList;
-        this.issue = issue;
-        this.pages = pages;
-        this.pubAccession = pubAccession;
-        this.publication = publication;
-        this.publicationDate = publicationDate;
-        this.publisher = publisher;
-        this.title = title;
-        this.volume = volume;
-        this.experiments = experiments;
     }
 
     public static CitationValueObject constructCitation( BibliographicReference bib ) {

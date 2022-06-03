@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +34,6 @@ public class ExpressionExperimentEditValueObject extends ExpressionExperimentDet
     private static final long serialVersionUID = 1630521876359566915L;
     private Collection<QuantitationTypeValueObject> quantitationTypes;
     private Collection<BioAssayValueObject> bioAssays;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ExpressionExperimentEditValueObject() {
-    }
 
     public ExpressionExperimentEditValueObject( ExpressionExperimentValueObject eevo ) {
         super( eevo );

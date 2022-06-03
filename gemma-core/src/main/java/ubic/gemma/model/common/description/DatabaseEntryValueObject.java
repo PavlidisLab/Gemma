@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 
 import java.io.Serializable;
@@ -22,56 +23,22 @@ import java.io.Serializable;
  * ValueObject for database entry
  */
 @SuppressWarnings("WeakerAccess") // Used in frontend
+@EqualsAndHashCode(of = { "accession", "externalDatabase" }, callSuper = false)
 public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
 
-    public DatabaseEntryValueObject( DatabaseEntry de ) {
-        super( de.getId() );
-        this.accession = de.getAccession();
-        this.externalDatabase =
-                de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;
-    }
-
-    public DatabaseEntryValueObject( long id ) {
+    protected DatabaseEntryValueObject( Long id ) {
         super( id );
     }
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public DatabaseEntryValueObject() {
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.accession == null ) ? 0 : this.accession.hashCode() );
-        result = prime * result + ( ( this.externalDatabase == null ) ? 0 : this.externalDatabase.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
-        if ( this.accession == null ) {
-            if ( other.accession != null )
-                return false;
-        } else if ( !this.accession.equals( other.accession ) )
-            return false;
-        if ( this.externalDatabase == null ) {
-            return other.externalDatabase == null;
-        } else
-            return this.externalDatabase.equals( other.externalDatabase );
+    public DatabaseEntryValueObject( DatabaseEntry de ) {
+        super( de );
+        this.accession = de.getAccession();
+        this.externalDatabase =
+                de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;
     }
 
     public String getAccession() {

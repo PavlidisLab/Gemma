@@ -49,18 +49,12 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     private Collection<Long> genes;
     private BioAssayDimensionValueObject bioAssayDimension;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public DataVectorValueObject() {
-    }
-
-    public DataVectorValueObject( Long id ) {
-        super( id );
+    protected DataVectorValueObject( long l ) {
+        super(l);
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
-        super( dedv.getId() );
+        super( dedv );
         if ( badvo == null ) {
             BioAssayDimension badim = dedv.getBioAssayDimension();
             this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
@@ -80,32 +74,8 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        final DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
-        //noinspection SimplifiableIfStatement // Better readability
-        if ( id == null ) {
-            return false;
-        } else
-            return id.equals( other.id );
-    }
-
-    @Override
     public String toString() {
         return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
     }
 
     /**

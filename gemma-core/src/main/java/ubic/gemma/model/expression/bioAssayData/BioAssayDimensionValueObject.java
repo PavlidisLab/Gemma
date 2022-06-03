@@ -50,12 +50,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     private BioAssayDimensionValueObject sourceBioAssayDimension;
 
     /**
-     * Required when using the class as a spring bean.
-     */
-    public BioAssayDimensionValueObject() {
-    }
-
-    /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
      *
      * @param id id
@@ -68,13 +62,13 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      * @param entity to be converted
      */
     public BioAssayDimensionValueObject( BioAssayDimension entity ) {
-        super( entity.getId() );
+        super( entity );
         this.bioAssayDimension = entity;
         this.name = entity.getName();
         this.description = entity.getDescription();
         for ( BioAssay bv : entity.getBioAssays() ) {
-            if (bv == null) {
-                throw new IllegalArgumentException("Null bioassay in " + entity);
+            if ( bv == null ) {
+                throw new IllegalArgumentException( "Null bioassay in " + entity );
             }
             bioAssays.add( new BioAssayValueObject( bv, false ) );
         }
@@ -82,7 +76,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
 
     @Override
     public String toString() {
-        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered=" + isReordered
+        return "BioAssayDimensionValueObject [" + ( getId() != null ? "id=" + getId() + ", " : "" ) + "isReordered=" + isReordered
                 + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" ) + "]";
     }
 
@@ -190,7 +184,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     }
 
     private BioAssayDimensionValueObject deepCopy() {
-        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject( this.id );
+        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject( this.getId() );
         result.bioAssays.addAll( this.bioAssays );
         result.bioAssayDimension = this.bioAssayDimension;
         result.sourceBioAssayDimension = this.sourceBioAssayDimension;
@@ -202,7 +196,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     }
 
     private BioAssayDimension makeDummyBioAssayDimension() {
-        assert this.id == null;
+        assert this.getId() == null;
 
         BioAssayDimension fakeBd = BioAssayDimension.Factory
                 .newInstance( "Placeholder representing: " + name, description, new ArrayList<BioAssay>() );

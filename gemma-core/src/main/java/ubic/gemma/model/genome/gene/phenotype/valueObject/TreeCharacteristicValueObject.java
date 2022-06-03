@@ -40,12 +40,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     // if we need to reconstruct part of the tree in the cache we need to know highest root parent
     private String rootOfTree = "";
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public TreeCharacteristicValueObject() {
-    }
-
     public TreeCharacteristicValueObject( Long id, String value, String valueUri ) {
         super( id, value, "", valueUri, "" );
         this._id = this.urlId;

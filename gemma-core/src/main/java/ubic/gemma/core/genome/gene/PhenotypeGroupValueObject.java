@@ -1,24 +1,6 @@
 /*
  * The Gemma project
  *
- * Copyright (c) 2009 University of British Columbia
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- *
- */
-/*
- * The Gemma project
- *
  * Copyright (c) 2011 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +19,7 @@
 
 package ubic.gemma.core.genome.gene;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 import java.util.Collection;
@@ -45,16 +28,13 @@ import java.util.Collection;
  * @author tvrossum
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in the front use
+@EqualsAndHashCode(of = { "phenotypeCategory", "phenotypeName" }, callSuper = false)
 public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -7264201170714207356L;
     private String phenotypeCategory;
     private String phenotypeName;
     private String searchTerm;
-
-    public PhenotypeGroupValueObject() {
-        super();
-    }
 
     /**
      * Method to create a display object from scratch

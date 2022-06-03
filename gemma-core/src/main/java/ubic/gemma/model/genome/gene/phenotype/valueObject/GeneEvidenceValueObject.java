@@ -41,12 +41,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence = new HashSet<>();
     private Set<String> phenotypesValueUri = new HashSet<>();
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public GeneEvidenceValueObject() {
-    }
-
+    @Deprecated
     public GeneEvidenceValueObject( Long id ) {
         super( id );
     }
@@ -54,15 +49,6 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     public GeneEvidenceValueObject( Gene gene,
             Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( gene );
-        this.evidence = evidence;
-    }
-
-    public GeneEvidenceValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId,
-            String officialSymbol, String officialName, String description, Double score, Long taxonId,
-            String taxonScientificName, String taxonCommonName,
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
-        super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
-                taxonScientificName, taxonCommonName );
         this.evidence = evidence;
     }
 

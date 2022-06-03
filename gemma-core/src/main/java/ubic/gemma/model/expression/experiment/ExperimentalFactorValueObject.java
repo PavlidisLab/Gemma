@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -49,18 +48,12 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ExperimentalFactorValueObject() {
-    }
-
     public ExperimentalFactorValueObject( Long id ) {
         super( id );
     }
 
     public ExperimentalFactorValueObject( ExperimentalFactor factor ) {
-        super( factor.getId() );
+        super( factor );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
 
@@ -123,18 +116,6 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
         this.setValues( vals );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        ExperimentalFactorValueObject other = ( ExperimentalFactorValueObject ) obj;
-        return Objects.equals( id, other.id );
-    }
-
     public String getCategory() {
         return category;
     }
@@ -168,14 +149,6 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
      */
     public void setFactorValues( String factorValues ) {
         this.factorValues = factorValues;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
-        return result;
     }
 
     public String getName() {

@@ -11,11 +11,8 @@ public class MeasurementValueObject extends IdentifiableValueObject {
     private String type;
     private String representation;
 
-    public MeasurementValueObject() {
-    }
-
     public MeasurementValueObject( Measurement measurement ) {
-        super( measurement.getId() );
+        super( measurement );
         this.value = measurement.getValue();
         if ( measurement.getUnit() != null ) {
             this.unit = measurement.getUnit().getUnitNameCV();

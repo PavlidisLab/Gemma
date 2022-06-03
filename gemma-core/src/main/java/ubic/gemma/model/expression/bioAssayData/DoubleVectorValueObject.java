@@ -19,13 +19,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import cern.colt.list.DoubleArrayList;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -42,6 +40,7 @@ import java.util.*;
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@EqualsAndHashCode(of = { "sourceVectorId" }, callSuper = true)
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
     private static final long serialVersionUID = -5116242513725297615L;
@@ -58,12 +57,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * Will only be non-null if the id is null, when we have a 'slice' of the data
      */
     private Long sourceVectorId = null;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public DoubleVectorValueObject() {
-    }
 
     /**
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
@@ -156,35 +149,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             }
             i++;
         }
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( id != null ) {
-            return super.equals( obj );
-        }
-
-        if ( this == obj )
-            return true;
-        if ( !super.equals( obj ) )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-
-        DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
-        if ( sourceVectorId == null ) {
-            return other.sourceVectorId == null;
-        } else
-            return sourceVectorId.equals( other.sourceVectorId );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        if ( super.getId() != null )
-            return super.hashCode();
-
-        return prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
     }
 
     public double[] getData() {

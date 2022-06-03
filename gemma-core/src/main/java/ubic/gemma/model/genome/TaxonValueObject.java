@@ -31,7 +31,7 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private ExternalDatabaseValueObject externalDatabase;
 
     public TaxonValueObject( Taxon taxon ) {
-        super( taxon.getId() );
+        super( taxon );
         this.setScientificName( taxon.getScientificName() );
         this.setCommonName( taxon.getCommonName() );
 
@@ -41,10 +41,6 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         if ( taxon.getExternalDatabase() != null ) {
             this.setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
         }
-    }
-
-    public TaxonValueObject( Long id ) {
-        super( id );
     }
 
     public static TaxonValueObject fromEntity( Taxon taxon ) {

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
@@ -29,6 +30,7 @@ import java.util.SortedSet;
  * @author stgeorgn
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@EqualsAndHashCode(of = { "geneDifferentialExpressionMetaAnalysisId" }, callSuper = false)
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<DifferentialExpressionEvidence> {
 
     private static final long serialVersionUID = 7262262666070114995L;
@@ -43,12 +45,6 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
     private Long geneDifferentialExpressionMetaAnalysisResultId = 0L;
     private GeneDifferentialExpressionMetaAnalysisSummaryValueObject geneDifferentialExpressionMetaAnalysisSummaryValueObject = null;
     private Long numEvidenceFromSameMetaAnalysis = 0L;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public DiffExpressionEvidenceValueObject() {
-    }
 
     public DiffExpressionEvidenceValueObject( Long id ) {
         super( id );
@@ -77,6 +73,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
         this.geneDifferentialExpressionMetaAnalysisSummaryValueObject.setDiffExpressionEvidence( this );
     }
 
+    @Deprecated
     public DiffExpressionEvidenceValueObject( Long id,
             GeneDifferentialExpressionMetaAnalysis geneDifferentialExpressionMetaAnalysis,
             GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult,
@@ -93,32 +90,6 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
         this.metaPvalueRank = geneDifferentialExpressionMetaAnalysisResult.getMetaPvalueRank();
         this.upperTail = geneDifferentialExpressionMetaAnalysisResult.getUpperTail();
         this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResult.getId();
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( !super.equals( obj ) )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        DiffExpressionEvidenceValueObject other = ( DiffExpressionEvidenceValueObject ) obj;
-        if ( this.geneDifferentialExpressionMetaAnalysisId == null ) {
-            return other.geneDifferentialExpressionMetaAnalysisId == null;
-        } else
-            return this.geneDifferentialExpressionMetaAnalysisId
-                    .equals( other.geneDifferentialExpressionMetaAnalysisId );
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( this.geneDifferentialExpressionMetaAnalysisId == null ) ?
-                0 :
-                this.geneDifferentialExpressionMetaAnalysisId.hashCode() );
-        return result;
     }
 
     public Long getGeneDifferentialExpressionMetaAnalysisId() {

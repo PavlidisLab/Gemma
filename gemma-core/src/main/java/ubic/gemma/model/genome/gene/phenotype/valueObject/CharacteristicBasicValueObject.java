@@ -10,16 +10,7 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
     protected String category;
     protected String categoryUri;
 
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public CharacteristicBasicValueObject() {
-    }
-
-    public CharacteristicBasicValueObject( Long id ) {
-        super( id );
-    }
-
+    @Deprecated
     public CharacteristicBasicValueObject( Long id, String value, String valueUri, String category,
             String categoryUri ) {
         super( id );
@@ -30,7 +21,7 @@ public class CharacteristicBasicValueObject extends IdentifiableValueObject<Char
     }
 
     public CharacteristicBasicValueObject( Characteristic c ) {
-        super( c.getId() );
+        super( c );
         this.value = c.getValue();
         this.valueUri = c.getValueUri();
         this.category = c.getCategory();
