@@ -17,6 +17,7 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -246,10 +247,10 @@ public class DatasetsRestTest extends BaseSpringWebTest {
     @Test
     public void testGetDatasetRawExpression() throws IOException {
         ExpressionExperiment ee = ees.get( 0 );
-        StreamingOutput streamingOutput = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ) );
+        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ) );
         byte[] payload;
         try ( ByteArrayOutputStream os = new ByteArrayOutputStream() ) {
-            streamingOutput.write( os );
+            ( ( StreamingOutput ) response.getEntity() ).write( os );
             payload = os.toByteArray();
         }
         String decodedPayload = new String( payload, StandardCharsets.UTF_8 );

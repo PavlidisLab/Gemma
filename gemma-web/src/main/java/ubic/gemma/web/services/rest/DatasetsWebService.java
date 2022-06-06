@@ -270,9 +270,12 @@ public class DatasetsWebService {
                     schema = @Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public StreamingOutput getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
-        return ( output ) -> expressionDataFileService.writeRawExpressionData( ee, new OutputStreamWriter( output ) );
+        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, new OutputStreamWriter( output ) );
+        return Response.ok( stream )
+                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+                .build();
     }
 
     /**
