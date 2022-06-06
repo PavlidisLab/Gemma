@@ -23,6 +23,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -353,10 +354,12 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
     @Override
     @Transactional(readOnly = true)
     public void writeRawExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException {
-        ee = expressionExperimentService.findWithRawExpressionDataVectors( ee );
+        ee = expressionExperimentService.find( ee );
         if ( ee == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment has been removed." );
         }
+        // pre-initialize it so that it get fetched in a single query without a jointure with the EE
+        Hibernate.initialize( ee.getRawExpressionDataVectors() );
         ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee );
         Set<ArrayDesign> ads = ee.getRawExpressionDataVectors().stream()
                 .map( RawExpressionDataVector::getDesignElement )
