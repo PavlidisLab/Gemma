@@ -318,6 +318,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.filterByTaxon( ids, taxon );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findWithRawExpressionDataVectors( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.findWithRawExpressionDataVectors( ee );
+    }
+
     /**
      * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
      */

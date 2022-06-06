@@ -48,6 +48,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.web.services.rest.annotations.GZIP;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -56,7 +57,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -323,6 +326,26 @@ public class DatasetsWebService {
             // TODO: handle other cases of filtering issue
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * Retrieve raw expression data.
+     *
+     * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
+     * the whole payload in memory.
+     */
+    @GZIP
+    @GET
+    @Path("/{dataset}/data/raw")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve raw expression data of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public StreamingOutput getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        return ( output ) -> expressionDataFileService.writeRawExpressionData( ee, new OutputStreamWriter( output ) );
     }
 
     /**

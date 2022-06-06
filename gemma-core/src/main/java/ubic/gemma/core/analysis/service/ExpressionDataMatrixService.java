@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -62,6 +63,13 @@ public interface ExpressionDataMatrixService {
      * missing, this will throw an exception.
      */
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
+
+    /**
+     * @throws IllegalArgumentException if the expression experiment has no preferred raw quantitation types
+     * @param ee
+     * @return
+     */
+    ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee );
 
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );
