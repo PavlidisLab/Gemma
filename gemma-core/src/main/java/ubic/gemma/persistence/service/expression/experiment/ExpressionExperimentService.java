@@ -108,6 +108,9 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment findWithRawExpressionDataVectors( ExpressionExperiment ee );
+
     @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperiment create( ExpressionExperiment expressionExperiment );

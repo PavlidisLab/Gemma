@@ -42,6 +42,8 @@ public interface ExpressionExperimentDao
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
+    ExpressionExperiment findWithRawExpressionDataVectors( ExpressionExperiment ee );
+
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
     Collection<ExpressionExperiment> findByAccession( String accession );

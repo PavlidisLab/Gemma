@@ -130,6 +130,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findWithRawExpressionDataVectors( ExpressionExperiment ee ) {
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee join fetch ee.rawExpressionDataVectors where ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
 
