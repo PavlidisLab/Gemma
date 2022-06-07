@@ -23,8 +23,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -42,6 +44,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -57,6 +60,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -345,6 +349,23 @@ public class ExpressionDataFileServiceImpl extends AbstractTsvFileService<Expres
                 zipOut.closeEntry();
             }
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void writeRawExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException {
+        ee = expressionExperimentService.find( ee );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "ExpressionExperiment has been removed." );
+        }
+        // pre-initialize it so that it get fetched in a single query without a jointure with the EE
+        Hibernate.initialize( ee.getRawExpressionDataVectors() );
+        ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee );
+        Set<ArrayDesign> ads = ee.getRawExpressionDataVectors().stream()
+                .map( RawExpressionDataVector::getDesignElement )
+                .map( CompositeSequence::getArrayDesign )
+                .collect( Collectors.toSet() );
+        new MatrixWriter().writeWithStringifiedGeneAnnotations( writer, matrix, getGeneAnnotationsAsStringsByProbe( ads ), true );
     }
 
     @Override

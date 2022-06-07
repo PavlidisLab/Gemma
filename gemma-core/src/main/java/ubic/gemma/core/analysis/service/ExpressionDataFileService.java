@@ -25,6 +25,7 @@ import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +120,20 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     // Possible external use
     File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException;
+
+    /**
+     * Write raw expression data to a given writer.
+     *
+     * Note: the preferred quantitations are used.
+     *
+     * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
+     * To write to a string, consider using {@link java.io.StringWriter}.
+     *
+     * @param ee the expression experiment
+     * @param writer the destination for the raw expression data
+     * @throws IOException if operations with the writer fails
+     */
+    void writeRawExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment

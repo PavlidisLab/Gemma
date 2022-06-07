@@ -15,6 +15,9 @@
 package ubic.gemma.web.services.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,10 +43,8 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.web.services.rest.util.ArgUtils;
-import ubic.gemma.web.services.rest.util.PaginatedResponseDataObject;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.annotations.GZIP;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,8 +52,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
-import java.util.*;
+import java.io.OutputStreamWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * RESTful interface for datasets.
@@ -247,6 +253,29 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         return this.outputDataFile( ee, filterData.getValue() );
+    }
+
+    /**
+     * Retrieve raw expression data.
+     *
+     * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
+     * the whole payload in memory.
+     */
+    @GZIP
+    @GET
+    @Path("/{dataset}/data/raw")
+    @Produces("text/tab-separated-values; charset=UTF-8")
+    @Operation(summary = "Retrieve raw expression data of a dataset", responses = {
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = "text/tab-separated-values; charset=UTF-8",
+                    schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
+        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, new OutputStreamWriter( output ) );
+        return Response.ok( stream )
+                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+                .build();
     }
 
     /**

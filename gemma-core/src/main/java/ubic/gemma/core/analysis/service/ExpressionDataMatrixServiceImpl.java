@@ -19,28 +19,31 @@
 package ubic.gemma.core.analysis.service;
 
 import cern.colt.list.DoubleArrayList;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -48,6 +51,7 @@ import java.util.Map;
  * @author keshav
  */
 @Component
+@CommonsLog
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
 
     @Autowired
@@ -55,6 +59,9 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -95,6 +102,32 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee ) {
+        Map<QuantitationType, List<RawExpressionDataVector>> rawVectorsByQt = ee.getRawExpressionDataVectors().stream()
+                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toList() ) );
+
+        Set<QuantitationType> preferredQuantitationTypes = rawVectorsByQt.keySet().stream()
+                .filter( QuantitationType::getIsPreferred )
+                .collect( Collectors.toSet() );
+
+        if ( preferredQuantitationTypes.isEmpty() ) {
+            throw new IllegalArgumentException( "There are no RawExpressionDataVectors for " + ee + ", they must be created first." );
+        }
+
+        if ( preferredQuantitationTypes.size() > 1 ) {
+            log.warn( "There are more than one preferred quantitation type for " + ee + " raw expression vectors." );
+        }
+
+        // pick the QT with the maximum ID, which should be the latest one created
+        QuantitationType pickedQuantitationType = preferredQuantitationTypes.stream()
+                .max( Comparator.comparing( QuantitationType::getId ) )
+                .orElse( null );
+
+        return new ExpressionDataDoubleMatrix( rawVectorsByQt.get( pickedQuantitationType ) );
     }
 
     @Override

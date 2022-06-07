@@ -17,6 +17,10 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -238,5 +242,22 @@ public class DatasetsRestTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ),
                 new MockHttpServletResponse() );
+    }
+
+    @Test
+    public void testGetDatasetRawExpression() throws IOException {
+        ExpressionExperiment ee = ees.get( 0 );
+        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ) );
+        byte[] payload;
+        try ( ByteArrayOutputStream os = new ByteArrayOutputStream() ) {
+            ( ( StreamingOutput ) response.getEntity() ).write( os );
+            payload = os.toByteArray();
+        }
+        String decodedPayload = new String( payload, StandardCharsets.UTF_8 );
+        // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
+        assertThat( decodedPayload )
+                .isNotEmpty()
+                .contains( ee.getShortName() )
+                .hasLineCount( 8 + 2 * testHelper.getTestElementCollectionSize() );
     }
 }
