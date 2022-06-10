@@ -134,11 +134,11 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                          *
                          * 2022: There are also identifiers with the format AllianceGenome:WB:WBGene00022277.
                          *
-                         * Therefore we have a special case.
+                         * Therefore we have special cases.
                          */
                         if ( dbF.length == 3 && ( dbF[1].equals( "HGNC" ) || dbF[1].equals( "MGI" ) ) ) {
                             dbF[1] = dbF[1] + ":" + dbF[2];
-                        } else if (dbF.length == 3 && (dbF[0].equals("AllianceGenome"))) {
+                        } else if (dbF.length == 3 && dbF[0].equals("AllianceGenome")) {
                             // we aren't going to do anything with these.
                             continue;
                         } else {
