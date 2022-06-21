@@ -375,6 +375,7 @@
         <dependency>
             <groupId>com.googlecode.javaewah</groupId>
             <artifactId>JavaEWAH</artifactId>
+            <!--suppress MavenPackageUpdate -->
             <version>0.7.9</version>
         </dependency>
         <dependency>

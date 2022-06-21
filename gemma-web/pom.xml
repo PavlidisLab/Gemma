@@ -218,7 +218,7 @@
 			<version>1.7</version>
 		</dependency>
 
-		<!-- RSS feeds -->
+		<!-- RSS feeds (depends on spring-web version) -->
 		<dependency>
 			<groupId>rome</groupId>
 			<artifactId>rome</artifactId>
@@ -234,7 +234,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20211205</version>
+			<version>20220320</version>
 		</dependency>
 
 		<!-- AJAX -->
@@ -265,7 +265,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Jersey -->
+		<!-- Jersey (latest for Spring 3) -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
@@ -294,7 +294,7 @@
 			<version>2.0.1</version>
 		</dependency>
 
-		<!-- Tomcat -->
+		<!-- Tomcat (defined by production deployment constraints) -->
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-servlet-api</artifactId>
