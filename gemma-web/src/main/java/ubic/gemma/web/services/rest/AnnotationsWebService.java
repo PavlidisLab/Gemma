@@ -24,6 +24,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -106,7 +107,11 @@ public class AnnotationsWebService {
         if ( query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query empty." );
         }
-        return Responder.respond( this.getTerms( query ) );
+        try {
+            return Responder.respond( this.getTerms( query ) );
+        } catch ( OntologySearchException e ) {
+            throw new BadRequestException( "Invalid search query.", e );
+        }
     }
 
     /**
@@ -247,7 +252,7 @@ public class AnnotationsWebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) {
+    private List<AnnotationSearchResultValueObject> getTerms( StringArrayArg arg ) throws OntologySearchException {
         List<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();

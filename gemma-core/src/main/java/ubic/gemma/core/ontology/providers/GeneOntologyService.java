@@ -16,6 +16,7 @@ package ubic.gemma.core.ontology.providers;
 
 import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
@@ -69,7 +70,7 @@ public interface GeneOntologyService extends InitializingBean {
      * @param  queryString query string
      * @return             ontology terms
      */
-    Collection<OntologyTerm> findTerm( String queryString );
+    Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException;
 
     /**
      * @param  entry entry

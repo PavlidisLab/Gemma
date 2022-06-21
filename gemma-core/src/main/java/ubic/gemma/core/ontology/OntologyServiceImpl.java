@@ -60,6 +60,7 @@ import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.providers.SequenceOntologyService;
 import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
@@ -217,7 +218,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
-            boolean useNeuroCartaOntology ) {
+            boolean useNeuroCartaOntology ) throws OntologySearchException {
 
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
@@ -288,7 +289,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
+    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException {
 
         String query = OntologySearch.stripInvalidCharacters( givenSearch );
         Collection<OntologyIndividual> results = new HashSet<>();
@@ -303,7 +304,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<Characteristic> findTermAsCharacteristic( String search ) {
+    public Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException {
 
         String query = OntologySearch.stripInvalidCharacters( search );
         Collection<Characteristic> results = new HashSet<>();
@@ -322,7 +323,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<OntologyTerm> findTerms( String search ) {
+    public Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException {
 
         Collection<OntologyTerm> results = new HashSet<>();
 
@@ -411,7 +412,7 @@ public class OntologyServiceImpl implements OntologyService {
 
             try {
                 results = service.findResources( queryString );
-            } catch ( Exception e ) {
+            } catch ( OntologySearchException e ) {
                 OntologyServiceImpl.log.warn( e.getMessage() ); // parse errors, etc.
             }
             if ( results == null || results.isEmpty() )
@@ -438,8 +439,12 @@ public class OntologyServiceImpl implements OntologyService {
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
         if ( searchResults.size() < OntologyServiceImpl.MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                    this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            try {
+                searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+                        this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+            } catch ( OntologySearchException e ) {
+                throw new SearchException( "Failed to search for characteristic terms.", e );
+            }
         }
         findGoTerms.stop();
 
@@ -867,7 +872,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology,
-            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws OntologySearchException {
 
         Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
 

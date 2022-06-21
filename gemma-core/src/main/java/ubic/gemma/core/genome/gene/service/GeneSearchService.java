@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.genome.gene.service;
 
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.genome.Gene;
@@ -45,7 +46,7 @@ public interface GeneSearchService {
      */
     Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
 
-    Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
+    Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) throws OntologySearchException;
 
     Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) throws SearchException;
 

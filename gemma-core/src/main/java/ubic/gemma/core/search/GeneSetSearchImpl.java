@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
@@ -117,13 +118,13 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
+    public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) throws OntologySearchException {
         return this.findByGoTermName( goTermName, taxon, null, null );
     }
 
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
-            Integer maxGeneSetSize ) {
+            Integer maxGeneSetSize ) throws OntologySearchException {
         Collection<? extends OntologyResource> matches = this.geneOntologyService
                 .findTerm( StringUtils.strip( goTermName ) );
 
@@ -170,7 +171,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) {
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();
@@ -209,7 +210,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
-    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) {
+    public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws OntologySearchException {
 
         StopWatch timer = new StopWatch();
         timer.start();

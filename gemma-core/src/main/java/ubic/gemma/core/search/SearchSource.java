@@ -27,5 +27,5 @@ public interface SearchSource {
 
     Collection<SearchResult<?>> searchGeneSet( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<?>> searchPhenotype( SearchSettings settings );
+    Collection<SearchResult<?>> searchPhenotype( SearchSettings settings ) throws SearchException;
 }
