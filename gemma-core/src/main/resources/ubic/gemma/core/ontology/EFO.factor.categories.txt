@@ -13,6 +13,7 @@ http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
 http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
 # no longer allowed:
+http://gemma.msl.ubc.ca/ont/TGEMO_00101 disease model
 #http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
 http://www.ebi.ac.uk/efo/EFO_0000513	genotype
 http://www.ebi.ac.uk/efo/EFO_0000523	growth condition
