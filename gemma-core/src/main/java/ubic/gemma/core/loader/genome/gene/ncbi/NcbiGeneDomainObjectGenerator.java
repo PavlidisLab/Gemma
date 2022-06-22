@@ -100,7 +100,12 @@ public class NcbiGeneDomainObjectGenerator {
         LocalFile geneHistoryFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEHISTORY_FILE ).iterator().next();
         LocalFile geneEnsemblFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEENSEMBL_FILE ).iterator().next();
 
-        return this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+        try {
+            return this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+        } catch ( IOException e ) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException( e );
+        }
     }
 
     public Future<?> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath, String geneHistoryFilePath,
@@ -153,7 +158,7 @@ public class NcbiGeneDomainObjectGenerator {
     }
 
     private Future<?> processLocalFiles( final LocalFile geneInfoFile, final LocalFile gene2AccessionFile,
-            LocalFile geneHistoryFile, LocalFile geneEnsemblFile, final BlockingQueue<NcbiGeneData> geneDataQueue ) {
+            LocalFile geneHistoryFile, LocalFile geneEnsemblFile, final BlockingQueue<NcbiGeneData> geneDataQueue ) throws IOException {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         infoParser.setFilter( this.filter );
@@ -171,7 +176,7 @@ public class NcbiGeneDomainObjectGenerator {
 
         final NcbiGeneHistoryParser historyParser = new NcbiGeneHistoryParser();
 
-        try {
+
             NcbiGeneDomainObjectGenerator.log.debug( "Parsing gene history" );
             historyParser.parse( geneHistoryFile.asFile() );
 
@@ -186,10 +191,7 @@ public class NcbiGeneDomainObjectGenerator {
                     .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() ) ) {
                 infoParser.parse( is );
             }
-        } catch ( IOException e ) {
-            // infoProducerDone.set( true );
-            throw new RuntimeException( e );
-        }
+
 
         Collection<NCBIGeneInfo> geneInfoList = infoParser.getResults();
 
@@ -246,10 +248,11 @@ public class NcbiGeneDomainObjectGenerator {
                             .debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
                     accParser.setStartingNbiId( startingNcbiId );
                     accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
+                    NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
                 } catch ( IOException e ) {
-                    throw new RuntimeException( e );
+                    log.error(e.getMessage(),e);
+                    throw new RuntimeException( e ); // this will not get propagated, fixme.
                 }
-                NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
             }
         } );
 

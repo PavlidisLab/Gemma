@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -75,7 +76,7 @@ public class NcbiGeneLoader {
      *
      * @param filterTaxa filter taxa
      */
-    public void load( boolean filterTaxa ) {
+    public void load( boolean filterTaxa ) throws IOException {
         this.load( "", "", "", "", filterTaxa );
     }
 
@@ -87,7 +88,7 @@ public class NcbiGeneLoader {
      * @param filterTaxa      should we filter out taxa we're not supporting
      */
     public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
-            boolean filterTaxa ) {
+            boolean filterTaxa ) throws IOException {
 
         Collection<Taxon> supportedTaxa = null;
         if ( filterTaxa ) {
@@ -98,7 +99,7 @@ public class NcbiGeneLoader {
     }
 
     public Future<?> load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
-            Taxon t ) {
+            Taxon t ) throws IOException {
 
         Collection<Taxon> taxaToUse = new HashSet<>();
         taxaToUse.add( t );
@@ -107,7 +108,7 @@ public class NcbiGeneLoader {
 
     }
 
-    public void load( Taxon t ) {
+    public void load( Taxon t ) throws IOException {
         this.load( "", "", "", "", t );
     }
 
@@ -213,7 +214,7 @@ public class NcbiGeneLoader {
     }
 
     private Future<?> load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
-            Collection<Taxon> supportedTaxa ) {
+            Collection<Taxon> supportedTaxa ) throws IOException {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa, taskExecutor );
         sdog.setDoDownload( doDownload );
         sdog.setStartingNcbiId( startingNcbiId );
