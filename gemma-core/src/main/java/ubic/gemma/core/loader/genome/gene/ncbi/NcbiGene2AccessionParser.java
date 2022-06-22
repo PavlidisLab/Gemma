@@ -82,6 +82,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length < NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
+            log.error(  "Line is not in the right format: has " + fields.length + " fields, expected "
+                    + NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW  ); // temporary
             throw new IllegalArgumentException(
                     "Line is not in the right format: has " + fields.length + " fields, expected "
                             + NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
@@ -179,7 +181,9 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
     }
 
     public void setStartingNbiId( Integer startingNcbiId ) {
-        this.startingNcbiId = startingNcbiId;
+        if ( startingNcbiId != null ) {
+            this.startingNcbiId = startingNcbiId;
+        }
     }
 
     private NCBIGene2Accession processFields( String[] fields ) {
@@ -302,8 +306,10 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             }
 
         } catch ( NumberFormatException e ) {
+            log.error(e.getMessage(), e);
             throw new RuntimeException( e );
         }
+        if (log.isDebugEnabled()) log.debug("Gene parsed: " + newGene);
         return newGene;
     }
 

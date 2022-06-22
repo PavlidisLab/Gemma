@@ -298,4 +298,11 @@ public class NCBIGene2Accession {
         this.taxId = taxId;
     }
 
+    @Override
+    public String toString() {
+        return "NCBIGene2Accession{" +
+                "taxId=" + taxId +
+                ", geneId='" + geneId + '\'' +
+                '}';
+    }
 }
