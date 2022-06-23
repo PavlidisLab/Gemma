@@ -297,6 +297,14 @@ public class NCBIGeneInfo {
         return this.synonyms;
     }
 
+    @Override
+    public String toString() {
+        return "NCBIGeneInfo{" +
+                "taxId=" + taxId +
+                ", defaultSymbol='" + defaultSymbol + '\'' +
+                '}';
+    }
+
     /**
      * @return Returns the taxId.
      */
