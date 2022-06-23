@@ -45,9 +45,11 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
     @Override
     public void parse( File file ) throws IOException {
         if ( file == null ) {
+            log.error("File is null");
             throw new IllegalArgumentException( "File cannot be null" );
         }
         if ( !file.exists() || !file.canRead() ) {
+            log.error("Could not read from file " + file.getPath() );
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
@@ -64,10 +66,12 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
         if ( br == null ) {
             if ( is == null ) {
+                log.error("Inputstream null");
                 throw new IllegalArgumentException( "Inputstream null" );
             }
 
             if ( is.available() == 0 ) {
+                log.error("No bytes available");
                 throw new IOException( "No bytes available to read from inputStream" );
             }
             br = new BufferedReader( new InputStreamReader( is ) );
@@ -106,6 +110,8 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
         }
         if ( nullLines > 0 )
             log.info( nullLines + " yielded no parse result (they may have been filtered)." );
+
+        log.debug("Done parsing");
     }
 
     @Override
