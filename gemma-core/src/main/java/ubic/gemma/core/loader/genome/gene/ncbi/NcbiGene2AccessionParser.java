@@ -74,13 +74,11 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         if ( startingNcbiId == null )
             hasStarted = true;
 
-        log.debug("Starting parsing");
         super.parse( f );
     }
 
     @Override
     public NCBIGene2Accession parseOneLine( String line ) {
-        if (log.isDebugEnabled()) log.debug("Parsing: " + line);
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length < NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
