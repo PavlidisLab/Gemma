@@ -241,7 +241,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             // RNA
             String rnaAccession = newGene.getRnaNucleotideAccession();
             if ( StringUtils.isNotBlank( rnaAccession ) ) {
-                String[] tokens = StringUtils.splitPreserveAllTokens( rnaAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( rnaAccession, ".", 2 );
                 switch ( tokens.length ) {
                     case 1:
                         newGene.setRnaNucleotideAccession( tokens[0] );
@@ -262,7 +262,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             // protein
             String proteinAccession = newGene.getProteinAccession();
             if ( StringUtils.isNotBlank( proteinAccession ) ) {
-                String[] tokens = StringUtils.splitPreserveAllTokens( proteinAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( proteinAccession, ".", 2 );
                 switch ( tokens.length ) {
                     case 1:
                         newGene.setProteinAccession( tokens[0] );
@@ -283,7 +283,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             // Genome (chromosome information)
             String genomicAccession = newGene.getGenomicNucleotideAccession();
             if ( StringUtils.isNotBlank( genomicAccession ) ) {
-                String[] tokens = StringUtils.splitPreserveAllTokens( genomicAccession, '.' );
+                String[] tokens = StringUtils.splitPreserveAllTokens( genomicAccession, ".", 2 );
                 switch ( tokens.length ) {
                     case 1:
                         newGene.setGenomicNucleotideAccession( tokens[0] );
