@@ -1,5 +1,11 @@
+# GPL96.probesets.txt is in gemma-core/src/test/resources/data/loader/expression/geo/platform
 gzip -dc /space/gemmaData/microAnnots/HG-U133A_B_Plus_2.an.txt.gz | grep -wf GPL96.probesets.txt | sort > gpl96.test.ncbigenes.txt
 cut -f 2 gpl96.test.ncbigenes.txt | sort > gpl96.test.symbols.txt
-grep -wf gpl96.test.symbols.txt  /space/scratch/paul/databases/ncbi/gene_info.human >  selected_gene_info
-cut -f 3 selected_gene_info | xargs -i grep -w {} /space/scratch/paul/databases/ncbi/gene2accession.human > selected_gene2accession
-cut -f 3 selected_gene_info | xargs -i grep -w {} /space/scratch/paul/databases/ncbi/gene_history.human > selected_gene_history
+# within /cosmos/scratch/curator-scratch/databases/ncib/
+egrep -w "^9606" gene_info/gene_info > gene_info.human
+egrep -w "^9606" gene_history/gene_history > gene_history.human
+egrep -w "^9606" gene2accession/gene2accession > gene2accession.human
+
+grep -wf gpl96.test.symbols.txt  /cosmos/scratch/curator-scratch/databases/ncbi/gene_info.human >  selected_gene_info
+cut -f 3 selected_gene_info | xargs -i grep -w {} /cosmos/scratch/curator-scratch/databases/ncbi/gene2accession.human > selected_gene2accession
+cut -f 3 selected_gene_info | xargs -i grep -w {} /cosmos/scratch/curator-scratch/databases/ncbi/gene_history.human > selected_gene_history
