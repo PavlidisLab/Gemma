@@ -44,16 +44,15 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
     @Override
     public void parse( File file ) throws IOException {
-        log.debug( "Parsing: " + file );
         if ( file == null ) {
-            log.error( "File is null" );
+            log.error("File is null");
             throw new IllegalArgumentException( "File cannot be null" );
         }
         if ( !file.exists() || !file.canRead() ) {
-            log.error( "Could not read from file " + file.getPath() );
+            log.error("Could not read from file " + file.getPath() );
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        try ( InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) ) {
+        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
             this.parse( stream );
         }
     }
@@ -61,18 +60,18 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
     @SuppressWarnings("Duplicates") // not effective to extract
     @Override
     public void parse( InputStream is ) throws IOException {
-        log.debug( "Parsing input stream" );
+
         int linesParsed = 0;
         int nullLines = 0;
 
         if ( br == null ) {
             if ( is == null ) {
-                log.error( "Inputstream null" );
+                log.error("Inputstream null");
                 throw new IllegalArgumentException( "Inputstream null" );
             }
 
             if ( is.available() == 0 ) {
-                log.error( "No bytes available" );
+                log.error("No bytes available");
                 throw new IOException( "No bytes available to read from inputStream" );
             }
             br = new BufferedReader( new InputStreamReader( is ) );
@@ -83,7 +82,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
         StopWatch timer = new StopWatch();
         timer.start();
         while ( ( line = br.readLine() ) != null ) {
-            log.debug( "Parsing line: " + line );
+
             if ( line.startsWith( BasicLineParser.COMMENTMARK ) ) {
                 continue;
             }
@@ -112,7 +111,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
         if ( nullLines > 0 )
             log.info( nullLines + " yielded no parse result (they may have been filtered)." );
 
-        log.debug( "Done parsing" );
+        log.debug("Done parsing");
     }
 
     @Override

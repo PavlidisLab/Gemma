@@ -105,7 +105,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     }
 
     public Gene convert( NCBIGeneInfo info ) {
-        log.debug("Converting: " + info);
         Gene gene = Gene.Factory.newInstance();
 
         gene.setNcbiGeneId( Integer.parseInt( info.getGeneId() ) );
@@ -174,7 +173,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     }
 
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
-        log.debug("Converting: " + acc);
         Collection<GeneProduct> geneProducts = new HashSet<>();
         // initialize up to two Gene Products
 
