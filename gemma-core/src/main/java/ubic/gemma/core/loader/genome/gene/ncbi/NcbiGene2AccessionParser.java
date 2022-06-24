@@ -42,7 +42,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         implements QueuingParser<NcbiGeneData> {
 
     /**
-     * They keep changing this...this is now a minimum value. As of 2022 there are 16 columns.
+     * They keep changing this...this is now a minimum value.
      */
     private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
 
