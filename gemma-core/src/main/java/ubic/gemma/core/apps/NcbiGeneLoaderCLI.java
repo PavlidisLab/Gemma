@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
@@ -100,7 +99,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
-        loader = new NcbiGeneLoader( this.getBean( AsyncTaskExecutor.class ) );
+        loader = new NcbiGeneLoader( this.getBean( TaskExecutor.class ) );
         TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );

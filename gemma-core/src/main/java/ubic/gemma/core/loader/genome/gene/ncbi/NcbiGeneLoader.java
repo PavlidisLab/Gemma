@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.genome.Gene;
@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Load or update information about genes from the NCBI Gene database.
@@ -45,6 +45,9 @@ import java.util.concurrent.Future;
 public class NcbiGeneLoader {
     private static final int QUEUE_SIZE = 1000;
     private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
+    private final AtomicBoolean generatorDone;
+    private final AtomicBoolean converterDone;
+    private final AtomicBoolean loaderDone;
     private Persister persisterHelper;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
@@ -52,13 +55,16 @@ public class NcbiGeneLoader {
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
     private Integer startingNcbiId = null;
-    private final AsyncTaskExecutor taskExecutor;
+    private final TaskExecutor taskExecutor;
 
-    public NcbiGeneLoader( AsyncTaskExecutor taskExecutor ) {
+    public NcbiGeneLoader( TaskExecutor taskExecutor ) {
         this.taskExecutor = taskExecutor;
+        generatorDone = new AtomicBoolean( false );
+        converterDone = new AtomicBoolean( false );
+        loaderDone = new AtomicBoolean( false );
     }
 
-    public NcbiGeneLoader( AsyncTaskExecutor taskExecutor, Persister persisterHelper ) {
+    public NcbiGeneLoader( TaskExecutor taskExecutor, Persister persisterHelper ) {
         this( taskExecutor );
         this.setPersisterHelper( persisterHelper );
     }
@@ -68,6 +74,11 @@ public class NcbiGeneLoader {
      */
     public int getLoadedGeneCount() {
         return loadedGeneCount;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    public boolean isLoaderDone() {
+        return loaderDone.get();
     }
 
     /**
@@ -97,13 +108,13 @@ public class NcbiGeneLoader {
 
     }
 
-    public Future<?> load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
+    public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
             Taxon t ) {
 
         Collection<Taxon> taxaToUse = new HashSet<>();
         taxaToUse.add( t );
 
-        return this.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, taxaToUse );
+        this.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, taxaToUse );
 
     }
 
@@ -170,10 +181,10 @@ public class NcbiGeneLoader {
         this.startingNcbiId = startNcbiid;
     }
 
-    private void doLoad( final BlockingQueue<Gene> geneQueue, Future<?> converterFuture ) {
+    void doLoad( final BlockingQueue<Gene> geneQueue ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        while ( !( converterFuture.isDone() && geneQueue.isEmpty() ) ) {
+        while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
             Gene gene = null;
             try {
                 // the converted genes.
@@ -193,56 +204,79 @@ public class NcbiGeneLoader {
 
             } catch ( Exception e ) {
                 NcbiGeneLoader.log.error( "Error while loading gene: " + gene + ": " + e.getMessage(), e );
+                loaderDone.set( true );
                 throw new RuntimeException( e );
             }
         }
         NcbiGeneLoader.log.info( "Loaded " + loadedGeneCount + " genes. " );
+        loaderDone.set( true );
     }
 
     /**
      * @param geneQueue a blocking queue of genes to be loaded into the database loads genes into the database
      */
-    private Future<?> load( final BlockingQueue<Gene> geneQueue, Future<?> converterFuture ) {
+    private void load( final BlockingQueue<Gene> geneQueue ) {
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
 
-        return taskExecutor.submit( () -> {
-            SecurityContextHolder.setContext( context );
-            NcbiGeneLoader.this.doLoad( geneQueue, converterFuture );
+        taskExecutor.execute( new Runnable() {
+            @Override
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                NcbiGeneLoader.this.doLoad( geneQueue );
+            }
+
         } );
+
+        while ( !generatorDone.get() || !converterDone.get() || !loaderDone.get() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private Future<?> load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
+    private void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
             Collection<Taxon> supportedTaxa ) {
+        /*
+         * In case this is reused.
+         */
+        this.generatorDone.set( false );
+        this.converterDone.set( false );
+        this.loaderDone.set( false );
+
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa, taskExecutor );
         sdog.setDoDownload( doDownload );
+        sdog.setProducerDoneFlag( generatorDone );
         sdog.setStartingNcbiId( startingNcbiId );
 
         NcbiGeneConverter converter = new NcbiGeneConverter( taskExecutor );
+        converter.setSourceDoneFlag( generatorDone );
+        converter.setProducerDoneFlag( converterDone );
 
         // create queue for GeneInfo objects
         final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<>( NcbiGeneLoader.QUEUE_SIZE );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<>( NcbiGeneLoader.QUEUE_SIZE );
 
         // Threaded producer - loading files into queue as GeneInfo objects
-        Future<?> producerFuture;
         if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
-            producerFuture = sdog.generate( geneInfoQueue );
+            sdog.generate( geneInfoQueue );
         } else {
-            producerFuture = sdog.generateLocal( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, geneInfoQueue );
+            sdog.generateLocal( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, geneInfoQueue );
         }
+
+        // Threaded consumer/producer - consumes GeneInfo objects and generates
+        // Gene/GeneProduct/DatabaseEntry entries
+        converter.convert( geneInfoQueue, geneQueue );
+
+        // Threaded consumer. Consumes Gene objects and persists them into
+        // the database
+        this.load( geneQueue );
 
         // update taxon table to indicate that now there are genes loaded for that taxa.
         // all or nothing so that if fails for some taxa then no taxa will be updated.
         this.updateTaxaWithGenesUsable( sdog.getSupportedTaxaWithNCBIGenes() );
-
-        // Threaded consumer/producer - consumes GeneInfo objects and generates
-        // Gene/GeneProduct/DatabaseEntry entries
-        Future<?> converterFuture = converter.convert( geneInfoQueue, geneQueue, producerFuture );
-
-        // Threaded consumer. Consumes Gene objects and persists them into
-        // the database
-        return this.load( geneQueue, converterFuture );
     }
 
 }

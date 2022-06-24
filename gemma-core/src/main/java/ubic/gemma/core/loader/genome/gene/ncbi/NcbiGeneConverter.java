@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
@@ -41,7 +41,7 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts. Genes without products are
@@ -64,9 +64,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
-    private final AsyncTaskExecutor taskExecutor;
+    private final TaskExecutor taskExecutor;
 
-    public NcbiGeneConverter( AsyncTaskExecutor taskExecutor ) {
+    AtomicBoolean producerDone = new AtomicBoolean( false );
+    AtomicBoolean sourceDone = new AtomicBoolean( false );
+
+    public NcbiGeneConverter( TaskExecutor taskExecutor ) {
         this.taskExecutor = taskExecutor;
     }
 
@@ -236,20 +239,18 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return gene;
     }
 
-    /**
+    /*
      * Threaded conversion of domain objects to Gemma objects.
-     *
-     * @return a future that completes when the conversion is done, that is when the gene info queue is empty and the
-     * source is done as well
      */
-    public Future<?> convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue, Future<?> sourceFuture ) {
+    public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        return this.taskExecutor.submit( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
+            @SuppressWarnings("synthetic-access")
             public void run() {
-                while ( !( sourceFuture.isDone() && geneInfoQueue.isEmpty() ) ) {
+                while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
                     try {
                         NcbiGeneData data = geneInfoQueue.poll();
                         if ( data == null ) {
@@ -272,8 +273,21 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         break;
                     }
                 }
+                producerDone.set( true );
             }
-        } );
+        });
+    }
+
+    public boolean isProducerDone() {
+        return this.producerDone.get();
+    }
+
+    public void setProducerDoneFlag( AtomicBoolean flag ) {
+        this.producerDone = flag;
+    }
+
+    public void setSourceDoneFlag( AtomicBoolean flag ) {
+        this.sourceDone = flag;
     }
 
     private PhysicalLocation getPhysicalLocation( NCBIGene2Accession acc, Gene gene ) {
