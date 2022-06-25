@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
@@ -40,8 +39,7 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.*;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts. Genes without products are
@@ -64,14 +62,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
-    private final TaskExecutor taskExecutor;
-
-    AtomicBoolean producerDone = new AtomicBoolean( false );
-    AtomicBoolean sourceDone = new AtomicBoolean( false );
-
-    public NcbiGeneConverter( TaskExecutor taskExecutor ) {
-        this.taskExecutor = taskExecutor;
-    }
+    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
 
     /**
      * @return the genBank
@@ -239,55 +230,41 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return gene;
     }
 
-    /*
+    /**
      * Threaded conversion of domain objects to Gemma objects.
+     *
+     * @param sourceFuture a future from the source so that the converter knows when no more genes are available for
+     *                     conversion
      */
-    public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
+    public Future<?> convertAsync( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue, Future<?> sourceFuture ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
-
-        this.taskExecutor.execute( new Runnable() {
-            @Override
-            @SuppressWarnings("synthetic-access")
-            public void run() {
-                while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
-                    try {
-                        NcbiGeneData data = geneInfoQueue.poll();
-                        if ( data == null ) {
-                            continue;
-                        }
-                        Gene converted = NcbiGeneConverter.this.convert( data );
-
-                        if ( converted.getProducts().isEmpty() ) {
-                            if ( log.isDebugEnabled() ) log.debug( "Gene with no products skipped: " + converted );
-                            continue;
-                        }
-
-                        geneQueue.put( converted );
-
-                    } catch ( InterruptedException e ) {
-                        NcbiGeneConverter.log.warn( "Interrupted" );
-                        break;
-                    } catch ( Exception e ) {
-                        NcbiGeneConverter.log.error( e, e );
-                        break;
+        return this.taskExecutor.submit( () -> {
+            while ( !sourceFuture.isDone() ) {
+                NcbiGeneData data = null;
+                try {
+                    data = geneInfoQueue.poll( 100, TimeUnit.MILLISECONDS );
+                    if ( data == null ) {
+                        continue; // will check if the future is done before retrying
                     }
+                    Gene converted = NcbiGeneConverter.this.convert( data );
+                    if ( converted.getProducts().isEmpty() ) {
+                        if ( log.isDebugEnabled() ) log.debug( "Gene with no products skipped: " + converted );
+                        continue;
+                    }
+                    geneQueue.put( converted );
+                } catch ( Exception e ) {
+                    if ( data != null ) {
+                        log.error( String.format( "Failed to convert %s. The producer will be cancelled.", data ) );
+                    }
+                    if ( e instanceof InterruptedException )
+                        Thread.currentThread().interrupt();
+                    // cancel the source if anything unexpected happens
+                    sourceFuture.cancel( true );
+                    throw new RuntimeException( e );
                 }
-                producerDone.set( true );
             }
-        });
-    }
-
-    public boolean isProducerDone() {
-        return this.producerDone.get();
-    }
-
-    public void setProducerDoneFlag( AtomicBoolean flag ) {
-        this.producerDone = flag;
-    }
-
-    public void setSourceDoneFlag( AtomicBoolean flag ) {
-        this.sourceDone = flag;
+        } );
     }
 
     private PhysicalLocation getPhysicalLocation( NCBIGene2Accession acc, Gene gene ) {

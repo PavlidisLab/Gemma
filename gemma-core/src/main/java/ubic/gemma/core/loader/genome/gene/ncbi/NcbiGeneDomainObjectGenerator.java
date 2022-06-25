@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
@@ -35,8 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.*;
 
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.
@@ -51,7 +49,6 @@ public class NcbiGeneDomainObjectGenerator {
     private static final String GENE2ACCESSION_FILE = "gene2accession";
     private static final String GENEHISTORY_FILE = "gene_history";
     private static final String GENEENSEMBL_FILE = "gene2ensembl";
-    private AtomicBoolean producerDone = new AtomicBoolean( false );
     private Map<Integer, Taxon> supportedTaxa = null;
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
     private boolean filter = true;
@@ -59,11 +56,9 @@ public class NcbiGeneDomainObjectGenerator {
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
     private Integer startingNcbiId = null;
-    private final TaskExecutor taskExecutor;
+    private final ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
 
-    public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa, TaskExecutor taskExecutor ) {
-        this.taskExecutor = taskExecutor;
-
+    public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa ) {
         if ( taxa != null ) {
             this.supportedTaxa = new HashMap<>();
             for ( Taxon t : taxa ) {
@@ -92,9 +87,9 @@ public class NcbiGeneDomainObjectGenerator {
 
     /**
      * @param queue queue
+     * @return
      */
-    public void generate( final BlockingQueue<NcbiGeneData> queue ) {
-
+    public Future<?> generateAsync( final BlockingQueue<NcbiGeneData> queue ) {
         NcbiGeneDomainObjectGenerator.log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         fetcher.setDoDownload( this.doDownload );
@@ -104,10 +99,10 @@ public class NcbiGeneDomainObjectGenerator {
         LocalFile geneHistoryFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEHISTORY_FILE ).iterator().next();
         LocalFile geneEnsemblFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEENSEMBL_FILE ).iterator().next();
 
-        this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+        return this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
     }
 
-    public void generateLocal( String geneInfoFilePath, String gene2AccesionFilePath, String geneHistoryFilePath,
+    public Future<?> generateLocalAsync( String geneInfoFilePath, String gene2AccesionFilePath, String geneHistoryFilePath,
             String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue ) {
 
         assert gene2AccesionFilePath != null;
@@ -136,19 +131,11 @@ public class NcbiGeneDomainObjectGenerator {
                 geneEnsemblFile.setLocalURL( geneEnsemblUrl );
             }
 
-            this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+            return this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    public boolean isProducerDone() {
-        return producerDone.get();
-    }
-
-    public void setProducerDoneFlag( AtomicBoolean flag ) {
-        this.producerDone = flag;
     }
 
     /**
@@ -164,7 +151,7 @@ public class NcbiGeneDomainObjectGenerator {
         this.startingNcbiId = startingNcbiId;
     }
 
-    private void processLocalFiles( final LocalFile geneInfoFile, final LocalFile gene2AccessionFile,
+    private Future<?> processLocalFiles( final LocalFile geneInfoFile, final LocalFile gene2AccessionFile,
             LocalFile geneHistoryFile, LocalFile geneEnsemblFile, final BlockingQueue<NcbiGeneData> geneDataQueue ) {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
@@ -199,7 +186,6 @@ public class NcbiGeneDomainObjectGenerator {
                 infoParser.parse( is );
             }
         } catch ( IOException e ) {
-            // infoProducerDone.set( true );
             throw new RuntimeException( e );
         }
 
@@ -250,20 +236,16 @@ public class NcbiGeneDomainObjectGenerator {
         // all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
-        this.taskExecutor.execute( new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    NcbiGeneDomainObjectGenerator.log
-                            .debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
-                    accParser.setStartingNbiId( startingNcbiId );
-                    accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
-                NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
-                producerDone.set( true );
+        return this.taskExecutor.submit( () -> {
+            NcbiGeneDomainObjectGenerator.log
+                    .debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
+            accParser.setStartingNbiId( startingNcbiId );
+            try {
+                accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
+            } catch ( IOException e ) {
+                throw new RuntimeException( String.format( "Failed to parse gene2accession from %s.", gene2AccessionFile.asFile().getAbsolutePath() ), e );
             }
+            NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
         } );
 
         // 1c) As elements get added to BlockingQueue, NCBIGeneConverter

@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
@@ -43,9 +42,6 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
-    @Autowired
-    private TaskExecutor taskExecutor;
-
     /*
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
@@ -53,9 +49,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     public void setUp() throws Exception {
         super.setUp();
         gene2GOAssociationService.removeAll();
-        gene2GOAssLoader = new NCBIGene2GOAssociationLoader( taskExecutor );
-        gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
-        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+        gene2GOAssLoader = new NCBIGene2GOAssociationLoader( this.persisterHelper, new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
     }
 
     /*
@@ -65,13 +59,12 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Test
     public void testParseAndLoad() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
-                InputStream gZipIs = new GZIPInputStream( is )) {
-            gene2GOAssLoader.load( gZipIs );
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
+                InputStream gZipIs = new GZIPInputStream( is ) ) {
+            long count = gene2GOAssLoader.loadAsync( gZipIs ).get();
 
             gZipIs.close();
             is.close();
-            int count = gene2GOAssLoader.getCount();
 
             /*
              * Actual count might vary depending on state of database (which taxa are available)

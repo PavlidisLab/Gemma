@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,8 +68,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     @Test
     public void testGeneLoader() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( taskExecutor, persisterHelper );
-        loader.setTaxonService( taxonService );
+        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper, taxonService );
 
         String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";
         String gene2AccTestFile = "/data/loader/genome/gene/gene2accession.human.sample";
@@ -81,19 +80,14 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         assertNotNull( ta );
 
-        loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
+        long loadedGeneCount = loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
                 FileTools.resourceToPath( geneHistoryFile ), null, ta );
-
-        // wait until the loader is done.
-        while ( !loader.isLoaderDone() ) {
-            Thread.sleep( 100 );
-        }
 
         // loader is done.
         // check if it loaded elements to the database
-        log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
+        log.debug( "Loader done with number of elements: " + loadedGeneCount );
         // Used to be 51; genes with no products are now skipped
-        assertEquals( 4, loader.getLoadedGeneCount() );
+        assertEquals( 4L, loadedGeneCount );
 
         // grab one gene and check its information
         // (depends on information in gene_info and gene2accession file
@@ -137,10 +131,6 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
                 FileTools.resourceToPath( updatedHistory ), FileTools.resourceToPath( geneEnsemblFile ), ta );
-        // wait until the loader is done.
-        while ( !loader.isLoaderDone() ) {
-            Thread.sleep( 100 );
-        }
         Collection<Gene> updatedTestGene = geneService.findByOfficialSymbol( "TEAD1" );
         assertEquals( 1, updatedTestGene.size() );
         g = updatedTestGene.iterator().next();
@@ -149,7 +139,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         g = geneService.findByNCBIId( 1 );
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
-        
+
         // test remove...
         geneProductService.remove( products );
 
