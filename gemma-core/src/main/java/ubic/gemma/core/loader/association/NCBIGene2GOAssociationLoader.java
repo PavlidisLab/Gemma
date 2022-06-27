@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.association;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,11 +50,6 @@ public class NCBIGene2GOAssociationLoader {
     private Persister persisterHelper;
     private NCBIGene2GOAssociationParser parser = null;
     private int count;
-    private final TaskExecutor taskExecutor;
-
-    public NCBIGene2GOAssociationLoader( TaskExecutor taskExecutor ) {
-        this.taskExecutor = taskExecutor;
-    }
 
     public int getCount() {
         return count;
@@ -81,7 +75,7 @@ public class NCBIGene2GOAssociationLoader {
         final SecurityContext context = SecurityContextHolder.getContext();
         final Authentication authentication = context.getAuthentication();
 
-        taskExecutor.execute( new Runnable() {
+        Thread loadThread = new Thread( new Runnable() {
             @Override
             public void run() {
                 NCBIGene2GOAssociationLoader.log.info( "Starting loading" );
@@ -90,7 +84,9 @@ public class NCBIGene2GOAssociationLoader {
             }
         } );
 
-        taskExecutor.execute( new Runnable() {
+        loadThread.start();
+
+        Thread parseThread = new Thread( new Runnable() {
             @Override
             public void run() {
                 try {
@@ -107,6 +103,8 @@ public class NCBIGene2GOAssociationLoader {
             }
         } );
 
+        parseThread.start();
+
         while ( !this.isProducerDone() || !this.isConsumerDone() ) {
             try {
                 Thread.sleep( 1000 );
@@ -118,8 +116,8 @@ public class NCBIGene2GOAssociationLoader {
 
     public void load( LocalFile ncbiFile ) {
 
-        try ( InputStream inputStream = FileTools
-                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() ) ) {
+        try (InputStream inputStream = FileTools
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() )) {
             this.load( inputStream );
 
         } catch ( IOException e ) {
