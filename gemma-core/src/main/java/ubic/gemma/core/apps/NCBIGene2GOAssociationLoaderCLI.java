@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
@@ -65,9 +64,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     @Override
     protected void doWork() throws Exception {
         TaxonService taxonService = this.getBean( TaxonService.class );
-        TaskExecutor taskExecutor = this.getBean( TaskExecutor.class );
 
-        NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader( taskExecutor );
+        NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
 
         gene2GOAssLoader.setPersisterHelper( this.getPersisterHelper() );
 

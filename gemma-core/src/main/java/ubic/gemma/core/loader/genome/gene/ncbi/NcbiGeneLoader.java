@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.genome.Gene;
@@ -55,17 +54,15 @@ public class NcbiGeneLoader {
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
     private Integer startingNcbiId = null;
-    private final TaskExecutor taskExecutor;
 
-    public NcbiGeneLoader( TaskExecutor taskExecutor ) {
-        this.taskExecutor = taskExecutor;
+    public NcbiGeneLoader() {
         generatorDone = new AtomicBoolean( false );
         converterDone = new AtomicBoolean( false );
         loaderDone = new AtomicBoolean( false );
     }
 
-    public NcbiGeneLoader( TaskExecutor taskExecutor, Persister persisterHelper ) {
-        this( taskExecutor );
+    public NcbiGeneLoader( Persister persisterHelper ) {
+        this();
         this.setPersisterHelper( persisterHelper );
     }
 
@@ -219,14 +216,15 @@ public class NcbiGeneLoader {
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
 
-        taskExecutor.execute( new Runnable() {
+        Thread loadThread = new Thread( new Runnable() {
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 NcbiGeneLoader.this.doLoad( geneQueue );
             }
 
-        } );
+        }, "Loading" );
+        loadThread.start();
 
         while ( !generatorDone.get() || !converterDone.get() || !loaderDone.get() ) {
             try {
@@ -246,12 +244,12 @@ public class NcbiGeneLoader {
         this.converterDone.set( false );
         this.loaderDone.set( false );
 
-        NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa, taskExecutor );
+        NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa );
         sdog.setDoDownload( doDownload );
         sdog.setProducerDoneFlag( generatorDone );
         sdog.setStartingNcbiId( startingNcbiId );
 
-        NcbiGeneConverter converter = new NcbiGeneConverter( taskExecutor );
+        NcbiGeneConverter converter = new NcbiGeneConverter();
         converter.setSourceDoneFlag( generatorDone );
         converter.setProducerDoneFlag( converterDone );
 
