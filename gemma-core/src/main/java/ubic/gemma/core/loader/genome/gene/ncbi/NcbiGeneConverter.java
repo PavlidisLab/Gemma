@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.task.TaskExecutor;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
@@ -39,7 +40,6 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -64,8 +64,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
+    private final TaskExecutor taskExecutor;
+
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
+
+    public NcbiGeneConverter( TaskExecutor taskExecutor ) {
+        this.taskExecutor = taskExecutor;
+    }
 
     /**
      * @return the genBank
@@ -223,12 +229,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // grab all accessions and fill in GeneProduct/DatabaseEntry
         // and associate with Gene
         Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
-        Set<GeneProduct> geneProducts = new HashSet<>();
+        Collection<GeneProduct> geneProducts = new HashSet<>();
 
         for ( NCBIGene2Accession acc : gene2accession ) {
             geneProducts.addAll( this.convert( acc, gene ) );
         }
-        gene.setProducts( geneProducts );
+        gene.setProducts( new HashSet<>( geneProducts ) );
 
         return gene;
     }
@@ -240,7 +246,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        Thread convertThread = new Thread( new Runnable() {
+        this.taskExecutor.execute( new Runnable() {
             @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
@@ -269,9 +275,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 }
                 producerDone.set( true );
             }
-        }, "Converter" );
-
-        convertThread.start();
+        });
     }
 
     public boolean isProducerDone() {

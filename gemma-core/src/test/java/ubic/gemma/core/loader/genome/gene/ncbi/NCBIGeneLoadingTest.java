@@ -22,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
@@ -51,9 +52,12 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneProductService geneProductService;
+    @Autowired
+    private TaskExecutor taskExecutor;
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         clean();
     }
 
@@ -64,7 +68,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     @Test
     public void testGeneLoader() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+        NcbiGeneLoader loader = new NcbiGeneLoader( taskExecutor, persisterHelper );
         loader.setTaxonService( taxonService );
 
         String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";
