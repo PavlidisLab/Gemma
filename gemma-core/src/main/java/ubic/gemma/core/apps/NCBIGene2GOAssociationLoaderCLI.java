@@ -65,13 +65,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     protected void doWork() throws Exception {
         TaxonService taxonService = this.getBean( TaxonService.class );
 
-        NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-
-        gene2GOAssLoader.setPersisterHelper( this.getPersisterHelper() );
-
         Collection<Taxon> taxa = taxonService.loadAll();
-
-        gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
+        NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader( this.getPersisterHelper(), new NCBIGene2GOAssociationParser( taxa ) );
 
         HttpFetcher fetcher = new HttpFetcher();
 
@@ -95,7 +90,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         ggoserv.removeAll();
 
         AbstractCLI.log.info( "Done, loading new ones" );
-        gene2GOAssLoader.load( gene2Gofile );
+        gene2GOAssLoader.loadAsync( gene2Gofile ).get();
 
         AbstractCLI.log.info( "Don't forget to update the annotation files for platforms." );
     }

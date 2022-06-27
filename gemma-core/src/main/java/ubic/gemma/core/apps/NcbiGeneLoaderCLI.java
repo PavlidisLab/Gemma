@@ -98,10 +98,8 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     protected void doWork() throws Exception {
-        loader = new NcbiGeneLoader();
         TaxonService taxonService = this.getBean( TaxonService.class );
-        loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( this.getPersisterHelper() );
+        loader = new NcbiGeneLoader( this.getPersisterHelper(), taxonService );
         loader.setSkipDownload( this.skipDownload );
         loader.setStartingNcbiId( startNcbiId );
 

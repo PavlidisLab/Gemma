@@ -46,11 +46,10 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
+        super.setUp();
         gene2GOAssociationService.removeAll();
-        gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
-        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+        gene2GOAssLoader = new NCBIGene2GOAssociationLoader( this.persisterHelper, new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
     }
 
     /*
@@ -60,13 +59,12 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Test
     public void testParseAndLoad() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
-                InputStream gZipIs = new GZIPInputStream( is )) {
-            gene2GOAssLoader.load( gZipIs );
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
+                InputStream gZipIs = new GZIPInputStream( is ) ) {
+            long count = gene2GOAssLoader.loadAsync( gZipIs ).get();
 
             gZipIs.close();
             is.close();
-            int count = gene2GOAssLoader.getCount();
 
             /*
              * Actual count might vary depending on state of database (which taxa are available)
