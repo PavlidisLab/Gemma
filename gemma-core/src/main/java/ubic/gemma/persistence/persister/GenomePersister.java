@@ -381,18 +381,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // might need to add referenceAssociations also.
         // remove associations to database entries that are still associated with sequences.
-        for ( GeneProduct gp : toRemove ) {
-            Collection<DatabaseEntry> accessions = gp.getAccessions();
-            Collection<DatabaseEntry> toRelease = new HashSet<>();
-            for ( DatabaseEntry de : accessions ) {
-                if ( this.bioSequenceDao.findByAccession( de ) != null ) {
-                    toRelease.add( de );
-                }
-            }
-            gp.getAccessions().removeAll( toRelease );
-            this.geneProductDao.remove( gp );
-
-        }
+        geneProductDao.remove( toRemove );
     }
 
     private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
