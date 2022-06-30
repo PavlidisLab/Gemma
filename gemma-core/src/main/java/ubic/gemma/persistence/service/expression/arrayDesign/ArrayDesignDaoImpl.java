@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
@@ -148,10 +149,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProduct ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         //noinspection unchecked
-        List<CompositeSequence> blatAssociations = this.getSessionFactory().getCurrentSession()
+        List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString ).setParameter( "arrayDesign", arrayDesign ).list();
         if ( !blatAssociations.isEmpty() ) {
-            for ( CompositeSequence r : blatAssociations ) {
+            for ( BlatAssociation r : blatAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
             AbstractDao.log.info(
