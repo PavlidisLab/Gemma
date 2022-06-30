@@ -137,6 +137,55 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     }
 
+
+    @Override
+    public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
+                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+
+
+        final String queryString = "select ba from CompositeSequence  cs "
+                + "inner join cs.biologicalCharacteristic bs, BlatAssociation ba "
+                + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+        //noinspection unchecked
+        List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString ).setParameter( "arrayDesign", arrayDesign ).list();
+        if ( !blatAssociations.isEmpty() ) {
+            for ( BlatAssociation r : blatAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+
+        }
+        AbstractDao.log.info(
+                "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
+
+    }
+
+    @Override
+    public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
+                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+
+        final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
+                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
+                + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+
+        //noinspection unchecked
+        List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
+                .createQuery( annotationAssociationQueryString ).setParameter( "arrayDesign", arrayDesign ).list();
+
+        if ( !annotAssociations.isEmpty() ) {
+
+            for ( AnnotationAssociation r : annotAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+
+
+        }
+        AbstractDao.log.info(
+                "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+    }
+
     @Override
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
