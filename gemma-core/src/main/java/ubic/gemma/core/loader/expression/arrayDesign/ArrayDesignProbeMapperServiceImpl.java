@@ -156,8 +156,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.load( persistingQueue, generatorDone, loaderDone, useDB );
 
         if ( useDB ) {
-            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
-            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
+            arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
         }
 
         int count = 0;
@@ -233,8 +233,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             String line;
             int numSkipped = 0;
 
-            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
-            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old annotation-based associations" );
+            arrayDesignService.deleteGeneProductAnnotationAssociations( arrayDesign );
 
             while ( ( line = b.readLine() ) != null ) {
 

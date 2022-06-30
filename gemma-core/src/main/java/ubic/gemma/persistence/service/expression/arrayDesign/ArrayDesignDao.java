@@ -129,4 +129,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
+
+    void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
+    void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
 }
