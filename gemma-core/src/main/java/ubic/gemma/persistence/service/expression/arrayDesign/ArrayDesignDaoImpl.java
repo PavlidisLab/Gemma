@@ -143,10 +143,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
                 .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
 
-        // this query is polymorphic, id gets the annotation associations?
+    // these two queries could be combined by using BioSequence2GeneProduct.
         //language=HQL
         final String queryString = "select ba from CompositeSequence  cs "
-                + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProduct ba "
+                + "inner join cs.biologicalCharacteristic bs, BlatAssociation ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
