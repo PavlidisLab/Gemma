@@ -158,7 +158,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
             Collection<GeneProduct> products = gene.getProducts();
 
-            log.info( "> Processing: " + gene.getOfficialSymbol() );
+            log.debug( "> Processing: " + gene.getOfficialSymbol() );
 
             if ( products.isEmpty() ) {
                 numWithNoTranscript++;
