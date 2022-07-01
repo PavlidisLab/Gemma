@@ -212,7 +212,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     }
 
     private void loadGeneData() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( taskExecutor );
+        NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.persisterHelper );
 
