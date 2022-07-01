@@ -389,6 +389,10 @@ abstract public class GenomePersister extends CommonPersister {
         // might need to add referenceAssociations also.
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
+            /*
+            This thaw was not thought to be necessary but during NcbiGeneLoader processing, we sometimes hit products that
+            are somehow not associated with the current session so we need to initialize gp.accessions in particular.
+             */
             GeneProduct gpt = geneProductDao.thaw( gp );
             Collection<DatabaseEntry> accessions = gpt.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<>();
