@@ -27,7 +27,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -324,6 +323,12 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Tasks are wrapped with {@link DelegatingSecurityContextCallable} to ensure that they execute with the security
+     * context set up by {@link #authenticate(CommandLine)}.
+     */
     @Override
     protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
         return super.executeBatchTasks( tasks.stream()
