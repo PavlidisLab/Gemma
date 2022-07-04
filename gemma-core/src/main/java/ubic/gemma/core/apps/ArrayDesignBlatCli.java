@@ -148,6 +148,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
+                AbstractCLI.log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
                 Collection<BlatResult> persistedResults;
                 try {
                     if ( this.blatResultFile != null ) {
@@ -229,7 +230,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private void processArrayDesign( ArrayDesign design ) {
 
-        AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
+        AbstractCLI.log.info( "============== Start processing: " + design.getShortName() + " ==================" );
         try {
             // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
