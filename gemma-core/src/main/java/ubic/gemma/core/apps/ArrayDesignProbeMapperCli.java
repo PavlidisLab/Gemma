@@ -514,7 +514,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         for ( ArrayDesign ad : allArrayDesigns ) {
             arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );
         }
-        executeBatchTasks( arrayDesigns );
+        executeBatchTasks( arrayDesigns, context );
     }
 
     private void configure( ArrayDesign arrayDesign ) {
