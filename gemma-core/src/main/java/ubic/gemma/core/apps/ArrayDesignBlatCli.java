@@ -183,15 +183,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             AbstractCLI.log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
                     + allArrayDesigns.size() + " items]" );
 
-            final SecurityContext context = SecurityContextHolder.getContext();
-
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
             Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
             for ( ArrayDesign arrayDesign : allArrayDesigns ) {
                 arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
 
-            executeBatchTasks( arrayDesigns, context );
+            executeBatchTasks( arrayDesigns );
 
         } else {
             throw new RuntimeException();

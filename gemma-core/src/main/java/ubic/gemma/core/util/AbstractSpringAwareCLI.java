@@ -26,6 +26,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
@@ -323,31 +324,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
     }
 
-    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks, SecurityContext securityContext ) throws InterruptedException {
+    @Override
+    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
         return super.executeBatchTasks( tasks.stream()
-                .map( task -> new CallableWithSecurityContext<>( task, securityContext ) )
+                .map( DelegatingSecurityContextCallable::new )
                 .collect( Collectors.toList() ) );
-    }
-
-    private static class CallableWithSecurityContext<T> implements Callable<T> {
-
-        private final Callable<T> callable;
-
-        private final SecurityContext securityContext;
-
-        private CallableWithSecurityContext( Callable<T> callable, SecurityContext securityContext ) {
-            this.callable = callable;
-            this.securityContext = securityContext;
-        }
-
-        @Override
-        public T call() throws Exception {
-            try {
-                SecurityContextHolder.setContext( securityContext );
-                return callable.call();
-            } finally {
-                SecurityContextHolder.clearContext();
-            }
-        }
     }
 }
