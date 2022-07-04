@@ -22,8 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
@@ -213,17 +212,13 @@ public class NcbiGeneLoader {
      * @param geneQueue a blocking queue of genes to be loaded into the database loads genes into the database
      */
     private void load( final BlockingQueue<Gene> geneQueue ) {
-        final SecurityContext context = SecurityContextHolder.getContext();
-        assert context != null;
-
-        Thread loadThread = new Thread( new Runnable() {
+        Thread loadThread = new Thread( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
-                SecurityContextHolder.setContext( context );
                 NcbiGeneLoader.this.doLoad( geneQueue );
             }
 
-        }, "Loading" );
+        } ), "Loading" );
         loadThread.start();
 
         while ( !generatorDone.get() || !converterDone.get() || !loaderDone.get() ) {
