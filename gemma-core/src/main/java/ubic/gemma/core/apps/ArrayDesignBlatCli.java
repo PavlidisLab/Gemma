@@ -191,7 +191,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 arrayDesigns.add( new ProcessArrayDesign( arrayDesign, skipIfLastRunLaterThan ) );
             }
 
-            executeBatchTasks( arrayDesigns );
+            executeBatchTasks( arrayDesigns, context );
 
         } else {
             throw new RuntimeException();

@@ -26,6 +26,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -42,8 +43,11 @@ import ubic.gemma.persistence.util.SpringContextUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
@@ -320,6 +324,34 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             return String.valueOf( System.console().readPassword( "Password: " ) );
         } else {
             throw new IllegalArgumentException( "Could not read the password from the console. Please provide either " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variables." );
+        }
+    }
+
+    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks, SecurityContext securityContext ) throws InterruptedException {
+        return super.executeBatchTasks( tasks.stream()
+                .map( task -> new CallableWithSecurityContext<>( task, securityContext ) )
+                .collect( Collectors.toList() ) );
+    }
+
+    private static class CallableWithSecurityContext<T> implements Callable<T> {
+
+        private final Callable<T> callable;
+
+        private final SecurityContext securityContext;
+
+        private CallableWithSecurityContext( Callable<T> callable, SecurityContext securityContext ) {
+            this.callable = callable;
+            this.securityContext = securityContext;
+        }
+
+        @Override
+        public T call() throws Exception {
+            try {
+                SecurityContextHolder.setContext( securityContext );
+                return callable.call();
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
         }
     }
 }
