@@ -76,7 +76,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         for ( BioAssaySet ee : queue ) {
             tasks.add( new ProcessBioAssaySet( ee, context ) );
         }
-        executeBatchTasks( tasks );
+        executeBatchTasks( tasks, context );
     }
 
     @Override
