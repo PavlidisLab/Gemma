@@ -25,8 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
@@ -89,16 +88,12 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
     @Override
     protected void initDao() throws Exception {
         super.initDao();
-        final SecurityContext context = SecurityContextHolder.getContext();
-
-        taskExecutor.execute(new Runnable() {
+        taskExecutor.execute( new DelegatingSecurityContextRunnable( new Runnable() {
 
             private final int MAX_WARNINGS = 5;
 
             @Override
             public void run() {
-                SecurityContextHolder.setContext( context );
-
                 int numWarnings = 0;
                 //noinspection InfiniteLoopStatement // Expected
                 while ( true ) {
@@ -131,7 +126,7 @@ class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements Coexpres
                 }
             }
 
-        });
+        } ) );
     }
 
     private void queryForCache( QueuedGene gene ) {

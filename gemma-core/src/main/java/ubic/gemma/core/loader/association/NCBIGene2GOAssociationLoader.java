@@ -20,9 +20,7 @@ package ubic.gemma.core.loader.association;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.LocalFile;
@@ -72,26 +70,22 @@ public class NCBIGene2GOAssociationLoader {
     public void load( final InputStream inputStream ) {
         final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<>(
                 NCBIGene2GOAssociationLoader.QUEUE_SIZE );
-        final SecurityContext context = SecurityContextHolder.getContext();
-        final Authentication authentication = context.getAuthentication();
 
-        Thread loadThread = new Thread( new Runnable() {
+        Thread loadThread = new Thread( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
                 NCBIGene2GOAssociationLoader.log.info( "Starting loading" );
-                SecurityContextHolder.setContext( context );
                 NCBIGene2GOAssociationLoader.this.load( queue );
             }
-        } );
+        } ) );
 
         loadThread.start();
 
-        Thread parseThread = new Thread( new Runnable() {
+        Thread parseThread = new Thread( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
                 try {
                     // NCBIGene2GOAssociationParser parser = new NCBIGene2GOAssociationParser();
-                    SecurityContextHolder.getContext().setAuthentication( authentication );
                     parser.parse( inputStream, queue );
                     NCBIGene2GOAssociationLoader.this.setCount( parser.getCount() );
                 } catch ( IOException e ) {
@@ -101,7 +95,7 @@ public class NCBIGene2GOAssociationLoader {
                 NCBIGene2GOAssociationLoader.log.info( "Done parsing" );
                 producerDone.set( true );
             }
-        } );
+        } ) );
 
         parseThread.start();
 
@@ -116,8 +110,8 @@ public class NCBIGene2GOAssociationLoader {
 
     public void load( LocalFile ncbiFile ) {
 
-        try (InputStream inputStream = FileTools
-                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() )) {
+        try ( InputStream inputStream = FileTools
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() ) ) {
             this.load( inputStream );
 
         } catch ( IOException e ) {

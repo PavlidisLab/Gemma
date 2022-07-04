@@ -22,8 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLI;
@@ -37,7 +35,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
@@ -347,29 +344,4 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         }
         return ees;
     }
-
-    abstract class Consumer implements Runnable {
-        private final SecurityContext context;
-        private final BlockingQueue<ArrayDesign> queue;
-
-        Consumer( BlockingQueue<ArrayDesign> q, SecurityContext context ) {
-            this.queue = q;
-            this.context = context;
-        }
-
-        @Override
-        public void run() {
-            SecurityContextHolder.setContext( this.context );
-            while ( true ) {
-                ArrayDesign ad = queue.poll();
-                if ( ad == null ) {
-                    break;
-                }
-                this.consume( ad );
-            }
-        }
-
-        abstract void consume( ArrayDesign x );
-    }
-
 }
