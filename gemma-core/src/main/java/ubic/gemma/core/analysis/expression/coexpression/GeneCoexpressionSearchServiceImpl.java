@@ -120,9 +120,15 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                 }
             }
 
+            GeneValueObject foundGene = coexpedGenes.get( cvo.getCoexGeneId() );
+
+            if ( foundGene == null ) {
+                log.warn( "Could not load gene with ID " + cvo.getCoexGeneId() + " from the database, has it been removed?" );
+                continue;
+            }
+
             CoexpressionValueObjectExt ecVo = new CoexpressionValueObjectExt();
             ecVo.setQueryGene( queryGene );
-            GeneValueObject foundGene = coexpedGenes.get( cvo.getCoexGeneId() );
 
             if ( !queryGeneIds.contains( foundGene.getId() ) ) {
                 foundGene.setIsQuery( false );
