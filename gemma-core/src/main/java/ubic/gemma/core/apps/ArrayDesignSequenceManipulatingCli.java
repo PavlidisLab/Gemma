@@ -296,7 +296,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
             if ( currentEvent.getEventType() == null || currentEvent.getEventType().getClass().equals( eventClass ) ) {
                 // ignore events of the same type.
-                log.info( "Ignoring " + currentEvent.getEventType().getClass() );
+                log.debug( "Ignoring " + currentEvent );
                 continue;
             }
 
