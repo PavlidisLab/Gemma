@@ -92,6 +92,18 @@ public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characte
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByValueUriOrValue( String search ) {
+        return this.characteristicDao.countCharacteristicValueLikeByNormalizedValue( search + '%' );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, CharacteristicDao.CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByValueUriOrValue( Collection<String> search ) {
+        return this.characteristicDao.countCharacteristicValueUriInByNormalizedValue( search );
+    }
+
+    @Override
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
         Map<Characteristic, Object> charToParent = new HashMap<>();
         Collection<Characteristic> needToSearch = new HashSet<>();

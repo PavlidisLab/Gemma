@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.common.description;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
@@ -70,7 +72,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
+                        "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ? "desc" : "" ) ).setMaxResults( limit )
                 .setFirstResult( start ).list();
     }
 
@@ -190,25 +192,24 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
 
     @Override
     public Collection<Characteristic> findByUri( Collection<String> uris ) {
-        int batchSize = 1000; // to avoid HQL parser barfing
-        Collection<String> batch = new HashSet<>();
         Collection<Characteristic> results = new HashSet<>();
+
         if ( uris.isEmpty() )
             return results;
 
-        //language=HQL
-        final String queryString = "from Characteristic where valueUri in (:uris)";
+        List<String> uniqueUris = uris.stream()
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
 
-        for ( String uri : uris ) {
-            batch.add( uri );
-            if ( batch.size() >= batchSize ) {
-                results.addAll( this.getBatchList( batch, queryString ) );
-                batch.clear();
-            }
+        for ( List<String> batch : ListUtils.partition( uniqueUris, 100 ) ) {
+            //noinspection unchecked
+            results.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "from Characteristic where valueUri in (:uris)" )
+                    .setParameterList( "uris", batch )
+                    .list() );
         }
-        if ( batch.size() > 0 ) {
-            results.addAll( this.getBatchList( batch, queryString ) );
-        }
+
         return results;
     }
 
@@ -220,6 +221,38 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
+    }
+
+    @Override
+    public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris ) {
+        List<Object[]> results = new ArrayList<>();
+        List<String> uniqueUris = uris.stream().distinct().sorted().collect( Collectors.toList() );
+        if ( uniqueUris.isEmpty() )
+            return Collections.emptyMap();
+        for ( List<String> batch : ListUtils.partition( uniqueUris, 100 ) ) {
+            //noinspection unchecked
+            results.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select lower(coalesce(nullif(char.valueUri, ''), char.value)), max(char.valueUri), max(char.value), count(char) from Characteristic char "
+                            + "where char.valueUri in :batch "
+                            + "group by lower(coalesce(nullif(char.valueUri, ''), char.value))" )
+                    .setParameterList( "batch", batch )
+                    .list() );
+        }
+        return results.stream()
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> new CharacteristicByValueUriOrValueCount( ( String ) row[1], ( String ) row[2], ( Long ) row[3] ) ) );
+    }
+
+    @Override
+    public Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value ) {
+        //noinspection unchecked
+        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select lower(coalesce(nullif(char.valueUri, ''), char.value)), max(char.valueUri), max(char.value), count(char) as cnt from Characteristic char "
+                        + "where char.value like :value "
+                        + "group by lower(coalesce(nullif(char.valueUri, ''), char.value))" )
+                .setParameter( "value", value )
+                .list() )
+                .stream()
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> new CharacteristicByValueUriOrValueCount( ( String ) row[1], ( String ) row[2], ( Long ) row[3] ) ) );
     }
 
     @Override
@@ -306,13 +339,6 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     @Override
     public CharacteristicValueObject loadValueObject( Characteristic entity ) {
         return new CharacteristicValueObject( entity );
-    }
-
-    @SuppressWarnings("SameParameterValue") // Better for general use
-    private Collection<Characteristic> getBatchList( Collection<String> batch, String queryString ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "uris", batch )
-                .list();
     }
 
     /*

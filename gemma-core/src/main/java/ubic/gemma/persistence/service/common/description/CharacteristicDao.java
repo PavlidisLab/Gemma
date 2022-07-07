@@ -18,12 +18,12 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import lombok.Data;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -88,6 +88,31 @@ public interface CharacteristicDao
     Collection<Characteristic> findByUri( String searchString );
 
     /**
+     * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
+     */
+    @Data
+    class CharacteristicByValueUriOrValueCount {
+        private final String valueUri;
+        private final String value;
+        private final Long count;
+    }
+
+    /**
+     * Count characteristics by value matching the provided LIKE pattern.
+     * <p>
+     * The key in the mapping is either the group's shared value URI or value of the former is null or empty, in
+     * lowercase.
+     */
+    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueLikeByNormalizedValue( String value );
+
+    /**
+     * Count characteristics by value URI in a given collection.
+     *
+     * @see #countCharacteristicValueUriInByNormalizedValue(Collection)
+     */
+    Map<String, CharacteristicByValueUriOrValueCount> countCharacteristicValueUriInByNormalizedValue( Collection<String> uris );
+
+    /**
      * Finds all Characteristics whose value match the given search term
      *
      * @param  search search
@@ -112,5 +137,4 @@ public interface CharacteristicDao
      * @return
      */
     Map<Characteristic, Long> getParentIds( Class<?> parentClass, Collection<Characteristic> characteristics );
-
 }
