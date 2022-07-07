@@ -965,7 +965,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
-        if ( candidateSubsumee.equals( candidateSubsumee ) ) {
+        if ( candidateSubsumee.equals( candidateSubsumer ) ) {
             log.warn("Attempt to check a platform against itself for subsuming!");
             return false;
         }
