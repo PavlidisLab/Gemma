@@ -566,6 +566,29 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                      },
                      scope : this
                   }, '-', {
+                     ref : 'mergedToggle',
+                     boxLabel : 'Hide mergees',
+                     checked : !this.showMergees,
+                     hidden : false,
+                     style : 'margin-top:0px',
+                     xtype : 'checkbox',
+                     tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideMergeeTT,
+                     handler : function( checkbox, isChecked ) {
+                        if ( !isChecked ) {
+
+                           this.showMergees = true;
+                           this.getStore().deactivateMultiFilter( 'mergeeFilter' );
+                           this.getStore().applyMultiFilters();
+
+                        } else {
+                           this.showMergees = false;
+                           this.getStore().activateMultiFilter( 'mergeeFilter' );
+                           this.getStore().applyMultiFilters();
+                        }
+
+                     },
+                     scope : this
+                  }, '-', {
                      ref : 'troubledToggle',
                      boxLabel : 'Hide Troubled',
                      checked : !this.showTroubled,
