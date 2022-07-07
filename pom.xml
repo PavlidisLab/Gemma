@@ -230,7 +230,7 @@
 			<!-- required by hibernate, explicitly import so we get it at runtime. -->
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.28.0-GA</version>
+			<version>3.29.0-GA</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -294,7 +294,7 @@
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-spring</artifactId>
-			<version>4.20</version>
+			<version>4.21</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -394,6 +394,7 @@
 		<dependency>
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
+			<!--suppress MavenPackageUpdate -->
 			<version>2.10.0</version>
 		</dependency>
 		<!-- This is also used at runtime by taglibs-standard-impl in gemma-web -->
@@ -672,13 +673,13 @@
 		<hibernate.version>3.6.10.Final</hibernate.version>
 		<jersey.version>2.25.1</jersey.version>
 		<jackson.version>2.13.3</jackson.version>
-		<swagger.version>2.2.0</swagger.version>
+		<swagger.version>2.2.1</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<tomcat.version>8.5.81</tomcat.version>
-		<mysql.version>8.0.28</mysql.version>
+		<mysql.version>8.0.29</mysql.version>
 		<lucene.version>3.6.2</lucene.version>
 		<log4j2.version>2.17.2</log4j2.version>
 		<slf4j.version>1.7.36</slf4j.version>
-		<slack.version>1.22.2</slack.version>
+		<slack.version>1.23.0</slack.version>
 	</properties>
 </project>
