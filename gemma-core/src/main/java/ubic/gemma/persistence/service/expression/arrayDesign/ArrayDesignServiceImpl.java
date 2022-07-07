@@ -230,6 +230,18 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    @Transactional
+    public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.deleteGeneProductAnnotationAssociations( arrayDesign );
+    }
+
+    @Override
+    @Transactional
+    public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.deleteGeneProductAnnotationAssociations( arrayDesign );
+    }
+
+    @Override
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
         return this.arrayDesignDao.isMerged( ids );
     }

@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.genome.ChromosomeDao;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
@@ -40,6 +41,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociat
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.util.Collection;
@@ -70,6 +72,8 @@ abstract public class GenomePersister extends CommonPersister {
     private BlatResultDao blatResultDao;
     @Autowired
     private AnnotationAssociationDao annotationAssociationDao;
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
 
     @Override
     @Transactional
@@ -385,15 +389,20 @@ abstract public class GenomePersister extends CommonPersister {
         // might need to add referenceAssociations also.
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
-            Collection<DatabaseEntry> accessions = gp.getAccessions();
+            /*
+            This thaw was not thought to be necessary but during NcbiGeneLoader processing, we sometimes hit products that
+            are somehow not associated with the current session so we need to initialize gp.accessions in particular.
+             */
+            GeneProduct gpt = geneProductDao.thaw( gp );
+            Collection<DatabaseEntry> accessions = gpt.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<>();
             for ( DatabaseEntry de : accessions ) {
                 if ( this.bioSequenceDao.findByAccession( de ) != null ) {
                     toRelease.add( de );
                 }
             }
-            gp.getAccessions().removeAll( toRelease );
-            this.geneProductDao.remove( gp );
+            gpt.getAccessions().removeAll( toRelease );
+            this.geneProductDao.remove( gpt );
 
         }
     }

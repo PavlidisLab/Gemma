@@ -23,7 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.*;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.LoggerContext;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.util.Settings;
@@ -73,7 +77,7 @@ public abstract class AbstractCLI {
 
     /* support for convenience options */
     private final String DEFAULT_HOST = "localhost";
-    private final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
+    private final Map<String, Level> originalLoggingLevels = new HashMap<>();
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
@@ -161,9 +165,9 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addDateOption( Options options ) {
         Option dateOption = Option.builder( "mdate" ).hasArg().desc(
-                "Constrain to run only on entities with analyses older than the given date. "
-                        + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                        + "If there is no record of when the analysis was last run, it will be run." )
+                        "Constrain to run only on entities with analyses older than the given date. "
+                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                                + "If there is no record of when the analysis was last run, it will be run." )
                 .build();
 
         options.addOption( dateOption );
@@ -224,7 +228,7 @@ public abstract class AbstractCLI {
         Option logOpt = new Option( "v", "verbosity", true,
                 "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
         Option otherLogOpt = Option.builder().longOpt( "logger" ).hasArg().argName( "logger" ).desc( "Configure a specific logger verbosity"
-                + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+                        + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
                 .build();
 
         options.addOption( otherLogOpt );
@@ -372,9 +376,12 @@ public abstract class AbstractCLI {
      * This is needed for CLIs that run in tests, so the logging settings get reset.
      */
     protected void resetLogging() {
-        for ( Logger log4jLogger : originalLoggingLevels.keySet() ) {
-            log4jLogger.setLevel( originalLoggingLevels.get( log4jLogger ) );
+        LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
+        Configuration config = context.getConfiguration();
+        for ( String loggerName : originalLoggingLevels.keySet() ) {
+            config.getLoggerConfig( loggerName ).setLevel( originalLoggingLevels.get( loggerName ) );
         }
+        context.updateLoggers();
     }
 
     /**
@@ -469,36 +476,36 @@ public abstract class AbstractCLI {
     }
 
     private void configureAllLoggers( int v ) {
-        Enumeration<?> currentLoggers = LogManager.getLoggerRepository().getCurrentLoggers();
-        while ( currentLoggers.hasMoreElements() ) {
-            Logger logger = ( Logger ) currentLoggers.nextElement();
-            this.setLoggerLevel( v, logger );
+        LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
+        Configuration config = context.getConfiguration();
+
+        Level newLevel = toLog4jLevel( v );
+
+        // configure all individual loggers
+        for ( Map.Entry<String, LoggerConfig> e : config.getLoggers().entrySet() ) {
+            configureLogging( e.getKey(), e.getValue(), newLevel );
         }
-        this.configureLogging( "net", v );
-        this.configureLogging( "org", v );
-        this.configureLogging( "com", v );
-        this.configureLogging( "ubic", v );
-        this.configureLogging( "gemma", v );
+
+        // This causes all Loggers to refetch information from their LoggerConfig.
+        context.updateLoggers();
     }
 
     /**
      * Set up logging according to the user-selected (or default) verbosity level.
      */
-    private void configureLogging( String loggerName, int v ) {
-
-        Logger log4jLogger = LogManager.exists( loggerName );
-
-        if ( log4jLogger == null ) {
-            log4jLogger = LogManager.getLogger( loggerName );
+    private void configureLogging( String loggerName, LoggerConfig loggerConfig, Level newLevel ) {
+        if ( loggerName.equals( loggerConfig.getName() ) ) {
+            AbstractCLI.log.info( String.format( "Setting logging level of '%s' to %s.", loggerConfig.getName(), newLevel ) );
+        } else {
+            // effective logger differs, this means that there no configuration
+            LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
+            AbstractCLI.log.warn( String.format( "Setting logging level of '%s' to %s since there's no logger named '%s'. To prevent this, add an entry for '%s' in log4j.properties.",
+                    loggerConfig.getName(), newLevel, loggerName, loggerName ) );
         }
-
-        // if logger name is nonsense this will not do anything.
-        AbstractCLI.log.info( "Setting logging for " + loggerName + " to " + v );
-        originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
-
-        this.setLoggerLevel( v, log4jLogger );
-
-        AbstractCLI.log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
+        if ( !originalLoggingLevels.containsKey( loggerConfig.getName() ) ) {
+            originalLoggingLevels.put( loggerConfig.getName(), loggerConfig.getLevel() );
+        }
+        loggerConfig.setLevel( newLevel );
     }
 
     private String invalidOptionString( CommandLine commandLine, String option ) {
@@ -526,27 +533,25 @@ public abstract class AbstractCLI {
         if ( commandLine.hasOption( AbstractCLI.VERBOSITY_OPTION ) ) {
             int verbosity = this.getIntegerOptionValue( commandLine, AbstractCLI.VERBOSITY_OPTION );
             if ( verbosity < 0 || verbosity > 5 ) {
-                throw new RuntimeException( "Verbosity must be from 0 to 5" );
+                throw new IllegalArgumentException( "Verbosity must be from 0 to 5." );
             }
             this.configureAllLoggers( verbosity );
         }
-        PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
-        ConsoleAppender cnslAppndr = new ConsoleAppender();
-        cnslAppndr.setLayout( layout );
-        Logger f = LogManager.getRootLogger();
-        assert f != null;
-        f.addAppender( cnslAppndr );
 
         if ( commandLine.hasOption( AbstractCLI.LOGGER_OPTION ) ) {
-            String value = commandLine.getOptionValue( AbstractCLI.LOGGER_OPTION );
-            String[] vals = value.split( "=" );
-            if ( vals.length != 2 )
-                throw new RuntimeException( "Logging value must in format [logger]=[value]" );
-            try {
-                this.configureLogging( vals[0], Integer.parseInt( vals[1] ) );
-            } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Logging level must be an integer between 0 and 5" );
+            LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
+            Configuration config = context.getConfiguration();
+            for ( String value : commandLine.getOptionValues( AbstractCLI.LOGGER_OPTION ) ) {
+                String[] vals = value.split( "=" );
+                if ( vals.length != 2 )
+                    throw new IllegalArgumentException( "Logging value must in format [loggerName]=[value]." );
+                try {
+                    configureLogging( vals[0], config.getLoggerConfig( vals[0] ), toLog4jLevel( Integer.parseInt( vals[1] ) ) );
+                } catch ( NumberFormatException e ) {
+                    throw new IllegalArgumentException( "Logging level must be an integer between 0 and 5." );
+                }
             }
+            context.updateLoggers();
         }
 
         if ( commandLine.hasOption( "mdate" ) ) {
@@ -559,29 +564,22 @@ public abstract class AbstractCLI {
         this.executorService = new ForkJoinPool( this.numThreads );
     }
 
-    private void setLoggerLevel( int level, Logger log4jLogger ) {
+    private static Level toLog4jLevel( int level ) {
         switch ( level ) {
             case 0:
-                log4jLogger.setLevel( Level.OFF );
-                break;
+                return Level.OFF;
             case 1:
-                log4jLogger.setLevel( Level.FATAL );
-                break;
+                return Level.FATAL;
             case 2:
-                log4jLogger.setLevel( Level.ERROR );
-                break;
+                return Level.ERROR;
             case 3:
-                log4jLogger.setLevel( Level.WARN );
-                break;
+                return Level.WARN;
             case 4:
-                log4jLogger.setLevel( Level.INFO );
-                break;
+                return Level.INFO;
             case 5:
-                log4jLogger.setLevel( Level.DEBUG );
-                break;
+                return Level.DEBUG;
             default:
-                throw new RuntimeException( "Verbosity must be from 0 to 5" );
-
+                throw new IllegalArgumentException( "Verbosity must be from 0 to 5" );
         }
     }
 

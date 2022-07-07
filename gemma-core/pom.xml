@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.27.15</version>
+        <version>1.27.16</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -375,6 +375,7 @@
         <dependency>
             <groupId>com.googlecode.javaewah</groupId>
             <artifactId>JavaEWAH</artifactId>
+            <!--suppress MavenPackageUpdate -->
             <version>0.7.9</version>
         </dependency>
         <dependency>

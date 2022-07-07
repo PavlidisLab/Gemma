@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.search;
 
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -60,7 +61,7 @@ public interface GeneSetSearch {
      * @param taxon      taxon
      * @return a collection with the hits
      */
-    Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon );
+    Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) throws OntologySearchException;
 
     /**
      * finds genesets by go term name eg: "trans-hexaPrenylTransTransferase activity" Note: the gene sets returned are
@@ -73,7 +74,7 @@ public interface GeneSetSearch {
      * @return a collection with the hits
      */
     Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
-            Integer maxGeneSetSize );
+            Integer maxGeneSetSize ) throws OntologySearchException;
 
     /**
      * @param name name
@@ -99,8 +100,8 @@ public interface GeneSetSearch {
      */
     @SuppressWarnings("unused")
     // Possible external use
-    Collection<GeneSet> findGeneSetsByName( String query, Long taxonId );
+    Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException;
 
-    Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon );
+    Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) throws OntologySearchException;
 
 }

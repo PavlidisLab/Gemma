@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- *
+ * 
  * Copyright (c) 2006 University of British Columbia
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
@@ -36,7 +35,6 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 
@@ -53,8 +51,6 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneProductService geneProductService;
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
 
     @Before
     public void setup() {
@@ -68,7 +64,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
     @Test
     public void testGeneLoader() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( taskExecutor, persisterHelper );
+        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
         loader.setTaxonService( taxonService );
 
         String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";
@@ -81,11 +77,13 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         assertNotNull( ta );
 
-        Future<?> loaderFuture = loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
+        loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
                 FileTools.resourceToPath( geneHistoryFile ), null, ta );
 
         // wait until the loader is done.
-        loaderFuture.get();
+        while ( !loader.isLoaderDone() ) {
+            Thread.sleep( 100 );
+        }
 
         // loader is done.
         // check if it loaded elements to the database
@@ -133,11 +131,12 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         String updatedHistory = "/data/loader/genome/gene/gene_history.human.changed.sample";
         String geneEnsemblFile = "/data/loader/genome/gene/gene2ensembl.human.sample";
 
-        loaderFuture = loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
+        loader.load( FileTools.resourceToPath( geneInfoTestFile ), FileTools.resourceToPath( gene2AccTestFile ),
                 FileTools.resourceToPath( updatedHistory ), FileTools.resourceToPath( geneEnsemblFile ), ta );
         // wait until the loader is done.
-        loaderFuture.get();
-
+        while ( !loader.isLoaderDone() ) {
+            Thread.sleep( 100 );
+        }
         Collection<Gene> updatedTestGene = geneService.findByOfficialSymbol( "TEAD1" );
         assertEquals( 1, updatedTestGene.size() );
         g = updatedTestGene.iterator().next();
@@ -146,7 +145,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         g = geneService.findByNCBIId( 1 );
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
-
+        
         // test remove...
         geneProductService.remove( products );
 

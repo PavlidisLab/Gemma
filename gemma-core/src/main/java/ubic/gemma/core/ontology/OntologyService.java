@@ -19,6 +19,7 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.Characteristic;
@@ -57,9 +58,9 @@ public interface OntologyService extends InitializingBean {
      * @return                       characteristic vos
      */
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery,
-            boolean useNeuroCartaOntology );
+            boolean useNeuroCartaOntology ) throws OntologySearchException;
 
-    Collection<OntologyIndividual> findIndividuals( String givenSearch );
+    Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException;
 
     /**
      * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
@@ -68,7 +69,7 @@ public interface OntologyService extends InitializingBean {
      * @param  search search
      * @return        a collection of Characteristics that are backed by the corresponding found OntologyTerm
      */
-    Collection<Characteristic> findTermAsCharacteristic( String search );
+    Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -78,7 +79,7 @@ public interface OntologyService extends InitializingBean {
      * @param  search search
      * @return        returns a collection of ontologyTerm's
      */
-    Collection<OntologyTerm> findTerms( String search );
+    Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException;
 
     /**
      * Given a search string will first look through the characteristic database for any entries that have a match. If a

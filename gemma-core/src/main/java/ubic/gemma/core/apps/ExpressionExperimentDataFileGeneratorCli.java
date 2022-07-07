@@ -70,11 +70,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         }
 
-        final SecurityContext context = SecurityContextHolder.getContext();
-
         Collection<Callable<Void>> tasks = new ArrayList<>( queue.size() );
         for ( BioAssaySet ee : queue ) {
-            tasks.add( new ProcessBioAssaySet( ee, context ) );
+            tasks.add( new ProcessBioAssaySet( ee ) );
         }
         executeBatchTasks( tasks );
     }
@@ -136,14 +134,12 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         private SecurityContext context;
         private BioAssaySet bioAssaySet;
 
-        private ProcessBioAssaySet( BioAssaySet bioAssaySet, SecurityContext context ) {
+        private ProcessBioAssaySet( BioAssaySet bioAssaySet ) {
             this.bioAssaySet = bioAssaySet;
-            this.context = context;
         }
 
         @Override
         public Void call() {
-            SecurityContextHolder.setContext( this.context );
             BioAssaySet ee = bioAssaySet;
             if ( ee == null ) {
                 return null;

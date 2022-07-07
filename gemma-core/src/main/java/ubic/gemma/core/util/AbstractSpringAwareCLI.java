@@ -26,6 +26,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -42,8 +43,11 @@ import ubic.gemma.persistence.util.SpringContextUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
@@ -317,5 +321,18 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         } else {
             throw new IllegalArgumentException( "Could not read the password from the console. Please provide either " + PASSWORD_ENV + " or " + PASSWORD_CMD_ENV + " environment variables." );
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Tasks are wrapped with {@link DelegatingSecurityContextCallable} to ensure that they execute with the security
+     * context set up by {@link #authenticate(CommandLine)}.
+     */
+    @Override
+    protected <T> List<T> executeBatchTasks( Collection<? extends Callable<T>> tasks ) throws InterruptedException {
+        return super.executeBatchTasks( tasks.stream()
+                .map( DelegatingSecurityContextCallable::new )
+                .collect( Collectors.toList() ) );
     }
 }

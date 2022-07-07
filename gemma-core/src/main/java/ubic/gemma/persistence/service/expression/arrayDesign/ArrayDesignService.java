@@ -72,7 +72,8 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
     void deleteAlignmentData( ArrayDesign arrayDesign );
 
     /**
-     * deletes the gene product associations on the specified array design F
+     * deletes the gene product associations on the specified array design. If you only want to delete alignment-based or annotation-based
+     * associations, use  deleteGeneProductAlignmentAssociation deleteGeneProductAnnotationAssociations.
      *
      * @param arrayDesign AD
      */
@@ -392,4 +393,9 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      */
     boolean isBlackListed( String geoAccession );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 }

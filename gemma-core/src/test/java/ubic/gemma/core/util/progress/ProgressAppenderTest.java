@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
- * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
+ * For this test to work you should have the appender configured in log4j-test.properties. If not it will be set up
  * programatically.
  *
  * @author pavlidis

@@ -16,6 +16,7 @@ package ubic.gemma.core.association.phenotype;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -130,7 +131,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  givenQueryString the search query
      * @return                  the terms found
      */
-    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString );
+    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws OntologySearchException;
 
     /**
      * Gets all External Databases that are used with evidence
@@ -269,7 +270,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  searchQuery the query search that was type by the user
      * @return             the terms found in the database with taxon and gene occurrence
      */
-    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
+    Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException;
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
@@ -278,7 +279,7 @@ public interface PhenotypeAssociationManagerService {
      * @param  geneId      the id of the chosen gene
      * @return             list of choices returned
      */
-    Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
+    Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws OntologySearchException;
 
     /**
      * Modify an existing evidence

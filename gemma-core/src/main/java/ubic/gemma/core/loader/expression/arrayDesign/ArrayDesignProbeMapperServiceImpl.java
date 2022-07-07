@@ -23,8 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
@@ -156,8 +155,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.load( persistingQueue, generatorDone, loaderDone, useDB );
 
         if ( useDB ) {
-            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
-            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
+            arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
         }
 
         int count = 0;
@@ -229,12 +228,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        try (BufferedReader b = new BufferedReader( new FileReader( source ) )) {
+        try ( BufferedReader b = new BufferedReader( new FileReader( source ) ) ) {
             String line;
             int numSkipped = 0;
 
-            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
-            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old annotation-based associations" );
+            arrayDesignService.deleteGeneProductAnnotationAssociations( arrayDesign );
 
             while ( ( line = b.readLine() ) != null ) {
 
@@ -516,17 +515,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      */
     private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
             final AtomicBoolean loaderDone, final boolean persist ) {
-        final SecurityContext context = SecurityContextHolder.getContext();
-        assert context != null;
-
-        this.taskExecutor.execute( new Runnable() {
+        this.taskExecutor.execute( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
-                SecurityContextHolder.setContext( context );
                 ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist );
             }
-
-        });
+        } ) );
 
     }
 

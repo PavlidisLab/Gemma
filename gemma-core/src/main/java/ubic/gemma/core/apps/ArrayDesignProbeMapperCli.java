@@ -509,7 +509,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         // TODO: process array designs in order of how many experiments they use (most first)
 
-        final SecurityContext context = SecurityContextHolder.getContext();
         Collection<Callable<Void>> arrayDesigns = new ArrayList<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
             arrayDesigns.add( new ProcessADProbeMapper( ad, skipIfLastRunLaterThan ) );

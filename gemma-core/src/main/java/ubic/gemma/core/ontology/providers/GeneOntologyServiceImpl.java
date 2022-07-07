@@ -38,6 +38,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.SearchIndex;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -219,7 +220,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public Collection<OntologyTerm> findTerm( String queryString ) {
+    public Collection<OntologyTerm> findTerm( String queryString ) throws OntologySearchException {
 
         if ( !this.isReady() )
             return new HashSet<>();

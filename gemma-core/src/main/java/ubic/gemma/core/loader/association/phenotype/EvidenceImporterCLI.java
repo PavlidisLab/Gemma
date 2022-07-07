@@ -17,6 +17,7 @@ package ubic.gemma.core.loader.association.phenotype;
 import org.apache.commons.cli.CommandLine;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.EntityNotFoundException;
@@ -158,7 +159,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     /**
      * convert for LiteratureEvidenceValueObject
      */
-    private EvidenceValueObject<?> convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException {
+    private EvidenceValueObject<?> convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException, OntologySearchException {
         EvidenceValueObject<?> evidence;
 
         String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
@@ -178,7 +179,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * convert for ExperimentalEvidenceValueObject
      */
     private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
-            throws IOException {
+            throws IOException, OntologySearchException {
 
         ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject( -1L );
         this.populateCommonFields( evidence, tokens );
@@ -254,7 +255,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     private Set<CharacteristicValueObject> experimentTags2Ontology( Set<String> values, String category,
-                                                                    String categoryUri, AbstractOntologyService ontologyUsed ) {
+                                                                    String categoryUri, AbstractOntologyService ontologyUsed ) throws OntologySearchException {
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
@@ -332,7 +333,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // value or valueUri given changed to valueUri (even if valueUri is given in file we need to check)
-    private String phenotype2Ontology( String phenotypeToSearch ) {
+    private String phenotype2Ontology( String phenotypeToSearch ) throws OntologySearchException {
 
         OntologyTerm ot;
 
@@ -374,7 +375,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     /**
      * File to valueObject conversion, populate the basics
      */
-    private void populateCommonFields( EvidenceValueObject<?> evidence, String[] tokens ) throws IOException {
+    private void populateCommonFields( EvidenceValueObject<?> evidence, String[] tokens ) throws IOException, OntologySearchException {
 
         boolean isNegativeEvidence = false;
 
@@ -543,7 +544,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // Change a set of phenotype to a set of CharacteristicValueObject
-    private SortedSet<CharacteristicValueObject> toValuesUri( Set<String> phenotypes ) {
+    private SortedSet<CharacteristicValueObject> toValuesUri( Set<String> phenotypes ) throws OntologySearchException {
 
         SortedSet<CharacteristicValueObject> characteristicPhenotypes = new TreeSet<>();
 

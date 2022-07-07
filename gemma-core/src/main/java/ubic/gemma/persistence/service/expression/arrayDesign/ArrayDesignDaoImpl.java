@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
@@ -136,22 +137,71 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     }
 
+
+    @Override
+    public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
+                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+
+
+        final String queryString = "select ba from CompositeSequence  cs "
+                + "inner join cs.biologicalCharacteristic bs, BlatAssociation ba "
+                + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+        //noinspection unchecked
+        List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
+                .createQuery( queryString ).setParameter( "arrayDesign", arrayDesign ).list();
+        if ( !blatAssociations.isEmpty() ) {
+            for ( BlatAssociation r : blatAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+
+        }
+        AbstractDao.log.info(
+                "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
+
+    }
+
+    @Override
+    public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
+                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
+
+        final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
+                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
+                + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+
+        //noinspection unchecked
+        List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
+                .createQuery( annotationAssociationQueryString ).setParameter( "arrayDesign", arrayDesign ).list();
+
+        if ( !annotAssociations.isEmpty() ) {
+
+            for ( AnnotationAssociation r : annotAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+
+
+        }
+        AbstractDao.log.info(
+                "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+    }
+
     @Override
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
                 .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
 
-        // this query is polymorphic, id gets the annotation associations?
+    // these two queries could be combined by using BioSequence2GeneProduct.
         //language=HQL
         final String queryString = "select ba from CompositeSequence  cs "
-                + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProduct ba "
+                + "inner join cs.biologicalCharacteristic bs, BlatAssociation ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         //noinspection unchecked
-        List<CompositeSequence> blatAssociations = this.getSessionFactory().getCurrentSession()
+        List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString ).setParameter( "arrayDesign", arrayDesign ).list();
         if ( !blatAssociations.isEmpty() ) {
-            for ( CompositeSequence r : blatAssociations ) {
+            for ( BlatAssociation r : blatAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
             AbstractDao.log.info(
