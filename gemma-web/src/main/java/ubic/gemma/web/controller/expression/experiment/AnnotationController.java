@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -107,7 +108,7 @@ public class AnnotationController {
      * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
      *                important use case.
      */
-    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) throws SearchException {
+    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
         if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<>();
         }
@@ -115,7 +116,11 @@ public class AnnotationController {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        return ontologyService.findTermsInexact( givenQueryString, taxon );
+        try {
+            return ontologyService.findTermsInexact( givenQueryString, taxon );
+        } catch ( OntologySearchException | SearchException e ) {
+            throw new IllegalArgumentException( "Invalid search query.", e );
+        }
     }
 
     /**

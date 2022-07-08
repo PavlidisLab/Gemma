@@ -93,7 +93,7 @@ public interface OntologyService extends InitializingBean {
      * @param  givenQueryString query string
      * @return                  characteristic vos
      */
-    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws SearchException;
+    Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException;
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic

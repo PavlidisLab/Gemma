@@ -5,6 +5,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.core.*;
+import org.compass.core.converter.ConversionException;
+import org.compass.core.engine.SearchEngineQueryParseException;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -14,6 +16,7 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.CompassSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
@@ -207,8 +210,12 @@ public class CompassSearchSource implements SearchSource {
                                 + " -> " + searchResults.size() + " hits" );
             }
             return searchResults;
+        } catch ( SearchEngineQueryParseException e ) {
+            throw new CompassSearchException( "Compass failed to parse the search query.", e );
         } catch ( CompassException e ) {
-            throw new SearchException( "Could not perform the request search.", e );
+            // FIXME: there's nothing we can do here and bubbling the error would abort the search altogether
+            log.warn( "The compass search source failed due to a cause unrelated to the query syntax. No results will be returned." );
+            return new HashSet<>();
         }
     }
 
