@@ -14,6 +14,7 @@ import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.search.CompassSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
@@ -208,7 +209,7 @@ public class CompassSearchSource implements SearchSource {
             }
             return searchResults;
         } catch ( CompassException e ) {
-            throw new SearchException( "Could not perform the request search.", e );
+            throw new CompassSearchException( "Could not perform the request search.", e );
         }
     }
 

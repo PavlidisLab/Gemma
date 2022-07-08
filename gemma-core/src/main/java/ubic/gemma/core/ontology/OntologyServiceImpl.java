@@ -372,7 +372,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws SearchException {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException {
 
         if ( StringUtils.isBlank( givenQueryString ) )
             return null;
@@ -439,12 +439,8 @@ public class OntologyServiceImpl implements OntologyService {
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
         if ( searchResults.size() < OntologyServiceImpl.MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            try {
-                searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                        this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
-            } catch ( OntologySearchException e ) {
-                throw new SearchException( "Failed to search for characteristic terms.", e );
-            }
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+                    this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
         }
         findGoTerms.stop();
 

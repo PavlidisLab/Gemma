@@ -12,6 +12,7 @@ import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
@@ -404,7 +405,7 @@ public class DatabaseSearchSource implements SearchSource {
         try {
             return this.dbHitsToSearchResult( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
         } catch ( OntologySearchException e ) {
-            throw new SearchException( "Failed to search for phenotype associations.", e );
+            throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
         }
     }
 

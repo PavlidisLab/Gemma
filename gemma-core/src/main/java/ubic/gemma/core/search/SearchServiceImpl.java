@@ -397,7 +397,7 @@ public class SearchServiceImpl implements SearchService {
                 ListUtils.addAllNewElements( results, this.dbHitsToSearchResult(
                         geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" ) );
             } catch ( OntologySearchException e ) {
-                throw new SearchException( "Ontology search query is invalid.", e );
+                throw new BaseCodeOntologySearchException( e );
             }
         }
 
@@ -680,7 +680,7 @@ public class SearchServiceImpl implements SearchService {
         try {
             individuals = ontologyService.findIndividuals( query );
         } catch ( OntologySearchException e ) {
-            throw new SearchException( "Failed to search for individuals in the ontology.", e );
+            throw new BaseCodeOntologySearchException( e );
         }
         for ( Collection<OntologyIndividual> individualbatch : BatchIterator.batches( individuals, 10 ) ) {
             Collection<String> uris = new HashSet<>();
@@ -711,7 +711,7 @@ public class SearchServiceImpl implements SearchService {
         try {
             matchingTerms = ontologyService.findTerms( query );
         } catch ( OntologySearchException e ) {
-            throw new SearchException( "Failed to find terms via ontology search.", e );
+            throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
         }
 
         if ( watch.getTime() > 500 ) {
@@ -1318,7 +1318,7 @@ public class SearchServiceImpl implements SearchService {
                 phenotypeTermHits = this.phenotypeAssociationManagerService
                         .searchInDatabaseForPhenotype( settings.getQuery() );
             } catch ( OntologySearchException e ) {
-                throw new SearchException( "Failed to search for genes via their phenotype associations.", e );
+                throw new BaseCodeOntologySearchException( e );
             }
 
             for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {

@@ -269,7 +269,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         try {
             srDos = this.getGOGroupResults( query, taxon );
         } catch ( OntologySearchException e ) {
-            throw new SearchException( "Ontology search query is invalid.", e );
+            throw new BaseCodeOntologySearchException( e );
         }
 
         List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();

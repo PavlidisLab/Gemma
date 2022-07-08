@@ -21,6 +21,7 @@ package ubic.gemma.core.ontology;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -39,7 +40,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     private OntologyService os;
 
     @Test
-    public void test() throws SearchException {
+    public void test() throws SearchException, OntologySearchException {
 
         os.getDiseaseOntologyService()
                 .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ), false );
