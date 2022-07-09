@@ -217,7 +217,8 @@ public class CompassSearchSource implements SearchSource {
             throw new CompassSearchException( "Compass failed to parse the search query.", e );
         } catch ( CompassException e ) {
             // FIXME: there's nothing we can do here and bubbling the error would abort the search altogether
-            log.warn( "The compass search source failed due to a cause unrelated to the query syntax. No results will be returned." );
+            log.warn( String.format( "Compass search via %s failed due to a cause unrelated to the query syntax. No results will be returned.",
+                    bean.getSettings().getSetting( "compass.name" ) ) );
             searchResults = new HashSet<>();
         }
 
