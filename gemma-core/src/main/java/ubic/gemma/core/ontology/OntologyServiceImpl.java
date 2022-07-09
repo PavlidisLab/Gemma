@@ -60,6 +60,7 @@ import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.providers.SequenceOntologyService;
 import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.Configuration;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
@@ -218,7 +219,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQueryString,
-            boolean useNeuroCartaOntology ) {
+            boolean useNeuroCartaOntology ) throws OntologySearchException {
 
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
@@ -289,7 +290,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
+    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) throws OntologySearchException {
 
         String query = OntologySearch.stripInvalidCharacters( givenSearch );
         Collection<OntologyIndividual> results = new HashSet<>();
@@ -304,7 +305,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<Characteristic> findTermAsCharacteristic( String search ) {
+    public Collection<Characteristic> findTermAsCharacteristic( String search ) throws OntologySearchException {
 
         String query = OntologySearch.stripInvalidCharacters( search );
         Collection<Characteristic> results = new HashSet<>();
@@ -323,7 +324,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<OntologyTerm> findTerms( String search ) {
+    public Collection<OntologyTerm> findTerms( String search ) throws OntologySearchException {
 
         Collection<OntologyTerm> results = new HashSet<>();
 
@@ -372,7 +373,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws SearchException {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) throws OntologySearchException, SearchException {
 
         if ( StringUtils.isBlank( givenQueryString ) )
             return null;
@@ -412,7 +413,7 @@ public class OntologyServiceImpl implements OntologyService {
 
             try {
                 results = service.findResources( queryString );
-            } catch ( Exception e ) {
+            } catch ( OntologySearchException e ) {
                 OntologyServiceImpl.log.warn( e.getMessage() ); // parse errors, etc.
             }
             if ( results == null || results.isEmpty() )
@@ -868,7 +869,7 @@ public class OntologyServiceImpl implements OntologyService {
      */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
             boolean useNeuroCartaOntology,
-            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) throws OntologySearchException {
 
         Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
 

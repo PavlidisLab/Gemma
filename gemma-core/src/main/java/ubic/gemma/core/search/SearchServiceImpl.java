@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
@@ -401,8 +402,12 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if ( settings.getUseGo() ) {
-            ListUtils.addAllNewElements( results, this.dbHitsToSearchResult(
-                    geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" ) );
+            try {
+                ListUtils.addAllNewElements( results, this.dbHitsToSearchResult(
+                        geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" ) );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
         }
 
         if ( settings.hasResultType( BibliographicReference.class ) ) {
@@ -637,7 +642,7 @@ public class SearchServiceImpl implements SearchService {
      * (thousands)
      * results.
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearch( final SearchSettings settings ) {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearch( final SearchSettings settings ) throws SearchException {
 
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
 
@@ -675,14 +680,19 @@ public class SearchServiceImpl implements SearchService {
      * @param  limit stop querying if we hit or surpass this limit. 0 for no limit.
      * @return collection of SearchResults (Experiments)
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, Taxon t, int limit ) {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchTerm( String query, Taxon t, int limit ) throws SearchException {
 
         StopWatch watch = StopWatch.createStarted();
         Collection<SearchResult<ExpressionExperiment>> results = new HashSet<>();
 
         // Phase 1: We first search for individuals.
         Map<String, String> uri2value = new HashMap<>();
-        Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( query );
+        Collection<OntologyIndividual> individuals = null;
+        try {
+            individuals = ontologyService.findIndividuals( query );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( e );
+        }
         for ( Collection<OntologyIndividual> individualbatch : BatchIterator.batches( individuals, 10 ) ) {
             Collection<String> uris = new HashSet<>();
             for ( OntologyIndividual individual : individualbatch ) {
@@ -708,7 +718,12 @@ public class SearchServiceImpl implements SearchService {
         /*
          * Phase 2: Search ontology classes matches to the query
          */
-        Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( query );
+        Collection<OntologyTerm> matchingTerms = null;
+        try {
+            matchingTerms = ontologyService.findTerms( query );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( "Failed to find terms via ontology search.", e );
+        }
 
         if ( watch.getTime() > 500 ) {
             SearchServiceImpl.log
@@ -810,7 +825,7 @@ public class SearchServiceImpl implements SearchService {
      * @param  limit try to stop searching if we exceed this (0 for no limit)
      * @return SearchResults of Experiments
      */
-    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, Taxon t, int limit ) {
+    private Collection<SearchResult<ExpressionExperiment>> characteristicEESearchWithChildren( String query, Taxon t, int limit ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
         /*
@@ -1326,8 +1341,13 @@ public class SearchServiceImpl implements SearchService {
          *
          */
         if ( combinedGeneList.isEmpty() ) {
-            Collection<CharacteristicValueObject> phenotypeTermHits = this.phenotypeAssociationManagerService
-                    .searchInDatabaseForPhenotype( settings.getQuery() );
+            Collection<CharacteristicValueObject> phenotypeTermHits = null;
+            try {
+                phenotypeTermHits = this.phenotypeAssociationManagerService
+                        .searchInDatabaseForPhenotype( settings.getQuery() );
+            } catch ( OntologySearchException e ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
 
             for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {
                 Set<String> phenotypeUris = new HashSet<>();
@@ -1612,7 +1632,7 @@ public class SearchServiceImpl implements SearchService {
     /**
      * @return results, if the settings.termUri is populated. This includes gene uris.
      */
-    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> ontologyUriSearch( SearchSettings settings ) {
+    private Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> ontologyUriSearch( SearchSettings settings ) throws SearchException {
         Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> results = new HashMap<>();
 
         // 1st check to see if the query is a URI (from an ontology).

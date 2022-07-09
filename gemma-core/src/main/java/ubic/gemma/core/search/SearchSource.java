@@ -61,5 +61,5 @@ public interface SearchSource {
 
     Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings ) throws SearchException;
 
-    Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings );
+    Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException;
 }

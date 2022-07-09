@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -25,6 +25,7 @@ import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -125,14 +126,19 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
             // format the query for lucene to look for ontology terms with an exact match for the value
             String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
-            Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
-
-            for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-                if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
-                    characteristic.setValueUri( ontologyTerm.getUri() );
-                    break;
+            Collection<OntologyTerm> ontologyTerms = null;
+            try {
+                ontologyTerms = this.ontologyService.findTerms( value );
+                for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+                    if ( ontologyTerm.getLabel().equalsIgnoreCase( characteristicValueObject.getValue() ) ) {
+                        characteristic.setValueUri( ontologyTerm.getUri() );
+                        break;
+                    }
                 }
+            } catch ( OntologySearchException e ) {
+                log.error( "Failed to retrieve ontology terms for " + value + " when converting to VO. The value URI will not be set.", e );
             }
+
         }
         return characteristic;
     }
@@ -174,7 +180,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     }
 
     @Override
-    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
+    public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) throws OntologySearchException {
         Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
         for ( AbstractOntologyService ontology : this.ontologies ) {
@@ -191,7 +197,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     }
 
     @Override
-    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) {
+    public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) throws OntologySearchException {
 
         Collection<OntologyTerm> results = new TreeSet<>();
         for ( AbstractOntologyService ontology : this.ontologies ) {

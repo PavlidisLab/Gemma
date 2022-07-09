@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.search.GeneSetSearch;
@@ -471,7 +472,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) throws OntologySearchException {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<>();

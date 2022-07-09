@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.OntologyService;
@@ -233,7 +234,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchOntologyForPhenotypes() {
+    public void testSearchOntologyForPhenotypes() throws OntologySearchException {
 
         // simulate someone looking for cancer, it should be found in the ontology file
         assertTrue( !this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "can", null ).isEmpty() );

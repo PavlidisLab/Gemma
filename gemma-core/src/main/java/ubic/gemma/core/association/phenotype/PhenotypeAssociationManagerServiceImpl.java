@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
@@ -361,7 +362,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
-    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) {
+    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws OntologySearchException {
         return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
@@ -716,7 +717,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) throws OntologySearchException {
 
         Collection<CharacteristicValueObject> results = new TreeSet<>();
 
@@ -742,7 +743,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     @Override
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) throws OntologySearchException {
         StopWatch timer = new StopWatch();
         timer.start();
         List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<>();

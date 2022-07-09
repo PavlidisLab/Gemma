@@ -494,9 +494,16 @@ public abstract class AbstractCLI {
      * Set up logging according to the user-selected (or default) verbosity level.
      */
     private void configureLogging( String loggerName, LoggerConfig loggerConfig, Level newLevel ) {
-        AbstractCLI.log.info( String.format( "Setting logging level of %s to %s.", loggerConfig.getName(), newLevel ) );
-        if ( !originalLoggingLevels.containsKey( loggerName ) ) {
-            originalLoggingLevels.put( loggerName, loggerConfig.getLevel() );
+        if ( loggerName.equals( loggerConfig.getName() ) ) {
+            AbstractCLI.log.info( String.format( "Setting logging level of '%s' to %s.", loggerConfig.getName(), newLevel ) );
+        } else {
+            // effective logger differs, this means that there no configuration
+            LoggerContext context = ( LoggerContext ) LogManager.getContext( false );
+            AbstractCLI.log.warn( String.format( "Setting logging level of '%s' to %s since there's no logger named '%s'. To prevent this, add an entry for '%s' in log4j.properties.",
+                    loggerConfig.getName(), newLevel, loggerName, loggerName ) );
+        }
+        if ( !originalLoggingLevels.containsKey( loggerConfig.getName() ) ) {
+            originalLoggingLevels.put( loggerConfig.getName(), loggerConfig.getLevel() );
         }
         loggerConfig.setLevel( newLevel );
     }

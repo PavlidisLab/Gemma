@@ -8,9 +8,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -410,11 +413,14 @@ public class DatabaseSearchSource implements SearchSource {
      * Find phenotypes.
      */
     @Override
-    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) {
+    public Collection<SearchResult<CharacteristicValueObject>> searchPhenotype( SearchSettings settings ) throws SearchException {
         if ( !settings.getUseDatabase() )
             return new HashSet<>();
-        return this.dbHitsToSearchResult(
-                this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
+        try {
+            return this.dbHitsToSearchResult( this.phenotypeAssociationManagerService.searchInDatabaseForPhenotype( settings.getQuery() ) );
+        } catch ( OntologySearchException e ) {
+            throw new BaseCodeOntologySearchException( "Failed to search for phenotype associations.", e );
+        }
     }
 
     /**
@@ -513,7 +519,8 @@ public class DatabaseSearchSource implements SearchSource {
                     }
                     toRemove.add( sr );
                 }
-            } catch ( SecurityException | IllegalArgumentException | InvocationTargetException | IllegalAccessException e ) {
+            } catch ( SecurityException | IllegalArgumentException | InvocationTargetException |
+                      IllegalAccessException e ) {
                 throw new RuntimeException( e );
             } catch ( NoSuchMethodException e ) {
                 /*

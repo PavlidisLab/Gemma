@@ -8,7 +8,7 @@ http://www.ebi.ac.uk/efo/EFO_0000324	cell type
 http://www.ebi.ac.uk/efo/EFO_0000352	clinical history
 http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
 http://www.ebi.ac.uk/efo/EFO_0000408	disease
-http://gemma.msl.ubc.ca/ont/TGEMO_00101  disease model
+http://gemma.msl.ubc.ca/ont/TGEMO_00101	disease model
 http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
 http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
