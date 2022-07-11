@@ -350,11 +350,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * order w.r.t. the sequence analysis, so we don't need to check that order.
          */
         if ( isNotMerged && lastSequenceUpdate != null ) {
+            // FIXME: repeatmasking is currently not operable so we are waiving this requirement.
             if ( lastRepeatMask != null && lastSequenceUpdate.getDate().after( lastRepeatMask.getDate() ) ) {
+//                AbstractCLI.log
+//                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
+//                return false;
                 AbstractCLI.log
-                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
-                return false;
-
+                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking but requirement temporarily waived" );
+               // return false;
             }
 
             if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate()
@@ -523,7 +526,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * Hackery to work around rn6 problems
          */
         boolean isRat;
-        if ( this.taxon == null ) {
+        if ( this.taxon == null) {
             assert arrayDesign != null;
             Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
             isRat = t.getCommonName().equals( "rat" );
