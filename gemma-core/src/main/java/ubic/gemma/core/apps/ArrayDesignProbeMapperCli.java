@@ -380,8 +380,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( isNotMerged && lastRepeatMask == null ) {
-            AbstractCLI.log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
-            return false;
+            AbstractCLI.log
+                    .warn( arrayDesign + "Repeat masking missing but requirement temporarily waived" );
+           // AbstractCLI.log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
+           // return false;
         }
 
         if ( skipIfLastRunLaterThan != null && lastProbeMapping != null && lastProbeMapping.getDate()
