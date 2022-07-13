@@ -483,7 +483,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     /*
                      * So, our gene products match, and the genes match but via an alias. That's pretty solid.
                      */
-                    ArrayDesignProbeMapperServiceImpl.log.info( "Associated gene product " + geneProduct
+                    ArrayDesignProbeMapperServiceImpl.log.debug( "Associated gene product " + geneProduct
                             + " has a match in Gemma through an aliased gene: " + existing2 );
                     return existing2;
                 }
