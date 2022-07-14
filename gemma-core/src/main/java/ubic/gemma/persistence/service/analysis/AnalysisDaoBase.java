@@ -83,6 +83,9 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T>
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.remove( this.findByInvestigation( ee ) );
+        // this sometimes causes a StaleStateException (see https://github.com/PavlidisLab/Gemma/issues/242)
+        // so we proactively flush it now
+        getSessionFactory().getCurrentSession().flush();
     }
 
 }
