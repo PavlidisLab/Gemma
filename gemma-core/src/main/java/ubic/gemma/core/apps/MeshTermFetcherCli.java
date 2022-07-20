@@ -56,6 +56,11 @@ public class MeshTermFetcherCli extends AbstractCLI {
         return "Gets MESH headings for a set of pubmed ids";
     }
 
+    @Override
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return null;
+    }
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
