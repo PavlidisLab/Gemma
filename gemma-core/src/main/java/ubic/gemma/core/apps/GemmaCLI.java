@@ -56,6 +56,9 @@ public class GemmaCLI {
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.apps" ) );
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
 
+            // GemmaAnalysis CLIs (deprecated!)
+            classes.addAll( provider.findCandidateComponents( "chibi.gemmaanalysis" ) );
+
             // CLI extensions
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.contrib.apps" ) );
 
