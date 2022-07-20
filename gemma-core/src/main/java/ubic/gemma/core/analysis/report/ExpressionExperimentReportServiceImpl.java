@@ -351,9 +351,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             try {
                 List<AuditEvent> events = auditEventService.getEvents( ee );
                 // Don't update if the only recent event was another BatchProblemsUpdateEvent
-                if ( events != null && !events.isEmpty() && BatchProblemsUpdateEvent.class
-                        .isAssignableFrom( events.get( events.size() - 1 ).getEventType().getClass() ) ) {
-                    continue;
+                if ( events != null && !events.isEmpty() ) {
+                    AuditEvent ae = events.get( events.size() - 1 );
+                    if ( ae.getEventType() != null && BatchProblemsUpdateEvent.class
+                            .isAssignableFrom( ae.getEventType().getClass() ) ) {
+                        continue;
+                    }
                 }
                 recalculateExperimentBatchInfo( ee );
             } catch ( Exception e ) {
