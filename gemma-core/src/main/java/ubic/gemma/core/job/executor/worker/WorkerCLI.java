@@ -21,6 +21,7 @@ package ubic.gemma.core.job.executor.worker;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
 import ubic.gemma.persistence.util.SpringContextUtil;
@@ -37,6 +38,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     @Override
     public String getShortDesc() {
         return "Start worker application for processing tasks sent by Gemma webapp.";
+    }
+
+    @Override
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return null;
     }
 
     @Override

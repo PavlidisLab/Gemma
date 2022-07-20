@@ -64,11 +64,6 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /**
-     * @return the command group for this CLI
-     */
-    public abstract CommandGroup getCommandGroup();
-
     protected Taxon setTaxonByName( CommandLine commandLine, TaxonService taxonService ) {
         String taxonName = commandLine.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
