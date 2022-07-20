@@ -99,7 +99,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testCountData() throws Exception {
-        assertNull( eeService.findByShortName( "GSE29006" ) );
+        ExpressionExperiment ee = eeService.findByShortName( "GSE29006" );
+        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
+                ee == null );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 

@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.hibernate.ObjectNotFoundException;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
@@ -79,7 +80,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @After
     public void after() {
         if ( ee != null ) {
-            eeService.remove( ee );
+            try {
+                eeService.remove( ee );
+            } catch ( ObjectNotFoundException e ) {
+                Assume.assumeNoException( e );
+            }
         }
     }
 
@@ -201,7 +206,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        ee = eeService.thaw( ee );
+        try {
+            ee = eeService.thaw( ee );
+        } catch ( ObjectNotFoundException e ) {
+            Assume.assumeNoException( e );
+        }
 
         qt = this.createOrUpdateQt( ScaleType.COUNT );
 
