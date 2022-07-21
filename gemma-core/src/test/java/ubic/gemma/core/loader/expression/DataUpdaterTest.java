@@ -20,6 +20,7 @@
 package ubic.gemma.core.loader.expression;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -309,7 +310,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-        assertNull( experimentService.findByShortName( "GSE29006" ) );
+        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", "GSE29006" ),
+                experimentService.findByShortName( "GSE29006" ) == null );
 
         // These tests were failing due to too many requests being made to geo, this is a workaround
         try {
