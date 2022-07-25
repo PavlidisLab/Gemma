@@ -45,10 +45,6 @@
 			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
-			<name>Manuel Belmadani</name>
-			<organization>University of British Columbia</organization>
-		</developer>
-		<developer>
 			<id>poirigui</id>
 			<name>Guillaume Poirier-Morency</name>
 			<email>poirigui@msl.ubc.ca</email>
@@ -58,6 +54,9 @@
 	<contributors>
 		<contributor>
 			<name>Nathaniel Lim</name>
+		</contributor>
+		<contributor>
+			<name>Manuel Belmadani</name>
 		</contributor>
 		<contributor>
 			<name>Stepan Tesar</name>
