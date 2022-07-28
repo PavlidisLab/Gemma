@@ -84,7 +84,7 @@ public class ProbeMapperConfig {
     private double nonSpecificSiteCountThreshold = ProbeMapperConfig.NON_SPECIFIC_SITE_THRESHOLD;
     private boolean useEnsembl = false;
     private boolean useEsts = false;
-    private boolean useKnownGene = true; // as of rn6, cannot be used for rat genome
+    private boolean useKnownGene = true; // as of rn6 and rn7, cannot be used for rat genome
     private boolean useMiRNA = false; // just confuses things.
     private boolean useMrnas = false; // doesn't add much.
     private boolean useRefGene = true;
