@@ -22,7 +22,6 @@ import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.Constants;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.UnknownLogScaleException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
