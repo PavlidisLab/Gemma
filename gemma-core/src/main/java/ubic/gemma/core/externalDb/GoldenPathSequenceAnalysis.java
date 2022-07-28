@@ -113,7 +113,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
 
         if ( config.isUseKnownGene() ) {
-            // get known genes as well, in case all we got was an intron. Currently does not work with rat (rn6)
+            // get known genes as well, in case all we got was an intron. Currently does not work with rat (rn6, rn7)
             geneProducts.addAll( this.findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
         }
 
@@ -249,8 +249,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
 
         /*
-         * Rat has changed again for rn6, dropped the use of RGD symbols and there is no Known Gene track, so this must
-         * be skipped for rat (3/2018)
+         * Rat has changed again for rn6 and rn7, dropped the use of RGD symbols and there is no Known Gene track, so this must
+         * be skipped for rat (3/2018, 7/2022)
          */
 
         /*

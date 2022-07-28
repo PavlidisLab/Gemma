@@ -525,7 +525,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.config = new ProbeMapperConfig();
 
         /*
-         * Hackery to work around rn6 problems
+         * Hackery to work around rn6+ problems
          */
         boolean isRat;
         if ( this.taxon == null) {
@@ -537,7 +537,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         boolean isMissingTracks = isRat && Settings
-                .getString( "gemma.goldenpath.db.rat" ).equals( "rn6" );
+                .getString( "gemma.goldenpath.db.rat" ).startsWith( "rn" );
 
         if ( mirnaOnlyModeOption ) {
             AbstractCLI.log.info( "Micro RNA only mode" );
