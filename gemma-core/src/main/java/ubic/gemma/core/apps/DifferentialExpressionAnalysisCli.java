@@ -169,7 +169,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "ebayes", "Use empirical-Bayes moderated statistics. Default: "
+        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default: "
                 + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
 
     }
@@ -222,8 +222,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             this.delete = true;
         }
 
-        if ( commandLine.hasOption( "ebayes" ) ) {
-            this.ebayes = true;
+        if ( commandLine.hasOption( "nobayes" ) ) {
+            this.ebayes = false;
         }
 
         if ( commandLine.hasOption( "nodb" ) ) {

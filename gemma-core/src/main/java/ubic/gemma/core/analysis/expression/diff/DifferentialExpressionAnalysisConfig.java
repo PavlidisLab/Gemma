@@ -40,7 +40,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     /**
      * Default value for whether empirical Bayes moderation of test statistics should be used.
      */
-    public static final boolean DEFAULT_EBAYES = false;
+    public static final boolean DEFAULT_EBAYES = true;
 
     private static final long serialVersionUID = 622877438067070041L;
 
