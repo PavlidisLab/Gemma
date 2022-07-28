@@ -76,6 +76,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean ebayes = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
 
     private boolean persist = true;
+    private boolean makeArchiveFiles = true;
 
     @Override
     public String getCommandName() {
@@ -127,11 +128,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption( options );
 
-        //
-        //        Option topOpt = Option.builder( "top" ).hasArg().argName( "number" ).desc( "The top (most significant) results to display." )
-        //                .build();
-        //        super.addOption( topOpt );
-
         super.addAutoOption( options );
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption( options );
@@ -162,15 +158,16 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         options.addOption( ignoreBatchOption );
 
-        options.addOption( "nodb", "Output files only to your gemma.appdata.home instead of database" );
+        options.addOption( "nodb", "Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database" );
 
         options.addOption( "redo", "If using automatic analysis "
-                + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
+                + "try to base analysis on previous analysis's choice of statistical model. Will re-run all analyses for the experiment" );
 
         options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default: "
-                + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
+        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes");
+
+        options.addOption( "nofiles",  "Don't create archive files after analysis. Default is to make them");
 
     }
 
@@ -228,6 +225,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         if ( commandLine.hasOption( "nodb" ) ) {
             this.persist = false;
+        }
+
+        if (commandLine.hasOption("nofiles")) {
+            this.makeArchiveFiles = false;
         }
 
         this.tryToCopyOld = commandLine.hasOption( "redo" );
@@ -317,6 +318,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setPersist( this.persist );
                 boolean rnaSeq = super.eeService.isRNASeq( ee );
                 config.setUseWeights( rnaSeq );
+                config.setMakeArchiveFile( this.makeArchiveFiles );
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
                  */
