@@ -65,6 +65,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     private FactorValue subsetFactorValue = null;
 
     private boolean useWeights = false;
+    private boolean makeArchiveFile = true;
 
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         interactionsToInclude.add( factors );
@@ -232,4 +233,11 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     }
 
+    public boolean getMakeArchiveFile() {
+        return makeArchiveFile;
+    }
+
+    public void setMakeArchiveFile( boolean makeArchiveFile ) {
+        this.makeArchiveFile = makeArchiveFile;
+    }
 }

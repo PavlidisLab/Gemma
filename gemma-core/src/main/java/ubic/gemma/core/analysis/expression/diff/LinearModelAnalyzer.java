@@ -1451,32 +1451,33 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                     // DEBUG CODE
 //                    try {
-//                        File file = File.createTempFile( "loess-fit-", ".txt", new File( "/Users/pzoot/" ) );
+                    // String dir = "/Users/pzoot";
+//                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
 //                        OutputStream os = new PrintStream( file );
 //                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
 //                        w.writeMatrix( mv.getLoess() );
 //
-//                        File f2 = File.createTempFile( "mv-", ".txt", new File( "/Users/pzoot/" ) );
+//                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
 //                        OutputStream os2 = new PrintStream( f2 );
 //                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
 //                        w2.writeMatrix( mv.getMeanVariance() );
 //
-//                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( "/Users/pzoot/" ) );
+//                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
 //                        OutputStream os3 = new PrintStream( f3 );
 //                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
 //                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
 //
-//                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( "/Users/pzoot/" ) );
+//                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
 //                        OutputStream os4 = new PrintStream( f4 );
 //                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
 //                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
 //
-//                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( "/Users/pzoot/" ) );
+//                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
 //                        OutputStream os5 = new PrintStream( f5 );
 //                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
 //                        w5.writeMatrix( designMatrix.getMatrix(), true );
 //
-//                        File f6 = File.createTempFile( "libsize-", ".txt", new File( "/Users/pzoot/" ) );
+//                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
 //                        OutputStream os6 = new PrintStream( f6 );
 //                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
 //                        w6.writeMatrix( librarySize );
