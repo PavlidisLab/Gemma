@@ -63,6 +63,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
+        config.setModerateStatistics( false );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
@@ -125,6 +126,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         factors.add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
+        config.setModerateStatistics( false );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
