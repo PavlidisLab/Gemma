@@ -165,6 +165,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         // DE analysis without weights to assist comparison to R
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setUseWeights( false );
+        config.setModerateStatistics( false );
         config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
@@ -190,6 +191,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         config = new DifferentialExpressionAnalysisConfig();
         config.setUseWeights( true ); // <----
         config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.setModerateStatistics( false );
         analyses = analyzer.run( ee, config );
         results = analyses.iterator().next();
         resultSet = results.getResultSets().iterator().next();
@@ -249,6 +251,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.setModerateStatistics( false );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );

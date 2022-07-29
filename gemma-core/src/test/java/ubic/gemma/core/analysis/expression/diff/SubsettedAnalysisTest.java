@@ -54,6 +54,7 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.setSubsetFactor( this.experimentalFactorB );
+        config.setModerateStatistics( false );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         assertEquals( 2, expressionAnalyses.size() );
