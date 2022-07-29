@@ -29,7 +29,7 @@ public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, Arra
     private ArrayDesignService arrayDesignService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
 
         ArrayDesign ad = taskCommand.getArrayDesign();
 

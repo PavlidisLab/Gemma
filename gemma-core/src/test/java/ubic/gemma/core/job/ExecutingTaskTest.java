@@ -193,7 +193,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         private static Log log = LogFactory.getLog( FailureTestTask.class );
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             log.info( "Executing a failing task." );
             throw new AccessDeniedException( "Test!" );
         }
@@ -204,7 +204,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         private static Log log = LogFactory.getLog( SuccessTestTask.class );
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             log.info( "Executing a success task." );
             return new TaskResult( this.getTaskCommand(), "SUCCESS" );
         }

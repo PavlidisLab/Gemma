@@ -65,7 +65,7 @@ public class TaskCommand implements Serializable {
     /**
      * Used to propagate security to grid workers.
      */
-    private final Authentication authentication;
+    private final SecurityContext securityContext;
     private String submitter;
     private String taskId;
     /**
@@ -81,7 +81,7 @@ public class TaskCommand implements Serializable {
         // security details.
         SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
-        this.authentication = context.getAuthentication();
+        this.securityContext = context;
 
         Authentication authentication = context.getAuthentication();
         // can happen in test situations.
@@ -148,8 +148,8 @@ public class TaskCommand implements Serializable {
         this.persistJobDetails = persistJobDetails;
     }
 
-    public Authentication getAuthentication() {
-        return this.authentication;
+    public SecurityContext getSecurityContext() {
+        return this.securityContext;
     }
 
     /**

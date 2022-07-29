@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.job.executor.common;
 
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
@@ -29,7 +30,7 @@ import java.util.concurrent.Callable;
  */
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
-    private final Task<T, ?> task;
+    private final DelegatingSecurityContextCallable<T> task;
     private final String taskId;
     private final TaskCommand taskCommand;
 
@@ -37,7 +38,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     private transient TaskLifecycleHandler lifecycleHandler;
 
     public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
-        this.task = task;
+        this.task = new DelegatingSecurityContextCallable<>( task, taskCommand.getSecurityContext() );
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
     }
@@ -57,15 +58,11 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
-            SecurityContextHolder.getContext().setAuthentication( taskCommand.getAuthentication() );
-            result = this.task.execute();
-        } catch ( Throwable e ) {
+            result = this.task.call();
+        } catch ( Exception e ) {
             // result is an exception
             result = ( T ) new TaskResult( taskId );
             result.setException( e );
-        } finally {
-            // restore the previous security context
-            SecurityContextHolder.getContext().setAuthentication( previousAuthentication );
         }
 
         if ( result.getException() == null ) {

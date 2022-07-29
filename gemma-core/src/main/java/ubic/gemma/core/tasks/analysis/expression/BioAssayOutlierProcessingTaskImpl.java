@@ -30,7 +30,7 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
     private OutlierFlaggingService sampleRemoveService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         Collection<BioAssay> bioAssays = bioAssayService.load( taskCommand.getBioAssayIds() );
         if ( bioAssays.isEmpty() ) {
             throw new RuntimeException( "Could not locate the bioassays" );

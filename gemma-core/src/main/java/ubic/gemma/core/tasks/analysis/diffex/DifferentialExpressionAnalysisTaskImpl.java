@@ -58,7 +58,7 @@ public class DifferentialExpressionAnalysisTaskImpl
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
 
         if ( taskCommand instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
             DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) taskCommand )

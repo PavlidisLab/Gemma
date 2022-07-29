@@ -305,7 +305,7 @@ public class ExpressionExperimentDataFetchController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             StopWatch watch = new StopWatch();
             watch.start();
 
@@ -341,7 +341,7 @@ public class ExpressionExperimentDataFetchController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
 
             StopWatch watch = new StopWatch();
             watch.start();
@@ -458,7 +458,7 @@ public class ExpressionExperimentDataFetchController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
 
             StopWatch watch = new StopWatch();
             watch.start();
