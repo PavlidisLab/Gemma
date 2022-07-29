@@ -61,7 +61,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         List<ExperimentalFactor> factors = Arrays.asList( experimentalFactorA_Area, experimentalFactorB );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
-
+        config.setModerateStatistics( false );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
