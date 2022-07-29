@@ -178,7 +178,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
         checkNotNull( taskCommand.getTaskId(), "Must have taskId." );
-        checkNotNull( taskCommand.getSecurityContext().getAuthentication(), "Must have Authentication." );
     }
 
     private SubmittedTask<TaskResult> constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
