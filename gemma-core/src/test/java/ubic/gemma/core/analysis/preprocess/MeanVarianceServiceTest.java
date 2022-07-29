@@ -187,7 +187,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // so it doesn't look for soft files
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-        assertNull( eeService.findByShortName( "GSE29006" ) );
+        if(null != eeService.findByShortName( "GSE29006" ) ) eeService.remove(eeService.findByShortName( "GSE29006" ));
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
