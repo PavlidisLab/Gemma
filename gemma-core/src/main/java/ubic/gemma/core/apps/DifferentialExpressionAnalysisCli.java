@@ -94,16 +94,16 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( expressionExperiments.size() > 1 ) {
                 AbstractCLI.log.info( ">>>>>> Begin processing: " + ee );
             }
-
-            /*
-             * This is really only important when running as admin and in a batch mode.
-             */
-            AbstractCLI.log.debug( securityService.getOwner( ee ) );
-
-            if ( !securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
-                AbstractCLI.log.warn( "Experiment is not owned by current user, skipping: " + ee );
-                continue;
-            }
+// no longer considered necessary
+//            /*
+//             * This is really only important when running as admin and in a batch mode,
+//             */
+//            AbstractCLI.log.debug( securityService.getOwner( ee ) );
+//
+//            if (!securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
+//                AbstractCLI.log.warn( "Experiment is not owned by current user, skipping: " + ee );
+//                continue;
+//            }
 
             this.processExperiment( ( ExpressionExperiment ) ee );
         }
