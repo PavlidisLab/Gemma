@@ -35,7 +35,7 @@
       <!-- assumed readily available in ExperimentalFactorValueObject -->
       <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic" cascade="all" lazy="false"
                    fetch="join">
-         <column name="CATEGORY_FK" not-null="true" sql-type="BIGINT" unique="true"/>
+         <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <set name="annotations" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write"/>
