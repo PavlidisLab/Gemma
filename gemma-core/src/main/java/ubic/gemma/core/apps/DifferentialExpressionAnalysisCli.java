@@ -133,27 +133,27 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addForceOption( options );
 
         Option factors = Option.builder( "factors" ).hasArg().desc(
-                "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
+                        "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
                 .build();
 
         options.addOption( factors );
 
         Option subsetFactor = Option.builder( "subset" ).hasArg().desc(
-                "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
+                        "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
                 .build();
         options.addOption( subsetFactor );
 
         Option analysisType = Option.builder( "type" ).hasArg().desc(
-                "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                        + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
-                        + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
+                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+                                + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
+                                + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
+                                + " GENERICLM (generic LM, no interactions); default: auto-detect" )
                 .build();
 
         options.addOption( analysisType );
 
         Option ignoreBatchOption = Option.builder( "usebatch" ).desc(
-                "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
+                        "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
                 .build();
 
         options.addOption( ignoreBatchOption );
@@ -165,9 +165,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes");
+        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes" );
 
-        options.addOption( "nofiles",  "Don't create archive files after analysis. Default is to make them");
+        options.addOption( "nofiles", "Don't create archive files after analysis. Default is to make them" );
 
     }
 
@@ -227,7 +227,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             this.persist = false;
         }
 
-        if (commandLine.hasOption("nofiles")) {
+        if ( commandLine.hasOption( "nofiles" ) ) {
             this.makeArchiveFiles = false;
         }
 
@@ -262,6 +262,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private void processExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> results;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        config.setMakeArchiveFile( this.makeArchiveFiles );
+        config.setModerateStatistics( this.ebayes );
+        config.setPersist( this.persist );
+        boolean rnaSeq = super.eeService.isRNASeq( ee );
+        config.setUseWeights( rnaSeq );
 
         try {
 
@@ -314,11 +320,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setAnalysisType( this.type );
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
-                config.setModerateStatistics( this.ebayes );
-                config.setPersist( this.persist );
-                boolean rnaSeq = super.eeService.isRNASeq( ee );
-                config.setUseWeights( rnaSeq );
-                config.setMakeArchiveFile( this.makeArchiveFiles );
+
+
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
                  */
@@ -365,16 +368,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 } else {
 
                     config.setFactorsToInclude( factorsToUse );
-                    config.setPersist( this.persist );
-                    config.setModerateStatistics( this.ebayes );
 
                     if ( factorsToUse.size() == 2 ) {
                         // include interactions by default
                         config.addInteractionToInclude( factorsToUse );
                     }
-
-                    boolean rnaSeq = super.eeService.isRNASeq( ee );
-                    config.setUseWeights( rnaSeq );
 
                     results = this.differentialExpressionAnalyzerService
                             .runDifferentialExpressionAnalyses( ee, config );
