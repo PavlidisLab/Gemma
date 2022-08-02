@@ -14,9 +14,6 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
@@ -30,17 +27,15 @@ import java.util.concurrent.Callable;
  */
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
-    private final DelegatingSecurityContextCallable<T> task;
+    private final Task<T, ?> task;
     private final String taskId;
-    private final TaskCommand taskCommand;
 
     // Does not survive serialization.
     private transient TaskLifecycleHandler lifecycleHandler;
 
-    public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
-        this.task = new DelegatingSecurityContextCallable<>( task, taskCommand.getSecurityContext() );
-        this.taskId = taskCommand.getTaskId();
-        this.taskCommand = taskCommand;
+    public ExecutingTask( Task<T, ?> task, String taskId ) {
+        this.task = task;
+        this.taskId = taskId;
     }
 
     @SuppressWarnings("unchecked")
@@ -53,8 +48,6 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         }
 
         lifecycleHandler.onStart();
-
-        Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
 
         try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
@@ -98,7 +91,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
          * On failure.
          * @param e
          */
-        void onFailure( Throwable e );
+        void onFailure( Exception e );
 
         /**
          * On successful completion.

@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.infrastructure.common.MessageSender;
 import ubic.gemma.core.infrastructure.jms.JMSHelper;
@@ -89,10 +90,10 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
 
 
         @SuppressWarnings("unchecked") final ExecutingTask<TaskResult> executingTask = ( ExecutingTask<TaskResult> ) new ExecutingTask<>(
-                task, taskCommand );
+                task, taskCommand.getTaskId() );
         executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
             @Override
-            public void onFailure( Throwable e ) {
+            public void onFailure( Exception e ) {
                 RemoteTaskRunningServiceImpl.log.error( e, e );
                 submittedTask.updateStatus( new TaskStatusUpdate( SubmittedTask.Status.FAILED ) );
             }
@@ -121,7 +122,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         } );
 
-        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
+        ListenableFuture<TaskResult> future = executorService.submit( new DelegatingSecurityContextCallable<>( executingTask, taskCommand.getSecurityContext() ) );
         submittedTask.setFuture( future );
 
         // These are run on task completion.

@@ -63,7 +63,7 @@ public class TaskResult implements Serializable {
     /**
      * @return the exception
      */
-    public Throwable getException() {
+    public Exception getException() {
         return exception;
     }
 
