@@ -291,7 +291,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                         for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                             factorName.append( ef.getName() ).append( "," );
-                            if ( StringUtils.isNotBlank( ef.getCategory().getCategoryUri() ) ) {
+                            if ( ef.getCategory() != null && StringUtils.isNotBlank( ef.getCategory().getCategoryUri() ) ) {
                                 factorURI.append( ef.getCategory().getCategoryUri() ).append( "," );
                             }
                         }

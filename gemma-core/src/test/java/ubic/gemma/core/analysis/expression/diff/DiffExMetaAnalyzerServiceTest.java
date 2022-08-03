@@ -550,6 +550,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config1.setFactorsToInclude( factors );
+        config1.setModerateStatistics( false );
         return config1;
     }
 

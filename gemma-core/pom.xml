@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.27.16</version>
+        <version>1.27.17</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -88,6 +88,8 @@
                     </programs>
                     <!-- this allows Log4j 2 to lookup for Log4j 1.2 configuration -->
                     <extraJvmArguments>-Dlog4j1.compatibility=true</extraJvmArguments>
+                    <!-- Gemma CLI extensions can be dropped in that folder -->
+                    <endorsedDir>contrib</endorsedDir>
                 </configuration>
                 <executions>
                     <execution>

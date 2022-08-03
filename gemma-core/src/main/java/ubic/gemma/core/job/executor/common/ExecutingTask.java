@@ -14,8 +14,6 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
@@ -31,15 +29,13 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
     private final Task<T, ?> task;
     private final String taskId;
-    private final TaskCommand taskCommand;
 
     // Does not survive serialization.
     private transient TaskLifecycleHandler lifecycleHandler;
 
-    public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
+    public ExecutingTask( Task<T, ?> task, String taskId ) {
         this.task = task;
-        this.taskId = taskCommand.getTaskId();
-        this.taskCommand = taskCommand;
+        this.taskId = taskId;
     }
 
     @SuppressWarnings("unchecked")
@@ -53,19 +49,13 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
         lifecycleHandler.onStart();
 
-        Authentication previousAuthentication = SecurityContextHolder.getContext().getAuthentication();
-
         try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
-            SecurityContextHolder.getContext().setAuthentication( taskCommand.getAuthentication() );
-            result = this.task.execute();
-        } catch ( Throwable e ) {
+            result = this.task.call();
+        } catch ( Exception e ) {
             // result is an exception
             result = ( T ) new TaskResult( taskId );
             result.setException( e );
-        } finally {
-            // restore the previous security context
-            SecurityContextHolder.getContext().setAuthentication( previousAuthentication );
         }
 
         if ( result.getException() == null ) {
@@ -101,7 +91,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
          * On failure.
          * @param e
          */
-        void onFailure( Throwable e );
+        void onFailure( Exception e );
 
         /**
          * On successful completion.

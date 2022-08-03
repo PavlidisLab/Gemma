@@ -143,7 +143,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                    AbstractCLI.log.warn( arrayDesign + " does not meet criteria to be processed");
                     return;
                 }
 

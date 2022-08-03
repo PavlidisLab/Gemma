@@ -76,7 +76,7 @@ public class BatchConfoundValueObject {
         } else {
             name = " Subset " + ee.getName() + " of " + ( ( ExpressionExperiment ) ee ).getShortName();
         }
-        return ee.getId() + "\t" + name + "\t" + ef.getId() + "\t" + ef.getCategory().getCategory() + "\t"
+        return ee.getId() + "\t" + name + "\t" + ef.getId() + "\t" + ( ef.getCategory() != null ? ef.getCategory().getCategory() : ef.getName() ) + "\t"
                 + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) + "\t"
                 + numBatches;
     }

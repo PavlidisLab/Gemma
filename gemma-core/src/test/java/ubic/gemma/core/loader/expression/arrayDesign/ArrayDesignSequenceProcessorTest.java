@@ -19,8 +19,10 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -119,10 +121,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        if ( fastacmdExe == null ) {
-            log.warn( "No fastacmd executable is configured, skipping test" );
-            return;
-        }
+        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
 
         File fi = new File( fastacmdExe );
         if ( !fi.canRead() ) {
@@ -156,6 +155,8 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
+        String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        Assume.assumeTrue( "No fastacmd executable is configured, skipping test.", fastacmdExe == null );
 
         GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );

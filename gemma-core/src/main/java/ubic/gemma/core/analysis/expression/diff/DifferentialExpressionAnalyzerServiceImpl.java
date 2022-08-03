@@ -244,11 +244,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // get a clean copy of the analysis object from the DB.
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
         // we do this here because now we have IDs for everything.
-        try {
-            expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
-        } catch ( IOException e ) {
-            DifferentialExpressionAnalyzerServiceImpl.log
-                    .error( "Unable to save the data to a file: " + e.getMessage() );
+        if (config.getMakeArchiveFile() ) {
+            try {
+                expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
+            } catch ( IOException e ) {
+                DifferentialExpressionAnalyzerServiceImpl.log
+                        .error( "Unable to save the data to a file: " + e.getMessage() );
+            }
         }
 
         // final transaction: audit.

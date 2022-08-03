@@ -26,7 +26,7 @@ public class TwoChannelMissingValueTaskImpl extends AbstractTask<TaskResult, Two
     private TwoChannelMissingValues twoChannelMissingValues;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 
         Collection<RawExpressionDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,

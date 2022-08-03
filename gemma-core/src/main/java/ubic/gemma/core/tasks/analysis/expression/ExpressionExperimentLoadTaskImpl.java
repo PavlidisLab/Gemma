@@ -33,7 +33,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 
     @SuppressWarnings("unchecked")
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         String accession = taskCommand.getAccession();
         boolean loadPlatformOnly = taskCommand.isLoadPlatformOnly();
         boolean doSampleMatching = !taskCommand.isSuppressMatching();

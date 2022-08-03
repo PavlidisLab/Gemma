@@ -350,11 +350,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * order w.r.t. the sequence analysis, so we don't need to check that order.
          */
         if ( isNotMerged && lastSequenceUpdate != null ) {
+            // FIXME: repeatmasking is currently not operable so we are waiving this requirement.
             if ( lastRepeatMask != null && lastSequenceUpdate.getDate().after( lastRepeatMask.getDate() ) ) {
+//                AbstractCLI.log
+//                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
+//                return false;
                 AbstractCLI.log
-                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
-                return false;
-
+                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking but requirement temporarily waived" );
+               // return false;
             }
 
             if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate()
@@ -377,8 +380,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( isNotMerged && lastRepeatMask == null ) {
-            AbstractCLI.log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
-            return false;
+            AbstractCLI.log
+                    .warn( arrayDesign + "Repeat masking missing but requirement temporarily waived" );
+           // AbstractCLI.log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
+           // return false;
         }
 
         if ( skipIfLastRunLaterThan != null && lastProbeMapping != null && lastProbeMapping.getDate()
@@ -520,10 +525,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.config = new ProbeMapperConfig();
 
         /*
-         * Hackery to work around rn6 problems
+         * Hackery to work around rn6+ problems
          */
         boolean isRat;
-        if ( this.taxon == null ) {
+        if ( this.taxon == null) {
             assert arrayDesign != null;
             Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
             isRat = t.getCommonName().equals( "rat" );
@@ -532,7 +537,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         boolean isMissingTracks = isRat && Settings
-                .getString( "gemma.goldenpath.db.rat" ).equals( "rn6" );
+                .getString( "gemma.goldenpath.db.rat" ).startsWith( "rn" );
 
         if ( mirnaOnlyModeOption ) {
             AbstractCLI.log.info( "Micro RNA only mode" );

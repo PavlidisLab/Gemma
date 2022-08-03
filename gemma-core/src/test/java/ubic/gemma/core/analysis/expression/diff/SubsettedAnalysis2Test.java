@@ -119,6 +119,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
         ExperimentalFactor genotype = null;
         ExperimentalFactor phenotype = null;
         for ( ExperimentalFactor ef : factors ) {
+            assertNotNull( ef.getCategory() );
             switch ( ef.getCategory().getValue() ) {
                 case "genotype":
                     genotype = ef;

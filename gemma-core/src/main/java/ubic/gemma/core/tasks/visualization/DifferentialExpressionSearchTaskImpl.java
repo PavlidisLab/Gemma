@@ -80,7 +80,7 @@ public class DifferentialExpressionSearchTaskImpl
     private Collection<GeneValueObject> geneGroup;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
 
         DifferentialExpressionSearchTaskImpl.log.info( "==== Starting diff ex search ==== " + this.taskCommand );
         DifferentialExpressionGenesConditionsValueObject searchResult = new DifferentialExpressionGenesConditionsValueObject();

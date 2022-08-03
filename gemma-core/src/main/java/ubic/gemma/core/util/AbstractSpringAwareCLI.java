@@ -233,9 +233,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 this.getAdditionalSpringConfigLocations() );
 
         /*
-         * Guarantee that the security settings are uniform throughout the application (all threads).
+         * Guarantee that the security settings are inherited from current thread.
          */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
     /**
@@ -243,11 +243,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param commandLine
      */
     private void authenticate( CommandLine commandLine ) {
-
-        /*
-         * Allow security settings (authorization etc) in a given context to be passed into spawned threads
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
         if ( requireLogin() || commandLine.hasOption( USERNAME_OPTION ) || System.getenv().containsKey( USERNAME_ENV ) ) {

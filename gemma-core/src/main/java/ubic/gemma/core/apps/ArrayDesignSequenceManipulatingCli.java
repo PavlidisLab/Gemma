@@ -138,8 +138,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
             Class<? extends ArrayDesignAnalysisEvent> cls ) {
-        if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) ) {
-            AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
+        if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) || design.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
+            AbstractCLI.log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
             addErrorObject( design, "Skipped because it is not a microarray platform." );

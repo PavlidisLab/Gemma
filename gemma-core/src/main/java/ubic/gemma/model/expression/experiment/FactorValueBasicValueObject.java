@@ -66,9 +66,9 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
             }
         }
 
-        this.experimentalFactorCategory = new CharacteristicBasicValueObject(
-                fv.getExperimentalFactor().getCategory() );
-
+        if ( fv.getExperimentalFactor().getCategory() != null ) {
+            this.experimentalFactorCategory = new CharacteristicBasicValueObject( fv.getExperimentalFactor().getCategory() );
+        }
     }
 
     @Override

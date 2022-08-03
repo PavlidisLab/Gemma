@@ -192,7 +192,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
                 .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
 
-    // these two queries could be combined by using BioSequence2GeneProduct.
+        // these two queries could be combined by using BioSequence2GeneProduct.
         //language=HQL
         final String queryString = "select ba from CompositeSequence  cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatAssociation ba "
@@ -964,6 +964,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+
+        if ( candidateSubsumee.equals( candidateSubsumer ) ) {
+            log.warn("Attempt to check a platform against itself for subsuming!");
+            return false;
+        }
 
         // Size does not automatically disqualify, because we only consider BioSequences that actually have
         // sequences in them.

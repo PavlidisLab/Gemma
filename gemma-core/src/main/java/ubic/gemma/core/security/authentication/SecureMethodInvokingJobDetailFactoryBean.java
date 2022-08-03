@@ -24,8 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.security.audit.AuditAdvice;
 import ubic.gemma.persistence.util.Settings;
@@ -60,22 +60,27 @@ public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobD
         String serverUserName = Settings.getString( "gemma.agent.userName" );
         String serverPassword = Settings.getString( "gemma.agent.password" );
         Object result;
-        Authentication oldAuth = SecurityContextHolder.getContext().getAuthentication();
+        SecurityContext previousSecurityContext = SecurityContextHolder.getContext();
 
         try {
-            assert manualAuthenticationService != null;
-            Authentication auth = manualAuthenticationService.attemptAuthentication( serverUserName, serverPassword );
-            SecurityContextHolder.getContext().setAuthentication( auth );
-        } catch ( AuthenticationException e ) {
-            SecureMethodInvokingJobDetailFactoryBean.log
-                    .error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous" );
-            manualAuthenticationService.authenticateAnonymously();
+            try {
+                assert manualAuthenticationService != null;
+                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                securityContext.setAuthentication( manualAuthenticationService.attemptAuthentication( serverUserName, serverPassword ) );
+                SecurityContextHolder.setContext( securityContext );
+            } catch ( AuthenticationException e ) {
+                SecureMethodInvokingJobDetailFactoryBean.log
+                        .error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous" );
+                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                SecurityContextHolder.setContext( securityContext );
+                // gsec will call SecurityContextHolder.getContext().setAuthentication()
+                manualAuthenticationService.authenticateAnonymously();
+            }
+            assert SecurityContextHolder.getContext().getAuthentication() != null;
+            return super.invoke();
         } finally {
-            result = super.invoke();
-            SecurityContextHolder.getContext().setAuthentication( oldAuth );
-
+            SecurityContextHolder.setContext( previousSecurityContext );
         }
-        return result;
     }
 
     /**

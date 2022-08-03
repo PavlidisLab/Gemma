@@ -11,6 +11,7 @@ package ubic.gemma.model.expression.experiment;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
@@ -18,7 +19,7 @@ import java.io.Serializable;
  * the objects for client display, there is only one characteristic associated here.
  * Note: this used to be called FactorValueObject and now replaces the old FactorValueValueObject. Confusing!
  *
- * @author     Paul
+ * @author Paul
  * @deprecated aim towards using the FactorValueBasicValueObject. This one is confusing. Once usage of this
  *             type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
  */
@@ -73,9 +74,9 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      *                   confuses things.
      *                   If c is null, the plain "value" is used.
      * @param      value value
-     * @deprecated       see class deprecated note
+     * @deprecated see class deprecated note
      */
-    public FactorValueValueObject( FactorValue value, Characteristic c ) {
+    public FactorValueValueObject( FactorValue value, @Nullable Characteristic c ) {
         super( value.getId() );
         this.init( value, c );
     }
@@ -220,7 +221,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.measurement = measurement;
     }
 
-    private void init( FactorValue val, Characteristic c ) {
+    private void init( FactorValue val, @Nullable Characteristic c ) {
         this.setFactorValue( FactorValueBasicValueObject.getSummaryString( val ) );
         this.setFactorId( val.getExperimentalFactor().getId() );
         this.isBaseline = val.getIsBaseline() != null ? val.getIsBaseline() : this.isBaseline;

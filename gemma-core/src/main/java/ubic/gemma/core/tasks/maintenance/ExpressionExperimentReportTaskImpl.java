@@ -20,7 +20,7 @@ public class ExpressionExperimentReportTaskImpl extends AbstractTask<TaskResult,
     private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         TaskResult result = new TaskResult( taskCommand, null );
 
         if ( taskCommand.doAll() ) {

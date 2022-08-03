@@ -48,7 +48,7 @@ import java.util.Map;
 @Component
 public class ProbeMapperImpl implements ProbeMapper {
 
-    private static final int MAX_WARNINGS = 100;
+    private static final int MAX_WARNINGS = 10;
     private final Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
     private final ThreePrimeDistanceMethod threePrimeMethod = ThreePrimeDistanceMethod.RIGHT;
 

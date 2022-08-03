@@ -71,7 +71,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     }
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         if ( taskCommand.isRemove() ) {
             return this.doRemove();
         }

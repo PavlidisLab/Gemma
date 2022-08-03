@@ -123,6 +123,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
         ExperimentalFactor disease = null;
         ExperimentalFactor diseasegroup = null;
         for ( ExperimentalFactor ef : factors ) {
+            assertNotNull( ef.getCategory() );
             switch ( ef.getCategory().getValue() ) {
                 case "study design":
                     diseasegroup = ef;

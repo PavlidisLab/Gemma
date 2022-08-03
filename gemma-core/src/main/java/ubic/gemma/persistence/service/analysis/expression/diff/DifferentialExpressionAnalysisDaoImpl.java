@@ -339,6 +339,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         timer.start();
 
         Session session = this.getSessionFactory().getCurrentSession();
+        session.flush();
         session.clear();
 
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );

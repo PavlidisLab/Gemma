@@ -76,6 +76,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean ebayes = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
 
     private boolean persist = true;
+    private boolean makeArchiveFiles = true;
 
     @Override
     public String getCommandName() {
@@ -94,13 +95,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( expressionExperiments.size() > 1 ) {
                 AbstractCLI.log.info( ">>>>>> Begin processing: " + ee );
             }
-// no longer considered necessary
+
 //            /*
-//             * This is really only important when running as admin and in a batch mode,
+//             * This is really only important when running as admin and in a batch mode.
 //             */
 //            AbstractCLI.log.debug( securityService.getOwner( ee ) );
 //
-//            if (!securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
+//            if ( !securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
 //                AbstractCLI.log.warn( "Experiment is not owned by current user, skipping: " + ee );
 //                continue;
 //            }
@@ -127,50 +128,46 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption( options );
 
-        //
-        //        Option topOpt = Option.builder( "top" ).hasArg().argName( "number" ).desc( "The top (most significant) results to display." )
-        //                .build();
-        //        super.addOption( topOpt );
-
         super.addAutoOption( options );
         this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption( options );
 
         Option factors = Option.builder( "factors" ).hasArg().desc(
-                "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
+                        "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
                 .build();
 
         options.addOption( factors );
 
         Option subsetFactor = Option.builder( "subset" ).hasArg().desc(
-                "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
+                        "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
                 .build();
         options.addOption( subsetFactor );
 
         Option analysisType = Option.builder( "type" ).hasArg().desc(
-                "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                        + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
-                        + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
+                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+                                + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
+                                + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
+                                + " GENERICLM (generic LM, no interactions); default: auto-detect" )
                 .build();
 
         options.addOption( analysisType );
 
         Option ignoreBatchOption = Option.builder( "usebatch" ).desc(
-                "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
+                        "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
                 .build();
 
         options.addOption( ignoreBatchOption );
 
-        options.addOption( "nodb", "Output files only to your gemma.appdata.home instead of database" );
+        options.addOption( "nodb", "Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database" );
 
         options.addOption( "redo", "If using automatic analysis "
-                + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
+                + "try to base analysis on previous analysis's choice of statistical model. Will re-run all analyses for the experiment" );
 
         options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "ebayes", "Use empirical-Bayes moderated statistics. Default: "
-                + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
+        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes" );
+
+        options.addOption( "nofiles", "Don't create archive files after analysis. Default is to make them" );
 
     }
 
@@ -222,12 +219,16 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             this.delete = true;
         }
 
-        if ( commandLine.hasOption( "ebayes" ) ) {
-            this.ebayes = true;
+        if ( commandLine.hasOption( "nobayes" ) ) {
+            this.ebayes = false;
         }
 
         if ( commandLine.hasOption( "nodb" ) ) {
             this.persist = false;
+        }
+
+        if ( commandLine.hasOption( "nofiles" ) ) {
+            this.makeArchiveFiles = false;
         }
 
         this.tryToCopyOld = commandLine.hasOption( "redo" );
@@ -261,6 +262,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private void processExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> results;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        config.setMakeArchiveFile( this.makeArchiveFiles );
+        config.setModerateStatistics( this.ebayes );
+        config.setPersist( this.persist );
+        boolean rnaSeq = super.eeService.isRNASeq( ee );
+        config.setUseWeights( rnaSeq );
 
         try {
 
@@ -313,10 +320,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setAnalysisType( this.type );
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
-                config.setModerateStatistics( this.ebayes );
-                config.setPersist( this.persist );
-                boolean rnaSeq = super.eeService.isRNASeq( ee );
-                config.setUseWeights( rnaSeq );
+
+
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
                  */
@@ -363,16 +368,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 } else {
 
                     config.setFactorsToInclude( factorsToUse );
-                    config.setPersist( this.persist );
-                    config.setModerateStatistics( this.ebayes );
 
                     if ( factorsToUse.size() == 2 ) {
                         // include interactions by default
                         config.addInteractionToInclude( factorsToUse );
                     }
-
-                    boolean rnaSeq = super.eeService.isRNASeq( ee );
-                    config.setUseWeights( rnaSeq );
 
                     results = this.differentialExpressionAnalyzerService
                             .runDifferentialExpressionAnalyses( ee, config );

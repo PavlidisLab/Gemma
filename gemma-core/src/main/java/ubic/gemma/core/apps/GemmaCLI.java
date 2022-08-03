@@ -22,12 +22,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.CLI;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -35,7 +34,7 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
-@SuppressWarnings({"unused", "WeakerAccess"}) // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GemmaCLI {
 
     public static void main( String[] args ) {
@@ -44,40 +43,41 @@ public class GemmaCLI {
          * Build a map from command names to classes.
          */
         Map<CommandGroup, Map<String, String>> commands = new HashMap<>();
-        Map<String, Class<? extends AbstractCLI>> commandClasses = new HashMap<>();
+        Map<String, Class<? extends CLI>> commandClasses = new HashMap<>();
         try {
-
             final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
                     false );
-            provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
+            provider.addIncludeFilter( new AssignableTypeFilter( CLI.class ) );
 
             // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
-            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.core.apps" );
+            final Set<BeanDefinition> classes = new HashSet<>();
+
+            // default CLIs
+            classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.apps" ) );
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
+
+            // CLI extensions
+            classes.addAll( provider.findCandidateComponents( "ubic.gemma.contrib.apps" ) );
 
             for ( BeanDefinition bean : classes ) {
                 try {
                     @SuppressWarnings("unchecked")
-                    Class<? extends AbstractCLI> aClazz = ( Class<? extends AbstractCLI> ) Class
+                    Class<? extends CLI> aClazz = ( Class<? extends CLI> ) Class
                             .forName( bean.getBeanClassName() );
 
-                    Object cliInstance = aClazz.newInstance();
+                    CLI cliInstance = aClazz.newInstance();
 
-                    Method method = aClazz.getMethod( "getCommandName" );
-                    String commandName = ( String ) method.invoke( cliInstance, new Object[]{} );
+                    String commandName = cliInstance.getCommandName();
                     if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                         // keep null to avoid printing some commands...
                         continue;
                     }
 
-                    Method method2 = aClazz.getMethod( "getShortDesc" );
-                    String desc = ( String ) method2.invoke( cliInstance, new Object[]{} );
+                    String desc = cliInstance.getShortDesc();
 
-                    Method method3 = aClazz.getMethod( "getCommandGroup" );
-                    CommandGroup g = ( CommandGroup ) method3.invoke( cliInstance, new Object[]{} );
-
+                    CommandGroup g = cliInstance.getCommandGroup();
                     if ( !commands.containsKey( g ) ) {
-                        commands.put( g, new TreeMap<String, String>() );
+                        commands.put( g, new TreeMap<>() );
                     }
 
                     commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
@@ -99,7 +99,7 @@ public class GemmaCLI {
         } else {
             LinkedList<String> f = new LinkedList<>( Arrays.asList( args ) );
             String commandRequested = f.remove( 0 );
-            String[] argsToPass = f.toArray( new String[]{} );
+            String[] argsToPass = f.toArray( new String[] {} );
 
             if ( !commandClasses.containsKey( commandRequested ) ) {
                 System.err.println( "Unrecognized command: " + commandRequested );
@@ -108,10 +108,9 @@ public class GemmaCLI {
                 System.exit( 1 );
             } else {
                 try {
-                    Class<? extends AbstractCLI> c = commandClasses.get( commandRequested );
+                    Class<? extends CLI> c = commandClasses.get( commandRequested );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
                     System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
-                    //noinspection JavaReflectionInvocation // It works
                     System.exit( c.getDeclaredConstructor().newInstance().executeCommand( argsToPass ) );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
@@ -126,9 +125,6 @@ public class GemmaCLI {
 
     /**
      * Mask password for logging
-     *
-     * @param argsToPass
-     * @return
      */
     public static String getOptStringForLogging( Object[] argsToPass ) {
         return java.util.regex.Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" )
@@ -137,8 +133,6 @@ public class GemmaCLI {
 
     /**
      * Print help and exit
-     *
-     * @param commands
      */
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
         System.err.println( "============ Gemma command line tools ============" );
@@ -156,7 +150,7 @@ public class GemmaCLI {
             if ( commandsInGroup.isEmpty() )
                 continue;
 
-            System.err.println( "\n---- " + commandGroup.toString() + " ----" );
+            System.err.println( "\n---- " + commandGroup + " ----" );
             for ( String cmd : commandsInGroup.keySet() ) {
                 if ( cmd == null )
                     continue; // just in case... but no command name means "skip";

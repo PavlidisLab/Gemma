@@ -28,7 +28,7 @@ public class DiffExMetaAnalyzerTaskImpl extends AbstractTask<TaskResult, DiffExM
     private GeneDiffExMetaAnalysisHelperService geneDiffExMetaAnalysisHelperService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.diffExMetaAnalyzerService.analyze( taskCommand
                 .getAnalysisResultSetIds() );
 
