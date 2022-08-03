@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -64,7 +65,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskResult, TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
         ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -84,7 +85,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
         verify( lifecycleHandler ).onStart();
         verify( lifecycleHandler ).onProgress( "Executing a failing task." );
-        verify( lifecycleHandler ).onFailure( any( Throwable.class ) );
+        verify( lifecycleHandler ).onFailure( any( Exception.class ) );
         verify( lifecycleHandler ).onComplete();
     }
 
@@ -98,7 +99,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         Task<TaskResult, TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
         ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
@@ -126,6 +127,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         this.runAsUser( "ExecutingTaskTestUser" );
         TaskCommand taskCommand = new TaskCommand();
         Authentication executingUserAuth = SecurityContextHolder.getContext().getAuthentication();
+        assertSame( SecurityContextHolder.getContext(), taskCommand.getSecurityContext() );
 
         this.runAsAdmin();
         Authentication launchingUserAuth = SecurityContextHolder.getContext().getAuthentication();
@@ -140,7 +142,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         final Authentication[] authenticationAfterSuccess = new Authentication[1];
         final Authentication[] authenticationAfterComplete = new Authentication[1];
 
-        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
+        ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand.getTaskId() );
         executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
 
             @Override
@@ -154,7 +156,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             }
 
             @Override
-            public void onFailure( Throwable e ) {
+            public void onFailure( Exception e ) {
                 fail();
             }
 
@@ -170,12 +172,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         } );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Future<TaskResult> future = executorService.submit( executingTask );
+        Future<TaskResult> future = executorService.submit( new DelegatingSecurityContextCallable<>( executingTask, taskCommand.getSecurityContext() ) );
         this.tryGetAnswer( future );
 
-        assertSame( launchingUserAuth, authenticationAfterInitialize[0] );
-        assertSame( launchingUserAuth, authenticationAfterSuccess[0] );
-        assertSame( launchingUserAuth, authenticationAfterComplete[0] );
+        assertSame( executingUserAuth, authenticationAfterInitialize[0] );
+        assertSame( executingUserAuth, authenticationAfterSuccess[0] );
+        assertSame( executingUserAuth, authenticationAfterComplete[0] );
         assertSame( executingUserAuth, authenticationDuringProgress[0] );
     }
 
@@ -194,7 +196,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         private static Log log = LogFactory.getLog( FailureTestTask.class );
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             log.info( "Executing a failing task." );
             throw new AccessDeniedException( "Test!" );
         }
@@ -205,7 +207,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         private static Log log = LogFactory.getLog( SuccessTestTask.class );
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             log.info( "Executing a success task." );
             return new TaskResult( this.getTaskCommand(), "SUCCESS" );
         }

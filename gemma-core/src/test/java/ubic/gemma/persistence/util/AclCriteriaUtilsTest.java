@@ -16,7 +16,7 @@ public class AclCriteriaUtilsTest extends BaseSpringContextTest {
 
     @Test
     public void test() {
-        super.runAsAnonymous();
+        super.runAsAnonymous( this.applicationContext );
         formAclRestrictionClause( "ee", ExpressionExperiment.class );
     }
 }

@@ -490,7 +490,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         // in case of retry
         Characteristic category = experimentalFactor.getCategory();
-        if ( this.isTransient( category ) ) {
+        if ( category != null && this.isTransient( category ) ) {
             category.setId( null );
         }
 

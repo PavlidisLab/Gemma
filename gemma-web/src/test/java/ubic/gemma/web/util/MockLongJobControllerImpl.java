@@ -55,7 +55,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
 
             long millis = System.currentTimeMillis();
             while ( System.currentTimeMillis() - millis < MockLongJobController.JOB_LENGTH ) {

@@ -201,7 +201,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
         c.setIndexBibRef( true );
 
         indexerTask.setTaskCommand( c );
-        indexerTask.execute();
+        try {
+            indexerTask.call();
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
 
         SearchSettings settings = SearchSettings.builder()
                 .query( "de novo mutation" )
@@ -231,7 +235,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
         c.setIndexBibRef( true );
 
         indexerTask.setTaskCommand( c );
-        indexerTask.execute();
+        try {
+            indexerTask.call();
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
 
         SearchSettings settings = SearchSettings.builder()
                 .query( "confirm chromosome 22q12" )

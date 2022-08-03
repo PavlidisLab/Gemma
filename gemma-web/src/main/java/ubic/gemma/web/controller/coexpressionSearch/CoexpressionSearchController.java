@@ -311,7 +311,7 @@ public class CoexpressionSearchController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
 
             CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) taskCommand;
 

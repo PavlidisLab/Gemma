@@ -712,7 +712,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
 
             if ( this.taskCommand.getEntityId() == null ) {
                 log.info( "Generating summary for all platforms" );
@@ -737,7 +737,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
             if ( ad == null ) {
                 throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );

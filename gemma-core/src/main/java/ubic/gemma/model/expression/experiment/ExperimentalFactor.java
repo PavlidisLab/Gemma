@@ -24,6 +24,7 @@ import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.util.Set;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ public class ExperimentalFactor extends Describable implements SecuredChild {
      */
     private static final long serialVersionUID = 4615731059510436891L;
     private Set<Characteristic> annotations = new HashSet<>();
+    @Nullable
     private Characteristic category;
     private ExperimentalDesign experimentalDesign;
     private Set<FactorValue> factorValues = new HashSet<>();
@@ -123,11 +125,17 @@ public class ExperimentalFactor extends Describable implements SecuredChild {
         this.annotations = annotations;
     }
 
+    /**
+     * Obtain the category of this experimental factor.
+     *
+     * @return the category or null if annotated automatically from GEO or used as a dummy.
+     */
+    @Nullable
     public Characteristic getCategory() {
         return this.category;
     }
 
-    public void setCategory( Characteristic category ) {
+    public void setCategory( @Nullable Characteristic category ) {
         this.category = category;
     }
 

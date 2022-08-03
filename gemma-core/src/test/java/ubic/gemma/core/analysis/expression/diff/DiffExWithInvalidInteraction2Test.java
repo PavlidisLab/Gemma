@@ -125,6 +125,7 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
         ExperimentalFactor strain = null;
         ExperimentalFactor cell_type = null;
         for ( ExperimentalFactor ef : factors ) {
+            assertNotNull( ef.getCategory() );
             if ( ef.getCategory().getValue().equals( "strain" ) ) {
                 strain = ef;
             } else if ( ef.getCategory().getValue().equals( "cell type" ) ) {

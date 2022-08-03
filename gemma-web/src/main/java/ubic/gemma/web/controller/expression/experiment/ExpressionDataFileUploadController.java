@@ -219,7 +219,7 @@ public class ExpressionDataFileUploadController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             File file = ExpressionDataFileUploadController.this.getFile( taskCommand );
 
             try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
@@ -306,7 +306,7 @@ public class ExpressionDataFileUploadController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             SimpleExpressionExperimentCommandValidation result = ExpressionDataFileUploadController.this
                     .doValidate( taskCommand );
             return new TaskResult( taskCommand, result );

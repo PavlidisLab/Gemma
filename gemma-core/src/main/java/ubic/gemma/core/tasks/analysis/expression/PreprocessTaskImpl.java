@@ -37,7 +37,7 @@ public class PreprocessTaskImpl
     private PreprocessorService preprocessorService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
         if ( taskCommand.diagnosticsOnly() ) {
             preprocessorService.processDiagnostics( ee );

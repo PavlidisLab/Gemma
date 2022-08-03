@@ -17,14 +17,14 @@ package ubic.gemma.core.tasks;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 
+import java.util.concurrent.Callable;
+
 /**
  * @author anton
  */
-public interface Task<T extends TaskResult, C extends TaskCommand> {
+public interface Task<T extends TaskResult, C extends TaskCommand> extends Callable<T> {
 
     C getTaskCommand();
 
     void setTaskCommand( C taskCommand );
-
-    T execute();
 }

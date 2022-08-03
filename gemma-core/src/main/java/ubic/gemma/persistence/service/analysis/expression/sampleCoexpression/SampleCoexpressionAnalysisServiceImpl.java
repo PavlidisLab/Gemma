@@ -16,6 +16,7 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
+import org.hibernate.StaleStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +144,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
         // Remove any old data
-        this.removeForExperiment( thawedee );
+        try {
+            this.removeForExperiment( thawedee );
+        } catch ( StaleStateException e ) {
+            // this sometimes causes a StaleStateException https://github.com/PavlidisLab/Gemma/issues/242
+            log.error( String.format( "Failed to remove old analysis for %s.", thawedee ), e );
+        }
 
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService

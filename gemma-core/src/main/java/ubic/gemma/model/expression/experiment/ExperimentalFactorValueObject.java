@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -64,10 +63,10 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
 
-        if ( factor.getCategory() != null )
+        if ( factor.getCategory() != null ) {
             this.setCategory( factor.getCategory().getCategory() );
-
-        this.setCategoryUri( this.getCategoryUri( factor.getCategory() ) );
+            this.setCategoryUri( factor.getCategory().getCategoryUri() );
+        }
 
         /*
          * Note: this code copied from the ExperimentalDesignController.
@@ -215,10 +214,4 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     public void setValues( Collection<FactorValueValueObject> values ) {
         this.values = values;
     }
-
-    private String getCategoryUri( Characteristic c ) {
-        return c.getCategoryUri();
-
-    }
-
 }

@@ -22,7 +22,7 @@ public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<TaskResult, Arr
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService = null;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         ArrayDesign ad = taskCommand.getArrayDesign();
 
         arrayDesignProbeMapperService.processArrayDesign( ad );

@@ -132,7 +132,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( geneValueObjects.iterator().next().getTaxonId() != null );
 
         // test other scenarios.
-        this.runAsAnonymous();
+        super.runAsAnonymous( this.applicationContext );
         geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
         assertEquals( 1, geneValueObjects.size() );
 
@@ -151,7 +151,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertEquals( 2, geneValueObjects.iterator().next().getPhenotypesValueUri().size() );
 
         // anonymous can't see the user's data
-        this.runAsAnonymous();
+        super.runAsAnonymous( this.applicationContext );
         geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
         assertEquals( 1, geneValueObjects.size() );
         assertEquals( 1, geneValueObjects.iterator().next().getPhenotypesValueUri().size() );
@@ -186,7 +186,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category( SlowTest.class )
+    @Category(SlowTest.class)
     public void testLoadAllPhenotypeUris() {
         Set<String> uris = this.phenotypeAssociationService.loadAllUsedPhenotypeUris();
         assertTrue( !uris.isEmpty() );
@@ -280,7 +280,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                 .findEvidenceByFilters( this.humanTaxon.getId(), 10, null );
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
 
-        this.runAsAnonymous();
+        super.runAsAnonymous( this.applicationContext );
         evidenceVO = this.phenotypeAssociationManagerService.findEvidenceByFilters( this.humanTaxon.getId(), 10, null );
         assertTrue( evidenceVO.isEmpty() );
     }

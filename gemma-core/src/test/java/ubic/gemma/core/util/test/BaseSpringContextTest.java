@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.util.test;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,11 +30,19 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.TestingAuthenticationProvider;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.jdbc.JdbcTestUtils;
@@ -58,11 +68,10 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * subclass for tests that need the container and use the database
@@ -106,12 +115,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected PersistentDummyObjectHelper testHelper;
     @Autowired
     private SessionFactory sessionFactory;
+
     @Autowired
-    private AuthenticationTestingUtil authenticationTestingUtil;
+    private UserManager userManager;
 
     @Override
     final public void afterPropertiesSet() {
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         this.jdbcTemplate = new JdbcTemplate( dataSource );
     }
 
@@ -119,8 +128,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * The default is to grant an administrator authority to the current user.
      */
     @Before
+    @OverridingMethodsMustInvokeSuper
     public void setUp() throws Exception {
-        authenticationTestingUtil.grantAdminAuthority();
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+        this.runAsAdmin();
     }
 
     /**
@@ -492,7 +503,19 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * runAsUser). This gets called before each test, no need to run it yourself otherwise.
      */
     protected final void runAsAdmin() {
-        authenticationTestingUtil.grantAdminAuthority();
+        ProviderManager providerManager = ( ProviderManager ) this.applicationContext.getBean( "authenticationManager" );
+        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+
+        // Grant all roles to test user.
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
+                Arrays.asList( new GrantedAuthority[] {
+                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
+
+        token.setAuthenticated( true );
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication( token );
+        SecurityContextHolder.setContext( securityContext );
     }
 
     /**
@@ -501,11 +524,35 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @param userName user name
      */
     protected final void runAsUser( String userName ) {
-        authenticationTestingUtil.switchToUser( userName );
+
+        UserDetails user = userManager.loadUserByUsername( userName );
+
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>( user.getAuthorities() );
+
+        ProviderManager providerManager = ( ProviderManager ) this.applicationContext.getBean( "authenticationManager" );
+        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+
+        TestingAuthenticationToken token = new TestingAuthenticationToken( userName, "testing", grantedAuthorities );
+        token.setAuthenticated( true );
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication( token );
+        SecurityContextHolder.setContext( securityContext );
     }
 
-    protected final void runAsAnonymous() {
-        authenticationTestingUtil.logOut();
+    protected void runAsAnonymous( ApplicationContext ctx ) {
+        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+
+        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
+                Arrays.asList( new GrantedAuthority[] {
+                        new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
+
+        token.setAuthenticated( false );
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication( token );
+        SecurityContextHolder.setContext( securityContext );
     }
 
     /**
@@ -518,5 +565,4 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected void setTestCollectionSize( int size ) {
         testHelper.setTestElementCollectionSize( size );
     }
-
 }

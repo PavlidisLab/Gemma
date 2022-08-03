@@ -209,7 +209,7 @@ public class IndexServiceImpl implements IndexService {
         }
 
         @Override
-        public IndexerResult execute() {
+        public IndexerResult call() {
             IndexerResult result;
             String taskId = taskRunningService.submitTaskCommand( taskCommand );
 

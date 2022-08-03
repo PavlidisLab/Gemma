@@ -19,7 +19,7 @@ public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisT
     private LinkAnalysisService linkAnalysisService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         linkAnalysisService.process( taskCommand.getExpressionExperiment(), taskCommand.getFilterConfig(),
                 taskCommand.getLinkAnalysisConfig() );
 

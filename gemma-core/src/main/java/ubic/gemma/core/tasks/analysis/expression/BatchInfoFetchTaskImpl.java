@@ -26,7 +26,7 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFe
     private BatchInfoPopulationService batchInfoService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         TaskResult result = new TaskResult( taskCommand, null );
 
         if ( taskCommand.doAll() ) {

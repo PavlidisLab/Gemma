@@ -230,9 +230,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         ctx = SpringContextUtil.getApplicationContext( commandLine.hasOption( "testing" ), false, null );
 
         /*
-         * Guarantee that the security settings are uniform throughout the application (all threads).
+         * Guarantee that the security settings are inherited from current thread.
          */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
     /**
@@ -240,11 +240,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param commandLine
      */
     private void authenticate( CommandLine commandLine ) {
-
-        /*
-         * Allow security settings (authorization etc) in a given context to be passed into spawned threads
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         if ( commandLine.hasOption( USERNAME_OPTION ) ) {
             log.warn( "Usage of the -" + USERNAME_OPTION + " is deprecated and will be removed in a future release. Use $GEMMA_USERNAME instead." );

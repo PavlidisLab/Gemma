@@ -1721,7 +1721,7 @@ public class ExpressionExperimentController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             expressionExperimentService.remove( taskCommand.getEntityId() );
 
             return new TaskResult( taskCommand, new ModelAndView(
@@ -1738,7 +1738,7 @@ public class ExpressionExperimentController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
 
             ee = expressionExperimentService.thawLite( ee );
@@ -1764,7 +1764,7 @@ public class ExpressionExperimentController {
         }
 
         @Override
-        public TaskResult execute() {
+        public TaskResult call() {
             Long eeId = taskCommand.getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
             if ( expressionExperiment == null )

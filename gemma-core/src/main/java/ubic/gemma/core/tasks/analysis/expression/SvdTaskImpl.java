@@ -36,7 +36,7 @@ public class SvdTaskImpl extends AbstractTask<TaskResult, SvdTaskCommand> implem
     private SVDService svdService;
 
     @Override
-    public TaskResult execute() {
+    public TaskResult call() {
         TaskResult result = new TaskResult( taskCommand, null );
 
         if ( taskCommand.getExpressionExperiment() != null ) {

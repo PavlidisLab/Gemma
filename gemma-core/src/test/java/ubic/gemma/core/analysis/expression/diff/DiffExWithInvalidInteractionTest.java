@@ -126,6 +126,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         ExperimentalFactor timepoint = null;
         ExperimentalFactor treatment = null;
         for ( ExperimentalFactor ef : factors ) {
+            assertNotNull( ef.getCategory() );
             if ( ef.getCategory().getValue().equals( "timepoint" ) ) {
                 timepoint = ef;
             } else if ( ef.getCategory().getValue().equals( "treatment" ) ) {

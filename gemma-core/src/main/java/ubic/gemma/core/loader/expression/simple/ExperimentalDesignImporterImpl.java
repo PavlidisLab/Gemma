@@ -376,10 +376,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             if ( factorType.equalsIgnoreCase( "CATEGORICAL" ) ) {
                 ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
                 Characteristic newVc = Characteristic.Factory.newInstance();
-                String category2 = category.getCategory();
-                assert category2 != null;
-                newVc.setCategory( category2 );
-                newVc.setCategoryUri( category.getCategoryUri() );
+                if ( category != null ) {
+                    String category2 = category.getCategory();
+                    assert category2 != null;
+                    newVc.setCategory( category2 );
+                    newVc.setCategoryUri( category.getCategoryUri() );
+                }
                 newVc.setValue( value ); // don't have a valueUri at this point
                 newVc.setEvidenceCode( GOEvidenceCode.IC );
                 factorValue.getCharacteristics().add( newVc );

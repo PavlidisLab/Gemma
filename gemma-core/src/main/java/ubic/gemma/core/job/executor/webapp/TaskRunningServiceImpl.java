@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
@@ -87,11 +88,11 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing, executorService );
 
-        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand );
+        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<TaskResult>( task, taskCommand.getTaskId() );
 
         executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
             @Override
-            public void onFailure( Throwable e ) {
+            public void onFailure( Exception e ) {
                 TaskRunningServiceImpl.log.error( e, e );
                 submittedTask.updateStatus( SubmittedTask.Status.FAILED, new Date() );
             }
@@ -117,7 +118,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
             }
         } );
 
-        ListenableFuture<TaskResult> future = executorService.submit( executingTask );
+        ListenableFuture<TaskResult> future = executorService.submit( new DelegatingSecurityContextCallable<>( executingTask, taskCommand.getSecurityContext() ) );
         submittedTask.setFuture( future );
 
         // Adding post-processing steps, they will run on future completion.
@@ -146,6 +147,5 @@ public class TaskRunningServiceImpl implements TaskRunningService {
 
     private void checkTaskCommand( TaskCommand taskCommand ) {
         checkNotNull( taskCommand.getTaskId(), "Must have taskId." );
-        checkNotNull( taskCommand.getAuthentication(), "Must have Authentication." );
     }
 }

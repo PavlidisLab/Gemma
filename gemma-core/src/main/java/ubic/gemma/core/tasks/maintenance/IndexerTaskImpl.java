@@ -124,7 +124,7 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
     private MailEngine mailEngine;
 
     @Override
-    public IndexerResult execute() {
+    public IndexerResult call() {
         IndexerResult result = new IndexerResult( taskCommand );
 
         if ( taskCommand.isIndexEE() ) {

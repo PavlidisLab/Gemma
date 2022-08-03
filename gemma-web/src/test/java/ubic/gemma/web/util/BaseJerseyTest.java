@@ -1,5 +1,6 @@
 package ubic.gemma.web.util;
 
+import gemma.gsec.AuthorityConstants;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
@@ -8,12 +9,18 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Before;
 import org.springframework.mock.web.MockServletConfig;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.TestingAuthenticationProvider;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
-import ubic.gemma.core.util.test.AuthenticationTestingUtil;
 
 import javax.ws.rs.core.Application;
+import java.util.Arrays;
 
 /**
  * Base class for Jersey-based integration tests.
@@ -33,8 +40,6 @@ public abstract class BaseJerseyTest extends JerseyTest {
      */
     protected WebApplicationContext applicationContext;
 
-    protected AuthenticationTestingUtil authenticationTestingUtil;
-
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new InMemoryTestContainerFactory();
@@ -43,7 +48,6 @@ public abstract class BaseJerseyTest extends JerseyTest {
     @Override
     public Application configure() {
         applicationContext = prepareWebApplicationContext();
-        authenticationTestingUtil = applicationContext.getBean( AuthenticationTestingUtil.class );
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         return new ResourceConfig()
                 .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.web.services.rest" )
@@ -55,7 +59,7 @@ public abstract class BaseJerseyTest extends JerseyTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        authenticationTestingUtil.grantAdminAuthority();
+        this.runAsAdmin();
     }
 
     private WebApplicationContext prepareWebApplicationContext() {
@@ -68,5 +72,21 @@ public abstract class BaseJerseyTest extends JerseyTest {
         applicationContext.setServletContext( new MockServletContext() );
         applicationContext.refresh();
         return applicationContext;
+    }
+
+    private void runAsAdmin() {
+        ProviderManager providerManager = ( ProviderManager ) this.applicationContext.getBean( "authenticationManager" );
+        providerManager.getProviders().add( new TestingAuthenticationProvider() );
+
+        // Grant all roles to test user.
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
+                Arrays.asList( new GrantedAuthority[] {
+                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
+
+        token.setAuthenticated( true );
+
+        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+        securityContext.setAuthentication( token );
+        SecurityContextHolder.setContext( securityContext );
     }
 }

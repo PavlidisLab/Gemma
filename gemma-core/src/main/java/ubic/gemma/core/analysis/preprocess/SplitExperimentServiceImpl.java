@@ -164,9 +164,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             if ( StringUtils.isBlank( factorValueString ) ) {
                 factorValueString = splitValue.getDescriptiveString();
             }
-            split.setName( "Split part " + splitNumber + " of: " + toSplit.getName() + " ["
-                    + splitValue.getExperimentalFactor().getCategory().getValue() + " = "
-                    + factorValueString + "]" );
+            split.setName( String.format( "Split part %d of: %s [%s = %s]",
+                    splitNumber,
+                    toSplit.getName(),
+                    splitValue.getExperimentalFactor().getCategory() != null ?
+                            splitValue.getExperimentalFactor().getCategory().getValue() :
+                            splitValue.getExperimentalFactor().getName(),
+                    factorValueString ) );
             split.setDescription( "This experiment was created by Gemma splitting another: \n" + toSplit + toSplit.getDescription() );
 
             split.setCharacteristics( this.cloneCharacteristics( toSplit.getCharacteristics() ) );
@@ -382,7 +386,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         for ( ExperimentalFactor ef : experimentalFactors ) {
             ExperimentalFactor clone = ExperimentalFactor.Factory.newInstance();
             clone.setAnnotations( this.cloneCharacteristics( ef.getAnnotations() ) );
-            clone.setCategory( this.cloneCharacteristic( ef.getCategory() ) );
+            if ( ef.getCategory() != null ) {
+                clone.setCategory( this.cloneCharacteristic( ef.getCategory() ) );
+            }
             clone.setName( ef.getName() );
             clone.setDescription( ef.getDescription() );
             clone.setType( ef.getType() );
