@@ -143,7 +143,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // Remove any old data
         try {
-            this.removeForExperiment( thawedee );
+            this.sampleCoexpressionAnalysisDao.removeForExperiment( thawedee );
         } catch ( StaleStateException e ) {
             // this sometimes causes a StaleStateException https://github.com/PavlidisLab/Gemma/issues/242
             log.error( String.format( "Failed to remove old analysis for %s.", thawedee ), e );
