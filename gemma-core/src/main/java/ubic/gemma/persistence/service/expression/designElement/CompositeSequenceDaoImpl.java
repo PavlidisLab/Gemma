@@ -266,6 +266,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             if ( csIdBatch.size() == BATCH_SIZE ) {
                 queryObject.setParameterList( "csids", csIdBatch );
                 csGene.addAll( queryObject.list() );
+                session.flush();
                 session.clear();
                 csIdBatch.clear();
             }
@@ -274,6 +275,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( csIdBatch.size() > 0 ) {
             queryObject.setParameterList( "csids", csIdBatch );
             csGene.addAll( queryObject.list() );
+            session.flush();
             session.clear();
         }
 
@@ -536,6 +538,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
                     session.evict( bs );
                 }
+                session.flush();
                 session.clear();
                 return null;
             }

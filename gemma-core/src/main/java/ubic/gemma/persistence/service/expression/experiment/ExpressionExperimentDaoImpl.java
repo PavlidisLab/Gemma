@@ -278,6 +278,7 @@ public class ExpressionExperimentDaoImpl
             while ( results.next() )
                 eeIds.add( results.getLong( 0 ) );
 
+            session.flush();
             session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.getHibernateTemplate().convertHibernateAccessException( ex );
