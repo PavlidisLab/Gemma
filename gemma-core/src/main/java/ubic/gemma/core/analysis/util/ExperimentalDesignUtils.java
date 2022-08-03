@@ -178,8 +178,8 @@ public class ExperimentalDesignUtils {
             return false;
         }
         Characteristic category = ef.getCategory();
-        return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) && category.getCategory()
-                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) &&
+                ( category != null && category.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) );
     }
 
     /**
