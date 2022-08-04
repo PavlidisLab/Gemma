@@ -3,7 +3,6 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.StaleStateException;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -91,8 +90,6 @@ public abstract class DatasetArg<T>
             // there are no rows left in the data matrix, thus no outliers ;o
         } catch ( FilteringException e ) {
             throw new RuntimeException( e );
-        } catch ( StaleStateException e ) {
-            log.warn( String.format( "Failed to determine outliers for %s. This is due to a high contention for the public-facing API endpoint. See https://github.com/PavlidisLab/Gemma/issues/400 for more details.", ee ), e );
         }
         return bioAssayValueObjects;
     }
