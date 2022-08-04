@@ -3,7 +3,6 @@ package ubic.gemma.web.services.rest.util.args;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.StaleStateException;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -79,16 +78,12 @@ public abstract class DatasetArg<T>
             BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( service ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
-        try {
-            Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
-                    .map( OutlierDetails::getBioAssay )
-                    .map( BioAssay::getId )
-                    .collect( Collectors.toSet() );
-            for ( BioAssayValueObject vo : bioAssayValueObjects ) {
-                vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
-            }
-        } catch ( StaleStateException e ) {
-            log.warn( String.format( "Failed to determine outliers for %s. This is due to a high contention for the public-facing API endpoint. See https://github.com/PavlidisLab/Gemma/issues/242 for more details.", ee ), e );
+        Set<Long> predictedOutlierBioAssayIds = outlierDetectionService.identifyOutliersByMedianCorrelation( ee ).stream()
+                .map( OutlierDetails::getBioAssay )
+                .map( BioAssay::getId )
+                .collect( Collectors.toSet() );
+        for ( BioAssayValueObject vo : bioAssayValueObjects ) {
+            vo.setPredictedOutlier( predictedOutlierBioAssayIds.contains( vo.getId() ) );
         }
         return bioAssayValueObjects;
     }

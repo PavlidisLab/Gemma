@@ -16,11 +16,11 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
-import org.hibernate.StaleStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -93,13 +93,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionExperimentService expressionExperimentService;
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public DoubleMatrix<BioAssay, BioAssay> loadFullMatrix( ExpressionExperiment ee ) {
         return this.toDoubleMatrix( this.load( ee ).getFullCoexpressionMatrix() );
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public DoubleMatrix<BioAssay, BioAssay> loadTryRegressedThenFull( ExpressionExperiment ee ) {
         SampleCoexpressionAnalysis analysis = this.load( ee );
         SampleCoexpressionMatrix matrix = analysis.getRegressedCoexpressionMatrix();
@@ -112,7 +112,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
@@ -135,8 +135,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return sampleCoexpressionAnalysisDao.load( ee ) != null;
     }
 
+    /**
+     * Unfortunately, this method breaks under high contention (see <a href="https://github.com/PavlidisLab/Gemma/issues/400">#400</a>,
+     * so we need to fully lock the database while undergoing using {@link Isolation#SERIALIZABLE} transaction isolation
+     * level. This annotation also has to be appled to other methods of this class that call compute() directly or
+     * indirectly.
+     */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public SampleCoexpressionAnalysis compute( ExpressionExperiment ee ) {
 
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
