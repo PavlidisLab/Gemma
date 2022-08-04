@@ -92,7 +92,7 @@ public abstract class DatasetArg<T>
         } catch ( FilteringException e ) {
             throw new RuntimeException( e );
         } catch ( StaleStateException e ) {
-            log.warn( String.format( "Failed to determine outliers for %s. This is due to a high contention for the public-facing API endpoint. See https://github.com/PavlidisLab/Gemma/issues/242 for more details.", ee ), e );
+            log.warn( String.format( "Failed to determine outliers for %s. This is due to a high contention for the public-facing API endpoint. See https://github.com/PavlidisLab/Gemma/issues/400 for more details.", ee ), e );
         }
         return bioAssayValueObjects;
     }
