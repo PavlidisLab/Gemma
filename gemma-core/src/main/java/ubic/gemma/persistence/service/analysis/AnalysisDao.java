@@ -52,5 +52,4 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
 
     Collection<T> findByTaxon( Taxon taxon );
 
-    void removeForExperiment( ExpressionExperiment ee );
 }

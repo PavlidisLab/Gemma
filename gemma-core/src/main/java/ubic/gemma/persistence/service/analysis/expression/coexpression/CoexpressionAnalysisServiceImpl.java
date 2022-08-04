@@ -160,8 +160,8 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
 
     @Override
     @Transactional
-    public void removeForExperiment( ExpressionExperiment ee ){
-        this.coexpressionAnalysisDao.removeForExperiment(ee);
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.coexpressionAnalysisDao.remove( this.coexpressionAnalysisDao.findByInvestigation( ee ) );
     }
 
 }
