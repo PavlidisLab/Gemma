@@ -144,12 +144,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         ExpressionExperiment thawedee = this.expressionExperimentService.thawLite( ee );
 
         // Remove any old data
-        try {
-            this.sampleCoexpressionAnalysisDao.removeForExperiment( thawedee );
-        } catch ( StaleStateException e ) {
-            // this sometimes causes a StaleStateException https://github.com/PavlidisLab/Gemma/issues/242
-            log.error( String.format( "Failed to remove old analysis for %s.", thawedee ), e );
-        }
+        this.removeForExperiment( thawedee );
 
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
@@ -166,7 +161,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+        this.sampleCoexpressionAnalysisDao.remove( this.sampleCoexpressionAnalysisDao.findByInvestigation( ee ) );
     }
 
     /**

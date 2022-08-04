@@ -527,13 +527,6 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
         return results;
     }
 
-    @Override
-    @Deprecated // Not useful for DEAs, works for other analysis types.
-    public void removeForExperiment( ExpressionExperiment ee ) {
-        throw new IllegalStateException(
-                "!!! Not removing any analyses for experiment " + ee + ", use the service layer instead!" );
-    }
-
     private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {
         for ( Object[] oa : fvs ) {
             Long eeId = ( Long ) oa[0];
