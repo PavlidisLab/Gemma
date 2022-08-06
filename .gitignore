@@ -120,6 +120,9 @@ gemma-core/src/main/uml/*.bak
 !.idea/codeStyles/
 *.iml
 
+# Eclipse
+.classpath
+
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
