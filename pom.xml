@@ -20,6 +20,7 @@
 	</parent>
 	<modules>
 		<module>gemma-core</module>
+		<module>gemma-cli</module>
 		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
@@ -334,6 +335,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
 			<version>2.8.0</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.11.0</version>
 		</dependency>
 
 		<!-- Jackson, for JSON serialization -->
