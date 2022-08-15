@@ -270,13 +270,10 @@ public class ExpressionExperimentDaoImpl
             queryObject.setLong( "geneID", gene.getId() );
             queryObject.setDouble( "rank", rank );
             queryObject.addScalar( "eeID", new LongType() );
-            ScrollableResults results = queryObject.scroll();
+            //noinspection unchecked
+            List<Long> results = queryObject.list();
 
-            eeIds = new HashSet<>();
-
-            // Post Processing
-            while ( results.next() )
-                eeIds.add( results.getLong( 0 ) );
+            eeIds = new HashSet<>( results );
 
             session.flush();
             session.clear();
@@ -389,13 +386,10 @@ public class ExpressionExperimentDaoImpl
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setLong( "geneID", gene.getId() );
         queryObject.addScalar( "eeID", new LongType() );
-        ScrollableResults results = queryObject.scroll();
+        //noinspection unchecked
+        List<Long> results = queryObject.list();
 
-        eeIds = new HashSet<>();
-
-        while ( results.next() ) {
-            eeIds.add( results.getLong( 0 ) );
-        }
+        eeIds = new HashSet<>( results );
 
         return this.load( eeIds );
     }

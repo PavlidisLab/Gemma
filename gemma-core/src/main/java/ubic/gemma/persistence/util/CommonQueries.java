@@ -213,15 +213,19 @@ public class CommonQueries {
         return queryObject;
     }
 
-    private static void addGeneIds( Map<Long, Collection<Long>> cs2genes, ScrollableResults results ) {
-        while ( results.next() ) {
-            Long csid = results.getLong( 0 );
-            Long geneId = results.getLong( 1 );
-
-            if ( !cs2genes.containsKey( csid ) ) {
-                cs2genes.put( csid, new HashSet<Long>() );
+    private static void addGeneIds( Map<Long, Collection<Long>> cs2genes, Query queryObject ) {
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        try {
+            while ( results.next() ) {
+                Long csid = results.getLong( 0 );
+                Long geneId = results.getLong( 1 );
+                if ( !cs2genes.containsKey( csid ) ) {
+                    cs2genes.put( csid, new HashSet<Long>() );
+                }
+                cs2genes.get( csid ).add( geneId );
             }
-            cs2genes.get( csid ).add( geneId );
+        } finally {
+            results.close();
         }
     }
 
@@ -245,9 +249,7 @@ public class CommonQueries {
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        CommonQueries.addGeneIds( cs2genes, results );
-        results.close();
+        CommonQueries.addGeneIds( cs2genes, queryObject );
 
         return cs2genes;
 
@@ -271,9 +273,7 @@ public class CommonQueries {
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        CommonQueries.addGenes( cs2gene, results );
-        results.close();
+        CommonQueries.addGenes( cs2gene, queryObject );
         if ( timer.getTime() > 200 ) {
             CommonQueries.log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
@@ -302,23 +302,26 @@ public class CommonQueries {
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        CommonQueries.addGenes( cs2gene, results );
-        results.close();
+        CommonQueries.addGenes( cs2gene, queryObject );
         if ( timer.getTime() > 200 ) {
             CommonQueries.log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
         return cs2gene;
     }
 
-    private static void addGenes( Map<CompositeSequence, Collection<Gene>> cs2gene, ScrollableResults results ) {
-        while ( results.next() ) {
-            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
-            Gene g = ( Gene ) results.get( 1 );
-            if ( !cs2gene.containsKey( cs ) ) {
-                cs2gene.put( cs, new HashSet<Gene>() );
+    private static void addGenes( Map<CompositeSequence, Collection<Gene>> cs2gene, Query queryObject ) {
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        try {
+            while ( results.next() ) {
+                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+                Gene g = ( Gene ) results.get( 1 );
+                if ( !cs2gene.containsKey( cs ) ) {
+                    cs2gene.put( cs, new HashSet<Gene>() );
+                }
+                cs2gene.get( cs ).add( g );
             }
-            cs2gene.get( cs ).add( g );
+        } finally {
+            results.close();
         }
     }
 
@@ -354,9 +357,7 @@ public class CommonQueries {
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        CommonQueries.addGeneIds( cs2genes, results );
-        results.close();
+        CommonQueries.addGeneIds( cs2genes, queryObject );
 
         return cs2genes;
     }
@@ -370,15 +371,8 @@ public class CommonQueries {
         queryObject.addScalar( "csid", LongType.INSTANCE );
         queryObject.setParameterList( "probes", probes, LongType.INSTANCE );
         queryObject.setParameterList( "adids", arrayDesignIds, LongType.INSTANCE );
-
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        List<Long> r = new ArrayList<>();
-        while ( results.next() ) {
-            r.add( results.getLong( 0 ) );
-
-        }
-        results.close();
-        return r;
+        //noinspection unchecked
+        return queryObject.list();
     }
 
 }

@@ -300,20 +300,22 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         queryObject.setReadOnly( true );
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
-        while ( results.next() ) {
-            @SuppressWarnings("unchecked")
-            T dedv = ( T ) results.get( 0 );
-            Long cs = ( Long ) results.get( 1 );
-            Collection<Long> associatedGenes = cs2gene.get( cs );
-            if ( !dedv2genes.containsKey( dedv ) ) {
-                dedv2genes.put( dedv, associatedGenes );
-            } else {
-                Collection<Long> mappedGenes = dedv2genes.get( dedv );
-                mappedGenes.addAll( associatedGenes );
+        try {
+            while ( results.next() ) {
+                @SuppressWarnings("unchecked")
+                T dedv = ( T ) results.get( 0 );
+                Long cs = ( Long ) results.get( 1 );
+                Collection<Long> associatedGenes = cs2gene.get( cs );
+                if ( !dedv2genes.containsKey( dedv ) ) {
+                    dedv2genes.put( dedv, associatedGenes );
+                } else {
+                    Collection<Long> mappedGenes = dedv2genes.get( dedv );
+                    mappedGenes.addAll( associatedGenes );
+                }
             }
+        } finally {
+            results.close();
         }
-
-        results.close();
     }
 
 }

@@ -101,14 +101,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L );
-            characteristicValueObject.setCategoryUri( ( String ) results.get( 0 ) );
-            characteristicValueObject.setCategory( ( String ) results.get( 1 ) );
-            mgedCategory.add( characteristicValueObject );
+        try {
+            while ( results.next() ) {
+                CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L );
+                characteristicValueObject.setCategoryUri( ( String ) results.get( 0 ) );
+                characteristicValueObject.setCategory( ( String ) results.get( 1 ) );
+                mgedCategory.add( characteristicValueObject );
+            }
+        } finally {
+            results.close();
         }
-        results.close();
 
         return mgedCategory;
     }
@@ -130,9 +132,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
-        while ( results.next() ) {
-            String owner = ( String ) results.get( 0 );
-            owners.add( owner );
+        try {
+            while ( results.next() ) {
+                String owner = ( String ) results.get( 0 );
+                owners.add( owner );
+            }
+        } finally {
+            results.close();
         }
 
         return owners;
@@ -444,12 +450,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
-        while ( results.next() ) {
-            Long phenotypeId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            ids.add( phenotypeId );
+        try {
+            while ( results.next() ) {
+                Long phenotypeId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+                ids.add( phenotypeId );
+            }
+        } finally {
+            results.close();
         }
 
-        results.close();
         return ids;
     }
 
@@ -849,14 +858,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     private Map<String, Set<Integer>> populateGenesAssociations( SQLQuery queryObject ) {
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-
-            Integer geneNcbiId = ( Integer ) results.get( 0 );
-            String valueUri = ( String ) results.get( 1 );
-
-            EntityUtils.populateMapSet( phenotypesGenesAssociations, valueUri, geneNcbiId );
+        try {
+            while ( results.next() ) {
+                Integer geneNcbiId = ( Integer ) results.get( 0 );
+                String valueUri = ( String ) results.get( 1 );
+                EntityUtils.populateMapSet( phenotypesGenesAssociations, valueUri, geneNcbiId );
+            }
+        } finally {
+            results.close();
         }
-        results.close();
         return phenotypesGenesAssociations;
     }
 
@@ -872,30 +882,33 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-            /* 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI */
-            Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
-            Integer nbciGeneId = ( Integer ) results.get( 1 );
-            String officialName = ( String ) results.get( 2 );
-            String officialSymbol = ( String ) results.get( 3 );
-            Long taxonId = ( ( BigInteger ) results.get( 4 ) ).longValue();
-            String taxonCommonName = ( String ) results.get( 5 );
-            String valueUri = ( String ) results.get( 6 );
+        try {
+            while ( results.next() ) {
+                /* 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI */
+                Long geneId = ( ( BigInteger ) results.get( 0 ) ).longValue();
+                Integer nbciGeneId = ( Integer ) results.get( 1 );
+                String officialName = ( String ) results.get( 2 );
+                String officialSymbol = ( String ) results.get( 3 );
+                Long taxonId = ( ( BigInteger ) results.get( 4 ) ).longValue();
+                String taxonCommonName = ( String ) results.get( 5 );
+                String valueUri = ( String ) results.get( 6 );
 
-            if ( genesWithPhenotypes.get( geneId ) != null ) {
-                genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
-            } else {
-                GeneEvidenceValueObject g = new GeneEvidenceValueObject( geneId );
-                g.setNcbiId( nbciGeneId );
-                g.setOfficialName( officialName );
-                g.setOfficialSymbol( officialSymbol );
-                g.setTaxonCommonName( taxonCommonName );
-                g.setTaxonId( taxonId );
-                g.getPhenotypesValueUri().add( valueUri );
-                genesWithPhenotypes.put( geneId, g );
+                if ( genesWithPhenotypes.get( geneId ) != null ) {
+                    genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
+                } else {
+                    GeneEvidenceValueObject g = new GeneEvidenceValueObject( geneId );
+                    g.setNcbiId( nbciGeneId );
+                    g.setOfficialName( officialName );
+                    g.setOfficialSymbol( officialSymbol );
+                    g.setTaxonCommonName( taxonCommonName );
+                    g.setTaxonId( taxonId );
+                    g.getPhenotypesValueUri().add( valueUri );
+                    genesWithPhenotypes.put( geneId, g );
+                }
             }
+        } finally {
+            results.close();
         }
-        results.close();
 
         if ( sw.getTime() > 500 ) {
             PhenotypeAssociationDaoImpl.log
