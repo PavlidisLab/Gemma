@@ -54,17 +54,17 @@ Gemma.GenePage = Ext.extend(Ext.TabPanel, {
             geneId: geneId
         }));
 
-        this.add(this.initDiffExTab(geneId));
+        // this.add(this.initDiffExTab(geneId));
 
-        this.add(this.initCoexTab(geneId));
+      //  this.add(this.initCoexTab(geneId));
 
         // Phenotype tab: don't show unless supported 13=fly, 14=worm
-        if (this.geneTaxonId == 1 || this.geneTaxonId == 2 || this.geneTaxonId == 3 || this.geneTaxonId == 13
+       /* if (this.geneTaxonId == 1 || this.geneTaxonId == 2 || this.geneTaxonId == 3 || this.geneTaxonId == 13
             || this.geneTaxonId == 14) {
             this.add(this.initPhenotypeTab(geneId));
-        }
+        }*/
 
-        this.add({
+       /* this.add({
             title: 'Gene Ontology Terms',
             xtype: 'genegogrid',
             border: true,
@@ -73,17 +73,18 @@ Gemma.GenePage = Ext.extend(Ext.TabPanel, {
             deferLoadToRender: true,
             itemId: 'goGrid'
         });
+        */
 
         // console.log( this.geneTaxonId );
         // ALLEN BRAIN ATLAS IMAGES don't add unless it's a mammal (human, mouse rat; taxon ids 1,2,3)
-        if (this.geneTaxonId == 1 || this.geneTaxonId == 2 || this.geneTaxonId == 3) {
+     /*   if (this.geneTaxonId == 1 || this.geneTaxonId == 2 || this.geneTaxonId == 3) {
             this.add({
                 xtype: 'geneallenbrainatlasimages',
                 geneId: geneId,
                 title: 'Expression Images',
                 itemId: 'expression'
             });
-        }
+        }*/
 
         var initialTab = 'details';
         this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
