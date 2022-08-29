@@ -121,19 +121,22 @@ Gemma.GemmaNavigationHeader = Ext
                      text : 'Browse Datasets',
                      href : ctxBasePath + "/expressionExperiment/showAllExpressionExperiments.html",
                      tooltip : "View the list of Gemma's expression data sets"
-                  }, {
+                  },
+                     /*{
                      text : 'Browse Phenotype Associations',
                      href : ctxBasePath + "/phenotypes.html",
                      tooltip : "View the list of Gemma's phenotype-gene associations"
-                  }, {
+                  }, */{
                      text : 'Browse Platforms',
                      href : ctxBasePath + "/arrays/showAllArrayDesigns.html",
                      tooltip : "View the list of Gemma's platforms"
-                  }, {
+                  }
+                  /*, {
                      text : 'Search Annotated Papers',
                      href : ctxBasePath + "/bibRef/searchBibRefs.html",
                      tooltip : "Search for papers the Gemma curators have annotated"
-                  } ],
+                  } */
+                  ],
                   listeners : {
                      mouseover : function() {
                         hideTaskSearch.cancel();
@@ -158,29 +161,31 @@ Gemma.GemmaNavigationHeader = Ext
 
             var myGemmaBtn = new Ext.Button( {
                text : 'My Gemma',
-               hidden : !userLoggedIn,
+               hidden : !userLoggedIn || !isAdmin,
                menu : new Ext.menu.Menu( {
                   defaults : menuDefaults,
                   style : 'background:white',
                   items : [// these items will render as dropdown menu items when the arrow is
                   // clicked:
-                  {
+                   {
                      text : 'Load Data',
                      href : ctxBasePath + "/expressionExperiment/upload.html",
                      tooltip : "Upload your expression data"
-                  }, {
+                  },  {
                      text : 'Dataset manager',
                      href : ctxBasePath + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
                      tooltip : "Curate your data"
-                  }, {
+                  }
+                  /*, {
                      text : 'My Phenotype Associations',
                      href : ctxBasePath + "/phenotypeAssociationManager.html",
                      tooltip : "Modify your phenotype-gene associations"
-                  }, '-', {
+                  }
+                     , '-', {
                      text : 'User Groups',
                      href : ctxBasePath + "/manageGroups.html",
                      tooltip : "Manage your user groups"
-                  }, {
+                  }*/, {
                      text : 'Gene Groups',
                      href : ctxBasePath + "/geneGroupManager.html",
                      tooltip : "Manage your gene groups"
@@ -230,13 +235,13 @@ Gemma.GemmaNavigationHeader = Ext
                      href : "https://pavlidislab.github.io/Gemma/",
                      tooltip : "Gemma overview and general help",
                      hrefTarget : "_blank"
-                  }, {
+                  }/*, {
                      text : 'Dataset citations',
                      href : ctxBasePath + "/bibRef/showAllEeBibRefs.html"
                   }, {
                      text : 'QC updates',
                      href : ctxBasePath + "/expressionExperimentsWithQC.html"
-                  } ],
+                  }*/ ],
                   listeners : {
                      mouseover : function() {
                         hideTaskAbout.cancel();
