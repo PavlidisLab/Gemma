@@ -111,6 +111,90 @@
                     </descriptors>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>pavlab</groupId>
+                                    <artifactId>gemma-gsec</artifactId>
+                                    <version>${gsec.version}</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/schema</outputDirectory>
+                                    <includes>**/*.sql</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>sql-maven-plugin</artifactId>
+                <version>1.5</version>
+                <dependencies><!-- yes, this needs to be here. -->
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>${mysql.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                <!-- common configuration shared by all executions -->
+                <configuration>
+                    <driver>com.mysql.cj.jdbc.Driver</driver>
+                    <username>${gemma.db.build.user}</username>
+                    <password>${gemma.db.build.password}</password>
+                    <onError>continue</onError>
+                    <autocommit>true</autocommit>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>drop-add-testdb</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <url>${bootstrap.db.url}</url>
+                            <autocommit>false</autocommit>
+                            <sqlCommand>
+                                <![CDATA[
+                                DROP DATABASE IF EXISTS ${gemma.testdb.name};
+                                CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
+                                ]]>
+                            </sqlCommand>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>load-testdb-schema</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <url>${gemma.testdb.build.url}</url>
+                            <srcFiles>
+                                <srcFile>${project.build.directory}/schema/gemma-ddl.sql</srcFile>
+                                <srcFile>${project.build.directory}/schema/gsec-acl-ddl.sql</srcFile>
+                                <scrFile>${project.build.directory}/schema/sql/init-acl-indices.sql</scrFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
+                                <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
+                                <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
+                            </srcFiles>
+                            <onError>abort</onError>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -142,105 +226,6 @@
             </plugins>
         </pluginManagement>
     </build>
-    <profiles>
-        <profile>
-            <id>testdb.build</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <property>
-                    <name>testdb.build</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <version>3.1.2</version>
-                        <executions>
-                            <execution>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>pavlab</groupId>
-                                            <artifactId>gemma-gsec</artifactId>
-                                            <version>${gsec.version}</version>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/schema</outputDirectory>
-                                            <includes>**/*.sql</includes>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>sql-maven-plugin</artifactId>
-                        <version>1.5</version>
-                        <dependencies><!-- yes, this needs to be here. -->
-                            <dependency>
-                                <groupId>mysql</groupId>
-                                <artifactId>mysql-connector-java</artifactId>
-                                <version>${mysql.version}</version>
-                                <scope>runtime</scope>
-                            </dependency>
-                        </dependencies>
-                        <!-- common configuration shared by all executions -->
-                        <configuration>
-                            <driver>com.mysql.cj.jdbc.Driver</driver>
-                            <username>${gemma.db.build.user}</username>
-                            <password>${gemma.db.build.password}</password>
-                            <onError>continue</onError>
-                            <autocommit>true</autocommit>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>drop-add-testdb</id>
-                                <phase>initialize</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <url>${bootstrap.db.url}</url>
-                                    <autocommit>false</autocommit>
-                                    <sqlCommand>
-										<![CDATA[
-                                        DROP DATABASE IF EXISTS ${gemma.testdb.name};
-                                        CREATE DATABASE ${gemma.testdb.name} CHARACTER SET utf8mb4;
-                                        ]]>
-									</sqlCommand>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>load-testdb-schema</id>
-                                <phase>process-test-resources</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <url>${gemma.testdb.build.url}</url>
-                                    <srcFiles>
-                                        <srcFile>${project.build.directory}/schema/gemma-ddl.sql</srcFile>
-                                        <srcFile>${project.build.directory}/schema/gsec-acl-ddl.sql</srcFile>
-                                        <scrFile>${project.build.directory}/schema/sql/init-acl-indices.sql</scrFile>
-                                        <srcFile>${project.basedir}/src/main/resources/sql/init-acls.sql</srcFile>
-                                        <scrFile>${project.basedir}/src/main/resources/sql/init-indices.sql</scrFile>
-                                        <srcFile>${project.basedir}/src/main/resources/sql/init-entities.sql</srcFile>
-                                    </srcFiles>
-                                    <onError>abort</onError>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
     <dependencies>
         <!-- Spring -->
         <!-- this is the latest for Spring 3 (>= 1.1 requires Spring 4) -->
