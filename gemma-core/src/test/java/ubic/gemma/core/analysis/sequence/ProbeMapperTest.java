@@ -18,10 +18,11 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.Assert;
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -31,7 +32,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
-import ubic.gemma.persistence.util.Settings;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import java.util.Map;
  * @author pavlidis
  */
 @Category(GoldenPathTest.class)
-public class ProbeMapperTest extends TestCase {
+public class ProbeMapperTest {
 
     private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
     private Collection<BlatResult> blatres;
@@ -53,6 +53,29 @@ public class ProbeMapperTest extends TestCase {
     private GoldenPathSequenceAnalysis mousegp = null;
     private GoldenPathSequenceAnalysis humangp = null;
 
+    @Before
+    public void setUp() throws Exception {
+        Taxon mouseTaxon = Taxon.Factory.newInstance( "mouse" );
+        Taxon humanTaxon = Taxon.Factory.newInstance( "human" );
+        mousegp = new GoldenPathSequenceAnalysis( mouseTaxon );
+        humangp = new GoldenPathSequenceAnalysis( humanTaxon );
+
+        tester = new ArrayList<>();
+        tester.add( 400d );
+        tester.add( 200d );
+        tester.add( 100d );
+        tester.add( 50d );
+
+        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
+            BlatResultParser brp = new BlatResultParser();
+            brp.setTaxon( mouseTaxon );
+            brp.parse( is );
+            blatres = brp.getResults();
+            assert blatres != null && blatres.size() > 0;
+        }
+    }
+
+    @Test
     public void testComputeSpecificityA() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
@@ -65,12 +88,14 @@ public class ProbeMapperTest extends TestCase {
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityC() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 50 / 750.0;
         Assert.assertEquals( expected, actual, 0.0001 );
     }
 
+    @Test
     public void testComputeSpecificityD() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
@@ -83,6 +108,7 @@ public class ProbeMapperTest extends TestCase {
      * here</a>
      * 73,461,405-73,480,144)
      */
+    @Test
     public void testLocateGene() {
 
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
@@ -95,6 +121,7 @@ public class ProbeMapperTest extends TestCase {
      * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
      * strand works.
      */
+    @Test
     public void testLocateGeneOnWrongStrand() {
 
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
@@ -103,6 +130,7 @@ public class ProbeMapperTest extends TestCase {
         Assert.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
+    @Test
     public void testProcessBlatResults() {
 
         ProbeMapperConfig config = new ProbeMapperConfig();
@@ -126,6 +154,7 @@ public class ProbeMapperTest extends TestCase {
         Assert.assertTrue( found );
     }
 
+    @Test
     public void testIntronIssues() {
 
         ProbeMapperConfig config = new ProbeMapperConfig();
@@ -141,37 +170,4 @@ public class ProbeMapperTest extends TestCase {
             }
         }
     }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        tester = new ArrayList<>();
-        tester.add( 400d );
-        tester.add( 200d );
-        tester.add( 100d );
-        tester.add( 50d );
-
-        try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" ) ) {
-            BlatResultParser brp = new BlatResultParser();
-            Taxon m = Taxon.Factory.newInstance();
-            m.setCommonName( "mouse" );
-            brp.setTaxon( m );
-            brp.parse( is );
-            blatres = brp.getResults();
-
-            assert blatres != null && blatres.size() > 0;
-        }
-        String databaseHost = Settings.getString( "gemma.testdb.host" );
-        String databaseUser = Settings.getString( "gemma.testdb.user" );
-        String databasePassword = Settings.getString( "gemma.testdb.password" );
-
-        mousegp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.mouse" ), databaseHost,
-                databaseUser, databasePassword );
-
-        humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
-                databaseUser, databasePassword );
-
-    }
-
 }

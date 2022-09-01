@@ -22,6 +22,9 @@ import org.junit.Assert;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
@@ -36,26 +39,31 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Category(GoldenPathTest.class)
-public class GoldenPathQueryTest extends TestCase {
+public class GoldenPathQueryTest {
 
-    private static final Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );
+    /* fixtures */
     private GoldenPathQuery queryer;
-    private boolean hasDb = false;
 
-    public final void testQueryEst() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
+    @Before
+    public void setUp() throws Exception {
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( "human" );
+        t.setIsGenesUsable( true );
+        try {
+            queryer = new GoldenPathQuery( t );
+        } catch ( Exception e ) {
+            Assume.assumeNoException( "Skipping test because hg could not be configured", e );
         }
+    }
+
+    @Test
+    public final void testQueryEst() {
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
         Assert.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
+    @Test
     public final void testQueryMrna() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
-        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
         // assertEquals( 3, actualValue.size() );
         Assert.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
@@ -63,33 +71,9 @@ public class GoldenPathQueryTest extends TestCase {
         Assert.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
+    @Test
     public final void testQueryNoResult() {
-        if ( !hasDb ) {
-            GoldenPathQueryTest.log.warn( "Skipping test because hg could not be configured" );
-            return;
-        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
         Assert.assertEquals( 0, actualValue.size() );
     }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "human" );
-        t.setIsGenesUsable( true );
-
-        try {
-            String databaseHost = Settings.getString( "gemma.testdb.host" );
-            String databaseUser = Settings.getString( "gemma.testdb.user" );
-            String databasePassword = Settings.getString( "gemma.testdb.password" );
-            queryer = new GoldenPathQuery( Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
-                    databaseUser, databasePassword );
-            this.hasDb = true;
-        } catch ( Exception e ) {
-            this.hasDb = false;
-        }
-
-    }
-
 }
