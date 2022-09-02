@@ -1537,7 +1537,7 @@ public class ExpressionExperimentDaoImpl
     private List<Long> getExpressionExperimentIdsWithDifferentialExpressionAnalysis() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select experimentAnalyzed.id from CoexpressionAnalysis" )
+                        "select experimentAnalyzed.id from DifferentialExpressionAnalysis" )
                 .setCacheable( true )
                 .list();
     }
