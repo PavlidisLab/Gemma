@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author pavlidis
  */
+@Category(GeoTest.class)
 public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );

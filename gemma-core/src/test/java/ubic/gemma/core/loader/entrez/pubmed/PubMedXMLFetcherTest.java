@@ -37,6 +37,7 @@ import static org.junit.Assert.*;
 /**
  * @author pavlidis
  */
+@Category(PubMedTest.class)
 public class PubMedXMLFetcherTest {
     private static final Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
     private PubMedXMLFetcher pmf;

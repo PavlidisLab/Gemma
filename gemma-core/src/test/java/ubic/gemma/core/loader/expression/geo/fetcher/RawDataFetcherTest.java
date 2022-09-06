@@ -21,7 +21,9 @@ package ubic.gemma.core.loader.expression.geo.fetcher;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.util.TestUtils;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.LocalFile;
 
 import java.util.Collection;
@@ -29,6 +31,7 @@ import java.util.Collection;
 /**
  * @author pavlidis
  */
+@Category(SlowTest.class)
 public class RawDataFetcherTest extends TestCase {
     private static final Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
 
