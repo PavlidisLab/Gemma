@@ -1,11 +1,24 @@
 /**
  * The javascript search interface.
- * 
+ *
  * @authors kelsey, paul
  *
  */
 Ext.namespace( "Gemma.Search" );
 Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+
+Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
+   "ArrayDesign" : {title : "Probe", sortBy : "shortName"},
+   "BibliographicReference" : {title : "Annotated Paper", sortBy : "citation"},
+   "BioSequence" : {title : "Sequence", sortBy : "name"},
+   "BlacklistedValueObject" : {title : "Blacklisted accession"},
+   "CompositeSequence" : {title : "Probe", sortBy : "name"},
+   "ExpressionExperiment" : {title : "Expression dataset"},
+   "ExpressionExperimentSet" : {title : "Experiment group", sortBy : "name"},
+   "Gene" : {title : "Gene", sortBy : "name"},
+   "GeneSet" : {title : "Gene group", sortBy : "name"},
+   "PhenotypeAssociation" : {title : "Phenotype"}
+};
 
 Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
    layout : 'vbox',
@@ -181,7 +194,7 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       };
    },
    /**
-    * 
+    *
     */
    search : search = function( t, event ) {
       var settings = this.getSearchSettings();
@@ -327,17 +340,17 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
                }
             } ),
 
-            new Ext.Button( {
-               id : 'submit-button',
-               text : 'Submit',
-               name : 'Submit',
-               columnWidth : 0.25,
-               setSize : function() {
-               },
-               handler : function() {
-                  this.fireEvent( "search" );
-               }.createDelegate( this )
-            } ) ]
+               new Ext.Button( {
+                  id : 'submit-button',
+                  text : 'Submit',
+                  name : 'Submit',
+                  columnWidth : 0.25,
+                  setSize : function() {
+                  },
+                  handler : function() {
+                     this.fireEvent( "search" );
+                  }.createDelegate( this )
+               } ) ]
          }, {
             xtype : 'fieldset',
             layout : 'table',
@@ -615,14 +628,13 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
 
          var clazz = r.get( "resultClass" );
          var obj = r.data.resultObject;
-         if ( clazz === "ExpressionExperimentValueObject" ) {
+         if ( clazz === "ExpressionExperiment" ) {
             return value.test( obj.shortName ) || value.test( obj.name );
          } else if ( clazz === "CompositeSequence" ) {
             return value.test( obj.name ) || value.test( obj.description ) || value.test( obj.arrayDesign.shortName );
-         } else if ( clazz === "ArrayDesignValueObject" ) {
+         } else if ( clazz === "ArrayDesign" ) {
             return value.test( obj.name ) || value.test( obj.description );
-         } else if ( /^BioSequence.*/.exec( clazz ) ) { // because we get
-            // proxies.
+         } else if ( clazz === "BioSequence" ) {
             return value.test( obj.name ) || value.test( obj.description ) || value.test( obj.taxon.commonName );
          } else if ( clazz === "Gene" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion" ) {
             return value.test( obj.officialSymbol ) || value.test( obj.officialName )
@@ -756,7 +768,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
       var lastResultClass = this.getStore().getAt( 0 ).data.resultClass;
       var expand = true;
       var i = 1;
-      for (i; i < this.getStore().getCount(); i++) {
+      for ( i; i < this.getStore().getCount(); i++ ) {
          var record = this.getStore().getAt( i ).data;
          if ( record.resultClass !== lastResultClass ) {
             expand = false;
@@ -786,46 +798,17 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
     */
    renderEntityClass : function( data, metadata, record, row, column, store ) {
       var clazz = record.get( "resultClass" );
-      if ( clazz === "ExpressionExperimentValueObject" ) {
-         return "Expression dataset";
-      } else if ( clazz === "CompositeSequence" || clazz === "CompositeSequenceValueObject" ) {
-         return "Probe";
-      } else if ( clazz === "ArrayDesignValueObject" ) {
-         return "Platform";
-      } else if ( /^BioSequence.*/.exec( clazz ) ) { // because we get proxies.
-         return "Sequence";
-      } else if ( clazz === "GeneValueObject" ) {
-         return "Gene";
-      } else if ( clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
-         return "Gene group";
-      } else if ( clazz === "ExpressionExperimentSetValueObject" ) {
-         return "Experiment group";
-      } else if ( clazz === "BibliographicReferenceValueObject" ) {
-         return "Annotated Paper";
-      } else if ( clazz === "CharacteristicValueObject" ) {
-          return "Phenotype";
-      } else if ( clazz === "BlacklistedValueObject") {
-         return "Blacklisted accession";
+      if ( clazz in Gemma.Search.SEARCH_RESULT_CLASS_METAS ) {
+         return Gemma.Search.SEARCH_RESULT_CLASS_METAS[clazz].title;
       } else {
          return clazz;
       }
    },
 
    sortInfo : function( record ) {
-      var clazz = record.resultsClass;
-      if ( clazz === "ExpressionExperimentValueObject" ) {
-         return record.shortName;
-      } else if ( clazz === "CompositeSequence" || clazz === "CompositeSequenceValueObject" ) {
-         return record.name;
-      } else if ( clazz === "ArrayDesignValueObject" ) {
-         return record.shortName;
-      } else if ( clazz === "BibliographicReferenceValueObject" ) {
-         return record.citation;
-      } else if ( /^BioSequence.*/.exec( clazz ) ) { // because we get proxies.
-         return record.name;
-      } else if ( clazz === "GeneValueObject" || clazz === 'GeneSetValueObject'
-         || clazz === "DatabaseBackedGeneSetValueObject" || clazz === 'ExpressionExperimentSetValueObject' ) {
-         return record.name;
+      var clazz = record.get( "resultsClass" );
+      if ( clazz in Gemma.Search.SEARCH_RESULT_CLASS_METAS ) {
+         return record[Gemma.Search.SEARCH_RESULT_CLASS_METAS[clazz].sortBy] || clazz;
       } else {
          return clazz;
       }
@@ -833,39 +816,39 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
 
    renderEntity : function( data, metadata, record, row, column, store ) {
       var clazz = record.get( "resultClass" );
-      if ( clazz === "ExpressionExperimentValueObject" ) {
+      if ( clazz === "ExpressionExperiment" ) {
          return "<a href=\"" + Gemma.LinkRoots.expressionExperimentPage
             + (data.sourceExperiment ? data.sourceExperiment : data.id) + "\">" + data.shortName + "</a> - "
             + data.name;
-      } else if ( clazz === "CompositeSequence" || clazz === "CompositeSequenceValueObject" ) {
+      } else if ( clazz === "CompositeSequence" ) {
          return "<a href='" + ctxBasePath + "/compositeSequence/show.html?id=" + data.id + "'>" + data.name + "</a> - "
             + (data.description ? data.description : "")
             + (data.arrayDesign ? "; Platform: " + data.arrayDesign.shortName : '');
-      } else if ( clazz === "ArrayDesignValueObject" ) {
+      } else if ( clazz === "ArrayDesign" ) {
          return "<a href='" + ctxBasePath + "/arrays/showArrayDesign.html?id=" + data.id + "'>" + data.shortName + "</a>  "
             + data.name;
-      } else if ( /^BioSequence.*/.exec( clazz ) ) {
+      } else if ( clazz === "BioSequence" ) {
          return "<a href='" + ctxBasePath + "/genome/bioSequence/showBioSequence.html?id=" + data.id + "'>" + data.name
             + "</a> - " + data.taxon.commonName + " " + (data.description ? data.description : "");
-      } else if ( clazz === "GeneValueObject" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion" ) {
+      } else if ( clazz === "Gene" ) {
          return "<a href=\"" + Gemma.LinkRoots.genePage + data.id + "\">" + data.officialSymbol
             + "</a><span style='color:grey'> " + data.taxonCommonName + "</span> "
-            + ((data.officialName && data.officialName !== null) ? data.officialName : '');
-      } else if ( clazz === "BibliographicReferenceValueObject" ) {
+            + (data.officialName ? data.officialName : '');
+      } else if ( clazz === "BibliographicReference" ) {
          return data.citation.citation + (new Ext.Template( Gemma.Common.tpl.pubmedLink.simple )).apply( {
             pubmedURL : data.citation.pubmedURL
          } );
-      } else if ( clazz === "ExpressionExperimentSetValueObject" ) {
+      } else if ( clazz === "ExpressionExperimentSet" ) {
          return "<a href=\"" + Gemma.LinkRoots.expressionExperimentSetPage + data.id + "\">" + data.name
             + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.size + ")";
-      } else if ( clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
+      } else if ( clazz === "GeneSet" ) {
          return "<a href=\"" + Gemma.LinkRoots.geneSetPage + data.id + "\">" + data.name
             + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.size + ")";
-      } else if ( clazz === "CharacteristicValueObject" ) {
-          return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
-              + "</a><span style='color:grey'> " + data.valueUri + '</span>';
-      } else if ( clazz === 'BlacklistedValueObject') {
-         return data.shortName  + '&nbsp;Blacklisted:&nbsp;' + data.name + '<br/>Reason: ' + data.reason;
+      } else if ( clazz === "PhenotypeAssociation" ) {
+         return "<a href=\"" + Gemma.LinkRoots.phenotypePage + data.urlId + "\">" + data.value
+            + "</a><span style='color:grey'> " + data.valueUri + '</span>';
+      } else if ( clazz === 'BlacklistedValueObject' ) {
+         return data.shortName + '&nbsp;Blacklisted:&nbsp;' + data.name + '<br/>Reason: ' + data.reason;
       } else {
          return data[0];
       }
