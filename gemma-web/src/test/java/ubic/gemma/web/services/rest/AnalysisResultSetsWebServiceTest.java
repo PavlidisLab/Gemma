@@ -7,7 +7,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -27,7 +26,6 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.args.*;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -41,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
@@ -101,7 +100,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
 
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assertNotNull( geo );
-        assertEquals( geo.getName(), "GEO" );
+        assertEquals( "GEO", geo.getName() );
 
         databaseEntry = DatabaseEntry.Factory.newInstance();
         databaseEntry.setAccession( "GEO123123" );
@@ -132,15 +131,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
                 LimitArg.valueOf( "10" ),
                 SortArg.valueOf( "+id" ) );
         //noinspection unchecked
-        List<ExpressionAnalysisResultSetValueObject> results = ( List<ExpressionAnalysisResultSetValueObject> ) result.getData();
-        assertEquals( results.size(), 1 );
+        List<ExpressionAnalysisResultSetValueObject> results = ( ( List<ExpressionAnalysisResultSetValueObject> ) result.getData() );
+
+        // this is kind of annoying, but we can have results from other tests still lingering in the database, so we
+        // only need to check for the fixture
+        assertThat( results )
+                .extracting( "id" )
+                .contains( this.dears.getId() );
+
         // individual analysis results are not exposed from this endpoint
-        assertNull( results.get( 0 ).getResults() );
+        assertThat( results ).extracting( "results" )
+                .containsOnlyNulls();
     }
 
     @Test
     public void testFindAllWithFilters() {
-        HttpServletResponse response = new MockHttpServletResponse();
         ResponseDataObject<?> result = service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id = " + this.dears.getId() ),
@@ -257,7 +262,6 @@ public class AnalysisResultSetsWebServiceTest extends BaseSpringWebTest {
     @Test
     public void testFindByIdWhenResultSetDoesNotExistsThenReturn404NotFoundError() {
         long id = 123129L;
-        HttpServletResponse response = new MockHttpServletResponse();
         NotFoundException e = assertThrows( NotFoundException.class, () -> service.getResultSet( ExpressionAnalysisResultSetArg.valueOf( String.valueOf( id ) ), false ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
