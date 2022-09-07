@@ -51,6 +51,11 @@ public class SearchWebService {
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
 
+    /**
+     * Maximum number of search results.
+     */
+    public static final int MAX_SEARCH_RESULTS = 1000;
+
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -93,7 +98,7 @@ public class SearchWebService {
                 .taxon( taxonArg != null ? taxonArg.getEntity( taxonService ) : null )
                 .platformConstraint( platformArg != null ? platformArg.getEntity( arrayDesignService ) : null )
                 .resultTypes( resultTypesCls )
-                .maxResults( limit.getValue( 100 ) )
+                .maxResults( limit.getValue( MAX_SEARCH_RESULTS ) )
                 .build();
 
         List<SearchResult<? extends Identifiable>> searchResults;
@@ -109,7 +114,7 @@ public class SearchWebService {
         return new SearchResultsResponseDataObject( searchResults.stream()
                 .map( searchService::loadValueObject )
                 .sorted() // SearchResults are sorted by descending score order
-                .limit( limit.getValue( 100 ) ) // results are limited by class, so there might be more results than expected when unraveling everything
+                .limit( limit.getValue( MAX_SEARCH_RESULTS ) ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
                 .collect( Collectors.toList() ), new SearchSettingsValueObject( searchSettings ) );
     }
