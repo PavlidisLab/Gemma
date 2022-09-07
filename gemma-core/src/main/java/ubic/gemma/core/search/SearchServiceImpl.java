@@ -40,6 +40,7 @@ import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -161,6 +162,8 @@ public class SearchServiceImpl implements SearchService {
     private BlacklistedEntityDao blackListDao;
     @Autowired
     private TaxonService taxonService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     private final Set<Class<? extends Identifiable>> supportedResultTypes = new HashSet<>();
     private final ConfigurableConversionService resultObjectConversionService = new GenericConversionService();
@@ -320,6 +323,7 @@ public class SearchServiceImpl implements SearchService {
 
     private void initializeResultObjectConversionService() {
         addVoConverter( ArrayDesign.class, arrayDesignService );
+        addVoConverter( BibliographicReference.class, bibliographicReferenceService );
         addVoConverter( BioSequence.class, bioSequenceService );
         // FIXME: this is used for phenotypes, but really we should be using {@link PhenotypeAssociation}
         resultObjectConversionService.addConverter( CharacteristicValueObject.class, IdentifiableValueObject.class, o -> o );
