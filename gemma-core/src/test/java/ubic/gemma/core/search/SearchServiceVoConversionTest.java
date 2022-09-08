@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -18,6 +19,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.source.CompassSearchSource;
 import ubic.gemma.core.search.source.DatabaseSearchSource;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -173,6 +175,11 @@ public class SearchServiceVoConversionTest extends AbstractJUnit4SpringContextTe
         @Bean
         public TaxonService taxonService() {
             return mock( TaxonService.class );
+        }
+
+        @Bean
+        public BibliographicReferenceService bibliographicReferenceService() {
+            return mock( BibliographicReferenceService.class );
         }
     }
 
