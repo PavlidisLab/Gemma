@@ -245,8 +245,6 @@ public interface ArrayDesignService extends FilteringVoEnabledService<ArrayDesig
      */
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
-    Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
      *

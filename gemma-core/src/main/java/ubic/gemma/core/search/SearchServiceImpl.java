@@ -98,6 +98,14 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class SearchServiceImpl implements SearchService {
 
+    /**
+     * Penalty hit for indirect hit (multiplicative).
+     * <p>
+     * For example, if a platform is matched by a gene hit (score = 1.0), the score will be multiplied by this penalty
+     * (score = 0.8 * 1.0 = 0.8).
+     */
+    private static final double INDIRECT_HIT_PENALTY = 0.8;
+
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private static final String NCBI_GENE = "ncbi_gene";
@@ -284,7 +292,9 @@ public class SearchServiceImpl implements SearchService {
             try {
                 //noinspection unchecked
                 U resultObjectVo = ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class );
-                sr.setResultObject( resultObjectVo );
+                if ( resultObjectVo != null ) {
+                    sr.setResultObject( resultObjectVo );
+                }
             } catch ( ConverterNotFoundException e ) {
                 throw new IllegalArgumentException( "Result type " + searchResult.getResultClass() + " is not supported for VO conversion.", e );
             }
@@ -325,7 +335,16 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private void initializeResultObjectConversionService() {
-        addVoConverter( ArrayDesign.class, arrayDesignService );
+        resultObjectConversionService.addConverter( ArrayDesign.class, IdentifiableValueObject.class, o -> {
+            ArrayDesign ad = ( ArrayDesign ) o;
+            // this is a work-around for Compass-loaded AD which do not have a primary taxon loaded, although it is a
+            // mandatory property
+            if ( ad.getPrimaryTaxon() == null ) {
+                return arrayDesignService.loadValueObjectById( ad.getId() );
+            } else {
+                return arrayDesignService.loadValueObject( ad );
+            }
+        } );
         addVoConverter( BibliographicReference.class, bibliographicReferenceService );
         addVoConverter( BioSequence.class, bioSequenceService );
         // FIXME: this is used for phenotypes, but really we should be using {@link PhenotypeAssociation}
@@ -618,7 +637,7 @@ public class SearchServiceImpl implements SearchService {
             }
             SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign() );
             // indirect hit penalty
-            sr.setScore( 0.9 * r.getScore() );
+            sr.setScore( INDIRECT_HIT_PENALTY * r.getScore() );
             results.add( sr );
         }
 

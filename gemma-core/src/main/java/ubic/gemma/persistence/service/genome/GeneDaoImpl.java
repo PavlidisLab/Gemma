@@ -315,8 +315,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Collection<Gene> loadThawed( Collection<Long> ids ) {
-        Collection<Gene> result = new HashSet<>();
+    public List<Gene> loadThawed( Collection<Long> ids ) {
+        List<Gene> result = new ArrayList<>( ids.size() );
 
         if ( ids.isEmpty() )
             return result;

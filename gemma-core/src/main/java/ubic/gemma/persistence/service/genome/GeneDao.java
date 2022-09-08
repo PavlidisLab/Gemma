@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,7 +127,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> loadKnownGenes( Taxon taxon );
 
-    Collection<Gene> loadThawed( Collection<Long> ids );
+    List<Gene> loadThawed( Collection<Long> ids );
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 

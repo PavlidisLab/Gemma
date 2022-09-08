@@ -443,8 +443,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        Collection<Gene> g = this.geneDao.loadThawed( ids );
+    public List<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        List<Gene> g = this.geneDao.loadThawed( ids );
         return this.loadValueObjects( g );
     }
 

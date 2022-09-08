@@ -79,6 +79,19 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         this.resultId = entityId;
     }
 
+    public static <T extends Identifiable> SearchResult<T> toSearchResult( T entity, double score ) {
+        SearchResult<T> sr = new SearchResult<>( entity );
+        sr.setScore( score );
+        return sr;
+    }
+
+    public static <T extends Identifiable> SearchResult<T> toSearchResult( T entity, double score, String highlightedText ) {
+        SearchResult<T> sr = new SearchResult<>( entity );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
     @Override
     public int compareTo( SearchResult<?> o ) {
         return getComparator().compare( this, o );

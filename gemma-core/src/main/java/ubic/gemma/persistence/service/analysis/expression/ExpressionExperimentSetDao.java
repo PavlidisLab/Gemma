@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see ExpressionExperimentSet
@@ -75,7 +76,7 @@ public interface ExpressionExperimentSetDao
      * @return ee vos
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds, boolean loadEEIds );
+    List<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds, boolean loadEEIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentDetailsValueObject> getExperimentValueObjectsInSet( Long id );

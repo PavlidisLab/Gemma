@@ -3,7 +3,6 @@ package ubic.gemma.persistence.service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.List;
  * A special case of Service that also provides value object functionality.
  */
 public abstract class AbstractVoEnabledService<O extends Identifiable, VO extends IdentifiableValueObject<O>>
-        extends AbstractService<O> implements BaseVoEnabledService<O,VO> {
+        extends AbstractService<O> implements BaseVoEnabledService<O, VO> {
 
     private final BaseVoEnabledDao<O, VO> voDao;
 
@@ -30,8 +29,20 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
 
     @Override
     @Transactional(readOnly = true)
+    public VO loadValueObjectById( Long entityId ) {
+        return loadValueObject( voDao.load( entityId ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<VO> loadValueObjects( Collection<O> entities ) {
         return entities == null ? null : voDao.loadValueObjects( entities );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VO> loadValueObjectsByIds( Collection<Long> entityIds ) {
+        return loadValueObjects( voDao.load( entityIds ) );
     }
 
     @Override

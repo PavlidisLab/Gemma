@@ -19,6 +19,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -555,10 +556,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
         ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
-
         vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
         vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
-
         return vo;
     }
 
@@ -930,23 +929,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "array design cannot be null" );
-        }
-        List res = this.getSessionFactory().getCurrentSession().createQuery(
+    public ArrayDesign thawLite( @NonNull ArrayDesign arrayDesign ) {
+        return Objects.requireNonNull( ( ArrayDesign ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                                 + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curationDetails left join fetch a.externalReferences"
                                 + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.alternativeTo where a.id=:adId" )
-                .setParameter( "adId", arrayDesign.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException(
-                    "No array design with id=" + arrayDesign.getId() + " could be loaded." );
-        }
-
-        return ( ArrayDesign ) res.get( 0 );
+                .setParameter( "adId", arrayDesign.getId() )
+                .uniqueResult(), "No array design with id=" + arrayDesign.getId() + " could be loaded." );
     }
 
     @Override
@@ -967,7 +957,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
         if ( candidateSubsumee.equals( candidateSubsumer ) ) {
-            log.warn("Attempt to check a platform against itself for subsuming!");
+            log.warn( "Attempt to check a platform against itself for subsuming!" );
             return false;
         }
 
