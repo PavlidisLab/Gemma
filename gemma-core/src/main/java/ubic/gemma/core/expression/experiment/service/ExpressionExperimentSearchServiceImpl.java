@@ -281,7 +281,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
             List<Long> eeSetIds = new ArrayList<>();
             for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
-                eeSetIds.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ).getId() );
+                eeSetIds.add( sr.getResultId() );
             }
 
             if ( eeSetIds.isEmpty() ) {

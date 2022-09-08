@@ -248,13 +248,15 @@ public class DatasetsWebService {
             @Context HttpServletRequest request ) {
         ExpressionExperiment ee = datasetArg.getEntity( expressionExperimentService );
         UriComponentsBuilder uriComponents;
-        // this is only for testing because Jersey inmemory container lacks a servlet context
+        // this is only for testing because Jersey in-memory container lacks a servlet context
         if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request );
+            uriComponents = ServletUriComponentsBuilder.fromContextPath( request )
+                    .scheme( null ).host( null );
         } else {
             uriComponents = UriComponentsBuilder.newInstance();
         }
-        URI resultSetUri = uriComponents.path( "/resultSets" )
+        URI resultSetUri = uriComponents
+                .path( "/resultSets" )
                 .queryParam( "datasets", ee.getId() )
                 .build().toUri();
         return Response.status( Response.Status.FOUND )

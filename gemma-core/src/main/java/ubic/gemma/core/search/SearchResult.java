@@ -23,21 +23,41 @@ import lombok.NonNull;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ReflectionUtil;
 
+import javax.annotation.Nullable;
+import java.util.Comparator;
+
 /**
  * @author paul
  */
 @EqualsAndHashCode(of = { "resultClass", "resultId" })
 public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<? extends Identifiable>> {
 
+    /**
+     * Obtain a comparator for this search result.
+     * <p>
+     * Results are compared by {@link #getScore()} in descending order. Note that any search result can be compared
+     * regardless of their result type or result object.
+     */
+    public static Comparator<SearchResult<?>> getComparator() {
+        return Comparator.comparing( SearchResult::getScore, Comparator.reverseOrder() );
+    }
+
     private final Class<? extends Identifiable> resultClass;
 
     private final long resultId;
 
+    /**
+     * Result object this search result is refeering to.
+     * <p>
+     * This can be null, at least initially if the resultClass and objectId are provided.
+     * <p>
+     * It may also be replaced at a later time via {@link #setResultObject(Identifiable)} and {@link #clearResultObject()}.
+     */
+    private T resultObject;
+
     private String highlightedText;
 
-    private Double score = 0.0;
-
-    private T resultObject; // can be null, at least initially, if the resultClass and objectId are provided.
+    private double score = 1.0;
 
     public SearchResult( @NonNull T resultObject ) {
         if ( resultObject.getId() == null ) {
@@ -48,34 +68,27 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         this.resultClass = ( Class<? extends Identifiable> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
     }
 
-    public SearchResult( @NonNull T searchResult, double score ) {
-        this( searchResult );
-        this.score = score;
-    }
-
-    public SearchResult( @NonNull T searchResult, double score, String matchingText ) {
-        this( searchResult );
-        this.score = score;
-        this.highlightedText = matchingText;
-    }
-
-    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull Long entityId, double score, String matchingText ) {
+    /**
+     * Placeholder for provisional search results.
+     * <p>
+     * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
+     * storage.
+     */
+    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull Long entityId ) {
         this.resultClass = entityClass;
         this.resultId = entityId;
-        this.score = score;
-        this.highlightedText = matchingText;
-    }
-
-    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull T entity, double score, String matchingText ) {
-        this( entityClass, entity.getId(), score, matchingText );
-        this.resultObject = entity;
     }
 
     @Override
     public int compareTo( SearchResult<?> o ) {
-        return -this.score.compareTo( o.getScore() );
+        return getComparator().compare( this, o );
     }
 
+    /**
+     * Obtain the highlighted text for this result.
+     * @return the highlighted text in the result, or null if not set
+     */
+    @Nullable
     public String getHighlightedText() {
         return highlightedText;
     }
@@ -95,6 +108,10 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         return resultClass;
     }
 
+    /**
+     * Obtain the result object if available.
+     */
+    @Nullable
     public T getResultObject() {
         return this.resultObject;
     }
@@ -121,11 +138,11 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         this.resultObject = null;
     }
 
-    public Double getScore() {
+    public double getScore() {
         return score;
     }
 
-    public void setScore( Double score ) {
+    public void setScore( double score ) {
         this.score = score;
     }
 

@@ -5,7 +5,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.core.*;
-import org.compass.core.converter.ConversionException;
 import org.compass.core.engine.SearchEngineQueryParseException;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
@@ -36,6 +35,8 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.function.Function.identity;
 
 /**
  * Compass-based search source.
@@ -147,16 +148,15 @@ public class CompassSearchSource implements SearchSource {
             geneResults = previousGeneSearchResults;
         }
 
-        Map<Gene, SearchResult<Gene>> genes = new HashMap<>();
-        for ( SearchResult<Gene> sr : geneResults ) {
-            genes.put( sr.getResultObject(), sr );
-        }
+        Map<Gene, SearchResult<Gene>> genes = geneResults.stream()
+                .filter( sr -> sr.getResultObject() != null )
+                .collect( Collectors.toMap( SearchResult::getResultObject, identity() ) );
 
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<>( seqsFromDb.get( gene ) );
             // bioSequenceService.thawRawAndProcessed( bs );
-            results.addAll( this.dbHitsToSearchResult( bs, genes.get( gene ) ) );
+            results.addAll( this.indirectDbHitsToSearchResults( bs, genes.get( gene ) ) );
         }
 
         return results;
@@ -335,11 +335,15 @@ public class CompassSearchSource implements SearchSource {
                 score = 1.0;
             }
 
+            //noinspection unchecked
+            SearchResult<T> sr = new SearchResult<>( ( T ) resultObject );
+            sr.setScore( score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR );
+            sr.setHighlightedText( this.getHighlightedText( hits, i ) );
+
             /*
              * Always give compass hits a lower score, so they can be differentiated from exact database hits.
              */
-            //noinspection unchecked
-            results.add( new SearchResult<>( ( T ) resultObject, score * CompassSearchSource.COMPASS_HIT_SCORE_PENALTY_FACTOR, this.getHighlightedText( hits, i ) ) );
+            results.add( sr );
         }
 
         if ( timer.getTime() > 100 ) {
@@ -385,7 +389,7 @@ public class CompassSearchSource implements SearchSource {
         return filteredResults;
     }
 
-    private <T extends Identifiable> List<SearchResult> dbHitsToSearchResult( Collection<T> entities, SearchResult compassHitDerivedFrom ) {
+    private <T extends Identifiable> List<SearchResult> indirectDbHitsToSearchResults( Collection<T> entities, SearchResult<?> compassHitDerivedFrom ) {
         StopWatch timer = StopWatch.createStarted();
         List<SearchResult> results = new ArrayList<>();
         for ( T e : entities ) {
@@ -398,7 +402,14 @@ public class CompassSearchSource implements SearchSource {
                 log.warn( "Search result object with null ID." );
                 continue;
             }
-            SearchResult<T> esr = this.dbHitToSearchResult( compassHitDerivedFrom, e );
+            SearchResult<T> esr;
+            if ( compassHitDerivedFrom != null ) {
+                esr = new SearchResult<>( e );
+                esr.setScore( compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY );
+                esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
+            } else {
+                esr = new SearchResult<>( e );
+            }
             results.add( esr );
         }
         if ( timer.getTime() > 1000 ) {
@@ -407,14 +418,4 @@ public class CompassSearchSource implements SearchSource {
         return results;
     }
 
-    private <T extends Identifiable> SearchResult<T> dbHitToSearchResult( SearchResult compassHitDerivedFrom, T e ) {
-        SearchResult<T> esr;
-        if ( compassHitDerivedFrom != null ) {
-            esr = new SearchResult<>( e, compassHitDerivedFrom.getScore() * CompassSearchSource.INDIRECT_DB_HIT_PENALTY );
-            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-        } else {
-            esr = new SearchResult<>( e, 1.0, null );
-        }
-        return esr;
-    }
 }

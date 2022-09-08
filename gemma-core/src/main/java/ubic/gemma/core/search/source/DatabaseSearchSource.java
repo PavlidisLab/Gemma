@@ -40,6 +40,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Search source for direct database results.
@@ -204,7 +205,9 @@ public class DatabaseSearchSource implements SearchSource {
          */
         Collection<SearchResult<Gene>> rawGeneResults = this.searchGene( settings );
         for ( SearchResult<Gene> searchResult : rawGeneResults ) {
-            geneSet.add( searchResult.getResultObject() );
+            if ( searchResult.getResultObject() != null ) {
+                geneSet.add( searchResult.getResultObject() );
+            }
         }
 
         for ( Gene g : geneSet ) {
@@ -295,7 +298,11 @@ public class DatabaseSearchSource implements SearchSource {
             DatabaseSearchSource.log.info( "DB Expression Experiment search for " + settings + " took " + watch.getTime()
                     + " ms and found " + results.size() + " EEs" );
 
-        return this.dbHitsToSearchResult( results );
+        return results.entrySet().stream().map( entry -> {
+            SearchResult<ExpressionExperiment> esr = new SearchResult<>( entry.getKey() );
+            esr.setHighlightedText( entry.getValue() );
+            return esr;
+        } ).collect( Collectors.toList() );
     }
 
     /**
@@ -332,11 +339,11 @@ public class DatabaseSearchSource implements SearchSource {
             //
         }
         if ( result != null ) {
-            results.add( this.dbHitToSearchResult( result, null ) );
+            results.add( new SearchResult<>( result ) );
         } else {
             result = geneService.findByAccession( searchString, null );
             if ( result != null ) {
-                results.add( this.dbHitToSearchResult( result, null ) );
+                results.add( new SearchResult<>( result ) );
             }
         }
         if ( results.size() > 0 ) {
@@ -435,8 +442,7 @@ public class DatabaseSearchSource implements SearchSource {
                     DatabaseSearchSource.log.debug( "Null search result object" );
                 continue;
             }
-            SearchResult<T> esr = this.dbHitToSearchResult( e, null );
-            results.add( esr );
+            results.add( new SearchResult<T>( e ) );
         }
         if ( watch.getTime() > 1000 ) {
             DatabaseSearchSource.log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
@@ -450,17 +456,11 @@ public class DatabaseSearchSource implements SearchSource {
     private <T extends Identifiable> List<SearchResult<T>> dbHitsToSearchResult( Map<T, String> entities ) {
         List<SearchResult<T>> results = new ArrayList<>( entities.size() );
         for ( T e : entities.keySet() ) {
-            SearchResult<T> esr = this.dbHitToSearchResult( e, entities.get( e ) );
+            SearchResult<T> esr = new SearchResult<>( e );
+            esr.setHighlightedText( entities.get( e ) );
             results.add( esr );
         }
         return results;
-    }
-
-    /**
-     * @param text that matched the query (for highlighting)
-     */
-    private <T extends Identifiable> SearchResult<T> dbHitToSearchResult( T e, String text ) {
-        return new SearchResult<>( e, 1.0, text );
     }
 
     /**
@@ -505,9 +505,12 @@ public class DatabaseSearchSource implements SearchSource {
                     CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
                     currentTaxon = taxonService.findByCommonName( charVO.getTaxon() );
 
-                } else {
+                } else if ( o != null ) {
                     Method m = o.getClass().getMethod( "getTaxon" );
                     currentTaxon = ( Taxon ) m.invoke( o );
+
+                } else {
+                    currentTaxon = null;
                 }
 
                 if ( currentTaxon == null || !currentTaxon.getId().equals( t.getId() ) ) {

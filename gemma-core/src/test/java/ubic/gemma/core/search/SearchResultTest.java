@@ -3,6 +3,8 @@ package ubic.gemma.core.search;
 import org.junit.Test;
 import ubic.gemma.model.common.Identifiable;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * Tests for {@link SearchResult}.
  *
@@ -26,7 +28,9 @@ public class SearchResultTest {
 
     @Test
     public void testResultObject() {
-        new SearchResult<Identifiable>( new FooBar( 1L ) );
+        SearchResult<Identifiable> sr = new SearchResult<>( new FooBar( 1L ) );
+        assertThat( sr.getScore() ).isEqualTo( 1.0 );
+        assertThat( sr.getHighlightedText() ).isNull();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -36,19 +40,19 @@ public class SearchResultTest {
 
     @Test
     public void testSetResultObject() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, 0, null );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
         sr.setResultObject( new FooBar( 1L ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetResultObjectWithNullId() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, 0, null );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
         sr.setResultObject( new FooBar( null ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetResultObjectWithDifferentId() {
-        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L, 0, null );
+        SearchResult<Identifiable> sr = new SearchResult<>( FooBar.class, 1L );
         sr.setResultObject( new FooBar( 2L ) );
     }
 

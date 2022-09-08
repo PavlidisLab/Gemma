@@ -275,18 +275,21 @@ public class SearchServiceImpl implements SearchService {
     @Override
     @Transactional(readOnly = true)
     public <T extends Identifiable, U extends IdentifiableValueObject<T>> SearchResult<U> loadValueObject( SearchResult<T> searchResult ) throws IllegalArgumentException {
-        if ( searchResult.getResultObject() == null ) {
-            // that's a valid state of the result is provisional
-            return new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId(), searchResult.getScore(), searchResult.getHighlightedText() );
-        } else {
+        SearchResult<U> sr = new SearchResult<>( searchResult.getResultClass(), searchResult.getResultId() );
+        sr.setScore( searchResult.getScore() );
+        sr.setHighlightedText( sr.getHighlightedText() );
+        // null if a valid state if the original result is provisional, then we return a provisional VO
+        T resultObject = searchResult.getResultObject();
+        if ( resultObject != null ) {
             try {
                 //noinspection unchecked
-                U resultObjectVo = ( U ) resultObjectConversionService.convert( searchResult.getResultObject(), IdentifiableValueObject.class );
-                return new SearchResult<>( searchResult.getResultClass(), resultObjectVo, searchResult.getScore(), searchResult.getHighlightedText() );
+                U resultObjectVo = ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class );
+                sr.setResultObject( resultObjectVo );
             } catch ( ConverterNotFoundException e ) {
                 throw new IllegalArgumentException( "Result type " + searchResult.getResultClass() + " is not supported for VO conversion.", e );
             }
         }
+        return sr;
     }
 
     @Override
@@ -553,14 +556,14 @@ public class SearchServiceImpl implements SearchService {
 
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
-            results.add( new SearchResult<>( shortNameResult, 1.0 ) );
+            results.add( new SearchResult<>( shortNameResult ) );
             return results;
         }
 
         Collection<ArrayDesign> nameResult = arrayDesignService.findByName( searchString );
         if ( nameResult != null && !nameResult.isEmpty() ) {
             for ( ArrayDesign ad : nameResult ) {
-                results.add( new SearchResult<>( ad, 1.0 ) );
+                results.add( new SearchResult<>( ad ) );
             }
             return results;
         }
@@ -568,18 +571,24 @@ public class SearchServiceImpl implements SearchService {
         BlacklistedEntity b = blackListDao.findByAccession( searchString );
         if ( b != null ) {
             // FIXME: I'm not sure the ID is a good thing to put here
-            results.add( new SearchResult<>( ArrayDesign.class, b.getId(), 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( ArrayDesign.class, b.getId() );
+            sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
+            results.add( sr );
             return results;
         }
 
         Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
         for ( ArrayDesign arrayDesign : altNameResults ) {
-            results.add( new SearchResult<>( arrayDesign, 0.9 ) );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign );
+            sr.setScore( 0.9 );
+            results.add( sr );
         }
 
         Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
         for ( ArrayDesign arrayDesign : manufacturerResults ) {
-            results.add( new SearchResult<>( arrayDesign, 0.9 ) );
+            SearchResult<ArrayDesign> sr = new SearchResult<>( arrayDesign );
+            sr.setScore( 0.9 );
+            results.add( sr );
         }
 
         /*
@@ -603,11 +612,14 @@ public class SearchServiceImpl implements SearchService {
 
         for ( SearchResult<CompositeSequence> r : probes ) {
             CompositeSequence cs = r.getResultObject();
-            if ( cs.getArrayDesign() == null ) // This might happen as compass
-                // might not have indexed the AD
-                // for the CS
+            // This might happen as compass might not have indexed the AD for the CS
+            if ( cs == null || cs.getArrayDesign() == null ) {
                 continue;
-            results.add( new SearchResult<>( cs.getArrayDesign(), r.getScore() ) );
+            }
+            SearchResult<ArrayDesign> sr = new SearchResult<>( cs.getArrayDesign() );
+            // indirect hit penalty
+            sr.setScore( 0.9 * r.getScore() );
+            results.add( sr );
         }
 
         watch.stop();
@@ -808,7 +820,8 @@ public class SearchServiceImpl implements SearchService {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, eeID, 1.0, matchedText );
+                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, eeID );
+                    sr.setHighlightedText( matchedText );
                     results.add( sr );
                     if ( limit > 0 && results.size() >= limit ) {
                         break;
@@ -1017,23 +1030,14 @@ public class SearchServiceImpl implements SearchService {
             if ( e.getId() == null ) {
                 log.warn( "Search result object with null ID." );
             }
-            SearchResult<T> esr = this.dbHitToSearchResult( e, matchText );
+            SearchResult<T> esr = new SearchResult<>( e );
+            esr.setHighlightedText( matchText );
             results.add( esr );
         }
         if ( watch.getTime() > 1000 ) {
             log.info( "Unpack " + results.size() + " search resultsS: " + watch.getTime() + "ms" );
         }
         return results;
-    }
-
-    /**
-     * @param text that matched the query (for highlighting)
-     */
-    private <T extends Identifiable> SearchResult<T> dbHitToSearchResult( T e, String text ) {
-        SearchResult<T> esr;
-        esr = new SearchResult<>( e, 1.0, text );
-        log.debug( esr );
-        return esr;
     }
 
     //    private void debugParentFetch( Map<Characteristic, Object> parentMap ) {
@@ -1087,7 +1091,9 @@ public class SearchServiceImpl implements SearchService {
 
             BlacklistedEntity b = blackListDao.findByAccession( settings.getQuery() );
             if ( b != null ) {
-                results.add( new SearchResult<>( ExpressionExperiment.class, b.getId(), 1.0, "Blacklisted accessions are not loaded into Gemma" ) );
+                SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, b.getId() );
+                sr.setHighlightedText( "Blacklisted accessions are not loaded into Gemma" );
+                results.add( sr );
                 return results;
             }
 
@@ -1101,6 +1107,9 @@ public class SearchServiceImpl implements SearchService {
             // TODO: make sure this is being hit correctly.
             for ( SearchResult<Gene> gh : geneHits ) {
                 Gene g = gh.getResultObject();
+                if ( g == null ) {
+                    continue;
+                }
                 Integer ncbiGeneId = g.getNcbiGeneId();
                 String geneUri = "http://" + NCBI_GENE + "/" + ncbiGeneId; // this is just enough to fool the search into looking by NCBI ID, but check working as expected
                 SearchSettings gss = SearchSettings.expressionExperimentSearch( geneUri );
@@ -1187,8 +1196,9 @@ public class SearchServiceImpl implements SearchService {
             watch.start();
             Collection<SearchResult<ArrayDesign>> matchingPlatforms = this.arrayDesignSearch( settings, null );
             for ( SearchResult adRes : matchingPlatforms ) {
-                if ( adRes.getResultObject() instanceof ArrayDesign ) {
-                    ArrayDesign ad = ( ArrayDesign ) adRes.getResultObject();
+                Object resultObject = adRes.getResultObject();
+                if ( resultObject instanceof ArrayDesign ) {
+                    ArrayDesign ad = ( ArrayDesign ) resultObject;
                     Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
                             .getExpressionExperiments( ad );
                     if ( expressionExperiments.size() > 0 )

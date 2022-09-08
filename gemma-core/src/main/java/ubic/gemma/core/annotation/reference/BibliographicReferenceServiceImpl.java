@@ -37,6 +37,7 @@ import ubic.gemma.persistence.service.common.description.BibliographicReferenceD
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -239,8 +240,11 @@ public class BibliographicReferenceServiceImpl
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
         // only return associations with the selected entity types.
-        for ( SearchResult<BibliographicReference> entity : resultEntities ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity.getResultObject() );
+        for ( SearchResult<BibliographicReference> sr : resultEntities ) {
+            BibliographicReference entity = sr.getResultObject();
+            if ( entity == null )
+                continue; // might be a compass hit that is no longer valid
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
 
             if ( settings.getSearchPhenotypes() || settings.getSearchBibrefs() ) {
                 this.populateBibliographicPhenotypes( vo );
@@ -250,7 +254,7 @@ public class BibliographicReferenceServiceImpl
             }
 
             if ( settings.getSearchExperiments() || settings.getSearchBibrefs() ) {
-                this.populateRelatedExperiments( entity.getResultObject(), vo );
+                this.populateRelatedExperiments( entity, vo );
                 if ( !vo.getExperiments().isEmpty() || settings.getSearchBibrefs() ) {
                     results.add( vo );
                 }
@@ -268,14 +272,17 @@ public class BibliographicReferenceServiceImpl
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) throws SearchException {
-        //noinspection unchecked
         List<SearchResult<BibliographicReference>> resultEntities = searchService
                 .search( SearchSettings.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
-        for ( SearchResult<BibliographicReference> entity : resultEntities ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity.getResultObject() );
+        for ( SearchResult<BibliographicReference> sr : resultEntities ) {
+            BibliographicReference entity = sr.getResultObject();
+            if ( entity == null ) {
+                continue;
+            }
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
             this.populateBibliographicPhenotypes( vo );
-            this.populateRelatedExperiments( entity.getResultObject(), vo );
+            this.populateRelatedExperiments( entity, vo );
             results.add( vo );
         }
 

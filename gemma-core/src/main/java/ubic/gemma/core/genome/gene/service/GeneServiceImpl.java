@@ -509,9 +509,11 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         for ( SearchResult<Gene> sr : geneSearchResults ) {
             Gene g = sr.getResultObject();
-            g = this.thaw( g );
-            genes.add( g );
-            log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            if ( g != null ) {
+                g = this.thaw( g );
+                genes.add( g );
+                log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            }
         }
         Collection<GeneValueObject> geneValueObjects = this.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );

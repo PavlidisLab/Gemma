@@ -179,8 +179,8 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
 
-        for ( SearchResult sr : found.get( Gene.class ) ) {
-            if ( sr.getResultObject().equals( gene ) ) {
+        for ( SearchResult<?> sr : found.get( Gene.class ) ) {
+            if ( gene.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
@@ -215,7 +215,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
-            if ( sr.getResultObject().equals( bibref ) ) {
+            if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
@@ -249,7 +249,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Map<Class<? extends Identifiable>, List<SearchResult<? extends Identifiable>>> found = this.searchService.search( settings );
         assertFalse( found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
-            if ( sr.getResultObject().equals( bibref ) ) {
+            if ( bibref.equals( sr.getResultObject() ) ) {
                 return;
             }
         }
