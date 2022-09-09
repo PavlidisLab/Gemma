@@ -47,7 +47,7 @@ public class HttpFetcherTest extends TestCase {
             Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
             TestCase.assertNotNull( results );
             TestCase.assertTrue( results.size() > 0 && results.iterator().next().getLocalURL() != null );
-            f = new File( results.iterator().next().getLocalURL().toURI() );
+            f = new File( results.iterator().next().getLocalURL() );
             TestCase.assertTrue( f.length() > 0 );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {

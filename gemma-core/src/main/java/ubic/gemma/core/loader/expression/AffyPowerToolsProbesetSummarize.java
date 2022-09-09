@@ -495,8 +495,8 @@ public class AffyPowerToolsProbesetSummarize {
 
         Set<String> celfiles = new HashSet<>();
         for ( LocalFile f : files ) {
-            try {
-                File fi = new File( f.getLocalURL().toURI() );
+            {
+                File fi = new File( f.getLocalURL() );
 
                 // If both unpacked and packed files are there, it looks at both of them. No major problem - the dups are resolved - just a little ugly.
                 if ( fi.canRead() && ( fi.getName().toUpperCase().endsWith( ".CEL" ) || fi.getName().toUpperCase()
@@ -522,8 +522,6 @@ public class AffyPowerToolsProbesetSummarize {
                         celfiles.add( fi.getAbsolutePath() );
                     }
                 }
-            } catch ( URISyntaxException e ) {
-                throw new RuntimeException( e );
             }
         }
 
