@@ -26,27 +26,4 @@ public class ListUtils {
         }
         return element2position;
     }
-
-    /**
-     * Efficiently add new elements from a collection to a list that are not already present.
-     *
-     * The naïve way of doing this takes a O(n*m) time complexity because the original list has to be traversed every
-     * single time a new element is to be added. This strategy works in O(n+m) by first constructing a set of already
-     * present elements and using that set to match elements to add to the list.
-     *
-     * @param list        a list containing elements
-     * @param newElements a collection of elements to add to the list
-     * @param <T>
-     */
-    public static <T> void addAllNewElements( List<? super T> list, Collection<T> newElements ) {
-        // O(n)
-        Set<? super T> alreadyIn = new HashSet<>( list );
-        // O(m)
-        for ( T elem : newElements ) {
-            if ( !alreadyIn.contains( elem ) ) {
-                list.add( elem );
-                alreadyIn.add( elem );
-            }
-        }
-    }
 }
