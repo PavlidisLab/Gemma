@@ -1383,7 +1383,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         // this analysis should take just 10 or 20 seconds for most data sets.
         // but there are cases that take longer; addressing https://github.com/PavlidisLab/Gemma/issues/13
         // would help.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 30; // 30 minutes.
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 100; // 100 minutes.
         double updateIntervalMillis = 60 * 1000;// 1 minute
         while ( !f.isDone() ) {
             try {
