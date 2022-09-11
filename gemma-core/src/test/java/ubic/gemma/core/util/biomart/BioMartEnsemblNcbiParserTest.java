@@ -122,7 +122,7 @@ public class BioMartEnsemblNcbiParserTest {
 
         try {
             parser.setBioMartFields( attributesToGet );
-            parser.parse( new File( myurl.getFile() ) );
+            parser.parse( new File( myurl.toURI() ) );
             Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             // 39 unique proteins and 36 unique genes
             assertEquals( 10, items.size() );
@@ -151,7 +151,7 @@ public class BioMartEnsemblNcbiParserTest {
         URL myurl = this.getClass().getResource( fileNameStringmouse );
         try {
             parser.setBioMartFields( attributesToGet );
-            parser.parse( new File( myurl.getFile() ) );
+            parser.parse( new File( myurl.toURI() ) );
             Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             boolean isItemThereOne = false;
             boolean isItemThereTwo = false;
