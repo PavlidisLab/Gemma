@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
 @Component
 public class BeanInitializationTimeMonitor implements BeanPostProcessor, Ordered, ApplicationListener<ContextRefreshedEvent> {
 
+    /**
+     * Total amount of time that has to elapse while initializing the context for emitting a warning.
+     */
     private static final int TOTAL_TIME_WARN_THRESHOLD = 5000;
 
     private final Map<String, StopWatch> stopWatches = new HashMap<>();
@@ -72,9 +75,10 @@ public class BeanInitializationTimeMonitor implements BeanPostProcessor, Ordered
                         .limit( 10 )
                         .map( entry -> formatBeanInitializationTime( entry.getKey(), entry.getValue(), false ) )
                         .filter( Objects::nonNull )
-                        .collect( Collectors.joining( ", " ) );
+                        .collect( Collectors.joining( "\n\t" ) );
         if ( totalTime >= TOTAL_TIME_WARN_THRESHOLD ) {
-            log.warn( "Spent " + totalTime + " ms initializing beans. Here are the worst offenders:" + worstOffenders + ". Enable debug logs for " + BeanInitializationTimeMonitor.class.getName() + " for a complete breakdown." );
+            log.warn( String.format( "Spent %d ms initializing beans. Here are the worst offenders:\n\n\t%s.\n\nEnable debug logs for %s for a complete breakdown.",
+                    totalTime, worstOffenders, BeanInitializationTimeMonitor.class.getName() ) );
         }
         if ( log.isDebugEnabled() ) {
             String completeBreakdown = stopWatches.entrySet().stream()
