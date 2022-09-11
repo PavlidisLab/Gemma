@@ -15,7 +15,7 @@
 		<property name="defaultFailureUrl" value="/login.jsp"/>
 	</bean>
 
-	<bean id="restAuthEntryPoint" class="ubic.gemma.web.services.rest.security.RestAuthEntryPoint"/>
+	<bean id="restAuthEntryPoint" class="ubic.gemma.rest.security.RestAuthEntryPoint"/>
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">

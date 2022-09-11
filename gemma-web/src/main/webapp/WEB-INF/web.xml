@@ -72,13 +72,13 @@
     <!-- CORS -->
     <filter>
         <filter-name>cors</filter-name>
-        <filter-class>ubic.gemma.web.services.rest.servlet.CorsFilter</filter-class>
+        <filter-class>ubic.gemma.rest.servlet.CorsFilter</filter-class>
     </filter>
 
     <!-- this is the default servlet that servers static resources -->
     <filter>
         <filter-name>restapidocsFilter</filter-name>
-        <filter-class>ubic.gemma.web.services.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
+        <filter-class>ubic.gemma.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
     </filter>
 
     <filter-mapping>
@@ -155,7 +155,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.web.services.rest</param-value>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources,ubic.gemma.rest</param-value>
         </init-param>
         <init-param>
             <!-- this is necessary because the file would otherwise be looked at under /WEB-INF/openapi-configuration.yaml -->
