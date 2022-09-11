@@ -1401,10 +1401,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
 
             if ( timer.getTime() > MAX_ANALYSIS_TIME ) {
-                LinearModelAnalyzer.log
-                        .error( "Analysis is taking too long, something bad must have happened; cancelling" );
-                f.cancel( true );
-                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
+//                LinearModelAnalyzer.log
+//                        .error( "Analysis is taking too long, something bad must have happened; cancelling" );
+//                f.cancel( true );
+//                throw new RuntimeException( "Analysis was taking too long, it was cancelled" );
             }
         }
 
