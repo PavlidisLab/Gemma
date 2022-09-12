@@ -51,6 +51,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return r;
     }
 
+    @JsonIgnore
     private Boolean blackListed = false;
     private String color; // FIXME redundant with technologyType
     @JsonIgnore
