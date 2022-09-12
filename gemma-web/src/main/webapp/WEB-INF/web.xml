@@ -66,6 +66,12 @@
         <filter-class>ubic.gemma.web.services.rest.servlet.CorsFilter</filter-class>
     </filter>
 
+    <!-- this is the default servlet that servers static resources -->
+    <filter>
+        <filter-name>restapidocsFilter</filter-name>
+        <filter-class>ubic.gemma.web.services.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
+    </filter>
+
     <!-- Spring Security -->
     <filter-mapping>
         <filter-name>springSecurityFilterChain</filter-name>
@@ -90,6 +96,12 @@
         <servlet-name>gemma-rest</servlet-name>
     </filter-mapping>
 
+    <!-- rewrites /resources/restapidocs/ -> /resources/restapidocs/index.html -->
+    <filter-mapping>
+        <filter-name>restapidocsFilter</filter-name>
+        <servlet-name>default</servlet-name>
+    </filter-mapping>
+
     <listener>
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
@@ -102,6 +114,7 @@
     <listener>
         <listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
     </listener>
+
 
     <!-- Dispatch Servlet Configuration -->
     <servlet>

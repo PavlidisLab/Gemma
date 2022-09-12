@@ -14,7 +14,13 @@
  */
 package ubic.gemma.web.services.rest.servlet;
 
-import javax.servlet.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -23,26 +29,23 @@ import java.io.IOException;
  * <p>
  * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
-public class CorsFilter implements Filter {
-
-    public CorsFilter() {
-
-    }
+public class CorsFilter extends OncePerRequestFilter {
 
     @Override
-    public void init( FilterConfig config ) {
-    }
-
-    @Override
-    public void doFilter( ServletRequest req, ServletResponse res, FilterChain chain )
+    public void doFilterInternal( HttpServletRequest req, HttpServletResponse res, FilterChain chain )
             throws IOException, ServletException {
-        final HttpServletResponse response = ( HttpServletResponse ) res;
-        response.addHeader( "Access-Control-Allow-Origin", "*" );
-        response.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type" );
+        if ( req.getHeader( "Origin" ) != null ) {
+            res.addHeader( "Access-Control-Allow-Origin", "*" );
+        }
+        if ( isPreflight( req ) ) {
+            res.addHeader( "Access-Control-Allow-Headers", "Authorization,Content-Type" );
+            res.setStatus( HttpStatus.NO_CONTENT.value() );
+            return;
+        }
         chain.doFilter( req, res );
     }
 
-    @Override
-    public void destroy() {
+    private static boolean isPreflight( HttpServletRequest req ) {
+        return req.getHeader( "Origin" ) != null && HttpMethod.valueOf( req.getMethod() ).equals( HttpMethod.OPTIONS );
     }
 }
