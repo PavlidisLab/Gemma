@@ -18,10 +18,15 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 /**
@@ -30,6 +35,8 @@ import java.util.HashSet;
  * @author paul et al
  */
 @SuppressWarnings("unused") // Used in front end
+@Data
+@EqualsAndHashCode(of = { "shortName" }, callSuper = true)
 public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,28 +53,76 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     private Boolean blackListed = false;
     private String color; // FIXME redundant with technologyType
+    @JsonIgnore
     private String dateCached;
     private String description;
+    @JsonIgnore
     private Integer designElementCount;
     private Integer expressionExperimentCount;
+    @JsonIgnore
     private Boolean hasBlatAssociations;
 
+    @JsonIgnore
     private Boolean hasGeneAssociations;
 
     private Boolean hasSequenceAssociations;
     private Boolean isAffymetrixAltCdf = false;
+    /**
+     * Indicates this array design is the merger of other array designs.
+     */
+    @JsonIgnore
     private Boolean isMerged;
+    /**
+     * Indicates that this array design has been merged into another.
+     */
     private Boolean isMergee;
+    /**
+     * Indicate if this array design is subsumed by some other array design.
+     */
+    @JsonIgnore
     private Boolean isSubsumed;
+    /**
+     * Indicates if this array design subsumes some other array design(s)
+     */
+    @JsonIgnore
     private Boolean isSubsumer;
-    private java.util.Date lastGeneMapping;
-    private java.util.Date lastRepeatMask;
-    private java.util.Date lastSequenceAnalysis;
-    private java.util.Date lastSequenceUpdate;
+    @JsonIgnore
+    private Date lastGeneMapping;
+    @JsonIgnore
+    private Date lastRepeatMask;
+    @JsonIgnore
+    private Date lastSequenceAnalysis;
+    @JsonIgnore
+    private Date lastSequenceUpdate;
     private String name;
+    /**
+     * The number of unique genes that this array design maps to.
+     *
+     * @deprecated this should have never been a {@link String}, use {@link #numberOfGenes} instead.
+     */
+    @Deprecated
+    @JsonIgnore
     private String numGenes;
+    /**
+     * The number of unique genes that this array design maps to, or null if unspecified.
+     */
+    @Nullable
+    private Long numberOfGenes;
+    /**
+     * The number of probes that have BLAT alignments.
+     */
+    @JsonIgnore
     private String numProbeAlignments;
+    /**
+     * The number of probes that map to bioSequences.
+     */
+    @JsonIgnore
     private String numProbeSequences;
+    /**
+     * The number of probes that map to genes. This count includes probe-aligned regions, predicted genes, and known
+     * genes.
+     */
+    @JsonIgnore
     private String numProbesToGenes;
     private String shortName;
     private Integer switchedExpressionExperimentCount = 0; // how many "hidden" assocations there are.
@@ -75,12 +130,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private Long taxonID;
 
     private String technologyType;
-
-    /**
-     * Required when using the class as a spring bean.
-     */
-    public ArrayDesignValueObject() {
-    }
 
     public ArrayDesignValueObject( Long id ) {
         super( id );
@@ -148,290 +197,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        ArrayDesignValueObject other = ( ArrayDesignValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) {
-                return false;
-            }
-        } else if ( !id.equals( other.id ) )
-            return false;
-        if ( shortName == null ) {
-            return other.shortName == null;
-        }
-        return shortName.equals( other.shortName );
-    }
-
-    public Boolean getBlackListed() {
-        return blackListed;
-    }
-
-    public String getColor() {
-        return this.color;
-    }
-
-    public String getDateCached() {
-        return this.dateCached;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public Integer getDesignElementCount() {
-        return this.designElementCount;
-    }
-
-    public Integer getExpressionExperimentCount() {
-        return this.expressionExperimentCount;
-    }
-
-    public Boolean getHasBlatAssociations() {
-        return this.hasBlatAssociations;
-    }
-
-    public Boolean getHasGeneAssociations() {
-        return this.hasGeneAssociations;
-    }
-
-    public Boolean getHasSequenceAssociations() {
-        return this.hasSequenceAssociations;
-    }
-
-    public Boolean getIsAffymetrixAltCdf() {
-        return isAffymetrixAltCdf;
-    }
-
-    /**
-     * @return Indicates this array design is the merger of other array designs.
-     */
-    public Boolean getIsMerged() {
-        return this.isMerged;
-    }
-
-    /**
-     * @return Indicates that this array design has been merged into another.
-     */
-    public Boolean getIsMergee() {
-        return this.isMergee;
-    }
-
-    /**
-     * @return Indicate if this array design is subsumed by some other array design.
-     */
-    public Boolean getIsSubsumed() {
-        return this.isSubsumed;
-    }
-
-    /**
-     * @return Indicates if this array design subsumes some other array design(s)
-     */
-    public Boolean getIsSubsumer() {
-        return this.isSubsumer;
-    }
-
-    public java.util.Date getLastGeneMapping() {
-        return this.lastGeneMapping;
-    }
-
-    public java.util.Date getLastRepeatMask() {
-        return this.lastRepeatMask;
-    }
-
-    public java.util.Date getLastSequenceAnalysis() {
-        return this.lastSequenceAnalysis;
-    }
-
-    public java.util.Date getLastSequenceUpdate() {
-        return this.lastSequenceUpdate;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * @return The number of unique genes that this array design maps to.
-     */
-    public String getNumGenes() {
-        return this.numGenes;
-    }
-
-    /**
-     * @return The number of probes that have BLAT alignments.
-     */
-    public String getNumProbeAlignments() {
-        return this.numProbeAlignments;
-    }
-
-    /**
-     * @return The number of probes that map to bioSequences.
-     */
-    public String getNumProbeSequences() {
-        return this.numProbeSequences;
-    }
-
-    /**
-     * @return The number of probes that map to genes. This count includes probe-aligned regions, predicted genes, and
-     *         known
-     *         genes.
-     */
-    public String getNumProbesToGenes() {
-        return this.numProbesToGenes;
-    }
-
-    public String getShortName() {
-        return this.shortName;
-    }
-
-    public Integer getSwitchedExpressionExperimentCount() {
-        return switchedExpressionExperimentCount;
-    }
-
-    public String getTaxon() {
-        return this.taxon;
-    }
-
-    public Long getTaxonID() {
-        return taxonID;
-    }
-
-    public String getTechnologyType() {
-        return this.technologyType;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        if ( id == null ) {
-            result = prime * result + ( ( shortName == null ) ? 0 : shortName.hashCode() );
-        }
-        return result;
-    }
-
-    public void setBlackListed( Boolean blackListed ) {
-        this.blackListed = blackListed;
-    }
-
-    public void setColor( String color ) {
-        this.color = color;
-    }
-
-    public void setDateCached( String dateCached ) {
-        this.dateCached = dateCached;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setDesignElementCount( Integer designElementCount ) {
-        this.designElementCount = designElementCount;
-    }
-
-    public void setExpressionExperimentCount( Integer expressionExperimentCount ) {
-        this.expressionExperimentCount = expressionExperimentCount;
-    }
-
-    public void setHasBlatAssociations( Boolean hasBlatAssociations ) {
-        this.hasBlatAssociations = hasBlatAssociations;
-    }
-
-    public void setHasGeneAssociations( Boolean hasGeneAssociations ) {
-        this.hasGeneAssociations = hasGeneAssociations;
-    }
-
-    public void setHasSequenceAssociations( Boolean hasSequenceAssociations ) {
-        this.hasSequenceAssociations = hasSequenceAssociations;
-    }
-
-    public void setIsAffymetrixAltCdf( Boolean isAffymetrixAltCdf ) {
-        this.isAffymetrixAltCdf = isAffymetrixAltCdf;
-    }
-
-    public void setIsMerged( Boolean isMerged ) {
-        this.isMerged = isMerged;
-    }
-
-    public void setIsMergee( Boolean isMergee ) {
-        this.isMergee = isMergee;
-    }
-
-    public void setIsSubsumed( Boolean isSubsumed ) {
-        this.isSubsumed = isSubsumed;
-    }
-
-    public void setIsSubsumer( Boolean isSubsumer ) {
-        this.isSubsumer = isSubsumer;
-    }
-
-    public void setLastGeneMapping( java.util.Date lastGeneMapping ) {
-        this.lastGeneMapping = lastGeneMapping;
-    }
-
-    public void setLastRepeatMask( java.util.Date lastRepeatMask ) {
-        this.lastRepeatMask = lastRepeatMask;
-    }
-
-    public void setLastSequenceAnalysis( java.util.Date lastSequenceAnalysis ) {
-        this.lastSequenceAnalysis = lastSequenceAnalysis;
-    }
-
-    public void setLastSequenceUpdate( java.util.Date lastSequenceUpdate ) {
-        this.lastSequenceUpdate = lastSequenceUpdate;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setNumGenes( String numGenes ) {
-        this.numGenes = numGenes;
-    }
-
-    public void setNumProbeAlignments( String numProbeAlignments ) {
-        this.numProbeAlignments = numProbeAlignments;
-    }
-
-    public void setNumProbeSequences( String numProbeSequences ) {
-        this.numProbeSequences = numProbeSequences;
-    }
-
-    public void setNumProbesToGenes( String numProbesToGenes ) {
-        this.numProbesToGenes = numProbesToGenes;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public void setSwitchedExpressionExperimentCount( Integer switchedExpressionExperimentCount ) {
-        this.switchedExpressionExperimentCount = switchedExpressionExperimentCount;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setTaxonID( Long taxonID ) {
-        this.taxonID = taxonID;
-    }
-
-    public void setTechnologyType( String technologyType ) {
-        this.technologyType = technologyType;
-    }
-
-    @Override
     public String toString() {
         return this.getShortName();
     }
-
 }

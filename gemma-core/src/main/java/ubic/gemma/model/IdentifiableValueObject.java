@@ -1,5 +1,6 @@
 package ubic.gemma.model;
 
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.Objects;

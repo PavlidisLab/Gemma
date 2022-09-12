@@ -556,6 +556,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
         ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
+        vo.setNumberOfGenes( numGenes( ad ) );
         vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
         vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
         return vo;
