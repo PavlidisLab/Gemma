@@ -20,15 +20,12 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.persistence.util.Slice;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +35,7 @@ import java.util.List;
  * @author paul, tesarst
  */
 @Repository
-public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
+public class GeeqDaoImpl extends AbstractVoEnabledDao<Geeq, GeeqValueObject> implements GeeqDao {
 
     @Autowired
     public GeeqDaoImpl( SessionFactory sessionFactory ) {

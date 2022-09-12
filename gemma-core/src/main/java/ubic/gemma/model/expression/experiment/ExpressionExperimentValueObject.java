@@ -1,20 +1,24 @@
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Objects;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment>
         implements SecureValueObject {
 
@@ -24,22 +28,29 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     protected String name;
 
     private String accession;
-    private Integer arrayDesignCount;
+    private Long arrayDesignCount;
     private String batchConfound;
     private String batchEffect;
+    @JsonIgnore
     private Integer bioMaterialCount;
+    @JsonIgnore
     private Boolean currentUserHasWritePermission = null;
+    @JsonIgnore
     private Boolean currentUserIsOwner = null;
+    @JsonIgnore
     private Long experimentalDesign;
     private String externalDatabase;
     private String externalUri;
     private GeeqValueObject geeq;
+    @JsonIgnore
     private Boolean isPublic = false;
+    @JsonIgnore
     private Boolean isShared = false;
     private String metadata;
     private Integer processedExpressionVectorCount;
     private String shortName;
     private String source;
+    @JsonIgnore
     private Boolean suitableForDEA = true;
     private String taxon;
     private Long taxonId;
@@ -54,12 +65,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     protected ExpressionExperimentValueObject( Long id ) {
         super( id );
-    }
-
-    public ExpressionExperimentValueObject( Long id, String shortName, String name ) {
-        this.id = id;
-        this.shortName = shortName;
-        this.name = name;
     }
 
     /**
@@ -93,12 +98,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // Counts
         if ( ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ) {
             this.bioAssayCount = ee.getBioAssays().size();
-            // this is available too because AD are eagerly fetched
-            this.arrayDesignCount = ( int ) ee.getBioAssays().stream().map( BioAssay::getArrayDesignUsed ).count();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
             this.bioAssayCount = ee.getNumberOfSamples();
-            this.arrayDesignCount = null; // the number of AD is unknown, unfortunately
         }
 
         // ED
@@ -168,124 +170,25 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( !this.getClass().isAssignableFrom( obj.getClass() ) )
-            return false;
-        ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
-        if ( id == null ) {
-            return other.id == null;
-        } else
-            return id.equals( other.id );
-    }
-
-    public String getAccession() {
-        return accession;
-    }
-
-    public Integer getArrayDesignCount() {
-        return arrayDesignCount;
-    }
-
-    public String getBatchConfound() {
-        return batchConfound;
-    }
-
-    public String getBatchEffect() {
-        return batchEffect;
-    }
-
-    public Integer getBioAssayCount() {
-        return bioAssayCount;
-    }
-
-    public Integer getBioMaterialCount() {
-        return bioMaterialCount;
-    }
-
-    public Boolean getCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
-    }
-
-    public Boolean getCurrentUserIsOwner() {
-        return currentUserIsOwner;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Long getExperimentalDesign() {
-        return experimentalDesign;
-    }
-
-    public String getExternalDatabase() {
-        return externalDatabase;
-    }
-
-    public String getExternalUri() {
-        return externalUri;
-    }
-
-    public GeeqValueObject getGeeq() {
-        return geeq;
-    }
-
-    @Override
+    @JsonIgnore
     public boolean getIsPublic() {
         return this.isPublic;
     }
 
     @Override
+    @JsonIgnore
     public boolean getIsShared() {
         return this.isShared;
     }
 
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Integer getProcessedExpressionVectorCount() {
-        return processedExpressionVectorCount;
-    }
-
     @Override
+    @JsonIgnore
     public Class<? extends Securable> getSecurableClass() {
         return ExpressionExperiment.class;
     }
 
-    public String getShortName() {
-        return shortName;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public Boolean getSuitableForDEA() {
-        return suitableForDEA;
-    }
-
-    public String getTaxon() {
-        return taxon;
-    }
-
-    public Long getTaxonId() {
-        return taxonId;
-    }
-
-    public String getTechnologyType() {
-        return technologyType;
-    }
-
     @Override
+    @JsonIgnore
     public boolean getUserCanWrite() {
         if ( this.currentUserHasWritePermission == null )
             return false;
@@ -293,70 +196,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     @Override
+    @JsonIgnore
     public boolean getUserOwned() {
         if ( this.currentUserIsOwner == null )
             return false;
         return this.currentUserIsOwner;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * ( result + ( ( id == null ) ? 0 : id.hashCode() ) );
-        return result;
-    }
-
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public void setArrayDesignCount( Integer arrayDesignCount ) {
-        this.arrayDesignCount = arrayDesignCount;
-    }
-
-    public void setBatchConfound( String batchConfound ) {
-        this.batchConfound = batchConfound;
-    }
-
-    public void setBatchEffect( String batchEffect ) {
-        this.batchEffect = batchEffect;
-    }
-
-    public void setBioAssayCount( Integer bioAssayCount ) {
-        this.bioAssayCount = bioAssayCount;
-    }
-
-    public void setBioMaterialCount( Integer bioMaterialCount ) {
-        this.bioMaterialCount = bioMaterialCount;
-    }
-
-    public void setCurrentUserHasWritePermission( Boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-    }
-
-    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
-        this.currentUserIsOwner = currentUserIsOwner;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setExperimentalDesign( Long experimentalDesign ) {
-        this.experimentalDesign = experimentalDesign;
-    }
-
-    public void setExternalDatabase( String externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    public void setExternalUri( String externalUri ) {
-        this.externalUri = externalUri;
-    }
-
-    public void setGeeq( GeeqValueObject geeq ) {
-        this.geeq = geeq;
     }
 
     @Override
@@ -367,42 +211,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Override
     public void setIsShared( boolean b ) {
         this.isShared = b;
-    }
-
-    public void setMetadata( String metadata ) {
-        this.metadata = metadata;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setProcessedExpressionVectorCount( Integer processedExpressionVectorCount ) {
-        this.processedExpressionVectorCount = processedExpressionVectorCount;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public void setSource( String source ) {
-        this.source = source;
-    }
-
-    public void setSuitableForDEA( Boolean suitableForDEA ) {
-        this.suitableForDEA = suitableForDEA;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public void setTechnologyType( String technologyType ) {
-        this.technologyType = technologyType;
     }
 
     @Override

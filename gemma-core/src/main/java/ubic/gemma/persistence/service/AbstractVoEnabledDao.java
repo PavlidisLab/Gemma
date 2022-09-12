@@ -31,8 +31,18 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     public abstract VO loadValueObject( O entity );
 
     @Override
+    public VO loadValueObjectById( Long id ) {
+        return loadValueObject( load( id ) );
+    }
+
+    @Override
     public List<VO> loadValueObjects( Collection<O> entities ) {
         return entities.stream().map( this::loadValueObject ).collect( Collectors.toList() );
+    }
+
+    @Override
+    public List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
+        return loadValueObjects( load( ids ) );
     }
 
     /**

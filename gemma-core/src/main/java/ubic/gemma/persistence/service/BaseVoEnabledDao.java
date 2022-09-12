@@ -21,6 +21,8 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      */
     VO loadValueObject( O entity );
 
+    VO loadValueObjectById( Long id );
+
     /**
      * Load value objects corresponding to entities
      *
@@ -28,6 +30,8 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
      * @return a collection of value objects
      */
     List<VO> loadValueObjects( Collection<O> entities );
+
+    List<VO> loadValueObjectsByIds( Collection<Long> ids );
 
     List<VO> loadAllValueObjects();
 }

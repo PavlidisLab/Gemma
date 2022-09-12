@@ -30,7 +30,7 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
     @Override
     @Transactional(readOnly = true)
     public VO loadValueObjectById( Long entityId ) {
-        return loadValueObject( voDao.load( entityId ) );
+        return voDao.loadValueObjectById( entityId );
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class AbstractVoEnabledService<O extends Identifiable, VO extend
     @Override
     @Transactional(readOnly = true)
     public List<VO> loadValueObjectsByIds( Collection<Long> entityIds ) {
-        return loadValueObjects( voDao.load( entityIds ) );
+        return voDao.loadValueObjectsByIds( entityIds );
     }
 
     @Override

@@ -418,7 +418,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
         this.arrayDesigns = arrayDesigns;
         ArrayDesignValueObject ad = arrayDesigns.iterator().next();
-        setArrayDesignCount( arrayDesigns.size() );
+        setArrayDesignCount( ( long ) arrayDesigns.size() );
         this.setTechnologyType( ad.getTechnologyType() );
         this.setTaxon( ad.getTaxon() ); // FIXME still need the ID of the taxon, don't we?
     }

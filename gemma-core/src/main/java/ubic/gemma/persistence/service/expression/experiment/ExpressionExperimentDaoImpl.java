@@ -1199,17 +1199,27 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
-        return this.loadValueObjectsByIds( Collections.singleton( entity.getId() ) ).stream().findFirst().orElse( null );
+        return new ExpressionExperimentValueObject( entity );
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
-        return this.loadValueObjectsByIds( EntityUtils.getIds( entities ) );
+        List<ExpressionExperimentValueObject> results = super.loadValueObjects( entities );
+        populateArrayDesignCount( results );
+        return results;
+    }
+
+    @Override
+    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        List<ExpressionExperimentValueObject> results = super.loadValueObjectsByIds( ids );
+        // FIXME: this is silly, but we keep the results ordered by ID
+        results.sort( Comparator.comparing( ExpressionExperimentValueObject::getId ) );
+        return results;
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder ) {
-        List<ExpressionExperimentValueObject> results = this.loadValueObjectsByIds( ids );
+        List<ExpressionExperimentValueObject> results = super.loadValueObjectsByIds( ids );
 
         // sort results according to ids
         if ( maintainOrder ) {
@@ -1223,13 +1233,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        if ( ids.isEmpty() ) {
-            return Collections.emptyList();
-        }
-        Filters filters = Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) );
-        // FIXME: this is silly, but we keep the results ordered by ID
-        return loadValueObjectsPreFilter( filters, Sort.by( getObjectAlias(), "id", Sort.Direction.ASC ) );
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+        List<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        populateArrayDesignCount( results );
+        return results;
+    }
+
+    @Override
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+        Slice<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        populateArrayDesignCount( results );
+        return results;
     }
 
     @Override
@@ -1779,6 +1793,21 @@ public class ExpressionExperimentDaoImpl
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
                 //     Hibernate.initialize( bf.getPublicationTypes() );
             }
+        }
+    }
+
+    private void populateArrayDesignCount( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, count(distinct ba.arrayDesignUsed) from ExpressionExperiment ee left join ee.bioAssays as ba where ee.id in (:ids) group by ee" )
+                .setParameterList( "ids", EntityUtils.getIds( eevos ) )
+                .list();
+        Map<Long, Long> adCountById = results.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setArrayDesignCount( adCountById.get( eevo.getId() ) );
         }
     }
 }
