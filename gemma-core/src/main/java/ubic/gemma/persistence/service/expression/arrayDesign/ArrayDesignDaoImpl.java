@@ -422,97 +422,54 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
-
-        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
-            return eventMap;
+            return Collections.emptyMap();
         }
-
-        //language=HQL
-        final String queryString =
-                "select ad.id, count(subs) from ArrayDesign as ad " + "left join ad.mergees subs where ad.id in (:ids) "
-                        + "group by ad";
+        final String queryString = "select ad.id, count(subs) as isMerged from ArrayDesign as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInList( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
     }
 
     @Override
     public Map<Long, Boolean> isMergee( final Collection<Long> ids ) {
-
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
-
         //language=HQL
-        final String queryString = "select ad.id, ad.mergedInto from ArrayDesign as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.mergedInto.id from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInListCheckMerger( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumed( final Collection<Long> ids ) {
-        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
-            return eventMap;
+            return Collections.emptyMap();
         }
-
         //language=HQL
-        final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesign as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.subsumingArrayDesign.id from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInListCheckMerger( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> row[1] != null ) );
     }
 
     @Override
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
-
-        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
-            return eventMap;
+            return Collections.emptyMap();
         }
-
         //language=HQL
-        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
+        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad left join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
-
-        this.putIdsInList( eventMap, list );
-        for ( Long id : ids ) {
-            if ( !eventMap.containsKey( id ) ) {
-                eventMap.put( id, Boolean.FALSE );
-            }
-        }
-        return eventMap;
+        return list.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] > 0 ) );
     }
 
     @Override
@@ -565,6 +522,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
         List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
+        populateIsMerged( results );
         populateBlacklisted( results );
         return results;
     }
@@ -593,6 +551,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
         Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
+        populateIsMerged( results );
         populateBlacklisted( results );
         return results;
     }
@@ -600,6 +559,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
         List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        populateIsMerged( results );
         populateBlacklisted( results );
         return results;
     }
@@ -1130,6 +1090,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return query;
     }
 
+    private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
+        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
+        for ( ArrayDesignValueObject advo : results ) {
+            advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
+        }
+    }
+
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
 
         if ( vos.isEmpty() ) return;
@@ -1147,26 +1114,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             shortNames.get( b.getShortName() ).setBlackListed( true );
         }
 
-    }
-
-    private void putIdsInList( Map<Long, Boolean> eventMap, List<Object[]> list ) {
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            Long mergeeCount = ( Long ) o[1];
-            if ( mergeeCount != null && mergeeCount > 0 ) {
-                eventMap.put( id, Boolean.TRUE );
-            }
-        }
-    }
-
-    private void putIdsInListCheckMerger( Map<Long, Boolean> eventMap, List<Object[]> list ) {
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            ArrayDesign merger = ( ArrayDesign ) o[1];
-            if ( merger != null ) {
-                eventMap.put( id, Boolean.TRUE );
-            }
-        }
     }
 
     private List thawBatchOfProbes( Collection<CompositeSequence> batch ) {

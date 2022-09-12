@@ -65,12 +65,13 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @JsonIgnore
     private Boolean hasGeneAssociations;
 
+    @JsonIgnore
     private Boolean hasSequenceAssociations;
+    @JsonIgnore
     private Boolean isAffymetrixAltCdf = false;
     /**
      * Indicates this array design is the merger of other array designs.
      */
-    @JsonIgnore
     private Boolean isMerged;
     /**
      * Indicates that this array design has been merged into another.
