@@ -767,7 +767,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                         + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign ).list().iterator().next();
+                .setParameter( "ar", arrayDesign )
+                .setCacheable( true )
+                .uniqueResult();
     }
 
     @Override
