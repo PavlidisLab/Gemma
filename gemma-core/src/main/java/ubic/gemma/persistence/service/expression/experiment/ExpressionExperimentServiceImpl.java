@@ -1105,11 +1105,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     public Boolean isSuitableForDEA( ExpressionExperiment ee ) {
         AuditEvent ev = auditEventDao.getLastEvent( ee, DifferentialExpressionSuitabilityEvent.class );
-        if ( ev == null ) return true;
-        if ( UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getClass() ) ) {
-            return false;
-        }
-        return true;
+        return ev == null || !UnsuitableForDifferentialExpressionAnalysisEvent.class.isAssignableFrom( ev.getEventType().getClass() );
     }
 
     @Override
