@@ -19,6 +19,7 @@ import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -70,7 +71,7 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
 
-    List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit );
+    List<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit );
 
     List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
 
@@ -140,7 +141,7 @@ public interface ExpressionExperimentDao
      * @param limit      maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
-    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit );
+    Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
 
     /**
      * Like {@link #loadDetailsValueObjectsByIds(Collection, Taxon, Sort, int, int)}, but returning a list.

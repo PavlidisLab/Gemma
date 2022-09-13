@@ -55,6 +55,8 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,6 +66,7 @@ import java.util.stream.Collectors;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class ExpressionExperimentDaoImpl
         extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {
@@ -96,7 +99,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
+    public Collection<Long> filterByTaxon( @Nullable Collection<Long> ids, Taxon taxon ) {
 
         if ( ids == null || ids.isEmpty() )
             return new HashSet<>();
@@ -210,7 +213,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bms ) {
-        if ( bms == null || bms.size() == 0 ) {
+        if ( bms.size() == 0 ) {
             return new HashMap<>();
         }
         //language=HQL
@@ -430,7 +433,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, @Nullable Integer limit ) {
         //language=HQL
         //        final String queryString =
         //                "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
@@ -493,7 +496,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
+    public Collection<ExpressionExperiment> findUpdatedAfter( @Nullable Date date ) {
         if ( date == null )
             return Collections.emptyList();
         //noinspection unchecked
@@ -900,7 +903,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
-            ArrayDesign arrayDesign ) {
+            @Nullable ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
             return this.getQuantitationTypes( expressionExperiment );
         }
@@ -982,6 +985,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameterList( "ees", bioAssaySets )
                 .list();
 
+        //noinspection unchecked
         return list.stream().collect( Collectors.toMap( row -> ( T ) row[0], row -> ( Taxon ) row[1] ) );
     }
 
@@ -1012,7 +1016,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
         if ( offset > 0 || limit > 0 )
@@ -1146,7 +1150,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
         Filters filters = new Filters();
 
         if ( ids != null ) {
@@ -1203,7 +1207,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+    public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         if ( sort == null ) {
             sort = Sort.by( getObjectAlias(), "id" );
         }
@@ -1213,7 +1217,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         if ( sort == null ) {
             sort = Sort.by( getObjectAlias(), "id" );
         }
@@ -1239,6 +1243,10 @@ public class ExpressionExperimentDaoImpl
 
         // reload EE as deletion will not work if it came from a different session
         ee = load( ee.getId() );
+
+        if ( ee == null ) {
+            return;
+        }
 
         Session session = this.getSessionFactory().getCurrentSession();
 
@@ -1371,7 +1379,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         if ( filters == null ) {
             filters = new Filters();
         }
@@ -1445,7 +1453,7 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         if ( filters == null ) {
             filters = new Filters();
         }
@@ -1617,7 +1625,7 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    private ExpressionExperiment thaw( ExpressionExperiment ee, boolean vectorsAlso ) {
+    private ExpressionExperiment thaw( @Nullable ExpressionExperiment ee, boolean vectorsAlso ) {
         if ( ee == null ) {
             return null;
         }
@@ -1707,7 +1715,7 @@ public class ExpressionExperimentDaoImpl
      * @param ee expression experiment to be thawed
      * @return thawed expression experiment.
      */
-    private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
+    private ExpressionExperiment thawLiter( @Nullable ExpressionExperiment ee ) {
         if ( ee == null ) {
             return null;
         }

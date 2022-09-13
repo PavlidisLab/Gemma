@@ -1,11 +1,13 @@
 package ubic.gemma.persistence.service;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Order;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
  * @param <VO>
  * @author poirigui
  */
+@ParametersAreNonnullByDefault
 public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO> {
 
     private final String objectAlias;

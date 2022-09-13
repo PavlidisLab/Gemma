@@ -59,7 +59,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String description;
     @JsonIgnore
     private Integer designElementCount;
-    private Integer expressionExperimentCount;
+    private Long expressionExperimentCount;
     @JsonIgnore
     private Boolean hasBlatAssociations;
 
@@ -127,7 +127,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @JsonIgnore
     private String numProbesToGenes;
     private String shortName;
-    private Integer switchedExpressionExperimentCount = 0; // how many "hidden" assocations there are.
+    private Long switchedExpressionExperimentCount = 0L; // how many "hidden" assocations there are.
     private String taxon;
     private Long taxonID;
 

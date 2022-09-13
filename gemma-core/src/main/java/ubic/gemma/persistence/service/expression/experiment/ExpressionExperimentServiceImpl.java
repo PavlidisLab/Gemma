@@ -100,6 +100,9 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * @author pavlidis
  * @author keshav
@@ -107,6 +110,7 @@ import ubic.gemma.persistence.util.Sort;
  */
 @Service
 @Transactional
+@ParametersAreNonnullByDefault
 public class ExpressionExperimentServiceImpl
         extends AbstractFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
@@ -861,7 +865,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, Sort sort, int offset, int limit ) {
+    public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Collection<Long> ids, Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
         return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids, taxon, sort, offset, limit );
     }
 

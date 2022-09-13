@@ -4,6 +4,7 @@ import org.hibernate.SessionFactory;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
  * Created by tesarst on 01/06/17.
  * Base DAO providing value object functionality.
  */
+@ParametersAreNonnullByDefault
 public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
         extends AbstractDao<O> implements BaseVoEnabledDao<O, VO> {
 
@@ -42,7 +44,8 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
 
     @Override
     public VO loadValueObjectById( Long id ) {
-        return doLoadValueObject( load( id ) );
+        O entity = load( id );
+        return entity == null ? null : doLoadValueObject( entity );
     }
 
     /**
