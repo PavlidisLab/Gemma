@@ -99,17 +99,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String name;
     /**
      * The number of unique genes that this array design maps to.
-     *
-     * @deprecated this should have never been a {@link String}, use {@link #numberOfGenes} instead.
      */
-    @Deprecated
     @JsonIgnore
     private String numGenes;
-    /**
-     * The number of unique genes that this array design maps to, or null if unspecified.
-     */
-    @Nullable
-    private Long numberOfGenes;
     /**
      * The number of probes that have BLAT alignments.
      */

@@ -45,6 +45,7 @@ import ubic.gemma.persistence.util.*;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -518,11 +519,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesignValueObject loadValueObject( ArrayDesign entity ) {
         ArrayDesignValueObject result = super.loadValueObject( entity );
-        populateNumberOfGenes( Collections.singleton( result ) );
-        populateExpressionExperimentCount( Collections.singleton( result ) );
-        populateSwitchedExpressionExperimentCount( Collections.singleton( result ) );
-        populateIsMerged( Collections.singleton( result ) );
-        populateBlacklisted( Collections.singleton( result ) );
+        populateArrayDesignValueObjects( Collections.singleton( result ) );
         return result;
     }
 
@@ -539,23 +536,24 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Slice<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
         Slice<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
-        populateIsMerged( results );
-        populateBlacklisted( results );
-        populateNumberOfGenes( results );
-        populateExpressionExperimentCount( results );
-        populateSwitchedExpressionExperimentCount( results );
+        populateArrayDesignValueObjects( results );
         return results;
     }
 
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         List<ArrayDesignValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
+        populateArrayDesignValueObjects( results );
+        return results;
+    }
+
+    private void populateArrayDesignValueObjects( Collection<ArrayDesignValueObject> results ) {
+        StopWatch timer = StopWatch.createStarted();
         populateIsMerged( results );
         populateBlacklisted( results );
-        populateNumberOfGenes( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
-        return results;
+        log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
     }
 
     @Override
@@ -1108,24 +1106,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         for ( ArrayDesignValueObject vo : vos ) {
             vo.setBlackListed( blacklistedShortnames.contains( vo.getShortName() ) );
-        }
-    }
-
-    private void populateNumberOfGenes( Collection<ArrayDesignValueObject> entities ) {
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession().createQuery(
-                        "select ar.id, count (distinct gene) from CompositeSequence as cs "
-                                + "inner join cs.arrayDesign as ar, BioSequence2GeneProduct bs2gp, Gene gene "
-                                + "inner join gene.products gp "
-                                + "where bs2gp.bioSequence = cs.biologicalCharacteristic "
-                                + "and bs2gp.geneProduct = gp and ar.id in (:arrayDesignIds) "
-                                + "group by ar" )
-                .setParameterList( "arrayDesignIds", EntityUtils.getIds( entities ) )
-                .setCacheable( true )
-                .list();
-        Map<Long, Long> numGenesById = results.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
-        for ( ArrayDesignValueObject vo : entities ) {
-            vo.setNumberOfGenes( numGenesById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 
