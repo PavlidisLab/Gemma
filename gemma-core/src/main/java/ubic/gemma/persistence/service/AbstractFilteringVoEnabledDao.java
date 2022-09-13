@@ -7,6 +7,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,8 +16,8 @@ import java.util.List;
 /**
  * Base implementation for {@link FilteringVoEnabledDao}.
  *
- * @param <O>
- * @param <VO>
+ * @param <O> the entity type
+ * @param <VO> the corresponding VO type
  * @author poirigui
  */
 @ParametersAreNonnullByDefault
@@ -24,11 +25,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
 
     private final String objectAlias;
 
-    protected AbstractFilteringVoEnabledDao( String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
     }
 
+    @Nullable
     @Override
     public final String getObjectAlias() {
         return objectAlias;
@@ -44,7 +46,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( entities.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ) ), null );
+        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), getIdPropertyName(), Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ) ), null );
     }
 
     @Override
@@ -52,11 +54,15 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( ids.isEmpty() ) {
             return Collections.emptyList();
         }
-        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) ), null );
+        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), getIdPropertyName(), Long.class, ObjectFilter.Operator.in, ids ) ), null );
     }
 
     @Override
     public final List<VO> loadAllValueObjects() {
         return loadValueObjectsPreFilter( null, null );
+    }
+
+    private String getIdPropertyName() {
+        return getSessionFactory().getClassMetadata( elementClass ).getIdentifierPropertyName();
     }
 }

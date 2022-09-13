@@ -49,18 +49,20 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
      * The default implementation calls {@link #doLoadValueObject(Identifiable)} for each entity.
      */
-    @Override
-    public List<VO> loadValueObjects( Collection<O> entities ) {
+    protected List<VO> doLoadValueObjects( Collection<O> entities ) {
         return entities.stream().map( this::doLoadValueObject ).collect( Collectors.toList() );
     }
 
     @Override
+    public List<VO> loadValueObjects( Collection<O> entities ) {
+        return doLoadValueObjects( entities );
+    }
+
+    @Override
     public List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
-        return loadValueObjects( load( ids ) );
+        return doLoadValueObjects( load( ids ) );
     }
 
     /**
@@ -70,6 +72,6 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
      */
     @Override
     public List<VO> loadAllValueObjects() {
-        return this.loadValueObjects( this.loadAll() );
+        return doLoadValueObjects( loadAll() );
     }
 }
