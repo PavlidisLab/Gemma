@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.BlacklistedPlatform;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,7 +41,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -1098,17 +1096,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         if ( vos.isEmpty() ) return;
 
-        Map<String, ArrayDesignValueObject> shortNames = new HashMap<>();
-        for ( ArrayDesignValueObject vs : vos ) {
-            shortNames.put( vs.getShortName(), vs );
-        }
+        Set<String> shortNames = vos.stream()
+                .map( ArrayDesignValueObject::getShortName )
+                .collect( Collectors.toSet() );
 
         //noinspection unchecked
-        List<BlacklistedPlatform> r = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select b from BlacklistedPlatform b where b.shortName in :n" )
-                .setParameterList( "n", shortNames.keySet() ).list();
-        for ( BlacklistedPlatform b : r ) {
-            shortNames.get( b.getShortName() ).setBlackListed( true );
+        Set<String> blacklistedShortnames = new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select b.shortName from BlacklistedPlatform b where b.shortName in :n" )
+                .setParameterList( "n", shortNames )
+                .list() );
+
+        for ( ArrayDesignValueObject vo : vos ) {
+            vo.setBlackListed( blacklistedShortnames.contains( vo.getShortName() ) );
         }
     }
 
@@ -1121,10 +1120,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                                 + "where bs2gp.bioSequence = cs.biologicalCharacteristic "
                                 + "and bs2gp.geneProduct = gp and ar.id in (:arrayDesignIds) "
                                 + "group by ar" )
-                .setParameterList( "arrayDesignIds", EntityUtils.getIds( entities ) ).list();
+                .setParameterList( "arrayDesignIds", EntityUtils.getIds( entities ) )
+                .setCacheable( true )
+                .list();
         Map<Long, Long> numGenesById = results.stream().collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
-            vo.setNumberOfGenes( numGenesById.get( vo.getId() ) );
+            vo.setNumberOfGenes( numGenesById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 
@@ -1147,7 +1148,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Map<Long, Long> countById = results.stream()
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
-            vo.setSwitchedExpressionExperimentCount( countById.get( vo.getId() ) );
+            vo.setSwitchedExpressionExperimentCount( countById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 
