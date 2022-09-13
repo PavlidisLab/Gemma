@@ -52,7 +52,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     @Override
     public ExperimentalFactor load( Long id ) {
         return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
+                        "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 
@@ -132,7 +132,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     }
 
     @Override
-    public ExperimentalFactorValueObject loadValueObject( ExperimentalFactor e ) {
+    protected ExperimentalFactorValueObject doLoadValueObject( ExperimentalFactor e ) {
         return new ExperimentalFactorValueObject( e );
     }
 

@@ -151,8 +151,6 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> loadLackingTags();
 
-    List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder );
-
     List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );

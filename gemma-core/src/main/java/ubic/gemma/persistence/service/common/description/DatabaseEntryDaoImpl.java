@@ -53,7 +53,7 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     }
 
     @Override
-    public DatabaseEntryValueObject loadValueObject( DatabaseEntry entity ) {
+    protected DatabaseEntryValueObject doLoadValueObject( DatabaseEntry entity ) {
         return new DatabaseEntryValueObject( entity );
     }
 

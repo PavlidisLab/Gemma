@@ -105,7 +105,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                        "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
 
@@ -173,7 +173,7 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
     }
 
     @Override
-    public BioAssayValueObject loadValueObject( BioAssay entity ) {
+    protected BioAssayValueObject doLoadValueObject( BioAssay entity ) {
         return new BioAssayValueObject( entity, false );
     }
 

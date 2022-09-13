@@ -101,7 +101,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public CompositeSequenceValueObject loadValueObject( CompositeSequence entity ) {
+    protected CompositeSequenceValueObject doLoadValueObject( CompositeSequence entity ) {
         return new CompositeSequenceValueObject( entity );
     }
 

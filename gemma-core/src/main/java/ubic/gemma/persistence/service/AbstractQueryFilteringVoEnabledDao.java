@@ -68,13 +68,13 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      *
      * The result is obtained from {@link Query#list()}.
      *
-     * By default, it will cast the result into a {@link O} and then apply {@link #loadValueObject(Identifiable)} to
+     * By default, it will cast the result into a {@link O} and then apply {@link #doLoadValueObject(Identifiable)} to
      * obtain a value object.
      *
      * @return a value object, or null, and it will be ignored when constructing the {@link Slice} in {@link #loadValueObjectsPreFilter(Filters, Sort, int, int)}
      */
     protected VO processLoadValueObjectsQueryResult( Object result ) {
-        return loadValueObject( ( O ) result );
+        return doLoadValueObject( ( O ) result );
     }
 
     @Override

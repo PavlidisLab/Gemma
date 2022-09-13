@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.BlacklistedValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 /**
- * 
+ *
  * @author paul
  */
 @Repository
@@ -43,39 +43,40 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao#findByAccession(java.lang.String)
      */
     @Override
     public BlacklistedEntity findByAccession( String accession ) {
         List<?> resultList = this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BlacklistedEntity b join b.externalAccession e where e.accession = :accession" )
+                        "select b from BlacklistedEntity b join b.externalAccession e where e.accession = :accession" )
                 .setParameter( "accession", accession ).list();
         if ( resultList.isEmpty() ) return null;
-        if ( resultList.size() > 1 ) throw new IllegalStateException( "More than one blacklist entry matches " + accession );
+        if ( resultList.size() > 1 )
+            throw new IllegalStateException( "More than one blacklist entry matches " + accession );
         return ( BlacklistedEntity ) resultList.get( 0 );
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.expression.experiment.BlacklistedEntityDao#isBlacklisted(java.lang.String)
      */
     @Override
     public boolean isBlacklisted( String accession ) {
         List<?> resultList = this.getSessionFactory().getCurrentSession().createQuery(
-                "select b from BlacklistedEntity b join b.externalAccession e where e.accession = :accession" )
+                        "select b from BlacklistedEntity b join b.externalAccession e where e.accession = :accession" )
                 .setParameter( "accession", accession ).list();
         return !resultList.isEmpty();
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.persistence.service.AbstractVoEnabledDao#loadValueObject(ubic.gemma.model.common.Identifiable)
      */
     @Override
-    public BlacklistedValueObject loadValueObject( BlacklistedEntity entity ) {
+    protected BlacklistedValueObject doLoadValueObject( BlacklistedEntity entity ) {
         return BlacklistedValueObject.fromEntity( this.load( entity.getId() ) );
     }
 

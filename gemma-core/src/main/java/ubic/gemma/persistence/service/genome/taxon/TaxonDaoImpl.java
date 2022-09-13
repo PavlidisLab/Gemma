@@ -116,7 +116,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    public TaxonValueObject loadValueObject( Taxon entity ) {
+    protected TaxonValueObject doLoadValueObject( Taxon entity ) {
         return new TaxonValueObject( entity );
     }
 

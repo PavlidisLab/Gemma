@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Data;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
@@ -48,6 +49,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -95,7 +97,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
@@ -886,7 +887,17 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
-        return this.expressionExperimentDao.loadValueObjectsByIds( ids, maintainOrder );
+        List<ExpressionExperimentValueObject> results = this.expressionExperimentDao.loadValueObjectsByIds( ids );
+
+        // sort results according to ids
+        if ( maintainOrder ) {
+            Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
+            return results.stream()
+                    .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
+                    .collect( Collectors.toList() );
+        }
+
+        return results;
     }
 
     @Override

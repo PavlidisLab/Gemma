@@ -43,7 +43,7 @@ public class GeeqDaoImpl extends AbstractVoEnabledDao<Geeq, GeeqValueObject> imp
     }
 
     @Override
-    public GeeqValueObject loadValueObject( Geeq entity ) {
+    protected GeeqValueObject doLoadValueObject( Geeq entity ) {
         return new GeeqValueObject( entity );
     }
 

@@ -337,7 +337,7 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
     }
 
     @Override
-    public CharacteristicValueObject loadValueObject( Characteristic entity ) {
+    protected CharacteristicValueObject doLoadValueObject( Characteristic entity ) {
         return new CharacteristicValueObject( entity );
     }
 

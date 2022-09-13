@@ -69,7 +69,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         try {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
+                            "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -82,7 +82,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         try {
             //noinspection unchecked
             return this.getSessionFactory().getCurrentSession().createQuery(
-                    "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
+                            "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
                     .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -94,10 +94,10 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
-                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
-                        + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
-                        + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
+                        "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
+                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
+                                + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
+                                + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
                 .setParameter( "taxon", taxon ).list();
     }
 
@@ -203,7 +203,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     }
 
     @Override
-    public GeneProductValueObject loadValueObject( GeneProduct entity ) {
+    protected GeneProductValueObject doLoadValueObject( GeneProduct entity ) {
         return new GeneProductValueObject( entity );
     }
 

@@ -135,7 +135,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
     }
 
     @Override
-    public FactorValueValueObject loadValueObject( FactorValue entity ) {
+    protected FactorValueValueObject doLoadValueObject( FactorValue entity ) {
         return new FactorValueValueObject( entity );
     }
 

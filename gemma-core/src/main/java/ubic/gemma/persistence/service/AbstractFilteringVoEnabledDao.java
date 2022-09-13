@@ -7,6 +7,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.*;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base implementation for {@link FilteringVoEnabledDao}.
@@ -32,5 +34,26 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     public Class<O> getElementClass() {
         return elementClass;
+    }
+
+    @Override
+    public final List<VO> loadValueObjects( Collection<O> entities ) {
+        if ( entities.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, EntityUtils.getIds( entities ) ) ), null );
+    }
+
+    @Override
+    public final List<VO> loadValueObjectsByIds( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return loadValueObjectsPreFilter( Filters.singleFilter( new ObjectFilter( getObjectAlias(), "id", Long.class, ObjectFilter.Operator.in, ids ) ), null );
+    }
+
+    @Override
+    public final List<VO> loadAllValueObjects() {
+        return loadValueObjectsPreFilter( null, null );
     }
 }

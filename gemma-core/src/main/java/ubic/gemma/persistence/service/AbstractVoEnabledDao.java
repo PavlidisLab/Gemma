@@ -17,7 +17,7 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
 
     /**
      * Amount of time in milliseconds after which a query (including post-processing) should be reported.
-     *
+     * <p>
      * If there is no way to perform a given query under this amount of time, consider paginating results or optimizing
      * how Hibernate entities are loaded or cached.
      */
@@ -27,17 +27,32 @@ public abstract class AbstractVoEnabledDao<O extends Identifiable, VO extends Id
         super( elementClass, sessionFactory );
     }
 
-    @Override
-    public abstract VO loadValueObject( O entity );
+    /**
+     * Load a value object for a given entity.
+     * <p>
+     * This should be fast and efficient, and avoid any database query or post-processing. If you need to perform
+     * additional queries, consider overriding {@link #loadValueObject(Identifiable)} or {@link #loadValueObjects(Collection)}.
+     */
+    protected abstract VO doLoadValueObject( O entity );
 
     @Override
-    public VO loadValueObjectById( Long id ) {
-        return loadValueObject( load( id ) );
+    public VO loadValueObject( O entity ) {
+        return doLoadValueObject( entity );
     }
 
     @Override
+    public VO loadValueObjectById( Long id ) {
+        return doLoadValueObject( load( id ) );
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default implementation calls {@link #doLoadValueObject(Identifiable)} for each entity.
+     */
+    @Override
     public List<VO> loadValueObjects( Collection<O> entities ) {
-        return entities.stream().map( this::loadValueObject ).collect( Collectors.toList() );
+        return entities.stream().map( this::doLoadValueObject ).collect( Collectors.toList() );
     }
 
     @Override

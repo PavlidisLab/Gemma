@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.NonNull;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.core.util.StopWatchUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -1014,11 +1012,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return this.loadValueObjectsPreFilter( null, null );
-    }
-
-    @Override
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( Filters filters, Sort sort, int offset, int limit ) {
         EnumSet<QueryHint> hints = EnumSet.noneOf( QueryHint.class );
 
@@ -1198,42 +1191,22 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
+    protected ExpressionExperimentValueObject doLoadValueObject( ExpressionExperiment entity ) {
         return new ExpressionExperimentValueObject( entity );
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
-        List<ExpressionExperimentValueObject> results = super.loadValueObjects( entities );
-        populateArrayDesignCount( results );
-        return results;
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        List<ExpressionExperimentValueObject> results = super.loadValueObjectsByIds( ids );
-        // FIXME: this is silly, but we keep the results ordered by ID
-        results.sort( Comparator.comparing( ExpressionExperimentValueObject::getId ) );
-        return results;
-    }
-
-    @Override
-    public List<ExpressionExperimentValueObject> loadValueObjectsByIds( List<Long> ids, boolean maintainOrder ) {
-        List<ExpressionExperimentValueObject> results = super.loadValueObjectsByIds( ids );
-
-        // sort results according to ids
-        if ( maintainOrder ) {
-            Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
-            return results.stream()
-                    .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
-                    .collect( Collectors.toList() );
-        }
-
-        return results;
+    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
+        ExpressionExperimentValueObject result = super.loadValueObject( entity );
+        populateArrayDesignCount( Collections.singleton( result ) );
+        return result;
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort ) {
+        if ( sort == null ) {
+            sort = Sort.by( getObjectAlias(), "id" );
+        }
         List<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort );
         populateArrayDesignCount( results );
         return results;
@@ -1241,6 +1214,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Slice<ExpressionExperimentValueObject> loadValueObjectsPreFilter( Filters filters, Sort sort, int offset, int limit ) {
+        if ( sort == null ) {
+            sort = Sort.by( getObjectAlias(), "id" );
+        }
         Slice<ExpressionExperimentValueObject> results = super.loadValueObjectsPreFilter( filters, sort, offset, limit );
         populateArrayDesignCount( results );
         return results;

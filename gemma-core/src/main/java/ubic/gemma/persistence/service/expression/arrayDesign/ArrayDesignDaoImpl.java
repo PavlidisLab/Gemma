@@ -422,7 +422,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
-        if ( ids.size() == 0 ) {
+        if ( ids.isEmpty() ) {
             return Collections.emptyMap();
         }
         final String queryString = "select ad.id, count(subs) as isMerged from ArrayDesign as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
@@ -511,8 +511,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * @return a value object with properties of the given array design.
      */
     @Override
-    public ArrayDesignValueObject loadValueObject( ArrayDesign ad ) {
+    protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
         ArrayDesignValueObject vo = new ArrayDesignValueObject( ad );
+        // TODO: move those un loadValueObject and add collection-wise implementations
         vo.setNumberOfGenes( numGenes( ad ) );
         vo.setExpressionExperimentCount( getExpressionExperimentCountMap().getOrDefault( ad.getId(), 0L ).intValue() );
         vo.setSwitchedExpressionExperimentCount( getSwitchedExpressionExperimentsCount( ad ).intValue() );
@@ -520,22 +521,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public List<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
-        List<ArrayDesignValueObject> results = super.loadValueObjects( entities );
-        populateIsMerged( results );
-        populateBlacklisted( results );
-        return results;
-    }
-
-    @Override
-    public List<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
-        if ( ids == null || ids.isEmpty() ) {
-            return new ArrayList<>();
-        }
-
-        ObjectFilter filter = new ObjectFilter( "ad", "id", Long.class, ObjectFilter.Operator.in, ids );
-
-        return loadValueObjectsPreFilter( Filters.singleFilter( filter ), null, 0, -1 );
+    public ArrayDesignValueObject loadValueObject( ArrayDesign entity ) {
+        ArrayDesignValueObject result = super.loadValueObject( entity );
+        populateIsMerged( Collections.singleton( result ) );
+        populateBlacklisted( Collections.singleton( result ) );
+        return result;
     }
 
     @Override

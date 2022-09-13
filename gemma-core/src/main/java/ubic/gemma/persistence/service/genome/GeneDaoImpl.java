@@ -520,7 +520,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public GeneValueObject loadValueObject( Gene entity ) {
+    protected GeneValueObject doLoadValueObject( Gene entity ) {
         return new GeneValueObject( entity );
     }
 
