@@ -45,7 +45,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         try {
             return Sort.by( getPropertyAlias( property ), getPropertyName( property ), direction );
         } catch ( NoSuchFieldException e ) {
-            throw new IllegalArgumentException( "Could not resolve propertyName " + property + " on " + voDao.getElementClass().getName() + ".", e );
+            throw new IllegalArgumentException( String.format( "Could not resolve propertyName '%s' on %s.", property, voDao.getElementClass().getName() ), e );
         }
     }
 
