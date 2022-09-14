@@ -34,6 +34,8 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -45,6 +47,7 @@ import java.util.List;
  * </p>
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<FactorValue, FactorValueValueObject>
         implements FactorValueDao {
 
@@ -61,7 +64,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
     }
 
     @Override
-    public void remove( final FactorValue factorValue ) {
+    public void remove( @Nullable final FactorValue factorValue ) {
         if ( factorValue == null )
             return;
 
@@ -149,7 +152,7 @@ public class FactorValueDaoImpl extends AbstractQueryFilteringVoEnabledDao<Facto
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         throw new NotImplementedException( "This is ont implemented yet!" );
     }
 }

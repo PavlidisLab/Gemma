@@ -26,8 +26,9 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.util.ObjectFilter;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.Map;
 /**
  * @see Gene
  */
+@ParametersAreNonnullByDefault
 public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     String OBJECT_ALIAS = "gene";
@@ -48,7 +50,7 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    Gene findByAccession( String accession, ExternalDatabase source );
+    Gene findByAccession( String accession, @Nullable ExternalDatabase source );
 
     /**
      * Locate genes that match the given alias string

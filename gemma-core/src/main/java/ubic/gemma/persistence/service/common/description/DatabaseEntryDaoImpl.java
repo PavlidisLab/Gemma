@@ -26,10 +26,11 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 
 /**
@@ -39,6 +40,7 @@ import java.util.EnumSet;
  * @see DatabaseEntry
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 
@@ -58,7 +60,7 @@ public class DatabaseEntryDaoImpl extends AbstractQueryFilteringVoEnabledDao<Dat
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         throw new NotImplementedException( "This is not implemented yet!" );
     }
 }

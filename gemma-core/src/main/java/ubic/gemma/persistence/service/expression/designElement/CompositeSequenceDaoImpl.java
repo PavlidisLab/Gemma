@@ -48,6 +48,8 @@ import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -55,6 +57,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
 
@@ -106,28 +109,26 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         //language=HQL
         String queryString = MessageFormat.format( "select {0} from CompositeSequence as {0} "
                         + "left join fetch {0}.arrayDesign as {1} "
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
                 getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-
-        if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
-        }
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         //language=HQL
         String queryString = MessageFormat.format( "select count(distinct {0}) "
                         + "from CompositeSequence as {0} "
@@ -135,11 +136,15 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                         + "where {0}.id is not null ", // needed to use formRestrictionCause()
                 getObjectAlias(), ArrayDesignDao.OBJECT_ALIAS );
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        if ( filters != null ) {
+            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }
@@ -409,7 +414,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences ) {
+    public Collection<Object[]> getRawSummary( @Nullable Collection<CompositeSequence> compositeSequences ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 )
             return null;
 
@@ -448,8 +453,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     @SuppressWarnings("unchecked")
     @Override
     public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
+        if ( arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException( "The ArrayDesign ID cannot be null." );
         }
 
         if ( numResults <= 0 ) {

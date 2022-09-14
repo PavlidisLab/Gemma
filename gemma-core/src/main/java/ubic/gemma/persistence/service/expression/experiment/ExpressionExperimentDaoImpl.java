@@ -1430,24 +1430,16 @@ public class ExpressionExperimentDaoImpl
         queryString += AclQueryUtils.formAclJoinClause( getObjectAlias() );
 
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
 
         // FIXME: this is necessary because of the ACL jointure, it can also become necessary if bioAssays are included as well
         // unlike in ArrayDesignDaoImpl, a distinct is not possible because we select the ACL AOI and SID
-        queryString += " group by " + getObjectAlias();
-
-        if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
-        }
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-
-        // FIXME: caching does nto work for lazy relationship (accession + geeq)
-        // query.setCacheable( true );
 
         return query;
     }
@@ -1506,8 +1498,6 @@ public class ExpressionExperimentDaoImpl
         AclQueryUtils.addAclJoinParameters( query, ExpressionExperiment.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-
-        query.setCacheable( true );
 
         return query;
     }

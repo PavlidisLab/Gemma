@@ -1028,20 +1028,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         queryString += AclQueryUtils.formAclJoinClause( "ad" );
         queryString += AclQueryUtils.formAclRestrictionClause();
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-
-        if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
-        }
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-
-        // FIXME: caching does not work for relationships
-        // query.setCacheable( true );
 
         return query;
     }
@@ -1075,8 +1068,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         AclQueryUtils.addAclJoinParameters( query, ArrayDesign.class );
         AclQueryUtils.addAclRestrictionParameters( query );
         ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
-
-        query.setCacheable( true );
 
         return query;
     }

@@ -15,29 +15,34 @@
 package ubic.gemma.persistence.service.genome.taxon;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.*;
-import org.hibernate.jdbc.Work;
+import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.ObjectFilterQueryUtils;
+import ubic.gemma.persistence.util.Sort;
 
-import java.sql.Connection;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
 
 /**
  * @author pavlidis
  * @see Taxon
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired
@@ -121,7 +126,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select {0} "
@@ -129,18 +134,19 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, null, sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select count({0}) "
@@ -148,11 +154,15 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
                 + "left join {0}.externalDatabase as ED " // external db
                 + "where {0}.id is not null ", getObjectAlias() ); // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        if ( filters != null ) {
+            queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
+        }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }

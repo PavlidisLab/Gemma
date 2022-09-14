@@ -27,6 +27,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -39,6 +40,8 @@ import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
@@ -47,6 +50,7 @@ import java.util.*;
  * @see Gene
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneValueObject> implements GeneDao {
 
     private static final int BATCH_SIZE = 100;
@@ -69,7 +73,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
-    public Gene findByAccession( String accession, ExternalDatabase source ) {
+    public Gene findByAccession( String accession, @Nullable ExternalDatabase source ) {
         Collection<Gene> genes = new HashSet<>();
         final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbQuery = accessionQuery + " and a.externalDatabase = :source";
@@ -120,7 +124,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Gene findByEnsemblId( String id ) {
-        //noinspection unchecked
         return ( Gene ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).uniqueResult();
     }
@@ -266,10 +269,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Collection<Gene> getGenesByTaxon( Taxon taxon ) {
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Must provide taxon" );
-        }
-
         //language=HQL
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon ";
         //noinspection unchecked
@@ -278,10 +277,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Collection<Gene> getMicroRnaByTaxon( Taxon taxon ) {
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Must provide taxon" );
-        }
-
         //language=HQL
         final String queryString = "select gene from Gene as gene where gene.taxon = :taxon"
                 + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
@@ -303,10 +298,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public Collection<Gene> loadKnownGenes( Taxon taxon ) {
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Must provide taxon" );
-        }
-
         //language=HQL
         final String queryString = "select gene from Gene as gene fetch all properties where gene.taxon = :taxon";
 
@@ -421,9 +412,6 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
     @Override
     public void remove( Gene gene ) {
-        if ( gene == null ) {
-            throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
-        }
         // remove associations
         List<?> associations = this.getHibernateTemplate().findByNamedParam(
                 "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
@@ -445,7 +433,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
         //noinspection unchecked,unchecked
         List<Gene> results = queryObject.list();
-        Object result;
+        Gene result;
 
         if ( results.isEmpty() ) {
 
@@ -498,13 +486,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             if ( results.size() > 1 ) {
                 AbstractDao.log.error( "Multiple genes found for " + gene + ":" );
                 this.debug( results );
-
-                Collections.sort( results, new Comparator<Gene>() {
-                    @Override
-                    public int compare( Gene arg0, Gene arg1 ) {
-                        return arg0.getId().compareTo( arg1.getId() );
-                    }
-                } );
+                results.sort( Comparator.comparing( Describable::getId ) );
                 result = results.iterator().next();
                 AbstractDao.log.error( "Returning arbitrary gene: " + result );
             } else {
@@ -515,8 +497,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
             result = results.get( 0 );
         }
 
-        return ( Gene ) result;
-
+        return result;
     }
 
     @Override
@@ -533,11 +514,10 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     /**
      * @param filters         see {@link ObjectFilterQueryUtils#formRestrictionClause(Filters)} filters argument for
      *                        description.
-     * @param hints
      * @return a Hibernated Query object ready to be used for TaxonVO retrieval.
      */
     @Override
-    protected Query getLoadValueObjectsQuery( Filters filters, Sort sort, EnumSet<QueryHint> hints ) {
+    protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "
@@ -545,32 +525,31 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 + "left join fetch " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
                 + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + getObjectAlias() + ".id ";
-        if ( sort != null ) {
-            queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
-        }
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), sort );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }
 
     @Override
-    protected Query getCountValueObjectsQuery( Filters filters ) {
+    protected Query getCountValueObjectsQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select count(*) from Gene as " + getObjectAlias() + " " // gene
                 + "left join " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
                 + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
-        queryString += "group by " + getObjectAlias() + ".id ";
+        queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), null );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        if ( filters != null ) {
+            ObjectFilterQueryUtils.addRestrictionParameters( query, filters );
+        }
 
         return query;
     }
@@ -594,7 +573,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
      * Returns genes in the region.
      */
     private Collection<Gene> findByPosition( Chromosome chromosome, final Long targetStart, final Long targetEnd,
-            final String strand ) {
+            @Nullable final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
         //language=none // Prevents unresolvable missing value warnings.
