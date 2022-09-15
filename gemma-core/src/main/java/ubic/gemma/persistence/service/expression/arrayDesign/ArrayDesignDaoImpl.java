@@ -44,6 +44,7 @@ import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -753,15 +754,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Transactional
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
-        final String queryString =
-                "select count (distinct gene) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BioSequence2GeneProduct bs2gp, Gene gene inner join gene.products gp "
-                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                        + "bs2gp.geneProduct=gp and ar = :ar";
-        return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ar", arrayDesign )
+        return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select count(distinct g2cs.GENE) from GENE2CS g2cs "
+                                + "where g2cs.AD = :arrayDesignId" )
+                .setParameter( "arrayDesignId", arrayDesign.getId() )
                 .setCacheable( true )
-                .uniqueResult();
+                .uniqueResult() ).longValue();
     }
 
     @Override
