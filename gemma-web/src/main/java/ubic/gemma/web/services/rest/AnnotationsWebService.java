@@ -105,7 +105,8 @@ public class AnnotationsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListAnnotationSearchResultValueObject"))),
-            @ApiResponse(responseCode = "400", description = "The search query is empty.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+            @ApiResponse(responseCode = "400", description = "The search query is empty.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) },
+            deprecated = true)
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations( // Params:
             @PathParam("query") @DefaultValue("") StringArrayArg query // Required
     ) {
@@ -130,7 +131,7 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets associated to an annotation tags search")
+    @Operation(summary = "Retrieve datasets associated to an annotation tags search", deprecated = true)
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @PathParam("query") StringArrayArg query, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg filterArg, // Optional, default null
@@ -179,7 +180,7 @@ public class AnnotationsWebService {
     @GET
     @Path("/{taxon}/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search")
+    @Operation(summary = "Retrieve datasets within a given taxa associated to an annotation tags search", deprecated = true)
     public PaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("query") StringArrayArg query, // Required
