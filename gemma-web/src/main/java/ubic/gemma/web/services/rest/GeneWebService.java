@@ -93,7 +93,7 @@ public class GeneWebService {
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching a gene identifier")
+    @Operation(summary = "Retrieve genes matching gene identifiers")
     public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
