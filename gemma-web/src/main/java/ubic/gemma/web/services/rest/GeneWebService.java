@@ -93,7 +93,7 @@ public class GeneWebService {
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching a gene identifier")
+    @Operation(summary = "Retrieve genes matching gene identifiers")
     public ResponseDataObject<List<GeneValueObject>> getGenes( // Params:
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
@@ -149,7 +149,7 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the probes associated to a genes")
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
     public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0

@@ -177,7 +177,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the platform of a dataset", responses = {
+    @Operation(summary = "Retrieve the platforms of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListArrayDesignValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -215,7 +215,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the differential analyses of a dataset", responses = {
+    @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectListDifferentialExpressionAnalysisValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -273,7 +273,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the annotations analysis of a dataset", responses = {
+    @Operation(summary = "Retrieve the annotations of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectSetAnnotationValueObject"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
