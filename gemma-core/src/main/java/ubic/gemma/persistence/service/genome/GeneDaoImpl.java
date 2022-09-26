@@ -522,6 +522,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         String queryString = "select " + getObjectAlias() + " "
                 + "from Gene as " + getObjectAlias() + " " // gene
+                + "left join fetch " + getObjectAlias() + ".multifunctionality " // multifunctionality, if available
                 + "left join fetch " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
                 + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 

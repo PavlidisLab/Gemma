@@ -56,7 +56,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * differentiate
      */
     private Boolean isQuery = true;
-    private Double multifunctionalityRank = 0.0;
+    private Double multifunctionalityRank;
     @JsonIgnore
     private String name;
     private Integer ncbiId;
@@ -111,6 +111,11 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.ensemblId = gene.getEnsemblId();
+        if ( gene.getMultifunctionality() != null && Hibernate.isInitialized( gene.getMultifunctionality() ) ) {
+            this.multifunctionalityRank = gene.getMultifunctionality().getRank();
+        } else {
+            this.multifunctionalityRank = null;
+        }
     }
 
     /**
