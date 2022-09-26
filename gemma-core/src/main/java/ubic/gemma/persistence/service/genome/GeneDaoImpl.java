@@ -524,6 +524,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 + "from Gene as " + getObjectAlias() + " " // gene
                 + "left join fetch " + getObjectAlias() + ".multifunctionality " // multifunctionality, if available
                 + "left join fetch " + getObjectAlias() + ".taxon as " + "taxon" + " "// taxon
+                + "left join fetch " + getObjectAlias() + ".aliases " // aliases
                 + "where " + getObjectAlias() + ".id is not null "; // needed to use formRestrictionCause()
 
         queryString += ObjectFilterQueryUtils.formRestrictionAndGroupByAndOrderByClauses( filters, getObjectAlias(), sort );

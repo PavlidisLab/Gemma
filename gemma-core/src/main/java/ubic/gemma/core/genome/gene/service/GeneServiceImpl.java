@@ -311,7 +311,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -390,7 +390,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        SortedSet<String> aliasStrings = new TreeSet<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
