@@ -149,7 +149,7 @@ public class SearchWebService {
      * Representation of {@link SearchResult} for the RESTful API.
      */
     @Data
-    public static class SearchResultValueObject<T extends IdentifiableValueObject<? extends Identifiable>> {
+    public static class SearchResultValueObject<T extends IdentifiableValueObject> {
 
         private final Long resultId;
 

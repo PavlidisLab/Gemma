@@ -14,6 +14,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import ubic.gemma.model.IdentifiableValueObject;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.TreeSet;
@@ -22,11 +25,11 @@ import java.util.TreeSet;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class ExternalDatabaseValueObject implements Serializable, Comparable<ExternalDatabaseValueObject> {
+public class ExternalDatabaseValueObject extends IdentifiableValueObject<ExternalDatabase> implements Serializable, Comparable<ExternalDatabaseValueObject> {
 
     private static final long serialVersionUID = -1714429166594162374L;
     private String name;
-    private Long id;
+    @JsonIgnore
     private boolean checked = false;
 
     public ExternalDatabaseValueObject() {
@@ -34,15 +37,13 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
     }
 
     public ExternalDatabaseValueObject( Long id, String name, boolean checked ) {
-        super();
+        super( id );
         this.name = name;
-        this.id = id;
         this.checked = checked;
     }
 
     public ExternalDatabaseValueObject( ExternalDatabase ed ) {
-        super();
-        this.id = ed.getId();
+        super( ed );
         this.name = ed.getName();
     }
 
@@ -95,14 +96,6 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
             return other.name == null;
         } else
             return name.equals( other.name );
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public String getName() {
