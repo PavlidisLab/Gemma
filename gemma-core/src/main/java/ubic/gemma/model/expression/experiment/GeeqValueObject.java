@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
@@ -28,6 +30,8 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
  * @author paul, tesarst
  */
 @SuppressWarnings("unused") // Used in frontend
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private double publicQualityScore;
@@ -97,9 +101,9 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = ( double ) row[19];
         this.qScoreReplicates = ( double ) row[20];
         this.qScoreBatchInfo = ( double ) row[21];
-        this.setqScorePublicBatchEffect( ( double ) row[23], ( boolean ) row[24], ( boolean ) row[25],
+        this.setQScorePublicBatchEffect( ( double ) row[23], ( boolean ) row[24], ( boolean ) row[25],
                 ( boolean ) row[26] );
-        this.setqScorePublicBatchConfound( ( double ) row[27], ( boolean ) row[28], ( boolean ) row[29] );
+        this.setQScorePublicBatchConfound( ( double ) row[27], ( boolean ) row[28], ( boolean ) row[29] );
         this.noVectors = ( boolean ) row[30];
         this.corrMatIssues = ( byte ) row[31];
         this.replicatesIssues = ( byte ) row[32];
@@ -127,9 +131,9 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = g.getqScorePlatformsTech();
         this.qScoreReplicates = g.getqScoreReplicates();
         this.qScoreBatchInfo = g.getqScoreBatchInfo();
-        this.setqScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
+        this.setQScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
                 g.isManualHasNoBatchEffect(), g.isManualBatchEffectActive() );
-        this.setqScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
+        this.setQScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
                 g.isManualBatchConfoundActive() );
         this.noVectors = g.isNoVectors();
         this.batchCorrected = g.isBatchCorrected();
@@ -145,7 +149,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.publicSuitabilityScore = override ? manual : detected;
     }
 
-    private void setqScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,
+    private void setQScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,
             boolean override ) {
         this.qScorePublicBatchEffect = //
                 !override ? detected : //
@@ -153,203 +157,9 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
                                 manualNone ? GeeqServiceImpl.BATCH_EFF_NONE : GeeqServiceImpl.BATCH_EFF_WEAK;
     }
 
-    private void setqScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
+    private void setQScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
         this.qScorePublicBatchConfound = //
                 !override ? detected : //
                         manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
-    }
-
-    public double getPublicQualityScore() {
-        return publicQualityScore;
-    }
-
-    /**
-     * Only for DWR serializer, do not use to manually set the score.
-     *
-     * @param publicQualityScore the new score
-     */
-    public void setPublicQualityScore( double publicQualityScore ) {
-        this.publicQualityScore = publicQualityScore;
-    }
-
-    public double getPublicSuitabilityScore() {
-        return publicSuitabilityScore;
-    }
-
-    /**
-     * Only for DWR serializer, do not use to manually set the score.
-     *
-     * @param publicSuitabilityScore the new score
-     */
-    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
-        this.publicSuitabilityScore = publicSuitabilityScore;
-    }
-
-    public double getsScorePublication() {
-        return sScorePublication;
-    }
-
-    public void setsScorePublication( double sScorePublication ) {
-        this.sScorePublication = sScorePublication;
-    }
-
-    public double getsScorePlatformAmount() {
-        return sScorePlatformAmount;
-    }
-
-    public void setsScorePlatformAmount( double sScorePlatformAmount ) {
-        this.sScorePlatformAmount = sScorePlatformAmount;
-    }
-
-    public double getsScorePlatformsTechMulti() {
-        return sScorePlatformsTechMulti;
-    }
-
-    public void setsScorePlatformsTechMulti( double sScorePlatformsTechMulti ) {
-        this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
-    }
-
-    public double getsScoreAvgPlatformPopularity() {
-        return sScoreAvgPlatformPopularity;
-    }
-
-    public void setsScoreAvgPlatformPopularity( double sScoreAvgPlatformPopularity ) {
-        this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
-    }
-
-    public double getsScoreAvgPlatformSize() {
-        return sScoreAvgPlatformSize;
-    }
-
-    public void setsScoreAvgPlatformSize( double sScoreAvgPlatformSize ) {
-        this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
-    }
-
-    public double getsScoreSampleSize() {
-        return sScoreSampleSize;
-    }
-
-    public void setsScoreSampleSize( double sScoreSampleSize ) {
-        this.sScoreSampleSize = sScoreSampleSize;
-    }
-
-    public double getsScoreRawData() {
-        return sScoreRawData;
-    }
-
-    public void setsScoreRawData( double sScoreRawData ) {
-        this.sScoreRawData = sScoreRawData;
-    }
-
-    public double getsScoreMissingValues() {
-        return sScoreMissingValues;
-    }
-
-    public void setsScoreMissingValues( double sScoreMissingValues ) {
-        this.sScoreMissingValues = sScoreMissingValues;
-    }
-
-    public double getqScoreOutliers() {
-        return qScoreOutliers;
-    }
-
-    public void setqScoreOutliers( double qScoreOutliers ) {
-        this.qScoreOutliers = qScoreOutliers;
-    }
-
-    public double getqScoreSampleMeanCorrelation() {
-        return qScoreSampleMeanCorrelation;
-    }
-
-    public void setqScoreSampleMeanCorrelation( double qScoreSampleMeanCorrelation ) {
-        this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
-    }
-
-    public double getqScoreSampleMedianCorrelation() {
-        return qScoreSampleMedianCorrelation;
-    }
-
-    public void setqScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
-        this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
-    }
-
-    public double getqScoreSampleCorrelationVariance() {
-        return qScoreSampleCorrelationVariance;
-    }
-
-    public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
-        this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
-    }
-
-    public double getqScorePlatformsTech() {
-        return qScorePlatformsTech;
-    }
-
-    public void setqScorePlatformsTech( double qScorePlatformsTech ) {
-        this.qScorePlatformsTech = qScorePlatformsTech;
-    }
-
-    public double getqScoreReplicates() {
-        return qScoreReplicates;
-    }
-
-    public void setqScoreReplicates( double qScoreReplicates ) {
-        this.qScoreReplicates = qScoreReplicates;
-    }
-
-    public double getqScoreBatchInfo() {
-        return qScoreBatchInfo;
-    }
-
-    public void setqScoreBatchInfo( double qScoreBatchInfo ) {
-        this.qScoreBatchInfo = qScoreBatchInfo;
-    }
-
-    public double getqScorePublicBatchEffect() {
-        return qScorePublicBatchEffect;
-    }
-
-    public void setqScorePublicBatchEffect( double qScorePublicBatchEffect ) {
-        this.qScorePublicBatchEffect = qScorePublicBatchEffect;
-    }
-
-    public double getqScorePublicBatchConfound() {
-        return qScorePublicBatchConfound;
-    }
-
-    public void setqScorePublicBatchConfound( double qScorePublicBatchConfound ) {
-        this.qScorePublicBatchConfound = qScorePublicBatchConfound;
-    }
-
-    public boolean isNoVectors() {
-        return noVectors;
-    }
-
-    public void setNoVectors( boolean noVectors ) {
-        this.noVectors = noVectors;
-    }
-
-    public byte getCorrMatIssues() {
-        return corrMatIssues;
-    }
-
-    public void setCorrMatIssues( byte corrMatIssues ) {
-        this.corrMatIssues = corrMatIssues;
-    }
-
-    public byte getReplicatesIssues() {
-        return replicatesIssues;
-    }
-
-    public void setReplicatesIssues( byte replicatesIssues ) {
-        this.replicatesIssues = replicatesIssues;
-    }
-
-    public boolean isBatchCorrected() {
-        return batchCorrected;
-    }
-
-    public void setBatchCorrected( boolean batchCorrected ) {
-        this.batchCorrected = batchCorrected;
     }
 }
