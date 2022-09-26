@@ -744,14 +744,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long numGenes( ArrayDesign arrayDesign ) {
         //language=HQL
         return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
                         "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                 + "where g2cs.AD = :arrayDesignId" )
                 .setParameter( "arrayDesignId", arrayDesign.getId() )
-                .setCacheable( true )
                 .uniqueResult() ).longValue();
     }
 
