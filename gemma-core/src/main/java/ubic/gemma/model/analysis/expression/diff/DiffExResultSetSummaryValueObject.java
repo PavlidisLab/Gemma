@@ -28,10 +28,14 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Summary of a result set.
  *
+ * @see DifferentialExpressionAnalysisValueObject
  * @author paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
@@ -50,41 +54,75 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private FactorValueValueObject baselineGroup;
 
-    private Integer downregulatedCount;
-
     private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
 
+    @JsonIgnore
     private Collection<Long> factorIds;
 
-    private Integer numberOfDiffExpressedProbes;
+    /**
+     * Analyzed {@link ubic.gemma.model.expression.experiment.BioAssaySet} ID.
+     * <p/>
+     * This is redundant because of {@link DifferentialExpressionAnalysisValueObject#getBioAssaySetId()}, and always
+     * displayed in that context in the RESTful API.
+     */
+    @JsonIgnore
+    private Long bioAssaySetAnalyzedId;
 
+    @JsonIgnore
     private Integer numberOfGenesAnalyzed;
 
+    @JsonIgnore
     private Integer numberOfProbesAnalyzed;
 
+    /**
+     * This is used once in the frontend, but never filled, so please ignore.
+     */
+    @Deprecated
+    @JsonIgnore
     private Double qValue;
 
+    /**
+     * Threshold applied to the hitlist.
+     */
+    @JsonIgnore
     private Double threshold;
 
+    /**
+     * Number of diffex probes in the {@link Direction#EITHER} hit list if available.
+     */
+    @JsonIgnore
+    private Integer numberOfDiffExpressedProbes;
+
+    /**
+     * Number of diffex probes in the {@link Direction#UP} hit list if available.
+     */
+    @JsonIgnore
     private Integer upregulatedCount;
 
-    private Long bioAssaySetAnalyzedId;
+    /**
+     * Number of diffex probes in the {@link Direction#DOWN} hit list if available.
+     */
+    @JsonIgnore
+    private Integer downregulatedCount;
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
         this.setId( resultSet.getId() );
-        this.setResultSetId( resultSet.getId() );
         this.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
         this.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
         this.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
 
-        this.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
         for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
             this.getExperimentalFactors().add( new ExperimentalFactorValueObject( ef ) );
         }
 
+        if ( resultSet.getBaselineGroup() != null ) {
+            this.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
+        }
+
+        // extract statistics for the default threshold (if available)
         for ( HitListSize hitList : resultSet.getHitListSizes() ) {
-            if ( hitList.getThresholdQvalue()
-                    .equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+            if ( hitList.getThresholdQvalue().equals( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+                this.setThreshold( hitList.getThresholdQvalue() );
                 if ( hitList.getDirection().equals( Direction.UP ) ) {
                     this.setUpregulatedCount( hitList.getNumberOfProbes() );
                 } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
@@ -92,28 +130,16 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
                 } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
                     this.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
                 }
-
             }
-        }
-
-        if ( resultSet.getBaselineGroup() != null ) {
-            this.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
         }
     }
 
     /**
-     * @deprecated use {@link #getResultSetId()} instead
+     * Alias for {@link #getId()} kept for backward-compatibility.
+     * @deprecated use {@link #getId()} instead
      */
     @Deprecated
     public Long getResultSetId() {
         return id;
-    }
-
-    /**
-     * @deprecated use {@link #setId} instead
-     */
-    @Deprecated
-    public void setResultSetId( Long resultSetId ) {
-        this.id = resultSetId;
     }
 }
