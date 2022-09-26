@@ -518,13 +518,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public ArrayDesignValueObject loadValueObject( ArrayDesign entity ) {
-        ArrayDesignValueObject result = super.loadValueObject( entity );
-        populateArrayDesignValueObjects( Collections.singleton( result ) );
-        return result;
-    }
-
-    @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
             return new ArrayList<>();

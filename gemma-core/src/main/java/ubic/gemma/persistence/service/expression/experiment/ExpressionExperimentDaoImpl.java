@@ -1200,13 +1200,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
-        ExpressionExperimentValueObject result = super.loadValueObject( entity );
-        populateArrayDesignCount( Collections.singleton( result ) );
-        return result;
-    }
-
-    @Override
     public List<ExpressionExperimentValueObject> loadValueObjectsPreFilter( @Nullable Filters filters, @Nullable Sort sort ) {
         if ( sort == null ) {
             sort = Sort.by( getObjectAlias(), "id" );
