@@ -21,9 +21,9 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     @Override
     public CompositeSequence getEntity( CompositeSequenceService service ) {
-        if ( arrayDesign == null )
+        if ( platform == null )
             throw new BadRequestException( "Platform not set for composite sequence retrieval" );
-        return checkEntity( this.getValue() == null ? null : service.findByName( arrayDesign, this.getValue() ) );
+        return checkEntity( this.getValue() == null ? null : service.findByName( platform, this.getValue() ) );
     }
 
     @Override
