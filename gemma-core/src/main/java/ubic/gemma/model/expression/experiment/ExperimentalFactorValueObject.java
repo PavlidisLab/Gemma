@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.io.Serializable;
@@ -126,10 +126,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     /**
      * Number of factor values.
-     * @deprecated simply use the size of {@link #values}, this is merely kept for the Gemma Web frontend.
      */
-    @JsonIgnore
-    @Deprecated
+    @GemmaWebOnly
     public int getNumValues() {
         return this.values == null ? 0 : this.values.size();
     }

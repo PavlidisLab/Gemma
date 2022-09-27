@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -129,8 +130,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
      * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
      * @deprecated use {@link #getId()} instead
      */
-    @Deprecated
-    @JsonIgnore
+    @GemmaWebOnly
     public Long getResultSetId() {
         return id;
     }
