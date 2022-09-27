@@ -28,9 +28,6 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Summary of a result set.
@@ -129,10 +126,11 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     }
 
     /**
-     * Alias for {@link #getId()} kept for backward-compatibility.
+     * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
      * @deprecated use {@link #getId()} instead
      */
     @Deprecated
+    @JsonIgnore
     public Long getResultSetId() {
         return id;
     }
