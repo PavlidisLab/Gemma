@@ -68,10 +68,8 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     @JsonIgnore
     private Long bioAssaySetAnalyzedId;
 
-    @JsonIgnore
     private Integer numberOfGenesAnalyzed;
 
-    @JsonIgnore
     private Integer numberOfProbesAnalyzed;
 
     /**
@@ -84,25 +82,21 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     /**
      * Threshold applied to the hitlist.
      */
-    @JsonIgnore
     private Double threshold;
 
     /**
      * Number of diffex probes in the {@link Direction#EITHER} hit list if available.
      */
-    @JsonIgnore
     private Integer numberOfDiffExpressedProbes;
 
     /**
      * Number of diffex probes in the {@link Direction#UP} hit list if available.
      */
-    @JsonIgnore
     private Integer upregulatedCount;
 
     /**
      * Number of diffex probes in the {@link Direction#DOWN} hit list if available.
      */
-    @JsonIgnore
     private Integer downregulatedCount;
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
