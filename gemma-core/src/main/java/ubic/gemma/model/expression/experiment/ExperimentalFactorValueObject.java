@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -25,13 +28,14 @@ import ubic.gemma.model.common.description.Characteristic;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Objects;
 
 /**
  * @author luke
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> implements Serializable {
 
     private static final long serialVersionUID = -2615804031123874251L;
@@ -44,7 +48,6 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     private String factorValues;
 
     private String name;
-    private Integer numValues = 0;
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 
@@ -60,12 +63,12 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     public ExperimentalFactorValueObject( ExperimentalFactor factor ) {
         super( factor.getId() );
-        this.setName( factor.getName() );
-        this.setDescription( factor.getDescription() );
+        this.name = factor.getName();
+        this.description = factor.getDescription();
 
         if ( factor.getCategory() != null ) {
-            this.setCategory( factor.getCategory().getCategory() );
-            this.setCategoryUri( factor.getCategory().getCategoryUri() );
+            this.category = factor.getCategory().getCategory();
+            this.categoryUri = factor.getCategory().getCategoryUri();
         }
 
         /*
@@ -108,9 +111,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
                 StringUtils.remove( factorValuesAsString.toString(), factor.getName() + ":" ) );
         factorValuesAsString = new StringBuilder( StringUtils.removeEnd( factorValuesAsString.toString(), ", " ) );
 
-        this.setFactorValues( factorValuesAsString.toString() );
+        this.factorValues = factorValuesAsString.toString();
 
-        this.numValues = factor.getFactorValues().size();
         Characteristic c = factor.getCategory();
         /*
          * NOTE this replaces code that previously made no sense. PP
@@ -119,99 +121,16 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             vals.add( new FactorValueValueObject( value, c ) );
         }
 
-        this.setValues( vals );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        ExperimentalFactorValueObject other = ( ExperimentalFactorValueObject ) obj;
-        return Objects.equals( id, other.id );
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public String getCategoryUri() {
-        return categoryUri;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getFactorValues() {
-        return factorValues;
+        this.values = vals;
     }
 
     /**
-     * @param factorValues Set a string which describes (in summary) the factor values
+     * Number of factor values.
+     * @deprecated simply use the size of {@link #values}, this is merely kept for the Gemma Web frontend.
      */
-    public void setFactorValues( String factorValues ) {
-        this.factorValues = factorValues;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
-        return result;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    /**
-     * @return the numValues
-     */
-    public Integer getNumValues() {
-        return this.numValues;
-    }
-
-    /**
-     * @param numValues the numValues to set
-     */
-    public void setNumValues( Integer numValues ) {
-        this.numValues = numValues;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
-    }
-
-    public Collection<FactorValueValueObject> getValues() {
-        return values;
-    }
-
-    public void setValues( Collection<FactorValueValueObject> values ) {
-        this.values = values;
+    @JsonIgnore
+    @Deprecated
+    public int getNumValues() {
+        return this.values == null ? 0 : this.values.size();
     }
 }
