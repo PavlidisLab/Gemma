@@ -126,6 +126,30 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     }
 
     /**
+     * @deprecated use {@link #getNumberOfUpregulatedProbes()} instead.
+     */
+    @Deprecated
+    public Integer getUpregulatedCount() {
+        return upregulatedCount;
+    }
+
+    public Integer getNumberOfUpregulatedProbes() {
+        return upregulatedCount;
+    }
+
+    /**
+     * @deprecated use {@link #getNumberOfDownregulatedProbes()} instead.
+     */
+    @Deprecated
+    public Integer getDownregulatedCount() {
+        return downregulatedCount;
+    }
+
+    public Integer getNumberOfDownregulatedProbes() {
+        return downregulatedCount;
+    }
+
+    /**
      * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
      * @deprecated use {@link #getId()} instead
      */

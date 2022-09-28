@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import org.apache.commons.lang3.StringUtils;
@@ -210,6 +211,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.categoryUri = categoryUri;
     }
 
+    @JsonIgnore
     public int getNumTimesUsed() {
         return numTimesUsed;
     }
@@ -226,6 +228,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.ontologyUsed = ontologyUsed;
     }
 
+    @JsonIgnore
     public long getPrivateGeneCount() {
         return this.privateGeneCount;
     }
@@ -234,6 +237,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.privateGeneCount = privateGeneCount;
     }
 
+    @JsonIgnore
     public long getPublicGeneCount() {
         return this.publicGeneCount;
     }

@@ -1082,7 +1082,7 @@ public class ExpressionExperimentDaoImpl
                     .map( row2 -> ( Integer ) row2[3] )
                     .findFirst()
                     .orElse( 0 );
-            vo.setBioAssayCount( bioAssayCount );
+            vo.setNumberOfBioAssays( bioAssayCount );
 
             // we need those later for computing original platforms
             Collection<ArrayDesign> arrayDesignsUsed = details.stream()

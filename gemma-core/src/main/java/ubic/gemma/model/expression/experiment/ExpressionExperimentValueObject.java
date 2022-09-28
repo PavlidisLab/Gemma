@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
@@ -11,7 +12,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Objects;
@@ -23,11 +23,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         implements SecureValueObject {
 
     private static final long serialVersionUID = -6861385216096602508L;
-    protected Integer bioAssayCount;
+    protected Integer numberOfBioAssays;
     protected String description;
     protected String name;
 
     private String accession;
+    @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
     private String batchConfound;
     private String batchEffect;
@@ -47,6 +48,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonIgnore
     private Boolean isShared = false;
     private String metadata;
+    @JsonProperty("numberOfProcessedExpressionVectors")
     private Integer processedExpressionVectorCount;
     private String shortName;
     private String source;
@@ -97,10 +99,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
         // Counts
         if ( ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ) {
-            this.bioAssayCount = ee.getBioAssays().size();
+            this.numberOfBioAssays = ee.getBioAssays().size();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
-            this.bioAssayCount = ee.getNumberOfSamples();
+            this.numberOfBioAssays = ee.getNumberOfSamples();
         }
 
         // ED
@@ -145,7 +147,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         super( vo );
         this.name = vo.name;
         this.description = vo.description;
-        this.bioAssayCount = vo.bioAssayCount;
+        this.numberOfBioAssays = vo.numberOfBioAssays;
         this.accession = vo.getAccession();
         this.batchConfound = vo.getBatchConfound();
         this.batchEffect = vo.getBatchEffect();
@@ -167,6 +169,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.isShared = vo.getIsShared();
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
+    }
+
+    /**
+     * Obtain the number of {@link ubic.gemma.model.expression.bioAssay.BioAssay} in this experiment.
+     *
+     * @deprecated use {@link #getNumberOfBioAssays()} instead.
+     */
+    @Deprecated
+    public int getBioAssayCount() {
+        return numberOfBioAssays;
     }
 
     @Override

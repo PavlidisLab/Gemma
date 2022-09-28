@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -32,6 +33,7 @@ import java.util.HashSet;
 public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
 
     private static final long serialVersionUID = 9164284536309673585L;
+
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
         Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {
@@ -39,6 +41,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         }
         return result;
     }
+
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";

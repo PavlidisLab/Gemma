@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -119,6 +120,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     @JsonIgnore
     private String numProbesToGenes;
     private String shortName;
+    @JsonProperty("numberOfSwitchedExpressionExperiments")
     private Long switchedExpressionExperimentCount = 0L; // how many "hidden" assocations there are.
     private String taxon;
     private Long taxonID;
@@ -188,6 +190,18 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = arrayDesignValueObject.technologyType;
         this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
         this.blackListed = arrayDesignValueObject.blackListed;
+    }
+
+    /**
+     * @deprecated use {@link #getNumberOfExpressionExperiments()} instead.
+     */
+    @Deprecated
+    public Long getExpressionExperimentCount() {
+        return expressionExperimentCount;
+    }
+
+    public Long getNumberOfExpressionExperiments() {
+        return expressionExperimentCount;
     }
 
     @Override
