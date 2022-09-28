@@ -27,25 +27,30 @@ import org.hibernate.classic.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.*;
 
 /**
  * @author pavlidis
  */
 @Repository
+@ParametersAreNonnullByDefault
 public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
+
+    @Autowired
+    private ArrayDesignDao arrayDesignDao;
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
@@ -164,17 +169,17 @@ public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValu
      */
     @Override
     //TODO remove when FactorValueValueObject usage is phased out
-    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
+    public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic ) {
         List<BioAssayValueObject> vos = new LinkedList<>();
         for ( BioAssay e : entities ) {
-            vos.add( new BioAssayValueObject( e, basic ) );
+            vos.add( new BioAssayValueObject( e, arrayDesignValueObjects, basic ) );
         }
         return vos;
     }
 
     @Override
     protected BioAssayValueObject doLoadValueObject( BioAssay entity ) {
-        return new BioAssayValueObject( entity, false );
+        return new BioAssayValueObject( entity, null, false );
     }
 
 }

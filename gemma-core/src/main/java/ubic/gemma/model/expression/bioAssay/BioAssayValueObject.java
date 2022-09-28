@@ -14,17 +14,19 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author Paul
@@ -67,22 +69,31 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     public BioAssayValueObject() {
     }
 
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
+    /**
+     * @param arrayDesignValueObjectsById pre-populated array design VOs by ID, or null to ignore and the VOs will be
+     *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     */
+    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, boolean basic ) {
         super( bioAssay.getId() );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
+        // the platform and original platform are eagerly fetched, so no need for a Hibernate.isInitialized() test:w
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        this.arrayDesign = new ArrayDesignValueObject( ad.getId() );
-        arrayDesign.setShortName( ad.getShortName() );
-        arrayDesign.setName( ad.getName() );
+        if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
+            this.arrayDesign = arrayDesignValueObjectsById.get( ad.getId() );
+        } else {
+            this.arrayDesign = new ArrayDesignValueObject( ad );
+        }
 
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            this.originalPlatform = new ArrayDesignValueObject( op.getId() );
-            this.originalPlatform.setShortName( op.getShortName() );
-            this.originalPlatform.setName( op.getName() );
+            if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {
+                this.originalPlatform = arrayDesignValueObjectsById.get( ad.getId() );
+            } else {
+                this.originalPlatform = new ArrayDesignValueObject( op );
+            }
         }
 
         this.processingDate = bioAssay.getProcessingDate();
@@ -107,8 +118,12 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         this.userFlaggedOutlier = this.outlier;
     }
 
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
+        this( bioAssay, null, basic );
+    }
+
     public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
-        this( bioAssay, basic );
+        this( bioAssay, null, basic );
         this.predictedOutlier = predictedOutlier;
     }
 
