@@ -94,7 +94,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
         if ( bioAssay.getSampleUsed() != null ) {
             this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic );
-            sample.getBioAssays().add( this.getId() );
+            sample.getBioAssayIds().add( this.getId() );
         }
 
         if ( bioAssay.getIsOutlier() != null ) {

@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -581,35 +582,18 @@ public class DatasetsWebService {
     }
 
     @SuppressWarnings("unused") // Used for json serialization
+    @Value
     private static class SimpleSVDValueObject {
         /**
          * Order same as the rows of the v matrix.
          */
-        private final Long[] bioMaterialIds;
+        Long[] bioMaterialIds;
 
         /**
          * An array of values representing the fraction of the variance each component accounts for
          */
-        private final Double[] variances;
-        private final DoubleMatrix<Long, Integer> vMatrix;
-
-        SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
-            this.bioMaterialIds = bioMaterialIds;
-            this.variances = variances;
-            this.vMatrix = vMatrix;
-        }
-
-        public Long[] getBioMaterialIds() {
-            return bioMaterialIds;
-        }
-
-        public Double[] getVariances() {
-            return variances;
-        }
-
-        public DoubleMatrix<Long, Integer> getvMatrix() {
-            return vMatrix;
-        }
+        Double[] variances;
+        DoubleMatrix<Long, Integer> vMatrix;
     }
 
 }
