@@ -1398,7 +1398,7 @@ public class ExpressionExperimentDaoImpl
                         + "left join fetch s.lastNoteUpdateEvent as eNote "
                         + "left join fetch s.lastTroubledEvent as eTrbl "
                         + "left join fetch {0}.geeq as geeq "
-                        + "left join fetch {0}.taxon as {3} ",
+                        + "left join fetch {0}.taxon as {3}",
                 getObjectAlias(), AclQueryUtils.AOI_ALIAS, AclQueryUtils.SID_ALIAS, TaxonDao.OBJECT_ALIAS );
 
         // fetching characteristics, bioAssays and arrayDesignUsed is costly, so we reserve these operations only if it
@@ -1406,17 +1406,17 @@ public class ExpressionExperimentDaoImpl
 
         if ( FiltersUtils.containsAnyAlias( filters, CharacteristicDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.characteristics, this might take some time..." );
-            queryString += MessageFormat.format( "left join ee.characteristics as {0} ", CharacteristicDao.OBJECT_ALIAS );
+            queryString += MessageFormat.format( " left join ee.characteristics as {0}", CharacteristicDao.OBJECT_ALIAS );
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays, this might take some time..." );
-            queryString += MessageFormat.format( "left join ee.bioAssays as {0} ", BioAssayDao.OBJECT_ALIAS );
+            queryString += MessageFormat.format( " left join ee.bioAssays as {0}", BioAssayDao.OBJECT_ALIAS );
         }
 
         if ( FiltersUtils.containsAnyAlias( filters, ArrayDesignDao.OBJECT_ALIAS ) ) {
             log.warn( "Querying ee.bioAssays.arrayDesignUsed, this might take some time..." );
-            queryString += MessageFormat.format( "left join {0}.arrayDesignUsed as {1} ", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
+            queryString += MessageFormat.format( " left join {0}.arrayDesignUsed as {1}", BioAssayDao.OBJECT_ALIAS, ArrayDesignDao.OBJECT_ALIAS );
         }
 
         // parts of this query (above) are only needed for administrators: the notes, so it could theoretically be sped up even more

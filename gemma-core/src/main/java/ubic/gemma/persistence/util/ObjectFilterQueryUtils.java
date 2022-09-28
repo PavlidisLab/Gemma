@@ -143,7 +143,7 @@ public class ObjectFilterQueryUtils {
             queryString += ObjectFilterQueryUtils.formRestrictionClause( filters );
         }
         if ( groupBy != null ) {
-            queryString += "group by " + groupBy + " ";
+            queryString += " group by " + groupBy;
         }
         if ( sort != null ) {
             queryString += ObjectFilterQueryUtils.formOrderByClause( sort );
