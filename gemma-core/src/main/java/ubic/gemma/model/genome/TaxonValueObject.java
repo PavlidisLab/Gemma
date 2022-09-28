@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.genome;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
@@ -26,6 +27,7 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
+    @JsonIgnore
     private Boolean isSpecies;
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
