@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,7 +63,7 @@ public class JsonReaderResponse<T> {
     public String message = "";
     public Collection<T> records;
     public boolean success = false;
-    public int totalRecords = 0;
+    public long totalRecords = 0;
 
     /**
      * Creates a successful JsonReaderResponse with the provided objectsToConvertToRecords. The
@@ -81,7 +81,7 @@ public class JsonReaderResponse<T> {
      * @param objectsToConvertToRecords objects to convert
      * @param totalRecords              total records
      */
-    public JsonReaderResponse( Collection<T> objectsToConvertToRecords, int totalRecords ) {
+    public JsonReaderResponse( Collection<T> objectsToConvertToRecords, long totalRecords ) {
         this.records = objectsToConvertToRecords;
         this.success = true;
         this.totalRecords = totalRecords;
@@ -131,14 +131,14 @@ public class JsonReaderResponse<T> {
     /**
      * @return the totalRecords
      */
-    public int getTotalRecords() {
+    public long getTotalRecords() {
         return totalRecords;
     }
 
     /**
      * @param totalRecords the totalRecords to set
      */
-    public void setTotalRecords( int totalRecords ) {
+    public void setTotalRecords( long totalRecords ) {
         this.totalRecords = totalRecords;
     }
 

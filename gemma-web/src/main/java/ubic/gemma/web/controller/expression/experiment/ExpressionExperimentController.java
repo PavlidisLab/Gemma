@@ -1178,12 +1178,10 @@ public class ExpressionExperimentController {
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
 
-        Collection<ExpressionExperimentDetailsValueObject> records = this
+        Slice<ExpressionExperimentDetailsValueObject> records = this
                 .loadAllValueObjectsOrdered( batch, ids, taxon );
 
-        long count = SecurityUtil.isUserAdmin() ? expressionExperimentService.countAll() : expressionExperimentService.countNotTroubled();
-
-        return new JsonReaderResponse<>( records, ( int ) count );
+        return new JsonReaderResponse<>( records, records.getTotalElements() );
     }
 
     /**
@@ -1623,7 +1621,7 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private Collection<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+    private Slice<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         Sort.Direction direction;
