@@ -8,6 +8,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -34,6 +35,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
 
     private static final long serialVersionUID = 3378801249808036785L;
 
+    @JsonProperty("isBaseline")
     private boolean isBaseline;
     private Collection<CharacteristicBasicValueObject> characteristics;
     private CharacteristicBasicValueObject experimentalFactorCategory;

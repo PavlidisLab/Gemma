@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -155,6 +156,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
         return "DiffExAnalysisVO [id=" + id + ", bioAssaySetId=" + bioAssaySetId + "]";
     }
 
+    @JsonProperty("isSubset")
     public boolean isSubset() {
         return this.subsetFactor != null;
     }
