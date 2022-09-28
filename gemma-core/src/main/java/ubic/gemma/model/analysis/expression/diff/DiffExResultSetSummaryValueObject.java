@@ -73,8 +73,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
     /**
      * This is used once in the frontend, but never filled, so please ignore.
      */
-    @Deprecated
-    @JsonIgnore
+    @GemmaWebOnly
     private Double qValue;
 
     /**
