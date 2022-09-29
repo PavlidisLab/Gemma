@@ -128,6 +128,7 @@ public class SearchWebService {
     public class SearchSettingsValueObject {
 
         private final String query;
+        @ArraySchema(schema = @Schema(ref = "SearchResultType"))
         private final Set<String> resultTypes;
 
         /* constraints */
@@ -153,6 +154,7 @@ public class SearchWebService {
 
         private final Long resultId;
 
+        @Schema(ref = "SearchResultType")
         private final String resultType;
 
         private final Double score;
