@@ -76,6 +76,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      */
     @GemmaWebOnly
     private boolean root = false;
+    @GemmaWebOnly
     private String taxon = "";
     private String value = "";
     private String valueUri = null;
