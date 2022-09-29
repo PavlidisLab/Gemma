@@ -35,6 +35,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -596,15 +597,11 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     private SearchResultDisplayObject getSearchResultForSessionBoundGroupValueObject( Taxon taxonForGS,
             SessionBoundGeneSetValueObject sbGsVo ) {
-
         if ( taxonForGS != null ) {
             // GO groups don't seem to have there sbGsVo's taxon info populated
-            sbGsVo.setTaxonId( taxonForGS.getId() );
-            sbGsVo.setTaxonName( taxonForGS.getCommonName() );
-
+            sbGsVo.setTaxon( new TaxonValueObject( taxonForGS ) );
         } else {
-            sbGsVo.setTaxonId( sbGsVo.getTaxonId() );
-            sbGsVo.setTaxonName( sbGsVo.getTaxonName() );
+            sbGsVo.setTaxon( sbGsVo.getTaxon() );
         }
         SearchResultDisplayObject sdo = new SearchResultDisplayObject( sbGsVo );
         sdo.setUserOwned( false );

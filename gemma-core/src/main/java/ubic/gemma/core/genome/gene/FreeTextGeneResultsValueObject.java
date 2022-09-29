@@ -37,6 +37,8 @@
 
 package ubic.gemma.core.genome.gene;
 
+import ubic.gemma.model.genome.TaxonValueObject;
+
 import java.util.Collection;
 
 /**
@@ -73,8 +75,7 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
         this.setName( name );
         this.setDescription( description );
 
-        this.setTaxonId( taxonId );
-        this.setTaxonName( taxonName );
+        this.setTaxon( new TaxonValueObject( taxonId, taxonName ) );
 
         this.setGeneIds( geneIds );
         this.setId( new Long( -1 ) );

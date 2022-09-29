@@ -19,10 +19,16 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.genome.TaxonValueObject;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,6 +38,8 @@ import java.util.HashSet;
  *
  * @author kelsey
  */
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
@@ -51,18 +59,24 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         return result;
     }
 
-    private boolean currentUserIsOwner = false;
-    private String description;
-    private Collection<Long> geneIds = new HashSet<>();
-
-    private boolean isPublic;
-    private boolean isShared;
     private String name;
+    private String description;
+    /**
+     * Gene IDs part of this gene set.
+     * <p>
+     * This is currently not populated, but we might consider it, see <a href="https://github.com/PavlidisLab/Gemma/issues/445">#445</a>.
+     */
+    @JsonIgnore
+    private Collection<Long> geneIds = new HashSet<>();
     private Integer size; // only used if we're not populating geneIds
 
-    private Long taxonId;
-    private String taxonName;
+    @Nullable
+    private TaxonValueObject taxon;
+
+    /* gsec stuff */
     private boolean userOwned = false;
+    private boolean isPublic;
+    private boolean isShared;
 
     /**
      * default constructor to satisfy java bean contract
@@ -80,55 +94,20 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         super( id );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( this.getClass() != obj.getClass() ) {
-            return false;
-        }
-        GeneSetValueObject other = ( GeneSetValueObject ) obj;
-        if ( id == null ) {
-            return other.id == null;
-        } else
-            return id.equals( other.id );
+    @GemmaWebOnly
+    public Long getTaxonId() {
+        return this.taxon != null ? this.taxon.getId() : null;
     }
 
-    public String getDescription() {
-        return this.description;
-    }
-
-    public Collection<Long> getGeneIds() {
-        return this.geneIds;
-    }
-
-    @Override
-    public boolean getIsPublic() {
-        return this.isPublic;
-    }
-
-    @Override
-    public boolean getIsShared() {
-        return this.isShared;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public Class<? extends Securable> getSecurableClass() {
-        return GeneSet.class;
+    @GemmaWebOnly
+    public String getTaxonName() {
+        return this.taxon != null ? this.taxon.getCommonName() : null;
     }
 
     /**
      * @return the number of members in the group
      */
-    public Integer getSize() {
+    public int getSize() {
         if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() )
             return this.getGeneIds().size();
         else if ( this.size > 0 )
@@ -136,69 +115,28 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         return 0;
     }
 
-    public Long getTaxonId() {
-        return this.taxonId;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    @Override
-    public boolean getUserCanWrite() {
-        return this.userOwned;
-    }
-
-    @Override
-    public boolean getUserOwned() {
-        return this.currentUserIsOwner;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setGeneIds( Collection<Long> geneMembers ) {
-        this.geneIds = geneMembers;
-    }
-
-    @Override
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-
-    }
-
-    @Override
-    public void setIsShared( boolean isShared ) {
-        this.isShared = isShared;
-
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setSize( Integer size ) {
+    public void setSize( int size ) {
         if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() && size != this.getGeneIds().size() ) {
             throw new IllegalArgumentException( "Invalid 'size'" );
         }
         this.size = size;
     }
 
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
+    @GemmaWebOnly
+    public boolean getCurrentUserIsOwner() {
+        return userOwned;
     }
 
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
+    @Override
+    @JsonIgnore
+    public boolean getUserOwned() {
+        return userOwned;
+    }
+
+    @Override
+    @JsonIgnore
+    public boolean getUserCanWrite() {
+        return userOwned;
     }
 
     @Override
@@ -207,13 +145,35 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
     }
 
     @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.currentUserIsOwner = isUserOwned;
+    @JsonIgnore
+    public boolean getIsPublic() {
+        return this.isPublic;
+    }
+
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    @Override
+    @JsonIgnore
+    public boolean getIsShared() {
+        return this.isShared;
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
+
+    @Override
+    @JsonIgnore
+    public Class<? extends Securable> getSecurableClass() {
+        return GeneSet.class;
     }
 
     @Override
     public String toString() {
-        return "GeneSetValueObject [id=" + id + ", name=" + name + ", taxonName=" + taxonName + "]";
+        return "GeneSetValueObject [id=" + id + ", name=" + name + ", taxonName=" + ( taxon != null ? taxon.getCommonName() : null ) + "]";
     }
-
 }
