@@ -203,7 +203,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         return taxonObject == null ? null : taxonObject.getCommonName();
     }
 
-    @GemmaWebOnly
+    /**
+     * @deprecated use {@link #getTaxonObject()} instead
+     */
+    @Deprecated
     public Long getTaxonId() {
         return taxonObject == null ? null : taxonObject.getId();
     }

@@ -213,7 +213,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return taxonObject == null ? null : taxonObject.getCommonName();
     }
 
-    @GemmaWebOnly
+    /**
+     * @deprecated use {@link #getTaxonObject()} instead
+     */
+    @Deprecated
     public Long getTaxonID() {
         return taxonObject == null ? null : taxonObject.getId();
     }
