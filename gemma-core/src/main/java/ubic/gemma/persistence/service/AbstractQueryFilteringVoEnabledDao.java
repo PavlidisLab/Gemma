@@ -117,7 +117,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         stopWatch.stop();
 
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( "Loading and counting VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms "
                     + "(querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
                     + "counting: " + countingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
@@ -148,7 +148,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
 
         stopWatch.stop();
 
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.info( "Loading VOs for " + elementClass.getName() + " took " + stopWatch.getTime( TimeUnit.MILLISECONDS ) + "ms ("
                     + "querying: " + queryStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms, "
                     + "post-processing: " + postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) + " ms)." );
