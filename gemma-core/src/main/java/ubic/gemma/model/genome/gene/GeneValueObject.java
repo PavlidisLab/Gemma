@@ -23,12 +23,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
-import sun.reflect.generics.tree.Tree;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -97,9 +99,8 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Integer platformCount;
     @JsonIgnore
     private Double score; // This is for genes in gene sets might have a rank or a score associated with them.
-    private String taxonCommonName;
-    private Long taxonId;
-    private String taxonScientificName;
+    @Nullable
+    private TaxonValueObject taxon;
 
     /**
      * Required when using the class as a spring bean.
@@ -122,9 +123,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
         if ( gene.getTaxon() != null && Hibernate.isInitialized( gene.getTaxon() ) ) {
-            this.taxonId = gene.getTaxon().getId();
-            this.taxonScientificName = gene.getTaxon().getScientificName();
-            this.setTaxonCommonName( gene.getTaxon().getCommonName() );
+            this.taxon = new TaxonValueObject( gene.getTaxon() );
         }
         this.name = gene.getName();
         this.description = gene.getDescription();
@@ -147,33 +146,22 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @SuppressWarnings("CopyConstructorMissesField") // Only copying constructor argument fields
     public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), null, otherBean.getNcbiId(), otherBean.getOfficialSymbol(),
-                otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(),
-                otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
-    }
-
-    public GeneValueObject( Long id, String name, SortedSet<String> aliases, Integer ncbiId, String officialSymbol,
-            String officialName, String description, Double score, Long taxonId, String taxonScientificName,
-            String taxonCommonName ) {
-        super( id );
-        this.name = name;
-        this.ncbiId = ncbiId;
-        this.officialSymbol = officialSymbol;
-        this.officialName = officialName;
-        this.description = description;
-        this.score = score;
-        this.taxonId = taxonId;
-        this.taxonScientificName = taxonScientificName;
-        this.taxonCommonName = taxonCommonName;
-        this.aliases = aliases;
+        super( otherBean.id );
+        this.name = otherBean.name;
+        this.ncbiId = otherBean.ncbiId;
+        this.officialSymbol = otherBean.officialSymbol;
+        this.officialName = otherBean.officialName;
+        this.description = otherBean.description;
+        this.score = otherBean.score;
+        this.taxon = otherBean.taxon;
+        this.aliases = null;
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
         super( geneId );
         this.officialSymbol = geneSymbol;
         this.officialName = geneOfficialName;
-        this.taxonId = taxon.getId();
-        this.taxonCommonName = taxon.getCommonName();
+        this.taxon = new TaxonValueObject( taxon );
     }
 
     /**
@@ -222,6 +210,21 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
             aliases.add( ga.getAlias() );
         }
         geneValueObject.setAliases( aliases );
+    }
+
+    @GemmaWebOnly
+    public Long getTaxonId() {
+        return taxon == null ? null : taxon.getId();
+    }
+
+    @GemmaWebOnly
+    public String getTaxonCommonName() {
+        return taxon == null ? null : taxon.getCommonName();
+    }
+
+    @GemmaWebOnly
+    public String getTaxonScientificName() {
+        return taxon == null ? null : taxon.getScientificName();
     }
 
     @Override

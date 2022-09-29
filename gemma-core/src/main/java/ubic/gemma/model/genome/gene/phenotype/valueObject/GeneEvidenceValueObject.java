@@ -26,7 +26,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  * @author kelsey
@@ -55,15 +54,6 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     public GeneEvidenceValueObject( Gene gene,
             Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( gene );
-        this.evidence = evidence;
-    }
-
-    public GeneEvidenceValueObject( Long id, String name, SortedSet<String> aliases, Integer ncbiId,
-            String officialSymbol, String officialName, String description, Double score, Long taxonId,
-            String taxonScientificName, String taxonCommonName,
-            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
-        super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
-                taxonScientificName, taxonCommonName );
         this.evidence = evidence;
     }
 

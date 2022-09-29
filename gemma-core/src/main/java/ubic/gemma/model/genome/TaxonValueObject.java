@@ -49,6 +49,11 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         super( id );
     }
 
+    public TaxonValueObject( Long id, String commonName ) {
+        super( id );
+        this.commonName = commonName;
+    }
+
     public static TaxonValueObject fromEntity( Taxon taxon ) {
         return new TaxonValueObject( taxon );
     }

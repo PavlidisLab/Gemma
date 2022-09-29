@@ -11,9 +11,12 @@ import gemma.gsec.util.SecurityUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
@@ -54,8 +57,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String source;
     @JsonIgnore
     private Boolean suitableForDEA = true;
-    private String taxon;
-    private Long taxonId;
+    /**
+     * FIXME: this should be named simply "taxon", but that field is already taken for Gemma Web, see {@link #getTaxon()}.
+     */
+    @Nullable
+    @JsonProperty("taxon")
+    private TaxonValueObject taxonObject;
 
     private String technologyType;
 
@@ -93,8 +100,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.processedExpressionVectorCount = ee.getNumberOfDataVectors();
 
         if ( ee.getTaxon() != null && Hibernate.isInitialized( ee.getTaxon() ) ) {
-            this.taxon = ee.getTaxon().getCommonName();
-            this.taxonId = ee.getTaxon().getId();
+            this.taxonObject = new TaxonValueObject( ee.getTaxon() );
         }
 
         // Counts
@@ -156,9 +162,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.metadata = vo.getMetadata();
         this.shortName = vo.getShortName();
         this.source = vo.getSource();
-        this.taxon = vo.getTaxon();
+        this.taxonObject = vo.getTaxonObject();
         this.technologyType = vo.getTechnologyType();
-        this.taxonId = vo.getTaxonId();
         this.experimentalDesign = vo.getExperimentalDesign();
         this.processedExpressionVectorCount = vo.getProcessedExpressionVectorCount();
         this.arrayDesignCount = vo.getArrayDesignCount();
@@ -191,6 +196,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @JsonIgnore
     public boolean getIsShared() {
         return this.isShared;
+    }
+
+    @GemmaWebOnly
+    public String getTaxon() {
+        return taxonObject == null ? null : taxonObject.getCommonName();
+    }
+
+    @GemmaWebOnly
+    public Long getTaxonId() {
+        return taxonObject == null ? null : taxonObject.getId();
     }
 
     @Override

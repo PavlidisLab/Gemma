@@ -22,7 +22,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -122,9 +124,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String shortName;
     @JsonProperty("numberOfSwitchedExpressionExperiments")
     private Long switchedExpressionExperimentCount = 0L; // how many "hidden" assocations there are.
-    private String taxon;
-    private Long taxonID;
-
+    @Nullable
+    @JsonProperty("taxon")
+    private TaxonValueObject taxonObject;
     private String technologyType;
 
     public ArrayDesignValueObject( Long id ) {
@@ -141,8 +143,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
-        this.taxon = ad.getPrimaryTaxon().getCommonName();
-        this.taxonID = ad.getPrimaryTaxon().getId();
+        if ( ad.getPrimaryTaxon() != null ) {
+            this.taxonObject = new TaxonValueObject( ad.getPrimaryTaxon() );
+        } else {
+            this.taxonObject = null;
+        }
         if ( ad.getTechnologyType() != null ) {
             this.technologyType = ad.getTechnologyType().toString();
         }
@@ -185,8 +190,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.numProbeSequences = arrayDesignValueObject.numProbeSequences;
         this.numProbesToGenes = arrayDesignValueObject.numProbesToGenes;
         this.shortName = arrayDesignValueObject.shortName;
-        this.taxon = arrayDesignValueObject.taxon;
-        this.taxonID = arrayDesignValueObject.taxonID;
+        this.taxonObject = arrayDesignValueObject.taxonObject;
         this.technologyType = arrayDesignValueObject.technologyType;
         this.isAffymetrixAltCdf = arrayDesignValueObject.isAffymetrixAltCdf;
         this.blackListed = arrayDesignValueObject.blackListed;
@@ -202,6 +206,16 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public Long getNumberOfExpressionExperiments() {
         return expressionExperimentCount;
+    }
+
+    @GemmaWebOnly
+    public String getTaxon() {
+        return taxonObject == null ? null : taxonObject.getCommonName();
+    }
+
+    @GemmaWebOnly
+    public Long getTaxonID() {
+        return taxonObject == null ? null : taxonObject.getId();
     }
 
     @Override
