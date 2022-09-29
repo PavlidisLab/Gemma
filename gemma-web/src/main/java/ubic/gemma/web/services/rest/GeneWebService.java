@@ -187,7 +187,7 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/coexpression")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the coexpression of two given genes")
+    @Operation(summary = "Retrieve the coexpression of two given genes", hidden = true)
     public ResponseDataObject<List<CoexpressionValueObjectExt>> getGeneGeneCoexpression( // Params:
             @PathParam("gene") final GeneArg<?> geneArg, // Required
             @QueryParam("with") final GeneArg<?> with, // Required
