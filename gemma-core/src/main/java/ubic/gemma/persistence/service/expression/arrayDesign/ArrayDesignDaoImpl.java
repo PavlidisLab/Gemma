@@ -1098,6 +1098,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
+        if ( entities.isEmpty() ) {
+            return;
+        }
         //noinspection unchecked
         List<Object[]> results = this.getSessionFactory().getCurrentSession().createQuery(
                         "select b.originalPlatform.id, count(distinct e) from ExpressionExperiment e "
