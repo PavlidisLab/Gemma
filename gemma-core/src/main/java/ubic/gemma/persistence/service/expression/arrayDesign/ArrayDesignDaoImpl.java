@@ -547,7 +547,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
-        log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        if ( timer.getTime( TimeUnit.MILLISECONDS ) > 20 ) {
+            log.info( String.format( "Populating ArrayDesign VOs took %d ms.", timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
     }
 
     @Override
@@ -976,28 +978,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return true;
     }
 
-    /**
-     * Gets the number of expression experiments per ArrayDesign for all array designs.
-     * <p>
-     * In case you're wondering why we're retrieving counts for all AD at once, it's just better to have a single
-     * cacheable query to cover all possible cases.
-     */
-    private Map<Long, Long> getExpressionExperimentCountMap() {
-        //language=HQL
-        final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
-
-        //noinspection unchecked
-        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setCacheable( true )
-                .list();
-
-        if ( list.size() < 2 )
-            AbstractDao.log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
-
-        return list.stream().collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
-    }
-
     @Override
     protected Query getLoadValueObjectsQuery( @Nullable Filters filters, @Nullable Sort sort, EnumSet<QueryHint> hints ) {
         // FIXME: the distinct is necessary because the ACL jointure creates duplicated platforms
@@ -1091,28 +1071,35 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
-        Map<Long, Long> map = getExpressionExperimentCountMap();
+        //noinspection unchecked
+        List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select ad.id, count(distinct ee) from ExpressionExperiment ee "
+                                + "join ee.bioAssays bas "
+                                + "join bas.arrayDesignUsed ad "
+                                + "group by ad" )
+                .setCacheable( true )
+                .list();
+        Map<Long, Long> countById = list.stream()
+                .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
-            vo.setExpressionExperimentCount( map.get( vo.getId() ) );
+            // missing implies no EEs, so zero is a valid default
+            vo.setExpressionExperimentCount( countById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
-        if ( entities.isEmpty() ) {
-            return;
-        }
         //noinspection unchecked
         List<Object[]> results = this.getSessionFactory().getCurrentSession().createQuery(
                         "select b.originalPlatform.id, count(distinct e) from ExpressionExperiment e "
-                                + "inner join e.bioAssays b where b.originalPlatform.id in :arrayDesignIds "
+                                + "join e.bioAssays b "
                                 + "group by b.originalPlatform" )
-                .setParameterList( "arrayDesignIds", EntityUtils.getIds( entities ) )
                 .setCacheable( true )
                 .list();
-        Map<Long, Long> countById = results.stream()
+        Map<Long, Long> switchedCountById = results.stream()
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
-            vo.setSwitchedExpressionExperimentCount( countById.getOrDefault( vo.getId(), 0L ) );
+            // missing implies no switched EEs, so zero is a valid default
+            vo.setSwitchedExpressionExperimentCount( switchedCountById.getOrDefault( vo.getId(), 0L ) );
         }
     }
 
