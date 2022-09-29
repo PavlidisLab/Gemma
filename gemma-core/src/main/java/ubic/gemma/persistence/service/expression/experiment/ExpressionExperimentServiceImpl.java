@@ -466,14 +466,7 @@ public class ExpressionExperimentServiceImpl
         Collection<String> seenTerms = new HashSet<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
 
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setClassUri( c.getCategoryUri() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setTermUri( c.getValueUri() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
-            annotationValue.setObjectClass( "ExperimentTag" );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, "ExperimentTag" );
 
             annotations.add( annotationValue );
             seenTerms.add( annotationValue.getTermName() );

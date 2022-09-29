@@ -111,15 +111,7 @@ public class CharacteristicBrowserController {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
 
-            AnnotationValueObject avo = new AnnotationValueObject();
-            avo.setId( c.getId() );
-            avo.setClassName( c.getCategory() );
-            avo.setTermName( c.getValue() );
-
-            if ( c.getEvidenceCode() != null )
-                avo.setEvidenceCode( c.getEvidenceCode().toString() );
-
-            populateClassValues( c, avo );
+            AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
 
             if ( parent != null ) {
                 populateParentInformation( avo, parent );
@@ -128,12 +120,6 @@ public class CharacteristicBrowserController {
         }
 
         return new JsonReaderResponse<>( results, ( int ) count );
-    }
-
-    private void populateClassValues( Characteristic c, AnnotationValueObject avo ) {
-        avo.setClassUri( c.getCategoryUri() );
-        avo.setTermUri( c.getValueUri() );
-        avo.setObjectClass( Characteristic.class.getSimpleName() );
     }
 
     public Long count() {
@@ -181,15 +167,7 @@ public class CharacteristicBrowserController {
                     || ( searchNos && parent == null ) || ( searchPAs
                     && parent instanceof PhenotypeAssociation ) ) {
 
-                AnnotationValueObject avo = new AnnotationValueObject();
-                avo.setId( c.getId() );
-                avo.setClassName( c.getCategory() );
-                avo.setTermName( c.getValue() );
-
-                if ( c.getEvidenceCode() != null )
-                    avo.setEvidenceCode( c.getEvidenceCode().toString() );
-
-                populateClassValues( c, avo );
+                AnnotationValueObject avo = new AnnotationValueObject( c, Characteristic.class.getSimpleName() );
 
                 if ( parent != null ) {
                     populateParentInformation( avo, parent );
@@ -211,9 +189,7 @@ public class CharacteristicBrowserController {
                 if ( StringUtils.isBlank( factorValue.getValue() ) )
                     continue;
 
-                AnnotationValueObject avo = new AnnotationValueObject();
-
-                avo.setId( factorValue.getId() );
+                AnnotationValueObject avo = new AnnotationValueObject( factorValue.getId() );
                 avo.setTermName( factorValue.getValue() );
                 avo.setObjectClass( FactorValue.class.getSimpleName() );
 

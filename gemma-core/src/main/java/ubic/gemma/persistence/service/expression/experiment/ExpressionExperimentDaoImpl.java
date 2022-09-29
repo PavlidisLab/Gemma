@@ -553,16 +553,7 @@ public class ExpressionExperimentDaoImpl
                 continue;
             }
 
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
-
-            annotationValue.setClassUri( c.getCategoryUri() );
-
-            annotationValue.setTermUri( c.getValueUri() );
-
-            annotationValue.setObjectClass( BioMaterial.class.getSimpleName() );
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class.getSimpleName() );
 
             results.add( annotationValue );
         }
@@ -609,18 +600,7 @@ public class ExpressionExperimentDaoImpl
                     continue;
             }
 
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
-
-            annotationValue.setClassUri( c.getCategoryUri() );
-
-            annotationValue.setTermUri( c.getValueUri() );
-
-            annotationValue.setObjectClass( FactorValue.class.getSimpleName() );
-
-            results.add( annotationValue );
+            results.add( new AnnotationValueObject( c, FactorValue.class.getSimpleName() ) );
         }
 
         return results;

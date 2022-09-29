@@ -18,226 +18,65 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.annotations.GemmaWebOnly;
+
 /**
  * @author luke
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class AnnotationValueObject {
+@Data
+@EqualsAndHashCode(of = { "className", "classUri", "objectClass", "termUri", "termName" }, callSuper = true)
+public class AnnotationValueObject extends IdentifiableValueObject<Characteristic> {
 
-    private Long id;
     private String classUri;
     private String className;
     private String termUri;
     private String termName;
+    private String description;
+    private String evidenceCode;
+    @GemmaWebOnly
+    private String objectClass;
+    @GemmaWebOnly
     private String parentName;
+    @GemmaWebOnly
     private String parentDescription;
+    @GemmaWebOnly
+    private String parentLink;
+    @GemmaWebOnly
+    private String parentOfParentName;
+    @GemmaWebOnly
+    private String parentOfParentDescription;
+    @GemmaWebOnly
+    private String parentOfParentLink;
 
-    @Override public String toString() {
+    public AnnotationValueObject( Long id ) {
+        super( id );
+    }
+
+    public AnnotationValueObject( Characteristic c ) {
+        classUri = c.getCategoryUri();
+        className = c.getCategory();
+        termUri = c.getValueUri();
+        termName = c.getValue();
+        // FIXME: should we use null instead of "" for missing evidence code?
+        evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "";
+    }
+
+    public AnnotationValueObject( Characteristic c, String objectClass ) {
+        this( c );
+        this.objectClass = objectClass;
+    }
+
+    @Override
+    public String toString() {
         return "AnnotationValueObject{" +
                 "classUri='" + classUri + '\'' +
                 ", className='" + className + '\'' +
                 ", termUri='" + termUri + '\'' +
                 ", termName='" + termName + '\'' +
                 '}';
-    }
-
-    private String parentLink;
-    private String parentOfParentName;
-    private String parentOfParentDescription;
-    private String parentOfParentLink;
-    private String description;
-    private String evidenceCode;
-    private String objectClass;
-
-    public AnnotationValueObject() {
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName( String ontologyClass ) {
-        this.className = ontologyClass;
-    }
-
-    public String getClassUri() {
-        return classUri;
-    }
-
-    public void setClassUri( String classUri ) {
-        this.classUri = classUri;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getEvidenceCode() {
-        return evidenceCode;
-    }
-
-    public void setEvidenceCode( String evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getObjectClass() {
-        return objectClass;
-    }
-
-    public void setObjectClass( String objectClass ) {
-        this.objectClass = objectClass;
-    }
-
-    public String getParentDescription() {
-        return parentDescription;
-    }
-
-    public void setParentDescription( String parentDescription ) {
-        this.parentDescription = parentDescription;
-    }
-
-    public String getParentLink() {
-        return parentLink;
-    }
-
-    public void setParentLink( String parentLink ) {
-        this.parentLink = parentLink;
-    }
-
-    public String getParentName() {
-        return parentName;
-    }
-
-    public void setParentName( String parentName ) {
-        this.parentName = parentName;
-    }
-
-    public String getParentOfParentDescription() {
-        return parentOfParentDescription;
-    }
-
-    public void setParentOfParentDescription( String parentOfParentDescription ) {
-        this.parentOfParentDescription = parentOfParentDescription;
-    }
-
-    public String getParentOfParentLink() {
-        return parentOfParentLink;
-    }
-
-    public void setParentOfParentLink( String parentOfParentLink ) {
-        this.parentOfParentLink = parentOfParentLink;
-    }
-
-    public String getParentOfParentName() {
-        return parentOfParentName;
-    }
-
-    public void setParentOfParentName( String parentOfParentName ) {
-        this.parentOfParentName = parentOfParentName;
-    }
-
-    public String getTermName() {
-        return termName;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-
-        if ( this.id != null ) return id.hashCode();
-
-        result = prime * result + ( ( className == null ) ? 0 : className.hashCode() );
-        result = prime * result + ( ( classUri == null ) ? 0 : classUri.hashCode() );
-        result = prime * result + ( ( objectClass == null ) ? 0 : objectClass.hashCode() );
-        result = prime * result + ( ( termUri == null ) ? 0 : termUri.hashCode() );
-        result = prime * result + ( ( termName == null ) ? 0 : termName.hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( getClass() != obj.getClass() ) {
-            return false;
-        }
-        AnnotationValueObject other = ( AnnotationValueObject ) obj;
-
-        if ( id == null ) {
-            if ( other.id != null ) {
-                return false;
-            }
-        } else if ( !id.equals( other.id ) ) {
-            return false;
-        }
-
-        if ( className == null ) {
-            if ( other.className != null ) {
-                return false;
-            }
-        } else if ( !className.equals( other.className ) ) {
-            return false;
-        }
-        if ( classUri == null ) {
-            if ( other.classUri != null ) {
-                return false;
-            }
-        } else if ( !classUri.equals( other.classUri ) ) {
-            return false;
-        }
-
-        if ( objectClass == null ) {
-            if ( other.objectClass != null ) {
-                return false;
-            }
-        } else if ( !objectClass.equals( other.objectClass ) ) {
-            return false;
-        }
-        if ( termUri == null ) {
-            if ( other.termUri != null ) {
-                return false;
-            }
-        } else if ( !termUri.equals( other.termUri ) ) {
-            return false;
-        }
-
-        if ( termName == null ) {
-            if ( other.termName != null ) {
-                return false;
-            }
-        } else if ( !termName.equals( other.termName ) ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public void setTermName( String ontologyTerm ) {
-        this.termName = ontologyTerm;
-    }
-
-    public String getTermUri() {
-        return termUri;
-    }
-
-    public void setTermUri( String termUri ) {
-        this.termUri = termUri;
     }
 }

@@ -199,16 +199,8 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
             if ( assoc.getOntologyEntry() == null )
                 continue;
 
-            AnnotationValueObject annotationValueObject = new AnnotationValueObject();
-
-            annotationValueObject.setId( assoc.getOntologyEntry().getId() );
+            AnnotationValueObject annotationValueObject = new AnnotationValueObject( assoc.getOntologyEntry() );
             annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-            annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
-            annotationValueObject
-                    .setEvidenceCode( assoc.getEvidenceCode() != null ? assoc.getEvidenceCode().getValue() : null );
-            annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
-            annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
-            annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
 
             ontologies.add( annotationValueObject );
         }
