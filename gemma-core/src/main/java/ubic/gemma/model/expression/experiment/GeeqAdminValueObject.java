@@ -57,25 +57,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
     public GeeqAdminValueObject() {
     }
 
-    public GeeqAdminValueObject( Object[] row ) {
-        super( row );
-        this.detectedQualityScore = ( double ) row[1];
-        this.manualQualityScore = ( double ) row[2];
-        this.manualQualityOverride = ( boolean ) row[3];
-        this.detectedSuitabilityScore = ( double ) row[4];
-        this.manualSuitabilityScore = ( double ) row[5];
-        this.manualSuitabilityOverride = ( boolean ) row[6];
-
-        this.qScoreBatchEffect = ( double ) row[23];
-        this.manualHasStrongBatchEffect = ( boolean ) row[24];
-        this.manualHasNoBatchEffect = ( boolean ) row[25];
-        this.manualBatchEffectActive = ( boolean ) row[26];
-        this.qScoreBatchConfound = ( double ) row[27];
-        this.manualHasBatchConfound = ( boolean ) row[28];
-        this.manualBatchConfoundActive = ( boolean ) row[29];
-        this.otherIssues = ( String ) row[34];
-    }
-
     public GeeqAdminValueObject( Geeq g ) {
         super( g );
         this.detectedQualityScore = g.getDetectedQualityScore();
