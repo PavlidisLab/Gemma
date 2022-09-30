@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.IdentifiableValueObject;
@@ -41,27 +42,44 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
      * Suitability score factors
      */
 
+    @JsonProperty("sScorePublication")
     private double sScorePublication;
+    @JsonProperty("sScorePlatformAmount")
     private double sScorePlatformAmount;
+    @JsonProperty("sScorePlatformTechMulti")
     private double sScorePlatformsTechMulti;
+    @JsonProperty("sScoreAvgPlatformPopularity")
     private double sScoreAvgPlatformPopularity;
+    @JsonProperty("sScoreAvgPlatformSize")
     private double sScoreAvgPlatformSize;
+    @JsonProperty("sScoreSampleSize")
     private double sScoreSampleSize;
+    @JsonProperty("sScoreRawData")
     private double sScoreRawData;
+    @JsonProperty("sScoreMissingValues")
     private double sScoreMissingValues;
 
     /*
      * Quality score factors
      */
 
+    @JsonProperty("qScoreOutliers")
     private double qScoreOutliers;
+    @JsonProperty("qScoreSampleMeanCorrelation")
     private double qScoreSampleMeanCorrelation;
+    @JsonProperty("qScoreSampleMedianCorrelation")
     private double qScoreSampleMedianCorrelation;
+    @JsonProperty("qScoreSampleCorrelationVariance")
     private double qScoreSampleCorrelationVariance;
+    @JsonProperty("qScorePlatformsTech")
     private double qScorePlatformsTech;
+    @JsonProperty("qScoreReplicates")
     private double qScoreReplicates;
+    @JsonProperty("qScoreBatchInfo")
     private double qScoreBatchInfo;
+    @JsonProperty("qScorePublicBatchEffect")
     private double qScorePublicBatchEffect;
+    @JsonProperty("qScorePublicBatchConfound")
     private double qScorePublicBatchConfound;
 
     /*
