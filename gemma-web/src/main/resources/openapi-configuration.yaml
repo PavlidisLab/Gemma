@@ -22,15 +22,24 @@ openAPI:
 
       ### Update 2.5.0
 
-      New `/search` endpoint! for an unified search experience. Annotation-based search endpoints under `/annotations`
-      are now deprecated.
+      Major cleanups were performed in this release in order to stabilize the specification. Numerous properties from
+      Gemma Web that were never intended to be exposed in Gemma REST have been hidden. It's a bit too much to describe
+      in here, but you can navigate to the schemas section below to get a good glance at the models.
 
-      Uniformly use `TaxonValueObject to represent taxon. This is breaking change for the `ExpressionExperimentValueObject`
+      Favour `numberOfSomething` instead of `somethingCount` which is clearer. The older names are kept for
+      backward-compatibility, but should be considered deprecated.
+
+      Gene aliases and multifunctionality rank are now filled in `GeneValueObject`.
+
+      Uniformly use `TaxonValueObject` to represent taxon. This is breaking change for the `ExpressionExperimentValueObject`
       and `ArrayDesignValueObject` as their `taxon` property will be an `object` instead of a `string`. Properties such
       as `taxonId` are now deprecated and `taxon.id` should be used instead.
 
       Entities that have IDs now all inherit from `IdentifiableValueObject`. This implies that you can assume the
       presence of an `id` in a search result `resultObject` attribute for example.
+
+      New `/search` endpoint! for an unified search experience. Annotation-based search endpoints under `/annotations`
+      are now deprecated.
 
       New API docs! While not as nice looking, the previous theme will be gradually ported to Swagger UI as we focused
       on functionality over prettiness for this release.
@@ -79,7 +88,7 @@ openAPI:
       May 2nd [2.2.5] Fixed: Cleaned up and optimized platforms/elements endpoint, removed redundant information
       (recursive properties nesting).
 
-      April 12th [2.2.3] Fixed: Array arguments not handling non-string properties properly, e.g. ncbiIds of genes.
+      April 12th [2.2.3] Fixed: Array arguments not handling non-string properties properly, e.g. `ncbiIds` of genes.
 
       April 9th [2.2.1] Fixed: Filter argument not working when the filtered field was a primitive type. This most
       significantly allows filtering by geeq boolean and double properties.
