@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.1.6</version>
+		<version>1.1.7</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -546,16 +546,6 @@
 					<name>localDeploy</name>
 					<url>file:///space/gemmaData/gemma-devsite</url>
 				</site>
-				<repository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</repository>
-				<snapshotRepository>
-					<id>repo</id>
-					<name>Pavlab</name>
-					<url>file:///space/maven2</url>
-				</snapshotRepository>
 			</distributionManagement>
 		</profile>
 	</profiles>
@@ -564,16 +554,6 @@
 			<id>website</id>
 			<url>/space/gemmaData/gemma-devsite</url>
 		</site>
-		<repository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</repository>
-		<snapshotRepository>
-			<id>repo</id>
-			<name>Pavlab</name>
-			<url>/space/maven2</url>
-		</snapshotRepository>
 	</distributionManagement>
 	<reporting>
 		<plugins>
