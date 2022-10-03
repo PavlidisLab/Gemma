@@ -623,11 +623,11 @@ class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Differential
                 continue;
             }
 
-            if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
+            if ( !avo.getFactorValuesUsedByExperimentalFactorId().containsKey( experimentalFactorId ) ) {
+                avo.getFactorValuesUsedByExperimentalFactorId().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
             }
 
-            avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
+            avo.getFactorValuesUsedByExperimentalFactorId().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
 
         }
     }

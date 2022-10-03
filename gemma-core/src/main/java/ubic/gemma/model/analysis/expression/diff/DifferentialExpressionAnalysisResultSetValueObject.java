@@ -34,6 +34,9 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
     public DifferentialExpressionAnalysisResultSetValueObject( ExpressionAnalysisResultSet analysisResultSet ) {
         super( analysisResultSet );
         this.analysis = new DifferentialExpressionAnalysisValueObject( analysisResultSet.getAnalysis() );
+        // these are ignored from JSON serialization of set to null
+        this.analysis.setFactorValuesUsed( null );
+        this.analysis.setResultSets( null );
         this.experimentalFactors = analysisResultSet.getExperimentalFactors().stream()
                 .map( ExperimentalFactorValueObject::new )
                 .collect( Collectors.toList() );
