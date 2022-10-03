@@ -30,7 +30,7 @@ import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
@@ -80,7 +80,7 @@ public class AnalysisResultSetsWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria")
-    public PaginatedResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSets(
+    public PaginatedResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSets(
             @QueryParam("datasets") DatasetArrayArg datasets,
             @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
             @QueryParam("filter") @DefaultValue("") FilterArg filters,
@@ -128,7 +128,7 @@ public class AnalysisResultSetsWebService {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExpressionAnalysisResultSetValueObject"))),
             @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<ExpressionAnalysisResultSetValueObject> getResultSet(
+    public ResponseDataObject<DifferentialExpressionAnalysisResultSetValueObject> getResultSet(
             @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults ) {
         if ( excludeResults ) {

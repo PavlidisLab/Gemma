@@ -21,13 +21,11 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringDao;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.analysis.AnalysisResultSetDao;
@@ -42,7 +40,7 @@ import java.util.Map;
 /**
  * @see ExpressionAnalysisResultSet
  */
-public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, ExpressionAnalysisResultSetValueObject> {
+public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
 
@@ -62,7 +60,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * Load an analysis result set with its all of its associated results.
      * @see #loadValueObject(Identifiable)
      */
-    ExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
+    DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Load a {@link DifferentialExpressionAnalysisResult} to {@link Gene} multi-map.
@@ -85,5 +83,5 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param sort field and direction by which the collection is ordered
      * @return
      */
-    Slice<ExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
+    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
 }
