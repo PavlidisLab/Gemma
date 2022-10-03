@@ -44,5 +44,9 @@
         <option name="CONTINUATION_INDENT_SIZE" value="3" />
       </indentOptions>
     </codeStyleSettings>
+    <codeStyleSettings language="yaml">
+      <option name="SPACE_WITHIN_BRACKETS" value="false" />
+      <option name="SPACE_WITHIN_BRACES" value="false" />
+    </codeStyleSettings>
   </code_scheme>
 </component>
