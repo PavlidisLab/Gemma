@@ -247,15 +247,15 @@ public class DatasetsWebService {
         UriComponentsBuilder uriComponents;
         // this is only for testing because Jersey in-memory container lacks a servlet context
         if ( request != null ) {
-            uriComponents = ServletUriComponentsBuilder.fromContextPath( request )
+            uriComponents = ServletUriComponentsBuilder.fromServletMapping( request )
                     .scheme( null ).host( null );
         } else {
             uriComponents = UriComponentsBuilder.newInstance();
         }
         URI resultSetUri = uriComponents
                 .path( "/resultSets" )
-                .queryParam( "datasets", ee.getId() )
-                .build().toUri();
+                .queryParam( "datasets", "{datasetId}" )
+                .buildAndExpand( ee.getId() ).toUri();
         return Response.status( Response.Status.FOUND )
                 .location( resultSetUri )
                 .build();
