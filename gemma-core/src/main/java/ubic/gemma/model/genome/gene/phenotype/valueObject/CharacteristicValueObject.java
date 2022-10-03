@@ -37,7 +37,6 @@ import java.util.List;
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 @Data
-@EqualsAndHashCode(of = { "valueUri", "value" }, callSuper = true)
 public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
         implements Comparable<CharacteristicValueObject> {
 
@@ -158,12 +157,49 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        if ( this.valueUri != null ) {
+            result = prime * result + this.valueUri.hashCode();
+        } else if ( this.value != null ) {
+            result = prime * result + this.value.hashCode();
+        } else {
+            result = prime * result + this.id.hashCode();
+        }
+        return result;
+    }
+
+    @Override
     public int compareTo( CharacteristicValueObject o ) {
         return ComparisonChain.start()
                 .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( taxon, o.taxon, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( value, o.value, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() ).result();
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
+        if ( this.valueUri == null ) {
+            if ( other.valueUri != null )
+                return false;
+        } else {
+            return this.valueUri.equals( other.valueUri );
+        }
+
+        if ( this.value == null ) {
+            return other.value == null;
+        }
+        return this.value.equals( other.value );
+
     }
 
     @Override
