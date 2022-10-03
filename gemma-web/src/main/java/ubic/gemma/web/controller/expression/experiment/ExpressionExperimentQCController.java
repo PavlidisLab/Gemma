@@ -694,7 +694,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private CategoryDataset getPCAScree( SVDValueObject svdo ) {
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
-        Double[] variances = svdo.getVariances();
+        double[] variances = svdo.getVariances();
         if ( variances == null || variances.length == 0 ) {
             return series;
         }

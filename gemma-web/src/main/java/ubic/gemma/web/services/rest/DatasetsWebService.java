@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
@@ -62,10 +61,7 @@ import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.OutputStreamWriter;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * RESTful interface for datasets.
@@ -409,7 +405,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         SVDValueObject svd = svdService.getSvd( datasetArg.getEntity( expressionExperimentService ).getId() );
-        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() )
+        return Responder.respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
         );
     }
 
@@ -586,13 +582,13 @@ public class DatasetsWebService {
         /**
          * Order same as the rows of the v matrix.
          */
-        Long[] bioMaterialIds;
+        List<Long> bioMaterialIds;
 
         /**
          * An array of values representing the fraction of the variance each component accounts for
          */
-        Double[] variances;
-        DoubleMatrix<Long, Integer> vMatrix;
+        double[] variances;
+        double[][] vMatrix;
     }
 
 }

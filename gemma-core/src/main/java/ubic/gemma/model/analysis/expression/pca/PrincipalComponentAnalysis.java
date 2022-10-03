@@ -135,8 +135,8 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
      * access the Eigenvalue data.
      */
     @Transient
-    public Double[] getVarianceFractions() {
-        Double[] result = new Double[this.getEigenValues().size()];
+    public double[] getVarianceFractions() {
+        double[] result = new double[this.getEigenValues().size()];
         for ( Eigenvalue v : this.getEigenValues() ) {
             result[v.getComponentNumber() - 1] = v.getVarianceFraction();
         }

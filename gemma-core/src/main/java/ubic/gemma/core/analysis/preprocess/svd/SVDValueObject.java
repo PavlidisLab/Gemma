@@ -67,10 +67,10 @@ public class SVDValueObject implements Serializable {
     /**
      * An array of values representing the fraction of the variance each component accounts for
      */
-    private Double[] variances;
+    private double[] variances;
     private DoubleMatrix<Long, Integer> vMatrix;
 
-    public SVDValueObject( Long id, List<Long> bioMaterialIds, Double[] variances,
+    public SVDValueObject( Long id, List<Long> bioMaterialIds, double[] variances,
             DoubleMatrix<Long, Integer> vMatrix ) {
         super();
         this.id = id;
@@ -185,11 +185,11 @@ public class SVDValueObject implements Serializable {
     /**
      * @return An array of values representing the fraction of the variance each component accounts for
      */
-    public Double[] getVariances() {
+    public double[] getVariances() {
         return variances;
     }
 
-    public void setVariances( Double[] variances ) {
+    public void setVariances( double[] variances ) {
         this.variances = variances;
     }
 
