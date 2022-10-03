@@ -81,7 +81,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 .desc( "Name for new platform, if the given platform is not already a merged design" )
                 .longOpt( "name" ).build();
         options.addOption( newAdName );
-        Option newAdShortName = Option.builder( "s" ).hasArg().argName( "name" )
+        Option newAdShortName = Option.builder( "s" ).hasArg().argName( "shortname" )
                 .desc( "Short name for new platform, if the given platform is not already a merged design" )
                 .longOpt( "shortname" ).build();
         options.addOption( newAdShortName );
