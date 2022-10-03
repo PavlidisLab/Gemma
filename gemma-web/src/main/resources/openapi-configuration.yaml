@@ -5,7 +5,7 @@ openAPI:
     - url: /rest/v2
   info:
     title: Gemma RESTful API
-    version: 2.4.1
+    version: 2.5.0
     description: |
       This website documents the usage of the [Gemma REST API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well

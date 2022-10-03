@@ -326,8 +326,7 @@ public class DatasetsWebService {
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
         } catch ( FilteringException e ) {
-            // TODO: handle other cases of filtering issue
-            throw new RuntimeException( e );
+            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
         }
     }
 
