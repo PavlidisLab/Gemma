@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -168,6 +169,16 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayProcessingDate = ba.getProcessingDate();
     }
 
+    @JsonProperty("factorValues")
+    public Collection<? extends IdentifiableValueObject> getFactorValues() {
+        return basicFVs ? fVBasicVOs : factorValueObjects;
+    }
+
+    /**
+     * @deprecated use {@link #getFactorValues()}
+     */
+    @Deprecated
+    @JsonProperty("factorValueObjects")
     public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
         return basicFVs ? fVBasicVOs : factorValueObjects;
     }
