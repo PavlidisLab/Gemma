@@ -2,7 +2,10 @@ resourcePackages:
   - ubic.gemma.web.services.rest
 openAPI:
   servers:
-    - url: /rest/v2
+    - description: Gemma
+      url: https://gemma.msl.ubc.ca/rest/v2
+    - description: Gemma (development server)
+      url: https://dev.gemma.msl.ubc.ca/rest/v2
   info:
     title: Gemma RESTful API
     version: 2.5.0
