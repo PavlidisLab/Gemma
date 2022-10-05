@@ -110,8 +110,8 @@ public class AnnotationsWebService {
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotations(
             @QueryParam("query") @DefaultValue("") StringArrayArg query
     ) {
-        if ( query.getValue().isEmpty() ) {
-            throw new BadRequestException( "Search query empty." );
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
         }
         try {
             return Responder.respond( this.getTerms( query ) );
@@ -158,6 +158,9 @@ public class AnnotationsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sortArg // Optional, default +id
     ) {
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue() );
@@ -228,6 +231,9 @@ public class AnnotationsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort // Optional, default +id
     ) {
+        if ( query == null || query.getValue().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
         Collection<Long> foundIds;
         try {
             foundIds = this.searchEEs( query.getValue() );
