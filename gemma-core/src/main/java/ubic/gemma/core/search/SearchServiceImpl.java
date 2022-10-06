@@ -286,9 +286,7 @@ public class SearchServiceImpl implements SearchService {
             try {
                 //noinspection unchecked
                 U resultObjectVo = ( U ) resultObjectConversionService.convert( resultObject, IdentifiableValueObject.class );
-                if ( resultObjectVo != null ) {
-                    sr.setResultObject( resultObjectVo );
-                }
+                sr.setResultObject( resultObjectVo );
             } catch ( ConverterNotFoundException e ) {
                 throw new IllegalArgumentException( "Result type " + searchResult.getResultClass() + " is not supported for VO conversion.", e );
             }
@@ -1557,7 +1555,7 @@ public class SearchServiceImpl implements SearchService {
         // Get the top N results for each class.
         for ( SearchResult<?> sr : sortedRawResults ) {
             if ( !fillObjects ) {
-                sr.clearResultObject();
+                sr.setResultObject( null );
             }
             Class<?> resultClass = sr.getResultClass();
             List<SearchResult<?>> resultsForClass = results.get( resultClass );
