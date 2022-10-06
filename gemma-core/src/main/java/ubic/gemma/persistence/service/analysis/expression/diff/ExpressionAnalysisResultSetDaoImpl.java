@@ -25,6 +25,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -32,11 +33,14 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +53,7 @@ import java.util.stream.Collectors;
  */
 @Repository
 @CommonsLog
+@ParametersAreNonnullByDefault
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
 
@@ -171,7 +176,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
+    public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort ) {
         Criteria query = getLoadValueObjectsCriteria( objectFilters );
         Criteria totalElementsQuery = getLoadValueObjectsCriteria( objectFilters );
 
@@ -195,12 +200,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .setProjection( Projections.countDistinct( "id" ) )
                 .uniqueResult();
 
-        //noinspection unchecked
+        // initialize subset factor values
+        for ( ExpressionAnalysisResultSet d : data ) {
+            Hibernate.initialize( d.getAnalysis().getSubsetFactorValue() );
+        }
+
         return new Slice<>( super.loadValueObjects( data ), sort, offset, limit, totalElements );
     }
 
     @Override
-    protected Criteria getLoadValueObjectsCriteria( Filters filters ) {
+    protected Criteria getLoadValueObjectsCriteria( @Nullable Filters filters ) {
         Criteria query = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionAnalysisResultSet.class, getObjectAlias() )
                 // these two are necessary for ACL filtering, so we must use a (default) inner jointure
@@ -212,11 +221,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // apply filtering
         query.add( ObjectFilterCriteriaUtils.formRestrictionClause( filters ) );
 
-        // apply the ACL on the associated EE
-        query.add( AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ) );
-
-        // make this cacheable
-        query.setCacheable( true );
+        // apply the ACL on the associated EE (or EE subset)
+        query.add( Restrictions.or(
+                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperiment.class ),
+                AclCriteriaUtils.formAclRestrictionClause( "e", ExpressionExperimentSubSet.class ) ) );
 
         return query;
     }

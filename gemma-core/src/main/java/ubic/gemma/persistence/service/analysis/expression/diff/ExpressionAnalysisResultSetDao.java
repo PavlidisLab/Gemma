@@ -33,6 +33,8 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import java.util.Map;
 /**
  * @see ExpressionAnalysisResultSet
  */
+@ParametersAreNonnullByDefault
 public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long id );
@@ -83,5 +86,5 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param sort field and direction by which the collection is ordered
      * @return
      */
-    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( Collection<BioAssaySet> bioAssaySets, Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
+    Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, Filters objectFilters, int offset, int limit, Sort sort );
 }
