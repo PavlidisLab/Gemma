@@ -34,6 +34,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
@@ -46,6 +47,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -88,18 +90,21 @@ public class AnalysisResultSetsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
             @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @QueryParam("sort") @DefaultValue("+id") SortArg sort ) {
-        Collection<BioAssaySet> ees = null;
+        Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
-            ees = datasets.getEntities( expressionExperimentService ).stream()
-                    .map( BioAssaySet.class::cast )
-                    .collect( Collectors.toList() );
+            Collection<ExpressionExperiment> ees = new ArrayList<>( datasets.getEntities( expressionExperimentService ) );
+            bas = new ArrayList<>( ees );
+            // expand with all subsets
+            for ( ExpressionExperiment ee : ees ) {
+                bas.addAll( expressionExperimentService.getSubSets( ee ) );
+            }
         }
         Collection<DatabaseEntry> des = null;
         if ( databaseEntries != null ) {
             des = databaseEntries.getEntities( databaseEntryService );
         }
         return Responder.paginate( expressionAnalysisResultSetService.findByBioAssaySetInAndDatabaseEntryInLimit(
-                ees, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
+                bas, des, filters.getObjectFilters( expressionAnalysisResultSetService ), offset.getValue(), limit.getValue(), sort.getSort( expressionAnalysisResultSetService ) ) );
     }
 
     private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
