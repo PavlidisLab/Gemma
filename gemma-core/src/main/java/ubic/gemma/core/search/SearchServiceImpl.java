@@ -296,14 +296,6 @@ public class SearchServiceImpl implements SearchService {
         return sr;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> loadValueObjects( Collection<SearchResult<ExpressionExperiment>> searchResults ) throws IllegalArgumentException {
-        return searchResults.stream()
-                .map( this::loadValueObject )
-                .collect( Collectors.toList() );
-    }
-
     @PostConstruct
     void initializeSearchService() {
         initializeSupportedResultTypes();

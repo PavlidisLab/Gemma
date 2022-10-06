@@ -358,25 +358,4 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertThat( resultVo.getResultObject() )
                 .isNull();
     }
-
-    @Test
-    public void testLoadValueObjects() throws SearchException {
-        SearchSettings settings = SearchSettings.builder()
-                .query( SearchServiceTest.SPINAL_CORD )
-                .resultType( ExpressionExperiment.class )
-                .build();
-        List<SearchResult<ExpressionExperiment>> results = searchService.search( settings, ExpressionExperiment.class );
-        assertThat( results ).hasSize( 1 );
-        List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> resultVo = searchService.loadValueObjects( results );
-        // ensure that the resultType is preserved
-        assertThat( resultVo )
-                .extracting( "resultClass" )
-                .containsOnly( ExpressionExperiment.class );
-        assertThat( resultVo )
-                .extracting( "resultId" )
-                .containsOnly( ee.getId() );
-        assertThat( resultVo )
-                .extracting( "resultObject" )
-                .containsOnlyNulls();
-    }
 }
