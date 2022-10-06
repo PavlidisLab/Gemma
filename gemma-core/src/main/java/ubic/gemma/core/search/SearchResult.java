@@ -18,19 +18,22 @@
  */
 package ubic.gemma.core.search;
 
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.ReflectionUtil;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Comparator;
 
 /**
  * @author paul
  */
+@Data
+@ParametersAreNonnullByDefault
 @EqualsAndHashCode(of = { "resultClass", "resultId" })
-public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<? extends Identifiable>> {
+public class SearchResult<T extends Identifiable> implements Comparable<SearchResult<?>> {
 
     /**
      * Obtain a comparator for this search result.
@@ -42,30 +45,62 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         return Comparator.comparing( SearchResult::getScore, Comparator.reverseOrder() );
     }
 
-    private final Class<? extends Identifiable> resultClass;
-
-    private final long resultId;
+    /**
+     * Create a search result from an entity and a score.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( T entity, double score ) {
+        SearchResult<T> sr = new SearchResult<>( entity );
+        sr.setScore( score );
+        return sr;
+    }
 
     /**
-     * Result object this search result is refeering to.
+     * Create a search result from an entity, a score and some highlighted text.
+     */
+    public static <T extends Identifiable> SearchResult<T> from( T entity, double score, String highlightedText ) {
+        SearchResult<T> sr = new SearchResult<>( entity );
+        sr.setScore( score );
+        sr.setHighlightedText( highlightedText );
+        return sr;
+    }
+
+    /**
+     * Class of the result, immutable.
+     */
+    private final Class<? extends Identifiable> resultClass;
+
+    /**
+     * ID of the result, immutable.
+     */
+    private final Long resultId;
+
+    /**
+     * Result object this search result is referring to.
      * <p>
      * This can be null, at least initially if the resultClass and objectId are provided.
      * <p>
-     * It may also be replaced at a later time via {@link #setResultObject(Identifiable)} and {@link #clearResultObject()}.
+     * It may also be replaced at a later time via {@link #setResultObject(Identifiable)}.
      */
+    @Nullable
     private T resultObject;
 
+    /**
+     * Highlighted text for this result.
+     * <p>
+     * This is provided by Compass to indicate which part of the result was matched by a query.
+     */
+    @Nullable
     private String highlightedText;
 
+    /**
+     * Score for ranking this result among other results.
+     */
     private double score = 1.0;
 
-    public SearchResult( @NonNull T resultObject ) {
-        if ( resultObject.getId() == null ) {
-            throw new IllegalArgumentException( "Result object ID cannot be null." );
-        }
+    public SearchResult( T resultObject ) {
+        this.resultClass = resultObject.getClass();
         this.resultId = resultObject.getId();
-        this.resultObject = resultObject; // FIXME: maybe this is a bad idea. Eventually we would only want value objects.
-        this.resultClass = ( Class<? extends Identifiable> ) ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+        setResultObject( resultObject );
     }
 
     /**
@@ -74,59 +109,14 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * This is used when the class and ID is known beforehand, but the result hasn't been retrieve yet from persistent
      * storage.
      */
-    public SearchResult( @NonNull Class<? extends Identifiable> entityClass, @NonNull Long entityId ) {
+    public SearchResult( Class<? extends Identifiable> entityClass, long entityId ) {
         this.resultClass = entityClass;
         this.resultId = entityId;
-    }
-
-    public static <T extends Identifiable> SearchResult<T> toSearchResult( T entity, double score ) {
-        SearchResult<T> sr = new SearchResult<>( entity );
-        sr.setScore( score );
-        return sr;
-    }
-
-    public static <T extends Identifiable> SearchResult<T> toSearchResult( T entity, double score, String highlightedText ) {
-        SearchResult<T> sr = new SearchResult<>( entity );
-        sr.setScore( score );
-        sr.setHighlightedText( highlightedText );
-        return sr;
     }
 
     @Override
     public int compareTo( SearchResult<?> o ) {
         return getComparator().compare( this, o );
-    }
-
-    /**
-     * Obtain the highlighted text for this result.
-     * @return the highlighted text in the result, or null if not set
-     */
-    @Nullable
-    public String getHighlightedText() {
-        return highlightedText;
-    }
-
-    public void setHighlightedText( String highlightedText ) {
-        this.highlightedText = highlightedText;
-    }
-
-    /**
-     * @return the id for the underlying result entity.
-     */
-    public Long getResultId() {
-        return resultId;
-    }
-
-    public Class<? extends Identifiable> getResultClass() {
-        return resultClass;
-    }
-
-    /**
-     * Obtain the result object if available.
-     */
-    @Nullable
-    public T getResultObject() {
-        return this.resultObject;
     }
 
     /**
@@ -142,14 +132,6 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
             throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
         }
         this.resultObject = resultObject;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    public void setScore( double score ) {
-        this.score = score;
     }
 
     @Override
