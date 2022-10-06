@@ -20,12 +20,12 @@ package ubic.gemma.core.search;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * @author paul
@@ -98,6 +98,9 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
     private double score = 1.0;
 
     public SearchResult( T resultObject ) {
+        if ( resultObject.getId() == null ) {
+            throw new IllegalArgumentException( "THe result object ID cannot be null." );
+        }
         this.resultClass = resultObject.getClass();
         this.resultId = resultObject.getId();
         setResultObject( resultObject );
@@ -128,7 +131,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
         if ( resultObject != null && resultObject.getId() == null ) {
             throw new IllegalArgumentException( "The result object ID cannot be null." );
         }
-        if ( resultObject != null && resultObject.getId() != this.resultId ) {
+        if ( resultObject != null && !Objects.equals( resultObject.getId(), this.resultId ) ) {
             throw new IllegalArgumentException( "The result object cannot be replaced with one that has a different ID." );
         }
         this.resultObject = resultObject;
