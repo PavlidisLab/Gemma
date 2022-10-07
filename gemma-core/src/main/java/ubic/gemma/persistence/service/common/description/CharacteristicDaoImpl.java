@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -146,7 +147,10 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
             return Collections.emptyMap();
         }
 
-        query += " where c.valueUri in (:uriStrings)";
+        query += AclQueryUtils.formAclJoinClause( "ee" );
+        query += AclQueryUtils.formAclRestrictionClause();
+
+        query += " and c.valueUri in (:uriStrings)";
 
         // don't retrieve EE IDs that we have already fetched otherwise
         if ( !seenEEs.isEmpty() ) {
@@ -165,6 +169,8 @@ public class CharacteristicDaoImpl extends AbstractVoEnabledDao<Characteristic, 
             q.setParameterList( "seenEEs", seenEEs );
         if ( taxon != null )
             q.setParameter( "t", taxon );
+        AclQueryUtils.addAclJoinParameters( q, ExpressionExperiment.class );
+        AclQueryUtils.addAclRestrictionParameters( q );
 
         //noinspection unchecked
         List<Object[]> results = q.list();

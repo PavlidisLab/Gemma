@@ -77,15 +77,16 @@ public interface CharacteristicDao
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are avoided
      * (and will thus be associated via the first uri that resulted in a hit).
+     * <p>
+     * Resulting EEs are filtered by ACLs.
      *
      * @param  uris       collection of URIs used for matching characteristics (via {@link Characteristic#getValueUri()})
      * @param  taxon      taxon to restrict EEs to, or null to ignore
      * @param  limit      approximate limit to how many results to return (just used to avoid extra queries; the limit
      *                    may be exceeded). Set to 0 for no limit.
-     * @return map of classes (Experiment, FactorValue, BioMaterial) to the matching uri to IDs of
-     *                    experiments which have an
-     *                    associated characteristic using the given uriString. The class lets us track where the
-     *                    annotation was.
+     * @return map of classes ({@link ExpressionExperiment}, {@link ubic.gemma.model.expression.experiment.FactorValue},
+     * {@link ubic.gemma.model.expression.biomaterial.BioMaterial}) to the matching URI to IDs of experiments which have
+     * an associated characteristic using the given uriString. The class lets us track where the annotation was.
      */
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
 

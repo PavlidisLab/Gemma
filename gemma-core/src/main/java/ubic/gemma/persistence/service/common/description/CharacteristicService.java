@@ -61,17 +61,7 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
     List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
 
     /**
-     * This search looks at direct annotations, factor values and biomaterials in that order. Duplicate EEs are
-     * avoided (and will thus be associated via the first uri that resulted in a hit).
-     *
-     * @param  uris      uri strings
-     * @param  taxon     taxon to limit to; null for no limit
-     * @param  limit     try to limit to this many results. No guarantee the limit won't be exceeded. Negative values
-     *                   implies no limit.
-     * @return map of classes (Experiment, FactorValue, BioMaterial) to the URI to the IDs of experiments
-     *                   which have an
-     *                   associated characteristic using the given uriString. The class lets us track where the
-     *                   annotation was.
+     * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int)
      */
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit );
 
