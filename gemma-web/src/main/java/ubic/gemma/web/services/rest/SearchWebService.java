@@ -110,9 +110,21 @@ public class SearchWebService {
             throw new BadRequestException( "Invalid search settings: " + searchSettings + ".", e );
         }
 
-        // convert the response to search results of VOs
-        return new SearchResultsResponseDataObject( searchResults.stream()
+        List<SearchResult<? extends IdentifiableValueObject<? extends Identifiable>>> searchResultVos = searchResults.stream()
                 .map( searchService::loadValueObject )
+                .collect( Collectors.toList() );
+
+        // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
+        List<String> searchResultVosWithNullResultObject = searchResultVos.stream().filter( sr -> sr.getResultObject() == null )
+                .map( SearchResult::toString )
+                .collect( Collectors.toList() );
+        if ( !searchResultVosWithNullResultObject.isEmpty() ) {
+            log.warn( String.format( "The following search results have null result objects: %s.", String.join( ", ", searchResultVosWithNullResultObject ) ) );
+        }
+
+        // convert the response to search results of VOs
+        return new SearchResultsResponseDataObject( searchResultVos.stream()
+                .filter( sr -> sr.getResultObject() != null ) // exclude null cases, we warn about them above
                 .sorted() // SearchResults are sorted by descending score order
                 .limit( limit.getValue( MAX_SEARCH_RESULTS ) ) // results are limited by class, so there might be more results than expected when unraveling everything
                 .map( SearchResultValueObject::new )
