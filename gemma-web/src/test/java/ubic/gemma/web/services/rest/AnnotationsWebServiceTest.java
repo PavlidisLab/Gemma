@@ -103,7 +103,7 @@ public class AnnotationsWebServiceTest extends AbstractJUnit4SpringContextTests 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );
         when( searchService.search( any( SearchSettings.class ), eq( false ), eq( false ) ) )
-                .thenReturn( Collections.singletonMap( ExpressionExperiment.class, Collections.singletonList( new SearchResult<>( ee ) ) ) );
+                .thenReturn( Collections.singletonMap( ExpressionExperiment.class, Collections.singletonList( new SearchResult<>( ee, "test object" ) ) ) );
         when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
         when( expressionExperimentService.loadValueObjectsPreFilter( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC ) ), eq( 0 ), eq( 20 ) ) )
                 .thenReturn( Slice.fromList( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ) ) );

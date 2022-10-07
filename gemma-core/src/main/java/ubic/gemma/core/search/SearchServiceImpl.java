@@ -824,7 +824,7 @@ public class SearchServiceImpl implements SearchService {
                     if ( !clazz.isAssignableFrom( ExpressionExperiment.class ) ) {
                         matchedText = matchedText + " via " + clazz.getSimpleName();
                     }
-                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ExpressionExperiment.class, eeID, "CharacteristicService.findExperimentsByUris" );
+                    SearchResult<ExpressionExperiment> sr = new SearchResult<>( ee, "CharacteristicService.findExperimentsByUris" );
                     sr.setHighlightedText( matchedText );
                     results.add( sr );
                     if ( limit > 0 && results.size() >= limit ) {
