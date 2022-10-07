@@ -65,7 +65,7 @@ public class SearchWebService {
 
     /**
      * Search everything subject to taxon and platform constraints.
-     *
+     * <p>
      * Naming the schema in for the result types is necessary so that it can be resolved in {@link SearchResultTypeAllowableValuesModelResolver}.
      */
     @GET
@@ -121,7 +121,7 @@ public class SearchWebService {
 
     /**
      * Represents search settings for the RESTful API.
-     *
+     * <p>
      * Note that we will only expose back what the {@link SearchWebService} accepts to take as parameters for searching.
      */
     @Data
@@ -157,7 +157,10 @@ public class SearchWebService {
         @Schema(ref = "SearchResultType")
         private final String resultType;
 
-        private final Double score;
+        private final double score;
+
+        @Schema(hidden = true)
+        private final String source;
 
         private final T resultObject;
 
@@ -166,6 +169,7 @@ public class SearchWebService {
             this.resultType = searchResult.getResultClass().getName();
             this.resultObject = searchResult.getResultObject();
             this.score = searchResult.getScore();
+            this.source = searchResult.getSource().toString();
         }
     }
 
